@@ -30,18 +30,20 @@ void main() async {
 }
 
 /// Main application widget
-class RabBookingApp extends StatelessWidget {
+class RabBookingApp extends ConsumerWidget {
   const RabBookingApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
     return MaterialApp.router(
       title: 'Rab Booking',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      routerConfig: appRouter,
+      routerConfig: router,
     );
   }
 }

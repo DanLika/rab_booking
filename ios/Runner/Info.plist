@@ -45,5 +45,22 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Deep linking: Custom URL scheme -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.rabbooking.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>rabbooking</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Universal Links (HTTPS deep links) -->
+	<key>FlutterDeepLinkingEnabled</key>
+	<true/>
 </dict>
 </plist>

@@ -1,0 +1,62 @@
+PROMPT 6: Navigation & Routing Setup
+
+Implementiraj GoRouter sa kompleksnim rutama:
+
+1. `lib/core/config/router.dart`:
+
+   Definiši rute:
+   - '/' → HomeScreen (javna)
+   - '/search' → SearchResultsScreen (query params)
+   - '/property/:id' → PropertyDetailsScreen
+   - '/booking/:unitId' → BookingScreen (auth required)
+   - '/auth/login' → LoginScreen
+   - '/auth/register' → RegisterScreen
+   - '/owner/dashboard' → OwnerDashboardScreen (auth + role check)
+   - '/owner/property/:id' → PropertyManagementScreen
+   - '/payment/confirm' → PaymentConfirmationScreen
+
+2. NAVIGATION GUARDS:
+   - Redirect logic za unauthenticated users
+   - Role-based access control
+   - Deep linking support
+
+   AUTH REDIRECT LOGIC:
+   - Implementiraj `redirect` callback u GoRouter
+   - Check Supabase auth state (via Riverpod)
+   - Redirect unauthenticated users sa protected ruta na /auth/login
+   - Redirect authenticated users sa /auth/* ruta nazad na home ili intended route
+   - Role-based redirects (guest vs owner dashboards)
+
+3. TRANSITION ANIMATIONS:
+   Custom page transitions za premium feel.
+
+4. PROVIDERS:
+   Riverpod provider za current route/params.
+
+5. NAVIGATION HELPERS (`lib/core/utils/navigation_helpers.dart`):
+   - Extension methods na BuildContext za type-safe navigation
+   - Named route constants
+   - Deep link handling
+
+6. BOTTOM NAVIGATION (za mobile):
+   - Shell route sa persistent bottom nav
+   - Home, Search, Bookings, Profile tabs
+   - Preserve state između tab switcheva
+
+5. RESPONSIVE NAVIGATION (za web/tablet):
+   - Sidebar navigation za desktop
+   - Drawer za mobile
+   - Adaptive layout wrapper
+
+Implementiraj sa error handling (404 screen).
+
+DELIVERABLES:
+- Kompletna GoRouter konfiguracija
+- Auth state management integrisana sa routingom
+- Navigation guards sa role-based access
+- Custom page transitions
+- Riverpod providers za route/params
+- Type-safe navigation helpers
+- Responsive navigation components
+- Deep linking setup (Android/iOS)
+- 404 error screen

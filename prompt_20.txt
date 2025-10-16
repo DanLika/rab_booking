@@ -1,0 +1,86 @@
+PROMPT 20: Documentation & Handoff
+
+Generiši kompletnu projektnu dokumentaciju:
+
+1. README.md (Root):
+   - Project overview
+   - Features list
+   - Tech stack
+   - Prerequisites
+   - Installation instructions
+   - Running the app (all platforms)
+   - Environment setup
+   - Contributing guidelines
+
+2. ARCHITECTURE.md:
+   - Folder structure explained
+   - Design patterns used
+   - State management flow
+   - Data flow diagrams
+   - Multi-tenancy implementation
+
+3. API_INTEGRATION.md:
+   - Supabase schema
+   - All database queries
+   - RLS policies explained
+   - Edge functions documentation
+   - Realtime subscriptions
+
+4. DESIGN_SYSTEM.md:
+   - Color palettes (with hex codes)
+   - Typography scale
+   - Spacing system
+   - Component library
+   - Usage examples
+   - Figma/design files links
+
+5. FEATURES_DOCUMENTATION.md:
+   Za svaku feature:
+   - User stories
+   - UI screenshots
+   - Implementation details
+   - Known limitations
+   - Future improvements
+
+6. TESTING.md:
+   - How to run tests
+   - Test coverage reports
+   - Testing strategy
+   - Mock data setup
+
+7. TROUBLESHOOTING.md:
+   - Common issues
+   - Debug steps
+   - FAQ
+
+8. CODE_COMMENTS:
+   Ensure all complex functions have:
+   - Purpose explanation
+   - Parameter descriptions
+   - Return value description
+   - Usage examples
+
+9. CHANGELOG.md:
+   Version history sa features/fixes.
+
+10. FUTURE_ROADMAP.md:
+    - Phase 2 features (interactive maps, iCal sync)
+    - Scalability plans
+    - Potential optimizations
+
+Svi dokumenti moraju biti markdown formatted sa table of contents.
+
+DELIVERABLES:
+- README.md (root) - comprehensive project overview
+- ARCHITECTURE.md - folder structure, patterns, data flow
+- API_INTEGRATION.md - Supabase schema, queries, RLS, edge functions
+- DESIGN_SYSTEM.md - colors, typography, spacing, components
+- FEATURES_DOCUMENTATION.md - user stories, screenshots, implementation
+- TESTING.md - test instructions, coverage, strategy
+- TROUBLESHOOTING.md - common issues, debug steps, FAQ
+- CODE_COMMENTS - all complex functions documented
+- CHANGELOG.md - version history
+- FUTURE_ROADMAP.md - Phase 2 features, scalability plans
+- All documents with table of contents
+- Properly formatted markdown with code examples
+- Links to external resources (Figma, design files)

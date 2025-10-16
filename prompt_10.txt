@@ -1,0 +1,171 @@
+PROMPT 10: Interactive Booking Calendar - Advanced
+
+Implementiraj sofisticirani calendar widget sa custom vizualima:
+
+1. `lib/features/booking/presentation/widgets/booking_calendar_widget.dart`:
+
+   BASE: table_calendar paket
+
+2. CUSTOM DAY BUILDER:
+
+   Za svaki dan kreiraj:
+   ```dart
+   Widget _buildDay(DateTime day, List<Booking> bookings) {
+     return Stack(
+       children: [
+         // Base container
+         Container(
+           decoration: BoxDecoration(
+             color: _getDayColor(day, bookings),
+             border: Border.all(color: Colors.grey[300]),
+           ),
+           child: Center(child: Text(day.day.toString())),
+         ),
+         // Check-in overlay (top half)
+         if (isCheckInDay(day))
+           Positioned(
+             top: 0, left: 0, right: 0,
+             height: cellHeight / 2,
+             child: Container(
+               decoration: BoxDecoration(
+                 gradient: LinearGradient(colors: [Colors.red, Colors.redAccent]),
+                 borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+               ),
+             ),
+           ),
+         // Check-out overlay (bottom half)
+         if (isCheckOutDay(day))
+           Positioned(
+             bottom: 0, left: 0, right: 0,
+             height: cellHeight / 2,
+             child: Container(
+               decoration: BoxDecoration(
+                 gradient: LinearGradient(colors: [Colors.red, Colors.redAccent]),
+                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
+               ),
+             ),
+           ),
+
+         // ALTERNATIVNA VERZIJA (Jednostavnija):
+         // Check-in indicator (red top half)
+         if (_isCheckInDay(day, bookings))
+           Positioned(
+             top: 0, left: 0, right: 0,
+             child: Container(height: 20, color: Colors.red),
+           ),
+
+         // Check-out indicator (red bottom half)
+         if (_isCheckOutDay(day, bookings))
+           Positioned(
+             bottom: 0, left: 0, right: 0,
+             child: Container(height: 20, color: Colors.red),
+           ),
+       ],
+     );
+   }
+   ```
+
+   Vizualni prikaz za svaki status:
+
+   a) AVAILABLE DAY:
+      - Background: neutral light
+      - Text: dark gray
+      - Border: none
+
+   b) SELECTED RANGE:
+      - Background: accent color (light opacity)
+      - Text: accent color (dark)
+      - Border radius: full
+
+   c) CHECK-IN DAY:
+      - Use Stack widget
+      - Top half: Red gradient
+      - Bottom half: Transparent
+      - Text: White (bold)
+      - ClipPath za half-circle effect
+
+   d) CHECK-OUT DAY:
+      - Stack widget
+      - Top half: Transparent
+      - Bottom half: Red gradient
+      - Text: White (bold)
+      - ClipPath za half-circle effect
+
+   e) BOOKED/UNAVAILABLE:
+      - Background: striped pattern ili cross-hatch
+      - Text: light gray
+      - Disabled: true
+
+3. BOJA LOGIKA:
+   - Slobodan: Colors.grey[200]
+   - Odabran (user selection): Primary accent
+   - Zauzet (iz baze): Colors.blue[300]
+   - Prošli datumi: Disabled gray
+
+4. REAL-TIME SYNC:
+   - Supabase realtime subscription
+   - Auto-refresh kada se doda nova rezervacija
+   - Optimistic updates
+
+5. INTERACTION:
+   - Single tap: Select check-in
+   - Second tap: Select check-out
+   - Range selection highlight
+   - "Clear dates" button
+
+6. INTERACTION LOGIC:
+
+   - onDaySelected callback:
+     * First tap: Set check-in date
+     * Second tap: Set check-out date
+     * Third tap: Reset selection
+   - Validation:
+     * check-out mora biti after check-in
+     * Ne dozvoliti overlapping sa booked dates
+     * Min stay (e.g., 2 nights)
+   - Visual feedback: Ripple animation na tap
+
+Implementiraj sa smooth animations i haptic feedback.
+
+7. SUPABASE INTEGRATION:
+
+   - Fetch booked dates query:
+     ```sql
+     SELECT check_in, check_out FROM bookings
+     WHERE unit_id = ? AND status IN ('confirmed', 'pending')
+     ```
+   - Real-time subscription za live updates
+   - Cache booked dates locally
+
+5. NOTIFIER (`booking_calendar_notifier.dart`):
+   - Fetch bookings za current month + next month
+   - Handle date selection logic
+   - Validate min/max nights
+   - Calculate total price
+
+6. STATE MANAGEMENT:
+
+   - BookingCalendarNotifier (Riverpod):
+     * selectedCheckIn
+     * selectedCheckOut
+     * bookedDates (List<DateRange>)
+     * isDateAvailable(date) method
+     * Fetch bookings za current month + next month
+     * Handle date selection logic
+     * Validate min/max nights
+   - Expose calculateTotalPrice() method
+
+7. RESPONSIVE DESIGN:
+
+   - Mobile: Single month view
+   - Tablet/Desktop: Two-month side-by-side view
+   - Adaptive cell size
+
+DELIVERABLES:
+- Custom calendar widget sa advanced day builders
+- Check-in/Check-out visual effects (half-circle gradient)
+- Booking validation logic
+- Supabase real-time integration
+- BookingCalendarNotifier (Riverpod)
+- Responsive layout
+- Unit tests za date validation

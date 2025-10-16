@@ -1,0 +1,255 @@
+PROMPT 15: Responsive Layout Helpers
+
+Kreiraj utilities za responsive design:
+
+1. `lib/core/utils/responsive_layout.dart`:
+
+   a) ResponsiveLayout widget:
+   ```dart
+   class ResponsiveLayout extends StatelessWidget {
+     final Widget mobile;
+     final Widget? tablet;
+     final Widget desktop;
+
+     // Automatic layout switching based on screen width
+
+     const ResponsiveLayout({
+       Key? key,
+       required this.mobile,
+       this.tablet,
+       required this.desktop,
+     }) : super(key: key);
+
+     @override
+     Widget build(BuildContext context) {
+       return LayoutBuilder(
+         builder: (context, constraints) {
+           if (constraints.maxWidth < 600) {
+             return mobile;
+           } else if (constraints.maxWidth < 1024) {
+             return tablet ?? mobile;
+           } else {
+             return desktop;
+           }
+         },
+       );
+     }
+   }
+   ```
+
+   b) ResponsiveValue class:
+   ```dart
+   T getResponsiveValue<T>({
+     required T mobile,
+     T? tablet,
+     required T desktop,
+   }) {
+     final screenWidth = MediaQuery.of(context).size.width;
+
+     if (screenWidth < 600) {
+       return mobile;
+     } else if (screenWidth < 1024) {
+       return tablet ?? mobile;
+     } else {
+       return desktop;
+     }
+   }
+   ```
+
+3. `lib/core/constants/breakpoints.dart`:
+
+   Static breakpoint values:
+   ```dart
+   class Breakpoints {
+     static const double mobile = 600;
+     static const double tablet = 1024;
+     static const double desktop = 1440;
+   }
+   ```
+
+4. USAGE EXAMPLE:
+   Demonstriraj kako koristiti ove utilities u existing screens.
+
+5. ADAPTIVE WIDGETS:
+   - AdaptiveScaffold
+   - AdaptiveNavigationRail/BottomNav
+   - AdaptiveDialog
+
+Sve mora biti type-safe i performantno.
+
+2. BREAKPOINTS CONSTANTS (Original):
+
+   `lib/core/constants/breakpoints.dart`:
+   ```dart
+   class Breakpoints {
+     static const double mobile = 600;
+     static const double tablet = 1024;
+     static const double desktop = 1440;
+
+     static bool isMobile(BuildContext context) =>
+       MediaQuery.of(context).size.width < mobile;
+
+     static bool isTablet(BuildContext context) =>
+       MediaQuery.of(context).size.width >= mobile &&
+       MediaQuery.of(context).size.width < desktop;
+
+     static bool isDesktop(BuildContext context) =>
+       MediaQuery.of(context).size.width >= desktop;
+   }
+   ```
+
+2. `lib/core/utils/screen_utils.dart`:
+
+   Extension methods:
+   ```dart
+   extension ScreenUtilsExtension on BuildContext {
+     bool get isMobile => MediaQuery.of(this).size.width < 600;
+     bool get isTablet => MediaQuery.of(this).size.width >= 600 &&
+                          MediaQuery.of(this).size.width < 1024;
+     bool get isDesktop => MediaQuery.of(this).size.width >= 1024;
+
+     double get screenWidth => MediaQuery.of(this).size.width;
+     double get screenHeight => MediaQuery.of(this).size.height;
+
+     EdgeInsets get safeAreaPadding => MediaQuery.of(this).padding;
+
+     // Responsive spacing helpers
+     double spacing(double mobile, [double? tablet, double? desktop]) {
+       if (isMobile) return mobile;
+       if (isTablet) return tablet ?? mobile;
+       return desktop ?? tablet ?? mobile;
+     }
+   }
+   ```
+
+6. EXTENSION METHODS (Original):
+
+   `lib/core/utils/context_extensions.dart`:
+   ```dart
+   extension ResponsiveExtension on BuildContext {
+     bool get isMobile => MediaQuery.of(this).size.width < 600;
+     bool get isTablet => MediaQuery.of(this).size.width >= 600 &&
+                          MediaQuery.of(this).size.width < 1024;
+     bool get isDesktop => MediaQuery.of(this).size.width >= 1024;
+
+     double get screenWidth => MediaQuery.of(this).size.width;
+     double get screenHeight => MediaQuery.of(this).size.height;
+
+     // Responsive spacing
+     double responsiveSpacing(double mobile, double tablet, double desktop) {
+       if (isMobile) return mobile;
+       if (isTablet) return tablet;
+       return desktop;
+     }
+
+     // Responsive font size
+     double responsiveFontSize(double mobile, double tablet, double desktop) {
+       if (isMobile) return mobile;
+       if (isTablet) return tablet;
+       return desktop;
+     }
+   }
+   ```
+
+7. RESPONSIVE GRID (Original):
+
+   `lib/shared/widgets/responsive_grid.dart`:
+   ```dart
+   class ResponsiveGrid extends StatelessWidget {
+     final List<Widget> children;
+     final int mobileColumns;
+     final int tabletColumns;
+     final int desktopColumns;
+     final double spacing;
+
+     const ResponsiveGrid({
+       Key? key,
+       required this.children,
+       this.mobileColumns = 1,
+       this.tabletColumns = 2,
+       this.desktopColumns = 3,
+       this.spacing = 16.0,
+     }) : super(key: key);
+
+     @override
+     Widget build(BuildContext context) {
+       return LayoutBuilder(
+         builder: (context, constraints) {
+           int columns;
+           if (constraints.maxWidth < 600) {
+             columns = mobileColumns;
+           } else if (constraints.maxWidth < 1024) {
+             columns = tabletColumns;
+           } else {
+             columns = desktopColumns;
+           }
+
+           return GridView.builder(
+             shrinkWrap: true,
+             physics: NeverScrollableScrollPhysics(),
+             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+               crossAxisCount: columns,
+               crossAxisSpacing: spacing,
+               mainAxisSpacing: spacing,
+             ),
+             itemCount: children.length,
+             itemBuilder: (context, index) => children[index],
+           );
+         },
+       );
+     }
+   }
+   ```
+
+8. ADAPTIVE WIDGETS (Original):
+
+   `lib/shared/widgets/adaptive/`:
+
+   a) `adaptive_scaffold.dart`:
+      - Mobile: Bottom navigation
+      - Desktop: Side navigation drawer
+
+   b) `adaptive_dialog.dart`:
+      - Mobile: Full-screen dialog
+      - Desktop: Centered dialog box
+
+   c) `adaptive_padding.dart`:
+      - Responsive padding values
+
+9. USAGE EXAMPLES (Original):
+
+   ```dart
+   // Example 1: Responsive Layout
+   ResponsiveLayout(
+     mobile: Column(children: [...]),
+     tablet: Row(children: [...]),
+     desktop: GridView(children: [...]),
+   )
+
+   // Example 2: Responsive Value
+   final fontSize = context.responsiveFontSize(14, 16, 18);
+
+   // Example 3: Responsive Grid
+   ResponsiveGrid(
+     mobileColumns: 1,
+     tabletColumns: 2,
+     desktopColumns: 3,
+     children: propertyCards,
+   )
+
+   // Example 4: Breakpoint Check
+   if (context.isDesktop) {
+     // Show sidebar
+   } else {
+     // Show drawer
+   }
+   ```
+
+DELIVERABLES:
+- ResponsiveLayout widget
+- Breakpoints constants
+- Context extensions za responsive checks
+- ResponsiveGrid widget
+- Adaptive widgets (Scaffold, Dialog, Padding)
+- Complete usage examples
+- Documentation comments

@@ -1,0 +1,66 @@
+PROMPT 4: Data Models & Repository Pattern
+
+Kreiraj kompletne Dart modele i repository layer:
+
+1. DATA MODELS (`lib/shared/models/`):
+
+   a) `user_model.dart`:
+      - Properties: id, email, firstName, lastName, role (enum), createdAt
+      - fromJson, toJson methods
+      - copyWith method
+      - Freezed/JsonSerializable annotations
+
+   b) `property_model.dart`:
+      - Properties: id, ownerId, name, description, location, amenities[], images[]
+      - Relationship methods
+
+   c) `unit_model.dart`:
+      - Properties: id, propertyId, name, pricePerNight, maxGuests, images[]
+      - Availability check methods
+
+   d) `booking_model.dart`:
+      - Properties: id, unitId, guestId, checkIn, checkOut, status (enum), totalPrice, paidAmount
+      - Date calculation methods
+
+2. ENUMS (`lib/core/constants/enums.dart`):
+   - UserRole (guest, owner, admin)
+   - BookingStatus (pending, confirmed, cancelled, completed)
+   - PropertyAmenity (wifi, parking, pool, airConditioning, kitchen, etc.)
+
+3. REPOSITORY INTERFACES (`lib/shared/repositories/`):
+
+   Kreiraj abstract classes za:
+   - UserRepository
+   - PropertyRepository
+   - UnitRepository
+   - BookingRepository
+
+   Sa CRUD metodama i custom query metodama.
+
+   a) `property_repository.dart`:
+      - fetchProperties(filters)
+      - fetchPropertyById(id)
+      - createProperty(property)
+      - updateProperty(property)
+      - deleteProperty(id)
+
+   b) `booking_repository.dart`:
+      - createBooking(booking)
+      - fetchUserBookings(userId)
+      - fetchPropertyBookings(propertyId)
+      - updateBookingStatus(id, status)
+
+4. SUPABASE IMPLEMENTATIONS:
+   Implementiraj concrete repositories koji koriste Supabase klijent.
+   - `lib/shared/repositories/supabase/` za sve implementacije
+   - Error handling sa custom exceptions
+   - Response mapping (Supabase JSON -> Models)
+
+Koristi Riverpod providers za dependency injection.
+Dodaj error handling sa custom exception klasama.
+
+DELIVERABLES:
+- Svi modeli sa kompletnom serialization logikom
+- Repository pattern sa clean interfaces
+- Supabase implementacije sa error handlingom
+- Unit testovi za model serialization

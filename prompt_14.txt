@@ -1,0 +1,194 @@
+PROMPT 14: Shared Widgets Library
+
+Kreiraj reusable widgets za consistent UI:
+
+1. BUTTONS (`lib/shared/widgets/buttons/`):
+
+   a) `primary_button.dart`:
+      - Full-width sa accent color
+      - Loading state indicator
+      - Disabled state
+      - onPressed callback
+
+   b) `secondary_button.dart`:
+      - Outlined style
+      - Hover effects
+
+   c) `icon_button_widget.dart`:
+      - Circular sa iconicom
+      - Tooltip
+
+2. INPUTS (`lib/shared/widgets/inputs/`):
+
+   a) `custom_text_field.dart`:
+      - Label, hint, prefix/suffix icons
+      - Validation error display
+      - Password visibility toggle
+      - Focus state animations
+
+   b) `date_picker_field.dart`:
+      - Read-only text field
+      - Calendar icon
+      - Opens date picker on tap
+
+   c) `dropdown_field.dart`:
+      - Custom styling
+      - Search functionality
+
+   INPUT FIELDS (Original):
+
+   a) `custom_text_field.dart`:
+      - Label, hint, error text
+      - Prefix/suffix icons
+      - Validation states
+      - Password visibility toggle option
+
+   b) `search_field_widget.dart`:
+      - Search icon prefix
+      - Clear button suffix
+      - onChanged debounce
+
+   c) `date_picker_field.dart`:
+      - Calendar icon
+      - Opens date picker na tap
+      - Display selected date
+
+3. CARDS (`lib/shared/widgets/cards/`):
+
+   a) `info_card.dart`:
+      - Icon, title, subtitle
+      - onTap action
+      - Loading skeleton
+
+   b) `stat_card.dart`:
+      - Number display
+      - Label, icon
+      - Trend indicator
+
+   CARDS (Original):
+
+   a) `property_card.dart`:
+      - Image carousel
+      - Title, location, price
+      - Favorite button
+      - onTap navigation
+
+   b) `booking_card.dart`:
+      - Booking info (dates, guest, property)
+      - Status badge
+      - Action buttons
+
+   c) `info_card.dart`:
+      - Generic card sa icon, title, description
+      - Custom background color
+
+4. LOADERS (`lib/shared/widgets/loaders/`):
+
+   a) `skeleton_loader.dart`:
+      - Shimmer effect
+      - Configurable shapes
+
+   b) `circular_loader.dart`:
+      - Brand color
+      - Sizes (small, medium, large)
+
+   LOADING STATES (Original) (`lib/shared/widgets/loading/`):
+
+   a) `shimmer_loading.dart`:
+      - Skeleton loaders za:
+        * Property card
+        * List items
+        * Text blocks
+
+   b) `circular_loader.dart`:
+      - Centered circular progress indicator
+      - Optional message text
+
+   c) `page_loader.dart`:
+      - Full-screen loader sa branding
+
+5. DIALOGS & BOTTOM SHEETS:
+
+   a) `confirmation_dialog.dart`:
+      - Title, message
+      - Cancel/Confirm buttons
+
+   b) `filter_bottom_sheet.dart`:
+      - Drag handle
+      - Scrollable content
+      - Apply/Reset buttons
+
+Svaki widget treba biti fully documented sa usage examples.
+
+6. EMPTY STATES (`lib/shared/widgets/empty_states/`):
+
+   a) `empty_state_widget.dart`:
+      - Icon, title, description
+      - Optional action button
+      - Customizable illustrations
+
+7. DIALOGS (`lib/shared/widgets/dialogs/`):
+
+   a) `confirmation_dialog.dart`:
+      - Title, message
+      - Confirm/Cancel buttons
+      - Async result (bool)
+
+   b) `error_dialog.dart`:
+      - Error icon, message
+      - "OK" button
+
+   c) `info_dialog.dart`:
+      - Custom icon, title, message
+
+8. BOTTOM SHEETS (`lib/shared/widgets/bottom_sheets/`):
+
+   a) `filter_bottom_sheet.dart`:
+      - Reusable filter UI
+      - Dynamic filter options
+      - Apply/Clear buttons
+
+   b) `guest_selector_sheet.dart`:
+      - Adults/Children counters
+      - +/- buttons
+      - "Done" button
+
+9. MISC WIDGETS (`lib/shared/widgets/`):
+
+   a) `rating_display.dart`:
+      - Star icons (filled/empty)
+      - Rating value text
+      - Review count
+
+   b) `status_badge.dart`:
+      - Colored badge
+      - Status text
+      - Variant: success, warning, error, info
+
+   c) `image_carousel.dart`:
+      - PageView sa images
+      - Dots indicator
+      - Tap to open full-screen gallery
+
+   d) `amenity_icon.dart`:
+      - Icon + label
+      - Grid layout helper
+
+10. IMPLEMENTATION NOTES:
+
+   - Sve widgete implementiraj sa:
+     * Proper null safety
+     * Theme integration (colors, typography)
+     * Responsive sizing
+     * Accessibility (semantic labels)
+   - Koristi const constructors gdje moguće
+   - Dodaj documentation comments
+   - Export sve preko barrel file: `lib/shared/widgets/widgets.dart`
+
+DELIVERABLES:
+- Kompletan shared widgets library
+- Sve kategorije implementirane
+- Theme integration
+- Documentation comments
+- Barrel export file
+- Example usage u README

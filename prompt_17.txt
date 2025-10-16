@@ -1,0 +1,632 @@
+PROMPT 17: Testing Strategy
+
+Kreiraj comprehensive testing setup:
+
+1. UNIT TESTS (`test/unit/`):
+
+   a) Model tests:
+      - fromJson/toJson correctness
+      - copyWith functionality
+      - Edge cases
+
+      Example:
+      ```dart
+      // test/unit/models/property_model_test.dart
+      void main() {
+        group('Property Model Tests', () {
+          test('fromJson should parse correctly', () {
+            final json = {
+              'id': '123',
+              'name': 'Villa Rab',
+              'location': 'Banjol',
+              'price_per_night': 100.0,
+            };
+
+            final property = Property.fromJson(json);
+
+            expect(property.id, '123');
+            expect(property.name, 'Villa Rab');
+            expect(property.location, 'Banjol');
+            expect(property.pricePerNight, 100.0);
+          });
+
+          test('toJson should serialize correctly', () {
+            final property = Property(
+              id: '123',
+              name: 'Villa Rab',
+              location: 'Banjol',
+              pricePerNight: 100.0,
+            );
+
+            final json = property.toJson();
+
+            expect(json['id'], '123');
+            expect(json['name'], 'Villa Rab');
+          });
+
+          test('copyWith should update fields correctly', () {
+            final property = Property(id: '123', name: 'Old Name');
+            final updated = property.copyWith(name: 'New Name');
+
+            expect(updated.name, 'New Name');
+            expect(updated.id, '123');
+          });
+        });
+      }
+      ```
+
+   b) Repository tests:
+      - Mock Supabase responses
+      - CRUD operations
+      - Error scenarios
+
+      Example:
+      ```dart
+      // test/unit/repositories/property_repository_test.dart
+      void main() {
+        late PropertyRepository repository;
+        late MockSupabaseClient mockClient;
+
+        setUp(() {
+          mockClient = MockSupabaseClient();
+          repository = PropertyRepositoryImpl(mockClient);
+        });
+
+        group('PropertyRepository Tests', () {
+          test('fetchProperties returns Success on valid response', () async {
+            when(() => mockClient.from('properties').select())
+              .thenAnswer((_) async => PostgrestResponse(
+                data: [{'id': '1', 'name': 'Villa'}],
+                status: 200,
+              ));
+
+            final result = await repository.fetchProperties();
+
+            expect(result, isA<Success<List<Property>>>());
+            expect(result.dataOrNull?.length, 1);
+          });
+
+          test('fetchProperties returns Failure on error', () async {
+            when(() => mockClient.from('properties').select())
+              .thenThrow(Exception('Network error'));
+
+            final result = await repository.fetchProperties();
+
+            expect(result, isA<Failure<List<Property>>>());
+            expect(result.exceptionOrNull, isA<DatabaseException>());
+          });
+        });
+      }
+      ```
+
+   c) Business logic tests:
+      - Validators
+      - Calculators (price, dates)
+      - Date utilities
+
+      Example:
+      ```dart
+      // test/unit/utils/validators_test.dart
+      void main() {
+        group('Email Validator', () {
+          test('should accept valid email', () {
+            expect(Validators.isValidEmail('test@example.com'), true);
+          });
+
+          test('should reject invalid email', () {
+            expect(Validators.isValidEmail('invalid-email'), false);
+          });
+        });
+
+        group('Booking Calculator', () {
+          test('should calculate total price correctly', () {
+            final checkIn = DateTime(2025, 1, 1);
+            final checkOut = DateTime(2025, 1, 5);
+            final pricePerNight = 100.0;
+
+            final total = BookingCalculator.calculateTotal(
+              checkIn: checkIn,
+              checkOut: checkOut,
+              pricePerNight: pricePerNight,
+            );
+
+            expect(total, 400.0); // 4 nights × 100
+          });
+        });
+      }
+      ```
+
+2. WIDGET TESTS (`test/widget/`):
+
+   a) Shared widgets:
+      - Button interactions
+      - Input validation displays
+      - Card rendering
+
+      Example:
+      ```dart
+      // test/widget/buttons/primary_button_test.dart
+      void main() {
+        testWidgets('PrimaryButton renders correctly', (tester) async {
+          bool pressed = false;
+
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: PrimaryButton(
+                  label: 'Click Me',
+                  onPressed: () => pressed = true,
+                ),
+              ),
+            ),
+          );
+
+          expect(find.text('Click Me'), findsOneWidget);
+
+          await tester.tap(find.byType(PrimaryButton));
+          expect(pressed, true);
+        });
+
+        testWidgets('PrimaryButton shows loading state', (tester) async {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: PrimaryButton(
+                  label: 'Submit',
+                  isLoading: true,
+                  onPressed: () {},
+                ),
+              ),
+            ),
+          );
+
+          expect(find.byType(CircularProgressIndicator), findsOneWidget);
+          expect(find.text('Submit'), findsNothing);
+        });
+      }
+      ```
+
+   b) Critical screens:
+      - SearchBar widget
+      - PropertyCard
+      - BookingCalendar day builder
+
+      Example:
+      ```dart
+      // test/widget/search_bar_widget_test.dart
+      void main() {
+        testWidgets('SearchBar renders all fields', (tester) async {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: SearchBarWidget(),
+              ),
+            ),
+          );
+
+          expect(find.text('Lokacija'), findsOneWidget);
+          expect(find.text('Dolazak - Odlazak'), findsOneWidget);
+          expect(find.text('Gosti'), findsOneWidget);
+        });
+
+        testWidgets('SearchBar opens date picker on tap', (tester) async {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: SearchBarWidget(),
+              ),
+            ),
+          );
+
+          await tester.tap(find.text('Dolazak - Odlazak'));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(DateRangePickerDialog), findsOneWidget);
+        });
+      }
+      ```
+
+3. INTEGRATION TESTS (`integration_test/`):
+
+   a) User flows:
+      - Complete booking process
+      - Property search to details
+      - Owner property creation
+
+   b) Auth flows:
+      - Login → Dashboard
+      - Logout logic
+
+   INTEGRATION TESTS (Original):
+
+   a) Authentication flow:
+      - Login → Home navigation
+      - Registration → Email verification
+      - Logout flow
+
+   b) Booking flow:
+      - Search → Property details → Booking → Payment
+      - End-to-end booking process
+
+   c) Owner dashboard:
+      - Add property → Add unit → View calendar
+
+   Example:
+   ```dart
+   // integration_test/booking_flow_test.dart
+   void main() {
+     IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+     testWidgets('Complete booking flow', (tester) async {
+       await tester.pumpWidget(MyApp());
+
+       // Search for property
+       await tester.tap(find.text('Search'));
+       await tester.pumpAndSettle();
+
+       // Select property
+       await tester.tap(find.byType(PropertyCard).first);
+       await tester.pumpAndSettle();
+
+       // Select dates
+       await tester.tap(find.text('Rezerviraj'));
+       await tester.pumpAndSettle();
+
+       // Fill guest info
+       await tester.enterText(find.byKey(Key('guest_name')), 'John Doe');
+       await tester.tap(find.text('Proceed to Payment'));
+       await tester.pumpAndSettle();
+
+       // Verify payment screen
+       expect(find.text('Payment'), findsOneWidget);
+     });
+   }
+   ```
+
+4. TEST UTILITIES (`test/helpers/`):
+
+   - Mock providers
+   - Fake repositories
+   - Test data builders
+   - Robot pattern for flows
+
+   Example:
+   ```dart
+   // test/helpers/test_data_builders.dart
+   class PropertyBuilder {
+     String _id = '1';
+     String _name = 'Test Villa';
+     double _price = 100.0;
+
+     PropertyBuilder withId(String id) {
+       _id = id;
+       return this;
+     }
+
+     PropertyBuilder withName(String name) {
+       _name = name;
+       return this;
+     }
+
+     PropertyBuilder withPrice(double price) {
+       _price = price;
+       return this;
+     }
+
+     Property build() {
+       return Property(
+         id: _id,
+         name: _name,
+         location: 'Rab',
+         pricePerNight: _price,
+       );
+     }
+   }
+
+   // Robot pattern for flows
+   class BookingFlowRobot {
+     final WidgetTester tester;
+
+     BookingFlowRobot(this.tester);
+
+     Future<void> searchForProperty(String location) async {
+       await tester.enterText(find.byKey(Key('location_field')), location);
+       await tester.tap(find.text('Search'));
+       await tester.pumpAndSettle();
+     }
+
+     Future<void> selectFirstProperty() async {
+       await tester.tap(find.byType(PropertyCard).first);
+       await tester.pumpAndSettle();
+     }
+
+     Future<void> completeBooking({
+       required String guestName,
+       required String email,
+     }) async {
+       await tester.enterText(find.byKey(Key('guest_name')), guestName);
+       await tester.enterText(find.byKey(Key('guest_email')), email);
+       await tester.tap(find.text('Proceed to Payment'));
+       await tester.pumpAndSettle();
+     }
+   }
+   ```
+
+5. SETUP FILES:
+
+   - test/flutter_test_config.dart
+   - test/pump_app.dart (wrapper sa providers)
+   - mocktail setup
+
+   Example:
+   ```dart
+   // test/flutter_test_config.dart
+   Future<void> testExecutable(FutureOr<void> Function() testMain) async {
+     setUpAll(() {
+       registerFallbackValues();
+       setupTestConfig();
+     });
+
+     tearDownAll(() {
+       teardownTestConfig();
+     });
+
+     await testMain();
+   }
+
+   // test/pump_app.dart
+   extension PumpApp on WidgetTester {
+     Future<void> pumpRabBookingApp({
+       List<Override>? overrides,
+       Widget? home,
+     }) async {
+       await pumpWidget(
+         ProviderScope(
+           overrides: overrides ?? [],
+           child: MaterialApp(
+             home: home ?? HomeScreen(),
+             theme: AppTheme.lightTheme,
+             darkTheme: AppTheme.darkTheme,
+           ),
+         ),
+       );
+       await pumpAndSettle();
+     }
+   }
+   ```
+
+6. CI/CD INTEGRATION:
+
+   GitHub Actions workflow za:
+   - Run all tests on PR
+   - Code coverage report
+   - Lint checks
+
+   `.github/workflows/test.yml`:
+   ```yaml
+   name: Run Tests
+
+   on:
+     pull_request:
+       branches: [main, develop]
+     push:
+       branches: [main, develop]
+
+   jobs:
+     test:
+       runs-on: ubuntu-latest
+
+       steps:
+         - uses: actions/checkout@v3
+
+         - name: Setup Flutter
+           uses: subosito/flutter-action@v2
+           with:
+             flutter-version: '3.24.0'
+             channel: 'stable'
+
+         - name: Get dependencies
+           run: flutter pub get
+
+         - name: Run code generation
+           run: flutter pub run build_runner build --delete-conflicting-outputs
+
+         - name: Analyze code
+           run: flutter analyze
+
+         - name: Run tests
+           run: flutter test --coverage
+
+         - name: Upload coverage to Codecov
+           uses: codecov/codecov-action@v3
+           with:
+             files: ./coverage/lcov.info
+
+         - name: Check code coverage
+           run: |
+             COVERAGE=$(lcov --summary coverage/lcov.info | grep lines | awk '{print $2}' | sed 's/%//')
+             if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+               echo "Coverage is below 70%: $COVERAGE%"
+               exit 1
+             fi
+   ```
+
+Napiši README sa komandama za pokretanje testova.
+
+   `test/README.md`:
+   ```markdown
+   # Testing Guide
+
+   ## Running Tests
+
+   ### All Tests
+   ```bash
+   flutter test
+   ```
+
+   ### Unit Tests Only
+   ```bash
+   flutter test test/unit/
+   ```
+
+   ### Widget Tests Only
+   ```bash
+   flutter test test/widget/
+   ```
+
+   ### Integration Tests
+   ```bash
+   flutter test integration_test/
+   ```
+
+   ### With Coverage
+   ```bash
+   flutter test --coverage
+   ```
+
+   ### View Coverage Report
+   ```bash
+   # Install lcov (macOS)
+   brew install lcov
+
+   # Generate HTML report
+   genhtml coverage/lcov.info -o coverage/html
+
+   # Open report
+   open coverage/html/index.html
+   ```
+
+   ## Test Structure
+
+   - `test/unit/` - Unit tests for models, repositories, business logic
+   - `test/widget/` - Widget tests for UI components
+   - `integration_test/` - End-to-end integration tests
+   - `test/helpers/` - Test utilities, mocks, builders
+   - `test/mocks.dart` - Mock class definitions
+
+   ## Writing Tests
+
+   ### Unit Test Example
+   ```dart
+   test('should calculate total price', () {
+     final result = calculateTotal(nights: 3, pricePerNight: 100);
+     expect(result, 300);
+   });
+   ```
+
+   ### Widget Test Example
+   ```dart
+   testWidgets('button shows loading state', (tester) async {
+     await tester.pumpWidget(MyApp());
+     await tester.tap(find.text('Submit'));
+     expect(find.byType(CircularProgressIndicator), findsOneWidget);
+   });
+   ```
+
+   ## Best Practices
+
+   - Always clean up resources in `tearDown()`
+   - Use test builders for complex objects
+   - Mock external dependencies (Supabase, APIs)
+   - Aim for 70%+ code coverage
+   - Use descriptive test names
+   - Group related tests together
+   ```
+
+7. MOCKING SETUP (Original):
+
+   `test/mocks.dart`:
+   ```dart
+   import 'package:mocktail/mocktail.dart';
+
+   class MockSupabaseClient extends Mock implements SupabaseClient {}
+   class MockPropertyRepository extends Mock implements PropertyRepository {}
+   class MockAuthRepository extends Mock implements AuthRepository {}
+   class MockPaymentService extends Mock implements PaymentService {}
+
+   // Register fallback values
+   void registerFallbackValues() {
+     registerFallbackValue(Property.empty());
+     registerFallbackValue(Booking.empty());
+   }
+   ```
+
+8. TEST HELPERS (Original):
+
+   `test/helpers/test_helpers.dart`:
+   ```dart
+   // Pump widget with providers
+   Future<void> pumpWithProviders(
+     WidgetTester tester,
+     Widget widget, {
+     List<Override>? overrides,
+   }) async {
+     await tester.pumpWidget(
+       ProviderScope(
+         overrides: overrides ?? [],
+         child: MaterialApp(home: widget),
+       ),
+     );
+   }
+
+   // Create mock property
+   Property createMockProperty({
+     String id = '1',
+     String name = 'Test Villa',
+     double price = 100.0,
+   }) {
+     return Property(
+       id: id,
+       name: name,
+       location: 'Rab',
+       pricePerNight: price,
+     );
+   }
+   ```
+
+9. GOLDEN TESTS (Visual Regression):
+
+   ```dart
+   // test/widget/golden/property_card_golden_test.dart
+   void main() {
+     testWidgets('PropertyCard golden test', (tester) async {
+       await tester.pumpWidget(
+         MaterialApp(
+           home: PropertyCard(property: mockProperty),
+         ),
+       );
+
+       await expectLater(
+         find.byType(PropertyCard),
+         matchesGoldenFile('goldens/property_card.png'),
+       );
+     });
+   }
+   ```
+
+10. TEST CONFIGURATION (Original):
+
+   `test/test_config.dart`:
+   ```dart
+   void setupTestConfig() {
+     // Mock Supabase initialization
+     // Setup test environment variables
+     // Initialize test database
+   }
+
+   void teardownTestConfig() {
+     // Cleanup test data
+     // Reset mocks
+   }
+   ```
+
+DELIVERABLES:
+- Unit tests za models, repositories, business logic
+- Widget tests za shared widgets i critical screens
+- Integration tests za key user flows
+- Mocking setup (mocktail)
+- Test helpers za common operations
+- Golden tests za visual regression
+- Test configuration setup
+- Minimum 70% code coverage
+- CI/CD integration (GitHub Actions)

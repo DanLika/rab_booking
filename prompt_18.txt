@@ -1,0 +1,1153 @@
+PROMPT 18: Performance Optimization
+
+Implementiraj performance best practices:
+
+1. IMAGE OPTIMIZATION:
+
+   a) `lib/core/services/image_service.dart`:
+      - Cache strategije sa cached_network_image
+      - Progressive loading
+      - Thumbnail generation
+      - Lazy loading u scroll views
+
+      Example:
+      ```dart
+      class ImageService {
+        static Widget optimizedImage({
+          required String imageUrl,
+          double? width,
+          double? height,
+          BoxFit fit = BoxFit.cover,
+        }) {
+          return CachedNetworkImage(
+            imageUrl: imageUrl,
+            width: width,
+            height: height,
+            fit: fit,
+            memCacheWidth: width?.toInt(),
+            memCacheHeight: height?.toInt(),
+            placeholder: (context, url) => Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(
+                width: width,
+                height: height,
+                color: Colors.white,
+              ),
+            ),
+            errorWidget: (context, url, error) => Icon(Icons.error),
+            fadeInDuration: Duration(milliseconds: 300),
+            fadeOutDuration: Duration(milliseconds: 300),
+          );
+        }
+
+        static String getThumbnailUrl(String originalUrl, {int width = 300}) {
+          // Generate thumbnail URL for Supabase Storage
+          // Example: append ?width=300 or use transform API
+          return '$originalUrl/transform?width=$width&quality=80';
+        }
+
+        static Future<void> precacheImages(
+          BuildContext context,
+          List<String> imageUrls,
+        ) async {
+          for (final url in imageUrls) {
+            await precacheImage(
+              CachedNetworkImageProvider(url),
+              context,
+            );
+          }
+        }
+      }
+      ```
+
+   b) Supabase Storage optimizacija:
+      - Resize images on upload
+      - WebP format conversion
+      - CDN caching headers
+
+      Example:
+      ```dart
+      class ImageUploadService {
+        static Future<String> uploadOptimizedImage(File imageFile) async {
+          // Resize image before upload
+          final resizedImage = await FlutterImageCompress.compressAndGetFile(
+            imageFile.absolute.path,
+            '${imageFile.path}_compressed.jpg',
+            quality: 85,
+            minWidth: 1920,
+            minHeight: 1080,
+          );
+
+          // Upload to Supabase Storage
+          final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+          final response = await Supabase.instance.client.storage
+              .from('property-images')
+              .upload(fileName, resizedImage!);
+
+          // Return public URL with CDN
+          return Supabase.instance.client.storage
+              .from('property-images')
+              .getPublicUrl(fileName);
+        }
+      }
+      ```
+
+2. LIST OPTIMIZATIONS:
+
+   a) Infinite scroll pagination:
+      - Load 20 items at a time
+      - Scroll controller za lazy load
+      - Skeleton loaders za smooth experience
+
+      Example:
+      ```dart
+      class PaginatedPropertyList extends ConsumerStatefulWidget {
+        @override
+        _PaginatedPropertyListState createState() => _PaginatedPropertyListState();
+      }
+
+      class _PaginatedPropertyListState extends ConsumerState<PaginatedPropertyList> {
+        final ScrollController _scrollController = ScrollController();
+        int _currentPage = 0;
+        final int _pageSize = 20;
+        bool _isLoadingMore = false;
+
+        @override
+        void initState() {
+          super.initState();
+          _scrollController.addListener(_onScroll);
+        }
+
+        void _onScroll() {
+          if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 200) {
+            _loadMore();
+          }
+        }
+
+        Future<void> _loadMore() async {
+          if (_isLoadingMore) return;
+
+          setState(() => _isLoadingMore = true);
+
+          await ref.read(propertiesProvider.notifier).loadMore(
+                page: _currentPage + 1,
+                pageSize: _pageSize,
+              );
+
+          setState(() {
+            _currentPage++;
+            _isLoadingMore = false;
+          });
+        }
+
+        @override
+        Widget build(BuildContext context) {
+          final properties = ref.watch(propertiesProvider);
+
+          return ListView.builder(
+            controller: _scrollController,
+            itemCount: properties.length + (_isLoadingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == properties.length) {
+                return Center(child: CircularProgressIndicator());
+              }
+              return PropertyCard(property: properties[index]);
+            },
+          );
+        }
+
+        @override
+        void dispose() {
+          _scrollController.dispose();
+          super.dispose();
+        }
+      }
+      ```
+
+   b) ListView builder optimizacije:
+      - Keep-alive mixins za complex items
+      - Item extent hints
+      - Deduplication logic
+
+      Example:
+      ```dart
+      class OptimizedPropertyList extends StatelessWidget {
+        final List<Property> properties;
+
+        const OptimizedPropertyList({required this.properties});
+
+        @override
+        Widget build(BuildContext context) {
+          return ListView.builder(
+            itemCount: properties.length,
+            // Optimize with item extent
+            itemExtent: 280.0, // Fixed height for better performance
+            // Add padding for better scrolling
+            padding: EdgeInsets.all(16),
+            // Cache extent for smoother scrolling
+            cacheExtent: 1000,
+            itemBuilder: (context, index) {
+              return _PropertyListItem(
+                property: properties[index],
+                key: ValueKey(properties[index].id), // Deduplication
+              );
+            },
+          );
+        }
+      }
+
+      class _PropertyListItem extends StatefulWidget {
+        final Property property;
+
+        const _PropertyListItem({Key? key, required this.property}) : super(key: key);
+
+        @override
+        _PropertyListItemState createState() => _PropertyListItemState();
+      }
+
+      class _PropertyListItemState extends State<_PropertyListItem>
+          with AutomaticKeepAliveClientMixin {
+        @override
+        bool get wantKeepAlive => true; // Keep state alive
+
+        @override
+        Widget build(BuildContext context) {
+          super.build(context); // Must call when using AutomaticKeepAliveClientMixin
+          return PropertyCard(property: widget.property);
+        }
+      }
+      ```
+
+3. STATE MANAGEMENT:
+
+   a) Riverpod optimizacije:
+      - Select specific fields sa .select()
+      - Family providers sa autodispose
+      - Cache providers gdje je potrebno
+
+      Example:
+      ```dart
+      // Select specific fields to avoid unnecessary rebuilds
+      @riverpod
+      class PropertyDetailsNotifier extends _$PropertyDetailsNotifier {
+        @override
+        Future<Property> build(String propertyId) async {
+          // Fetch property
+          final result = await ref.read(propertyRepositoryProvider)
+              .fetchPropertyById(propertyId);
+
+          return result.when(
+            success: (property) => property,
+            failure: (exception) => throw exception,
+          );
+        }
+      }
+
+      // In widget - only rebuild when name changes
+      Widget build(BuildContext context) {
+        final propertyName = ref.watch(
+          propertyDetailsNotifierProvider(propertyId)
+            .select((asyncValue) => asyncValue.value?.name),
+        );
+
+        return Text(propertyName ?? 'Loading...');
+      }
+
+      // Family provider with autoDispose
+      @riverpod
+      Future<List<Booking>> propertyBookings(
+        PropertyBookingsRef ref,
+        String propertyId,
+      ) async {
+        // Automatically disposed when no longer used
+        final result = await ref.read(bookingRepositoryProvider)
+            .fetchBookingsByProperty(propertyId);
+
+        return result.when(
+          success: (bookings) => bookings,
+          failure: (exception) => throw exception,
+        );
+      }
+
+      // Cache provider
+      @Riverpod(keepAlive: true) // Keep alive - don't autodispose
+      class AppConfigNotifier extends _$AppConfigNotifier {
+        @override
+        Future<AppConfig> build() async {
+          // Cached configuration
+          return await _loadAppConfig();
+        }
+      }
+      ```
+
+   b) Debouncing:
+      - Search input debouncing (500ms)
+      - Filter changes throttling
+
+      Example:
+      ```dart
+      class SearchNotifier extends StateNotifier<String> {
+        Timer? _debounceTimer;
+
+        SearchNotifier() : super('');
+
+        void updateSearchQuery(String query) {
+          _debounceTimer?.cancel();
+
+          _debounceTimer = Timer(Duration(milliseconds: 500), () {
+            state = query;
+            // Trigger search
+            _performSearch(query);
+          });
+        }
+
+        void _performSearch(String query) {
+          // Actual search logic
+        }
+
+        @override
+        void dispose() {
+          _debounceTimer?.cancel();
+          super.dispose();
+        }
+      }
+
+      // In widget
+      TextField(
+        onChanged: (value) {
+          ref.read(searchNotifierProvider.notifier).updateSearchQuery(value);
+        },
+      )
+
+      // Throttling for filters
+      class FilterNotifier extends StateNotifier<FilterState> {
+        Timer? _throttleTimer;
+        bool _isThrottling = false;
+
+        FilterNotifier() : super(FilterState.initial());
+
+        void updateFilter(FilterState newFilter) {
+          if (_isThrottling) return;
+
+          state = newFilter;
+          _isThrottling = true;
+
+          _throttleTimer = Timer(Duration(milliseconds: 300), () {
+            _isThrottling = false;
+          });
+        }
+
+        @override
+        void dispose() {
+          _throttleTimer?.cancel();
+          super.dispose();
+        }
+      }
+      ```
+
+4. DATABASE QUERIES:
+
+   a) Indexing strategy:
+      - Composite indexes za common queries
+      - Full-text search indexing
+
+      SQL Migration Example:
+      ```sql
+      -- supabase/migrations/004_performance_indexes.sql
+
+      -- Composite index za search queries
+      CREATE INDEX idx_properties_location_status
+      ON properties(location, status);
+
+      -- Index za date range queries
+      CREATE INDEX idx_bookings_dates
+      ON bookings(check_in, check_out);
+
+      -- Full-text search index
+      CREATE INDEX idx_properties_search
+      ON properties USING GIN (to_tsvector('english', name || ' ' || description));
+
+      -- Index za owner queries
+      CREATE INDEX idx_properties_owner_id
+      ON properties(owner_id);
+
+      -- Partial index za published properties only
+      CREATE INDEX idx_properties_published
+      ON properties(created_at)
+      WHERE status = 'published';
+
+      -- Query example using full-text search
+      SELECT * FROM properties
+      WHERE to_tsvector('english', name || ' ' || description)
+            @@ to_tsquery('english', 'villa & beach');
+      ```
+
+   b) Query optimizacije:
+      - Limit/offset pagination
+      - Select samo potrebna polja
+      - Join optimizations
+
+      Example:
+      ```dart
+      class OptimizedPropertyRepository {
+        // Efficient pagination
+        Future<Result<List<Property>>> fetchProperties({
+          int page = 0,
+          int pageSize = 20,
+          PropertyFilters? filters,
+        }) async {
+          try {
+            var query = Supabase.instance.client
+                .from('properties')
+                // Select only needed fields - avoid SELECT *
+                .select('id, name, location, price_per_night, images, status')
+                .eq('status', 'published');
+
+            // Apply filters
+            if (filters?.location != null) {
+              query = query.eq('location', filters!.location!);
+            }
+
+            if (filters?.priceRange != null) {
+              query = query
+                  .gte('price_per_night', filters!.priceRange!.min)
+                  .lte('price_per_night', filters.priceRange!.max);
+            }
+
+            // Pagination with limit/offset
+            final response = await query
+                .order('created_at', ascending: false)
+                .range(page * pageSize, (page + 1) * pageSize - 1);
+
+            final properties = (response as List)
+                .map((json) => Property.fromJson(json))
+                .toList();
+
+            return Success(properties);
+          } catch (e) {
+            return Failure(DatabaseException('Failed to fetch properties'));
+          }
+        }
+
+        // Optimized join query
+        Future<Result<Property>> fetchPropertyWithRelations(String id) async {
+          try {
+            // Fetch property with units and owner in ONE query
+            final response = await Supabase.instance.client
+                .from('properties')
+                .select('''
+                  id, name, description, location, price_per_night,
+                  units!inner(
+                    id, name, price_per_night, max_guests
+                  ),
+                  owner:owner_id(
+                    id, name, email
+                  )
+                ''')
+                .eq('id', id)
+                .single();
+
+            return Success(Property.fromJson(response));
+          } catch (e) {
+            return Failure(DatabaseException('Failed to fetch property'));
+          }
+        }
+
+        // Count query optimization
+        Future<int> countProperties({PropertyFilters? filters}) async {
+          var query = Supabase.instance.client
+              .from('properties')
+              .select('id', const FetchOptions(count: CountOption.exact, head: true))
+              .eq('status', 'published');
+
+          // Apply filters...
+
+          final response = await query;
+          return response.count ?? 0;
+        }
+      }
+      ```
+
+5. BUILD OPTIMIZATIONS:
+
+   a) Const constructors:
+      - Koristi const konstruktore gdje god je moguće
+      - Reducira rebuild overhead
+      - Extract constants u separate files
+
+      Example:
+      ```dart
+      // Good - const constructor
+      class PrimaryButton extends StatelessWidget {
+        final String label;
+        final VoidCallback onPressed;
+
+        const PrimaryButton({
+          Key? key,
+          required this.label,
+          required this.onPressed,
+        }) : super(key: key);
+
+        @override
+        Widget build(BuildContext context) {
+          return ElevatedButton(
+            onPressed: onPressed,
+            child: Text(label),
+          );
+        }
+      }
+
+      // Usage - const instances
+      const PrimaryButton(
+        label: 'Submit',
+        onPressed: _handleSubmit,
+      )
+
+      // Constants file
+      class AppConstants {
+        static const double cardBorderRadius = 12.0;
+        static const EdgeInsets defaultPadding = EdgeInsets.all(16);
+        static const Duration animationDuration = Duration(milliseconds: 300);
+      }
+      ```
+
+   b) RepaintBoundary optimizations:
+      - Wrap expensive widgets in RepaintBoundary
+      - Isolate animations
+      - Prevent unnecessary repaints
+
+      Example:
+      ```dart
+      class PropertyCard extends StatelessWidget {
+        final Property property;
+
+        const PropertyCard({Key? key, required this.property}) : super(key: key);
+
+        @override
+        Widget build(BuildContext context) {
+          return RepaintBoundary(
+            child: Card(
+              child: Column(
+                children: [
+                  // Image rarely changes - isolate it
+                  RepaintBoundary(
+                    child: _PropertyImage(imageUrl: property.imageUrl),
+                  ),
+                  _PropertyInfo(property: property),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      // Animated widget isolation
+      class AnimatedLikeButton extends StatefulWidget {
+        @override
+        _AnimatedLikeButtonState createState() => _AnimatedLikeButtonState();
+      }
+
+      class _AnimatedLikeButtonState extends State<AnimatedLikeButton>
+          with SingleTickerProviderStateMixin {
+        late AnimationController _controller;
+
+        @override
+        Widget build(BuildContext context) {
+          // Isolate animation - don't repaint parent
+          return RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: 1.0 + (_controller.value * 0.2),
+                  child: Icon(Icons.favorite),
+                );
+              },
+            ),
+          );
+        }
+      }
+      ```
+
+   c) Builder widgets za isolated rebuilds:
+      - Koristi Builder za minimiziranje rebuild scope
+      - Izoluj state changes
+
+      Example:
+      ```dart
+      class PropertyDetailsScreen extends ConsumerWidget {
+        final String propertyId;
+
+        const PropertyDetailsScreen({required this.propertyId});
+
+        @override
+        Widget build(BuildContext context, WidgetRef ref) {
+          final propertyAsync = ref.watch(propertyProvider(propertyId));
+
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Property Details'),
+              actions: [
+                // Only this builder rebuilds when favorite changes
+                Builder(
+                  builder: (context) {
+                    final isFavorite = ref.watch(
+                      favoriteProvider(propertyId),
+                    );
+                    return IconButton(
+                      icon: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                      ),
+                      onPressed: () => ref.read(favoriteProvider(propertyId).notifier)
+                          .toggle(),
+                    );
+                  },
+                ),
+              ],
+            ),
+            body: propertyAsync.when(
+              data: (property) => SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Image gallery - isolated
+                    _PropertyGallery(images: property.images),
+                    // Info section - isolated
+                    _PropertyInfo(property: property),
+                    // Reviews - isolated and only rebuilds on reviews change
+                    Builder(
+                      builder: (context) {
+                        final reviews = ref.watch(
+                          propertyReviewsProvider(propertyId),
+                        );
+                        return _PropertyReviews(reviews: reviews);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              loading: () => CircularProgressIndicator(),
+              error: (error, stack) => ErrorWidget(error: error),
+            ),
+          );
+        }
+      }
+      ```
+
+6. MONITORING:
+
+   Setup za performance monitoring i analizu:
+
+   a) Flutter DevTools guidelines:
+      - Profile mode testing
+      - Timeline view analysis
+      - Memory profiling
+      - Network inspector
+
+      Best Practices:
+      ```
+      # Run app in profile mode
+      flutter run --profile
+
+      # Monitoring checklist:
+      - Check for jank in Timeline (60fps = 16ms per frame)
+      - Identify expensive widgets in Widget Rebuild Stats
+      - Monitor memory leaks in Memory view
+      - Analyze network requests in Network tab
+      - Check for shader compilation jank
+      ```
+
+   b) Custom performance markers:
+      - Timeline events
+      - Custom performance tracking
+
+      Example:
+      ```dart
+      import 'dart:developer' as developer;
+
+      class PerformanceTracker {
+        static void startTrace(String name) {
+          developer.Timeline.startSync(name);
+        }
+
+        static void endTrace(String name) {
+          developer.Timeline.finishSync();
+        }
+
+        static Future<T> track<T>(
+          String name,
+          Future<T> Function() operation,
+        ) async {
+          developer.Timeline.startSync(name);
+          try {
+            final result = await operation();
+            return result;
+          } finally {
+            developer.Timeline.finishSync();
+          }
+        }
+
+        // Usage in repository
+        static Future<Result<List<Property>>> fetchProperties() async {
+          return await PerformanceTracker.track(
+            'fetchProperties',
+            () async {
+              final response = await Supabase.instance.client
+                  .from('properties')
+                  .select();
+              return Success(response.map((json) => Property.fromJson(json)).toList());
+            },
+          );
+        }
+
+        // Usage in widget
+        @override
+        Widget build(BuildContext context) {
+          developer.Timeline.startSync('PropertyCard.build');
+          final widget = Card(
+            child: Column(children: [
+              // ...
+            ]),
+          );
+          developer.Timeline.finishSync();
+          return widget;
+        }
+      }
+
+      // Log performance metrics
+      class PerformanceLogger {
+        static final Map<String, List<int>> _metrics = {};
+
+        static void logMetric(String name, int durationMs) {
+          _metrics[name] ??= [];
+          _metrics[name]!.add(durationMs);
+
+          // Log in debug mode
+          debugPrint('Performance [$name]: ${durationMs}ms');
+        }
+
+        static void logSummary() {
+          _metrics.forEach((name, durations) {
+            final avg = durations.reduce((a, b) => a + b) / durations.length;
+            final max = durations.reduce((a, b) => a > b ? a : b);
+            debugPrint('[$name] Avg: ${avg.toStringAsFixed(2)}ms, Max: ${max}ms');
+          });
+        }
+      }
+      ```
+
+   c) Build time tracking:
+      - Measure widget build times
+      - Identify bottlenecks
+
+      Example:
+      ```dart
+      class BuildTimeTracker extends StatefulWidget {
+        final Widget child;
+        final String label;
+
+        const BuildTimeTracker({
+          Key? key,
+          required this.child,
+          required this.label,
+        }) : super(key: key);
+
+        @override
+        _BuildTimeTrackerState createState() => _BuildTimeTrackerState();
+      }
+
+      class _BuildTimeTrackerState extends State<BuildTimeTracker> {
+        final Stopwatch _stopwatch = Stopwatch();
+
+        @override
+        void initState() {
+          super.initState();
+          _stopwatch.start();
+        }
+
+        @override
+        Widget build(BuildContext context) {
+          _stopwatch.reset();
+          _stopwatch.start();
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _stopwatch.stop();
+            debugPrint('${widget.label} build time: ${_stopwatch.elapsedMilliseconds}ms');
+          });
+
+          return widget.child;
+        }
+
+        @override
+        void dispose() {
+          _stopwatch.stop();
+          super.dispose();
+        }
+      }
+
+      // Usage
+      BuildTimeTracker(
+        label: 'PropertyListView',
+        child: ListView.builder(
+          itemCount: properties.length,
+          itemBuilder: (context, index) {
+            return PropertyCard(property: properties[index]);
+          },
+        ),
+      )
+
+      // Global performance observer
+      class AppPerformanceObserver extends WidgetsBindingObserver {
+        int _frameCount = 0;
+        DateTime? _lastLog;
+
+        @override
+        void didChangeMetrics() {
+          _frameCount++;
+
+          final now = DateTime.now();
+          if (_lastLog == null || now.difference(_lastLog!) > Duration(seconds: 5)) {
+            final fps = _frameCount / 5;
+            debugPrint('Average FPS: ${fps.toStringAsFixed(2)}');
+            _frameCount = 0;
+            _lastLog = now;
+          }
+        }
+      }
+
+      // Register in main.dart
+      void main() {
+        WidgetsBinding.instance.addObserver(AppPerformanceObserver());
+        runApp(MyApp());
+      }
+      ```
+
+7. PERFORMANCE CHECKLIST DOCUMENT:
+
+   Kreiraj `docs/PERFORMANCE_CHECKLIST.md`:
+   ```markdown
+   # Performance Checklist
+
+   ## Image Optimization
+   - [ ] All images use CachedNetworkImage
+   - [ ] Images are resized before upload (max 1920x1080)
+   - [ ] Thumbnails generated for list views
+   - [ ] WebP format used where possible
+   - [ ] Image compression quality 80-85%
+
+   ## List Performance
+   - [ ] ListView.builder used (not ListView with children)
+   - [ ] Infinite scroll pagination implemented (page size: 20)
+   - [ ] Skeleton loaders for better UX
+   - [ ] itemExtent specified where possible
+   - [ ] AutomaticKeepAliveClientMixin for complex items
+
+   ## State Management
+   - [ ] Riverpod providers use autoDispose
+   - [ ] .select() used for granular rebuilds
+   - [ ] Family providers for parameterized data
+   - [ ] Debouncing on search inputs (500ms)
+   - [ ] Throttling on filter changes (300ms)
+
+   ## Database Queries
+   - [ ] Indexes created for common queries
+   - [ ] SELECT specific columns (avoid SELECT *)
+   - [ ] Pagination with LIMIT/OFFSET
+   - [ ] Full-text search indexes for text search
+   - [ ] Composite indexes for multi-column filters
+
+   ## Widget Optimization
+   - [ ] Const constructors used everywhere possible
+   - [ ] RepaintBoundary on expensive widgets
+   - [ ] Builder widgets for isolated rebuilds
+   - [ ] Split large widgets into smaller components
+   - [ ] Avoid rebuilding entire screen
+
+   ## Build Performance
+   - [ ] Profile mode testing completed
+   - [ ] No jank in Timeline (maintain 60fps)
+   - [ ] Memory leaks checked and fixed
+   - [ ] Shader compilation jank addressed
+   - [ ] Build times tracked and optimized
+
+   ## Network
+   - [ ] API responses cached where appropriate
+   - [ ] TTL strategy implemented (5 minutes default)
+   - [ ] Error retry logic with exponential backoff
+   - [ ] Timeout handling (30 seconds max)
+
+   ## Monitoring
+   - [ ] Flutter DevTools profiling completed
+   - [ ] Performance markers added for critical paths
+   - [ ] Build time tracking on key screens
+   - [ ] Frame rate monitoring in production
+   - [ ] Memory usage tracked
+
+   ## Testing
+   - [ ] Performance tests for critical user flows
+   - [ ] Load testing with large datasets (100+ items)
+   - [ ] Network throttling tests (slow 3G)
+   - [ ] Memory leak tests
+   ```
+
+9. DATABASE QUERY OPTIMIZATION (Original):
+
+   a) Supabase query best practices:
+      - Select only needed columns
+      - Use indexes
+      - Limit results
+      - Pagination
+
+      Example:
+      ```dart
+      class OptimizedPropertyRepository {
+        Future<Result<List<Property>>> fetchProperties({
+          int page = 0,
+          int pageSize = 20,
+        }) async {
+          try {
+            final response = await Supabase.instance.client
+                .from('properties')
+                .select('id, name, location, price_per_night, images') // Only needed fields
+                .eq('status', 'published')
+                .order('created_at', ascending: false)
+                .range(page * pageSize, (page + 1) * pageSize - 1); // Pagination
+
+            final properties = (response as List)
+                .map((json) => Property.fromJson(json))
+                .toList();
+
+            return Success(properties);
+          } catch (e) {
+            return Failure(DatabaseException('Failed to fetch properties'));
+          }
+        }
+
+        Future<Result<Property>> fetchPropertyDetails(String id) async {
+          try {
+            // Fetch property with related data in one query
+            final response = await Supabase.instance.client
+                .from('properties')
+                .select('''
+                  *,
+                  units(*),
+                  owner:users(id, name, email)
+                ''')
+                .eq('id', id)
+                .single();
+
+            return Success(Property.fromJson(response));
+          } catch (e) {
+            return Failure(DatabaseException('Failed to fetch property'));
+          }
+        }
+      }
+      ```
+
+   b) Caching strategy:
+      - In-memory cache za frequently accessed data
+      - TTL (Time To Live) strategy
+      - Cache invalidation
+
+      Example:
+      ```dart
+      class CacheService<T> {
+        final Map<String, _CacheEntry<T>> _cache = {};
+        final Duration ttl;
+
+        CacheService({this.ttl = const Duration(minutes: 5)});
+
+        void set(String key, T value) {
+          _cache[key] = _CacheEntry(
+            value: value,
+            timestamp: DateTime.now(),
+          );
+        }
+
+        T? get(String key) {
+          final entry = _cache[key];
+          if (entry == null) return null;
+
+          final isExpired = DateTime.now().difference(entry.timestamp) > ttl;
+          if (isExpired) {
+            _cache.remove(key);
+            return null;
+          }
+
+          return entry.value;
+        }
+
+        void invalidate(String key) {
+          _cache.remove(key);
+        }
+
+        void clear() {
+          _cache.clear();
+        }
+      }
+
+      class _CacheEntry<T> {
+        final T value;
+        final DateTime timestamp;
+
+        _CacheEntry({required this.value, required this.timestamp});
+      }
+
+      // Usage in repository
+      @riverpod
+      class PropertiesNotifier extends _$PropertiesNotifier {
+        final _cache = CacheService<List<Property>>();
+
+        @override
+        Future<List<Property>> build() async {
+          // Check cache first
+          final cached = _cache.get('properties');
+          if (cached != null) return cached;
+
+          // Fetch from API
+          final result = await ref.read(propertyRepositoryProvider).fetchProperties();
+
+          return result.when(
+            success: (properties) {
+              _cache.set('properties', properties);
+              return properties;
+            },
+            failure: (exception) => throw exception,
+          );
+        }
+
+        void invalidateCache() {
+          _cache.clear();
+          ref.invalidateSelf();
+        }
+      }
+      ```
+
+10. STATE MANAGEMENT OPTIMIZATION (Original):
+
+   a) Riverpod best practices:
+      - Use family for parameterized providers
+      - AutoDispose for cleanup
+      - Select for granular rebuilds
+
+      Example:
+      ```dart
+      // Family for parameterized provider
+      @riverpod
+      Future<Property> property(PropertyRef ref, String id) async {
+        final result = await ref.read(propertyRepositoryProvider).fetchPropertyById(id);
+        return result.when(
+          success: (property) => property,
+          failure: (exception) => throw exception,
+        );
+      }
+
+      // AutoDispose for cleanup
+      @riverpod
+      class SearchNotifier extends _$SearchNotifier {
+        @override
+        List<Property> build() => [];
+
+        // Automatically disposed when no longer needed
+      }
+
+      // Select for granular rebuilds
+      Widget build(BuildContext context) {
+        // Only rebuild when property name changes
+        final propertyName = ref.watch(
+          propertyProvider(id).select((property) => property.name),
+        );
+
+        return Text(propertyName);
+      }
+      ```
+
+11. BUILD OPTIMIZATION (Original):
+
+   a) Const constructors:
+      - Use const wherever possible
+      - Extract constants to separate files
+
+   b) Widget rebuilds:
+      - Use RepaintBoundary for expensive widgets
+      - Split widgets to minimize rebuild scope
+
+      Example:
+      ```dart
+      class PropertyCard extends StatelessWidget {
+        final Property property;
+
+        const PropertyCard({Key? key, required this.property}) : super(key: key);
+
+        @override
+        Widget build(BuildContext context) {
+          return RepaintBoundary(
+            child: Card(
+              child: Column(
+                children: [
+                  _PropertyImage(imageUrl: property.imageUrl),
+                  _PropertyInfo(property: property),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      class _PropertyImage extends StatelessWidget {
+        final String imageUrl;
+
+        const _PropertyImage({required this.imageUrl});
+
+        @override
+        Widget build(BuildContext context) {
+          return RepaintBoundary(
+            child: ImageService.optimizedImage(
+              imageUrl: imageUrl,
+              width: double.infinity,
+              height: 200,
+            ),
+          );
+        }
+      }
+      ```
+
+12. PERFORMANCE MONITORING (Original):
+
+   ```dart
+   class PerformanceMonitor {
+     static void measureRenderTime(String label, VoidCallback callback) {
+       final stopwatch = Stopwatch()..start();
+       callback();
+       stopwatch.stop();
+       debugPrint('$label took ${stopwatch.elapsedMilliseconds}ms');
+     }
+
+     static Future<T> measureAsyncOperation<T>(
+       String label,
+       Future<T> Function() operation,
+     ) async {
+       final stopwatch = Stopwatch()..start();
+       final result = await operation();
+       stopwatch.stop();
+       debugPrint('$label took ${stopwatch.elapsedMilliseconds}ms');
+       return result;
+     }
+   }
+   ```
+
+DELIVERABLES:
+- Image optimization service (caching, compression, thumbnails)
+- Infinite scroll pagination implementation
+- ListView optimizations (keep-alive, item extent)
+- Database query optimizations (select, pagination, indexes)
+- Caching strategy (in-memory, TTL, invalidation)
+- Riverpod optimization patterns (select, family, autoDispose)
+- Debouncing & throttling implementations
+- Build optimizations (const constructors, RepaintBoundary, Builder widgets)
+- Performance monitoring utilities (PerformanceTracker, PerformanceLogger)
+- Build time tracking (BuildTimeTracker, AppPerformanceObserver)
+- Flutter DevTools profiling guidelines
+- Performance checklist document (docs/PERFORMANCE_CHECKLIST.md)
+- Documentation sa best practices

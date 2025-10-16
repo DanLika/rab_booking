@@ -1,0 +1,76 @@
+PROMPT 7: Home Screen - Hero Section sa Search Bar
+
+Kreiraj HomeScreen sa premium hero sekcijom (inspiracija: splvillas.com):
+
+1. `lib/features/home/presentation/screens/home_screen.dart`:
+
+   Struktura:
+   - Custom ScrollView sa SliverAppBar
+   - Hero section (600px height mobile, 800px desktop)
+   - Integrated search bar
+   - Featured properties grid
+
+2. HERO SECTION (`hero_section_widget.dart`):
+   - Background: Gradient overlay preko high-res slike
+   - Typography: Large, elegant font (80px desktop, 48px mobile)
+   - Tagline: Subtitle ispod naslova
+   - Parallax scroll effect
+
+3. SEARCH BAR COMPONENT (`search_bar_widget.dart`):
+
+   Premium dizajn sa tri polja:
+
+   a) LOCATION FIELD:
+      - Default: "Otok Rab"
+      - Expandable dropdown sa mjestima (Banjol, Barbat, Lopar...)
+      - Icon: location pin
+
+   b) DATES FIELD:
+      - Display: "Dolazak - Odlazak"
+      - onTap: Otvara showDateRangePicker
+      - Icons: calendar
+
+   c) GUESTS FIELD:
+      - Display: "2 odraslih, 1 dijete"
+      - onTap: Otvara custom bottom sheet sa +/- kontrolama
+      - Icon: person
+
+   d) SEARCH BUTTON:
+      - Full width na mobileu
+      - Fixed width na desktopu
+      - Accent color sa hover effect
+
+   Design:
+   - Responsive: Stacked na mobile, horizontal na desktop
+   - Floating na hero section sa shadow/blur backdrop
+   - Submit button sa animacijom
+
+4. RESPONSIVENESS:
+   - Mobile: Stack layout (polja vertikalno)
+   - Tablet/Desktop: Row layout (polja horizontalno)
+   - LayoutBuilder za breakpoints
+
+Implementiraj sa animacijama i state managementom (Riverpod).
+
+5. FEATURED PROPERTIES SECTION:
+   - Grid layout (1 col mobile, 2 col tablet, 3 col desktop)
+   - Property cards sa hover effects
+   - Shimmer loading state
+   - "View All" button
+
+6. STATE MANAGEMENT:
+   - Riverpod providers za search form state
+   - FeaturedPropertiesProvider (fetch top 6 properties)
+   - Search submission -> navigate sa queryParams
+
+7. RESPONSIVE BREAKPOINTS:
+   - Koristi LayoutBuilder
+   - Adaptive hero height, font sizes, grid columns
+
+DELIVERABLES:
+- Kompletna HomeScreen implementacija
+- Reusable search bar widget
+- Featured properties grid
+- Parallax scroll animacije
+- Responsive za sve device sizes
+- Shimmer loading states

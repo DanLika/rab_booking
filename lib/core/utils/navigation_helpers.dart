@@ -12,6 +12,9 @@ class Routes {
 
   // Protected routes (require authentication)
   static const booking = '/booking/:unitId';
+  static const bookingReview = '/booking/review';
+  static const payment = '/payment/:bookingId';
+  static const paymentSuccess = '/payment/success/:bookingId';
   static const paymentConfirm = '/payment/confirm';
   static const profile = '/profile';
   static const myBookings = '/bookings';
@@ -37,6 +40,11 @@ class RoutePaths {
       '/property/$propertyId';
 
   static String booking(String unitId) => '/booking/$unitId';
+
+  static String payment(String bookingId) => '/payment/$bookingId';
+
+  static String paymentSuccess(String bookingId) =>
+      '/payment/success/$bookingId';
 
   static String ownerProperty(String propertyId) =>
       '/owner/property/$propertyId';
@@ -91,6 +99,15 @@ extension NavigationExtensions on BuildContext {
       go(RoutePaths.propertyDetails(propertyId));
 
   void goToBooking(String unitId) => go(RoutePaths.booking(unitId));
+
+  void goToBookingReview() => go(Routes.bookingReview);
+
+  void goToPayment(String bookingId) => go(RoutePaths.payment(bookingId));
+
+  void goToPaymentSuccess(String bookingId) =>
+      go(RoutePaths.paymentSuccess(bookingId));
+
+  void goToForgotPassword() => go('/auth/forgot-password');
 
   // Auth navigation
   void goToLogin({String? redirectTo}) {

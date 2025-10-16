@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
@@ -21,6 +22,11 @@ void main() async {
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
+
+  // Initialize Stripe
+  Stripe.publishableKey = AppConfig.stripePublishableKey;
+  Stripe.merchantIdentifier = 'merchant.com.rab.booking';
+  await Stripe.instance.applySettings();
 
   runApp(
     const ProviderScope(

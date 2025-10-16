@@ -1,0 +1,47 @@
+import '../models/unit_model.dart';
+
+/// Abstract unit repository interface
+abstract class UnitRepository {
+  /// Get unit by ID
+  Future<UnitModel?> fetchUnitById(String id);
+
+  /// Get units by property ID
+  Future<List<UnitModel>> fetchUnitsByProperty(String propertyId);
+
+  /// Get available units by property ID and date range
+  Future<List<UnitModel>> fetchAvailableUnits({
+    required String propertyId,
+    required DateTime checkIn,
+    required DateTime checkOut,
+  });
+
+  /// Create new unit
+  Future<UnitModel> createUnit(UnitModel unit);
+
+  /// Update unit
+  Future<UnitModel> updateUnit(UnitModel unit);
+
+  /// Delete unit
+  Future<void> deleteUnit(String id);
+
+  /// Toggle unit availability
+  Future<UnitModel> toggleUnitAvailability(String id, bool isAvailable);
+
+  /// Update unit price
+  Future<UnitModel> updateUnitPrice(String id, double pricePerNight);
+
+  /// Check if unit is available for date range
+  Future<bool> isUnitAvailable({
+    required String unitId,
+    required DateTime checkIn,
+    required DateTime checkOut,
+  });
+
+  /// Get units filtered by criteria
+  Future<List<UnitModel>> fetchFilteredUnits({
+    String? propertyId,
+    double? maxPrice,
+    int? minGuests,
+    bool? availableOnly,
+  });
+}

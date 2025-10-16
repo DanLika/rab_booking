@@ -1,0 +1,322 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../shared/models/property_model.dart';
+import '../../property/domain/models/property_unit.dart';
+
+part 'owner_properties_repository.g.dart';
+
+/// Owner properties repository for CRUD operations
+class OwnerPropertiesRepository {
+  final SupabaseClient _supabase;
+
+  OwnerPropertiesRepository(this._supabase);
+
+  /// Get all properties for current owner
+  Future<List<PropertyModel>> getOwnerProperties(String ownerId) async {
+    try {
+      final response = await _supabase
+          .from('properties')
+          .select('*')
+          .eq('owner_id', ownerId)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => PropertyModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch properties: $e');
+    }
+  }
+
+  /// Create new property
+  Future<PropertyModel> createProperty({
+    required String ownerId,
+    required String name,
+    required String description,
+    required String location,
+    required double latitude,
+    required double longitude,
+    required List<String> amenities,
+    List<String>? images,
+    String? coverImage,
+  }) async {
+    try {
+      final response = await _supabase.from('properties').insert({
+        'owner_id': ownerId,
+        'name': name,
+        'description': description,
+        'location': location,
+        'latitude': latitude,
+        'longitude': longitude,
+        'amenities': amenities,
+        'images': images ?? [],
+        'cover_image': coverImage,
+        'is_active': true,
+        'rating': 0.0,
+        'review_count': 0,
+      }).select().single();
+
+      return PropertyModel.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('Failed to create property: $e');
+    }
+  }
+
+  /// Update property
+  Future<PropertyModel> updateProperty({
+    required String propertyId,
+    String? name,
+    String? description,
+    String? location,
+    double? latitude,
+    double? longitude,
+    List<String>? amenities,
+    List<String>? images,
+    String? coverImage,
+    bool? isActive,
+  }) async {
+    try {
+      final updates = <String, dynamic>{};
+      if (name != null) updates['name'] = name;
+      if (description != null) updates['description'] = description;
+      if (location != null) updates['location'] = location;
+      if (latitude != null) updates['latitude'] = latitude;
+      if (longitude != null) updates['longitude'] = longitude;
+      if (amenities != null) updates['amenities'] = amenities;
+      if (images != null) updates['images'] = images;
+      if (coverImage != null) updates['cover_image'] = coverImage;
+      if (isActive != null) updates['is_active'] = isActive;
+
+      if (updates.isNotEmpty) {
+        updates['updated_at'] = DateTime.now().toIso8601String();
+
+        final response = await _supabase
+            .from('properties')
+            .update(updates)
+            .eq('id', propertyId)
+            .select()
+            .single();
+
+        return PropertyModel.fromJson(response as Map<String, dynamic>);
+      }
+
+      throw Exception('No updates provided');
+    } catch (e) {
+      throw Exception('Failed to update property: $e');
+    }
+  }
+
+  /// Delete property
+  Future<void> deleteProperty(String propertyId) async {
+    try {
+      // Check if property has units
+      final unitsResponse = await _supabase
+          .from('units')
+          .select('id')
+          .eq('property_id', propertyId);
+
+      if ((unitsResponse as List).isNotEmpty) {
+        throw Exception(
+          'Cannot delete property with existing units. Please delete all units first.',
+        );
+      }
+
+      // Check if property has bookings
+      final bookingsResponse = await _supabase
+          .from('bookings')
+          .select('id')
+          .in_('unit_id', [propertyId]);
+
+      if ((bookingsResponse as List).isNotEmpty) {
+        throw Exception(
+          'Cannot delete property with existing bookings.',
+        );
+      }
+
+      await _supabase.from('properties').delete().eq('id', propertyId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Upload image to Supabase Storage
+  Future<String> uploadPropertyImage({
+    required String propertyId,
+    required String filePath,
+    required List<int> bytes,
+  }) async {
+    try {
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${filePath.split('/').last}';
+      final storagePath = 'property-images/$propertyId/$fileName';
+
+      await _supabase.storage.from('property-images').uploadBinary(
+            storagePath,
+            bytes,
+            fileOptions: const FileOptions(
+              contentType: 'image/jpeg',
+              upsert: false,
+            ),
+          );
+
+      final publicUrl = _supabase.storage
+          .from('property-images')
+          .getPublicUrl(storagePath);
+
+      return publicUrl;
+    } catch (e) {
+      throw Exception('Failed to upload image: $e');
+    }
+  }
+
+  /// Delete image from Supabase Storage
+  Future<void> deletePropertyImage(String imageUrl) async {
+    try {
+      // Extract storage path from public URL
+      final uri = Uri.parse(imageUrl);
+      final path = uri.path.split('/property-images/').last;
+
+      await _supabase.storage.from('property-images').remove([path]);
+    } catch (e) {
+      throw Exception('Failed to delete image: $e');
+    }
+  }
+
+  /// Get units for property
+  Future<List<PropertyUnit>> getPropertyUnits(String propertyId) async {
+    try {
+      final response = await _supabase
+          .from('units')
+          .select('*')
+          .eq('property_id', propertyId)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => PropertyUnit.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch units: $e');
+    }
+  }
+
+  /// Create unit
+  Future<PropertyUnit> createUnit({
+    required String propertyId,
+    required String name,
+    String? description,
+    required double pricePerNight,
+    required int maxGuests,
+    required int bedrooms,
+    required int bathrooms,
+    required double area,
+    List<String>? amenities,
+    List<String>? images,
+    String? coverImage,
+    int quantity = 1,
+    int minStayNights = 1,
+  }) async {
+    try {
+      final response = await _supabase.from('units').insert({
+        'property_id': propertyId,
+        'name': name,
+        'description': description,
+        'price_per_night': pricePerNight,
+        'max_guests': maxGuests,
+        'bedrooms': bedrooms,
+        'bathrooms': bathrooms,
+        'area': area,
+        'amenities': amenities ?? [],
+        'images': images ?? [],
+        'cover_image': coverImage,
+        'quantity': quantity,
+        'min_stay_nights': minStayNights,
+        'is_available': true,
+      }).select().single();
+
+      return PropertyUnit.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('Failed to create unit: $e');
+    }
+  }
+
+  /// Update unit
+  Future<PropertyUnit> updateUnit({
+    required String unitId,
+    String? name,
+    String? description,
+    double? pricePerNight,
+    int? maxGuests,
+    int? bedrooms,
+    int? bathrooms,
+    double? area,
+    List<String>? amenities,
+    List<String>? images,
+    String? coverImage,
+    int? quantity,
+    int? minStayNights,
+    bool? isAvailable,
+  }) async {
+    try {
+      final updates = <String, dynamic>{};
+      if (name != null) updates['name'] = name;
+      if (description != null) updates['description'] = description;
+      if (pricePerNight != null) updates['price_per_night'] = pricePerNight;
+      if (maxGuests != null) updates['max_guests'] = maxGuests;
+      if (bedrooms != null) updates['bedrooms'] = bedrooms;
+      if (bathrooms != null) updates['bathrooms'] = bathrooms;
+      if (area != null) updates['area'] = area;
+      if (amenities != null) updates['amenities'] = amenities;
+      if (images != null) updates['images'] = images;
+      if (coverImage != null) updates['cover_image'] = coverImage;
+      if (quantity != null) updates['quantity'] = quantity;
+      if (minStayNights != null) updates['min_stay_nights'] = minStayNights;
+      if (isAvailable != null) updates['is_available'] = isAvailable;
+
+      if (updates.isNotEmpty) {
+        updates['updated_at'] = DateTime.now().toIso8601String();
+
+        final response = await _supabase
+            .from('units')
+            .update(updates)
+            .eq('id', unitId)
+            .select()
+            .single();
+
+        return PropertyUnit.fromJson(response as Map<String, dynamic>);
+      }
+
+      throw Exception('No updates provided');
+    } catch (e) {
+      throw Exception('Failed to update unit: $e');
+    }
+  }
+
+  /// Delete unit
+  Future<void> deleteUnit(String unitId) async {
+    try {
+      // Check if unit has active bookings
+      final bookingsResponse = await _supabase
+          .from('bookings')
+          .select('id')
+          .eq('unit_id', unitId)
+          .in_('status', ['pending', 'confirmed']);
+
+      if ((bookingsResponse as List).isNotEmpty) {
+        throw Exception(
+          'Cannot delete unit with active bookings.',
+        );
+      }
+
+      await _supabase.from('units').delete().eq('id', unitId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+}
+
+/// Provider for owner properties repository
+@riverpod
+OwnerPropertiesRepository ownerPropertiesRepository(
+  OwnerPropertiesRepositoryRef ref,
+) {
+  return OwnerPropertiesRepository(Supabase.instance.client);
+}

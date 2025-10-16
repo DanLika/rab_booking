@@ -43,3 +43,20 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment variables - NEVER COMMIT!
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+.env.staging
+
+# Supabase
+supabase/.temp
+supabase/.branches
+
+# Secrets
+*.key
+*.keystore
+android/key.properties

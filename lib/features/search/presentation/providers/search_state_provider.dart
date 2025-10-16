@@ -84,7 +84,7 @@ class SearchFiltersNotifier extends _$SearchFiltersNotifier {
   }
 
   /// Load next page
-  void loadNextPage() {
+  Future<void> loadNextPage() async {
     state = state.copyWith(page: state.page + 1);
   }
 
@@ -105,22 +105,3 @@ class SearchFiltersNotifier extends _$SearchFiltersNotifier {
     // This will trigger SearchResultsProvider to refetch
   }
 }
-
-/// View mode for search results (grid vs list)
-@riverpod
-class SearchViewMode extends _$SearchViewMode {
-  @override
-  ViewMode build() {
-    return ViewMode.grid;
-  }
-
-  void toggle() {
-    state = state == ViewMode.grid ? ViewMode.list : ViewMode.grid;
-  }
-
-  void setMode(ViewMode mode) {
-    state = mode;
-  }
-}
-
-enum ViewMode { grid, list }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/property_unit.dart';
 import '../providers/property_details_provider.dart';
+import '../../../booking/presentation/widgets/booking_calendar_widget.dart';
 
 /// Booking widget with calendar and price calculation
 class BookingWidget extends ConsumerStatefulWidget {
@@ -26,7 +26,6 @@ class _BookingWidgetState extends ConsumerState<BookingWidget> {
   Widget build(BuildContext context) {
     final selectedDates = ref.watch(selectedDatesNotifierProvider);
     final selectedGuests = ref.watch(selectedGuestsNotifierProvider);
-    final blockedDatesAsync = ref.watch(blockedDatesProvider(widget.unit.id));
     final bookingCalcAsync = selectedDates.hasCompleteDates
         ? ref.watch(bookingCalculationProvider(widget.unit.id))
         : null;
@@ -58,10 +57,27 @@ class _BookingWidgetState extends ConsumerState<BookingWidget> {
           const SizedBox(height: 24),
 
           // Date selection
-          _buildDateSelector(selectedDates, blockedDatesAsync),
+          _buildDateSelector(selectedDates),
 
           if (_isCalendarExpanded)
-            _buildCalendar(selectedDates, blockedDatesAsync),
+            Container(
+              margin: const EdgeInsets.only(top: 16),
+              child: BookingCalendarWidget(
+                unitId: widget.unit.id,
+                minStayNights: widget.unit.minStayNights,
+                onDatesSelected: (checkIn, checkOut) {
+                  if (checkIn != null && checkOut != null) {
+                    ref
+                        .read(selectedDatesNotifierProvider.notifier)
+                        .setDates(checkIn, checkOut);
+                  } else if (checkIn != null) {
+                    ref
+                        .read(selectedDatesNotifierProvider.notifier)
+                        .setCheckIn(checkIn);
+                  }
+                },
+              ),
+            ),
 
           const SizedBox(height: 16),
 
@@ -137,10 +153,7 @@ class _BookingWidgetState extends ConsumerState<BookingWidget> {
     );
   }
 
-  Widget _buildDateSelector(
-    SelectedDates selectedDates,
-    AsyncValue<List<DateTime>> blockedDatesAsync,
-  ) {
+  Widget _buildDateSelector(SelectedDates selectedDates) {
     final dateFormat = DateFormat('dd.MM.yyyy');
 
     return InkWell(
@@ -216,91 +229,6 @@ class _BookingWidgetState extends ConsumerState<BookingWidget> {
         ),
       ),
     );
-  }
-
-  Widget _buildCalendar(
-    SelectedDates selectedDates,
-    AsyncValue<List<DateTime>> blockedDatesAsync,
-  ) {
-    return blockedDatesAsync.when(
-      data: (blockedDates) {
-        return Container(
-          margin: const EdgeInsets.only(top: 16),
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TableCalendar(
-            firstDay: DateTime.now(),
-            lastDay: DateTime.now().add(const Duration(days: 365)),
-            focusedDay: _focusedDay,
-            selectedDayPredicate: (day) {
-              if (selectedDates.checkIn != null &&
-                  selectedDates.checkOut != null) {
-                return day.isAfter(selectedDates.checkIn!.subtract(const Duration(days: 1))) &&
-                    day.isBefore(selectedDates.checkOut!);
-              }
-              return isSameDay(day, selectedDates.checkIn) ||
-                  isSameDay(day, selectedDates.checkOut);
-            },
-            onDaySelected: (selectedDay, focusedDay) {
-              if (_isDayBlocked(selectedDay, blockedDates)) {
-                return; // Don't select blocked days
-              }
-
-              setState(() {
-                _focusedDay = focusedDay;
-              });
-
-              final notifier = ref.read(selectedDatesNotifierProvider.notifier);
-
-              if (selectedDates.checkIn == null ||
-                  (selectedDates.checkIn != null && selectedDates.checkOut != null)) {
-                // Start new selection
-                notifier.setDates(selectedDay, null);
-              } else if (selectedDay.isBefore(selectedDates.checkIn!)) {
-                // Selected before check-in, make it new check-in
-                notifier.setDates(selectedDay, null);
-              } else {
-                // Set as check-out
-                notifier.setCheckOut(selectedDay);
-              }
-            },
-            enabledDayPredicate: (day) {
-              return !_isDayBlocked(day, blockedDates) &&
-                  day.isAfter(DateTime.now().subtract(const Duration(days: 1)));
-            },
-            calendarStyle: CalendarStyle(
-              todayDecoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.3),
-                shape: BoxShape.circle,
-              ),
-              selectedDecoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-                shape: BoxShape.circle,
-              ),
-              rangeHighlightColor: Theme.of(context).primaryColor.withOpacity(0.2),
-              disabledDecoration: BoxDecoration(
-                color: Colors.grey[200],
-                shape: BoxShape.circle,
-              ),
-            ),
-            headerStyle: const HeaderStyle(
-              formatButtonVisible: false,
-              titleCentered: true,
-            ),
-            calendarFormat: CalendarFormat.month,
-          ),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Text('Greška: $error'),
-    );
-  }
-
-  bool _isDayBlocked(DateTime day, List<DateTime> blockedDates) {
-    return blockedDates.any((blockedDate) => isSameDay(day, blockedDate));
   }
 
   Widget _buildGuestsSelector(int selectedGuests) {

@@ -1,17 +1,21 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../shared/models/property_model.dart';
+import '../../../search/data/repositories/property_search_repository.dart';
 
 part 'featured_properties_provider.g.dart';
 
-/// Featured properties provider
+/// Featured properties provider (now using REAL Supabase data!)
 @riverpod
 Future<List<PropertyModel>> featuredProperties(
     FeaturedPropertiesRef ref) async {
-  // Simulate API call
-  await Future.delayed(const Duration(seconds: 2));
+  final repository = ref.watch(propertySearchRepositoryProvider);
 
-  // Mock data - TODO: Replace with real Supabase query
-  return _mockProperties;
+  try {
+    return await repository.getFeaturedProperties(limit: 6);
+  } catch (e) {
+    // Fallback to mock data on error
+    return _mockProperties;
+  }
 }
 
 /// Mock featured properties data

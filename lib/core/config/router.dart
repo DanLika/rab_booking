@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/design_system_demo/design_system_demo_screen.dart';
 
 /// Application router configuration
 final appRouter = GoRouter(
@@ -11,6 +12,13 @@ final appRouter = GoRouter(
       path: '/',
       name: 'home',
       builder: (context, state) => const _PlaceholderScreen(title: 'Home'),
+    ),
+
+    // Design System Demo - for development/testing
+    GoRoute(
+      path: '/design-system-demo',
+      name: 'design-system-demo',
+      builder: (context, state) => const DesignSystemDemoScreen(),
     ),
 
     // Auth routes - placeholders
@@ -81,6 +89,8 @@ class _PlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isHome = title == 'Home';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -107,10 +117,17 @@ class _PlaceholderScreen extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => context.go('/'),
-              child: const Text('Go to Home'),
-            ),
+            if (isHome)
+              ElevatedButton.icon(
+                onPressed: () => context.go('/design-system-demo'),
+                icon: const Icon(Icons.palette),
+                label: const Text('View Design System'),
+              )
+            else
+              ElevatedButton(
+                onPressed: () => context.go('/'),
+                child: const Text('Go to Home'),
+              ),
           ],
         ),
       ),

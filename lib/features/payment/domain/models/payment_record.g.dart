@@ -18,10 +18,9 @@ _PaymentRecord _$PaymentRecordFromJson(Map<String, dynamic> json) =>
       receiptUrl: json['receiptUrl'] as String?,
       failureMessage: json['failureMessage'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt:
-          json['updatedAt'] == null
-              ? null
-              : DateTime.parse(json['updatedAt'] as String),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
     );
 
 Map<String, dynamic> _$PaymentRecordToJson(_PaymentRecord instance) =>

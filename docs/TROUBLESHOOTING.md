@@ -2,6 +2,24 @@
 
 Common issues and solutions for Rab Booking development.
 
+## ⚠️ Known Issues
+
+### Compilation Errors After Flutter 3.35.6 Upgrade
+
+**Status**: UNRESOLVED - App cannot run due to compilation errors.
+
+**Symptoms**: 86 compilation errors related to Riverpod code generation and Freezed classes after upgrading to Flutter 3.35.6.
+
+**Details**: See [COMPILATION_ISSUES.md](../COMPILATION_ISSUES.md) in project root for:
+- Full error analysis
+- Attempted solutions
+- Recommended fixes
+- Complete error log in `errors.txt`
+
+**Quick Summary**: Riverpod 3.x and Freezed appear incompatible with Flutter 3.35.6/Dart 3.9.2. Consider downgrading Riverpod to 2.x or Flutter to 3.29.0.
+
+---
+
 ## Build Issues
 
 ### Gradle Build Failed (Android)

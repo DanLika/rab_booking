@@ -11,6 +11,7 @@ part of 'search_filters.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$SearchFilters {
 
@@ -28,6 +29,8 @@ mixin _$SearchFilters {
 @pragma('vm:prefer-inline')
 $SearchFiltersCopyWith<SearchFilters> get copyWith => _$SearchFiltersCopyWithImpl<SearchFilters>(this as SearchFilters, _$identity);
 
+  /// Serializes this SearchFilters to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -35,7 +38,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchFilters&&(identical(other.location, location) || other.location == location)&&(identical(other.checkIn, checkIn) || other.checkIn == checkIn)&&(identical(other.checkOut, checkOut) || other.checkOut == checkOut)&&(identical(other.guests, guests) || other.guests == guests)&&(identical(other.minPrice, minPrice) || other.minPrice == minPrice)&&(identical(other.maxPrice, maxPrice) || other.maxPrice == maxPrice)&&const DeepCollectionEquality().equals(other.propertyTypes, propertyTypes)&&const DeepCollectionEquality().equals(other.amenities, amenities)&&(identical(other.minBedrooms, minBedrooms) || other.minBedrooms == minBedrooms)&&(identical(other.minBathrooms, minBathrooms) || other.minBathrooms == minBathrooms)&&(identical(other.sortBy, sortBy) || other.sortBy == sortBy)&&(identical(other.page, page) || other.page == page)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,location,checkIn,checkOut,guests,minPrice,maxPrice,const DeepCollectionEquality().hash(propertyTypes),const DeepCollectionEquality().hash(amenities),minBedrooms,minBathrooms,sortBy,page,pageSize);
 
@@ -222,11 +225,11 @@ return $default(_that.location,_that.checkIn,_that.checkOut,_that.guests,_that.m
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _SearchFilters extends SearchFilters {
   const _SearchFilters({this.location, this.checkIn, this.checkOut, this.guests = 2, this.minPrice, this.maxPrice, final  List<PropertyType> propertyTypes = const [], final  List<String> amenities = const [], this.minBedrooms, this.minBathrooms, this.sortBy = SortBy.recommended, this.page = 0, this.pageSize = 20}): _propertyTypes = propertyTypes,_amenities = amenities,super._();
-  
+  factory _SearchFilters.fromJson(Map<String, dynamic> json) => _$SearchFiltersFromJson(json);
 
 // Location & dates (from search bar)
 @override final  String? location;
@@ -269,14 +272,17 @@ class _SearchFilters extends SearchFilters {
 @pragma('vm:prefer-inline')
 _$SearchFiltersCopyWith<_SearchFilters> get copyWith => __$SearchFiltersCopyWithImpl<_SearchFilters>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$SearchFiltersToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchFilters&&(identical(other.location, location) || other.location == location)&&(identical(other.checkIn, checkIn) || other.checkIn == checkIn)&&(identical(other.checkOut, checkOut) || other.checkOut == checkOut)&&(identical(other.guests, guests) || other.guests == guests)&&(identical(other.minPrice, minPrice) || other.minPrice == minPrice)&&(identical(other.maxPrice, maxPrice) || other.maxPrice == maxPrice)&&const DeepCollectionEquality().equals(other._propertyTypes, _propertyTypes)&&const DeepCollectionEquality().equals(other._amenities, _amenities)&&(identical(other.minBedrooms, minBedrooms) || other.minBedrooms == minBedrooms)&&(identical(other.minBathrooms, minBathrooms) || other.minBathrooms == minBathrooms)&&(identical(other.sortBy, sortBy) || other.sortBy == sortBy)&&(identical(other.page, page) || other.page == page)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,location,checkIn,checkOut,guests,minPrice,maxPrice,const DeepCollectionEquality().hash(_propertyTypes),const DeepCollectionEquality().hash(_amenities),minBedrooms,minBathrooms,sortBy,page,pageSize);
 

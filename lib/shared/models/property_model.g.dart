@@ -29,10 +29,9 @@ _PropertyModel _$PropertyModelFromJson(Map<String, dynamic> json) =>
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt:
-          json['updatedAt'] == null
-              ? null
-              : DateTime.parse(json['updatedAt'] as String),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
       isActive: json['isActive'] as bool? ?? true,
     );
 
@@ -45,8 +44,9 @@ Map<String, dynamic> _$PropertyModelToJson(_PropertyModel instance) =>
       'location': instance.location,
       'latitude': instance.latitude,
       'longitude': instance.longitude,
-      'amenities':
-          instance.amenities.map((e) => _$PropertyAmenityEnumMap[e]!).toList(),
+      'amenities': instance.amenities
+          .map((e) => _$PropertyAmenityEnumMap[e]!)
+          .toList(),
       'images': instance.images,
       'coverImage': instance.coverImage,
       'rating': instance.rating,

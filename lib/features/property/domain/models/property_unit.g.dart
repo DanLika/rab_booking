@@ -28,14 +28,12 @@ _PropertyUnit _$PropertyUnitFromJson(
   quantity: (json['quantity'] as num?)?.toInt() ?? 1,
   minStayNights: (json['minStayNights'] as num?)?.toInt() ?? 1,
   isAvailable: json['isAvailable'] as bool? ?? true,
-  createdAt:
-      json['createdAt'] == null
-          ? null
-          : DateTime.parse(json['createdAt'] as String),
-  updatedAt:
-      json['updatedAt'] == null
-          ? null
-          : DateTime.parse(json['updatedAt'] as String),
+  createdAt: json['createdAt'] == null
+      ? null
+      : DateTime.parse(json['createdAt'] as String),
+  updatedAt: json['updatedAt'] == null
+      ? null
+      : DateTime.parse(json['updatedAt'] as String),
 );
 
 Map<String, dynamic> _$PropertyUnitToJson(_PropertyUnit instance) =>

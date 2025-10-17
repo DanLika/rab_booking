@@ -12,7 +12,10 @@
       "Bash(flutter doctor:*)",
       "Bash(flutter upgrade:*)",
       "Bash(flutter pub:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(flutter run:*)",
+      "Bash(flutter clean:*)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []

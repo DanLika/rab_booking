@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'search_filters.freezed.dart';
+part 'search_filters.g.dart';
 
 /// Search filters model
 @freezed
@@ -35,6 +36,9 @@ class SearchFilters with _$SearchFilters {
   }) = _SearchFilters;
 
   const SearchFilters._();
+
+  factory SearchFilters.fromJson(Map<String, dynamic> json) =>
+      _$SearchFiltersFromJson(json);
 
   /// Check if any filters are active (excluding default search params)
   bool get hasActiveFilters {

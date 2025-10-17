@@ -20,15 +20,13 @@ _BookingModel _$BookingModelFromJson(Map<String, dynamic> json) =>
       notes: json['notes'] as String?,
       paymentIntentId: json['paymentIntentId'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt:
-          json['updatedAt'] == null
-              ? null
-              : DateTime.parse(json['updatedAt'] as String),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
       cancellationReason: json['cancellationReason'] as String?,
-      cancelledAt:
-          json['cancelledAt'] == null
-              ? null
-              : DateTime.parse(json['cancelledAt'] as String),
+      cancelledAt: json['cancelledAt'] == null
+          ? null
+          : DateTime.parse(json['cancelledAt'] as String),
     );
 
 Map<String, dynamic> _$BookingModelToJson(_BookingModel instance) =>

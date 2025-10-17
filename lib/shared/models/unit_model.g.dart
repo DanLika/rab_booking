@@ -22,10 +22,9 @@ _UnitModel _$UnitModelFromJson(Map<String, dynamic> json) => _UnitModel(
   isAvailable: json['isAvailable'] as bool? ?? true,
   minStayNights: (json['minStayNights'] as num?)?.toInt() ?? 1,
   createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt:
-      json['updatedAt'] == null
-          ? null
-          : DateTime.parse(json['updatedAt'] as String),
+  updatedAt: json['updatedAt'] == null
+      ? null
+      : DateTime.parse(json['updatedAt'] as String),
 );
 
 Map<String, dynamic> _$UnitModelToJson(_UnitModel instance) =>

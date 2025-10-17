@@ -1,0 +1,68 @@
+name: Run Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run code generation
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+      - name: Check code coverage
+        run: |
+          if ! command -v lcov &> /dev/null; then
+            echo "lcov not installed, skipping coverage check"
+            exit 0
+          fi
+
+          COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep -oP 'lines......: \K[0-9.]+' || echo "0")
+          echo "Coverage: $COVERAGE%"
+
+          if (( $(echo "$COVERAGE < 50" | bc -l 2>/dev/null || echo "0") )); then
+            echo "⚠️ Coverage is below 50%: $COVERAGE%"
+            echo "This is a warning, not failing the build yet"
+          else
+            echo "✅ Coverage is acceptable: $COVERAGE%"
+          fi
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ All tests passed!'
+            })

@@ -11,7 +11,8 @@
       "Bash(flutter --version:*)",
       "Bash(flutter doctor:*)",
       "Bash(flutter upgrade:*)",
-      "Bash(flutter pub:*)"
+      "Bash(flutter pub:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

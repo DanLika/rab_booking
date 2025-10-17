@@ -10,6 +10,8 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/search/presentation/screens/search_results_screen.dart';
 import '../../features/property/presentation/screens/property_details_screen.dart';
 import '../../features/booking/presentation/screens/booking_screen.dart';
+import '../../features/booking/presentation/screens/user_bookings_screen.dart';
+import '../../features/booking/presentation/screens/booking_detail_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/owner/presentation/screens/owner_dashboard_screen.dart';
@@ -25,11 +27,18 @@ import '../../features/design_system_demo/design_system_demo_screen.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateNotifierProvider);
 
+  // Create a stream controller to listen to auth state changes
+  final streamController = StreamController<AuthState>();
+  ref.listen(authStateNotifierProvider, (previous, next) {
+    streamController.add(next);
+  });
+  ref.onDispose(() => streamController.close());
+
   return GoRouter(
     initialLocation: Routes.home,
     debugLogDiagnostics: true,
     refreshListenable: GoRouterRefreshStream(
-      ref.read(authStateNotifierProvider.notifier).stream,
+      streamController.stream,
     ),
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
@@ -49,6 +58,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Protected routes - require authentication
       final protectedRoutes = [
         '/booking/',
+        '/bookings/',
         Routes.paymentConfirm,
         Routes.profile,
         Routes.myBookings,
@@ -145,7 +155,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'myBookings',
             pageBuilder: (context, state) => CustomTransitionPage(
               key: state.pageKey,
-              child: const MyBookingsScreen(),
+              child: const UserBookingsScreen(),
               transitionsBuilder: _fadeTransition,
             ),
           ),
@@ -184,6 +194,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           return CustomTransitionPage(
             key: state.pageKey,
             child: BookingScreen(unitId: unitId),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+
+      // Booking detail
+      GoRoute(
+        path: '/bookings/:id',
+        name: 'bookingDetail',
+        pageBuilder: (context, state) {
+          final bookingId = state.pathParameters['id']!;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: BookingDetailScreen(bookingId: bookingId),
             transitionsBuilder: _slideTransition,
           );
         },

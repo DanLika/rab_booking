@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:gotrue/gotrue.dart' as gotrue;
 import '../../data/auth_repository.dart';
 
 part 'auth_notifier.g.dart';
@@ -46,7 +47,7 @@ class AuthState {
 /// Auth notifier
 @riverpod
 class AuthNotifier extends _$AuthNotifier {
-  StreamSubscription<AuthState>? _authSubscription;
+  StreamSubscription<gotrue.AuthState>? _authSubscription;
 
   @override
   AuthState build() {
@@ -71,7 +72,7 @@ class AuthNotifier extends _$AuthNotifier {
   void _listenToAuthChanges() {
     final repository = ref.read(authRepositoryProvider);
 
-    _authSubscription = repository.onAuthStateChange().listen((authState) {
+    _authSubscription = repository.onAuthStateChange().listen((gotrue.AuthState authState) {
       final user = authState.session?.user;
 
       if (user != null) {

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/models/property_model.dart';
@@ -125,7 +126,7 @@ class OwnerPropertiesRepository {
       final bookingsResponse = await _supabase
           .from('bookings')
           .select('id')
-          .in_('unit_id', [propertyId]);
+          .inFilter('unit_id', [propertyId]);
 
       if ((bookingsResponse as List).isNotEmpty) {
         throw Exception(
@@ -151,7 +152,7 @@ class OwnerPropertiesRepository {
 
       await _supabase.storage.from('property-images').uploadBinary(
             storagePath,
-            bytes,
+            Uint8List.fromList(bytes),
             fileOptions: const FileOptions(
               contentType: 'image/jpeg',
               upsert: false,
@@ -298,7 +299,7 @@ class OwnerPropertiesRepository {
           .from('bookings')
           .select('id')
           .eq('unit_id', unitId)
-          .in_('status', ['pending', 'confirmed']);
+          .inFilter('status', ['pending', 'confirmed']);
 
       if ((bookingsResponse as List).isNotEmpty) {
         throw Exception(

@@ -6,8 +6,8 @@ part of 'payment_record.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$PaymentRecordImpl _$$PaymentRecordImplFromJson(Map<String, dynamic> json) =>
-    _$PaymentRecordImpl(
+_PaymentRecord _$PaymentRecordFromJson(Map<String, dynamic> json) =>
+    _PaymentRecord(
       id: json['id'] as String,
       bookingId: json['bookingId'] as String,
       amount: (json['amount'] as num).toInt(),
@@ -24,7 +24,7 @@ _$PaymentRecordImpl _$$PaymentRecordImplFromJson(Map<String, dynamic> json) =>
               : DateTime.parse(json['updatedAt'] as String),
     );
 
-Map<String, dynamic> _$$PaymentRecordImplToJson(_$PaymentRecordImpl instance) =>
+Map<String, dynamic> _$PaymentRecordToJson(_PaymentRecord instance) =>
     <String, dynamic>{
       'id': instance.id,
       'bookingId': instance.bookingId,

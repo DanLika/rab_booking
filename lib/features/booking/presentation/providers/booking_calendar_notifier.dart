@@ -143,7 +143,7 @@ class BookingCalendarNotifier extends _$BookingCalendarNotifier {
           .from('bookings')
           .select('check_in, check_out')
           .eq('unit_id', unitId)
-          .in_('status', ['confirmed', 'pending']);
+          .inFilter('status', ['confirmed', 'pending']);
 
       final bookedRanges = (response as List).map((booking) {
         return DateRange(

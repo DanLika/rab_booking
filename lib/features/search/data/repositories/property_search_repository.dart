@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../shared/models/property_model.dart';
-import '../../domain/models/search_filters.dart';
+import '../../domain/models/search_filters.dart' as search;
 
 part 'property_search_repository.g.dart';
 
@@ -12,10 +12,10 @@ class PropertySearchRepository {
   PropertySearchRepository(this._supabase);
 
   /// Search properties with filters
-  Future<List<PropertyModel>> searchProperties(SearchFilters filters) async {
+  Future<List<PropertyModel>> searchProperties(search.SearchFilters filters) async {
     try {
       // Start with base query
-      var query = _supabase
+      dynamic query = _supabase
           .from('properties')
           .select('*')
           .eq('is_active', true);
@@ -32,19 +32,19 @@ class PropertySearchRepository {
 
       // Apply sorting
       switch (filters.sortBy) {
-        case SortBy.priceLowToHigh:
+        case search.SortBy.priceLowToHigh:
           // Will sort after fetching (needs unit prices)
           break;
-        case SortBy.priceHighToLow:
+        case search.SortBy.priceHighToLow:
           // Will sort after fetching (needs unit prices)
           break;
-        case SortBy.rating:
+        case search.SortBy.rating:
           query = query.order('rating', ascending: false);
           break;
-        case SortBy.newest:
+        case search.SortBy.newest:
           query = query.order('created_at', ascending: false);
           break;
-        case SortBy.recommended:
+        case search.SortBy.recommended:
           // Default sorting: rating desc, then review_count desc
           query = query.order('rating', ascending: false);
           break;
@@ -83,16 +83,16 @@ class PropertySearchRepository {
 
           return filters.propertyTypes.any((type) {
             switch (type) {
-              case PropertyType.villa:
+              case search.PropertyType.villa:
                 return nameLower.contains('villa');
-              case PropertyType.apartment:
+              case search.PropertyType.apartment:
                 return nameLower.contains('apartment') ||
                     nameLower.contains('apartman');
-              case PropertyType.house:
+              case search.PropertyType.house:
                 return nameLower.contains('house') ||
                     nameLower.contains('kuća') ||
                     nameLower.contains('kuca');
-              case PropertyType.studio:
+              case search.PropertyType.studio:
                 return nameLower.contains('studio');
             }
           });

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../features/search/domain/models/search_filters.dart';
+import '../../../../core/constants/enums.dart';
 
 /// Property info section with title, location, rating, and quick facts
 class PropertyInfoSection extends StatefulWidget {
@@ -227,40 +228,39 @@ class _QuickFactItem extends StatelessWidget {
 class _AmenityItem extends StatelessWidget {
   const _AmenityItem({required this.amenity});
 
-  final String amenity;
+  final PropertyAmenity amenity;
 
-  IconData _getAmenityIcon(String amenity) {
-    final lower = amenity.toLowerCase();
-    if (lower.contains('wifi')) return Icons.wifi;
-    if (lower.contains('parking')) return Icons.local_parking;
-    if (lower.contains('pool')) return Icons.pool;
-    if (lower.contains('air')) return Icons.ac_unit;
-    if (lower.contains('kitchen')) return Icons.kitchen;
-    if (lower.contains('view')) return Icons.visibility;
-    if (lower.contains('balcony')) return Icons.balcony;
-    if (lower.contains('bbq')) return Icons.outdoor_grill;
-    if (lower.contains('pet')) return Icons.pets;
-    if (lower.contains('beach')) return Icons.beach_access;
-    if (lower.contains('tv')) return Icons.tv;
-    if (lower.contains('washer')) return Icons.local_laundry_service;
-    return Icons.check_circle_outline;
-  }
-
-  String _getAmenityLabel(String amenity) {
-    final lower = amenity.toLowerCase();
-    if (lower.contains('wifi')) return 'WiFi';
-    if (lower.contains('parking')) return 'Parking';
-    if (lower.contains('pool')) return 'Bazen';
-    if (lower.contains('air')) return 'Klima';
-    if (lower.contains('kitchen')) return 'Kuhinja';
-    if (lower.contains('view')) return 'Pogled na more';
-    if (lower.contains('balcony')) return 'Balkon';
-    if (lower.contains('bbq')) return 'Roštilj';
-    if (lower.contains('pet')) return 'Kućni ljubimci';
-    if (lower.contains('beach')) return 'Pristup plaži';
-    if (lower.contains('tv')) return 'TV';
-    if (lower.contains('washer')) return 'Perilica';
-    return amenity;
+  IconData _getAmenityIcon(PropertyAmenity amenity) {
+    switch (amenity) {
+      case PropertyAmenity.wifi:
+        return Icons.wifi;
+      case PropertyAmenity.parking:
+        return Icons.local_parking;
+      case PropertyAmenity.pool:
+        return Icons.pool;
+      case PropertyAmenity.airConditioning:
+        return Icons.ac_unit;
+      case PropertyAmenity.kitchen:
+        return Icons.kitchen;
+      case PropertyAmenity.seaView:
+        return Icons.visibility;
+      case PropertyAmenity.balcony:
+        return Icons.balcony;
+      case PropertyAmenity.bbq:
+        return Icons.outdoor_grill;
+      case PropertyAmenity.petFriendly:
+        return Icons.pets;
+      case PropertyAmenity.beachAccess:
+        return Icons.beach_access;
+      case PropertyAmenity.tv:
+        return Icons.tv;
+      case PropertyAmenity.washingMachine:
+        return Icons.local_laundry_service;
+      case PropertyAmenity.fireplace:
+        return Icons.fireplace;
+      default:
+        return Icons.check_circle_outline;
+    }
   }
 
   @override
@@ -275,7 +275,7 @@ class _AmenityItem extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Text(
-            _getAmenityLabel(amenity),
+            amenity.displayName,
             style: Theme.of(context).textTheme.bodyMedium,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/constants/enums.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../search/data/repositories/property_search_repository.dart';
 
@@ -30,12 +31,12 @@ final _mockProperties = [
     latitude: 44.7604,
     longitude: 14.7606,
     amenities: const [
-      'wifi',
-      'parking',
-      'pool',
-      'air_conditioning',
-      'kitchen',
-      'sea_view'
+      PropertyAmenity.wifi,
+      PropertyAmenity.parking,
+      PropertyAmenity.pool,
+      PropertyAmenity.airConditioning,
+      PropertyAmenity.kitchen,
+      PropertyAmenity.seaView
     ],
     images: const [
       'https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=800',
@@ -59,11 +60,11 @@ final _mockProperties = [
     latitude: 44.8285,
     longitude: 14.7373,
     amenities: const [
-      'wifi',
-      'parking',
-      'air_conditioning',
-      'kitchen',
-      'beach_access'
+      PropertyAmenity.wifi,
+      PropertyAmenity.parking,
+      PropertyAmenity.airConditioning,
+      PropertyAmenity.kitchen,
+      PropertyAmenity.beachAccess
     ],
     images: const [
       'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800',
@@ -86,11 +87,11 @@ final _mockProperties = [
     latitude: 44.7889,
     longitude: 14.7142,
     amenities: const [
-      'wifi',
-      'parking',
-      'pet_friendly',
-      'fireplace',
-      'bbq'
+      PropertyAmenity.wifi,
+      PropertyAmenity.parking,
+      PropertyAmenity.petFriendly,
+      PropertyAmenity.fireplace,
+      PropertyAmenity.bbq
     ],
     images: const [],
     coverImage:
@@ -109,7 +110,7 @@ final _mockProperties = [
     location: 'Kampor, Island of Rab',
     latitude: 44.7850,
     longitude: 14.7250,
-    amenities: const ['wifi', 'parking', 'air_conditioning', 'balcony'],
+    amenities: const [PropertyAmenity.wifi, PropertyAmenity.parking, PropertyAmenity.airConditioning, PropertyAmenity.balcony],
     images: const [],
     coverImage:
         'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=800',
@@ -129,14 +130,14 @@ final _mockProperties = [
     latitude: 44.7550,
     longitude: 14.7650,
     amenities: const [
-      'wifi',
-      'parking',
-      'pool',
-      'air_conditioning',
-      'kitchen',
-      'sea_view',
-      'beach_access',
-      'bbq'
+      PropertyAmenity.wifi,
+      PropertyAmenity.parking,
+      PropertyAmenity.pool,
+      PropertyAmenity.airConditioning,
+      PropertyAmenity.kitchen,
+      PropertyAmenity.seaView,
+      PropertyAmenity.beachAccess,
+      PropertyAmenity.bbq
     ],
     images: const [],
     coverImage:
@@ -155,7 +156,7 @@ final _mockProperties = [
     location: 'Palit, Island of Rab',
     latitude: 44.7620,
     longitude: 14.7580,
-    amenities: const ['wifi', 'air_conditioning', 'kitchen'],
+    amenities: const [PropertyAmenity.wifi, PropertyAmenity.airConditioning, PropertyAmenity.kitchen],
     images: const [],
     coverImage:
         'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?q=80&w=800',

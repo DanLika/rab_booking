@@ -6,8 +6,8 @@ part of 'booking_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$BookingModelImpl _$$BookingModelImplFromJson(Map<String, dynamic> json) =>
-    _$BookingModelImpl(
+_BookingModel _$BookingModelFromJson(Map<String, dynamic> json) =>
+    _BookingModel(
       id: json['id'] as String,
       unitId: json['unitId'] as String,
       guestId: json['guestId'] as String,
@@ -31,7 +31,7 @@ _$BookingModelImpl _$$BookingModelImplFromJson(Map<String, dynamic> json) =>
               : DateTime.parse(json['cancelledAt'] as String),
     );
 
-Map<String, dynamic> _$$BookingModelImplToJson(_$BookingModelImpl instance) =>
+Map<String, dynamic> _$BookingModelToJson(_BookingModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'unitId': instance.unitId,

@@ -6,8 +6,8 @@ part of 'property_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$PropertyModelImpl _$$PropertyModelImplFromJson(Map<String, dynamic> json) =>
-    _$PropertyModelImpl(
+_PropertyModel _$PropertyModelFromJson(Map<String, dynamic> json) =>
+    _PropertyModel(
       id: json['id'] as String,
       ownerId: json['ownerId'] as String,
       name: json['name'] as String,
@@ -36,7 +36,7 @@ _$PropertyModelImpl _$$PropertyModelImplFromJson(Map<String, dynamic> json) =>
       isActive: json['isActive'] as bool? ?? true,
     );
 
-Map<String, dynamic> _$$PropertyModelImplToJson(_$PropertyModelImpl instance) =>
+Map<String, dynamic> _$PropertyModelToJson(_PropertyModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'ownerId': instance.ownerId,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/navigation_helpers.dart';
 import '../providers/search_form_provider.dart';
+import '../state/search_form_state.dart';
 import 'guest_selector_sheet.dart';
 
 /// Premium search bar widget

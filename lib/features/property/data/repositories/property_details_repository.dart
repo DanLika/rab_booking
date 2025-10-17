@@ -74,7 +74,7 @@ class PropertyDetailsRepository {
           .from('bookings')
           .select('check_in, check_out')
           .eq('unit_id', unitId)
-          .in_('status', ['confirmed', 'pending']);
+          .inFilter('status', ['confirmed', 'pending']);
 
       final blockedDates = <DateTime>[];
 

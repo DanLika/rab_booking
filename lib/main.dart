@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,10 +24,12 @@ void main() async {
     anonKey: AppConfig.supabaseAnonKey,
   );
 
-  // Initialize Stripe
-  Stripe.publishableKey = AppConfig.stripePublishableKey;
-  Stripe.merchantIdentifier = 'merchant.com.rab.booking';
-  await Stripe.instance.applySettings();
+  // Initialize Stripe (only on mobile platforms, not on web)
+  if (!kIsWeb) {
+    Stripe.publishableKey = AppConfig.stripePublishableKey;
+    Stripe.merchantIdentifier = 'merchant.com.rab.booking';
+    await Stripe.instance.applySettings();
+  }
 
   runApp(
     const ProviderScope(

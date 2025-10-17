@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/enums.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../core/utils/navigation_helpers.dart';
 
@@ -223,32 +224,35 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget>
 class _AmenityChip extends StatelessWidget {
   const _AmenityChip({required this.amenity});
 
-  final String amenity;
+  final PropertyAmenity amenity;
 
-  IconData _getAmenityIcon(String amenity) {
-    final lower = amenity.toLowerCase();
-    if (lower.contains('wifi')) return Icons.wifi;
-    if (lower.contains('parking')) return Icons.local_parking;
-    if (lower.contains('pool')) return Icons.pool;
-    if (lower.contains('air')) return Icons.ac_unit;
-    if (lower.contains('kitchen')) return Icons.kitchen;
-    if (lower.contains('view')) return Icons.visibility;
-    if (lower.contains('balcony')) return Icons.balcony;
-    if (lower.contains('bbq')) return Icons.outdoor_grill;
-    return Icons.check_circle_outline;
-  }
-
-  String _getAmenityLabel(String amenity) {
-    final lower = amenity.toLowerCase();
-    if (lower.contains('wifi')) return 'WiFi';
-    if (lower.contains('parking')) return 'Parking';
-    if (lower.contains('pool')) return 'Bazen';
-    if (lower.contains('air')) return 'Klima';
-    if (lower.contains('kitchen')) return 'Kuhinja';
-    if (lower.contains('view')) return 'Pogled';
-    if (lower.contains('balcony')) return 'Balkon';
-    if (lower.contains('bbq')) return 'Roštilj';
-    return amenity;
+  IconData _getAmenityIcon(PropertyAmenity amenity) {
+    switch (amenity) {
+      case PropertyAmenity.wifi:
+        return Icons.wifi;
+      case PropertyAmenity.parking:
+        return Icons.local_parking;
+      case PropertyAmenity.pool:
+        return Icons.pool;
+      case PropertyAmenity.airConditioning:
+        return Icons.ac_unit;
+      case PropertyAmenity.kitchen:
+        return Icons.kitchen;
+      case PropertyAmenity.seaView:
+        return Icons.visibility;
+      case PropertyAmenity.balcony:
+        return Icons.balcony;
+      case PropertyAmenity.bbq:
+        return Icons.outdoor_grill;
+      case PropertyAmenity.beachAccess:
+        return Icons.beach_access;
+      case PropertyAmenity.petFriendly:
+        return Icons.pets;
+      case PropertyAmenity.fireplace:
+        return Icons.fireplace;
+      default:
+        return Icons.check_circle_outline;
+    }
   }
 
   @override
@@ -269,7 +273,7 @@ class _AmenityChip extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            _getAmenityLabel(amenity),
+            amenity.displayName,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,

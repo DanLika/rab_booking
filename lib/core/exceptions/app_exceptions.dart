@@ -1,9 +1,10 @@
 /// Base application exception
 abstract class AppException implements Exception {
-  const AppException(this.message, [this.code]);
+  const AppException(this.message, {this.code, this.details});
 
   final String message;
   final String? code;
+  final dynamic details;
 
   @override
   String toString() => code != null ? '[$code] $message' : message;
@@ -11,46 +12,47 @@ abstract class AppException implements Exception {
 
 /// Network-related exceptions
 class NetworkException extends AppException {
-  const NetworkException([String? message])
-      : super(message ?? 'Network connection failed', 'NETWORK_ERROR');
+  const NetworkException([String? message, dynamic details])
+      : super(message ?? 'Network connection failed', code: 'NETWORK_ERROR', details: details);
 }
 
 /// Server/API exceptions
 class ServerException extends AppException {
-  const ServerException([String? message, String? code])
-      : super(message ?? 'Server error occurred', code ?? 'SERVER_ERROR');
+  const ServerException([String? message, String? code, dynamic details])
+      : super(message ?? 'Server error occurred', code: code ?? 'SERVER_ERROR', details: details);
 }
 
 /// Authentication exceptions
 class AuthException extends AppException {
-  const AuthException([String? message, String? code])
-      : super(message ?? 'Authentication failed', code ?? 'AUTH_ERROR');
+  const AuthException([String? message, String? code, dynamic details])
+      : super(message ?? 'Authentication failed', code: code ?? 'AUTH_ERROR', details: details);
 }
 
 /// Authorization exceptions (user doesn't have permission)
 class AuthorizationException extends AppException {
-  const AuthorizationException([String? message])
+  const AuthorizationException([String? message, dynamic details])
       : super(
           message ?? 'You do not have permission to perform this action',
-          'AUTHORIZATION_ERROR',
+          code: 'AUTHORIZATION_ERROR',
+          details: details,
         );
 }
 
 /// Validation exceptions (invalid input data)
 class ValidationException extends AppException {
-  const ValidationException(String message, [String? code])
-      : super(message, code ?? 'VALIDATION_ERROR');
+  const ValidationException(String message, {String? code, dynamic details})
+      : super(message, code: code ?? 'VALIDATION_ERROR', details: details);
 
   /// Create validation exception with field-specific error
   factory ValidationException.field(String field, String error) {
-    return ValidationException('$field: $error', 'FIELD_VALIDATION_ERROR');
+    return ValidationException('$field: $error', code: 'FIELD_VALIDATION_ERROR');
   }
 }
 
 /// Not found exceptions (resource doesn't exist)
 class NotFoundException extends AppException {
-  const NotFoundException([String? message, String? code])
-      : super(message ?? 'Resource not found', code ?? 'NOT_FOUND');
+  const NotFoundException([String? message, String? code, dynamic details])
+      : super(message ?? 'Resource not found', code: code ?? 'NOT_FOUND', details: details);
 
   /// Create not found exception for specific resource type
   factory NotFoundException.resource(String resourceType, String id) {
@@ -60,38 +62,38 @@ class NotFoundException extends AppException {
 
 /// Conflict exceptions (e.g., duplicate booking)
 class ConflictException extends AppException {
-  const ConflictException([String? message, String? code])
-      : super(message ?? 'Resource conflict occurred', code ?? 'CONFLICT');
+  const ConflictException([String? message, String? code, dynamic details])
+      : super(message ?? 'Resource conflict occurred', code: code ?? 'CONFLICT', details: details);
 }
 
 /// Database exceptions
 class DatabaseException extends AppException {
-  const DatabaseException([String? message, String? code])
-      : super(message ?? 'Database operation failed', code ?? 'DATABASE_ERROR');
+  const DatabaseException([String? message, String? code, dynamic details])
+      : super(message ?? 'Database operation failed', code: code ?? 'DATABASE_ERROR', details: details);
 }
 
 /// Cache exceptions
 class CacheException extends AppException {
-  const CacheException([String? message, String? code])
-      : super(message ?? 'Cache operation failed', code ?? 'CACHE_ERROR');
+  const CacheException([String? message, String? code, dynamic details])
+      : super(message ?? 'Cache operation failed', code: code ?? 'CACHE_ERROR', details: details);
 }
 
 /// Timeout exceptions
 class TimeoutException extends AppException {
-  const TimeoutException([String? message])
-      : super(message ?? 'Operation timed out', 'TIMEOUT_ERROR');
+  const TimeoutException([String? message, dynamic details])
+      : super(message ?? 'Operation timed out', code: 'TIMEOUT_ERROR', details: details);
 }
 
 /// Booking-specific exceptions
 class BookingException extends AppException {
-  const BookingException(String message, [String? code])
-      : super(message, code ?? 'BOOKING_ERROR');
+  const BookingException(String message, {String? code, dynamic details})
+      : super(message, code: code ?? 'BOOKING_ERROR', details: details);
 
   /// Unit is not available for selected dates
   factory BookingException.unitNotAvailable() {
     return const BookingException(
       'This unit is not available for the selected dates',
-      'UNIT_NOT_AVAILABLE',
+      code: 'UNIT_NOT_AVAILABLE',
     );
   }
 
@@ -99,7 +101,7 @@ class BookingException extends AppException {
   factory BookingException.datesOverlap() {
     return const BookingException(
       'Selected dates overlap with an existing booking',
-      'DATES_OVERLAP',
+      code: 'DATES_OVERLAP',
     );
   }
 
@@ -107,7 +109,7 @@ class BookingException extends AppException {
   factory BookingException.minimumStayNotMet(int minNights) {
     return BookingException(
       'Minimum stay requirement is $minNights ${minNights == 1 ? 'night' : 'nights'}',
-      'MINIMUM_STAY_NOT_MET',
+      code: 'MINIMUM_STAY_NOT_MET',
     );
   }
 
@@ -115,7 +117,7 @@ class BookingException extends AppException {
   factory BookingException.guestCountExceeded(int maxGuests) {
     return BookingException(
       'Maximum guest capacity is $maxGuests',
-      'GUEST_COUNT_EXCEEDED',
+      code: 'GUEST_COUNT_EXCEEDED',
     );
   }
 
@@ -123,7 +125,7 @@ class BookingException extends AppException {
   factory BookingException.cannotCancel(String reason) {
     return BookingException(
       'Booking cannot be cancelled: $reason',
-      'CANNOT_CANCEL',
+      code: 'CANNOT_CANCEL',
     );
   }
 
@@ -131,7 +133,7 @@ class BookingException extends AppException {
   factory BookingException.invalidDateRange() {
     return const BookingException(
       'Check-out date must be after check-in date',
-      'INVALID_DATE_RANGE',
+      code: 'INVALID_DATE_RANGE',
     );
   }
 
@@ -139,21 +141,21 @@ class BookingException extends AppException {
   factory BookingException.pastDate() {
     return const BookingException(
       'Cannot create booking for past dates',
-      'PAST_DATE',
+      code: 'PAST_DATE',
     );
   }
 }
 
 /// Payment exceptions
 class PaymentException extends AppException {
-  const PaymentException(String message, [String? code])
-      : super(message, code ?? 'PAYMENT_ERROR');
+  const PaymentException(String message, {String? code, dynamic details})
+      : super(message, code: code ?? 'PAYMENT_ERROR', details: details);
 
   /// Payment failed
   factory PaymentException.paymentFailed([String? reason]) {
     return PaymentException(
       'Payment failed${reason != null ? ': $reason' : ''}',
-      'PAYMENT_FAILED',
+      code: 'PAYMENT_FAILED',
     );
   }
 
@@ -161,7 +163,7 @@ class PaymentException extends AppException {
   factory PaymentException.paymentCancelled() {
     return const PaymentException(
       'Payment was cancelled',
-      'PAYMENT_CANCELLED',
+      code: 'PAYMENT_CANCELLED',
     );
   }
 
@@ -169,7 +171,7 @@ class PaymentException extends AppException {
   factory PaymentException.invalidAmount() {
     return const PaymentException(
       'Invalid payment amount',
-      'INVALID_AMOUNT',
+      code: 'INVALID_AMOUNT',
     );
   }
 
@@ -177,7 +179,7 @@ class PaymentException extends AppException {
   factory PaymentException.insufficientFunds() {
     return const PaymentException(
       'Insufficient funds',
-      'INSUFFICIENT_FUNDS',
+      code: 'INSUFFICIENT_FUNDS',
     );
   }
 }

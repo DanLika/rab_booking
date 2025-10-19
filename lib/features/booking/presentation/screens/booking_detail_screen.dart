@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:rab_booking/features/booking/domain/models/booking_status.dart';
-import 'package:rab_booking/features/booking/presentation/providers/user_bookings_provider.dart';
+import '../../domain/models/booking_status.dart';
+import '../providers/user_bookings_provider.dart';
+import '../../../property/data/repositories/reviews_repository.dart';
+import '../../../../core/providers/auth_state_provider.dart';
+import '../../../../l10n/app_localizations.dart';
+
+// Standard check-in/check-out times (industry standard)
+const String kDefaultCheckInTime = '14:00'; // 2:00 PM
+const String kDefaultCheckOutTime = '11:00'; // 11:00 AM
 
 class BookingDetailScreen extends ConsumerWidget {
   final String bookingId;
@@ -24,7 +31,6 @@ class BookingDetailScreen extends ConsumerWidget {
       body: bookingAsync.when(
         data: (booking) {
           final dateFormat = DateFormat('EEEE, MMM d, y');
-          final timeFormat = DateFormat('h:mm a');
 
           return SingleChildScrollView(
             child: Column(
@@ -118,7 +124,7 @@ class BookingDetailScreen extends ConsumerWidget {
                             child: _DateCard(
                               label: 'Check-in',
                               date: booking.checkInDate,
-                              time: '2:00 PM',
+                              time: kDefaultCheckInTime,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -126,7 +132,7 @@ class BookingDetailScreen extends ConsumerWidget {
                             child: _DateCard(
                               label: 'Check-out',
                               date: booking.checkOutDate,
-                              time: '11:00 AM',
+                              time: kDefaultCheckOutTime,
                             ),
                           ),
                         ],
@@ -159,7 +165,7 @@ class BookingDetailScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -257,24 +263,12 @@ class BookingDetailScreen extends ConsumerWidget {
                         ),
                       ],
 
-                      if (booking.isPast) ...[
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              // TODO: Navigate to review screen
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Review feature coming soon'),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.rate_review),
-                            label: const Text('Write a Review'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                          ),
+                      if (booking.status == BookingStatus.completed) ...[
+                        const SizedBox(height: 12),
+                        _WriteReviewButton(
+                          bookingId: booking.id,
+                          propertyId: booking.propertyId,
+                          propertyName: booking.propertyName,
                         ),
                       ],
                     ],
@@ -325,6 +319,10 @@ class BookingDetailScreen extends ConsumerWidget {
       case BookingStatus.completed:
         chipColor = Colors.blue[100]!;
         textColor = Colors.blue[900]!;
+        break;
+      case BookingStatus.blocked:
+        chipColor = Colors.grey[300]!;
+        textColor = Colors.grey[900]!;
         break;
     }
 
@@ -518,6 +516,84 @@ class _DateCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _WriteReviewButton extends ConsumerWidget {
+  final String bookingId;
+  final String propertyId;
+  final String propertyName;
+
+  const _WriteReviewButton({
+    required this.bookingId,
+    required this.propertyId,
+    required this.propertyName,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userId = ref.watch(authStateNotifierProvider).user?.id;
+
+    if (userId == null) {
+      return const SizedBox.shrink();
+    }
+
+    return FutureBuilder<PropertyReview?>(
+      future: ref
+          .read(reviewsRepositoryProvider)
+          .getUserReviewForBooking(bookingId: bookingId, userId: userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: null,
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        }
+
+        final localizations = AppLocalizations.of(context);
+        final existingReview = snapshot.data;
+        final hasReview = existingReview != null;
+
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () async {
+              final result = await context.push(
+                '/booking/$bookingId/review',
+                extra: {
+                  'propertyId': propertyId,
+                  'propertyName': propertyName,
+                  'existingReview': existingReview,
+                },
+              );
+
+              // Refresh if review was submitted
+              if (result == true) {
+                ref.invalidate(bookingDetailsProvider(bookingId));
+              }
+            },
+            icon: Icon(hasReview ? Icons.edit : Icons.rate_review),
+            label: Text(
+              hasReview
+                  ? localizations.editReview
+                  : localizations.writeReview,
+            ),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor:
+                  hasReview ? Colors.orange : Theme.of(context).primaryColor,
+            ),
+          ),
+        );
+      },
     );
   }
 }

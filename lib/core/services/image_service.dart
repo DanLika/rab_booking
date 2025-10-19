@@ -1,9 +1,30 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 /// Service for optimized image loading with caching and progressive loading
+/// Enhanced with memory optimization and preloading
 class ImageService {
+  /// Preload images for better performance
+  static Future<void> preloadImages(
+    BuildContext context,
+    List<String> imageUrls,
+  ) async {
+    for (final url in imageUrls) {
+      try {
+        await precacheImage(
+          CachedNetworkImageProvider(url),
+          context,
+        );
+      } catch (e) {
+        // Ignore preload errors
+      }
+    }
+  }
+
   /// Display an optimized cached network image with shimmer placeholder
   static Widget optimizedImage({
     required String imageUrl,
@@ -186,6 +207,137 @@ class ImageService {
         ),
       ),
     );
+  }
+
+  /// Upload property images to Supabase Storage
+  /// Returns list of public URLs for the uploaded images
+  static Future<List<String>> uploadPropertyImages(
+    List<XFile> images, {
+    required String propertyId,
+    Function(int current, int total)? onProgress,
+  }) async {
+    final supabase = Supabase.instance.client;
+    final uploadedUrls = <String>[];
+
+    for (var i = 0; i < images.length; i++) {
+      try {
+        onProgress?.call(i + 1, images.length);
+
+        final file = images[i];
+        final bytes = await file.readAsBytes();
+        final fileExt = file.name.split('.').last;
+        final fileName = '${const Uuid().v4()}.$fileExt';
+        final filePath = 'properties/$propertyId/$fileName';
+
+        // Upload to Supabase Storage
+        await supabase.storage.from('property-images').uploadBinary(
+              filePath,
+              bytes,
+              fileOptions: FileOptions(
+                contentType: _getContentType(fileExt),
+                upsert: false,
+              ),
+            );
+
+        // Get public URL
+        final publicUrl = supabase.storage.from('property-images').getPublicUrl(filePath);
+
+        uploadedUrls.add(publicUrl);
+        debugPrint('✅ Uploaded image ${i + 1}/${images.length}: $fileName');
+      } catch (e) {
+        debugPrint('❌ Failed to upload image ${i + 1}: $e');
+        rethrow;
+      }
+    }
+
+    return uploadedUrls;
+  }
+
+  /// Upload a single image to Supabase Storage
+  /// Returns the public URL for the uploaded image
+  static Future<String> uploadSingleImage(
+    XFile image, {
+    required String bucket,
+    required String folder,
+  }) async {
+    final supabase = Supabase.instance.client;
+
+    try {
+      final bytes = await image.readAsBytes();
+      final fileExt = image.name.split('.').last;
+      final fileName = '${const Uuid().v4()}.$fileExt';
+      final filePath = '$folder/$fileName';
+
+      // Upload to Supabase Storage
+      await supabase.storage.from(bucket).uploadBinary(
+            filePath,
+            bytes,
+            fileOptions: FileOptions(
+              contentType: _getContentType(fileExt),
+              upsert: false,
+            ),
+          );
+
+      // Get public URL
+      final publicUrl = supabase.storage.from(bucket).getPublicUrl(filePath);
+
+      debugPrint('✅ Uploaded image: $fileName');
+      return publicUrl;
+    } catch (e) {
+      debugPrint('❌ Failed to upload image: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete image from Supabase Storage
+  static Future<void> deleteImage(String imageUrl) async {
+    final supabase = Supabase.instance.client;
+
+    try {
+      // Extract file path from URL
+      final uri = Uri.parse(imageUrl);
+      final pathSegments = uri.pathSegments;
+
+      // Find the bucket name and file path
+      // URL format: https://[project].supabase.co/storage/v1/object/public/[bucket]/[path]
+      final bucketIndex = pathSegments.indexOf('public') + 1;
+      if (bucketIndex < pathSegments.length) {
+        final bucket = pathSegments[bucketIndex];
+        final filePath = pathSegments.sublist(bucketIndex + 1).join('/');
+
+        await supabase.storage.from(bucket).remove([filePath]);
+        debugPrint('✅ Deleted image: $filePath');
+      }
+    } catch (e) {
+      debugPrint('❌ Failed to delete image: $e');
+      // Don't rethrow - deletion failures shouldn't block operations
+    }
+  }
+
+  /// Delete multiple images from Supabase Storage
+  static Future<void> deleteImages(List<String> imageUrls) async {
+    for (final url in imageUrls) {
+      await deleteImage(url);
+    }
+  }
+
+  /// Get content type from file extension
+  static String _getContentType(String fileExt) {
+    switch (fileExt.toLowerCase()) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      case 'heic':
+        return 'image/heic';
+      default:
+        return 'image/jpeg'; // Default fallback
+    }
   }
 
   /// Clear image cache - useful for troubleshooting or when storage is low

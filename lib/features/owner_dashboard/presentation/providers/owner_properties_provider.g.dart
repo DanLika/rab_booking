@@ -6,89 +6,45 @@ part of 'owner_properties_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint, type=warning
-/// Owner properties provider
+String _$ownerPropertiesHash() => r'ae345ad1672bdefda37d1c6b0a2522889edc930c';
 
+/// Owner properties provider
+///
+/// Copied from [ownerProperties].
 @ProviderFor(ownerProperties)
-const ownerPropertiesProvider = OwnerPropertiesProvider._();
+final ownerPropertiesProvider =
+    AutoDisposeFutureProvider<List<PropertyModel>>.internal(
+      ownerProperties,
+      name: r'ownerPropertiesProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$ownerPropertiesHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
-/// Owner properties provider
-
-final class OwnerPropertiesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<PropertyModel>>,
-          List<PropertyModel>,
-          FutureOr<List<PropertyModel>>
-        >
-    with
-        $FutureModifier<List<PropertyModel>>,
-        $FutureProvider<List<PropertyModel>> {
-  /// Owner properties provider
-  const OwnerPropertiesProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'ownerPropertiesProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$ownerPropertiesHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<List<PropertyModel>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<List<PropertyModel>> create(Ref ref) {
-    return ownerProperties(ref);
-  }
-}
-
-String _$ownerPropertiesHash() => r'c8f6ea03a2d5f00960d2341fb8db88d0bc2dc0e8';
-
-/// Owner properties count
-
-@ProviderFor(ownerPropertiesCount)
-const ownerPropertiesCountProvider = OwnerPropertiesCountProvider._();
-
-/// Owner properties count
-
-final class OwnerPropertiesCountProvider
-    extends $FunctionalProvider<AsyncValue<int>, int, FutureOr<int>>
-    with $FutureModifier<int>, $FutureProvider<int> {
-  /// Owner properties count
-  const OwnerPropertiesCountProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'ownerPropertiesCountProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$ownerPropertiesCountHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<int> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<int> create(Ref ref) {
-    return ownerPropertiesCount(ref);
-  }
-}
-
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef OwnerPropertiesRef = AutoDisposeFutureProviderRef<List<PropertyModel>>;
 String _$ownerPropertiesCountHash() =>
-    r'66db8343e1d8e87cf1009aa591da631c45e7e582';
+    r'58c713cc7460e83f5c76d6a5518aa67d64c23e5b';
+
+/// Owner properties count
+///
+/// Copied from [ownerPropertiesCount].
+@ProviderFor(ownerPropertiesCount)
+final ownerPropertiesCountProvider = AutoDisposeFutureProvider<int>.internal(
+  ownerPropertiesCount,
+  name: r'ownerPropertiesCountProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$ownerPropertiesCountHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef OwnerPropertiesCountRef = AutoDisposeFutureProviderRef<int>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

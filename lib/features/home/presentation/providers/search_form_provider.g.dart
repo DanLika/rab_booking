@@ -6,64 +6,24 @@ part of 'search_form_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint, type=warning
-/// Search form state notifier
-
-@ProviderFor(SearchFormNotifier)
-const searchFormProvider = SearchFormNotifierProvider._();
-
-/// Search form state notifier
-final class SearchFormNotifierProvider
-    extends $NotifierProvider<SearchFormNotifier, SearchFormState> {
-  /// Search form state notifier
-  const SearchFormNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'searchFormProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$searchFormNotifierHash();
-
-  @$internal
-  @override
-  SearchFormNotifier create() => SearchFormNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SearchFormState value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<SearchFormState>(value),
-    );
-  }
-}
-
 String _$searchFormNotifierHash() =>
-    r'47c3a1c81b97af9db775302a37f8df9a31b2dffb';
+    r'0b0c6ade4016f8edc21ffa488553099edc521ea3';
 
 /// Search form state notifier
+///
+/// Copied from [SearchFormNotifier].
+@ProviderFor(SearchFormNotifier)
+final searchFormNotifierProvider =
+    AutoDisposeNotifierProvider<SearchFormNotifier, SearchFormState>.internal(
+      SearchFormNotifier.new,
+      name: r'searchFormNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$searchFormNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
-abstract class _$SearchFormNotifier extends $Notifier<SearchFormState> {
-  SearchFormState build();
-  @$mustCallSuper
-  @override
-  void runBuild() {
-    final created = build();
-    final ref = this.ref as $Ref<SearchFormState, SearchFormState>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<SearchFormState, SearchFormState>,
-              SearchFormState,
-              Object?,
-              Object?
-            >;
-    element.handleValue(ref, created);
-  }
-}
+typedef _$SearchFormNotifier = AutoDisposeNotifier<SearchFormState>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

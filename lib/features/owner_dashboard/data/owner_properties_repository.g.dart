@@ -6,57 +6,27 @@ part of 'owner_properties_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint, type=warning
-/// Provider for owner properties repository
-
-@ProviderFor(ownerPropertiesRepository)
-const ownerPropertiesRepositoryProvider = OwnerPropertiesRepositoryProvider._();
-
-/// Provider for owner properties repository
-
-final class OwnerPropertiesRepositoryProvider
-    extends
-        $FunctionalProvider<
-          OwnerPropertiesRepository,
-          OwnerPropertiesRepository,
-          OwnerPropertiesRepository
-        >
-    with $Provider<OwnerPropertiesRepository> {
-  /// Provider for owner properties repository
-  const OwnerPropertiesRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'ownerPropertiesRepositoryProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$ownerPropertiesRepositoryHash();
-
-  @$internal
-  @override
-  $ProviderElement<OwnerPropertiesRepository> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  OwnerPropertiesRepository create(Ref ref) {
-    return ownerPropertiesRepository(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(OwnerPropertiesRepository value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<OwnerPropertiesRepository>(value),
-    );
-  }
-}
-
 String _$ownerPropertiesRepositoryHash() =>
-    r'72c300ab7a5596e318abf3fd2b9317a8d20e76f9';
+    r'e274837f3db1dbb49a0d128b72c8bbc290720e3f';
+
+/// Provider for owner properties repository
+///
+/// Copied from [ownerPropertiesRepository].
+@ProviderFor(ownerPropertiesRepository)
+final ownerPropertiesRepositoryProvider =
+    AutoDisposeProvider<OwnerPropertiesRepository>.internal(
+      ownerPropertiesRepository,
+      name: r'ownerPropertiesRepositoryProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$ownerPropertiesRepositoryHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef OwnerPropertiesRepositoryRef =
+    AutoDisposeProviderRef<OwnerPropertiesRepository>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "RAB Booking - Flutter Web Application",
   "scripts": {
-    "build": "flutter build web --release",
-    "install": "flutter pub get",
-    "postinstall": "echo 'Flutter dependencies installed'"
+    "build": "./build.sh",
+    "install": "echo 'Skipping npm install - using build.sh for Flutter setup'",
+    "postinstall": "echo 'Ready for build'"
   },
   "repository": {
     "type": "git",

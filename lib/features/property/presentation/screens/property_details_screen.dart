@@ -98,25 +98,30 @@ class _PropertyDetailsScreenState
                         orElse: () => false,
                       );
 
-                      return IconButton(
-                        icon: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite ? Colors.red : null,
-                        ),
-                        onPressed: () async {
-                          try {
-                            await ref
-                                .read(favoritesNotifierProvider.notifier)
-                                .toggleFavorite(widget.propertyId);
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Greška: $e')),
-                              );
+                      return Semantics(
+                        label: isFavorite ? 'Remove from favorites' : 'Add to favorites',
+                        hint: 'Toggle favorite status for this property',
+                        button: true,
+                        child: IconButton(
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.red : null,
+                          ),
+                          onPressed: () async {
+                            try {
+                              await ref
+                                  .read(favoritesNotifierProvider.notifier)
+                                  .toggleFavorite(widget.propertyId);
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Greška: $e')),
+                                );
+                              }
                             }
-                          }
-                        },
-                        tooltip: isFavorite ? 'Ukloni iz omiljenih' : 'Dodaj u omiljene',
+                          },
+                          tooltip: isFavorite ? 'Ukloni iz omiljenih' : 'Dodaj u omiljene',
+                        ),
                       );
                     },
                   ),
@@ -153,11 +158,16 @@ class _PropertyDetailsScreenState
 
       // Floating Action Button (mobile only)
       floatingActionButton: isMobile && _selectedUnit != null && _currentProperty != null
-          ? FloatingActionButton.extended(
-              onPressed: () => _showBookingBottomSheet(context, _currentProperty),
-              icon: const Icon(Icons.calendar_today),
-              label: Text(
-                  'Rezerviraj - €${_selectedUnit!.pricePerNight.toStringAsFixed(0)}'),
+          ? Semantics(
+              label: 'Book this property for €${_selectedUnit!.pricePerNight.toStringAsFixed(0)} per night',
+              hint: 'Opens booking screen with date selection',
+              button: true,
+              child: FloatingActionButton.extended(
+                onPressed: () => _showBookingBottomSheet(context, _currentProperty),
+                icon: const Icon(Icons.calendar_today),
+                label: Text(
+                    'Rezerviraj - €${_selectedUnit!.pricePerNight.toStringAsFixed(0)}'),
+              ),
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

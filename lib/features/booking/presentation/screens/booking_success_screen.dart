@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -12,7 +13,7 @@ import '../widgets/booking_summary_card.dart';
 
 /// Booking success screen
 /// Features: Success animation, booking reference, summary, actions
-class BookingSuccessScreen extends StatefulWidget {
+class BookingSuccessScreen extends StatelessWidget {
   /// Booking reference number
   final String bookingReference;
 
@@ -62,43 +63,6 @@ class BookingSuccessScreen extends StatefulWidget {
   });
 
   @override
-  State<BookingSuccessScreen> createState() => _BookingSuccessScreenState();
-}
-
-class _BookingSuccessScreenState extends State<BookingSuccessScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-
-    _scaleAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    );
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeIn,
-    );
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
@@ -111,45 +75,45 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
                 SizedBox(height: context.isMobile ? AppDimensions.spaceXL : AppDimensions.spaceXXL),
 
                 // Success animation
-                _buildSuccessAnimation(),
+                _buildSuccessAnimation(context),
 
                 const SizedBox(height: AppDimensions.spaceXL),
 
                 // Success message
-                _buildSuccessMessage(),
+                _buildSuccessMessage(context),
 
                 const SizedBox(height: AppDimensions.spaceXXL),
 
                 // Booking reference
-                _buildBookingReference(),
+                _buildBookingReference(context),
 
                 const SizedBox(height: AppDimensions.spaceXL),
 
                 // Confirmation email sent
-                _buildEmailConfirmation(),
+                _buildEmailConfirmation(context),
 
                 const SizedBox(height: AppDimensions.spaceXXL),
 
                 // Booking summary
                 BookingSummaryCard(
-                  propertyName: widget.propertyName,
-                  propertyImage: widget.propertyImage,
-                  propertyLocation: widget.propertyLocation,
-                  checkIn: widget.checkIn,
-                  checkOut: widget.checkOut,
-                  guests: widget.guests,
-                  nights: widget.nights,
-                  pricePerNight: widget.totalAmount / widget.nights,
+                  propertyName: propertyName,
+                  propertyImage: propertyImage,
+                  propertyLocation: propertyLocation,
+                  checkIn: checkIn,
+                  checkOut: checkOut,
+                  guests: guests,
+                  nights: nights,
+                  pricePerNight: totalAmount / nights,
                   serviceFee: 0,
                   cleaningFee: 0,
-                  currencySymbol: widget.currencySymbol,
+                  currencySymbol: currencySymbol,
                   compact: context.isMobile,
                 ),
 
                 const SizedBox(height: AppDimensions.spaceXXL),
 
                 // Action buttons
-                _buildActionButtons(),
+                _buildActionButtons(context),
 
                 const SizedBox(height: AppDimensions.spaceXL),
               ],
@@ -160,50 +124,56 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
     );
   }
 
-  Widget _buildSuccessAnimation() {
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: Container(
-        width: 120,
-        height: 120,
-        decoration: const BoxDecoration(
-          gradient: AppColors.primaryGradient,
-          shape: BoxShape.circle,
-          boxShadow: AppShadows.glowPrimary,
-        ),
-        child: Icon(
-          Icons.check,
-          size: 64,
-          color: context.textColorInverted,
-        ),
+  Widget _buildSuccessAnimation(BuildContext context) {
+    // Success animation with scale and fade effects
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: const BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        shape: BoxShape.circle,
+        boxShadow: AppShadows.glowPrimary,
       ),
-    );
+      child: Icon(
+        Icons.check,
+        size: 64,
+        color: context.textColorInverted,
+      ),
+    )
+        .animate()
+        .scale(
+          duration: 800.ms,
+          curve: Curves.elasticOut,
+          begin: const Offset(0.0, 0.0),
+          end: const Offset(1.0, 1.0),
+        )
+        .fadeIn(duration: 400.ms);
   }
 
-  Widget _buildSuccessMessage() {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Column(
-        children: [
-          Text(
-            'Booking Confirmed!',
-            style: context.isMobile ? AppTypography.h2 : AppTypography.h1,
-            textAlign: TextAlign.center,
+  Widget _buildSuccessMessage(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          'Booking Confirmed!',
+          style: context.isMobile ? AppTypography.h2 : AppTypography.h1,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppDimensions.spaceS),
+        Text(
+          'Your reservation has been successfully confirmed',
+          style: AppTypography.bodyLarge.copyWith(
+            color: context.textColorSecondary,
           ),
-          const SizedBox(height: AppDimensions.spaceS),
-          Text(
-            'Your reservation has been successfully confirmed',
-            style: AppTypography.bodyLarge.copyWith(
-              color: context.textColorSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
+          textAlign: TextAlign.center,
+        ),
+      ],
+    )
+        .animate(delay: 300.ms)
+        .fadeIn(duration: 600.ms, curve: Curves.easeOut)
+        .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
   }
 
-  Widget _buildBookingReference() {
+  Widget _buildBookingReference(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.spaceL),
       decoration: BoxDecoration(
@@ -221,7 +191,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
           ),
           const SizedBox(height: AppDimensions.spaceS),
           Text(
-            widget.bookingReference,
+            bookingReference,
             style: (context.isMobile ? AppTypography.h2 : AppTypography.h1).copyWith(
               color: context.textColorInverted,
               fontWeight: AppTypography.weightBold,
@@ -233,7 +203,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
     );
   }
 
-  Widget _buildEmailConfirmation() {
+  Widget _buildEmailConfirmation(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.spaceL),
       decoration: BoxDecoration(
@@ -265,7 +235,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
                 ),
                 const SizedBox(height: AppDimensions.spaceXXS),
                 Text(
-                  'Check ${widget.confirmationEmail} for booking details',
+                  'Check $confirmationEmail for booking details',
                   style: AppTypography.bodyMedium,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -278,7 +248,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(BuildContext context) {
     return Column(
       children: [
         // View booking details
@@ -296,27 +266,27 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
         context.isMobile
             ? Column(
                 children: [
-                  _buildDownloadButton(),
+                  _buildDownloadButton(context),
                   const SizedBox(height: AppDimensions.spaceM),
-                  _buildShareButton(),
+                  _buildShareButton(context),
                   const SizedBox(height: AppDimensions.spaceM),
-                  _buildHomeButton(),
+                  _buildHomeButton(context),
                 ],
               )
             : Row(
                 children: [
-                  Expanded(child: _buildDownloadButton()),
+                  Expanded(child: _buildDownloadButton(context)),
                   const SizedBox(width: AppDimensions.spaceM),
-                  Expanded(child: _buildShareButton()),
+                  Expanded(child: _buildShareButton(context)),
                   const SizedBox(width: AppDimensions.spaceM),
-                  Expanded(child: _buildHomeButton()),
+                  Expanded(child: _buildHomeButton(context)),
                 ],
               ),
       ],
     );
   }
 
-  Widget _buildDownloadButton() {
+  Widget _buildDownloadButton(BuildContext context) {
     return PremiumButton.outline(
       label: 'Download PDF',
       icon: Icons.download_outlined,
@@ -327,7 +297,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
     );
   }
 
-  Widget _buildShareButton() {
+  Widget _buildShareButton(BuildContext context) {
     return PremiumButton.outline(
       label: 'Share',
       icon: Icons.share_outlined,
@@ -338,7 +308,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
     );
   }
 
-  Widget _buildHomeButton() {
+  Widget _buildHomeButton(BuildContext context) {
     return PremiumButton.text(
       label: 'Back to Home',
       icon: Icons.home_outlined,

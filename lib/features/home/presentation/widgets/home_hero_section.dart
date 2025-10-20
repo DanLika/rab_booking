@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_animations.dart';
@@ -110,48 +111,44 @@ class HomeHeroSection extends StatelessWidget {
   }
 
   Widget _buildTitle(BuildContext context, bool isDark) {
-    return AnimatedOpacity(
-      opacity: 1.0,
-      duration: AppAnimations.fadeIn.duration,
-      curve: AppAnimations.fadeIn.curve,
-      child: Text(
-        title,
-        style: context.isMobile
-            ? AppTypography.h1.copyWith(
-                color: backgroundImage != null ? Colors.white : Colors.white,
-                fontWeight: AppTypography.weightBold,
-              )
-            : AppTypography.heroTitle.copyWith(
-                color: backgroundImage != null ? Colors.white : Colors.white,
-                fontWeight: AppTypography.weightBold,
-              ),
-        textAlign: TextAlign.center,
-      ),
-    );
+    return Text(
+      title,
+      style: context.isMobile
+          ? AppTypography.h1.copyWith(
+              color: backgroundImage != null ? Colors.white : Colors.white,
+              fontWeight: AppTypography.weightBold,
+            )
+          : AppTypography.heroTitle.copyWith(
+              color: backgroundImage != null ? Colors.white : Colors.white,
+              fontWeight: AppTypography.weightBold,
+            ),
+      textAlign: TextAlign.center,
+    )
+        .animate()
+        .fadeIn(duration: 600.ms, curve: Curves.easeOutCubic)
+        .slideY(begin: 0.3, end: 0, curve: Curves.easeOutBack);
   }
 
   Widget _buildSubtitle(BuildContext context, bool isDark) {
-    return AnimatedOpacity(
-      opacity: 1.0,
-      duration: AppAnimations.fadeIn.duration,
-      curve: AppAnimations.fadeIn.curve,
-      child: Text(
-        subtitle,
-        style: context.isMobile
-            ? AppTypography.bodyLarge.copyWith(
-                color: backgroundImage != null
-                    ? AppColors.withOpacity(Colors.white, AppColors.opacity90)
-                    : AppColors.withOpacity(Colors.white, AppColors.opacity90),
-              )
-            : AppTypography.heroSubtitle.copyWith(
-                color: backgroundImage != null
-                    ? AppColors.withOpacity(Colors.white, AppColors.opacity90)
-                    : AppColors.withOpacity(Colors.white, AppColors.opacity90),
-              ),
-        textAlign: TextAlign.center,
-        maxLines: 2,
-      ),
-    );
+    return Text(
+      subtitle,
+      style: context.isMobile
+          ? AppTypography.bodyLarge.copyWith(
+              color: backgroundImage != null
+                  ? AppColors.withOpacity(Colors.white, AppColors.opacity90)
+                  : AppColors.withOpacity(Colors.white, AppColors.opacity90),
+            )
+          : AppTypography.heroSubtitle.copyWith(
+              color: backgroundImage != null
+                  ? AppColors.withOpacity(Colors.white, AppColors.opacity90)
+                  : AppColors.withOpacity(Colors.white, AppColors.opacity90),
+            ),
+      textAlign: TextAlign.center,
+      maxLines: 2,
+    )
+        .animate(delay: 200.ms) // Stagger after title
+        .fadeIn(duration: 600.ms, curve: Curves.easeOutCubic)
+        .slideY(begin: 0.3, end: 0, curve: Curves.easeOutBack);
   }
 
   Widget _buildSearchWidget(BuildContext context, bool isDark) {
@@ -260,6 +257,10 @@ class HomeHeroSection extends StatelessWidget {
           ),
         ),
       ),
-    );
+    )
+        .animate(delay: 400.ms) // Stagger after subtitle
+        .fadeIn(duration: 700.ms, curve: Curves.easeOutCubic)
+        .slideY(begin: 0.4, end: 0, curve: Curves.easeOutBack)
+        .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack);
   }
 }

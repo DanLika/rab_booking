@@ -218,17 +218,29 @@ class ResponsiveAppBar extends ConsumerWidget implements PreferredSizeWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Notifications icon button
-          IconButton(
-            onPressed: () => context.go(Routes.notifications),
-            icon: const Icon(Icons.notifications_outlined),
-            tooltip: 'Obavještenja',
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: 48,
+              minHeight: 48,
+            ),
+            child: IconButton(
+              onPressed: () => context.go(Routes.notifications),
+              icon: const Icon(Icons.notifications_outlined),
+              tooltip: 'Obavještenja',
+            ),
           ),
           const SizedBox(width: 8),
           // Profile icon button
-          IconButton(
-            onPressed: () => context.go(Routes.profile),
-            icon: const Icon(Icons.person),
-            tooltip: 'Profil',
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: 48,
+              minHeight: 48,
+            ),
+            child: IconButton(
+              onPressed: () => context.go(Routes.profile),
+              icon: const Icon(Icons.person),
+              tooltip: 'Profil',
+            ),
           ),
           const SizedBox(width: 8),
           // Logout button

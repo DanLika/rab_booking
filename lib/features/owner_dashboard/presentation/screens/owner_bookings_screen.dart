@@ -4,6 +4,7 @@ import '../../../booking/domain/models/booking_status.dart';
 import '../providers/owner_bookings_provider.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../../data/owner_bookings_repository.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
 
 /// Owner bookings screen with filters and booking management
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
@@ -35,7 +36,14 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               data: (bookings) => bookings.isEmpty
                   ? _buildEmptyState()
                   : _buildBookingsList(bookings),
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: 3,
+                itemBuilder: (context, index) => const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: BookingCardSkeleton(),
+                ),
+              ),
               error: (error, stack) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

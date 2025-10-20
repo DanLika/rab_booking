@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/user_bookings_provider.dart';
 import '../widgets/booking_card.dart';
 import '../widgets/cancel_booking_dialog.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
 
 class UserBookingsScreen extends ConsumerStatefulWidget {
   const UserBookingsScreen({super.key});
@@ -126,7 +127,14 @@ class _UpcomingBookingsTab extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: 3,
+        itemBuilder: (context, index) => const Padding(
+          padding: EdgeInsets.only(bottom: 16),
+          child: BookingCardSkeleton(),
+        ),
+      ),
       error: (error, stack) {
         // If error is about RLS/permissions, show friendly message
         final errorMessage = error.toString();
@@ -260,7 +268,14 @@ class _PastBookingsTab extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: 3,
+        itemBuilder: (context, index) => const Padding(
+          padding: EdgeInsets.only(bottom: 16),
+          child: BookingCardSkeleton(),
+        ),
+      ),
       error: (error, stack) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -347,7 +362,14 @@ class _CancelledBookingsTab extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: 3,
+        itemBuilder: (context, index) => const Padding(
+          padding: EdgeInsets.only(bottom: 16),
+          child: BookingCardSkeleton(),
+        ),
+      ),
       error: (error, stack) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

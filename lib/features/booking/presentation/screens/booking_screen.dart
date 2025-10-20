@@ -255,36 +255,46 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
           // Continue button
           Padding(
             padding: const EdgeInsets.all(16),
-            child: ElevatedButton(
-              onPressed: hasSelectedDates
-                  ? () => _proceedToReview(unit)
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 12),
-                ),
-                elevation: hasSelectedDates ? 2 : 0,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    hasSelectedDates
-                        ? 'Nastavi na pregled'
-                        : 'Odaberite datume za nastavak',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+            child: Semantics(
+              label: hasSelectedDates
+                  ? 'Continue to booking review for $nights ${nights == 1 ? 'night' : 'nights'}, €${(unit.pricePerNight * nights * 1.10 + 50).toStringAsFixed(2)} total'
+                  : 'Select dates first to continue',
+              hint: hasSelectedDates
+                  ? 'Proceeds to guest details and payment'
+                  : 'Button is disabled until dates are selected',
+              button: true,
+              enabled: hasSelectedDates,
+              child: ElevatedButton(
+                onPressed: hasSelectedDates
+                    ? () => _proceedToReview(unit)
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 12),
                   ),
-                  if (hasSelectedDates) ...[
-                    const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward),
+                  elevation: hasSelectedDates ? 2 : 0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      hasSelectedDates
+                          ? 'Nastavi na pregled'
+                          : 'Odaberite datume za nastavak',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (hasSelectedDates) ...[
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),

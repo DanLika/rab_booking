@@ -45,6 +45,10 @@ dependencies:
   # Loading States
   shimmer: ^3.0.0
 
+  # Animations & Scroll Effects (2025 UX)
+  visibility_detector: ^0.4.0+2
+  flutter_animate: ^4.5.0
+
   # URL Launcher
   url_launcher: ^6.3.1
 

@@ -260,27 +260,39 @@ class _SearchButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FilledButton(
-      onPressed: formState.isValid ? () => _handleSearch(context, ref) : null,
-      style: FilledButton.styleFrom(
-        padding: EdgeInsets.symmetric(
-          horizontal: isCompact ? 24 : 32,
-          vertical: 16,
+    final searchLabel = formState.isValid
+        ? 'Search for properties${formState.location.isNotEmpty ? ' in ${formState.location}' : ''}'
+        : 'Fill in search details to search';
+
+    return Semantics(
+      label: searchLabel,
+      hint: formState.isValid
+          ? 'Opens search results with filters'
+          : 'Button is disabled until location is selected',
+      button: true,
+      enabled: formState.isValid,
+      child: FilledButton(
+        onPressed: formState.isValid ? () => _handleSearch(context, ref) : null,
+        style: FilledButton.styleFrom(
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 24 : 32,
+            vertical: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+          ),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
-        ),
-      ),
-      child: Row(
-        mainAxisSize: isCompact ? MainAxisSize.min : MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.search),
-          if (!isCompact) ...[
-            const SizedBox(width: 8),
-            const Text('Pretraži'),
+        child: Row(
+          mainAxisSize: isCompact ? MainAxisSize.min : MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.search),
+            if (!isCompact) ...[
+              const SizedBox(width: 8),
+              const Text('Pretraži'),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

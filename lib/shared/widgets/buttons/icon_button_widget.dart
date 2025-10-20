@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/services/haptic_service.dart';
 
 /// Circular icon button with tooltip
 ///
@@ -51,7 +52,12 @@ class IconButtonWidget extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: IconButton(
-        onPressed: onPressed,
+        onPressed: onPressed == null
+            ? null
+            : () async {
+                await HapticService.buttonPress();
+                onPressed!();
+              },
         icon: Icon(icon),
         color: iconColor ?? Theme.of(context).colorScheme.onPrimaryContainer,
         iconSize: size * 0.5,

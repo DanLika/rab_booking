@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/services/haptic_service.dart';
 
 /// Primary button widget with loading and disabled states
 ///
@@ -40,9 +41,17 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Wrap onPressed with haptic feedback
+    final wrappedOnPressed = (isLoading || onPressed == null)
+        ? null
+        : () async {
+            await HapticService.buttonPress();
+            onPressed!();
+          };
+
     final button = icon != null
         ? FilledButton.icon(
-            onPressed: isLoading ? null : onPressed,
+            onPressed: wrappedOnPressed,
             icon: isLoading
                 ? const SizedBox(
                     width: 20,
@@ -61,10 +70,11 @@ class PrimaryButton extends StatelessWidget {
                 vertical: 12,
               ),
               minimumSize: const Size(0, AppDimensions.buttonHeight),
+              animationDuration: const Duration(milliseconds: 100),
             ),
           )
         : FilledButton(
-            onPressed: isLoading ? null : onPressed,
+            onPressed: wrappedOnPressed,
             style: FilledButton.styleFrom(
               // Use design system padding (24px horizontal, 12px vertical for 48px height)
               padding: const EdgeInsets.symmetric(
@@ -72,6 +82,7 @@ class PrimaryButton extends StatelessWidget {
                 vertical: 12,
               ),
               minimumSize: const Size(0, AppDimensions.buttonHeight),
+              animationDuration: const Duration(milliseconds: 100),
             ),
             child: isLoading
                 ? const SizedBox(

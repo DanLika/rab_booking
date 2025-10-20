@@ -10,9 +10,11 @@ import '../widgets/cta_section.dart';
 import '../../../../core/utils/navigation_helpers.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/widgets/widgets.dart';
+import '../../../../shared/widgets/animations/scroll_reveal.dart';
 
-/// Premium home screen with all sections
+/// Premium home screen with all sections + scroll reveal animations (2025 UX)
 /// Phase 4: Complete premium home screen implementation
+/// Phase 5: Added scroll-triggered reveal animations
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -33,51 +35,68 @@ class HomeScreen extends ConsumerWidget {
               onSearchPressed: () => context.goToSearch(),
             ),
 
-            // 2. Featured Properties Section
-            FeaturedPropertiesSection(
-              title: 'Featured Properties',
-              subtitle: 'Hand-picked properties for your perfect stay',
-              maxProperties: 6,
-              onPropertyTapped: (PropertyModel property) {
-                context.goToPropertyDetails(property.id);
-              },
-              onSeeAllTapped: () => context.goToSearch(),
+            // 2. Featured Properties Section (with scroll reveal)
+            SectionReveal(
+              child: FeaturedPropertiesSection(
+                title: 'Featured Properties',
+                subtitle: 'Hand-picked properties for your perfect stay',
+                maxProperties: 6,
+                onPropertyTapped: (PropertyModel property) {
+                  context.goToPropertyDetails(property.id);
+                },
+                onSeeAllTapped: () => context.goToSearch(),
+              ),
             ),
 
-            // 2.5. Recently Viewed Section (only for logged-in users)
-            const RecentlyViewedSection(
-              title: 'Recently Viewed',
-              subtitle: 'Properties you have viewed recently',
-              maxProperties: 10,
+            // 2.5. Recently Viewed Section (only for logged-in users, with scroll reveal)
+            SectionReveal(
+              delay: const Duration(milliseconds: 100),
+              child: const RecentlyViewedSection(
+                title: 'Recently Viewed',
+                subtitle: 'Properties you have viewed recently',
+                maxProperties: 10,
+              ),
             ),
 
-            // 3. Popular Destinations Section
-            PopularDestinationsSection(
-              title: 'Popular Destinations',
-              subtitle: 'Explore the most sought-after vacation spots',
-              onDestinationTapped: (destination) {
-                // Navigate to search with destination filter
-                context.goToSearch();
-              },
+            // 3. Popular Destinations Section (with scroll reveal)
+            SectionReveal(
+              delay: const Duration(milliseconds: 200),
+              child: PopularDestinationsSection(
+                title: 'Popular Destinations',
+                subtitle: 'Explore the most sought-after vacation spots',
+                onDestinationTapped: (destination) {
+                  // Navigate to search with destination filter
+                  context.goToSearch();
+                },
+              ),
             ),
 
-            // 4. How It Works Section
-            const HowItWorksSection(
-              title: 'How It Works',
-              subtitle: 'Book your dream vacation in three simple steps',
+            // 4. How It Works Section (with scroll reveal)
+            SectionReveal(
+              delay: const Duration(milliseconds: 100),
+              child: const HowItWorksSection(
+                title: 'How It Works',
+                subtitle: 'Book your dream vacation in three simple steps',
+              ),
             ),
 
-            // 5. Testimonials Section
-            const TestimonialsSection(
-              title: 'What Our Guests Say',
-              subtitle: 'Real experiences from real travelers',
-              autoPlay: true,
+            // 5. Testimonials Section (with scroll reveal)
+            SectionReveal(
+              delay: const Duration(milliseconds: 150),
+              child: const TestimonialsSection(
+                title: 'What Our Guests Say',
+                subtitle: 'Real experiences from real travelers',
+                autoPlay: true,
+              ),
             ),
 
-            // 6. Call-to-Action Section
-            CtaSectionPresets.getStarted(
-              onGetStarted: () => context.goToSearch(),
-              onLearnMore: () => context.goToAboutUs(),
+            // 6. Call-to-Action Section (with scroll reveal)
+            SectionReveal(
+              delay: const Duration(milliseconds: 100),
+              child: CtaSectionPresets.getStarted(
+                onGetStarted: () => context.goToSearch(),
+                onLearnMore: () => context.goToAboutUs(),
+              ),
             ),
 
             // 7. Footer Section

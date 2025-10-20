@@ -7,6 +7,7 @@ library;
 export 'buttons/primary_button.dart';
 export 'buttons/secondary_button.dart';
 export 'buttons/icon_button_widget.dart';
+export 'buttons/accessible_icon_button.dart';
 
 // Forms
 export 'forms/app_text_field.dart';

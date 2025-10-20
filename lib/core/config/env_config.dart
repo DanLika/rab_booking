@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/logging_service.dart';
+import 'web_config.dart';
 
 /// Environment configuration loader
 ///
@@ -25,7 +26,22 @@ class EnvConfig {
   /// - Development: .env.development
   /// - Staging: .env.staging
   /// - Production: .env.production
+  ///
+  /// For web builds, uses hardcoded values from WebConfig instead.
   static Future<void> load({String? environment}) async {
+    // Web builds use hardcoded WebConfig values
+    if (kIsWeb) {
+      if (kDebugMode) {
+        LoggingService.logInfo('✅ Web build detected - using WebConfig');
+        LoggingService.logInfo('📦 App Name: ${WebConfig.appName}');
+        LoggingService.logInfo('🌍 Environment: ${WebConfig.environmentName}');
+        LoggingService.logInfo('🔧 Supabase URL: ${WebConfig.supabaseUrl}');
+        LoggingService.logInfo('💳 Stripe Mode: ${WebConfig.isTestMode ? "TEST" : "PRODUCTION"}');
+      }
+      return;
+    }
+
+    // Mobile/Desktop builds use .env files
     final env = environment ?? _currentEnvironment;
 
     try {
@@ -64,11 +80,19 @@ class EnvConfig {
 
   /// Supabase project URL
   static String get supabaseUrl {
+    // Use WebConfig for web builds
+    if (kIsWeb) return WebConfig.supabaseUrl;
+
+    // Use .env for mobile/desktop
     return dotenv.get('SUPABASE_URL', fallback: '');
   }
 
   /// Supabase anonymous key (public)
   static String get supabaseAnonKey {
+    // Use WebConfig for web builds
+    if (kIsWeb) return WebConfig.supabaseAnonKey;
+
+    // Use .env for mobile/desktop
     return dotenv.get('SUPABASE_ANON_KEY', fallback: '');
   }
 
@@ -88,6 +112,10 @@ class EnvConfig {
 
   /// Stripe publishable key (safe to use in client-side code)
   static String get stripePublishableKey {
+    // Use WebConfig for web builds
+    if (kIsWeb) return WebConfig.stripePublishableKey;
+
+    // Use .env for mobile/desktop
     return dotenv.get('STRIPE_PUBLISHABLE_KEY', fallback: '');
   }
 

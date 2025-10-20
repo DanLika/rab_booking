@@ -168,13 +168,19 @@ class _GuestRow extends StatelessWidget {
         Row(
           children: [
             // Decrement button
-            IconButton(
-              onPressed: canDecrement ? onDecrement : null,
-              icon: const Icon(Icons.remove_circle_outline),
-              color: canDecrement
-                  ? Theme.of(context).primaryColor
-                  : context.colorScheme.outline.withValues(alpha: 0.3),
-              iconSize: 32,
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                minWidth: 48,
+                minHeight: 48,
+              ),
+              child: IconButton(
+                onPressed: canDecrement ? onDecrement : null,
+                icon: const Icon(Icons.remove_circle_outline),
+                color: canDecrement
+                    ? Theme.of(context).primaryColor
+                    : context.colorScheme.outline.withValues(alpha: 0.3),
+                iconSize: 32,
+              ),
             ),
 
             // Count
@@ -190,13 +196,19 @@ class _GuestRow extends StatelessWidget {
             ),
 
             // Increment button
-            IconButton(
-              onPressed: canIncrement ? onIncrement : null,
-              icon: const Icon(Icons.add_circle_outline),
-              color: canIncrement
-                  ? Theme.of(context).primaryColor
-                  : context.colorScheme.outline.withValues(alpha: 0.3),
-              iconSize: 32,
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                minWidth: 48,
+                minHeight: 48,
+              ),
+              child: IconButton(
+                onPressed: canIncrement ? onIncrement : null,
+                icon: const Icon(Icons.add_circle_outline),
+                color: canIncrement
+                    ? Theme.of(context).primaryColor
+                    : context.colorScheme.outline.withValues(alpha: 0.3),
+                iconSize: 32,
+              ),
             ),
           ],
         ),

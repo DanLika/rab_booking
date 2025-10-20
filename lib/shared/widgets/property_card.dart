@@ -47,73 +47,83 @@ class _PropertyCardState extends ConsumerState<PropertyCard> {
 
   @override
   Widget build(BuildContext context) {
-    return HoverEffect(
-      enableScale: true,
-      enableElevation: true,
-      scale: 1.02,
-      normalElevation: 2,
-      hoverElevation: 8,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
-      onTap: () async {
-        await HapticService.buttonPress();
-        if (context.mounted) {
-          context.goToPropertyDetails(widget.property.id);
-        }
-      },
-      child: Card(
-        elevation: 2,
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
-        ),
-        child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Image carousel with Hero animation
-                _buildImageCarousel(),
+    // Build semantic label for screen readers
+    final semanticLabel = '${widget.property.name}, ${widget.property.location}, '
+        '${widget.property.formattedPricePerNight}, '
+        '${widget.property.rating > 0 ? '${widget.property.rating.toStringAsFixed(1)} stars, ${widget.property.reviewCount} reviews' : 'No rating yet'}';
 
-                // Property info
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  // Name
-                  Text(
-                    widget.property.name,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
+    return Semantics(
+      label: semanticLabel,
+      hint: 'Double tap to view property details',
+      button: true,
+      excludeSemantics: true, // Prevent child widgets from adding conflicting semantics
+      child: HoverEffect(
+        enableScale: true,
+        enableElevation: true,
+        scale: 1.02,
+        normalElevation: 2,
+        hoverElevation: 8,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+        onTap: () async {
+          await HapticService.buttonPress();
+          if (context.mounted) {
+            context.goToPropertyDetails(widget.property.id);
+          }
+        },
+        child: Card(
+          elevation: 2,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image carousel with Hero animation
+              _buildImageCarousel(),
 
-                  // Location
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 16,
-                        color: Colors.grey[600],
+              // Property info
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Name
+                    Text(
+                      widget.property.name,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          widget.property.location,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
 
-                  // Quick info icons (guests, bedrooms, bathrooms)
-                  if (widget.property.hasCompleteInfo)
+                    // Location
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 16,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            widget.property.location,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Quick info icons (guests, bedrooms, bathrooms)
+                    if (widget.property.hasCompleteInfo)
                     Row(
                       children: [
                         _QuickInfoIcon(
@@ -222,6 +232,7 @@ class _PropertyCardState extends ConsumerState<PropertyCard> {
                 ),
               ],
             ),
+        ),
       ),
     );
   }
@@ -351,32 +362,39 @@ class _FavoriteButton extends ConsumerWidget {
       orElse: () => false,
     );
 
-    return GestureDetector(
-      onTap: () async {
-        await HapticService.lightImpact();
+    return Semantics(
+      label: isFavorite ? 'Remove from favorites' : 'Add to favorites',
+      hint: isFavorite
+          ? 'Double tap to remove this property from your favorites'
+          : 'Double tap to add this property to your favorites',
+      button: true,
+      child: GestureDetector(
+        onTap: () async {
+          await HapticService.lightImpact();
 
-        try {
-          await ref
-              .read(favoritesNotifierProvider.notifier)
-              .toggleFavorite(propertyId);
-        } catch (e) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Greška: $e')),
-            );
+          try {
+            await ref
+                .read(favoritesNotifierProvider.notifier)
+                .toggleFavorite(propertyId);
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Greška: $e')),
+              );
+            }
           }
-        }
-      },
-      child: AnimatedScale(
-        scale: isFavorite ? 1.1 : 1.0,
-        duration: const Duration(milliseconds: 200),
-        child: CircleAvatar(
-          backgroundColor: Colors.white.withValues(alpha: 0.95),
-          radius: 18,
-          child: Icon(
-            isFavorite ? Icons.favorite : Icons.favorite_border,
-            size: 20,
-            color: isFavorite ? Colors.red : Colors.grey[600],
+        },
+        child: AnimatedScale(
+          scale: isFavorite ? 1.1 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          child: CircleAvatar(
+            backgroundColor: Colors.white.withValues(alpha: 0.95),
+            radius: 18,
+            child: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              size: 20,
+              color: isFavorite ? Colors.red : Colors.grey[600],
+            ),
           ),
         ),
       ),

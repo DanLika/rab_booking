@@ -530,19 +530,25 @@ class _PremiumBookingWidgetState extends State<PremiumBookingWidget> {
           // Guest counter
           Row(
             children: [
-              IconButton(
-                onPressed: _guestCount > 1
-                    ? () {
-                        setState(() {
-                          _guestCount--;
-                        });
-                      }
-                    : null,
-                icon: Icon(
-                  Icons.remove_circle_outline,
-                  color: _guestCount > 1
-                      ? AppColors.primary
-                      : AppColors.textDisabled,
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minWidth: 48,
+                  minHeight: 48,
+                ),
+                child: IconButton(
+                  onPressed: _guestCount > 1
+                      ? () {
+                          setState(() {
+                            _guestCount--;
+                          });
+                        }
+                      : null,
+                  icon: Icon(
+                    Icons.remove_circle_outline,
+                    color: _guestCount > 1
+                        ? AppColors.primary
+                        : AppColors.textDisabled,
+                  ),
                 ),
               ),
               SizedBox(
@@ -555,19 +561,25 @@ class _PremiumBookingWidgetState extends State<PremiumBookingWidget> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              IconButton(
-                onPressed: _guestCount < widget.maxGuests
-                    ? () {
-                        setState(() {
-                          _guestCount++;
-                        });
-                      }
-                    : null,
-                icon: Icon(
-                  Icons.add_circle_outline,
-                  color: _guestCount < widget.maxGuests
-                      ? AppColors.primary
-                      : AppColors.textDisabled,
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minWidth: 48,
+                  minHeight: 48,
+                ),
+                child: IconButton(
+                  onPressed: _guestCount < widget.maxGuests
+                      ? () {
+                          setState(() {
+                            _guestCount++;
+                          });
+                        }
+                      : null,
+                  icon: Icon(
+                    Icons.add_circle_outline,
+                    color: _guestCount < widget.maxGuests
+                        ? AppColors.primary
+                        : AppColors.textDisabled,
+                  ),
                 ),
               ),
             ],

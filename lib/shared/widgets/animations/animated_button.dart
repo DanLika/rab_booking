@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/services/haptic_service.dart';
 
 /// Animated button with scale and ripple effects
 /// Press animation: scales down slightly
@@ -103,7 +104,12 @@ class _AnimatedButtonState extends State<AnimatedButton>
       onTapDown: _handleTapDown,
       onTapUp: _handleTapUp,
       onTapCancel: _handleTapCancel,
-      onTap: widget.enabled && !widget.isLoading ? widget.onPressed : null,
+      onTap: widget.enabled && !widget.isLoading && widget.onPressed != null
+          ? () async {
+              await HapticService.buttonPress();
+              widget.onPressed!();
+            }
+          : null,
       child: AnimatedBuilder(
         animation: _scaleAnimation,
         builder: (context, child) {
@@ -174,7 +180,12 @@ class RippleButton extends StatelessWidget {
       color: backgroundColor ?? AppColors.primary,
       borderRadius: BorderRadius.circular(borderRadius),
       child: InkWell(
-        onTap: onPressed,
+        onTap: onPressed == null
+            ? null
+            : () async {
+                await HapticService.buttonPress();
+                onPressed!();
+              },
         borderRadius: BorderRadius.circular(borderRadius),
         splashColor: rippleColor ?? Colors.white.withValues(alpha: 0.3),
         highlightColor: rippleColor ?? Colors.white.withValues(alpha: 0.1),
@@ -344,7 +355,12 @@ class _PulseButtonState extends State<PulseButton>
               color: bgColor,
               borderRadius: BorderRadius.circular(widget.borderRadius),
               child: InkWell(
-                onTap: widget.onPressed,
+                onTap: widget.onPressed == null
+                    ? null
+                    : () async {
+                        await HapticService.buttonPress();
+                        widget.onPressed!();
+                      },
                 borderRadius: BorderRadius.circular(widget.borderRadius),
                 child: Container(
                   padding: widget.padding,
@@ -408,7 +424,8 @@ class _RotatingIconButtonState extends State<RotatingIconButton>
     super.dispose();
   }
 
-  void _handlePressed() {
+  void _handlePressed() async {
+    await HapticService.buttonPress();
     if (widget.rotateOnPress) {
       _controller.forward().then((_) => _controller.reverse());
     }
@@ -495,7 +512,8 @@ class _BouncyButtonState extends State<BouncyButton>
     super.dispose();
   }
 
-  void _handlePressed() {
+  void _handlePressed() async {
+    await HapticService.buttonPress();
     _controller.forward(from: 0);
     widget.onPressed?.call();
   }

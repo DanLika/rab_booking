@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/services/haptic_service.dart';
 
 /// Secondary outlined button widget with hover effects
 ///
@@ -35,9 +36,17 @@ class SecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Wrap onPressed with haptic feedback
+    final wrappedOnPressed = onPressed == null
+        ? null
+        : () async {
+            await HapticService.buttonPress();
+            onPressed!();
+          };
+
     final button = icon != null
         ? OutlinedButton.icon(
-            onPressed: onPressed,
+            onPressed: wrappedOnPressed,
             icon: Icon(icon),
             label: Text(text),
             style: OutlinedButton.styleFrom(
@@ -47,10 +56,11 @@ class SecondaryButton extends StatelessWidget {
                 vertical: 12,
               ),
               minimumSize: const Size(0, AppDimensions.buttonHeight),
+              animationDuration: const Duration(milliseconds: 100),
             ),
           )
         : OutlinedButton(
-            onPressed: onPressed,
+            onPressed: wrappedOnPressed,
             style: OutlinedButton.styleFrom(
               // Use design system padding (24px horizontal, 12px vertical for 48px height)
               padding: const EdgeInsets.symmetric(
@@ -58,6 +68,7 @@ class SecondaryButton extends StatelessWidget {
                 vertical: 12,
               ),
               minimumSize: const Size(0, AppDimensions.buttonHeight),
+              animationDuration: const Duration(milliseconds: 100),
             ),
             child: Text(text),
           );

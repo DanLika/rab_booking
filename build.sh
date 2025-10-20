@@ -12,8 +12,8 @@ if command -v flutter &> /dev/null; then
 else
     echo "📦 Installing Flutter SDK..."
 
-    # Download Flutter stable
-    FLUTTER_VERSION="3.24.0-stable"
+    # Download Flutter stable (3.35.6 has Dart 3.9.0+ required by pubspec.yaml)
+    FLUTTER_VERSION="3.35.6-stable"
     FLUTTER_URL="https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}.tar.xz"
 
     echo "  - Downloading Flutter ${FLUTTER_VERSION}..."

@@ -46,7 +46,12 @@ dart run build_runner build --delete-conflicting-outputs
 
 echo ""
 echo "🔨 Building for web..."
-flutter build web --release
+flutter build web --release --verbose 2>&1 || {
+  echo "❌ Build failed! Error code: $?"
+  echo "Attempting to show build errors..."
+  cat .dart_tool/flutter_build/*/dart2js.log 2>/dev/null || echo "No dart2js.log found"
+  exit 1
+}
 
 echo ""
 echo "✅ Build complete! Output: build/web/"

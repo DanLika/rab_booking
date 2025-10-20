@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'core/config/app_config.dart';
+import 'core/config/env_config.dart';
 import 'core/config/router.dart';
 import 'core/providers/language_provider.dart';
 import 'core/theme/app_theme.dart';
@@ -17,29 +17,23 @@ import 'l10n/app_localizations.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables (skip on web - using WebConfig instead)
-  if (!kIsWeb) {
-    try {
-      await dotenv.load(fileName: '.env.development');
-    } catch (e) {
-      debugPrint('⚠️ Failed to load .env.development: $e');
-    }
-  }
+  // Load environment configuration (uses WebConfig for web builds)
+  await EnvConfig.load();
 
   // Validate configuration
-  AppConfig.validate();
+  EnvConfig.validate();
 
   // Initialize Supabase
   await Supabase.initialize(
-    url: AppConfig.supabaseUrl,
-    anonKey: AppConfig.supabaseAnonKey,
+    url: EnvConfig.supabaseUrl,
+    anonKey: EnvConfig.supabaseAnonKey,
   );
 
   // Initialize Stripe (only on Android/iOS, not on web or desktop)
   if (!kIsWeb) {
     try {
       if (Platform.isAndroid || Platform.isIOS) {
-        Stripe.publishableKey = AppConfig.stripePublishableKey;
+        Stripe.publishableKey = EnvConfig.stripePublishableKey;
         Stripe.merchantIdentifier = 'merchant.com.rab.booking';
         await Stripe.instance.applySettings();
       }

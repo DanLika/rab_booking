@@ -135,6 +135,9 @@ class EnvConfig {
 
   /// API base URL
   static String get apiBaseUrl {
+    // Use Supabase URL as API base for web builds
+    if (kIsWeb) return WebConfig.supabaseUrl;
+
     return dotenv.get('API_BASE_URL', fallback: '');
   }
 
@@ -144,11 +147,17 @@ class EnvConfig {
 
   /// App name (can vary by environment)
   static String get appName {
+    // Use WebConfig for web builds
+    if (kIsWeb) return WebConfig.appName;
+
     return dotenv.get('APP_NAME', fallback: 'Rab Booking');
   }
 
   /// Environment name (development, staging, production)
   static String get environmentName {
+    // Use WebConfig for web builds
+    if (kIsWeb) return WebConfig.environmentName;
+
     return dotenv.get('ENVIRONMENT', fallback: 'development');
   }
 

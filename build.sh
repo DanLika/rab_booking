@@ -33,6 +33,10 @@ else
 fi
 
 echo ""
+echo "🧹 Cleaning build cache..."
+flutter clean
+
+echo ""
 echo "📦 Installing dependencies..."
 flutter pub get
 

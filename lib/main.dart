@@ -17,8 +17,14 @@ import 'l10n/app_localizations.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: '.env.development');
+  // Load environment variables (skip on web - using WebConfig instead)
+  if (!kIsWeb) {
+    try {
+      await dotenv.load(fileName: '.env.development');
+    } catch (e) {
+      debugPrint('⚠️ Failed to load .env.development: $e');
+    }
+  }
 
   // Validate configuration
   AppConfig.validate();
@@ -30,10 +36,16 @@ void main() async {
   );
 
   // Initialize Stripe (only on Android/iOS, not on web or desktop)
-  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-    Stripe.publishableKey = AppConfig.stripePublishableKey;
-    Stripe.merchantIdentifier = 'merchant.com.rab.booking';
-    await Stripe.instance.applySettings();
+  if (!kIsWeb) {
+    try {
+      if (Platform.isAndroid || Platform.isIOS) {
+        Stripe.publishableKey = AppConfig.stripePublishableKey;
+        Stripe.merchantIdentifier = 'merchant.com.rab.booking';
+        await Stripe.instance.applySettings();
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to initialize Stripe: $e');
+    }
   }
 
   runApp(

@@ -1,0 +1,28 @@
+{
+  "name": "rab-booking",
+  "version": "1.0.0",
+  "description": "RAB Booking - Flutter Web Application",
+  "scripts": {
+    "build": "flutter build web --release",
+    "install": "flutter pub get",
+    "postinstall": "echo 'Flutter dependencies installed'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DanLika/rab_booking.git"
+  },
+  "keywords": [
+    "flutter",
+    "web",
+    "booking",
+    "rab"
+  ],
+  "author": "RAB Booking Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}

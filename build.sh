@@ -37,6 +37,10 @@ echo "📦 Installing dependencies..."
 flutter pub get
 
 echo ""
+echo "⚙️ Generating code (Riverpod, Freezed, JSON)..."
+dart run build_runner build --delete-conflicting-outputs
+
+echo ""
 echo "🔨 Building for web..."
 flutter build web --release
 

@@ -266,7 +266,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget>
         .animate()
         .fadeIn(duration: 400.ms, curve: Curves.easeOut)
         .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic)
-        .scale(begin: const Offset(0.95, 0.95), curve: Curves.easeOut);
+        .scale(begin: 0.95, end: 1.0, curve: Curves.easeOut);
   }
 }
 

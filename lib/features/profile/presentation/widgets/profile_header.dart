@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -152,12 +153,26 @@ class PremiumProfileHeader extends StatelessWidget {
           ),
           child: ClipOval(
             child: user.avatarUrl != null
-                ? Image.network(
-                    user.avatarUrl!,
+                ? CachedNetworkImage(
+                    imageUrl: user.avatarUrl!,
                     width: 120,
                     height: 120,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
+                    placeholder: (context, url) => Container(
+                      color: AppColors.withOpacity(
+                        AppColors.primary,
+                        AppColors.opacity10,
+                      ),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) =>
                         _buildInitialsAvatar(initials),
                   )
                 : _buildInitialsAvatar(initials),

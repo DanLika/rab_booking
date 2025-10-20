@@ -45,45 +45,28 @@ class AuthRepository {
         },
       );
 
-      // If sign up successful, create user profile in database
+      // Create user profile using database function
+      // This function runs as SECURITY DEFINER so it can insert into public.users
       if (response.user != null) {
-        await _createUserProfile(
-          userId: response.user!.id,
-          email: email,
-          firstName: firstName,
-          lastName: lastName,
-          role: role,
-        );
+        try {
+          await _supabase.rpc('create_user_profile', params: {
+            'user_id': response.user!.id,
+            'user_email': email,
+            'first_name': firstName,
+            'last_name': lastName,
+            'user_role': role,
+          });
+          LoggingService.logInfo('User profile created successfully for ${response.user!.id}');
+        } catch (e) {
+          // Log error but don't fail registration - user is still authenticated
+          LoggingService.logError('Failed to create user profile: $e');
+          // Profile creation failure is not critical - user can still login
+        }
       }
 
       return response;
     } catch (e) {
       rethrow;
-    }
-  }
-
-  /// Create user profile in database
-  Future<void> _createUserProfile({
-    required String userId,
-    required String email,
-    required String firstName,
-    required String lastName,
-    required String role,
-  }) async {
-    try {
-      await _supabase.from('users').insert({
-        'id': userId,
-        'email': email,
-        'first_name': firstName,
-        'last_name': lastName,
-        'role': role,
-        'is_active': true,
-        'created_at': DateTime.now().toIso8601String(),
-      });
-    } catch (e) {
-      // Profile creation failed, but auth was successful
-      // User can still login, profile can be created later
-      LoggingService.logError('Failed to create user profile', e);
     }
   }
 
@@ -94,6 +77,9 @@ class AuthRepository {
         OAuthProvider.google,
         redirectTo: 'rabbooking://login-callback',
       );
+
+      // Note: Profile creation for OAuth users happens via the callback
+      // The auth state change listener should handle profile creation if needed
 
       return response;
     } catch (e) {

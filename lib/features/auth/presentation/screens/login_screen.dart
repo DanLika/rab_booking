@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/navigation_helpers.dart';
+import '../../../../core/utils/accessibility_utils.dart';
+import '../../../../core/utils/responsive_breakpoints.dart';
 import '../providers/auth_notifier.dart';
 import '../utils/form_validators.dart';
 
@@ -96,88 +99,114 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
-    final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(isMobile ? 24 : 48),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+            padding: EdgeInsets.all(context.horizontalPadding),
+            child: ResponsiveContainer(
+              maxWidth: 400,
+              child: RepaintBoundary(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                     // Logo or title
-                    Icon(
-                      Icons.villa,
-                      size: 80,
-                      color: Theme.of(context).primaryColor,
+                    Semantics(
+                      label: 'Rab Booking logo',
+                      image: true,
+                      child: Icon(
+                        Icons.villa,
+                        size: 80,
+                        color: Theme.of(context).primaryColor,
+                      ),
                     ),
                     const SizedBox(height: 16),
 
-                    Text(
-                      'Dobrodošli nazad',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                      textAlign: TextAlign.center,
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        'Dobrodošli nazad',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     const SizedBox(height: 8),
 
-                    Text(
-                      'Prijavite se na svoj račun',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: context.textColorSecondary,
-                          ),
-                      textAlign: TextAlign.center,
+                    Semantics(
+                      readOnly: true,
+                      child: Text(
+                        'Prijavite se na svoj račun',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: context.textColorSecondary,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     const SizedBox(height: 48),
 
                     // Email field
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(),
+                    Semantics(
+                      label: 'Email adresa',
+                      hint: 'Unesite vašu email adresu',
+                      textField: true,
+                      child: TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email_outlined),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: FormValidators.validateEmail,
+                        enabled: !authState.isLoading,
                       ),
-                      validator: FormValidators.validateEmail,
-                      enabled: !authState.isLoading,
                     ),
                     const SizedBox(height: 16),
 
                     // Password field
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Lozinka',
-                        prefixIcon: const Icon(Icons.lock_outlined),
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
+                    Semantics(
+                      label: 'Lozinka',
+                      hint: 'Unesite vašu lozinku',
+                      textField: true,
+                      obscured: _obscurePassword,
+                      child: TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: 'Lozinka',
+                          prefixIcon: const Icon(Icons.lock_outlined),
+                          border: const OutlineInputBorder(),
+                          suffixIcon: Semantics(
+                            label: _obscurePassword ? 'Prikaži lozinku' : 'Sakrij lozinku',
+                            hint: 'Dvostruki dodir za promjenu vidljivosti',
+                            button: true,
+                            child: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Lozinka je obavezna';
+                          }
+                          return null;
+                        },
+                        enabled: !authState.isLoading,
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Lozinka je obavezna';
-                        }
-                        return null;
-                      },
-                      enabled: !authState.isLoading,
                     ),
                     const SizedBox(height: 8),
 
@@ -194,21 +223,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 24),
 
                     // Login button
-                    FilledButton(
-                      onPressed: authState.isLoading ? null : _handleLogin,
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                    Semantics(
+                      label: authState.isLoading ? 'Prijavljuje se...' : 'Prijavite se',
+                      hint: authState.isLoading
+                        ? 'Molimo pričekajte dok se prijavljujete'
+                        : 'Dvostruki dodir za prijavu na račun',
+                      button: true,
+                      enabled: !authState.isLoading,
+                      child: FilledButton(
+                        onPressed: authState.isLoading ? null : _handleLogin,
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                        child: authState.isLoading
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: context.textColorInverted,
+                                ),
+                              )
+                            : const Text('Prijavite se'),
                       ),
-                      child: authState.isLoading
-                          ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: context.textColorInverted,
-                              ),
-                            )
-                          : const Text('Prijavite se'),
                     ),
                     const SizedBox(height: 24),
 
@@ -229,30 +267,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 24),
 
                     // Google sign in
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: authState.isLoading ? null : _handleGoogleSignIn,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.network(
-                              'https://www.google.com/favicon.ico',
-                              width: 20,
-                              height: 20,
-                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, size: 20),
-                            ),
-                            const SizedBox(width: 8),
-                            const Flexible(
-                              child: Text(
-                                'Nastavite s Google',
-                                overflow: TextOverflow.ellipsis,
+                    Semantics(
+                      label: 'Prijavite se s Google računom',
+                      hint: 'Dvostruki dodir za prijavu preko Google-a',
+                      button: true,
+                      enabled: !authState.isLoading,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: authState.isLoading ? null : _handleGoogleSignIn,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                            minimumSize: const Size(double.infinity, 48),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CachedNetworkImage(
+                                imageUrl: 'https://www.google.com/favicon.ico',
+                                width: 20,
+                                height: 20,
+                                placeholder: (context, url) => const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.g_mobiledata, size: 20),
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              const Flexible(
+                                child: Text(
+                                  'Nastavite s Google',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -281,6 +332,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

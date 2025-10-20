@@ -12,8 +12,18 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../shared/widgets/widgets.dart';
 import '../../../../shared/widgets/range_slider.dart';
 
+/// Filter section expansion state provider
+final filterExpansionStateProvider = StateProvider<Map<String, bool>>((ref) {
+  return {
+    'price': true,      // Expanded by default
+    'type': true,       // Expanded by default
+    'amenities': false, // Collapsed by default
+    'rooms': false,     // Collapsed by default
+  };
+});
+
 /// Premium filter panel widget
-/// Features: Smooth animations, premium styling, responsive design
+/// Features: Smooth animations, premium styling, responsive design, accordion sections
 class PremiumFilterPanel extends ConsumerWidget {
   const PremiumFilterPanel({super.key});
 
@@ -50,25 +60,45 @@ class PremiumFilterPanel extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Price range
-                  _PriceRangeSection(filters: filters),
+                  // Price range - ACCORDION
+                  _AccordionSection(
+                    sectionKey: 'price',
+                    title: 'Cjenovni raspon',
+                    icon: Icons.euro,
+                    child: _PriceRangeSection(filters: filters),
+                  ),
 
-                  const SizedBox(height: AppDimensions.spaceXL),
+                  const SizedBox(height: AppDimensions.spaceM),
 
-                  // Property type
-                  _PropertyTypeSection(filters: filters),
+                  // Property type - ACCORDION
+                  _AccordionSection(
+                    sectionKey: 'type',
+                    title: 'Tip nekretnine',
+                    icon: Icons.villa,
+                    child: _PropertyTypeSection(filters: filters),
+                  ),
 
-                  const SizedBox(height: AppDimensions.spaceXL),
+                  const SizedBox(height: AppDimensions.spaceM),
 
-                  // Amenities
-                  _AmenitiesSection(filters: filters),
+                  // Amenities - ACCORDION
+                  _AccordionSection(
+                    sectionKey: 'amenities',
+                    title: 'Sadržaji',
+                    icon: Icons.pool,
+                    child: _AmenitiesSection(filters: filters),
+                  ),
 
-                  const SizedBox(height: AppDimensions.spaceXL),
+                  const SizedBox(height: AppDimensions.spaceM),
 
-                  // Bedrooms & Bathrooms
-                  _RoomsSection(filters: filters),
+                  // Bedrooms & Bathrooms - ACCORDION
+                  _AccordionSection(
+                    sectionKey: 'rooms',
+                    title: 'Sobe',
+                    icon: Icons.bed,
+                    child: _RoomsSection(filters: filters),
+                  ),
 
-                  const SizedBox(height: AppDimensions.spaceXL),
+                  const SizedBox(height: AppDimensions.spaceM),
                 ],
               ),
             ),
@@ -193,60 +223,21 @@ class _PriceRangeSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(searchFiltersNotifierProvider.notifier);
 
-    return PremiumCard.elevated(
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.spaceL),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.spaceS),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
-                  child: Icon(
-                    Icons.euro,
-                    color: context.textColorInverted,
-                    size: AppDimensions.iconM,
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.spaceM),
-                Expanded(
-                  child: Text(
-                    'Cjenovni raspon',
-                    style: AppTypography.h3.copyWith(
-                      fontWeight: AppTypography.weightSemibold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: AppDimensions.spaceL),
-
-            PremiumRangeSlider(
-              values: RangeValues(
-                filters.minPrice ?? 0,
-                filters.maxPrice ?? 500,
-              ),
-              min: 0,
-              max: 1000,
-              divisions: 100,
-              currencySymbol: '€',
-              minLabel: 'Min cijena',
-              maxLabel: 'Max cijena',
-              onChangeEnd: (values) {
-                notifier.updatePriceRange(values.start, values.end);
-              },
-            ),
-          ],
-        ),
+    // Header removed - now shown by accordion
+    return PremiumRangeSlider(
+      values: RangeValues(
+        filters.minPrice ?? 0,
+        filters.maxPrice ?? 500,
       ),
+      min: 0,
+      max: 1000,
+      divisions: 100,
+      currencySymbol: '€',
+      minLabel: 'Min cijena',
+      maxLabel: 'Max cijena',
+      onChangeEnd: (values) {
+        notifier.updatePriceRange(values.start, values.end);
+      },
     );
   }
 }
@@ -261,73 +252,48 @@ class _PropertyTypeSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(searchFiltersNotifierProvider.notifier);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppDimensions.spaceS),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+    // Header removed - now shown by accordion
+    return Wrap(
+      spacing: AppDimensions.spaceS,
+      runSpacing: AppDimensions.spaceS,
+      children: PropertyType.values.map((type) {
+        final isSelected = filters.propertyTypes.contains(type);
+        return AnimatedContainer(
+          duration: AppAnimations.fast,
+          child: Semantics(
+            label: '${type.displayName} filter',
+            hint: isSelected
+                ? 'Double tap to deselect ${type.displayName}'
+                : 'Double tap to filter by ${type.displayName}',
+            selected: isSelected,
+            button: true,
+            child: FilterChip(
+              label: Text(type.displayName),
+              selected: isSelected,
+              onSelected: (selected) => notifier.togglePropertyType(type),
+              backgroundColor: isSelected ? AppColors.primary : null,
+              selectedColor: AppColors.primary,
+              checkmarkColor: context.textColorInverted,
+              labelStyle: AppTypography.bodyMedium.copyWith(
+                color: isSelected ? context.textColorInverted : null,
+                fontWeight: isSelected
+                    ? AppTypography.weightSemibold
+                    : AppTypography.weightMedium,
               ),
-              child: Icon(
-                Icons.villa,
-                color: context.textColorInverted,
-                size: AppDimensions.iconM,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
               ),
+              side: isSelected
+                  ? BorderSide.none
+                  : BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.borderDark
+                          : AppColors.borderLight,
+                    ),
             ),
-            const SizedBox(width: AppDimensions.spaceM),
-            Expanded(
-              child: Text(
-                'Tip smještaja',
-                style: AppTypography.h3.copyWith(
-                  fontWeight: AppTypography.weightSemibold,
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: AppDimensions.spaceM),
-
-        Wrap(
-          spacing: AppDimensions.spaceS,
-          runSpacing: AppDimensions.spaceS,
-          children: PropertyType.values.map((type) {
-            final isSelected = filters.propertyTypes.contains(type);
-            return AnimatedContainer(
-              duration: AppAnimations.fast,
-              child: FilterChip(
-                label: Text(type.displayName),
-                selected: isSelected,
-                onSelected: (selected) => notifier.togglePropertyType(type),
-                backgroundColor: isSelected ? AppColors.primary : null,
-                selectedColor: AppColors.primary,
-                checkmarkColor: context.textColorInverted,
-                labelStyle: AppTypography.bodyMedium.copyWith(
-                  color: isSelected ? context.textColorInverted : null,
-                  fontWeight: isSelected
-                      ? AppTypography.weightSemibold
-                      : AppTypography.weightMedium,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-                ),
-                side: isSelected
-                    ? BorderSide.none
-                    : BorderSide(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.borderDark
-                            : AppColors.borderLight,
-                      ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -343,105 +309,88 @@ class _AmenitiesSection extends ConsumerWidget {
     final notifier = ref.read(searchFiltersNotifierProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Header removed - now shown by accordion
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppDimensions.spaceS),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-              ),
-              child: Icon(
-                Icons.featured_play_list,
-                color: context.textColorInverted,
-                size: AppDimensions.iconM,
-              ),
-            ),
-            const SizedBox(width: AppDimensions.spaceM),
-            Expanded(
-              child: Text(
-                'Sadržaji',
-                style: AppTypography.h3.copyWith(
-                  fontWeight: AppTypography.weightSemibold,
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: AppDimensions.spaceM),
-
         ...commonAmenities.map((amenity) {
           final isSelected = filters.amenities.contains(amenity);
+          final amenityName = getAmenityDisplayName(amenity);
+
           return Padding(
             padding: const EdgeInsets.only(bottom: AppDimensions.spaceXS),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => notifier.toggleAmenity(amenity),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.spaceM,
-                    vertical: AppDimensions.spaceS,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.1)
-                        : (isDark
-                            ? AppColors.surfaceVariantDark
-                            : AppColors.surfaceVariantLight),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : (isDark ? AppColors.borderDark : AppColors.borderLight),
-                      width: isSelected ? 2 : 1,
+            child: Semantics(
+              label: '$amenityName amenity filter',
+              hint: isSelected
+                  ? 'Selected. Double tap to remove $amenityName filter'
+                  : 'Not selected. Double tap to add $amenityName filter',
+              selected: isSelected,
+              button: true,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => notifier.toggleAmenity(amenity),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.spaceM,
+                      vertical: AppDimensions.spaceS,
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      AnimatedContainer(
-                        duration: AppAnimations.fast,
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary : Colors.transparent,
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: isSelected
-                                ? AppColors.primary
-                                : (isDark
-                                    ? AppColors.borderDark
-                                    : AppColors.borderLight),
-                            width: 2,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary.withValues(alpha: 0.1)
+                          : (isDark
+                              ? AppColors.surfaceVariantDark
+                              : AppColors.surfaceVariantLight),
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary
+                            : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        AnimatedContainer(
+                          duration: AppAnimations.fast,
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppColors.primary : Colors.transparent,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : (isDark
+                                      ? AppColors.borderDark
+                                      : AppColors.borderLight),
+                              width: 2,
+                            ),
+                          ),
+                          child: isSelected
+                              ? Icon(
+                                  Icons.check,
+                                  size: 14,
+                                  color: context.textColorInverted,
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: AppDimensions.spaceM),
+                        Expanded(
+                          child: Text(
+                            amenityName,
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: isSelected
+                                  ? AppTypography.weightSemibold
+                                  : AppTypography.weightMedium,
+                              color: isSelected ? AppColors.primary : null,
+                            ),
                           ),
                         ),
-                        child: isSelected
-                            ? Icon(
-                                Icons.check,
-                                size: 14,
-                                color: context.textColorInverted,
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: AppDimensions.spaceM),
-                      Expanded(
-                        child: Text(
-                          getAmenityDisplayName(amenity),
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: isSelected
-                                ? AppTypography.weightSemibold
-                                : AppTypography.weightMedium,
-                            color: isSelected ? AppColors.primary : null,
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -463,44 +412,13 @@ class _RoomsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(searchFiltersNotifierProvider.notifier);
 
-    return PremiumCard.elevated(
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.spaceL),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.spaceS),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
-                  child: Icon(
-                    Icons.bed,
-                    color: context.textColorInverted,
-                    size: AppDimensions.iconM,
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.spaceM),
-                Expanded(
-                  child: Text(
-                    'Broj soba',
-                    style: AppTypography.h3.copyWith(
-                      fontWeight: AppTypography.weightSemibold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: AppDimensions.spaceL),
-
-            // Bedrooms
-            Text(
+    // Header removed - now shown by accordion
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Bedrooms
+        Text(
               'Spavaće sobe',
               style: AppTypography.bodyMedium.copyWith(
                 fontWeight: AppTypography.weightMedium,
@@ -551,8 +469,6 @@ class _RoomsSection extends ConsumerWidget {
               }),
             ),
           ],
-        ),
-      ),
     );
   }
 
@@ -576,6 +492,116 @@ class _RoomsSection extends ConsumerWidget {
         borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
       ),
       side: isSelected ? BorderSide.none : null,
+    );
+  }
+}
+
+/// Accordion section widget with expand/collapse animation
+class _AccordionSection extends ConsumerWidget {
+  const _AccordionSection({
+    required this.sectionKey,
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
+
+  final String sectionKey;
+  final String title;
+  final IconData icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final expansionState = ref.watch(filterExpansionStateProvider);
+    final isExpanded = expansionState[sectionKey] ?? false;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return PremiumCard.elevated(
+      elevation: 1,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header - clickable
+          InkWell(
+            onTap: () {
+              final currentState = ref.read(filterExpansionStateProvider);
+              ref.read(filterExpansionStateProvider.notifier).state = {
+                ...currentState,
+                sectionKey: !(currentState[sectionKey] ?? false),
+              };
+            },
+            borderRadius: BorderRadius.vertical(
+              top: const Radius.circular(AppDimensions.radiusM),
+              bottom: isExpanded
+                  ? Radius.zero
+                  : const Radius.circular(AppDimensions.radiusM),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppDimensions.spaceL),
+              child: Row(
+                children: [
+                  // Icon with gradient background
+                  Container(
+                    padding: const EdgeInsets.all(AppDimensions.spaceS),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: context.textColorInverted,
+                      size: AppDimensions.iconM,
+                    ),
+                  ),
+
+                  const SizedBox(width: AppDimensions.spaceM),
+
+                  // Title
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: AppTypography.h3.copyWith(
+                        fontWeight: AppTypography.weightSemibold,
+                      ),
+                    ),
+                  ),
+
+                  // Expand/collapse icon
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: AppAnimations.fast,
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondaryLight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Content - with animation
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.only(
+                left: AppDimensions.spaceL,
+                right: AppDimensions.spaceL,
+                bottom: AppDimensions.spaceL,
+              ),
+              child: child,
+            ),
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: AppAnimations.fast,
+            sizeCurve: Curves.easeInOut,
+          ),
+        ],
+      ),
     );
   }
 }

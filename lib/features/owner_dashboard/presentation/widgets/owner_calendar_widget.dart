@@ -5,6 +5,7 @@ import '../../../../shared/models/booking_model.dart';
 import '../../../booking/domain/models/booking_status.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../../data/owner_bookings_repository.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Owner calendar widget with month view and color-coded bookings
 class OwnerCalendarWidget extends ConsumerStatefulWidget {
@@ -443,7 +444,7 @@ class _OwnerCalendarWidgetState extends ConsumerState<OwnerCalendarWidget> {
                       ? 'Klikni na dva datuma za odabir raspona'
                       : 'Klikni na datum za pregled rezervacija',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                        color: AppColors.textSecondaryLight,
                       ),
                 ),
               ],
@@ -467,12 +468,15 @@ class _OwnerCalendarWidgetState extends ConsumerState<OwnerCalendarWidget> {
   }
 
   void _showBookingsDialog(DateTime day, List<BookingModel> bookings) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth > 500 ? 400.0 : screenWidth * 0.9;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Rezervacije - ${day.day}.${day.month}.${day.year}.'),
         content: SizedBox(
-          width: 400,
+          width: dialogWidth,
           child: ListView.separated(
             shrinkWrap: true,
             itemCount: bookings.length,
@@ -519,7 +523,7 @@ class _OwnerCalendarWidgetState extends ConsumerState<OwnerCalendarWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Molimo odaberite jedinicu prije blokiranja datuma'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -573,7 +577,7 @@ class _OwnerCalendarWidgetState extends ConsumerState<OwnerCalendarWidget> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Datumi su uspješno blokirani'),
-                      backgroundColor: Colors.green,
+                      backgroundColor: AppColors.success,
                     ),
                   );
 
@@ -592,7 +596,7 @@ class _OwnerCalendarWidgetState extends ConsumerState<OwnerCalendarWidget> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Greška: $e'),
-                      backgroundColor: Colors.red,
+                      backgroundColor: AppColors.error,
                     ),
                   );
                 }

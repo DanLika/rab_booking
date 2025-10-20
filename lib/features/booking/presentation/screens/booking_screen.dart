@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/navigation_helpers.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../property/domain/models/property_unit.dart';
 import '../../../property/presentation/providers/property_details_provider.dart';
 import '../providers/booking_flow_notifier.dart';
@@ -42,17 +46,16 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       body: unitAsync.when(
         data: (unit) {
           if (unit == null) {
-            return Center(
+            return const Center(
               child: ErrorStateWidget(
                 message: 'Ova jedinica nije dostupna ili ne postoji.',
-                onRetry: () => ref.invalidate(unitDetailsProvider(widget.unitId)),
               ),
             );
           }
 
           return _buildContent(unit);
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => _buildSkeletonLoader(),
         error: (error, stack) => Center(
           child: ErrorStateWidget(
             message: 'Greška pri učitavanju: ${error.toString()}',
@@ -83,19 +86,13 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
           // Calendar section
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(20),
+            margin: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+            padding: EdgeInsets.all(AppDimensions.spaceM),
             decoration: BoxDecoration(
               color: context.surfaceColor,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 12),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
               border: Border.all(color: context.borderColor),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              // Removed boxShadow for modern flat design (matches Home/Property pages)
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,11 +123,11 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
           // Guests selector
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(20),
+            margin: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+            padding: EdgeInsets.all(AppDimensions.spaceM),
             decoration: BoxDecoration(
               color: context.surfaceColor,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 12),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
               border: Border.all(color: context.borderColor),
             ),
             child: Row(
@@ -203,11 +200,11 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
           // Price breakdown (shown when dates are selected)
           if (hasSelectedDates) ...[
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(20),
+              margin: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+              padding: EdgeInsets.all(AppDimensions.spaceM),
               decoration: BoxDecoration(
                 color: context.surfaceVariantColor,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 12),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
                 border: Border.all(color: context.borderColor),
               ),
               child: Column(
@@ -254,14 +251,14 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
           // Continue button
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(context.horizontalPadding),
             child: Semantics(
               label: hasSelectedDates
-                  ? 'Continue to booking review for $nights ${nights == 1 ? 'night' : 'nights'}, €${(unit.pricePerNight * nights * 1.10 + 50).toStringAsFixed(2)} total'
-                  : 'Select dates first to continue',
+                  ? 'Nastavi na pregled rezervacije za $nights ${nights == 1 ? 'noć' : 'noći'}, €${(unit.pricePerNight * nights * 1.10 + 50).toStringAsFixed(2)} ukupno'
+                  : 'Prvo odaberite datume za nastavak',
               hint: hasSelectedDates
-                  ? 'Proceeds to guest details and payment'
-                  : 'Button is disabled until dates are selected',
+                  ? 'Dvostruki dodir za nastavak na detalje gostiju i plaćanje'
+                  : 'Dugme je onemogućeno dok ne odaberete datume',
               button: true,
               enabled: hasSelectedDates,
               child: ElevatedButton(
@@ -272,10 +269,11 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   backgroundColor: context.primaryColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size(double.infinity, 48), // AAA touch target
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 12),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px for buttons
                   ),
-                  elevation: hasSelectedDates ? 2 : 0,
+                  elevation: 0, // Flat design (matches Home/Property pages)
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -307,18 +305,12 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
   Widget _buildUnitHeader(PropertyUnit unit, dynamic property) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: EdgeInsets.all(context.horizontalPadding),
       decoration: BoxDecoration(
         color: context.surfaceColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 12),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
         border: Border.all(color: context.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        // Removed boxShadow for modern flat design (matches Home/Property pages)
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,24 +318,31 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
           // Unit image
           if (unit.coverImage != null || unit.images.isNotEmpty)
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(AppDimensions.radiusM), // 20px to match card
               ),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
-                child: Image.network(
-                  unit.coverImage ?? unit.images.first,
+                child: CachedNetworkImage(
+                  imageUrl: unit.coverImage ?? unit.images.first,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: context.surfaceVariantColor,
-                      child: Icon(
-                        Icons.image_not_supported,
-                        size: 48,
-                        color: context.textColorTertiary,
+                  placeholder: (context, url) => Container(
+                    color: context.surfaceVariantColor,
+                    child: const Center(
+                      child: SkeletonLoader(
+                        width: double.infinity,
+                        height: double.infinity,
                       ),
-                    );
-                  },
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: context.surfaceVariantColor,
+                    child: Icon(
+                      Icons.image_not_supported,
+                      size: 48,
+                      color: context.textColorTertiary,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -544,5 +543,115 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     if (mounted) {
       context.push(Routes.bookingReview);
     }
+  }
+
+  /// Skeleton loader for initial loading state
+  Widget _buildSkeletonLoader() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Unit header skeleton
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: const Column(
+                children: [
+                  // Image skeleton
+                  AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: SkeletonLoader(
+                      borderRadius: 12,
+                    ),
+                  ),
+                  // Details skeleton
+                  Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonLoader(width: 200, height: 28),
+                        SizedBox(height: 8),
+                        SkeletonLoader(width: 150, height: 18),
+                        SizedBox(height: 16),
+                        Row(
+                          children: [
+                            SkeletonLoader(width: 80, height: 16),
+                            SizedBox(width: 16),
+                            SkeletonLoader(width: 80, height: 16),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        SkeletonLoader(width: 100, height: 24),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Calendar skeleton
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonLoader(width: 180, height: 24),
+                  SizedBox(height: 16),
+                  SkeletonLoader(width: double.infinity, height: 300),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Guests selector skeleton
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonLoader(width: 120, height: 20),
+                      SizedBox(height: 4),
+                      SkeletonLoader(width: 150, height: 16),
+                    ],
+                  ),
+                  SkeletonLoader(width: 150, height: 48),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Button skeleton
+            const SkeletonLoader(
+              width: double.infinity,
+              height: 52,
+              borderRadius: 20,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

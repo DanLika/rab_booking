@@ -92,7 +92,7 @@ class RevenueChartWidget extends StatelessWidget {
 
           const SizedBox(height: AppDimensions.spaceXL),
 
-          // Chart
+          // Chart - Responsive height
           if (data.isEmpty)
             Center(
               child: Padding(
@@ -120,9 +120,20 @@ class RevenueChartWidget extends StatelessWidget {
               ),
             )
           else
-            SizedBox(
-              height: 200,
-              child: _BarChart(data: data),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // Responsive chart height based on available width
+                final chartHeight = constraints.maxWidth > 600
+                    ? 250.0
+                    : constraints.maxWidth > 400
+                        ? 200.0
+                        : 150.0;
+
+                return SizedBox(
+                  height: chartHeight,
+                  child: _BarChart(data: data),
+                );
+              },
             ),
         ],
       ),
@@ -141,106 +152,123 @@ class _BarChart extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final maxValue = data.map((d) => d.value).reduce(math.max);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        // Y-axis labels
-        SizedBox(
-          width: 50,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: List.generate(5, (index) {
-              final value = maxValue * (4 - index) / 4;
-              return Text(
-                '€${value.toStringAsFixed(0)}',
-                style: AppTypography.small.copyWith(
-                  color: isDark
-                      ? AppColors.textSecondaryDark
-                      : AppColors.textSecondaryLight,
-                ),
-              );
-            }),
-          ),
-        ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate responsive Y-axis width based on max value
+        final maxValueDigits = maxValue.toStringAsFixed(0).length;
+        final yAxisWidth = math.min(60.0, math.max(40.0, maxValueDigits * 8.0));
 
-        const SizedBox(width: AppDimensions.spaceS),
+        // Calculate available height for bars
+        final barChartHeight = constraints.maxHeight - 40; // Reserve space for X-axis labels
 
-        // Bars
-        Expanded(
-          child: Column(
-            children: [
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: data.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final point = entry.value;
-                    final height = maxValue > 0 ? point.value / maxValue : 0;
-
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          left: index == 0 ? 0 : AppDimensions.spaceXXS,
-                          right: index == data.length - 1
-                              ? 0
-                              : AppDimensions.spaceXXS,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Container(
-                              height: height * 150,
-                              decoration: const BoxDecoration(
-                                gradient: AppColors.primaryGradient,
-                                borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(AppDimensions.radiusS),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Y-axis labels - Responsive width
+            SizedBox(
+              width: yAxisWidth,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(5, (index) {
+                  final value = maxValue * (4 - index) / 4;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Text(
+                      '€${value.toStringAsFixed(0)}',
+                      style: AppTypography.small.copyWith(
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight,
+                        fontSize: 10,
                       ),
-                    );
-                  }).toList(),
-                ),
-              ),
-
-              const SizedBox(height: AppDimensions.spaceS),
-
-              // X-axis labels
-              Row(
-                children: data.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final point = entry.value;
-
-                  return Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        left: index == 0 ? 0 : AppDimensions.spaceXXS,
-                        right: index == data.length - 1
-                            ? 0
-                            : AppDimensions.spaceXXS,
-                      ),
-                      child: Text(
-                        point.label,
-                        style: AppTypography.small.copyWith(
-                          color: isDark
-                              ? AppColors.textSecondaryDark
-                              : AppColors.textSecondaryLight,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   );
-                }).toList(),
+                }),
               ),
-            ],
-          ),
-        ),
-      ],
+            ),
+
+            const SizedBox(width: AppDimensions.spaceS),
+
+            // Bars
+            Expanded(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: data.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final point = entry.value;
+                        final heightRatio = maxValue > 0 ? point.value / maxValue : 0;
+
+                        return Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: index == 0 ? 0 : AppDimensions.spaceXXS,
+                              right: index == data.length - 1
+                                  ? 0
+                                  : AppDimensions.spaceXXS,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                // Dynamic height based on available space
+                                Container(
+                                  height: heightRatio * barChartHeight,
+                                  decoration: const BoxDecoration(
+                                    gradient: AppColors.primaryGradient,
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(AppDimensions.radiusS),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppDimensions.spaceS),
+
+                  // X-axis labels
+                  Row(
+                    children: data.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final point = entry.value;
+
+                      return Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            left: index == 0 ? 0 : AppDimensions.spaceXXS,
+                            right: index == data.length - 1
+                                ? 0
+                                : AppDimensions.spaceXXS,
+                          ),
+                          child: Text(
+                            point.label,
+                            style: AppTypography.small.copyWith(
+                              color: isDark
+                                  ? AppColors.textSecondaryDark
+                                  : AppColors.textSecondaryLight,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

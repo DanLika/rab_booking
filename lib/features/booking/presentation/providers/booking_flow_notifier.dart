@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../property/domain/models/property_unit.dart';
 import '../../../property/presentation/providers/unavailable_dates_provider.dart';
+import '../../domain/constants/booking_constants.dart';
 
 part 'booking_flow_notifier.freezed.dart';
 part 'booking_flow_notifier.g.dart';
@@ -108,12 +109,16 @@ class BookingFlowNotifier extends _$BookingFlowNotifier {
       // Calculate number of nights
       final nights = checkOut.difference(checkIn).inDays;
 
-      // Calculate prices
+      // Calculate prices using BookingConstants
       final basePrice = unit.pricePerNight * nights;
-      final serviceFee = basePrice * 0.10; // 10% service fee
-      final cleaningFee = 50.0; // Fixed cleaning fee
-      final totalPrice = basePrice + serviceFee + cleaningFee;
-      final advanceAmount = totalPrice * 0.20; // 20% advance
+      final serviceFee = BookingConstants.calculateServiceFee(basePrice);
+      final cleaningFee = BookingConstants.cleaningFeeEur;
+      final totalPrice = BookingConstants.calculateTotalPrice(
+        basePrice: basePrice,
+        customServiceFee: serviceFee,
+        customCleaningFee: cleaningFee,
+      );
+      final advanceAmount = BookingConstants.calculateAdvancePayment(totalPrice);
 
       state = state.copyWith(
         property: property,

@@ -102,13 +102,14 @@ class ResponsiveUtils {
 
   /// Get responsive horizontal padding
   ///
-  /// Mobile: 16px, Tablet: 24px, Desktop: 32px
+  /// Mobile: 16px, Tablet: 24px, Desktop: 32px, Ultra-wide: 48px
   static double getHorizontalPadding(BuildContext context) {
-    return value(
+    return valueWith(
       context,
-      mobile: AppDimensions.spaceS,
-      tablet: AppDimensions.spaceM,
-      desktop: AppDimensions.spaceL,
+      mobile: AppDimensions.spaceS,     // 16px
+      tablet: AppDimensions.spaceM,     // 24px
+      desktop: AppDimensions.spaceL,    // 32px
+      largeDesktop: AppDimensions.spaceXL, // 48px - for ultra-wide screens
     );
   }
 

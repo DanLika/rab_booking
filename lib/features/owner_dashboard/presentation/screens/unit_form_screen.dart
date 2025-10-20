@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../property/domain/models/property_unit.dart';
 import '../../data/owner_properties_repository.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Unit form screen for add/edit
 class UnitFormScreen extends ConsumerStatefulWidget {
@@ -429,7 +430,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
             child: Text(
               'Ukupno: $totalImages fotografija',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondaryLight,
                   ),
             ),
           ),
@@ -445,7 +446,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
+            border: Border.all(color: AppColors.borderLight),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -454,7 +455,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  color: Colors.grey[200],
+                  color: AppColors.surfaceVariantLight,
                   child: const Icon(Icons.broken_image),
                 );
               },
@@ -470,7 +471,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
             },
             icon: const Icon(Icons.close, size: 16),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
               padding: EdgeInsets.zero,
               minimumSize: const Size(24, 24),
             ),
@@ -488,8 +489,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
-            color: Colors.grey[200],
+            border: Border.all(color: AppColors.borderLight),
+            color: AppColors.surfaceVariantLight,
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -505,7 +506,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
             },
             icon: const Icon(Icons.close, size: 16),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
               padding: EdgeInsets.zero,
               minimumSize: const Size(24, 24),
             ),

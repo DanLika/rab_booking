@@ -10,8 +10,8 @@ import 'package:universal_io/io.dart' show Platform;
 import 'core/config/env_config.dart';
 import 'core/config/router.dart';
 import 'core/providers/language_provider.dart';
+import 'core/providers/theme_provider.dart';
 import 'core/theme/app_theme.dart';
-import 'features/profile/data/profile_service.dart';
 import 'l10n/app_localizations.dart';
 
 void main() async {
@@ -58,21 +58,8 @@ class RabBookingApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     final locale = ref.watch(currentLocaleProvider);
 
-    // Watch user preferences for theme mode
-    final preferencesAsync = ref.watch(userPreferencesNotifierProvider);
-    final themeMode = preferencesAsync.maybeWhen(
-      data: (prefs) {
-        switch (prefs.theme) {
-          case 'dark':
-            return ThemeMode.dark;
-          case 'light':
-            return ThemeMode.light;
-          default:
-            return ThemeMode.system;
-        }
-      },
-      orElse: () => ThemeMode.system,
-    );
+    // Watch theme mode from theme provider (uses local SharedPreferences)
+    final themeMode = ref.watch(currentThemeModeProvider);
 
     return MaterialApp.router(
       title: 'Rab Booking',

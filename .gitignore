@@ -64,3 +64,11 @@ supabase/.branches
 *.key
 *.keystore
 android/key.properties
+
+# Documentation and debug files
+*.md
+!README.md
+*.sql
+*.stackdump
+build_output.txt
+supabase/supabase/

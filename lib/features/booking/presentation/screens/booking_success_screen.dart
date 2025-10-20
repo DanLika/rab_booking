@@ -58,7 +58,7 @@ class BookingSuccessScreen extends StatelessWidget {
     required this.guests,
     required this.nights,
     required this.totalAmount,
-    this.currencySymbol = '\$',
+    this.currencySymbol = '€',
     required this.confirmationEmail,
   });
 
@@ -154,17 +154,19 @@ class BookingSuccessScreen extends StatelessWidget {
     return Column(
       children: [
         Text(
-          'Booking Confirmed!',
+          'Rezervacija potvrđena!',
           style: context.isMobile ? AppTypography.h2 : AppTypography.h1,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppDimensions.spaceS),
         Text(
-          'Your reservation has been successfully confirmed',
+          'Vaša rezervacija je uspješno potvrđena',
           style: AppTypography.bodyLarge.copyWith(
             color: context.textColorSecondary,
           ),
           textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     )
@@ -184,10 +186,12 @@ class BookingSuccessScreen extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Booking Reference',
+            'Referentni broj rezervacije',
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.withOpacity(context.textColorInverted, AppColors.opacity90),
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: AppDimensions.spaceS),
           Text(
@@ -227,15 +231,17 @@ class BookingSuccessScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Confirmation Email Sent',
+                  'Potvrda poslana emailom',
                   style: AppTypography.bodyLarge.copyWith(
                     fontWeight: AppTypography.weightSemibold,
                     color: AppColors.success,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: AppDimensions.spaceXXS),
                 Text(
-                  'Check $confirmationEmail for booking details',
+                  'Provjerite $confirmationEmail za detalje rezervacije',
                   style: AppTypography.bodyMedium,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -253,7 +259,7 @@ class BookingSuccessScreen extends StatelessWidget {
       children: [
         // View booking details
         PremiumButton.primary(
-          label: 'View Booking Details',
+          label: 'Pogledaj detalje rezervacije',
           icon: Icons.receipt_long_outlined,
           isFullWidth: true,
           size: ButtonSize.large,
@@ -288,7 +294,7 @@ class BookingSuccessScreen extends StatelessWidget {
 
   Widget _buildDownloadButton(BuildContext context) {
     return PremiumButton.outline(
-      label: 'Download PDF',
+      label: 'Preuzmi PDF',
       icon: Icons.download_outlined,
       isFullWidth: true,
       onPressed: () {
@@ -299,7 +305,7 @@ class BookingSuccessScreen extends StatelessWidget {
 
   Widget _buildShareButton(BuildContext context) {
     return PremiumButton.outline(
-      label: 'Share',
+      label: 'Podijeli',
       icon: Icons.share_outlined,
       isFullWidth: true,
       onPressed: () {
@@ -310,7 +316,7 @@ class BookingSuccessScreen extends StatelessWidget {
 
   Widget _buildHomeButton(BuildContext context) {
     return PremiumButton.text(
-      label: 'Back to Home',
+      label: 'Nazad na početnu',
       icon: Icons.home_outlined,
       isFullWidth: true,
       onPressed: () => context.goToHome(),

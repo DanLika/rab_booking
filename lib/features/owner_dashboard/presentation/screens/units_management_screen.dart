@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/owner_properties_repository.dart';
 import '../../../property/domain/models/property_unit.dart';
 import 'unit_form_screen.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Units management screen for a property
 class UnitsManagementScreen extends ConsumerStatefulWidget {
@@ -73,7 +74,7 @@ class _UnitsManagementScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text('Greška: $_error'),
             const SizedBox(height: 16),
@@ -115,7 +116,7 @@ class _UnitsManagementScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.apartment, size: 120, color: Colors.grey[300]),
+            Icon(Icons.apartment, size: 120, color: AppColors.textDisabled),
             const SizedBox(height: 24),
             Text(
               'Nema dodanih jedinica',
@@ -128,7 +129,7 @@ class _UnitsManagementScreenState
             Text(
               'Dodajte prvu jedinicu (apartman, sobu, studio) za ovu nekretninu',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondaryLight,
                   ),
               textAlign: TextAlign.center,
             ),
@@ -190,7 +191,7 @@ class _UnitsManagementScreenState
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
             ),
             child: const Text('Obriši'),
           ),
@@ -260,16 +261,16 @@ class _UnitCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: unit.isAvailable
-                              ? Colors.green.withValues(alpha: 0.1)
-                              : Colors.grey.withValues(alpha: 0.1),
+                              ? AppColors.success.withValues(alpha: 0.1)
+                              : AppColors.surfaceVariantLight,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           unit.isAvailable ? 'Dostupno' : 'Nedostupno',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: unit.isAvailable
-                                    ? Colors.green[700]
-                                    : Colors.grey[700],
+                                    ? AppColors.success
+                                    : AppColors.textPrimaryDark,
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
@@ -322,7 +323,7 @@ class _UnitCard extends StatelessWidget {
               Text(
                 unit.description!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondaryLight,
                     ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -348,7 +349,7 @@ class _UnitCard extends StatelessWidget {
                   icon: const Icon(Icons.delete),
                   label: const Text('Obriši'),
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
+                    foregroundColor: AppColors.error,
                   ),
                 ),
               ],
@@ -367,12 +368,12 @@ class _UnitCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
+        Icon(icon, size: 16, color: AppColors.textSecondaryLight),
         const SizedBox(width: 4),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
+                color: AppColors.textSecondaryLight,
               ),
         ),
       ],

@@ -342,30 +342,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   )
                                 : null,
                           ),
-                          ListTile(
-                            onTap: () {
-                              setState(() => _selectedRole = 'admin');
-                            },
-                            contentPadding: EdgeInsets.zero,
-                            dense: true,
-                            leading: Icon(
-                              _selectedRole == 'admin'
-                                  ? Icons.radio_button_checked
-                                  : Icons.radio_button_unchecked,
-                              color: _selectedRole == 'admin'
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.grey,
-                            ),
-                            title: const Text('Administrator'),
-                            subtitle: const Text('Potpuna kontrola nad sistemom'),
-                            trailing: _selectedRole == 'admin'
-                                ? Icon(
-                                    Icons.check_circle,
-                                    color: Theme.of(context).primaryColor,
-                                    size: 20,
-                                  )
-                                : null,
-                          ),
+                          // Admin registration removed - admins can only login (not register)
                         ],
                       ),
                     ),

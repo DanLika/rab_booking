@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
 import '../providers/booking_calendar_notifier.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -48,22 +49,31 @@ class _BookingCalendarWidgetState
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${calendarState.selectedNights} ${calendarState.selectedNights == 1 ? 'noć' : 'noći'} odabrano',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                Semantics(
+                  label: '${calendarState.selectedNights} ${calendarState.selectedNights == 1 ? 'noć' : 'noći'} odabrano',
+                  readOnly: true,
+                  child: Text(
+                    '${calendarState.selectedNights} ${calendarState.selectedNights == 1 ? 'noć' : 'noći'} odabrano',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
                 ),
-                TextButton.icon(
-                  onPressed: () {
-                    ref
-                        .read(bookingCalendarNotifierProvider(widget.unitId)
-                            .notifier)
-                        .clearDates();
-                    widget.onDatesSelected?.call(null, null);
-                  },
-                  icon: const Icon(Icons.clear),
-                  label: const Text('Očisti'),
+                Semantics(
+                  label: 'Očisti odabrane datume',
+                  hint: 'Dvostruki dodir za brisanje odabira datuma',
+                  button: true,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      ref
+                          .read(bookingCalendarNotifierProvider(widget.unitId)
+                              .notifier)
+                          .clearDates();
+                      widget.onDatesSelected?.call(null, null);
+                    },
+                    icon: const Icon(Icons.clear),
+                    label: const Text('Očisti'),
+                  ),
                 ),
               ],
             ),
@@ -88,12 +98,16 @@ class _BookingCalendarWidgetState
 
         // Error message
         if (calendarState.error != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Text(
-              calendarState.error!,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
+          Semantics(
+            label: 'Greška: ${calendarState.error}',
+            liveRegion: true,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Text(
+                calendarState.error!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
               ),
             ),
           ),
@@ -185,8 +199,10 @@ class _BookingCalendarWidgetState
                   ),
             ),
             calendarStyle: const CalendarStyle(
-              cellMargin: EdgeInsets.all(4),
-              cellPadding: EdgeInsets.zero,
+              // Increased margin for better touch targets (WCAG 44×44px minimum)
+              cellMargin: EdgeInsets.all(6),
+              // Added padding inside cells for better clickability
+              cellPadding: EdgeInsets.all(2),
               isTodayHighlighted: false, // We handle today in custom builder
               selectedDecoration: BoxDecoration(),
               selectedTextStyle: TextStyle(),
@@ -364,11 +380,35 @@ class _BookingCalendarWidgetState
     final isCheckOut = calendarState.isCheckOutDay(day);
     final isInRange = calendarState.isInSelectedRange(day);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      margin: const EdgeInsets.all(2),
-      child: Stack(
-        children: [
+    // Build semantic label for screen readers
+    final dayLabel = DateFormat('d MMMM yyyy').format(day);
+    String semanticLabel = dayLabel;
+    if (isCheckIn) {
+      semanticLabel += ', datum dolaska';
+    } else if (isCheckOut) {
+      semanticLabel += ', datum odlaska';
+    } else if (isInRange) {
+      semanticLabel += ', u odabranom rasponu';
+    } else if (isBooked) {
+      semanticLabel += ', zauzeto';
+    } else if (isToday) {
+      semanticLabel += ', danas';
+    } else {
+      semanticLabel += ', dostupno';
+    }
+
+    return Semantics(
+      label: semanticLabel,
+      hint: isBooked
+          ? 'Ovaj datum nije dostupan za rezervaciju'
+          : 'Dvostruki dodir za odabir datuma',
+      button: !isBooked,
+      selected: isCheckIn || isCheckOut || isInRange,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.all(2),
+        child: Stack(
+          children: [
           // Base container
           Container(
             decoration: BoxDecoration(
@@ -492,23 +532,31 @@ class _BookingCalendarWidgetState
                 ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildDisabledDay(BuildContext context, DateTime day) {
-    return Container(
-      margin: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: context.surfaceVariantColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Center(
-        child: Text(
-          '${day.day}',
-          style: const TextStyle(
-            color: AppColors.textDisabled,
+    final dayLabel = DateFormat('d MMMM yyyy').format(day);
+
+    return Semantics(
+      label: '$dayLabel, nedostupno',
+      hint: 'Prošli datum, nije moguće rezervirati',
+      excludeSemantics: true,
+      child: Container(
+        margin: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          color: context.surfaceVariantColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            '${day.day}',
+            style: const TextStyle(
+              color: AppColors.textDisabled,
+            ),
           ),
         ),
       ),
@@ -565,30 +613,34 @@ class _BookingCalendarWidgetState
   }
 
   Widget _buildLegend() {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 8,
-      children: [
-        _LegendItem(
-          color: context.primaryColor.withValues(alpha:0.2),
-          label: 'Odabrano',
-        ),
-        const _LegendItem(
-          color: AppColors.error,
-          label: 'Check-in/out',
-        ),
-        _LegendItem(
-          color: context.isDarkMode
-              ? AppColors.infoDark.withValues(alpha: 0.2)
-              : AppColors.info.withValues(alpha: 0.1),
-          label: 'Zauzeto',
-          hasStripes: true,
-        ),
-        _LegendItem(
-          color: context.surfaceVariantColor,
-          label: 'Nedostupno',
-        ),
-      ],
+    return Semantics(
+      label: 'Legenda kalendara',
+      readOnly: true,
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 8,
+        children: [
+          _LegendItem(
+            color: context.primaryColor.withValues(alpha:0.2),
+            label: 'Odabrano',
+          ),
+          const _LegendItem(
+            color: AppColors.error,
+            label: 'Check-in/out',
+          ),
+          _LegendItem(
+            color: context.isDarkMode
+                ? AppColors.infoDark.withValues(alpha: 0.2)
+                : AppColors.info.withValues(alpha: 0.1),
+            label: 'Zauzeto',
+            hasStripes: true,
+          ),
+          _LegendItem(
+            color: context.surfaceVariantColor,
+            label: 'Nedostupno',
+          ),
+        ],
+      ),
     );
   }
 }
@@ -606,30 +658,35 @@ class _LegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 20,
-          height: 20,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4),
+    return Semantics(
+      label: 'Legenda stavka: $label',
+      readOnly: true,
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: hasStripes
+                ? CustomPaint(
+                    painter: _DiagonalStripesPainter(
+                      color: AppColors.infoLight,
+                    ),
+                  )
+                : null,
           ),
-          child: hasStripes
-              ? CustomPaint(
-                  painter: _DiagonalStripesPainter(
-                    color: AppColors.infoLight,
-                  ),
-                )
-              : null,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
     );
   }
 }

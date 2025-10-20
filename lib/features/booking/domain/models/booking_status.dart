@@ -1,12 +1,13 @@
-import 'package:flutter/material.dart' show Color;
+import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 
 enum BookingStatus {
-  pending('pending', 'Pending'),
-  confirmed('confirmed', 'Confirmed'),
-  cancelled('cancelled', 'Cancelled'),
-  completed('completed', 'Completed'),
-  refunded('refunded', 'Refunded'),
-  blocked('blocked', 'Blocked');
+  pending('pending', 'Na čekanju'),
+  confirmed('confirmed', 'Potvrđeno'),
+  cancelled('cancelled', 'Otkazano'),
+  completed('completed', 'Završeno'),
+  refunded('refunded', 'Refundirano'),
+  blocked('blocked', 'Blokirano');
 
   final String value;
   final String displayName;
@@ -25,22 +26,20 @@ enum BookingStatus {
     return this == BookingStatus.pending || this == BookingStatus.confirmed;
   }
 
-  /// Get color for status
-  /// Used for calendar and UI display
+  /// Get the color associated with this booking status
   Color get color {
     switch (this) {
       case BookingStatus.confirmed:
-        return const Color(0xFF4CAF50); // Green
+        return AppColors.statusConfirmed;
       case BookingStatus.pending:
-        return const Color(0xFFFF9800); // Orange
+        return AppColors.statusPending;
       case BookingStatus.cancelled:
-        return const Color(0xFFF44336); // Red
-      case BookingStatus.blocked:
-        return const Color(0xFF2196F3); // Blue
-      case BookingStatus.completed:
-        return const Color(0xFF9E9E9E); // Grey
       case BookingStatus.refunded:
-        return const Color(0xFF9C27B0); // Purple
+        return AppColors.statusCancelled;
+      case BookingStatus.completed:
+        return AppColors.statusCompleted;
+      case BookingStatus.blocked:
+        return AppColors.textDisabled;
     }
   }
 }

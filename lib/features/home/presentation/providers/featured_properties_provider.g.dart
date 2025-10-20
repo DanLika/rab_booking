@@ -7,7 +7,7 @@ part of 'featured_properties_provider.dart';
 // **************************************************************************
 
 String _$featuredPropertiesHash() =>
-    r'a085ea5166b9c05418acff754e126f62cd256395';
+    r'dee2d5ea4225f90ae9f051ec675672a972e54245';
 
 /// Featured properties provider - fetches real data from Supabase
 ///

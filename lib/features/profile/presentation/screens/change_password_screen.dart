@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/errors/error_mapper.dart';
 import '../../../../shared/widgets/widgets.dart';
 
 /// Change Password Screen
@@ -44,8 +45,36 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
     try {
       final supabase = Supabase.instance.client;
+      final currentUser = supabase.auth.currentUser;
 
-      // Update password with Supabase Auth
+      if (currentUser == null || currentUser.email == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // SECURITY: First, re-authenticate user with current password
+      // This ensures that the person changing the password is the actual account owner
+      try {
+        await supabase.auth.signInWithPassword(
+          email: currentUser.email!,
+          password: _currentPasswordController.text,
+        );
+      } on AuthException {
+        // Re-authentication failed - current password is wrong
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Trenutna lozinka je netačna. Molimo pokušajte ponovo.',
+              ),
+              backgroundColor: AppColors.error,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return; // Stop here, don't change password
+      }
+
+      // Current password is correct, now update to new password
       await supabase.auth.updateUser(
         UserAttributes(
           password: _newPasswordController.text,
@@ -57,6 +86,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
           const SnackBar(
             content: Text('Lozinka uspešno promenjena'),
             backgroundColor: AppColors.success,
+            duration: Duration(seconds: 3),
           ),
         );
 
@@ -64,19 +94,23 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       }
     } on AuthException catch (e) {
       if (mounted) {
+        final appException = ErrorMapper.mapException(e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Greška: ${e.message}'),
+            content: Text(appException.getUserMessage()),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        final appException = ErrorMapper.mapException(e);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Došlo je do greške pri promeni lozinke'),
+          SnackBar(
+            content: Text(appException.getUserMessage()),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

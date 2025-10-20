@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/home_hero_section.dart';
+import '../widgets/home_hero_section_premium.dart';
 import '../widgets/featured_properties_section.dart';
-import '../widgets/recently_viewed_section.dart';
-import '../widgets/popular_destinations_section.dart';
-import '../widgets/how_it_works_section.dart';
-import '../widgets/testimonials_section.dart';
-import '../widgets/cta_section.dart';
+import '../widgets/recently_viewed_section_premium.dart';
+import '../widgets/popular_destinations_section_premium.dart';
+import '../widgets/how_it_works_section_premium.dart';
+import '../widgets/testimonials_section_premium.dart';
+import '../widgets/cta_section_premium.dart';
 import '../../../../core/utils/navigation_helpers.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/widgets/widgets.dart';
@@ -24,15 +24,11 @@ class HomeScreen extends ConsumerWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 1. Premium Hero Section with integrated search
-            HomeHeroSection(
-              title: 'Discover Your Perfect Getaway',
-              subtitle:
-                  'Browse thousands of premium vacation rentals in stunning destinations around the world',
-              backgroundImage:
-                  'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1600',
-              showSearch: true,
-              onSearchPressed: () => context.goToSearch(),
+            // 1. Premium Hero Section with Functional Search
+            const HomeHeroSectionPremium(
+              title: 'Discover Your Perfect Getaway on Rab Island',
+              subtitle: 'Premium villas, apartments & vacation homes in the heart of the Adriatic',
+              backgroundImage: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1600',
             ),
 
             // 2. Featured Properties Section (with scroll reveal)
@@ -48,22 +44,22 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
 
-            // 2.5. Recently Viewed Section (only for logged-in users, with scroll reveal)
+            // 2.5. Recently Viewed Section (Premium) - only for logged-in users
             const SectionReveal(
               delay: Duration(milliseconds: 100),
-              child: RecentlyViewedSection(
+              child: RecentlyViewedSectionPremium(
                 title: 'Recently Viewed',
                 subtitle: 'Properties you have viewed recently',
                 maxProperties: 10,
               ),
             ),
 
-            // 3. Popular Destinations Section (with scroll reveal)
+            // 3. Popular Destinations Section Premium (with scroll reveal)
             SectionReveal(
               delay: const Duration(milliseconds: 200),
-              child: PopularDestinationsSection(
+              child: PopularDestinationsSectionPremium(
                 title: 'Popular Destinations',
-                subtitle: 'Explore the most sought-after vacation spots',
+                subtitle: 'Explore the most sought-after vacation spots on Rab Island',
                 onDestinationTapped: (destination) {
                   // Navigate to search with destination filter
                   context.goToSearch();
@@ -71,36 +67,36 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
 
-            // 4. How It Works Section (with scroll reveal)
+            // 4. How It Works Section Premium (with scroll reveal)
             const SectionReveal(
               delay: Duration(milliseconds: 100),
-              child: HowItWorksSection(
+              child: HowItWorksSectionPremium(
                 title: 'How It Works',
                 subtitle: 'Book your dream vacation in three simple steps',
               ),
             ),
 
-            // 5. Testimonials Section (with scroll reveal)
+            // 5. Testimonials Section Premium (with scroll reveal)
             const SectionReveal(
               delay: Duration(milliseconds: 150),
-              child: TestimonialsSection(
+              child: TestimonialsSectionPremium(
                 title: 'What Our Guests Say',
                 subtitle: 'Real experiences from real travelers',
                 autoPlay: true,
               ),
             ),
 
-            // 6. Call-to-Action Section (with scroll reveal)
+            // 6. Call-to-Action Section Premium (with scroll reveal)
             SectionReveal(
               delay: const Duration(milliseconds: 100),
-              child: CtaSectionPresets.getStarted(
+              child: CtaSectionPresetsPremium.getStarted(
                 onGetStarted: () => context.goToSearch(),
                 onLearnMore: () => context.goToAboutUs(),
               ),
             ),
 
-            // 7. Footer Section
-            const AppFooter(),
+            // Bottom padding to account for BottomNavigationBar
+            const SizedBox(height: 24),
           ],
         ),
       ),

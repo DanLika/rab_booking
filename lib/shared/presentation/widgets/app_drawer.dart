@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/providers/auth_state_provider.dart';
+import '../../../core/providers/language_provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../features/auth/presentation/providers/auth_notifier.dart';
 import '../../../core/utils/navigation_helpers.dart';
 import '../../../core/theme/app_colors.dart';
@@ -141,6 +143,68 @@ class AppDrawer extends ConsumerWidget {
             ],
           ],
 
+          // Settings section (Theme & Language) - Available to all users
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'POSTAVKE',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+
+          // Theme Switcher (Light/Dark Mode)
+          Consumer(
+            builder: (context, ref, child) {
+              final themeModeAsync = ref.watch(themeNotifierProvider);
+              final currentMode = themeModeAsync.value ?? ThemeMode.system;
+
+              return ListTile(
+                leading: Icon(
+                  currentMode == ThemeMode.dark
+                      ? Icons.dark_mode
+                      : currentMode == ThemeMode.light
+                          ? Icons.light_mode
+                          : Icons.brightness_auto,
+                ),
+                title: const Text('Tema'),
+                subtitle: Text(
+                  currentMode == ThemeMode.dark
+                      ? 'Tamna'
+                      : currentMode == ThemeMode.light
+                          ? 'Svijetla'
+                          : 'Sistemska',
+                ),
+                onTap: () {
+                  _showThemeSelector(context, ref);
+                },
+              );
+            },
+          ),
+
+          // Language Selector
+          Consumer(
+            builder: (context, ref, child) {
+              final localeAsync = ref.watch(languageNotifierProvider);
+              final currentLocale = localeAsync.value ?? const Locale('hr');
+
+              return ListTile(
+                leading: const Icon(Icons.language),
+                title: const Text('Jezik'),
+                subtitle: Text(
+                  currentLocale.languageCode == 'hr' ? 'Hrvatski' : 'English',
+                ),
+                onTap: () {
+                  _showLanguageSelector(context, ref);
+                },
+              );
+            },
+          ),
+
           // Auth section (login/logout)
           const Divider(),
 
@@ -175,17 +239,77 @@ class AppDrawer extends ConsumerWidget {
             ),
           ],
 
-          // Design system demo (dev only)
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.palette_outlined),
-            title: const Text('Design System'),
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/design-system-demo');
-            },
-          ),
         ],
+      ),
+    );
+  }
+
+  /// Show theme selector dialog
+  void _showThemeSelector(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Izaberite temu'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.light_mode),
+              title: const Text('Svijetla'),
+              onTap: () async {
+                await ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
+                if (context.mounted) Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.dark_mode),
+              title: const Text('Tamna'),
+              onTap: () async {
+                await ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
+                if (context.mounted) Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.brightness_auto),
+              title: const Text('Sistemska'),
+              onTap: () async {
+                await ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
+                if (context.mounted) Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show language selector dialog
+  void _showLanguageSelector(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Izaberite jezik'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Text('🇭🇷', style: TextStyle(fontSize: 32)),
+              title: const Text('Hrvatski'),
+              onTap: () {
+                ref.read(languageNotifierProvider.notifier).setLanguage('hr');
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Text('🇬🇧', style: TextStyle(fontSize: 32)),
+              title: const Text('English'),
+              onTap: () {
+                ref.read(languageNotifierProvider.notifier).setLanguage('en');
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

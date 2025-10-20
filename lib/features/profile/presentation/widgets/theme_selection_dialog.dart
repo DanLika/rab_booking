@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../domain/models/user_preferences.dart';
 
 /// Theme selection dialog
@@ -58,7 +60,7 @@ class _ThemeSelectionDialogState extends State<ThemeSelectionDialog> {
             contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
             leading: Icon(
               _getThemeIcon(themeMode),
-              color: isSelected ? const Color(0xFF667eea) : Colors.grey,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
             ),
             title: Text(
               themeMode.displayName,
@@ -68,20 +70,19 @@ class _ThemeSelectionDialogState extends State<ThemeSelectionDialog> {
             ),
             subtitle: Text(
               _getThemeDescription(themeMode),
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textSecondary,
               ),
             ),
             trailing: isSelected
                 ? const Icon(
                     Icons.check_circle,
-                    color: Color(0xFF667eea),
+                    color: AppColors.primary,
                     size: 20,
                   )
                 : const Icon(
                     Icons.radio_button_unchecked,
-                    color: Colors.grey,
+                    color: AppColors.textSecondary,
                     size: 20,
                   ),
           );

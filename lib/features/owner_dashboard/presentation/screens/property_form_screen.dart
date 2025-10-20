@@ -7,6 +7,7 @@ import '../../../../shared/models/property_model.dart';
 import '../../data/owner_properties_repository.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../providers/owner_properties_provider.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Property form screen for add/edit
 class PropertyFormScreen extends ConsumerStatefulWidget {
@@ -300,7 +301,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             child: Text(
               'Ukupno: $totalImages fotografija',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondaryLight,
                   ),
             ),
           ),
@@ -316,7 +317,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
+            border: Border.all(color: AppColors.borderLight),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -325,7 +326,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  color: Colors.grey[200],
+                  color: AppColors.surfaceVariantLight,
                   child: const Icon(Icons.broken_image),
                 );
               },
@@ -341,7 +342,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             },
             icon: const Icon(Icons.close, size: 16),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
               padding: EdgeInsets.zero,
               minimumSize: const Size(24, 24),
             ),
@@ -359,8 +360,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
-            color: Colors.grey[200],
+            border: Border.all(color: AppColors.borderLight),
+            color: AppColors.surfaceVariantLight,
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -376,7 +377,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             },
             icon: const Icon(Icons.close, size: 16),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
               padding: EdgeInsets.zero,
               minimumSize: const Size(24, 24),
             ),
@@ -453,7 +454,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Greška pri upload-u slika: $e'),
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.error,
               ),
             );
           }

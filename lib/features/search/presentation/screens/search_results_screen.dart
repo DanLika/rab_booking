@@ -14,10 +14,12 @@ import '../widgets/save_search_dialog.dart';
 import '../../domain/models/search_filters.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../shared/widgets/widgets.dart';
 import '../../../../core/providers/auth_state_provider.dart';
+import '../../data/repositories/search_constants.dart';
 
 /// Premium search results screen
 /// Features: Grid/List/Map views, filters, sorting, infinite scroll
@@ -85,11 +87,16 @@ class _PremiumSearchResultsScreenState
   }
 
   void _onScroll() {
+    // Memory leak protection - check if widget is still mounted
+    if (!mounted) return;
     if (_isLoadingMore) return;
+
+    // Safety check for scroll position
+    if (!_scrollController.hasClients) return;
 
     final maxScroll = _scrollController.position.maxScrollExtent;
     final currentScroll = _scrollController.position.pixels;
-    final threshold = maxScroll * 0.8; // Load more at 80% scroll
+    final threshold = maxScroll * SearchConstants.scrollLoadThreshold; // 0.8 = 80%
 
     if (currentScroll >= threshold) {
       _loadMore();
@@ -173,11 +180,14 @@ class _PremiumSearchResultsScreenState
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Filter sidebar (desktop only)
+          // Filter sidebar (desktop only) - RESPONSIVE WIDTH
           if (isDesktop)
             Container(
-              width: 320,
+              width: _getFilterPanelWidth(context),
               decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.surfaceDark
+                    : AppColors.surfaceLight,
                 border: Border(
                   right: BorderSide(
                     color: Theme.of(context).brightness == Brightness.dark
@@ -185,6 +195,7 @@ class _PremiumSearchResultsScreenState
                         : AppColors.borderLight,
                   ),
                 ),
+                boxShadow: AppShadows.elevation2,
               ),
               child: const PremiumFilterPanel(),
             ),
@@ -296,29 +307,129 @@ class _PremiumSearchResultsScreenState
     }
   }
 
+  /// Get responsive filter panel width based on screen size
+  double _getFilterPanelWidth(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Small desktop/laptop (900-1200px)
+    if (screenWidth < 1200) return 280.0;
+
+    // Medium desktop (1200-1600px)
+    if (screenWidth < 1600) return 320.0;
+
+    // Large desktop/ultrawide (1600px+)
+    return 360.0;
+  }
+
+  /// Get grid columns based on screen width - FIX #2: Match Home Page breakpoints
+  int _getGridColumns(double screenWidth) {
+    // Mobile (< 600px) - Match ResponsivePropertyGrid
+    if (screenWidth < AppDimensions.mobile) return 1;
+
+    // Tablet (600-1024px) - Match ResponsivePropertyGrid
+    if (screenWidth < AppDimensions.tablet) return 2;
+
+    // Desktop (1024-1440px) - Match ResponsivePropertyGrid
+    if (screenWidth < AppDimensions.desktop) return 3;
+
+    // Large Desktop (1440px+) - Match ResponsivePropertyGrid
+    return 4;
+  }
+
+  /// Get responsive grid padding - FIX #1 & #3: MaxWidth + consistent spacing
+  EdgeInsets _getResponsiveGridPadding(BuildContext context, double screenWidth) {
+    // Calculate max content width (containerXXL = 1536px)
+    const maxContentWidth = AppDimensions.containerXXL;
+
+    // Base horizontal padding (matches Home Page)
+    final baseHorizontalPadding = context.horizontalPadding; // 16/24/32px
+
+    // If screen is wider than max content + filter panel, add extra padding to center
+    final filterPanelWidth = screenWidth >= AppDimensions.tablet
+        ? _getFilterPanelWidth(context)
+        : 0.0;
+
+    final availableWidth = screenWidth - filterPanelWidth;
+    final extraPadding = availableWidth > maxContentWidth
+        ? (availableWidth - maxContentWidth) / 2
+        : 0.0;
+
+    final horizontalPadding = baseHorizontalPadding + extraPadding;
+    final verticalPadding = context.sectionSpacing; // 24/32/48px
+
+    return EdgeInsets.symmetric(
+      horizontal: horizontalPadding,
+      vertical: verticalPadding,
+    );
+  }
+
   Widget _buildSortDropdown(SearchFilters filters) {
-    return PopupMenuButton<SortBy>(
-      icon: const Icon(Icons.sort),
-      tooltip: 'Sortiraj',
-      initialValue: filters.sortBy,
-      onSelected: (sortBy) {
-        ref.read(searchFiltersNotifierProvider.notifier).updateSortBy(sortBy);
-      },
-      itemBuilder: (context) => SortBy.values.map((sortBy) {
-        return PopupMenuItem(
-          value: sortBy,
-          child: Row(
-            children: [
-              if (sortBy == filters.sortBy)
-                const Icon(Icons.check, size: 20, color: AppColors.primary)
-              else
-                const SizedBox(width: 20),
-              const SizedBox(width: AppDimensions.spaceS),
-              Text(sortBy.displayName),
-            ],
-          ),
-        );
-      }).toList(),
+    return Semantics(
+      label: 'Sort by: ${filters.sortBy.displayName}',
+      hint: 'Double tap to change sort order',
+      button: true,
+      child: PopupMenuButton<SortBy>(
+        icon: Badge(
+          label: filters.sortBy != SortBy.recommended
+              ? const Icon(Icons.circle, size: 8)
+              : const SizedBox.shrink(),
+          child: const Icon(Icons.sort),
+        ),
+        tooltip: 'Sortiraj: ${filters.sortBy.displayName}',
+        initialValue: filters.sortBy,
+        onSelected: (sortBy) {
+          // Debug: Log sort change
+          debugPrint('🔄 [Search] Sorting changed: ${sortBy.displayName}');
+
+          // Update sorting
+          ref.read(searchFiltersNotifierProvider.notifier).updateSortBy(sortBy);
+
+          // Visual feedback: Show snackbar
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.sort, color: Colors.white, size: 20),
+                  const SizedBox(width: AppDimensions.spaceS),
+                  Text('Sortiranje: ${sortBy.displayName}'),
+                ],
+              ),
+              backgroundColor: AppColors.primary,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+              margin: const EdgeInsets.all(AppDimensions.spaceM),
+            ),
+          );
+        },
+        itemBuilder: (context) => SortBy.values.map((sortBy) {
+          final isSelected = sortBy == filters.sortBy;
+          return PopupMenuItem(
+            value: sortBy,
+            child: Semantics(
+              label: sortBy.displayName,
+              selected: isSelected,
+              child: Row(
+                children: [
+                  if (isSelected)
+                    const Icon(Icons.check, size: 20, color: AppColors.primary)
+                  else
+                    const SizedBox(width: 20),
+                  const SizedBox(width: AppDimensions.spaceS),
+                  Text(
+                    sortBy.displayName,
+                    style: TextStyle(
+                      fontWeight: isSelected
+                          ? AppTypography.weightSemibold
+                          : AppTypography.weightMedium,
+                      color: isSelected ? AppColors.primary : null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -382,20 +493,36 @@ class _PremiumSearchResultsScreenState
         else
           _buildList(results),
 
-        // Loading more indicator
-        if (_isLoadingMore)
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(AppDimensions.spaceL),
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
+        // Loading more indicator - FIXED: Always show when loading
+        SliverToBoxAdapter(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: _isLoadingMore
+                ? const Padding(
+                    padding: EdgeInsets.all(AppDimensions.spaceL),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: AppDimensions.spaceS),
+                          Text(
+                            'Učitavanje...',
+                            style: TextStyle(color: AppColors.textSecondaryLight),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ),
+        ),
 
-        // Footer
+        // FIX: Footer removed from search results - doesn't belong in mid-page context
+        // Footer should only appear on landing page
+        // Added spacing instead for visual balance
         const SliverToBoxAdapter(
-          child: AppFooter(),
+          child: SizedBox(height: AppDimensions.spaceXXL),
         ),
       ],
     );
@@ -407,12 +534,13 @@ class _PremiumSearchResultsScreenState
     bool isTablet,
     bool isDesktop,
   ) {
-    final crossAxisCount = isMobile ? 1 : (isTablet ? 2 : 3);
+    // RESPONSIVE GRID: Match Home Page breakpoints
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = _getGridColumns(screenWidth);
 
+    // FIX #1: MaxWidth constraint + FIX #3: Responsive padding (match Home Page)
     return SliverPadding(
-      padding: EdgeInsets.all(
-        isMobile ? AppDimensions.spaceM : AppDimensions.spaceL,
-      ),
+      padding: _getResponsiveGridPadding(context, screenWidth),
       sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
@@ -436,8 +564,11 @@ class _PremiumSearchResultsScreenState
   }
 
   Widget _buildList(List<PropertyModel> results) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // FIX #1 & #3: Use same responsive padding as grid
     return SliverPadding(
-      padding: const EdgeInsets.all(AppDimensions.spaceL),
+      padding: _getResponsiveGridPadding(context, screenWidth),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
@@ -462,12 +593,20 @@ class _PremiumSearchResultsScreenState
     bool isMobile,
     bool isTablet,
   ) {
-    final crossAxisCount = isMobile ? 1 : (isTablet ? 2 : 3);
+    // FIX #2: Use same grid columns calculation as actual results
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = _getGridColumns(screenWidth);
+
+    // Dynamic skeleton count based on screen
+    final skeletonCount = SearchConstants.getSkeletonCount(crossAxisCount);
+
+    // FIX #3: Use responsive padding
+    final responsivePadding = _getResponsiveGridPadding(context, screenWidth);
 
     if (viewMode == SearchViewMode.list) {
       return ListView.builder(
-        padding: const EdgeInsets.all(AppDimensions.spaceL),
-        itemCount: 5,
+        padding: responsivePadding,
+        itemCount: skeletonCount,
         itemBuilder: (context, index) {
           return Padding(
             padding: const EdgeInsets.only(bottom: AppDimensions.spaceL),
@@ -478,14 +617,14 @@ class _PremiumSearchResultsScreenState
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.all(AppDimensions.spaceL),
+      padding: responsivePadding,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         mainAxisSpacing: AppDimensions.spaceL,
         crossAxisSpacing: AppDimensions.spaceL,
         childAspectRatio: isMobile ? 0.75 : 0.8,
       ),
-      itemCount: 6,
+      itemCount: skeletonCount,
       itemBuilder: (context, index) {
         return SkeletonLoader.propertyCard();
       },

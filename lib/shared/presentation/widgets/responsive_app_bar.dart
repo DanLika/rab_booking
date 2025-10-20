@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_state_provider.dart';
+import '../../../core/providers/theme_provider.dart';
+import '../../../core/providers/language_provider.dart';
 import '../../../core/utils/navigation_helpers.dart';
 import '../../../features/auth/presentation/providers/auth_notifier.dart';
 
@@ -160,6 +162,14 @@ class ResponsiveAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
           const Spacer(),
 
+          // Theme Selector
+          _buildThemeSelector(context, ref),
+          const SizedBox(width: 8),
+
+          // Language Selector
+          _buildLanguageSelector(context, ref),
+          const SizedBox(width: 16),
+
           // Auth Section
           if (isAuthenticated)
             _buildLogoutButton(context, ref)
@@ -290,5 +300,161 @@ class ResponsiveAppBar extends ConsumerWidget implements PreferredSizeWidget {
         );
       }
     }
+  }
+
+  /// Theme selector with popup menu
+  Widget _buildThemeSelector(BuildContext context, WidgetRef ref) {
+    final themeModeAsync = ref.watch(themeNotifierProvider);
+    final currentMode = themeModeAsync.value ?? ThemeMode.system;
+
+    IconData themeIcon;
+    String themeTooltip;
+
+    switch (currentMode) {
+      case ThemeMode.light:
+        themeIcon = Icons.light_mode;
+        themeTooltip = 'Svijetla tema';
+        break;
+      case ThemeMode.dark:
+        themeIcon = Icons.dark_mode;
+        themeTooltip = 'Tamna tema';
+        break;
+      case ThemeMode.system:
+        themeIcon = Icons.brightness_auto;
+        themeTooltip = 'Sistemska tema';
+        break;
+    }
+
+    return PopupMenuButton<ThemeMode>(
+      icon: Icon(themeIcon),
+      tooltip: themeTooltip,
+      onSelected: (ThemeMode mode) async {
+        await ref.read(themeNotifierProvider.notifier).setThemeMode(mode);
+      },
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<ThemeMode>>[
+        PopupMenuItem<ThemeMode>(
+          value: ThemeMode.light,
+          child: Row(
+            children: [
+              Icon(
+                Icons.light_mode,
+                color: currentMode == ThemeMode.light
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Svijetla',
+                style: TextStyle(
+                  fontWeight: currentMode == ThemeMode.light
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem<ThemeMode>(
+          value: ThemeMode.dark,
+          child: Row(
+            children: [
+              Icon(
+                Icons.dark_mode,
+                color: currentMode == ThemeMode.dark
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Tamna',
+                style: TextStyle(
+                  fontWeight: currentMode == ThemeMode.dark
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem<ThemeMode>(
+          value: ThemeMode.system,
+          child: Row(
+            children: [
+              Icon(
+                Icons.brightness_auto,
+                color: currentMode == ThemeMode.system
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Sistemska',
+                style: TextStyle(
+                  fontWeight: currentMode == ThemeMode.system
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Language selector with popup menu
+  Widget _buildLanguageSelector(BuildContext context, WidgetRef ref) {
+    final localeAsync = ref.watch(languageNotifierProvider);
+    final currentLocale = localeAsync.value ?? const Locale('hr');
+
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.language),
+      tooltip: 'Jezik',
+      onSelected: (String languageCode) async {
+        await ref.read(languageNotifierProvider.notifier).setLanguage(languageCode);
+      },
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+        PopupMenuItem<String>(
+          value: 'hr',
+          child: Row(
+            children: [
+              const Text('🇭🇷', style: TextStyle(fontSize: 24)),
+              const SizedBox(width: 12),
+              Text(
+                'Hrvatski',
+                style: TextStyle(
+                  fontWeight: currentLocale.languageCode == 'hr'
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                  color: currentLocale.languageCode == 'hr'
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'en',
+          child: Row(
+            children: [
+              const Text('🇬🇧', style: TextStyle(fontSize: 24)),
+              const SizedBox(width: 12),
+              Text(
+                'English',
+                style: TextStyle(
+                  fontWeight: currentLocale.languageCode == 'en'
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                  color: currentLocale.languageCode == 'en'
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }

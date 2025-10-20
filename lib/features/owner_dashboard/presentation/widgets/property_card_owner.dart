@@ -118,23 +118,23 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       // Stats row
                       Row(
                         children: [
-                          Flexible(
+                          Expanded(
                             child: _buildStat(
                               context,
                               icon: Icons.apartment,
                               label: '${widget.property.unitsCount} ${widget.property.unitsCount == 1 ? 'jedinica' : 'jedinice'}',
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Flexible(
+                          const SizedBox(width: 12),
+                          Expanded(
                             child: _buildStat(
                               context,
                               icon: Icons.star,
                               label: widget.property.formattedRating,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Flexible(
+                          const SizedBox(width: 12),
+                          Expanded(
                             child: _buildStat(
                               context,
                               icon: Icons.reviews,
@@ -147,60 +147,104 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       const SizedBox(height: 16),
 
                       // Actions row
-                      Row(
-                        children: [
-                          // Published toggle
-                          Expanded(
-                            child: Row(
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          // Use wrap for very narrow screens to prevent overflow
+                          if (constraints.maxWidth < 400) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  widget.property.isActive ? 'Objavljeno' : 'Skriveno',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: widget.property.isActive
-                                            ? const Color(0xFF10B981)
-                                            : const Color(0xFFF59E0B),
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        widget.property.isActive ? 'Objavljeno' : 'Skriveno',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color: widget.property.isActive
+                                                  ? const Color(0xFF10B981)
+                                                  : const Color(0xFFF59E0B),
+                                            ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
+                                    ),
+                                    Switch(
+                                      value: widget.property.isActive,
+                                      onChanged: widget.onTogglePublished,
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 8),
-                                Switch(
-                                  value: widget.property.isActive,
-                                  onChanged: widget.onTogglePublished,
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    IconButton(
+                                      onPressed: widget.onEdit,
+                                      icon: const Icon(Icons.edit_outlined),
+                                      tooltip: 'Uredi',
+                                    ),
+                                    IconButton(
+                                      onPressed: widget.onDelete,
+                                      icon: const Icon(Icons.delete_outline),
+                                      color: context.errorColor,
+                                      tooltip: 'Obriši',
+                                    ),
+                                  ],
                                 ),
                               ],
-                            ),
-                          ),
+                            );
+                          }
 
-                          // Edit button
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              minWidth: 48,
-                              minHeight: 48,
-                            ),
-                            child: IconButton(
-                              onPressed: widget.onEdit,
-                              icon: const Icon(Icons.edit_outlined),
-                              tooltip: 'Uredi',
-                            ),
-                          ),
+                          return Row(
+                            children: [
+                              // Published toggle
+                              Flexible(
+                                child: Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        widget.property.isActive ? 'Objavljeno' : 'Skriveno',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color: widget.property.isActive
+                                                  ? const Color(0xFF10B981)
+                                                  : const Color(0xFFF59E0B),
+                                            ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Switch(
+                                      value: widget.property.isActive,
+                                      onChanged: widget.onTogglePublished,
+                                    ),
+                                  ],
+                                ),
+                              ),
 
-                          // Delete button
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              minWidth: 48,
-                              minHeight: 48,
-                            ),
-                            child: IconButton(
-                              onPressed: widget.onDelete,
-                              icon: const Icon(Icons.delete_outline),
-                              color: context.errorColor,
-                              tooltip: 'Obriši',
-                            ),
-                          ),
-                        ],
+                              // Edit button
+                              IconButton(
+                                onPressed: widget.onEdit,
+                                icon: const Icon(Icons.edit_outlined),
+                                tooltip: 'Uredi',
+                              ),
+
+                              // Delete button
+                              IconButton(
+                                onPressed: widget.onDelete,
+                                icon: const Icon(Icons.delete_outline),
+                                color: context.errorColor,
+                                tooltip: 'Obriši',
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -253,11 +297,15 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
       children: [
         Icon(icon, size: 16, color: context.iconColorSecondary),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: context.textColorSecondary,
-              ),
+        Flexible(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.textColorSecondary,
+                ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
         ),
       ],
     );

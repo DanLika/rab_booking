@@ -5,6 +5,8 @@ import '../providers/user_bookings_provider.dart';
 import '../widgets/booking_card.dart';
 import '../widgets/cancel_booking_dialog.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
+import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class UserBookingsScreen extends ConsumerStatefulWidget {
   const UserBookingsScreen({super.key});
@@ -46,7 +48,7 @@ class _UserBookingsScreenState extends ConsumerState<UserBookingsScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
+        children: const [
           _UpcomingBookingsTab(),
           _PastBookingsTab(),
           _CancelledBookingsTab(),
@@ -57,6 +59,8 @@ class _UserBookingsScreenState extends ConsumerState<UserBookingsScreen>
 }
 
 class _UpcomingBookingsTab extends ConsumerWidget {
+  const _UpcomingBookingsTab();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bookingsAsync = ref.watch(upcomingBookingsProvider);
@@ -70,26 +74,34 @@ class _UpcomingBookingsTab extends ConsumerWidget {
               children: [
                 Icon(
                   Icons.event_available,
-                  size: 64,
+                  size: AppDimensions.iconXL,
                   color: Colors.grey[400],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: AppDimensions.spaceS),
                 Text(
                   'Nema nadolazećih rezervacija',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: AppDimensions.spaceXS),
                 Text(
                   'Počni istraživati smještaje',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
                 ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: () => context.go('/'),
-                  icon: const Icon(Icons.search),
-                  label: const Text('Pretraži smještaje'),
+                SizedBox(height: AppDimensions.spaceM),
+                Semantics(
+                  label: 'Pretraži smještaje',
+                  hint: 'Dvostruki dodir za pregled dostupnih smještaja',
+                  button: true,
+                  child: FilledButton.icon(
+                    onPressed: () => context.go('/'),
+                    icon: const Icon(Icons.search),
+                    label: const Text('Pretraži smještaje'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(200, 48),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -101,7 +113,7 @@ class _UpcomingBookingsTab extends ConsumerWidget {
             ref.invalidate(userBookingsProvider);
           },
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(context.horizontalPadding),
             itemCount: bookings.length,
             itemBuilder: (context, index) {
               final booking = bookings[index];
@@ -128,11 +140,11 @@ class _UpcomingBookingsTab extends ConsumerWidget {
         );
       },
       loading: () => ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(context.horizontalPadding),
         itemCount: 3,
-        itemBuilder: (context, index) => const Padding(
-          padding: EdgeInsets.only(bottom: 16),
-          child: BookingCardSkeleton(),
+        itemBuilder: (context, index) => Padding(
+          padding: EdgeInsets.only(bottom: AppDimensions.spaceS),
+          child: const BookingCardSkeleton(),
         ),
       ),
       error: (error, stack) {
@@ -144,7 +156,7 @@ class _UpcomingBookingsTab extends ConsumerWidget {
 
         return Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: EdgeInsets.all(context.horizontalPadding),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -152,10 +164,10 @@ class _UpcomingBookingsTab extends ConsumerWidget {
                   isPermissionError
                       ? Icons.lock_outline
                       : Icons.error_outline,
-                  size: 64,
+                  size: AppDimensions.iconXL,
                   color: isPermissionError ? Colors.orange : Colors.red,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: AppDimensions.spaceS),
                 Text(
                   isPermissionError
                       ? 'Nema dostupnih rezervacija'
@@ -164,7 +176,7 @@ class _UpcomingBookingsTab extends ConsumerWidget {
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: AppDimensions.spaceXS),
                 Text(
                   isPermissionError
                       ? 'Možda još nemaš nijednu rezervaciju'
@@ -174,21 +186,37 @@ class _UpcomingBookingsTab extends ConsumerWidget {
                       ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: AppDimensions.spaceM),
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: () => ref.invalidate(upcomingBookingsProvider),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Osvježi'),
+                    Semantics(
+                      label: 'Osvježi listu nadolazećih rezervacija',
+                      hint: 'Dvostruki dodir za ponovno učitavanje',
+                      button: true,
+                      child: OutlinedButton.icon(
+                        onPressed: () => ref.invalidate(upcomingBookingsProvider),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Osvježi'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed: () => context.go('/'),
-                      icon: const Icon(Icons.search),
-                      label: const Text('Pretraži smještaje'),
+                    SizedBox(height: AppDimensions.spaceXS),
+                    Semantics(
+                      label: 'Pretraži smještaje',
+                      hint: 'Dvostruki dodir za pregled dostupnih smještaja',
+                      button: true,
+                      child: FilledButton.icon(
+                        onPressed: () => context.go('/'),
+                        icon: const Icon(Icons.search),
+                        label: const Text('Pretraži smještaje'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -202,6 +230,8 @@ class _UpcomingBookingsTab extends ConsumerWidget {
 }
 
 class _PastBookingsTab extends ConsumerWidget {
+  const _PastBookingsTab();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bookingsAsync = ref.watch(pastBookingsProvider);
@@ -215,17 +245,17 @@ class _PastBookingsTab extends ConsumerWidget {
               children: [
                 Icon(
                   Icons.history,
-                  size: 64,
+                  size: AppDimensions.iconXL,
                   color: Colors.grey[400],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: AppDimensions.spaceS),
                 Text(
                   'Nema prošlih rezervacija',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: AppDimensions.spaceXS),
                 Text(
                   'Tvoje prošle rezervacije će se prikazati ovdje',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -243,7 +273,7 @@ class _PastBookingsTab extends ConsumerWidget {
             ref.invalidate(userBookingsProvider);
           },
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(context.horizontalPadding),
             itemCount: bookings.length,
             itemBuilder: (context, index) {
               final booking = bookings[index];
@@ -269,33 +299,98 @@ class _PastBookingsTab extends ConsumerWidget {
         );
       },
       loading: () => ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(context.horizontalPadding),
         itemCount: 3,
-        itemBuilder: (context, index) => const Padding(
-          padding: EdgeInsets.only(bottom: 16),
-          child: BookingCardSkeleton(),
+        itemBuilder: (context, index) => Padding(
+          padding: EdgeInsets.only(bottom: AppDimensions.spaceS),
+          child: const BookingCardSkeleton(),
         ),
       ),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 16),
-            Text('Error: $error'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => ref.invalidate(pastBookingsProvider),
-              child: const Text('Retry'),
+      error: (error, stack) {
+        // If error is about RLS/permissions, show friendly message
+        final errorMessage = error.toString();
+        final isPermissionError = errorMessage.contains('500') ||
+            errorMessage.contains('policy') ||
+            errorMessage.contains('permission');
+
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.all(context.horizontalPadding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isPermissionError
+                      ? Icons.lock_outline
+                      : Icons.error_outline,
+                  size: AppDimensions.iconXL,
+                  color: isPermissionError ? Colors.orange : Colors.red,
+                ),
+                SizedBox(height: AppDimensions.spaceS),
+                Text(
+                  isPermissionError
+                      ? 'Nema dostupnih rezervacija'
+                      : 'Greška pri učitavanju',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                SizedBox(height: AppDimensions.spaceXS),
+                Text(
+                  isPermissionError
+                      ? 'Možda još nemaš nijednu rezervaciju'
+                      : 'Pokušaj ponovo kasnije',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: AppDimensions.spaceM),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Semantics(
+                      label: 'Osvježi listu prošlih rezervacija',
+                      hint: 'Dvostruki dodir za ponovno učitavanje',
+                      button: true,
+                      child: OutlinedButton.icon(
+                        onPressed: () => ref.invalidate(pastBookingsProvider),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Osvježi'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: AppDimensions.spaceXS),
+                    Semantics(
+                      label: 'Pretraži smještaje',
+                      hint: 'Dvostruki dodir za pregled dostupnih smještaja',
+                      button: true,
+                      child: FilledButton.icon(
+                        onPressed: () => context.go('/'),
+                        icon: const Icon(Icons.search),
+                        label: const Text('Pretraži smještaje'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
 
 class _CancelledBookingsTab extends ConsumerWidget {
+  const _CancelledBookingsTab();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bookingsAsync = ref.watch(cancelledBookingsProvider);
@@ -309,17 +404,17 @@ class _CancelledBookingsTab extends ConsumerWidget {
               children: [
                 Icon(
                   Icons.cancel_outlined,
-                  size: 64,
+                  size: AppDimensions.iconXL,
                   color: Colors.grey[400],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: AppDimensions.spaceS),
                 Text(
                   'Nema otkazanih rezervacija',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: AppDimensions.spaceXS),
                 Text(
                   'Otkazane rezervacije će se prikazati ovdje',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -337,7 +432,7 @@ class _CancelledBookingsTab extends ConsumerWidget {
             ref.invalidate(userBookingsProvider);
           },
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(context.horizontalPadding),
             itemCount: bookings.length,
             itemBuilder: (context, index) {
               final booking = bookings[index];
@@ -363,28 +458,91 @@ class _CancelledBookingsTab extends ConsumerWidget {
         );
       },
       loading: () => ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(context.horizontalPadding),
         itemCount: 3,
-        itemBuilder: (context, index) => const Padding(
-          padding: EdgeInsets.only(bottom: 16),
-          child: BookingCardSkeleton(),
+        itemBuilder: (context, index) => Padding(
+          padding: EdgeInsets.only(bottom: AppDimensions.spaceS),
+          child: const BookingCardSkeleton(),
         ),
       ),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 16),
-            Text('Error: $error'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => ref.invalidate(cancelledBookingsProvider),
-              child: const Text('Retry'),
+      error: (error, stack) {
+        // If error is about RLS/permissions, show friendly message
+        final errorMessage = error.toString();
+        final isPermissionError = errorMessage.contains('500') ||
+            errorMessage.contains('policy') ||
+            errorMessage.contains('permission');
+
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.all(context.horizontalPadding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isPermissionError
+                      ? Icons.lock_outline
+                      : Icons.error_outline,
+                  size: AppDimensions.iconXL,
+                  color: isPermissionError ? Colors.orange : Colors.red,
+                ),
+                SizedBox(height: AppDimensions.spaceS),
+                Text(
+                  isPermissionError
+                      ? 'Nema dostupnih rezervacija'
+                      : 'Greška pri učitavanju',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                SizedBox(height: AppDimensions.spaceXS),
+                Text(
+                  isPermissionError
+                      ? 'Možda još nemaš nijednu rezervaciju'
+                      : 'Pokušaj ponovo kasnije',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: AppDimensions.spaceM),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Semantics(
+                      label: 'Osvježi listu otkazanih rezervacija',
+                      hint: 'Dvostruki dodir za ponovno učitavanje',
+                      button: true,
+                      child: OutlinedButton.icon(
+                        onPressed: () => ref.invalidate(cancelledBookingsProvider),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Osvježi'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: AppDimensions.spaceXS),
+                    Semantics(
+                      label: 'Pretraži smještaje',
+                      hint: 'Dvostruki dodir za pregled dostupnih smještaja',
+                      button: true,
+                      child: FilledButton.icon(
+                        onPressed: () => context.go('/'),
+                        icon: const Icon(Icons.search),
+                        label: const Text('Pretraži smještaje'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

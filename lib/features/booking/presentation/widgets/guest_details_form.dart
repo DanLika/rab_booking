@@ -138,17 +138,24 @@ class _GuestDetailsFormState extends State<GuestDetailsForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Section title
-          Text(
-            'Guest Details',
-            style: context.isMobile ? AppTypography.h3 : AppTypography.h2,
+          Semantics(
+            header: true,
+            child: Text(
+              'Guest Details',
+              style: context.isMobile ? AppTypography.h3 : AppTypography.h2,
+            ),
           ),
 
           const SizedBox(height: AppDimensions.spaceM),
 
-          Text(
-            'Please provide your contact information for booking confirmation',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondaryLight,
+          Semantics(
+            label: 'Molimo unesite vaše kontakt podatke za potvrdu rezervacije',
+            readOnly: true,
+            child: Text(
+              'Please provide your contact information for booking confirmation',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondaryLight,
+              ),
             ),
           ),
 
@@ -203,79 +210,113 @@ class _GuestDetailsFormState extends State<GuestDetailsForm> {
   }
 
   Widget _buildFirstNameField() {
-    return PremiumTextField(
-      controller: _firstNameController,
-      label: 'First Name',
-      prefixIcon: Icons.person_outline,
-      validator: (value) => _validateRequired(value, 'First name'),
+    return Semantics(
+      label: 'Ime',
+      hint: 'Unesite vaše ime',
+      textField: true,
+      child: PremiumTextField(
+        controller: _firstNameController,
+        label: 'First Name',
+        prefixIcon: Icons.person_outline,
+        validator: (value) => _validateRequired(value, 'First name'),
+      ),
     );
   }
 
   Widget _buildLastNameField() {
-    return PremiumTextField(
-      controller: _lastNameController,
-      label: 'Last Name',
-      prefixIcon: Icons.person_outline,
-      validator: (value) => _validateRequired(value, 'Last name'),
+    return Semantics(
+      label: 'Prezime',
+      hint: 'Unesite vaše prezime',
+      textField: true,
+      child: PremiumTextField(
+        controller: _lastNameController,
+        label: 'Last Name',
+        prefixIcon: Icons.person_outline,
+        validator: (value) => _validateRequired(value, 'Last name'),
+      ),
     );
   }
 
   Widget _buildEmailField() {
-    return PremiumTextField(
-      controller: _emailController,
-      label: 'Email',
-      prefixIcon: Icons.email_outlined,
-      keyboardType: TextInputType.emailAddress,
-      validator: _validateEmail,
-      helperText: 'Booking confirmation will be sent to this email',
+    return Semantics(
+      label: 'Email adresa',
+      hint: 'Unesite vašu email adresu. Potvrda rezervacije će biti poslana na ovu adresu',
+      textField: true,
+      child: PremiumTextField(
+        controller: _emailController,
+        label: 'Email',
+        prefixIcon: Icons.email_outlined,
+        keyboardType: TextInputType.emailAddress,
+        validator: _validateEmail,
+        helperText: 'Booking confirmation will be sent to this email',
+      ),
     );
   }
 
   Widget _buildPhoneField() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Country code selector
-        SizedBox(
-          width: 120,
-          child: PremiumDropdown<String>(
-            value: _selectedCountryCode,
-            items: _countryCodeItems,
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _selectedCountryCode = value;
-                });
-              }
-            },
-            label: 'Code',
+    return Semantics(
+      label: 'Telefonski broj sa pozivnim brojem',
+      hint: 'Odaberite pozivni broj i unesite vaš telefonski broj',
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Country code selector
+          Semantics(
+            label: 'Pozivni broj države',
+            hint: 'Odaberite pozivni broj vaše države. Trenutno odabrano: $_selectedCountryCode',
+            child: SizedBox(
+              width: 120,
+              child: PremiumDropdown<String>(
+                value: _selectedCountryCode,
+                items: _countryCodeItems,
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _selectedCountryCode = value;
+                    });
+                  }
+                },
+                label: 'Code',
+              ),
+            ),
           ),
-        ),
 
-        const SizedBox(width: AppDimensions.spaceM),
+          const SizedBox(width: AppDimensions.spaceM),
 
-        // Phone number field
-        Expanded(
-          child: PremiumTextField(
-            controller: _phoneController,
-            label: 'Phone Number',
-            prefixIcon: Icons.phone_outlined,
-            keyboardType: TextInputType.phone,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            validator: _validatePhone,
+          // Phone number field
+          Expanded(
+            child: Semantics(
+              label: 'Telefonski broj',
+              hint: 'Unesite vaš telefonski broj bez pozivnog broja',
+              textField: true,
+              child: PremiumTextField(
+                controller: _phoneController,
+                label: 'Phone Number',
+                prefixIcon: Icons.phone_outlined,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                validator: _validatePhone,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildSpecialRequestsField() {
-    return PremiumTextField(
-      controller: _specialRequestsController,
-      label: 'Special Requests (Optional)',
-      prefixIcon: Icons.notes_outlined,
-      maxLines: 4,
-      helperText: 'Any special requests or requirements',
+    return Semantics(
+      label: 'Posebni zahtjevi',
+      hint: 'Opcionalno. Unesite bilo kakve posebne zahtjeve ili potrebe za vašu rezervaciju',
+      textField: true,
+      multiline: true,
+      child: PremiumTextField(
+        controller: _specialRequestsController,
+        label: 'Special Requests (Optional)',
+        prefixIcon: Icons.notes_outlined,
+        maxLines: 4,
+        helperText: 'Any special requests or requirements',
+      ),
     );
   }
 

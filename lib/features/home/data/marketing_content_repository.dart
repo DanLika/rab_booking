@@ -13,6 +13,7 @@ class MarketingContentRepository {
   MarketingContentRepository(this._supabase);
 
   /// Get active popular destinations ordered by display_order
+  /// IMPORTANT: Only shows destinations from island of Rab, Croatia
   Future<List<DestinationData>> getPopularDestinations() async {
     try {
       final response = await _supabase
@@ -21,7 +22,8 @@ class MarketingContentRepository {
           .eq('is_active', true)
           .order('display_order');
 
-      return (response as List).map((json) {
+      // Filter to only include destinations from island of Rab
+      final allDestinations = (response as List).map((json) {
         return DestinationData(
           name: json['name'] as String,
           location: json['location'] as String,
@@ -29,10 +31,30 @@ class MarketingContentRepository {
           propertyCount: json['property_count'] as int? ?? 0,
         );
       }).toList();
+
+      // Only return destinations that are on island of Rab
+      // Check if location contains "Rab" (case insensitive)
+      final rabDestinations = allDestinations.where((dest) {
+        final locationLower = dest.location.toLowerCase();
+        return locationLower.contains('rab') ||
+               _isRabLocation(dest.name);
+      }).toList();
+
+      return rabDestinations;
     } catch (e) {
       // Return empty list on error, widgets will handle empty state
       return [];
     }
+  }
+
+  /// Check if destination name is a known Rab island location
+  bool _isRabLocation(String name) {
+    final nameLower = name.toLowerCase();
+    final rabLocations = [
+      'rab town', 'rab grad', 'lopar', 'barbat', 'kampor',
+      'suha punta', 'banjol', 'mundanije', 'palit'
+    ];
+    return rabLocations.any((loc) => nameLower.contains(loc));
   }
 
   /// Get active how it works steps ordered by step_number

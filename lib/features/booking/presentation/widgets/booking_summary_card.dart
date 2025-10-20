@@ -66,7 +66,7 @@ class BookingSummaryCard extends StatelessWidget {
     required this.serviceFee,
     required this.cleaningFee,
     this.taxes,
-    this.currencySymbol = '\$',
+    this.currencySymbol = '€',
     this.showEditButton = false,
     this.onEdit,
     this.compact = false,
@@ -93,12 +93,14 @@ class BookingSummaryCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Booking Summary',
+                  'Sažetak rezervacije',
                   style: compact ? AppTypography.bodyLarge : AppTypography.h3,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 if (showEditButton && onEdit != null)
                   PremiumButton.text(
-                    label: 'Edit',
+                    label: 'Izmijeni',
                     icon: Icons.edit_outlined,
                     onPressed: onEdit,
                     size: ButtonSize.small,
@@ -208,29 +210,29 @@ class BookingSummaryCard extends StatelessWidget {
         _buildDetailRow(
           context: context,
           icon: Icons.calendar_today_outlined,
-          label: 'Check-in',
+          label: 'Dolazak',
           value: _formatDate(checkIn),
         ),
         const SizedBox(height: AppDimensions.spaceM),
         _buildDetailRow(
           context: context,
           icon: Icons.calendar_today_outlined,
-          label: 'Check-out',
+          label: 'Odlazak',
           value: _formatDate(checkOut),
         ),
         const SizedBox(height: AppDimensions.spaceM),
         _buildDetailRow(
           context: context,
           icon: Icons.nightlight_outlined,
-          label: 'Nights',
-          value: '$nights ${nights == 1 ? 'night' : 'nights'}',
+          label: 'Noći',
+          value: '$nights ${nights == 1 ? 'noć' : nights < 5 ? 'noći' : 'noći'}',
         ),
         const SizedBox(height: AppDimensions.spaceM),
         _buildDetailRow(
           context: context,
           icon: Icons.people_outline,
-          label: 'Guests',
-          value: '$guests ${guests == 1 ? 'guest' : 'guests'}',
+          label: 'Gosti',
+          value: '$guests ${guests == 1 ? 'gost' : 'gostiju'}',
         ),
       ],
     );
@@ -256,6 +258,8 @@ class BookingSummaryCard extends StatelessWidget {
             style: AppTypography.bodyMedium.copyWith(
               color: context.textColorSecondary,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         Text(
@@ -263,6 +267,8 @@ class BookingSummaryCard extends StatelessWidget {
           style: AppTypography.bodyMedium.copyWith(
             fontWeight: AppTypography.weightMedium,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -285,7 +291,7 @@ class BookingSummaryCard extends StatelessWidget {
         // Service fee
         _buildPriceRow(
           context: context,
-          label: 'Service fee',
+          label: 'Naknada za uslugu',
           value: '$currencySymbol${serviceFee.toStringAsFixed(2)}',
         ),
 
@@ -294,7 +300,7 @@ class BookingSummaryCard extends StatelessWidget {
         // Cleaning fee
         _buildPriceRow(
           context: context,
-          label: 'Cleaning fee',
+          label: 'Naknada za čišćenje',
           value: '$currencySymbol${cleaningFee.toStringAsFixed(2)}',
         ),
 
@@ -303,7 +309,7 @@ class BookingSummaryCard extends StatelessWidget {
           const SizedBox(height: AppDimensions.spaceS),
           _buildPriceRow(
             context: context,
-            label: 'Taxes',
+            label: 'Porezi',
             value: '$currencySymbol${taxes!.toStringAsFixed(2)}',
           ),
         ],
@@ -320,7 +326,7 @@ class BookingSummaryCard extends StatelessWidget {
         // Total
         _buildPriceRow(
           context: context,
-          label: 'Total',
+          label: 'Ukupno',
           value: '$currencySymbol${total.toStringAsFixed(2)}',
           isTotal: true,
         ),
@@ -337,14 +343,19 @@ class BookingSummaryCard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: isTotal
-              ? AppTypography.bodyLarge.copyWith(
-                  fontWeight: AppTypography.weightBold,
-                )
-              : AppTypography.bodyMedium,
+        Expanded(
+          child: Text(
+            label,
+            style: isTotal
+                ? AppTypography.bodyLarge.copyWith(
+                    fontWeight: AppTypography.weightBold,
+                  )
+                : AppTypography.bodyMedium,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
+        const SizedBox(width: 8),
         Text(
           value,
           style: isTotal
@@ -355,6 +366,8 @@ class BookingSummaryCard extends StatelessWidget {
               : AppTypography.bodyMedium.copyWith(
                   fontWeight: AppTypography.weightMedium,
                 ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/utils/navigation_helpers.dart';
+import '../../../../core/utils/responsive_breakpoints.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../providers/property_details_provider.dart';
 import '../widgets/image_gallery_widget.dart';
 import '../widgets/property_info_section.dart';
@@ -473,8 +475,65 @@ class _PropertyDetailsScreenState
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(),
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          expandedHeight: 0,
+          floating: true,
+          pinned: true,
+          title: const SkeletonLoader(width: 200, height: 24),
+        ),
+        SliverToBoxAdapter(
+          child: Column(
+            children: [
+              // Image skeleton
+              const AspectRatio(
+                aspectRatio: 16 / 9,
+                child: SkeletonLoader(width: double.infinity),
+              ),
+
+              // Content skeleton
+              Padding(
+                padding: EdgeInsets.all(context.horizontalPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    const SkeletonLoader(width: 250, height: 28),
+                    const SizedBox(height: 8),
+                    const SkeletonLoader(width: 180, height: 16),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: List.generate(
+                        3,
+                        (index) => const Padding(
+                          padding: EdgeInsets.only(right: 16),
+                          child: SkeletonLoader(width: 80, height: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    const SkeletonLoader(width: double.infinity, height: 120),
+                    const SizedBox(height: 32),
+                    // Units skeleton
+                    ...List.generate(
+                      2,
+                      (index) => const Padding(
+                        padding: EdgeInsets.only(bottom: 16),
+                        child: SkeletonLoader(
+                          width: double.infinity,
+                          height: 150,
+                          borderRadius: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

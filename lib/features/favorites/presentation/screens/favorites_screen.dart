@@ -6,6 +6,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../shared/widgets/widgets.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../providers/favorites_provider.dart';
 
 /// Favorites Screen - Display user's favorite properties
@@ -29,9 +30,7 @@ class FavoritesScreen extends ConsumerWidget {
 
           return _buildFavoritesList(context, ref, favorites);
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        loading: () => _buildLoadingState(context),
         error: (error, stack) => _buildErrorState(context, ref, error),
       ),
     );
@@ -172,6 +171,34 @@ class FavoritesScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState(BuildContext context) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(context.horizontalPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header skeleton
+          const SkeletonLoader(width: 200, height: 28),
+          const SizedBox(height: AppDimensions.spaceS),
+          const SkeletonLoader(width: 120, height: 18),
+          const SizedBox(height: AppDimensions.spaceXL),
+
+          // Grid skeleton
+          ResponsiveGrid(
+            mobileColumns: 1,
+            tabletColumns: 2,
+            desktopColumns: 3,
+            spacing: context.spacing,
+            children: List.generate(
+              6,
+              (index) => const PropertyCardSkeleton(),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/navigation_helpers.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -141,9 +142,24 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
 
           if (imageFile == null) return null;
 
-          // Upload to Supabase Storage
-          final avatarUrl = await profileService.uploadAvatar(imageFile!);
-          return avatarUrl;
+          // Upload to Supabase Storage with validation
+          try {
+            final avatarUrl = await profileService.uploadAvatar(imageFile!);
+            return avatarUrl;
+          } catch (e) {
+            // Handle validation errors with user-friendly messages
+            if (mounted) {
+              final appException = ErrorMapper.mapException(e);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(appException.getUserMessage()),
+                  backgroundColor: AppColors.error,
+                  duration: const Duration(seconds: 4),
+                ),
+              );
+            }
+            return null; // Return null to indicate upload failed
+          }
         },
       ),
     );
@@ -270,28 +286,42 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
                     children: [
                       const SizedBox(height: AppDimensions.spaceXL),
 
-                      // Stats cards
+                      // Stats cards - OPTIMIZED: Using single combined API call
                       Consumer(
                         builder: (context, ref, child) {
                           final userId = userModel.id;
-                          final bookingsCountAsync = ref.watch(userBookingsCountProvider(userId));
-                          final favoritesCountAsync = ref.watch(userFavoritesCountProvider(userId));
-                          final reviewsCountAsync = ref.watch(userReviewsCountProvider(userId));
-                          final averageRatingAsync = ref.watch(userAverageRatingProvider(userId));
+                          // Single provider call instead of 4 separate API requests
+                          final userStatsAsync = ref.watch(userStatsProvider(userId));
 
-                          return PremiumStatsCards(
-                            bookingsCount: bookingsCountAsync.value ?? 0,
-                            favoritesCount: favoritesCountAsync.value ?? 0,
-                            reviewsCount: reviewsCountAsync.value ?? 0,
-                            averageRating: averageRatingAsync.value,
-                            onBookingsTap: () => context.go('/bookings'),
-                            onFavoritesTap: () => context.go('/favorites'),
-                            onReviewsTap: () {
-                              // Navigate to user's reviews (future feature)
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Recenzije - uskoro')),
-                              );
-                            },
+                          return userStatsAsync.when(
+                            data: (stats) => PremiumStatsCards(
+                              bookingsCount: stats.bookingsCount,
+                              favoritesCount: stats.favoritesCount,
+                              reviewsCount: stats.reviewsCount,
+                              averageRating: stats.averageRating,
+                              onBookingsTap: () => context.go('/bookings'),
+                              onFavoritesTap: () => context.go('/favorites'),
+                              onReviewsTap: () {
+                                // Navigate to user's reviews (future feature)
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Recenzije - uskoro')),
+                                );
+                              },
+                            ),
+                            loading: () => SkeletonLoader.statsCards(),
+                            error: (error, stack) => PremiumStatsCards(
+                              bookingsCount: 0,
+                              favoritesCount: 0,
+                              reviewsCount: 0,
+                              averageRating: null,
+                              onBookingsTap: () => context.go('/bookings'),
+                              onFavoritesTap: () => context.go('/favorites'),
+                              onReviewsTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Recenzije - uskoro')),
+                                );
+                              },
+                            ),
                           );
                         },
                       ),

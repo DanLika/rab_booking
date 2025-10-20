@@ -198,12 +198,17 @@ class _ActivityTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: Text(
-        _formatTimestamp(activity.timestamp),
-        style: AppTypography.small.copyWith(
-          color: isDark
-              ? AppColors.textSecondaryDark
-              : AppColors.textSecondaryLight,
+      trailing: SizedBox(
+        width: 60, // Fixed width to prevent overflow
+        child: Text(
+          _formatTimestamp(activity.timestamp),
+          style: AppTypography.small.copyWith(
+            color: isDark
+                ? AppColors.textSecondaryDark
+                : AppColors.textSecondaryLight,
+          ),
+          textAlign: TextAlign.end,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );

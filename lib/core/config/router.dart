@@ -9,7 +9,7 @@ import '../utils/navigation_helpers.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/search/presentation/screens/search_results_screen.dart';
 import '../../features/search/presentation/screens/saved_searches_screen.dart';
-import '../../features/property/presentation/screens/property_details_screen.dart';
+import '../../features/property/presentation/screens/property_details_screen_redesigned.dart';
 import '../../features/property/presentation/screens/review_form_screen.dart';
 import '../../features/booking/presentation/screens/booking_screen.dart';
 import '../../features/booking/presentation/screens/booking_review_screen.dart';
@@ -234,7 +234,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final propertyId = state.pathParameters['id']!;
           return CustomTransitionPage(
             key: state.pageKey,
-            child: PropertyDetailsScreen(propertyId: propertyId),
+            child: PropertyDetailsScreenRedesigned(propertyId: propertyId),
             transitionsBuilder: _slideTransition,
           );
         },

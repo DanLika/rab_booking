@@ -222,41 +222,48 @@ class _MetricCardsGrid extends StatelessWidget {
                 ? 2
                 : 1;
 
+        // Responsive aspect ratio based on screen width
+        final aspectRatio = constraints.maxWidth > 900
+            ? 1.8  // Desktop - wider cards
+            : constraints.maxWidth > 600
+                ? 1.6  // Tablet - medium cards
+                : 1.3; // Mobile - taller cards for more content
+
         return GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: crossAxisCount,
           mainAxisSpacing: 16,
           crossAxisSpacing: 16,
-          childAspectRatio: 1.5,
+          childAspectRatio: aspectRatio,
           children: [
             _MetricCard(
               title: 'Total Revenue',
               value: '\$${analytics.totalRevenue.toStringAsFixed(2)}',
               subtitle: 'Monthly: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
               icon: Icons.attach_money,
-              color: Colors.green,
+              color: AppColors.success,
             ),
             _MetricCard(
               title: 'Total Bookings',
               value: '${analytics.totalBookings}',
               subtitle: 'Monthly: ${analytics.monthlyBookings}',
               icon: Icons.book,
-              color: Colors.blue,
+              color: AppColors.info,
             ),
             _MetricCard(
               title: 'Occupancy Rate',
               value: '${analytics.occupancyRate.toStringAsFixed(1)}%',
               subtitle: '${analytics.activeProperties}/${analytics.totalProperties} properties active',
               icon: Icons.home,
-              color: Colors.orange,
+              color: AppColors.warning,
             ),
             _MetricCard(
               title: 'Avg. Nightly Rate',
               value: '\$${analytics.averageNightlyRate.toStringAsFixed(2)}',
               subtitle: 'Cancellation: ${analytics.cancellationRate.toStringAsFixed(1)}%',
               icon: Icons.night_shelter,
-              color: Colors.purple,
+              color: AppColors.secondary,
             ),
           ],
         );
@@ -393,7 +400,7 @@ class _RevenueChart extends StatelessWidget {
                     );
                   }).toList(),
                   isCurved: true,
-                  color: Colors.green,
+                  color: AppColors.success,
                   barWidth: 3,
                   dotData: const FlDotData(show: true),
                   belowBarData: BarAreaData(
@@ -475,7 +482,7 @@ class _BookingsChart extends StatelessWidget {
                   barRods: [
                     BarChartRodData(
                       toY: entry.value.count.toDouble(),
-                      color: Colors.blue,
+                      color: AppColors.info,
                       width: 20,
                     ),
                   ],
@@ -519,7 +526,10 @@ class _TopPropertiesList extends StatelessWidget {
               backgroundColor: AppColors.primary,
               child: Text(
                 '${index + 1}',
-                style: const TextStyle(color: Colors.white),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             title: Text(
@@ -540,13 +550,13 @@ class _TopPropertiesList extends StatelessWidget {
                   '\$${property.revenue.toStringAsFixed(2)}',
                   style: AppTypography.bodyMedium.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                    color: AppColors.success,
                   ),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.star, size: 14, color: Colors.amber),
+                    const Icon(Icons.star, size: 14, color: AppColors.star),
                     const SizedBox(width: 2),
                     Text(
                       property.rating.toStringAsFixed(1),

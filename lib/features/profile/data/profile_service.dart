@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/models/user_preferences.dart';
 import '../../../shared/models/user_model.dart';
+import '../../../core/errors/app_exceptions.dart';
 
 part 'profile_service.g.dart';
 
@@ -91,30 +92,93 @@ class ProfileService {
     );
   }
 
-  /// Upload avatar to Supabase Storage
+  /// Upload avatar to Supabase Storage with validation
   Future<String> uploadAvatar(XFile imageFile) async {
     if (_userId == null) {
       throw Exception('User not authenticated');
+    }
+
+    // VALIDATION: Read file bytes
+    final bytes = await imageFile.readAsBytes();
+
+    // VALIDATION: Check file size (max 5MB)
+    const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+    if (bytes.length > maxSizeBytes) {
+      throw FileSizeException(
+        message: 'File size ${bytes.length} exceeds maximum $maxSizeBytes',
+        maxSize: maxSizeBytes,
+        actualSize: bytes.length,
+      );
+    }
+
+    // VALIDATION: Check file type by extension
+    final fileExt = imageFile.path.split('.').last.toLowerCase();
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'heic'];
+
+    if (!allowedExtensions.contains(fileExt)) {
+      throw FileTypeException(
+        message: 'Invalid file type: $fileExt',
+        allowedTypes: allowedExtensions.join(', '),
+      );
+    }
+
+    // VALIDATION: Check MIME type if available
+    if (imageFile.mimeType != null) {
+      const allowedMimeTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp',
+        'image/heic',
+      ];
+
+      if (!allowedMimeTypes.contains(imageFile.mimeType!.toLowerCase())) {
+        throw FileTypeException(
+          message: 'Invalid MIME type: ${imageFile.mimeType}',
+          allowedTypes: 'JPEG, PNG, WebP, HEIC',
+        );
+      }
     }
 
     // Delete old avatar if exists
     await _deleteOldAvatar();
 
     // Generate unique filename
-    final fileExt = imageFile.path.split('.').last;
     final fileName = '$_userId-${DateTime.now().millisecondsSinceEpoch}.$fileExt';
     final filePath = 'avatars/$fileName';
 
+    // Determine content type based on extension
+    String contentType;
+    switch (fileExt) {
+      case 'png':
+        contentType = 'image/png';
+        break;
+      case 'webp':
+        contentType = 'image/webp';
+        break;
+      case 'heic':
+        contentType = 'image/heic';
+        break;
+      default:
+        contentType = 'image/jpeg';
+    }
+
     // Upload to Supabase Storage
-    final bytes = await imageFile.readAsBytes();
-    await _supabase.storage.from('user-uploads').uploadBinary(
-          filePath,
-          bytes,
-          fileOptions: const FileOptions(
-            contentType: 'image/jpeg',
-            upsert: true,
-          ),
-        );
+    try {
+      await _supabase.storage.from('user-uploads').uploadBinary(
+            filePath,
+            bytes,
+            fileOptions: FileOptions(
+              contentType: contentType,
+              upsert: true,
+            ),
+          );
+    } catch (e) {
+      throw FileUploadException(
+        message: 'Failed to upload avatar: $e',
+        originalError: e,
+      );
+    }
 
     // Get public URL
     final publicUrl = _supabase.storage.from('user-uploads').getPublicUrl(filePath);
@@ -217,25 +281,61 @@ class UserPreferencesNotifier extends _$UserPreferencesNotifier {
     return await service.loadPreferences();
   }
 
-  /// Update notification settings
+  /// Update notification settings with optimistic update
   Future<void> updateNotifications(bool enabled) async {
-    final service = ref.read(profileServiceProvider);
-    await service.updateNotificationSettings(enabled);
-    ref.invalidateSelf();
+    // OPTIMISTIC UPDATE: Update UI immediately
+    final currentState = state.valueOrNull;
+    if (currentState != null) {
+      state = AsyncValue.data(currentState.copyWith(notificationsEnabled: enabled));
+    }
+
+    // Make API call in background
+    try {
+      final service = ref.read(profileServiceProvider);
+      await service.updateNotificationSettings(enabled);
+    } catch (e, stack) {
+      // ROLLBACK: Revert optimistic update on error
+      ref.invalidateSelf();
+      rethrow;
+    }
   }
 
-  /// Update language
+  /// Update language with optimistic update
   Future<void> updateLanguage(String languageCode) async {
-    final service = ref.read(profileServiceProvider);
-    await service.updateLanguage(languageCode);
-    ref.invalidateSelf();
+    // OPTIMISTIC UPDATE: Update UI immediately
+    final currentState = state.valueOrNull;
+    if (currentState != null) {
+      state = AsyncValue.data(currentState.copyWith(language: languageCode));
+    }
+
+    // Make API call in background
+    try {
+      final service = ref.read(profileServiceProvider);
+      await service.updateLanguage(languageCode);
+    } catch (e, stack) {
+      // ROLLBACK: Revert optimistic update on error
+      ref.invalidateSelf();
+      rethrow;
+    }
   }
 
-  /// Update theme
+  /// Update theme with optimistic update
   Future<void> updateTheme(String themeCode) async {
-    final service = ref.read(profileServiceProvider);
-    await service.updateTheme(themeCode);
-    ref.invalidateSelf();
+    // OPTIMISTIC UPDATE: Update UI immediately
+    final currentState = state.valueOrNull;
+    if (currentState != null) {
+      state = AsyncValue.data(currentState.copyWith(theme: themeCode));
+    }
+
+    // Make API call in background
+    try {
+      final service = ref.read(profileServiceProvider);
+      await service.updateTheme(themeCode);
+    } catch (e, stack) {
+      // ROLLBACK: Revert optimistic update on error
+      ref.invalidateSelf();
+      rethrow;
+    }
   }
 
   /// Upload avatar

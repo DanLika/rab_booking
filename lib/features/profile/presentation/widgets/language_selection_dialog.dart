@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/language_provider.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../domain/models/user_preferences.dart';
 
 /// Language selection dialog using modern Flutter Radio API
@@ -44,7 +46,7 @@ class _LanguageSelectionDialogState extends ConsumerState<LanguageSelectionDialo
                 ? 'Jezik promenjen na Hrvatski'
                 : 'Language changed to English',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
             duration: const Duration(seconds: 2),
           ),
         );
@@ -54,7 +56,7 @@ class _LanguageSelectionDialogState extends ConsumerState<LanguageSelectionDialo
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error changing language: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -93,16 +95,14 @@ class _LanguageSelectionDialogState extends ConsumerState<LanguageSelectionDialo
                   ),
                   title: Text(
                     language.displayName,
-                    style: TextStyle(
+                    style: AppTypography.bodyMedium.copyWith(
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      fontSize: 16,
                     ),
                   ),
                   subtitle: Text(
                     language.code.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textSecondary,
                     ),
                   ),
                   trailing: isSelected

@@ -5,9 +5,10 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../shared/widgets/widgets.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Premium stats cards widget
-/// Features: Animated counters, icons, gradient backgrounds, responsive layout
+/// Features: Animated counters, icons, gradient backgrounds, responsive layout, i18n
 class PremiumStatsCards extends StatelessWidget {
   /// Number of bookings
   final int bookingsCount;
@@ -43,6 +44,8 @@ class PremiumStatsCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return context.isMobile
         ? Column(
             children: [
@@ -53,7 +56,7 @@ class PremiumStatsCards extends StatelessWidget {
                       context,
                       icon: Icons.calendar_month_outlined,
                       value: bookingsCount.toString(),
-                      label: 'Bookings',
+                      label: l10n.bookings,
                       gradient: LinearGradient(
                         colors: [
                           AppColors.primary,
@@ -72,7 +75,7 @@ class PremiumStatsCards extends StatelessWidget {
                       context,
                       icon: Icons.favorite_outlined,
                       value: favoritesCount.toString(),
-                      label: 'Favorites',
+                      label: l10n.favorites,
                       gradient: LinearGradient(
                         colors: [
                           AppColors.error,
@@ -95,7 +98,7 @@ class PremiumStatsCards extends StatelessWidget {
                       context,
                       icon: Icons.star_outline,
                       value: reviewsCount.toString(),
-                      label: 'Reviews',
+                      label: l10n.reviews,
                       gradient: LinearGradient(
                         colors: [
                           AppColors.warning,
@@ -115,7 +118,7 @@ class PremiumStatsCards extends StatelessWidget {
                         context,
                         icon: Icons.trending_up,
                         value: averageRating!.toStringAsFixed(1),
-                        label: 'Rating',
+                        label: l10n.rating,
                         gradient: LinearGradient(
                           colors: [
                             AppColors.success,
@@ -140,7 +143,7 @@ class PremiumStatsCards extends StatelessWidget {
                   context,
                   icon: Icons.calendar_month_outlined,
                   value: bookingsCount.toString(),
-                  label: 'Bookings',
+                  label: l10n.bookings,
                   gradient: LinearGradient(
                     colors: [
                       AppColors.primary,
@@ -159,7 +162,7 @@ class PremiumStatsCards extends StatelessWidget {
                   context,
                   icon: Icons.favorite_outlined,
                   value: favoritesCount.toString(),
-                  label: 'Favorites',
+                  label: l10n.favorites,
                   gradient: LinearGradient(
                     colors: [
                       AppColors.error,
@@ -178,7 +181,7 @@ class PremiumStatsCards extends StatelessWidget {
                   context,
                   icon: Icons.star_outline,
                   value: reviewsCount.toString(),
-                  label: 'Reviews',
+                  label: l10n.reviews,
                   gradient: LinearGradient(
                     colors: [
                       AppColors.warning,
@@ -198,7 +201,7 @@ class PremiumStatsCards extends StatelessWidget {
                     context,
                     icon: Icons.trending_up,
                     value: averageRating!.toStringAsFixed(1),
-                    label: 'Rating',
+                    label: l10n.rating,
                     gradient: LinearGradient(
                       colors: [
                         AppColors.success,

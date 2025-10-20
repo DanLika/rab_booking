@@ -2,40 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/utils/responsive_utils.dart';
-import '../widgets/dashboard_stats_card.dart';
-import '../widgets/revenue_chart_widget.dart';
 import '../widgets/recent_activity_widget.dart';
-import '../providers/revenue_analytics_provider.dart';
-import '../providers/performance_metrics_provider.dart';
+import '../providers/owner_properties_provider.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Dashboard overview tab
-/// Shows stats cards, revenue chart, and recent activity
+/// Shows basic overview information and recent activity
 class DashboardOverviewTab extends ConsumerWidget {
   const DashboardOverviewTab({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch all data providers
-    final revenueWeeklyAsync = ref.watch(revenueWeeklyProvider);
-    final totalRevenueAsync = ref.watch(revenueThisMonthProvider);
-    final revenueTrendAsync = ref.watch(revenueTrendProvider);
-    final occupancyRateAsync = ref.watch(occupancyRateProvider);
-    final occupancyTrendAsync = ref.watch(occupancyTrendProvider);
-    final totalBookingsAsync = ref.watch(totalBookingsCountProvider);
-    final bookingsTrendAsync = ref.watch(bookingsTrendProvider);
-    final activeListingsAsync = ref.watch(activeListingsCountProvider);
+    final propertiesAsync = ref.watch(ownerPropertiesProvider);
 
     return RefreshIndicator(
       onRefresh: () async {
-        // Invalidate all providers to force refresh
-        ref.invalidate(revenueWeeklyProvider);
-        ref.invalidate(revenueThisMonthProvider);
-        ref.invalidate(revenueTrendProvider);
-        ref.invalidate(occupancyRateProvider);
-        ref.invalidate(occupancyTrendProvider);
-        ref.invalidate(totalBookingsCountProvider);
-        ref.invalidate(bookingsTrendProvider);
-        ref.invalidate(activeListingsCountProvider);
+        ref.invalidate(ownerPropertiesProvider);
       },
       child: SingleChildScrollView(
         padding: EdgeInsets.all(
@@ -44,283 +26,220 @@ class DashboardOverviewTab extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Stats cards grid - Show loading or data
-            totalBookingsAsync.when(
-              data: (totalBookings) => totalRevenueAsync.when(
-                data: (totalRevenue) => occupancyRateAsync.when(
-                  data: (occupancyRate) => activeListingsAsync.when(
-                    data: (activeListings) => bookingsTrendAsync.when(
-                      data: (bookingsTrend) => revenueTrendAsync.when(
-                        data: (revenueTrend) => occupancyTrendAsync.when(
-                          data: (occupancyTrendVal) {
-                            // Format trends
-                            final bookingsTrendStr = bookingsTrend >= 0
-                                ? '+${bookingsTrend.toStringAsFixed(1)}%'
-                                : '${bookingsTrend.toStringAsFixed(1)}%';
-                            final revenueTrendStr = revenueTrend >= 0
-                                ? '+${revenueTrend.toStringAsFixed(1)}%'
-                                : '${revenueTrend.toStringAsFixed(1)}%';
-                            final occupancyTrendStr = occupancyTrendVal >= 0
-                                ? '+${occupancyTrendVal.toStringAsFixed(1)}%'
-                                : '${occupancyTrendVal.toStringAsFixed(1)}%';
-
-                            return DashboardStatsGrid(
-                              totalBookings: totalBookings,
-                              totalRevenue: totalRevenue,
-                              occupancyRate: occupancyRate,
-                              activeListings: activeListings,
-                              bookingsTrend: bookingsTrendStr,
-                              revenueTrend: revenueTrendStr,
-                              occupancyTrend: occupancyTrendStr,
-                              isBookingsTrendPositive: bookingsTrend >= 0,
-                              isRevenueTrendPositive: revenueTrend >= 0,
-                              isOccupancyTrendPositive: occupancyTrendVal >= 0,
-                            );
-                          },
-                          loading: () => _buildLoadingStats(),
-                          error: (e, s) => _buildErrorStats(e.toString()),
-                        ),
-                        loading: () => _buildLoadingStats(),
-                        error: (e, s) => _buildErrorStats(e.toString()),
-                      ),
-                      loading: () => _buildLoadingStats(),
-                      error: (e, s) => _buildErrorStats(e.toString()),
-                    ),
-                    loading: () => _buildLoadingStats(),
-                    error: (e, s) => _buildErrorStats(e.toString()),
+            // Welcome message
+            Text(
+              'Pregled',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  loading: () => _buildLoadingStats(),
-                  error: (e, s) => _buildErrorStats(e.toString()),
-                ),
-                loading: () => _buildLoadingStats(),
-                error: (e, s) => _buildErrorStats(e.toString()),
-              ),
-              loading: () => _buildLoadingStats(),
-              error: (e, s) => _buildErrorStats(e.toString()),
+            ),
+            const SizedBox(height: AppDimensions.spaceXS),
+            Text(
+              'Dobrodošli u vaš Dashboard',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppColors.textSecondaryLight,
+                  ),
             ),
 
             const SizedBox(height: AppDimensions.spaceXL),
 
-            // Charts section
-            if (context.isDesktop)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Revenue chart
-                  Expanded(
-                    flex: 2,
-                    child: revenueWeeklyAsync.when(
-                      data: (data) => RevenueChartWidget(
-                        data: data,
-                        subtitle: 'Last 7 days',
-                      ),
-                      loading: () => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                      error: (e, s) => Center(
-                        child: Text('Error loading revenue data: $e'),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(width: AppDimensions.spaceL),
-
-                  // Recent activity
-                  Expanded(
-                    child: RecentActivityWidget(
-                      activities: _generateRecentActivities(),
-                      onViewAll: () {
-                        // Navigate to activity page
-                      },
-                    ),
-                  ),
-                ],
-              )
-            else ...[
-              // Revenue chart
-              revenueWeeklyAsync.when(
-                data: (data) => RevenueChartWidget(
-                  data: data,
-                  subtitle: 'Last 7 days',
-                ),
-                loading: () => const Center(
+            // Simple stats cards
+            propertiesAsync.when(
+              data: (properties) => _buildStatsCards(
+                context,
+                totalProperties: properties.length,
+                activeProperties: properties.where((p) => p.isActive).length,
+              ),
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(AppDimensions.spaceXL),
                   child: CircularProgressIndicator(),
                 ),
-                error: (e, s) => Center(
-                  child: Text('Error loading revenue data: $e'),
+              ),
+              error: (e, s) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppDimensions.spaceXL),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.error_outline,
+                          size: 48, color: AppColors.error),
+                      const SizedBox(height: AppDimensions.spaceM),
+                      const Text(
+                        'Greška prilikom učitavanja podataka',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spaceS),
+                      Text(
+                        e.toString(),
+                        style:
+                            const TextStyle(color: AppColors.textSecondaryLight),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-
-              const SizedBox(height: AppDimensions.spaceL),
-
-              // Recent activity
-              RecentActivityWidget(
-                activities: _generateRecentActivities(),
-                onViewAll: () {
-                  // Navigate to activity page
-                },
-              ),
-            ],
+            ),
 
             const SizedBox(height: AppDimensions.spaceXL),
 
-            // Quick actions
-            _buildQuickActions(context),
+            // Recent activity
+            RecentActivityWidget(
+              activities: _generateRecentActivities(),
+              onViewAll: () {
+                // Navigate to bookings tab
+              },
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLoadingStats() {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(AppDimensions.spaceXL),
-        child: CircularProgressIndicator(),
-      ),
-    );
-  }
+  Widget _buildStatsCards(
+    BuildContext context, {
+    required int totalProperties,
+    required int activeProperties,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth > 900
+            ? 3
+            : constraints.maxWidth > 600
+                ? 2
+                : 1;
 
-  Widget _buildErrorStats(String error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.spaceXL),
-        child: Column(
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          mainAxisSpacing: AppDimensions.spaceM,
+          crossAxisSpacing: AppDimensions.spaceM,
+          childAspectRatio: constraints.maxWidth > 900
+              ? 2.5
+              : constraints.maxWidth > 600
+                  ? 2.0
+                  : 1.8,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: AppDimensions.spaceM),
-            const Text(
-              'Error loading dashboard data',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+            _StatCard(
+              title: 'Ukupno Nekretnina',
+              value: '$totalProperties',
+              icon: Icons.villa,
+              color: AppColors.primary,
             ),
-            const SizedBox(height: AppDimensions.spaceS),
-            Text(
-              error,
-              style: const TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
+            _StatCard(
+              title: 'Aktivne Nekretnine',
+              value: '$activeProperties',
+              icon: Icons.check_circle,
+              color: AppColors.success,
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActions(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        const SizedBox(height: AppDimensions.spaceM),
-
-        Wrap(
-          spacing: AppDimensions.spaceM,
-          runSpacing: AppDimensions.spaceM,
-          children: [
-            _QuickActionButton(
-              icon: Icons.add_home,
-              label: 'Add Property',
-              onTap: () {
-                // Navigate to add property
-              },
-            ),
-            _QuickActionButton(
-              icon: Icons.calendar_month,
-              label: 'Manage Calendar',
-              onTap: () {
-                // Navigate to calendar
-              },
-            ),
-            _QuickActionButton(
-              icon: Icons.euro_symbol,
-              label: 'View Payments',
-              onTap: () {
-                // Navigate to payments
-              },
-            ),
-            _QuickActionButton(
-              icon: Icons.analytics,
-              label: 'View Analytics',
-              onTap: () {
-                // Navigate to analytics
-              },
+            _StatCard(
+              title: 'Neaktivne',
+              value: '${totalProperties - activeProperties}',
+              icon: Icons.pause_circle,
+              color: AppColors.warning,
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
-
-  // Removed: _generateRevenueData() - now using real data from revenueWeeklyProvider
 
   List<ActivityItem> _generateRecentActivities() {
     final now = DateTime.now();
     return [
       ActivityItem(
         type: ActivityType.booking,
-        title: 'New booking received',
-        subtitle: 'Villa Mediteran - 7 nights',
+        title: 'Nova rezervacija primljena',
+        subtitle: 'Villa Mediteran - 7 noćenja',
         timestamp: now.subtract(const Duration(minutes: 15)),
       ),
       ActivityItem(
         type: ActivityType.review,
-        title: 'New review posted',
-        subtitle: '5 stars from John Smith',
+        title: 'Nova recenzija',
+        subtitle: '5 zvjezdica od John Smith',
         timestamp: now.subtract(const Duration(hours: 2)),
       ),
       ActivityItem(
         type: ActivityType.payment,
-        title: 'Payment received',
-        subtitle: '€850.00 for booking #BK-2024-001',
+        title: 'Plaćanje primljeno',
+        subtitle: '€850.00 za rezervaciju #BK-2024-001',
         timestamp: now.subtract(const Duration(hours: 5)),
       ),
       ActivityItem(
         type: ActivityType.message,
-        title: 'New message',
-        subtitle: 'Guest inquiry about Apartment Sunset',
+        title: 'Nova poruka',
+        subtitle: 'Upit gosta o Apartment Sunset',
         timestamp: now.subtract(const Duration(days: 1)),
       ),
       ActivityItem(
         type: ActivityType.booking,
-        title: 'Booking confirmed',
-        subtitle: 'Apartment Sunset - 3 nights',
+        title: 'Rezervacija potvrđena',
+        subtitle: 'Apartment Sunset - 3 noćenja',
         timestamp: now.subtract(const Duration(days: 2)),
       ),
     ];
   }
 }
 
-/// Quick action button
-class _QuickActionButton extends StatelessWidget {
+/// Simple stat card widget
+class _StatCard extends StatelessWidget {
+  final String title;
+  final String value;
   final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+  final Color color;
 
-  const _QuickActionButton({
+  const _StatCard({
+    required this.title,
+    required this.value,
     required this.icon,
-    required this.label,
-    required this.onTap,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.spaceL,
-          vertical: AppDimensions.spaceM,
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        side: BorderSide(color: AppColors.borderLight),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.spaceM),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppDimensions.spaceS),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.spaceM),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: AppDimensions.spaceXS),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondaryLight,
+                  ),
+            ),
+          ],
         ),
       ),
     );

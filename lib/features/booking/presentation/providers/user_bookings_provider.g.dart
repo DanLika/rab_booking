@@ -6,7 +6,7 @@ part of 'user_bookings_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$upcomingBookingsHash() => r'bc7966dd0d25ed53bca1c5717d96a84364563ae4';
+String _$upcomingBookingsHash() => r'151141225b93162a14147eb9b7425f584e9ee5f2';
 
 /// See also [upcomingBookings].
 @ProviderFor(upcomingBookings)
@@ -24,7 +24,7 @@ final upcomingBookingsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef UpcomingBookingsRef = AutoDisposeFutureProviderRef<List<UserBooking>>;
-String _$pastBookingsHash() => r'702fc2346d16d694335c68e1f876c62d308ec751';
+String _$pastBookingsHash() => r'a0e018db1280b138e8d519d92d906bd31db4eb6a';
 
 /// See also [pastBookings].
 @ProviderFor(pastBookings)
@@ -42,7 +42,7 @@ final pastBookingsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PastBookingsRef = AutoDisposeFutureProviderRef<List<UserBooking>>;
-String _$cancelledBookingsHash() => r'bc7a31648a132e797f0ae4df4e588d2b8f8705b8';
+String _$cancelledBookingsHash() => r'34cfafea7cb9678f8b93086a1d7bfbbaca66c3c2';
 
 /// See also [cancelledBookings].
 @ProviderFor(cancelledBookings)
@@ -201,12 +201,15 @@ class _BookingDetailsProviderElement
   String get bookingId => (origin as BookingDetailsProvider).bookingId;
 }
 
-String _$userBookingsHash() => r'444058c64cab435e879a0afbc31fc5b73016ebf5';
+String _$userBookingsHash() => r'b33c4985f910cfd29f4c06a87e32153672febc9e';
 
 /// See also [UserBookings].
 @ProviderFor(UserBookings)
 final userBookingsProvider =
-    AutoDisposeAsyncNotifierProvider<UserBookings, List<UserBooking>>.internal(
+    AutoDisposeAsyncNotifierProvider<
+      UserBookings,
+      PaginatedBookingsState
+    >.internal(
       UserBookings.new,
       name: r'userBookingsProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -216,6 +219,6 @@ final userBookingsProvider =
       allTransitiveDependencies: null,
     );
 
-typedef _$UserBookings = AutoDisposeAsyncNotifier<List<UserBooking>>;
+typedef _$UserBookings = AutoDisposeAsyncNotifier<PaginatedBookingsState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

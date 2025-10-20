@@ -5,6 +5,8 @@ import '../providers/owner_bookings_provider.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../../data/owner_bookings_repository.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 /// Owner bookings screen with filters and booking management
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
@@ -51,7 +53,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     Icon(
                       Icons.error_outline,
                       size: 64,
-                      color: Theme.of(context).colorScheme.error,
+                      color: AppColors.error,
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -62,7 +64,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     Text(
                       error.toString(),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
+                            color: AppColors.textSecondaryLight,
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -105,108 +107,154 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                // Status filter
-                Expanded(
-                  child: DropdownButtonFormField<BookingStatus?>(
-                    key: ValueKey(filters.status),
-                    decoration: const InputDecoration(
-                      labelText: 'Status',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.filter_list),
-                    ),
-                    initialValue: filters.status,
-                    items: [
-                      const DropdownMenuItem(
-                        value: null,
-                        child: Text('Svi statusi'),
-                      ),
-                      ...BookingStatus.values
-                          .where((s) => s != BookingStatus.blocked)
-                          .map((status) {
-                        return DropdownMenuItem(
-                          value: status,
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: status.color,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(status.displayName),
-                            ],
-                          ),
-                        );
-                      }),
+            // Responsive filter layout
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 768;
+                final isTablet = constraints.maxWidth >= 768 && constraints.maxWidth < 1024;
+
+                if (isMobile) {
+                  // Column layout for mobile - full width filters
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildStatusFilter(filters),
+                      const SizedBox(height: 12),
+                      _buildPropertyFilter(filters, propertiesAsync),
+                      const SizedBox(height: 12),
+                      _buildDateRangeFilter(filters),
                     ],
-                    onChanged: (value) {
-                      ref.read(bookingsFiltersNotifierProvider.notifier).setStatus(value);
-                    },
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-
-                // Property filter
-                Expanded(
-                  child: propertiesAsync.when(
-                    data: (properties) {
-                      return DropdownButtonFormField<String?>(
-                        key: ValueKey(filters.propertyId),
-                        decoration: const InputDecoration(
-                          labelText: 'Objekt',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.home_outlined),
-                        ),
-                        initialValue: filters.propertyId,
-                        items: [
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text('Svi objekti'),
-                          ),
-                          ...properties.map((property) {
-                            return DropdownMenuItem(
-                              value: property.id,
-                              child: Text(property.name),
-                            );
-                          }),
+                  );
+                } else if (isTablet) {
+                  // 2-column layout for tablets
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(child: _buildStatusFilter(filters)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildPropertyFilter(filters, propertiesAsync)),
                         ],
-                        onChanged: (value) {
-                          ref.read(bookingsFiltersNotifierProvider.notifier).setProperty(value);
-                        },
-                      );
-                    },
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (error, _) => const Text('Error'),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDateRangeFilter(filters),
+                    ],
+                  );
+                } else {
+                  // 3-column Row layout for desktop
+                  return Row(
+                    children: [
+                      Expanded(child: _buildStatusFilter(filters)),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildPropertyFilter(filters, propertiesAsync)),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildDateRangeFilter(filters)),
+                    ],
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusFilter(BookingsFilters filters) {
+    return DropdownButtonFormField<BookingStatus?>(
+      key: ValueKey(filters.status),
+      decoration: const InputDecoration(
+        labelText: 'Status',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.filter_list),
+      ),
+      initialValue: filters.status,
+      items: [
+        const DropdownMenuItem(
+          value: null,
+          child: Text('Svi statusi'),
+        ),
+        ...BookingStatus.values
+            .where((s) => s != BookingStatus.blocked)
+            .map((status) {
+          return DropdownMenuItem(
+            value: status,
+            child: Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: status.color,
+                    shape: BoxShape.circle,
                   ),
                 ),
-
-                const SizedBox(width: 16),
-
-                // Date range filter
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showDateRangePicker(),
-                    icon: const Icon(Icons.date_range),
-                    label: Text(
-                      filters.startDate != null && filters.endDate != null
-                          ? '${filters.startDate!.day}.${filters.startDate!.month}. - ${filters.endDate!.day}.${filters.endDate!.month}.'
-                          : 'Odaberi raspon',
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                    ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    status.displayName,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
+          );
+        }),
+      ],
+      onChanged: (value) {
+        ref.read(bookingsFiltersNotifierProvider.notifier).setStatus(value);
+      },
+    );
+  }
+
+  Widget _buildPropertyFilter(BookingsFilters filters, AsyncValue propertiesAsync) {
+    return propertiesAsync.when(
+      data: (properties) {
+        return DropdownButtonFormField<String?>(
+          key: ValueKey(filters.propertyId),
+          decoration: const InputDecoration(
+            labelText: 'Objekt',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.home_outlined),
+          ),
+          initialValue: filters.propertyId,
+          items: [
+            const DropdownMenuItem(
+              value: null,
+              child: Text('Svi objekti'),
+            ),
+            ...properties.map((property) {
+              return DropdownMenuItem(
+                value: property.id,
+                child: Text(
+                  property.name,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }),
           ],
-        ),
+          onChanged: (value) {
+            ref.read(bookingsFiltersNotifierProvider.notifier).setProperty(value);
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => const Text('Error'),
+    );
+  }
+
+  Widget _buildDateRangeFilter(BookingsFilters filters) {
+    return OutlinedButton.icon(
+      onPressed: () => _showDateRangePicker(),
+      icon: const Icon(Icons.date_range),
+      label: Text(
+        filters.startDate != null && filters.endDate != null
+            ? '${filters.startDate!.day}.${filters.startDate!.month}. - ${filters.endDate!.day}.${filters.endDate!.month}.'
+            : 'Odaberi raspon',
+        overflow: TextOverflow.ellipsis,
+      ),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       ),
     );
   }
@@ -230,7 +278,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           Icon(
             Icons.book_online_outlined,
             size: 80,
-            color: Colors.grey[400],
+            color: AppColors.textDisabled,
           ),
           const SizedBox(height: 24),
           Text(
@@ -243,7 +291,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           Text(
             'Ovdje će se prikazati sve rezervacije za vaše objekte.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
+                  color: AppColors.textSecondaryLight,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -321,7 +369,7 @@ class _BookingCard extends ConsumerWidget {
                 Text(
                   '#${booking.id.substring(0, 8)}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                        color: AppColors.textSecondaryLight,
                       ),
                 ),
               ],
@@ -353,14 +401,14 @@ class _BookingCard extends ConsumerWidget {
                       Text(
                         ownerBooking.guestEmail,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
+                              color: AppColors.textSecondaryLight,
                             ),
                       ),
                       if (ownerBooking.guestPhone != null)
                         Text(
                           ownerBooking.guestPhone!,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
+                                color: AppColors.textSecondaryLight,
                               ),
                         ),
                     ],
@@ -374,7 +422,7 @@ class _BookingCard extends ConsumerWidget {
             // Property and unit info
             Row(
               children: [
-                Icon(Icons.home_outlined, size: 20, color: Colors.grey[600]),
+                Icon(Icons.home_outlined, size: 20, color: AppColors.textSecondaryLight),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -389,7 +437,7 @@ class _BookingCard extends ConsumerWidget {
                       Text(
                         unit.name,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
+                              color: AppColors.textSecondaryLight,
                             ),
                       ),
                     ],
@@ -403,7 +451,7 @@ class _BookingCard extends ConsumerWidget {
             // Dates
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 20, color: Colors.grey[600]),
+                Icon(Icons.calendar_today, size: 20, color: AppColors.textSecondaryLight),
                 const SizedBox(width: 8),
                 Text(
                   '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}. - '
@@ -414,7 +462,7 @@ class _BookingCard extends ConsumerWidget {
                 Text(
                   '(${booking.numberOfNights} ${booking.numberOfNights == 1 ? 'noć' : 'noći'})',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                        color: AppColors.textSecondaryLight,
                       ),
                 ),
               ],
@@ -425,7 +473,7 @@ class _BookingCard extends ConsumerWidget {
             // Guests
             Row(
               children: [
-                Icon(Icons.people_outline, size: 20, color: Colors.grey[600]),
+                Icon(Icons.people_outline, size: 20, color: AppColors.textSecondaryLight),
                 const SizedBox(width: 8),
                 Text(
                   '${booking.guestCount} ${booking.guestCount == 1 ? 'gost' : 'gostiju'}',
@@ -446,7 +494,7 @@ class _BookingCard extends ConsumerWidget {
                       Text(
                         'Ukupno',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
+                              color: AppColors.textSecondaryLight,
                             ),
                       ),
                       Text(
@@ -466,7 +514,7 @@ class _BookingCard extends ConsumerWidget {
                       Text(
                         'Plaćeno',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
+                              color: AppColors.textSecondaryLight,
                             ),
                       ),
                       Text(
@@ -485,14 +533,14 @@ class _BookingCard extends ConsumerWidget {
                       Text(
                         'Preostalo',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
+                              color: AppColors.textSecondaryLight,
                             ),
                       ),
                       Text(
                         booking.formattedRemainingBalance,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: booking.isFullyPaid ? Colors.green : Colors.orange,
+                              color: booking.isFullyPaid ? AppColors.success : AppColors.warning,
                             ),
                       ),
                     ],
@@ -505,9 +553,9 @@ class _BookingCard extends ConsumerWidget {
             const SizedBox(height: 12),
             LinearProgressIndicator(
               value: booking.paymentPercentage / 100,
-              backgroundColor: Colors.grey[200],
+              backgroundColor: AppColors.surfaceVariantLight,
               valueColor: AlwaysStoppedAnimation<Color>(
-                booking.isFullyPaid ? Colors.green : Theme.of(context).primaryColor,
+                booking.isFullyPaid ? AppColors.success : Theme.of(context).primaryColor,
               ),
             ),
             const SizedBox(height: 4),
@@ -516,7 +564,7 @@ class _BookingCard extends ConsumerWidget {
                   ? 'Plaćeno u potpunosti'
                   : '${booking.paymentPercentage.toStringAsFixed(0)}% plaćeno',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondaryLight,
                   ),
             ),
 
@@ -526,7 +574,7 @@ class _BookingCard extends ConsumerWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.note_outlined, size: 20, color: Colors.grey[600]),
+                  Icon(Icons.note_outlined, size: 20, color: AppColors.textSecondaryLight),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -535,7 +583,7 @@ class _BookingCard extends ConsumerWidget {
                         Text(
                           'Napomene',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
+                                color: AppColors.textSecondaryLight,
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
@@ -578,7 +626,7 @@ class _BookingCard extends ConsumerWidget {
                       icon: const Icon(Icons.check_circle_outline),
                       label: const Text('Potvrdi'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: AppColors.success,
                       ),
                     ),
                   ),
@@ -593,7 +641,7 @@ class _BookingCard extends ConsumerWidget {
                       icon: const Icon(Icons.done_all),
                       label: const Text('Završi'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: Colors.grey[700],
+                        backgroundColor: AppColors.textPrimaryDark,
                       ),
                     ),
                   ),
@@ -610,7 +658,7 @@ class _BookingCard extends ConsumerWidget {
                       icon: const Icon(Icons.cancel_outlined),
                       label: const Text('Otkaži'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
+                        foregroundColor: AppColors.error,
                       ),
                     ),
                   ),
@@ -657,7 +705,7 @@ class _BookingCard extends ConsumerWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Rezervacija je uspješno potvrđena'),
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.success,
             ),
           );
           ref.invalidate(ownerBookingsProvider);
@@ -667,7 +715,7 @@ class _BookingCard extends ConsumerWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Greška: $e'),
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
             ),
           );
         }
@@ -703,7 +751,7 @@ class _BookingCard extends ConsumerWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Rezervacija je označena kao završena'),
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.success,
             ),
           );
           ref.invalidate(ownerBookingsProvider);
@@ -713,7 +761,7 @@ class _BookingCard extends ConsumerWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Greška: $e'),
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
             ),
           );
         }
@@ -752,7 +800,7 @@ class _BookingCard extends ConsumerWidget {
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
             ),
             child: const Text('Otkaži rezervaciju'),
           ),
@@ -772,7 +820,7 @@ class _BookingCard extends ConsumerWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Rezervacija je otkazana'),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.warning,
             ),
           );
           ref.invalidate(ownerBookingsProvider);
@@ -782,7 +830,7 @@ class _BookingCard extends ConsumerWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Greška: $e'),
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
             ),
           );
         }
@@ -802,11 +850,13 @@ class _BookingDetailsDialog extends StatelessWidget {
     final booking = ownerBooking.booking;
     final property = ownerBooking.property;
     final unit = ownerBooking.unit;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth > 600 ? 500.0 : screenWidth * 0.9;
 
     return AlertDialog(
       title: const Text('Detalji rezervacije'),
       content: SizedBox(
-        width: 500,
+        width: dialogWidth,
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -901,7 +951,7 @@ class _BookingDetailsDialog extends StatelessWidget {
               _DetailRow(
                 label: 'Preostalo',
                 value: booking.formattedRemainingBalance,
-                valueColor: booking.isFullyPaid ? Colors.green : Colors.orange,
+                valueColor: booking.isFullyPaid ? AppColors.success : AppColors.warning,
               ),
               if (booking.paymentIntentId != null)
                 _DetailRow(
@@ -995,7 +1045,7 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondaryLight,
                   ),
             ),
           ),

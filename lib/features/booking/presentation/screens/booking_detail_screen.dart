@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../domain/models/booking_status.dart';
 import '../providers/user_bookings_provider.dart';
 import '../../../property/data/repositories/reviews_repository.dart';
@@ -26,7 +30,7 @@ class BookingDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Booking Details'),
+        title: const Text('Detalji rezervacije'),
       ),
       body: bookingAsync.when(
         data: (booking) {
@@ -37,22 +41,33 @@ class BookingDetailScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Property Image
-                Image.network(
-                  booking.propertyImage,
+                CachedNetworkImage(
+                  imageUrl: booking.propertyImage,
                   height: 250,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 250,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.image_not_supported, size: 64),
-                    );
-                  },
+                  placeholder: (context, url) => Container(
+                    height: 250,
+                    color: AppColors.surfaceVariantLight,
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    height: 250,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                    ),
+                    child: const Icon(
+                      Icons.villa_outlined,
+                      color: Colors.white,
+                      size: 64,
+                    ),
+                  ),
                 ),
 
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(context.horizontalPadding),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -69,13 +84,13 @@ class BookingDetailScreen extends ConsumerWidget {
                           _buildStatusChip(context, booking.status),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: AppDimensions.spaceXS),
 
                       // Location
                       Row(
                         children: [
                           Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
+                          SizedBox(width: AppDimensions.spaceXXS),
                           Text(
                             booking.propertyLocation,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -85,25 +100,27 @@ class BookingDetailScreen extends ConsumerWidget {
                         ],
                       ),
 
-                      const Divider(height: 32),
+                      Divider(height: AppDimensions.spaceL),
 
                       // Booking Information
                       Text(
-                        'Booking Information',
+                        'Informacije o rezervaciji',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: AppDimensions.spaceS),
 
                       _InfoRow(
                         icon: Icons.confirmation_number,
-                        label: 'Booking ID',
+                        label: 'ID rezervacije',
                         value: booking.id.substring(0, 8).toUpperCase(),
                       ),
                       _InfoRow(
                         icon: Icons.event,
-                        label: 'Booking Date',
+                        label: 'Datum rezervacije',
                         value: dateFormat.format(booking.bookingDate),
                       ),
 
@@ -111,10 +128,12 @@ class BookingDetailScreen extends ConsumerWidget {
 
                       // Stay Details
                       Text(
-                        'Stay Details',
+                        'Detalji boravka',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 16),
 
@@ -122,7 +141,7 @@ class BookingDetailScreen extends ConsumerWidget {
                         children: [
                           Expanded(
                             child: _DateCard(
-                              label: 'Check-in',
+                              label: 'Dolazak',
                               date: booking.checkInDate,
                               time: kDefaultCheckInTime,
                             ),
@@ -130,7 +149,7 @@ class BookingDetailScreen extends ConsumerWidget {
                           const SizedBox(width: 16),
                           Expanded(
                             child: _DateCard(
-                              label: 'Check-out',
+                              label: 'Odlazak',
                               date: booking.checkOutDate,
                               time: kDefaultCheckOutTime,
                             ),
@@ -142,23 +161,25 @@ class BookingDetailScreen extends ConsumerWidget {
 
                       _InfoRow(
                         icon: Icons.nights_stay,
-                        label: 'Duration',
-                        value: '${booking.nightsCount} night${booking.nightsCount != 1 ? 's' : ''}',
+                        label: 'Trajanje',
+                        value: '${booking.nightsCount} ${booking.nightsCount == 1 ? 'noć' : booking.nightsCount < 5 ? 'noći' : 'noći'}',
                       ),
                       _InfoRow(
                         icon: Icons.person,
-                        label: 'Guests',
-                        value: '${booking.guests} guest${booking.guests != 1 ? 's' : ''}',
+                        label: 'Gosti',
+                        value: '${booking.guests} ${booking.guests == 1 ? 'gost' : 'gostiju'}',
                       ),
 
                       const Divider(height: 32),
 
                       // Payment Information
                       Text(
-                        'Payment Information',
+                        'Informacije o plaćanju',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 16),
 
@@ -172,13 +193,15 @@ class BookingDetailScreen extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Total Amount',
+                              'Ukupan iznos',
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              '\$${booking.totalPrice.toStringAsFixed(2)}',
+                              '€${booking.totalPrice.toStringAsFixed(2)}',
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: Theme.of(context).primaryColor,
@@ -192,10 +215,12 @@ class BookingDetailScreen extends ConsumerWidget {
                       if (booking.isCancelled) ...[
                         const Divider(height: 32),
                         Text(
-                          'Cancellation Details',
+                          'Detalji otkazivanja',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 16),
                         Container(
@@ -211,14 +236,14 @@ class BookingDetailScreen extends ConsumerWidget {
                               if (booking.cancellationDate != null)
                                 _InfoRow(
                                   icon: Icons.event,
-                                  label: 'Cancelled On',
+                                  label: 'Otkazano dana',
                                   value: dateFormat.format(booking.cancellationDate!),
                                   iconColor: Colors.red[700],
                                 ),
                               if (booking.cancellationReason != null)
                                 _InfoRow(
                                   icon: Icons.comment,
-                                  label: 'Reason',
+                                  label: 'Razlog',
                                   value: booking.cancellationReason!,
                                   iconColor: Colors.red[700],
                                 ),
@@ -236,7 +261,7 @@ class BookingDetailScreen extends ConsumerWidget {
                           child: OutlinedButton.icon(
                             onPressed: () => _showCancelDialog(context, ref, booking.id),
                             icon: const Icon(Icons.cancel_outlined),
-                            label: const Text('Cancel Booking'),
+                            label: const Text('Otkaži rezervaciju'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.red,
                               side: const BorderSide(color: Colors.red),
@@ -255,7 +280,7 @@ class BookingDetailScreen extends ConsumerWidget {
                               context.push('/properties/${booking.propertyId}');
                             },
                             icon: const Icon(Icons.home),
-                            label: const Text('View Property'),
+                            label: const Text('Pogledaj smještaj'),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
@@ -304,25 +329,25 @@ class BookingDetailScreen extends ConsumerWidget {
 
     switch (status) {
       case BookingStatus.confirmed:
-        chipColor = Colors.green[100]!;
-        textColor = Colors.green[900]!;
+        chipColor = AppColors.statusConfirmed.withValues(alpha: 0.1);
+        textColor = AppColors.statusConfirmed;
         break;
       case BookingStatus.pending:
-        chipColor = Colors.orange[100]!;
-        textColor = Colors.orange[900]!;
+        chipColor = AppColors.statusPending.withValues(alpha: 0.1);
+        textColor = AppColors.statusPending;
         break;
       case BookingStatus.cancelled:
       case BookingStatus.refunded:
-        chipColor = Colors.red[100]!;
-        textColor = Colors.red[900]!;
+        chipColor = AppColors.statusCancelled.withValues(alpha: 0.1);
+        textColor = AppColors.statusCancelled;
         break;
       case BookingStatus.completed:
-        chipColor = Colors.blue[100]!;
-        textColor = Colors.blue[900]!;
+        chipColor = AppColors.statusCompleted.withValues(alpha: 0.1);
+        textColor = AppColors.statusCompleted;
         break;
       case BookingStatus.blocked:
-        chipColor = Colors.grey[300]!;
-        textColor = Colors.grey[900]!;
+        chipColor = AppColors.textDisabled.withValues(alpha: 0.1);
+        textColor = AppColors.textDisabled;
         break;
     }
 
@@ -339,6 +364,8 @@ class BookingDetailScreen extends ConsumerWidget {
           fontWeight: FontWeight.w600,
           color: textColor,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -453,6 +480,8 @@ class _InfoRow extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.grey[600],
                       ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -460,6 +489,8 @@ class _InfoRow extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

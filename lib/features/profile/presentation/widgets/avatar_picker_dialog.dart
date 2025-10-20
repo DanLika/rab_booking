@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Avatar picker dialog - choose between camera and gallery
 class AvatarPickerDialog extends StatelessWidget {
@@ -22,7 +23,7 @@ class AvatarPickerDialog extends StatelessWidget {
           ListTile(
             leading: const Icon(
               Icons.camera_alt,
-              color: Color(0xFF667eea),
+              color: AppColors.primary,
             ),
             title: const Text('Kamera'),
             subtitle: const Text('Fotografiraj novu sliku'),
@@ -35,7 +36,7 @@ class AvatarPickerDialog extends StatelessWidget {
           ListTile(
             leading: const Icon(
               Icons.photo_library,
-              color: Color(0xFF667eea),
+              color: AppColors.primary,
             ),
             title: const Text('Galerija'),
             subtitle: const Text('Odaberi postojeću sliku'),

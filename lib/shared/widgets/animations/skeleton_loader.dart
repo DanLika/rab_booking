@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/responsive_utils.dart';
 
 /// Skeleton loader with shimmer effect
 /// Replaces CircularProgressIndicator for better UX
@@ -20,6 +22,9 @@ class SkeletonLoader extends StatefulWidget {
 
   /// Property card skeleton (horizontal)
   static Widget propertyCardHorizontal() => const PropertyCardSkeletonHorizontal();
+
+  /// Stats cards skeleton (for profile page)
+  static Widget statsCards() => const StatsCardsSkeleton();
 
   @override
   State<SkeletonLoader> createState() => _SkeletonLoaderState();
@@ -374,48 +379,48 @@ class BookingCardSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppDimensions.spaceS),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (matches real card)
         border: Border.all(color: Colors.grey[200]!),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Property info
           Row(
             children: [
-              SkeletonLoader(
-                width: 80,
-                height: 80,
-                borderRadius: 8,
+              const SkeletonLoader(
+                width: 100,
+                height: 100,
+                borderRadius: 12,
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppDimensions.spaceS),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SkeletonLoader(width: double.infinity, height: 16),
-                    SizedBox(height: 8),
-                    SkeletonLoader(width: 150, height: 14),
+                    const SkeletonLoader(width: double.infinity, height: 16),
+                    SizedBox(height: AppDimensions.spaceXS),
+                    const SkeletonLoader(width: 150, height: 14),
                   ],
                 ),
               ),
             ],
           ),
-          SizedBox(height: 16),
+          SizedBox(height: AppDimensions.spaceS),
 
           // Booking details
-          SkeletonLoader(width: 180, height: 14),
-          SizedBox(height: 8),
-          SkeletonLoader(width: 140, height: 14),
-          SizedBox(height: 8),
-          SkeletonLoader(width: 100, height: 14),
-          SizedBox(height: 16),
+          const SkeletonLoader(width: 180, height: 14),
+          SizedBox(height: AppDimensions.spaceXS),
+          const SkeletonLoader(width: 140, height: 14),
+          SizedBox(height: AppDimensions.spaceXS),
+          const SkeletonLoader(width: 100, height: 14),
+          SizedBox(height: AppDimensions.spaceS),
 
           // Status badge
-          SkeletonLoader(
+          const SkeletonLoader(
             width: 100,
             height: 32,
             borderRadius: 16,
@@ -492,6 +497,95 @@ class ListItemSkeleton extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Stats cards skeleton loader - mimics PremiumStatsCards layout
+class StatsCardsSkeleton extends StatelessWidget {
+  const StatsCardsSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return context.isMobile
+        ? Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(child: _buildStatCardSkeleton(context)),
+                  const SizedBox(width: AppDimensions.spaceM),
+                  Expanded(child: _buildStatCardSkeleton(context)),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spaceM),
+              Row(
+                children: [
+                  Expanded(child: _buildStatCardSkeleton(context)),
+                  const SizedBox(width: AppDimensions.spaceM),
+                  Expanded(child: _buildStatCardSkeleton(context)),
+                ],
+              ),
+            ],
+          )
+        : Row(
+            children: [
+              Expanded(child: _buildStatCardSkeleton(context)),
+              const SizedBox(width: AppDimensions.spaceM),
+              Expanded(child: _buildStatCardSkeleton(context)),
+              const SizedBox(width: AppDimensions.spaceM),
+              Expanded(child: _buildStatCardSkeleton(context)),
+              const SizedBox(width: AppDimensions.spaceM),
+              Expanded(child: _buildStatCardSkeleton(context)),
+            ],
+          );
+  }
+
+  Widget _buildStatCardSkeleton(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(
+        context.isMobile ? AppDimensions.spaceM : AppDimensions.spaceL,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.withOpacity(AppColors.surfaceLight, 0.5),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(
+          color: AppColors.withOpacity(AppColors.borderLight, 0.3),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Icon skeleton
+          SkeletonLoader(
+            width: context.isMobile ? AppDimensions.iconL : AppDimensions.iconXL,
+            height: context.isMobile ? AppDimensions.iconL : AppDimensions.iconXL,
+            borderRadius: AppDimensions.radiusS,
+          ),
+          const SizedBox(height: AppDimensions.spaceS),
+
+          // Value skeleton (large number)
+          SkeletonLoader(
+            width: 60,
+            height: context.isMobile ? 32 : 48,
+            borderRadius: AppDimensions.spaceXXS,
+          ),
+          const SizedBox(height: AppDimensions.spaceXXS),
+
+          // Label skeleton
+          const SkeletonLoader(
+            width: 80,
+            height: 16,
+            borderRadius: 4,
+          ),
+          const SizedBox(height: AppDimensions.spaceXS),
+
+          // Arrow skeleton (optional)
+          const SkeletonLoader(
+            width: 16,
+            height: 16,
+            borderRadius: 8,
+          ),
+        ],
+      ),
     );
   }
 }

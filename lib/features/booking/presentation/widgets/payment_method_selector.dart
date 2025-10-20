@@ -404,40 +404,98 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
 
   String? _validateCardNumber(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Card number is required';
+      return 'Broj kartice je obavezan';
     }
     final digits = value.replaceAll(' ', '');
     if (digits.length < 13 || digits.length > 19) {
-      return 'Please enter a valid card number';
+      return 'Unesite važeći broj kartice';
     }
+
+    // Luhn algorithm validation
+    if (!_isValidLuhn(digits)) {
+      return 'Broj kartice nije važeći';
+    }
+
     return null;
+  }
+
+  /// Luhn algorithm for credit card validation
+  /// https://en.wikipedia.org/wiki/Luhn_algorithm
+  bool _isValidLuhn(String cardNumber) {
+    int sum = 0;
+    bool alternate = false;
+
+    // Start from the rightmost digit
+    for (int i = cardNumber.length - 1; i >= 0; i--) {
+      int digit = int.parse(cardNumber[i]);
+
+      if (alternate) {
+        digit *= 2;
+        if (digit > 9) {
+          digit -= 9;
+        }
+      }
+
+      sum += digit;
+      alternate = !alternate;
+    }
+
+    return sum % 10 == 0;
   }
 
   String? _validateExpiry(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Expiry date is required';
+      return 'Datum isteka je obavezan';
     }
     if (value.length != 5) {
-      return 'Format: MM/YY';
+      return 'Format: MM/GG';
     }
     final parts = value.split('/');
     if (parts.length != 2) {
-      return 'Format: MM/YY';
+      return 'Format: MM/GG';
     }
+
     final month = int.tryParse(parts[0]);
+    final year = int.tryParse(parts[1]);
+
     if (month == null || month < 1 || month > 12) {
-      return 'Invalid month';
+      return 'Nevažeći mjesec';
     }
+
+    if (year == null) {
+      return 'Nevažeća godina';
+    }
+
+    // Check if card is expired
+    final now = DateTime.now();
+    final currentYear = now.year % 100; // Get last 2 digits
+    final currentMonth = now.month;
+
+    if (year < currentYear || (year == currentYear && month < currentMonth)) {
+      return 'Kartica je istekla';
+    }
+
+    // Check if expiry is too far in the future (more than 10 years)
+    if (year > currentYear + 10) {
+      return 'Datum isteka nije važeći';
+    }
+
     return null;
   }
 
   String? _validateCVV(String? value) {
     if (value == null || value.isEmpty) {
-      return 'CVV is required';
+      return 'CVV je obavezan';
     }
     if (value.length < 3 || value.length > 4) {
-      return 'Invalid CVV';
+      return 'Nevažeći CVV';
     }
+
+    // Ensure CVV contains only digits (extra safety check)
+    if (!RegExp(r'^\d+$').hasMatch(value)) {
+      return 'CVV mora sadržavati samo brojeve';
+    }
+
     return null;
   }
 }

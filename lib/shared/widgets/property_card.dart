@@ -3,6 +3,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/enums.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_typography.dart';
 import '../models/property_model.dart';
 import '../../core/utils/navigation_helpers.dart';
 import '../../core/utils/web_hover_utils.dart';
@@ -61,8 +63,8 @@ class _PropertyCardState extends ConsumerState<PropertyCard> {
         enableScale: true,
         enableElevation: true,
         scale: 1.02,
-        normalElevation: 2,
-        hoverElevation: 8,
+        normalElevation: 0, // Changed from 2 to match bordered design
+        hoverElevation: 4,  // Changed from 8 for subtle effect
         borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
         onTap: () async {
           await HapticService.buttonPress();
@@ -71,10 +73,11 @@ class _PropertyCardState extends ConsumerState<PropertyCard> {
           }
         },
         child: Card(
-          elevation: 2,
+          elevation: 0, // Changed from 2 to match modern bordered design
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+            side: BorderSide(color: AppColors.borderLight, width: 1), // Added border for modern design
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,152 +85,155 @@ class _PropertyCardState extends ConsumerState<PropertyCard> {
               // Image carousel with Hero animation
               _buildImageCarousel(),
 
-              // Property info
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Name
-                    Text(
-                      widget.property.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Location
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            widget.property.location,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Quick info icons (guests, bedrooms, bathrooms)
-                    if (widget.property.hasCompleteInfo)
-                    Row(
-                      children: [
-                        _QuickInfoIcon(
-                          icon: Icons.person_outline,
-                          value: widget.property.maxGuests!,
-                        ),
-                        const SizedBox(width: 16),
-                        _QuickInfoIcon(
-                          icon: Icons.bed_outlined,
-                          value: widget.property.bedrooms!,
-                        ),
-                        const SizedBox(width: 16),
-                        _QuickInfoIcon(
-                          icon: Icons.bathroom_outlined,
-                          value: widget.property.bathrooms!,
-                        ),
-                      ],
-                    ),
-
-                  if (widget.property.hasCompleteInfo)
-                    const SizedBox(height: 12),
-
-                  // Rating and review count
-                  if (widget.property.rating > 0)
-                    Row(
-                      children: [
-                        Icon(Icons.star, size: 16, color: Colors.amber[700]),
-                        const SizedBox(width: 4),
-                        Text(
-                          widget.property.rating.toStringAsFixed(1),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '(${widget.property.reviewCount})',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
-                        ),
-                      ],
-                    ),
-
-                  if (widget.property.rating > 0)
-                    const SizedBox(height: 12),
-
-                  // Price per night
-                  Text(
-                    widget.property.formattedPricePerNight,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              // Property info - Flexible to prevent overflow
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.all(12), // Reduced from 16
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min, // Important for preventing overflow
+                    children: [
+                      // Name
+                      Text(
+                        widget.property.name,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
                         ),
-                  ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6), // Reduced from 8
 
-                  const SizedBox(height: 12),
+                      // Location
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: AppDimensions.iconS,
+                            color: AppColors.textSecondaryLight,
+                          ),
+                          const SizedBox(width: AppDimensions.spaceXXS),
+                          Expanded(
+                            child: Text(
+                              widget.property.location,
+                              style: AppTypography.small.copyWith(
+                                color: AppColors.textSecondaryLight,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8), // Reduced from 12
 
-                  // Amenities preview
-                  if (widget.property.amenities.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: widget.property.amenities
-                          .take(3)
-                          .map((amenity) => _AmenityChip(amenity: amenity))
-                          .toList(),
-                    ),
+                      // Quick info icons (guests, bedrooms, bathrooms)
+                      if (widget.property.hasCompleteInfo)
+                      Row(
+                        children: [
+                          _QuickInfoIcon(
+                            icon: Icons.person_outline,
+                            value: widget.property.maxGuests!,
+                          ),
+                          const SizedBox(width: 12), // Reduced from 16
+                          _QuickInfoIcon(
+                            icon: Icons.bed_outlined,
+                            value: widget.property.bedrooms!,
+                          ),
+                          const SizedBox(width: 12), // Reduced from 16
+                          _QuickInfoIcon(
+                            icon: Icons.bathroom_outlined,
+                            value: widget.property.bathrooms!,
+                          ),
+                        ],
+                      ),
 
-                  const SizedBox(height: 16),
+                    if (widget.property.hasCompleteInfo)
+                      const SizedBox(height: 8), // Reduced from 12
 
-                  // View Details button
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius (upgraded from 8)
-                      border: Border.all(
-                        color: Theme.of(context).primaryColor,
-                        width: 1.5,
+                    // Rating and review count
+                    if (widget.property.rating > 0)
+                      Row(
+                        children: [
+                          Icon(Icons.star, size: AppDimensions.iconS, color: AppColors.star),
+                          const SizedBox(width: AppDimensions.spaceXXS),
+                          Text(
+                            widget.property.rating.toStringAsFixed(1),
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: AppTypography.weightSemibold,
+                            ),
+                          ),
+                          const SizedBox(width: AppDimensions.spaceXXS),
+                          Text(
+                            '(${widget.property.reviewCount})',
+                            style: AppTypography.small.copyWith(
+                              color: AppColors.textSecondaryLight,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    if (widget.property.rating > 0)
+                      const SizedBox(height: 8), // Reduced from 12
+
+                    // Price per night
+                    Text(
+                      widget.property.formattedPricePerNight,
+                      style: AppTypography.h3.copyWith(
+                        fontWeight: AppTypography.weightBold,
+                        color: AppColors.primary,
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Pogledaj detalje',
-                          style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
+
+                    const SizedBox(height: 8), // Reduced from 12
+
+                    // Amenities preview
+                    if (widget.property.amenities.isNotEmpty)
+                      Flexible(
+                        child: Wrap(
+                          spacing: 6, // Reduced from 8
+                          runSpacing: 6, // Reduced from 8
+                          children: widget.property.amenities
+                              .take(3)
+                              .map((amenity) => _AmenityChip(amenity: amenity))
+                              .toList(),
+                        ),
+                      ),
+
+                    const SizedBox(height: 10), // Reduced from 16
+
+                    // View Details button - Compact version
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spaceS),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                        border: Border.all(
+                          color: AppColors.primary,
+                          width: AppDimensions.borderWidthFocus,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Pogledaj detalje',
+                            style: AppTypography.buttonText.copyWith(
+                              color: AppColors.primary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.arrow_forward,
-                          color: Theme.of(context).primaryColor,
-                          size: 18,
-                        ),
+                          const SizedBox(width: AppDimensions.spaceXS),
+                          Icon(
+                            Icons.arrow_forward,
+                            color: AppColors.primary,
+                            size: AppDimensions.iconS,
+                          ),
+                        ],
+                      ),
+                    ),
                       ],
                     ),
-                  ),
-                    ],
                   ),
                 ),
               ],
@@ -243,9 +249,13 @@ class _PropertyCardState extends ConsumerState<PropertyCard> {
       return AspectRatio(
         aspectRatio: 16 / 9, // 16:9 aspect ratio
         child: Container(
-          color: Colors.grey[200],
-          child: const Center(
-            child: Icon(Icons.villa, size: 60, color: Colors.grey),
+          color: AppColors.surfaceVariantLight,
+          child: Center(
+            child: Icon(
+              Icons.villa,
+              size: AppDimensions.iconXL,
+              color: AppColors.textDisabled,
+            ),
           ),
         ),
       );
@@ -274,9 +284,13 @@ class _PropertyCardState extends ConsumerState<PropertyCard> {
                     borderRadius: 0,
                   ),
                   errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[200],
-                    child: const Center(
-                      child: Icon(Icons.villa, size: 60, color: Colors.grey),
+                    color: AppColors.surfaceVariantLight,
+                    child: Center(
+                      child: Icon(
+                        Icons.villa,
+                        size: AppDimensions.iconXL,
+                        color: AppColors.textDisabled,
+                      ),
                     ),
                   ),
                 ),
@@ -337,11 +351,11 @@ class _QuickInfoIcon extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
-        const SizedBox(width: 4),
+        Icon(icon, size: AppDimensions.iconS, color: AppColors.textSecondaryLight),
+        const SizedBox(width: AppDimensions.spaceXXS),
         Text(
           value.toString(),
-          style: Theme.of(context).textTheme.bodySmall,
+          style: AppTypography.small,
         ),
       ],
     );
@@ -388,12 +402,12 @@ class _FavoriteButton extends ConsumerWidget {
           scale: isFavorite ? 1.1 : 1.0,
           duration: const Duration(milliseconds: 200),
           child: CircleAvatar(
-            backgroundColor: Colors.white.withValues(alpha: 0.95),
+            backgroundColor: AppColors.surfaceLight.withValues(alpha: 0.95),
             radius: 18,
             child: Icon(
               isFavorite ? Icons.favorite : Icons.favorite_border,
               size: 20,
-              color: isFavorite ? Colors.red : Colors.grey[600],
+              color: isFavorite ? AppColors.favorite : AppColors.textSecondaryLight,
             ),
           ),
         ),
@@ -440,26 +454,28 @@ class _AmenityChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.spaceXS,
+        vertical: AppDimensions.spaceXXS,
+      ),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withValues(alpha:0.1),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXS), // 6px modern radius
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXS),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             _getAmenityIcon(amenity),
-            size: 14,
-            color: Theme.of(context).primaryColor,
+            size: AppDimensions.iconXS,
+            color: AppColors.primary,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppDimensions.spaceXXS),
           Text(
             amenity.displayName,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: Theme.of(context).primaryColor,
+            style: AppTypography.small.copyWith(
+              fontWeight: AppTypography.weightMedium,
+              color: AppColors.primary,
             ),
           ),
         ],

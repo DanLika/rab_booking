@@ -9,7 +9,9 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../auth/presentation/utils/form_validators.dart';
 import '../../domain/models/booking_status.dart';
+import '../../data/booking_notification_service.dart';
 import '../providers/booking_flow_notifier.dart';
+import '../utils/booking_error_parser.dart';
 
 /// Booking review screen with guest details and price breakdown
 class BookingReviewScreen extends ConsumerStatefulWidget {
@@ -108,6 +110,11 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
 
       // Store booking ID
       bookingFlow.setBookingId(booking.id);
+
+      // Send booking confirmation email (non-blocking)
+      // This will call Supabase Edge Function to send email notification
+      _sendConfirmationEmail(booking.id);
+
       bookingFlow.setLoading(false);
 
       // Navigate to payment screen
@@ -122,6 +129,24 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
         _showBookingErrorDialog(e.toString());
       }
     }
+  }
+
+  /// Send confirmation email asynchronously (non-blocking)
+  /// This will call the Supabase Edge Function to send the email
+  /// Email sending failures won't block the booking flow
+  void _sendConfirmationEmail(String bookingId) {
+    // Run email sending in the background (fire and forget)
+    ref.read(bookingNotificationServiceProvider).sendBookingConfirmation(bookingId).then((success) {
+      if (success) {
+        debugPrint('✅ Confirmation email sent successfully for booking: $bookingId');
+      } else {
+        debugPrint('⚠️ Failed to send confirmation email for booking: $bookingId');
+        // Note: We don't show error to user as email is not critical for booking flow
+        // Admin can retry sending email from dashboard if needed
+      }
+    }).catchError((error) {
+      debugPrint('❌ Error sending confirmation email: $error');
+    });
   }
 
   /// Show booking error dialog with retry option
@@ -141,7 +166,7 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_getUserFriendlyErrorMessage(errorMessage)),
+            Text(BookingErrorParser.getUserFriendlyMessage(errorMessage)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -187,34 +212,6 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
         ],
       ),
     );
-  }
-
-  /// Get user-friendly error message for booking errors
-  String _getUserFriendlyErrorMessage(String error) {
-    final errorLower = error.toLowerCase();
-
-    if (errorLower.contains('not authenticated') || errorLower.contains('not logged in')) {
-      return 'Morate biti prijavljeni da biste napravili rezervaciju.';
-    }
-
-    if (errorLower.contains('network') || errorLower.contains('connection') || errorLower.contains('internet')) {
-      return 'Greška u mrežnoj vezi. Provjerite internet konekciju.';
-    }
-
-    if (errorLower.contains('timeout')) {
-      return 'Zahtjev je istekao. Molimo pokušajte ponovo.';
-    }
-
-    if (errorLower.contains('already booked') || errorLower.contains('not available')) {
-      return 'Ovi datumi su već zauzeti. Molimo odaberite druge datume.';
-    }
-
-    if (errorLower.contains('permission') || errorLower.contains('denied')) {
-      return 'Nemate dozvolu za ovu akciju. Molimo kontaktirajte podršku.';
-    }
-
-    // Generic error
-    return 'Došlo je do greške. Molimo pokušajte ponovo.';
   }
 
   @override

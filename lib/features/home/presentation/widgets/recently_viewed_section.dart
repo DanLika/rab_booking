@@ -149,7 +149,7 @@ class RecentlyViewedSection extends ConsumerWidget {
 
               // Horizontal Property List
               SizedBox(
-                height: isMobile ? 320 : 360,
+                height: isMobile ? 390 : 420, // Increased from 320/360 to prevent overflow
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: EdgeInsets.symmetric(

@@ -337,6 +337,8 @@ class PropertySearchRepository {
   /// Get featured properties (top rated)
   Future<List<PropertyModel>> getFeaturedProperties({int limit = 6}) async {
     try {
+      print('🔍 [Repository] Fetching featured properties from Supabase...');
+
       final response = await _supabase
           .from('properties')
           .select('*')
@@ -345,10 +347,34 @@ class PropertySearchRepository {
           .order('review_count', ascending: false)
           .limit(limit); // Only fetch what we need
 
-      return (response as List)
-          .map((json) => PropertyModel.fromJson(json as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
+      print('✅ [Repository] Got response: ${response.runtimeType}');
+      print('✅ [Repository] Response length: ${(response as List).length}');
+
+      if (response.isEmpty) {
+        print('⚠️ [Repository] WARNING: Empty response from Supabase!');
+        return [];
+      }
+
+      print('🔄 [Repository] Parsing ${response.length} properties...');
+      final properties = <PropertyModel>[];
+
+      for (var i = 0; i < response.length; i++) {
+        try {
+          final json = response[i] as Map<String, dynamic>;
+          print('  Parsing property ${i + 1}: ${json['name']}');
+          final property = PropertyModel.fromJson(json);
+          properties.add(property);
+        } catch (e) {
+          print('  ❌ Failed to parse property ${i + 1}: $e');
+          print('  Data: ${response[i]}');
+        }
+      }
+
+      print('✅ [Repository] Successfully parsed ${properties.length} properties');
+      return properties;
+    } catch (e, stackTrace) {
+      print('❌ [Repository] ERROR: $e');
+      print('Stack trace: $stackTrace');
       throw Exception('Failed to fetch featured properties: $e');
     }
   }

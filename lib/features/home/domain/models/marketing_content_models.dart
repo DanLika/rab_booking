@@ -103,24 +103,55 @@ class TestimonialData {
 
 /// Default data for fallback when database is empty or unavailable
 
+/// Default destinations - ALL from island of Rab, Croatia
 const List<DestinationData> defaultDestinations = [
   DestinationData(
-    name: 'Rab Old Town',
-    location: 'Rab, Croatia',
+    name: 'Rab Town (Rab Grad)',
+    location: 'Island of Rab, Croatia',
     imageUrl: 'https://images.unsplash.com/photo-1588453251771-cd19dc5d75f4?w=800',
     propertyCount: 45,
   ),
   DestinationData(
-    name: 'Lopar Beach',
-    location: 'Lopar, Rab',
+    name: 'Lopar',
+    location: 'Island of Rab, Croatia',
     imageUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800',
     propertyCount: 32,
   ),
   DestinationData(
-    name: 'Kampor Bay',
-    location: 'Kampor, Rab',
+    name: 'Barbat',
+    location: 'Island of Rab, Croatia',
+    imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+    propertyCount: 18,
+  ),
+  DestinationData(
+    name: 'Kampor',
+    location: 'Island of Rab, Croatia',
     imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
     propertyCount: 28,
+  ),
+  DestinationData(
+    name: 'Suha Punta',
+    location: 'Island of Rab, Croatia',
+    imageUrl: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800',
+    propertyCount: 15,
+  ),
+  DestinationData(
+    name: 'Banjol',
+    location: 'Island of Rab, Croatia',
+    imageUrl: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800',
+    propertyCount: 22,
+  ),
+  DestinationData(
+    name: 'Mundanije',
+    location: 'Island of Rab, Croatia',
+    imageUrl: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800',
+    propertyCount: 12,
+  ),
+  DestinationData(
+    name: 'Palit',
+    location: 'Island of Rab, Croatia',
+    imageUrl: 'https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=800',
+    propertyCount: 10,
   ),
 ];
 

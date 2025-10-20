@@ -9,7 +9,6 @@ import 'property_form_screen.dart';
 import 'units_management_screen.dart';
 import 'owner_bookings_screen.dart';
 import 'dashboard_overview_tab.dart';
-import 'analytics_screen.dart';
 
 /// Owner dashboard screen with tabs
 class OwnerDashboardScreen extends ConsumerStatefulWidget {
@@ -27,7 +26,7 @@ class _OwnerDashboardScreenState extends ConsumerState<OwnerDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -59,11 +58,10 @@ class _OwnerDashboardScreenState extends ConsumerState<OwnerDashboardScreen>
           controller: _tabController,
           isScrollable: true,
           tabs: const [
-            Tab(text: 'Overview', icon: Icon(Icons.dashboard_outlined)),
+            Tab(text: 'Pregled', icon: Icon(Icons.dashboard_outlined)),
             Tab(text: 'Moji Objekti', icon: Icon(Icons.home_outlined)),
             Tab(text: 'Kalendar', icon: Icon(Icons.calendar_month)),
             Tab(text: 'Rezervacije', icon: Icon(Icons.book_online)),
-            Tab(text: 'Analytics', icon: Icon(Icons.analytics_outlined)),
           ],
         ),
       ),
@@ -74,7 +72,6 @@ class _OwnerDashboardScreenState extends ConsumerState<OwnerDashboardScreen>
           _PropertiesListTab(),
           _MasterCalendarTab(),
           _BookingsListTab(),
-          AnalyticsScreen(),
         ],
       ),
     );

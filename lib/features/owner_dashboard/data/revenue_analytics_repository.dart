@@ -26,9 +26,15 @@ class RevenueAnalyticsRepository {
           .from('bookings')
           .select('''
             *,
-            properties!inner(owner_id)
+            units!inner(
+              id,
+              properties!inner(
+                id,
+                owner_id
+              )
+            )
           ''')
-          .eq('properties.owner_id', ownerId)
+          .eq('units.properties.owner_id', ownerId)
           .inFilter('status', ['confirmed', 'completed'])
           .gte('created_at', startDate.toIso8601String())
           .lte('created_at', endDate.toIso8601String())
@@ -100,9 +106,15 @@ class RevenueAnalyticsRepository {
           .from('bookings')
           .select('''
             total_price,
-            properties!inner(owner_id)
+            units!inner(
+              id,
+              properties!inner(
+                id,
+                owner_id
+              )
+            )
           ''')
-          .eq('properties.owner_id', ownerId)
+          .eq('units.properties.owner_id', ownerId)
           .inFilter('status', ['confirmed', 'completed']);
 
       double total = 0.0;
@@ -127,9 +139,15 @@ class RevenueAnalyticsRepository {
           .from('bookings')
           .select('''
             total_price,
-            properties!inner(owner_id)
+            units!inner(
+              id,
+              properties!inner(
+                id,
+                owner_id
+              )
+            )
           ''')
-          .eq('properties.owner_id', ownerId)
+          .eq('units.properties.owner_id', ownerId)
           .inFilter('status', ['confirmed', 'completed'])
           .gte('created_at', startOfMonth.toIso8601String())
           .lte('created_at', endOfMonth.toIso8601String());
@@ -156,9 +174,15 @@ class RevenueAnalyticsRepository {
           .from('bookings')
           .select('''
             total_price,
-            properties!inner(owner_id)
+            units!inner(
+              id,
+              properties!inner(
+                id,
+                owner_id
+              )
+            )
           ''')
-          .eq('properties.owner_id', ownerId)
+          .eq('units.properties.owner_id', ownerId)
           .inFilter('status', ['confirmed', 'completed'])
           .gte('created_at', startOfLastMonth.toIso8601String())
           .lte('created_at', endOfLastMonth.toIso8601String());
@@ -195,16 +219,24 @@ class RevenueAnalyticsRepository {
           .from('bookings')
           .select('''
             total_price,
-            property_id,
-            properties!inner(owner_id, name)
+            unit_id,
+            units!inner(
+              id,
+              property_id,
+              properties!inner(
+                id,
+                owner_id,
+                name
+              )
+            )
           ''')
-          .eq('properties.owner_id', ownerId)
+          .eq('units.properties.owner_id', ownerId)
           .inFilter('status', ['confirmed', 'completed']);
 
       final Map<String, double> revenueByProperty = {};
 
       for (final data in response as List) {
-        final propertyName = data['properties']['name'] as String;
+        final propertyName = data['units']['properties']['name'] as String;
         final totalPrice = (data['total_price'] as num).toDouble();
 
         revenueByProperty[propertyName] =

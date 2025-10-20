@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../property/domain/models/property_unit.dart';
+import '../../../property/presentation/providers/unavailable_dates_provider.dart';
 
 part 'booking_flow_notifier.freezed.dart';
 part 'booking_flow_notifier.g.dart';
@@ -72,36 +73,72 @@ class BookingFlowNotifier extends _$BookingFlowNotifier {
   }
 
   /// Initialize booking flow with property and unit
-  void initializeBooking({
+  /// Validates dates against unavailable dates from Supabase
+  Future<bool> initializeBooking({
     required PropertyModel property,
     required PropertyUnit unit,
     required DateTime checkIn,
     required DateTime checkOut,
     required int guests,
-  }) {
-    // Calculate number of nights
-    final nights = checkOut.difference(checkIn).inDays;
+  }) async {
+    // Set loading state
+    state = state.copyWith(isLoading: true, error: null);
 
-    // Calculate prices
-    final basePrice = unit.pricePerNight * nights;
-    final serviceFee = basePrice * 0.10; // 10% service fee
-    final cleaningFee = 50.0; // Fixed cleaning fee
-    final totalPrice = basePrice + serviceFee + cleaningFee;
-    final advanceAmount = totalPrice * 0.20; // 20% advance
+    try {
+      // Validate dates against unavailable dates
+      final unavailableDates = await ref.read(
+        unitUnavailableDatesProvider(unit.id).future,
+      );
 
-    state = state.copyWith(
-      property: property,
-      selectedUnit: unit,
-      checkInDate: checkIn,
-      checkOutDate: checkOut,
-      numberOfGuests: guests,
-      basePrice: basePrice,
-      serviceFee: serviceFee,
-      cleaningFee: cleaningFee,
-      totalPrice: totalPrice,
-      advanceAmount: advanceAmount,
-      currentStep: BookingStep.review,
-    );
+      // Check if selected range contains any unavailable dates
+      final hasUnavailableDates = _hasUnavailableDatesInRange(
+        checkIn,
+        checkOut,
+        unavailableDates,
+      );
+
+      if (hasUnavailableDates) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Odabrani period sadrži zauzete datume. Molimo odaberite drugi period.',
+        );
+        return false;
+      }
+
+      // Calculate number of nights
+      final nights = checkOut.difference(checkIn).inDays;
+
+      // Calculate prices
+      final basePrice = unit.pricePerNight * nights;
+      final serviceFee = basePrice * 0.10; // 10% service fee
+      final cleaningFee = 50.0; // Fixed cleaning fee
+      final totalPrice = basePrice + serviceFee + cleaningFee;
+      final advanceAmount = totalPrice * 0.20; // 20% advance
+
+      state = state.copyWith(
+        property: property,
+        selectedUnit: unit,
+        checkInDate: checkIn,
+        checkOutDate: checkOut,
+        numberOfGuests: guests,
+        basePrice: basePrice,
+        serviceFee: serviceFee,
+        cleaningFee: cleaningFee,
+        totalPrice: totalPrice,
+        advanceAmount: advanceAmount,
+        currentStep: BookingStep.review,
+        isLoading: false,
+        error: null,
+      );
+
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Greška pri validaciji datuma: $e',
+      );
+      return false;
+    }
   }
 
   /// Update guest details
@@ -187,5 +224,37 @@ class BookingFlowNotifier extends _$BookingFlowNotifier {
         state.guestEmail!.isNotEmpty &&
         state.guestPhone != null &&
         state.guestPhone!.isNotEmpty;
+  }
+
+  /// Check if date range contains any unavailable dates
+  bool _hasUnavailableDatesInRange(
+    DateTime start,
+    DateTime end,
+    List<DateTime> unavailableDates,
+  ) {
+    // Normalize dates to midnight
+    final normalizedStart = DateTime(start.year, start.month, start.day);
+    final normalizedEnd = DateTime(end.year, end.month, end.day);
+
+    // Calculate range in days
+    final range = normalizedEnd.difference(normalizedStart).inDays;
+
+    // Check each date in the range
+    for (var i = 0; i <= range; i++) {
+      final date = normalizedStart.add(Duration(days: i));
+
+      // Check if this date is unavailable
+      final isUnavailable = unavailableDates.any((unavailable) {
+        final normalizedUnavailable =
+            DateTime(unavailable.year, unavailable.month, unavailable.day);
+        return normalizedUnavailable.isAtSameMomentAs(date);
+      });
+
+      if (isUnavailable) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

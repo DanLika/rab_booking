@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -135,31 +136,48 @@ class AuthStateNotifier extends _$AuthStateNotifier {
       state = const AuthState(user: null, role: null, isLoading: false);
     }
   }
+
+  /// Sign out
+  Future<void> signOut() async {
+    try {
+      await Supabase.instance.client.auth.signOut();
+      state = const AuthState(user: null, role: null, isLoading: false);
+    } catch (e) {
+      debugPrint('Error signing out: $e');
+      rethrow;
+    }
+  }
 }
 
 /// Convenience providers
 
 /// Check if user is authenticated
 @riverpod
-bool isAuthenticated(IsAuthenticatedRef ref) {
+bool isAuthenticated(Ref ref) {
   return ref.watch(authStateNotifierProvider).isAuthenticated;
 }
 
 /// Get current user
 @riverpod
-User? currentUser(CurrentUserRef ref) {
+User? currentUser(Ref ref) {
   return ref.watch(authStateNotifierProvider).user;
+}
+
+/// Get current user ID
+@riverpod
+String? currentUserId(Ref ref) {
+  return ref.watch(authStateNotifierProvider).user?.id;
 }
 
 /// Get current user role
 @riverpod
-UserRole? currentUserRole(CurrentUserRoleRef ref) {
+UserRole? currentUserRole(Ref ref) {
   return ref.watch(authStateNotifierProvider).role;
 }
 
 /// Check if user is owner or admin
 @riverpod
-bool isOwnerOrAdmin(IsOwnerOrAdminRef ref) {
+bool isOwnerOrAdmin(Ref ref) {
   final role = ref.watch(currentUserRoleProvider);
   return role == UserRole.owner || role == UserRole.admin;
 }

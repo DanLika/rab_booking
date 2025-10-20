@@ -123,7 +123,7 @@ class PerformanceLogger {
     }
 
     debugPrint('📊 Performance Summary:');
-    debugPrint('${'=' * 60}');
+    debugPrint('=' * 60);
 
     _metrics.forEach((name, durations) {
       final avg = getAverage(name);
@@ -139,7 +139,7 @@ class PerformanceLogger {
       debugPrint('');
     });
 
-    debugPrint('${'=' * 60}');
+    debugPrint('=' * 60);
   }
 
   /// Clear all metrics

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/logging_service.dart';
 
 /// Environment configuration loader
 ///
@@ -31,14 +32,14 @@ class EnvConfig {
       await dotenv.load(fileName: '.env.$env');
 
       if (kDebugMode) {
-        print('✅ Environment loaded: $env');
-        print('📦 App Name: ${appName}');
-        print('🌍 Environment: ${environmentName}');
-        print('🔧 API Base URL: ${apiBaseUrl}');
+        LoggingService.logInfo('✅ Environment loaded: $env');
+        LoggingService.logInfo('📦 App Name: $appName');
+        LoggingService.logInfo('🌍 Environment: $environmentName');
+        LoggingService.logInfo('🔧 API Base URL: $apiBaseUrl');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('⚠️ Failed to load .env.$env, falling back to .env.development');
+        LoggingService.logWarning('⚠️ Failed to load .env.$env, falling back to .env.development');
       }
 
       // Fallback to development
@@ -213,14 +214,14 @@ class EnvConfig {
       final errorMessage = 'Environment validation failed:\n${errors.join('\n')}';
 
       if (kDebugMode) {
-        print('❌ $errorMessage');
+        LoggingService.logError('❌ $errorMessage');
       }
 
       throw Exception(errorMessage);
     }
 
     if (kDebugMode) {
-      print('✅ Environment validation passed');
+      LoggingService.logInfo('✅ Environment validation passed');
     }
   }
 
@@ -248,16 +249,16 @@ class EnvConfig {
   static void printConfig() {
     if (!kDebugMode) return;
 
-    print('');
-    print('=' * 60);
-    print('Environment Configuration');
-    print('=' * 60);
+    LoggingService.logDebug('');
+    LoggingService.logDebug('=' * 60);
+    LoggingService.logDebug('Environment Configuration');
+    LoggingService.logDebug('=' * 60);
 
     toMap().forEach((key, value) {
-      print('$key: $value');
+      LoggingService.logDebug('$key: $value');
     });
 
-    print('=' * 60);
-    print('');
+    LoggingService.logDebug('=' * 60);
+    LoggingService.logDebug('');
   }
 }

@@ -1,9 +1,10 @@
 // ignore_for_file: unused_element, unused_local_variable
 
-/// EXAMPLES: How to use error handling in repositories and providers
+/// EXAMPLES: How to use error handling in repositories and providers.
 ///
 /// This file contains example implementations showing how to integrate
 /// the error handling system with repositories and Riverpod providers.
+library;
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -18,7 +19,7 @@ import 'error_handler.dart';
 // EXAMPLE 1: Repository with Result Pattern
 // ============================================================================
 
-/// Example repository showing how to use Result<T> for error handling
+/// Example repository showing how to use `Result<T>` for error handling
 class ExamplePropertyRepository {
   final SupabaseClient _client;
 
@@ -30,7 +31,7 @@ class ExamplePropertyRepository {
       final response = await _client.from('properties').select();
 
       // Success case
-      return Success(response as List<Map<String, dynamic>>);
+      return Success(response);
     } on SocketException {
       // Network error
       return const Failure(NetworkException('Nema internet konekcije'));
@@ -188,7 +189,7 @@ class ExamplePropertiesScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               Text(
                 ErrorHandler.getUserFriendlyMessage(error),

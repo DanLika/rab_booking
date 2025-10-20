@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/navigation_helpers.dart';
 import '../providers/search_form_provider.dart';
 import '../state/search_form_state.dart';
@@ -22,14 +24,14 @@ class SearchBarWidget extends ConsumerWidget {
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 1200),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: isFloating
           ? BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              color: context.surfaceColor,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 12)
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
+                  color: context.shadowColorProminent,
                   blurRadius: 30,
                   offset: const Offset(0, 10),
                 ),
@@ -204,12 +206,12 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.borderColor),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
         ),
         child: Row(
           children: [
@@ -223,7 +225,7 @@ class _SearchField extends StatelessWidget {
                   Text(
                     label,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
+                          color: context.textColorSecondary,
                           fontSize: 11,
                         ),
                   ),
@@ -266,7 +268,7 @@ class _SearchButton extends ConsumerWidget {
           vertical: 16,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
         ),
       ),
       child: Row(
@@ -319,7 +321,7 @@ class _LocationPickerSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: context.borderColor,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -343,7 +345,7 @@ class _LocationPickerSheet extends StatelessWidget {
                   Icons.location_on,
                   color: isSelected
                       ? Theme.of(context).primaryColor
-                      : Colors.grey,
+                      : context.iconColorSecondary,
                 ),
                 title: Text(location),
                 trailing: isSelected

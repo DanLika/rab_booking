@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rab_booking/features/booking/presentation/providers/user_bookings_provider.dart';
-import 'package:rab_booking/features/booking/presentation/widgets/booking_card.dart';
+import '../providers/user_bookings_provider.dart';
+import '../widgets/booking_card.dart';
+import '../widgets/cancel_booking_dialog.dart';
 
 class UserBookingsScreen extends ConsumerStatefulWidget {
   const UserBookingsScreen({super.key});
@@ -32,13 +33,13 @@ class _UserBookingsScreenState extends ConsumerState<UserBookingsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Bookings'),
+        title: const Text('Moje Rezervacije'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Upcoming'),
-            Tab(text: 'Past'),
-            Tab(text: 'Cancelled'),
+            Tab(text: 'Nadolazeće'),
+            Tab(text: 'Prošle'),
+            Tab(text: 'Otkazane'),
           ],
         ),
       ),
@@ -73,20 +74,21 @@ class _UpcomingBookingsTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No upcoming bookings',
+                  'Nema nadolazećih rezervacija',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Start exploring properties',
+                  'Počni istraživati smještaje',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton(
+                FilledButton.icon(
                   onPressed: () => context.go('/'),
-                  child: const Text('Explore Properties'),
+                  icon: const Icon(Icons.search),
+                  label: const Text('Pretraži smještaje'),
                 ),
               ],
             ),
@@ -95,38 +97,98 @@ class _UpcomingBookingsTab extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async {
-            await ref.refresh(userBookingsProvider.future);
+            ref.invalidate(userBookingsProvider);
           },
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: bookings.length,
             itemBuilder: (context, index) {
+              final booking = bookings[index];
               return BookingCard(
-                booking: bookings[index],
+                booking: booking,
                 onTap: () => context.push(
-                  '/bookings/${bookings[index].id}',
+                  '/bookings/${booking.id}',
                 ),
+                onCancelRequested: booking.canCancel
+                    ? () async {
+                        await CancelBookingDialog.show(
+                          context,
+                          booking: booking,
+                          onCancelled: () {
+                            // Refresh bookings list after successful cancellation
+                            ref.invalidate(userBookingsProvider);
+                          },
+                        );
+                      }
+                    : null,
               );
             },
           ),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 16),
-            Text('Error: $error'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => ref.invalidate(upcomingBookingsProvider),
-              child: const Text('Retry'),
+      error: (error, stack) {
+        // If error is about RLS/permissions, show friendly message
+        final errorMessage = error.toString();
+        final isPermissionError = errorMessage.contains('500') ||
+            errorMessage.contains('policy') ||
+            errorMessage.contains('permission');
+
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isPermissionError
+                      ? Icons.lock_outline
+                      : Icons.error_outline,
+                  size: 64,
+                  color: isPermissionError ? Colors.orange : Colors.red,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  isPermissionError
+                      ? 'Nema dostupnih rezervacija'
+                      : 'Greška pri učitavanju',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isPermissionError
+                      ? 'Možda još nemaš nijednu rezervaciju'
+                      : 'Pokušaj ponovo kasnije',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () => ref.invalidate(upcomingBookingsProvider),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Osvježi'),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: () => context.go('/'),
+                      icon: const Icon(Icons.search),
+                      label: const Text('Pretraži smještaje'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -150,8 +212,18 @@ class _PastBookingsTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No past bookings',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  'Nema prošlih rezervacija',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Tvoje prošle rezervacije će se prikazati ovdje',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -160,17 +232,29 @@ class _PastBookingsTab extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async {
-            await ref.refresh(userBookingsProvider.future);
+            ref.invalidate(userBookingsProvider);
           },
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: bookings.length,
             itemBuilder: (context, index) {
+              final booking = bookings[index];
               return BookingCard(
-                booking: bookings[index],
+                booking: booking,
                 onTap: () => context.push(
-                  '/bookings/${bookings[index].id}',
+                  '/bookings/${booking.id}',
                 ),
+                onCancelRequested: booking.canCancel
+                    ? () async {
+                        await CancelBookingDialog.show(
+                          context,
+                          booking: booking,
+                          onCancelled: () {
+                            ref.invalidate(userBookingsProvider);
+                          },
+                        );
+                      }
+                    : null,
               );
             },
           ),
@@ -215,8 +299,18 @@ class _CancelledBookingsTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No cancelled bookings',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  'Nema otkazanih rezervacija',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Otkazane rezervacije će se prikazati ovdje',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -225,17 +319,29 @@ class _CancelledBookingsTab extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async {
-            await ref.refresh(userBookingsProvider.future);
+            ref.invalidate(userBookingsProvider);
           },
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: bookings.length,
             itemBuilder: (context, index) {
+              final booking = bookings[index];
               return BookingCard(
-                booking: bookings[index],
+                booking: booking,
                 onTap: () => context.push(
-                  '/bookings/${bookings[index].id}',
+                  '/bookings/${booking.id}',
                 ),
+                onCancelRequested: booking.canCancel
+                    ? () async {
+                        await CancelBookingDialog.show(
+                          context,
+                          booking: booking,
+                          onCancelled: () {
+                            ref.invalidate(userBookingsProvider);
+                          },
+                        );
+                      }
+                    : null,
               );
             },
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_dimensions.dart';
 
 /// Secondary outlined button widget with hover effects
 ///
@@ -40,19 +41,23 @@ class SecondaryButton extends StatelessWidget {
             icon: Icon(icon),
             label: Text(text),
             style: OutlinedButton.styleFrom(
+              // Use design system padding (24px horizontal, 12px vertical for 48px height)
               padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 16,
+                horizontal: AppDimensions.spaceM,
+                vertical: 12,
               ),
+              minimumSize: const Size(0, AppDimensions.buttonHeight),
             ),
           )
         : OutlinedButton(
             onPressed: onPressed,
             style: OutlinedButton.styleFrom(
+              // Use design system padding (24px horizontal, 12px vertical for 48px height)
               padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 16,
+                horizontal: AppDimensions.spaceM,
+                vertical: 12,
               ),
+              minimumSize: const Size(0, AppDimensions.buttonHeight),
             ),
             child: Text(text),
           );

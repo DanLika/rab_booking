@@ -6,8 +6,8 @@ part of 'search_filters.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_SearchFilters _$SearchFiltersFromJson(Map<String, dynamic> json) =>
-    _SearchFilters(
+_$SearchFiltersImpl _$$SearchFiltersImplFromJson(Map<String, dynamic> json) =>
+    _$SearchFiltersImpl(
       location: json['location'] as String?,
       checkIn: json['checkIn'] == null
           ? null
@@ -23,11 +23,13 @@ _SearchFilters _$SearchFiltersFromJson(Map<String, dynamic> json) =>
               ?.map((e) => $enumDecode(_$PropertyTypeEnumMap, e))
               .toList() ??
           const [],
+      propertyType: json['propertyType'] as String?,
       amenities:
           (json['amenities'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      minRating: (json['minRating'] as num?)?.toDouble(),
       minBedrooms: (json['minBedrooms'] as num?)?.toInt(),
       minBathrooms: (json['minBathrooms'] as num?)?.toInt(),
       sortBy:
@@ -37,7 +39,7 @@ _SearchFilters _$SearchFiltersFromJson(Map<String, dynamic> json) =>
       pageSize: (json['pageSize'] as num?)?.toInt() ?? 20,
     );
 
-Map<String, dynamic> _$SearchFiltersToJson(_SearchFilters instance) =>
+Map<String, dynamic> _$$SearchFiltersImplToJson(_$SearchFiltersImpl instance) =>
     <String, dynamic>{
       'location': instance.location,
       'checkIn': instance.checkIn?.toIso8601String(),
@@ -48,7 +50,9 @@ Map<String, dynamic> _$SearchFiltersToJson(_SearchFilters instance) =>
       'propertyTypes': instance.propertyTypes
           .map((e) => _$PropertyTypeEnumMap[e]!)
           .toList(),
+      'propertyType': instance.propertyType,
       'amenities': instance.amenities,
+      'minRating': instance.minRating,
       'minBedrooms': instance.minBedrooms,
       'minBathrooms': instance.minBathrooms,
       'sortBy': _$SortByEnumMap[instance.sortBy]!,

@@ -43,57 +43,6 @@ enum UserRole {
   }
 }
 
-/// Booking status lifecycle
-@JsonEnum(valueField: 'value')
-enum BookingStatus {
-  /// Booking created, awaiting payment confirmation
-  pending('pending'),
-
-  /// Payment received, booking confirmed
-  confirmed('confirmed'),
-
-  /// Booking cancelled by guest or owner
-  cancelled('cancelled'),
-
-  /// Stay completed, booking archived
-  completed('completed');
-
-  const BookingStatus(this.value);
-
-  final String value;
-
-  /// Get display name for the status
-  String get displayName {
-    switch (this) {
-      case BookingStatus.pending:
-        return 'Pending Payment';
-      case BookingStatus.confirmed:
-        return 'Confirmed';
-      case BookingStatus.cancelled:
-        return 'Cancelled';
-      case BookingStatus.completed:
-        return 'Completed';
-    }
-  }
-
-  /// Check if booking can be cancelled
-  bool get canBeCancelled => this == BookingStatus.pending || this == BookingStatus.confirmed;
-
-  /// Check if booking is active
-  bool get isActive => this == BookingStatus.confirmed;
-
-  /// Check if booking is finalized (cannot be modified)
-  bool get isFinalized => this == BookingStatus.cancelled || this == BookingStatus.completed;
-
-  /// Parse from string value
-  static BookingStatus fromString(String value) {
-    return BookingStatus.values.firstWhere(
-      (status) => status.value == value,
-      orElse: () => BookingStatus.pending,
-    );
-  }
-}
-
 /// Property amenities for filtering and display
 @JsonEnum(valueField: 'value')
 enum PropertyAmenity {
@@ -277,5 +226,68 @@ enum PropertyAmenity {
   /// Convert list to string list
   static List<String> toStringList(List<PropertyAmenity> amenities) {
     return amenities.map((a) => a.value).toList();
+  }
+}
+
+/// Property types for classification
+@JsonEnum(valueField: 'value')
+enum PropertyType {
+  /// Villa - standalone house with luxury amenities
+  villa('villa'),
+
+  /// Apartment - unit within a building
+  apartment('apartment'),
+
+  /// Studio - compact living space
+  studio('studio'),
+
+  /// House - traditional family home
+  house('house'),
+
+  /// Room - single room rental
+  room('room');
+
+  const PropertyType(this.value);
+
+  final String value;
+
+  /// Get display name for the property type
+  String get displayName {
+    switch (this) {
+      case PropertyType.villa:
+        return 'Villa';
+      case PropertyType.apartment:
+        return 'Apartment';
+      case PropertyType.studio:
+        return 'Studio';
+      case PropertyType.house:
+        return 'House';
+      case PropertyType.room:
+        return 'Room';
+    }
+  }
+
+  /// Get Croatian display name
+  String get displayNameHR {
+    switch (this) {
+      case PropertyType.villa:
+        return 'Vila';
+      case PropertyType.apartment:
+        return 'Apartman';
+      case PropertyType.studio:
+        return 'Studio';
+      case PropertyType.house:
+        return 'Kuća';
+      case PropertyType.room:
+        return 'Soba';
+    }
+  }
+
+  /// Parse from string value
+  static PropertyType fromString(String value) {
+    return PropertyType.values.firstWhere(
+      (type) => type.value == value,
+      orElse: () => PropertyType.apartment,
+    );
   }
 }

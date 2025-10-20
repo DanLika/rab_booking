@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import '../../../../../core/theme/theme_extensions.dart';
 
 /// Image gallery widget with lightbox view
 class ImageGalleryWidget extends StatelessWidget {
@@ -20,15 +21,24 @@ class ImageGalleryWidget extends StatelessWidget {
       allImages.add(coverImage!);
     }
     allImages.addAll(images);
-    return allImages.isEmpty
-        ? ['https://via.placeholder.com/800x600?text=No+Image']
-        : allImages;
+    // Return empty list if no images - will be handled with placeholder widget
+    return allImages;
   }
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 768;
+    // If no images, show placeholder
+    if (_allImages.isEmpty) {
+      return Container(
+        height: 300,
+        color: context.surfaceVariantColor,
+        child: Center(
+          child: Icon(Icons.villa, size: 80, color: context.iconColorSecondary),
+        ),
+      );
+    }
 
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return isMobile ? _buildMobileLayout(context) : _buildDesktopLayout(context);
   }
 
@@ -45,12 +55,12 @@ class ImageGalleryWidget extends StatelessWidget {
               width: double.infinity,
               fit: BoxFit.cover,
               placeholder: (context, url) => Container(
-                color: Colors.grey[200],
+                color: context.surfaceVariantColor,
                 child: const Center(child: CircularProgressIndicator()),
               ),
               errorWidget: (context, url, error) => Container(
-                color: Colors.grey[200],
-                child: const Icon(Icons.villa, size: 60, color: Colors.grey),
+                color: context.surfaceVariantColor,
+                child: Icon(Icons.villa, size: 60, color: context.iconColorSecondary),
               ),
             ),
           ),
@@ -62,8 +72,8 @@ class ImageGalleryWidget extends StatelessWidget {
               icon: const Icon(Icons.photo_library, size: 18),
               label: Text('${_allImages.length} fotografija'),
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
+                backgroundColor: context.surfaceColor,
+                foregroundColor: context.textColor,
               ),
             ),
           ),
@@ -88,12 +98,12 @@ class ImageGalleryWidget extends StatelessWidget {
                   imageUrl: _allImages[0],
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
-                    color: Colors.grey[200],
+                    color: context.surfaceVariantColor,
                     child: const Center(child: CircularProgressIndicator()),
                   ),
                   errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[200],
-                    child: const Icon(Icons.villa, size: 60, color: Colors.grey),
+                    color: context.surfaceVariantColor,
+                    child: Icon(Icons.villa, size: 60, color: context.iconColorSecondary),
                   ),
                 ),
               ),
@@ -193,11 +203,11 @@ class ImageGalleryWidget extends StatelessWidget {
         imageUrl: _allImages[index],
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(
-          color: Colors.grey[200],
+          color: context.surfaceVariantColor,
         ),
         errorWidget: (context, url, error) => Container(
-          color: Colors.grey[200],
-          child: const Icon(Icons.image, color: Colors.grey),
+          color: context.surfaceVariantColor,
+          child: Icon(Icons.image, color: context.iconColorSecondary),
         ),
       ),
     );

@@ -1,34 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../shared/widgets/property_card.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../shared/models/property_model.dart';
 import '../providers/search_results_provider.dart';
 import '../providers/search_state_provider.dart';
 import '../providers/search_view_mode_provider.dart';
-import '../widgets/filter_panel_widget.dart';
+import '../widgets/filter_panel.dart';
+import '../widgets/property_card.dart';
+import '../widgets/search_results_header.dart';
+import '../widgets/search_no_results.dart';
+import '../widgets/map_view_widget.dart';
+import '../widgets/save_search_dialog.dart';
 import '../../domain/models/search_filters.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/utils/responsive_utils.dart';
+import '../../../../shared/widgets/widgets.dart';
+import '../../../../core/providers/auth_state_provider.dart';
 
-/// Search results screen with grid/list view and filters
-class SearchResultsScreen extends ConsumerStatefulWidget {
-  const SearchResultsScreen({
-    this.query,
+/// Premium search results screen
+/// Features: Grid/List/Map views, filters, sorting, infinite scroll
+class PremiumSearchResultsScreen extends ConsumerStatefulWidget {
+  const PremiumSearchResultsScreen({
     this.location,
-    this.maxGuests,
     this.checkIn,
     this.checkOut,
+    this.guests,
     super.key,
   });
 
-  final String? query;
   final String? location;
-  final int? maxGuests;
   final String? checkIn;
   final String? checkOut;
+  final int? guests;
 
   @override
-  ConsumerState<SearchResultsScreen> createState() => _SearchResultsScreenState();
+  ConsumerState<PremiumSearchResultsScreen> createState() =>
+      _PremiumSearchResultsScreenState();
 }
 
-class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
+class _PremiumSearchResultsScreenState
+    extends ConsumerState<PremiumSearchResultsScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isLoadingMore = false;
 
@@ -37,10 +50,16 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
 
-    // Initialize filters from URL parameters
+    // Initialize filters from parameters
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeFilters();
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _initializeFilters() {
@@ -50,8 +69,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       notifier.updateLocation(widget.location!);
     }
 
-    if (widget.maxGuests != null) {
-      notifier.updateGuests(widget.maxGuests!);
+    if (widget.guests != null) {
+      notifier.updateGuests(widget.guests!);
     }
 
     if (widget.checkIn != null && widget.checkOut != null) {
@@ -60,15 +79,9 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
         final checkOut = DateTime.parse(widget.checkOut!);
         notifier.updateDates(checkIn, checkOut);
       } catch (e) {
-        // Invalid date format, ignore
+        debugPrint('Invalid date format: $e');
       }
     }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   void _onScroll() {
@@ -84,145 +97,162 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   }
 
   Future<void> _loadMore() async {
+    if (_isLoadingMore) return;
+
     setState(() => _isLoadingMore = true);
 
-    // Load next page
-    final notifier = ref.read(searchFiltersNotifierProvider.notifier);
-    await notifier.loadNextPage();
+    await ref.read(searchResultsNotifierProvider.notifier).loadNextPage();
 
-    setState(() => _isLoadingMore = false);
+    if (mounted) {
+      setState(() => _isLoadingMore = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final resultsAsync = ref.watch(searchResultsProvider);
+    final resultsAsync = ref.watch(searchResultsNotifierProvider);
     final filters = ref.watch(searchFiltersNotifierProvider);
     final viewMode = ref.watch(searchViewModeNotifierProvider);
-
-    final isMobile = MediaQuery.of(context).size.width < 768;
-    final isTablet = MediaQuery.of(context).size.width >= 768 &&
-                     MediaQuery.of(context).size.width < 1200;
+    final isMobile = context.isMobile;
+    final isTablet = context.isTablet;
+    final isDesktop = context.isDesktop;
 
     return Scaffold(
       appBar: AppBar(
         title: _buildSearchSummary(filters),
         actions: [
+          // Filter button (mobile/tablet)
+          if (!isDesktop)
+            IconButton(
+              icon: filters.filterCount > 0
+                  ? Badge(
+                      label: Text('${filters.filterCount}'),
+                      child: const Icon(Icons.filter_list),
+                    )
+                  : const Icon(Icons.filter_list),
+              onPressed: () => PremiumFilterPanel.showBottomSheet(context),
+              tooltip: 'Filteri',
+            ),
+
+          // Save search button
+          () {
+            final authState = ref.watch(authStateNotifierProvider);
+            final isLoggedIn = authState.isAuthenticated;
+
+            if (isLoggedIn && resultsAsync.properties.isNotEmpty) {
+              return IconButton(
+                icon: const Icon(Icons.bookmark_add_outlined),
+                onPressed: () => _showSaveSearchDialog(context, filters),
+                tooltip: 'Sačuvaj pretragu',
+              );
+            }
+            return const SizedBox.shrink();
+          }(),
+
           // View mode toggle
           IconButton(
             icon: Icon(
               viewMode == SearchViewMode.grid
-                ? Icons.view_list
-                : Icons.grid_view,
+                  ? Icons.view_list
+                  : viewMode == SearchViewMode.list
+                      ? Icons.map
+                      : Icons.grid_view,
             ),
             onPressed: () {
               ref.read(searchViewModeNotifierProvider.notifier).toggle();
             },
-            tooltip: viewMode == SearchViewMode.grid
-              ? 'Prikaz kao lista'
-              : 'Prikaz kao grid',
+            tooltip: _getViewModeTooltip(viewMode),
           ),
 
           // Sort dropdown
-          PopupMenuButton<SortBy>(
-            icon: const Icon(Icons.sort),
-            tooltip: 'Sortiraj',
-            onSelected: (sortBy) {
-              ref.read(searchFiltersNotifierProvider.notifier).updateSortBy(sortBy);
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: SortBy.recommended,
-                child: Text('Preporučeno'),
-              ),
-              const PopupMenuItem(
-                value: SortBy.priceLowToHigh,
-                child: Text('Cijena: Niska → Visoka'),
-              ),
-              const PopupMenuItem(
-                value: SortBy.priceHighToLow,
-                child: Text('Cijena: Visoka → Niska'),
-              ),
-              const PopupMenuItem(
-                value: SortBy.rating,
-                child: Text('Ocjena'),
-              ),
-              const PopupMenuItem(
-                value: SortBy.newest,
-                child: Text('Najnovije'),
-              ),
-            ],
-          ),
+          _buildSortDropdown(filters),
 
-          // Filter button (mobile only)
-          if (isMobile)
-            IconButton(
-              icon: Stack(
-                children: [
-                  const Icon(Icons.filter_list),
-                  if (filters.hasActiveFilters)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.error,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          '${filters.filterCount}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              onPressed: () {
-                FilterPanelWidget.showBottomSheet(context);
-              },
-              tooltip: 'Filteri',
-            ),
+          const SizedBox(width: AppDimensions.spaceS),
         ],
       ),
       body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Desktop sidebar with filters
-          if (!isMobile && !isTablet)
+          // Filter sidebar (desktop only)
+          if (isDesktop)
             Container(
               width: 320,
               decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
                 border: Border(
                   right: BorderSide(
-                    color: Theme.of(context).dividerColor,
-                    width: 1,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.borderDark
+                        : AppColors.borderLight,
                   ),
                 ),
               ),
-              child: const FilterPanelWidget(),
+              child: const PremiumFilterPanel(),
             ),
 
-          // Main content area
+          // Results area
           Expanded(
-            child: resultsAsync.when(
-              data: (properties) => _buildResultsView(
-                properties,
-                viewMode,
-                isMobile,
-                isTablet,
-              ),
-              loading: () => _buildLoadingState(isMobile),
-              error: (error, stack) => _buildErrorState(error.toString()),
-            ),
+            child: () {
+              // Handle error state
+              if (resultsAsync.error != null) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: AppColors.error,
+                      ),
+                      const SizedBox(height: AppDimensions.spaceM),
+                      Text(
+                        'Greška pri učitavanju rezultata',
+                        style: AppTypography.h3,
+                      ),
+                      const SizedBox(height: AppDimensions.spaceS),
+                      Text(
+                        resultsAsync.error.toString(),
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondaryLight,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppDimensions.spaceL),
+                      PremiumButton.primary(
+                        label: 'Pokušaj ponovo',
+                        icon: Icons.refresh,
+                        onPressed: () {
+                          ref.invalidate(searchResultsNotifierProvider);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // Handle loading state
+              if (resultsAsync.isLoading && resultsAsync.properties.isEmpty) {
+                return _buildLoadingState(viewMode, isMobile, isTablet);
+              }
+
+              // Handle empty results
+              if (resultsAsync.properties.isEmpty) {
+                return SearchNoResults(
+                  filters: filters,
+                  onClearFilters: () {
+                    ref.read(searchFiltersNotifierProvider.notifier).clearFilters();
+                  },
+                );
+              }
+
+              // Display results
+              return _buildResultsView(
+                results: resultsAsync.properties,
+                viewMode: viewMode,
+                isMobile: isMobile,
+                isTablet: isTablet,
+                isDesktop: isDesktop,
+              );
+            }(),
           ),
         ],
       ),
@@ -230,264 +260,237 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   }
 
   Widget _buildSearchSummary(SearchFilters filters) {
-    final parts = <String>[];
-
-    if (filters.location != null && filters.location!.isNotEmpty) {
-      parts.add(filters.location!);
-    }
-
-    if (filters.checkIn != null && filters.checkOut != null) {
-      final checkIn = filters.checkIn!;
-      final checkOut = filters.checkOut!;
-      parts.add('${checkIn.day}.${checkIn.month}. - ${checkOut.day}.${checkOut.month}.');
-    }
-
-    if (filters.guests > 0) {
-      parts.add('${filters.guests} ${filters.guests == 1 ? 'gost' : 'gostiju'}');
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Rezultati pretrage',
-          style: Theme.of(context).textTheme.titleMedium,
+          filters.location ?? 'Sva odredišta',
+          style: AppTypography.bodyLarge.copyWith(
+            fontWeight: AppTypography.weightSemibold,
+          ),
         ),
-        if (parts.isNotEmpty)
+        if (filters.checkIn != null && filters.checkOut != null)
           Text(
-            parts.join(' • '),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
+            '${_formatDate(filters.checkIn!)} - ${_formatDate(filters.checkOut!)}',
+            style: AppTypography.small.copyWith(
+              color: AppColors.textSecondaryLight,
             ),
           ),
       ],
     );
   }
 
-  Widget _buildResultsView(
-    List<dynamic> properties,
-    SearchViewMode viewMode,
-    bool isMobile,
-    bool isTablet,
-  ) {
-    if (properties.isEmpty) {
-      return _buildEmptyState();
+  String _formatDate(DateTime date) {
+    return '${date.day}.${date.month}.${date.year}';
+  }
+
+  String _getViewModeTooltip(SearchViewMode mode) {
+    switch (mode) {
+      case SearchViewMode.grid:
+        return 'Prikaz liste';
+      case SearchViewMode.list:
+        return 'Prikaz mape';
+      case SearchViewMode.map:
+        return 'Prikaz grida';
+    }
+  }
+
+  Widget _buildSortDropdown(SearchFilters filters) {
+    return PopupMenuButton<SortBy>(
+      icon: const Icon(Icons.sort),
+      tooltip: 'Sortiraj',
+      initialValue: filters.sortBy,
+      onSelected: (sortBy) {
+        ref.read(searchFiltersNotifierProvider.notifier).updateSortBy(sortBy);
+      },
+      itemBuilder: (context) => SortBy.values.map((sortBy) {
+        return PopupMenuItem(
+          value: sortBy,
+          child: Row(
+            children: [
+              if (sortBy == filters.sortBy)
+                const Icon(Icons.check, size: 20, color: AppColors.primary)
+              else
+                const SizedBox(width: 20),
+              const SizedBox(width: AppDimensions.spaceS),
+              Text(sortBy.displayName),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Future<void> _showSaveSearchDialog(
+    BuildContext context,
+    SearchFilters filters,
+  ) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => SaveSearchDialog(filters: filters),
+    );
+
+    // Dialog returns true if search was saved successfully
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pretraga je uspješno sačuvana!'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Widget _buildResultsView({
+    required List<PropertyModel> results,
+    required SearchViewMode viewMode,
+    required bool isMobile,
+    required bool isTablet,
+    required bool isDesktop,
+  }) {
+    if (viewMode == SearchViewMode.map) {
+      // Map view with property markers
+      return MapViewWidget(
+        properties: results,
+        onPropertyTap: (property) {
+          context.push('/property/${property.id}');
+        },
+      );
     }
 
-    return Column(
-      children: [
-        // Results count
-        Container(
-          padding: const EdgeInsets.all(16),
-          alignment: Alignment.centerLeft,
-          child: Text(
-            '${properties.length} ${properties.length == 1 ? 'smještaj pronađen' : 'smještaja pronađeno'}',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+    return CustomScrollView(
+      controller: _scrollController,
+      slivers: [
+        // Results header
+        SliverToBoxAdapter(
+          child: SearchResultsHeader(
+            totalResults: results.length,
+            viewMode: viewMode,
+            onViewModeChanged: (mode) {
+              ref.read(searchViewModeNotifierProvider.notifier).setMode(mode);
+            },
           ),
         ),
 
         // Results grid/list
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(searchResultsProvider);
-            },
-            child: viewMode == SearchViewMode.grid
-              ? _buildGridView(properties, isMobile, isTablet)
-              : _buildListView(properties),
-          ),
-        ),
+        if (viewMode == SearchViewMode.grid)
+          _buildGrid(results, isMobile, isTablet, isDesktop)
+        else
+          _buildList(results),
 
         // Loading more indicator
         if (_isLoadingMore)
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: CircularProgressIndicator(),
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(AppDimensions.spaceL),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
           ),
+
+        // Footer
+        const SliverToBoxAdapter(
+          child: AppFooter(),
+        ),
       ],
     );
   }
 
-  Widget _buildGridView(
-    List<dynamic> properties,
+  Widget _buildGrid(
+    List<PropertyModel> results,
+    bool isMobile,
+    bool isTablet,
+    bool isDesktop,
+  ) {
+    final crossAxisCount = isMobile ? 1 : (isTablet ? 2 : 3);
+
+    return SliverPadding(
+      padding: EdgeInsets.all(
+        isMobile ? AppDimensions.spaceM : AppDimensions.spaceL,
+      ),
+      sliver: SliverGrid(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          mainAxisSpacing: AppDimensions.spaceL,
+          crossAxisSpacing: AppDimensions.spaceL,
+          childAspectRatio: isMobile ? 0.75 : 0.8,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return PremiumPropertyCard(
+              property: results[index],
+              onTap: () {
+                context.push('/property/${results[index].id}');
+              },
+            );
+          },
+          childCount: results.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildList(List<PropertyModel> results) {
+    return SliverPadding(
+      padding: const EdgeInsets.all(AppDimensions.spaceL),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppDimensions.spaceL),
+              child: PremiumPropertyCard.horizontal(
+                property: results[index],
+                onTap: () {
+                  context.push('/property/${results[index].id}');
+                },
+              ),
+            );
+          },
+          childCount: results.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState(
+    SearchViewMode viewMode,
     bool isMobile,
     bool isTablet,
   ) {
     final crossAxisCount = isMobile ? 1 : (isTablet ? 2 : 3);
 
+    if (viewMode == SearchViewMode.list) {
+      return ListView.builder(
+        padding: const EdgeInsets.all(AppDimensions.spaceL),
+        itemCount: 5,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppDimensions.spaceL),
+            child: SkeletonLoader.propertyCardHorizontal(),
+          );
+        },
+      );
+    }
+
     return GridView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimensions.spaceL),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: properties.length,
-      itemBuilder: (context, index) {
-        return PropertyCard(property: properties[index]);
-      },
-    );
-  }
-
-  Widget _buildListView(List<dynamic> properties) {
-    return ListView.separated(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16),
-      itemCount: properties.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        return PropertyCard(property: properties[index]);
-      },
-    );
-  }
-
-  Widget _buildLoadingState(bool isMobile) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isMobile ? 1 : 3,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+        mainAxisSpacing: AppDimensions.spaceL,
+        crossAxisSpacing: AppDimensions.spaceL,
+        childAspectRatio: isMobile ? 0.75 : 0.8,
       ),
       itemCount: 6,
-      itemBuilder: (context, index) => _buildShimmerCard(),
-    );
-  }
-
-  Widget _buildShimmerCard() {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image placeholder
-          Container(
-            height: 200,
-            color: Colors.grey[200],
-            child: const Center(
-              child: CircularProgressIndicator(),
-            ),
-          ),
-
-          // Content placeholder
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 20,
-                  width: double.infinity,
-                  color: Colors.grey[200],
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  height: 16,
-                  width: 150,
-                  color: Colors.grey[200],
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  height: 16,
-                  width: 100,
-                  color: Colors.grey[200],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search_off,
-              size: 80,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Nema rezultata',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Pokušajte promijeniti filtere ili kriterije pretrage.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            FilledButton.icon(
-              onPressed: () {
-                ref.read(searchFiltersNotifierProvider.notifier).clearFilters();
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Očisti sve filtere'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 80,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Greška prilikom učitavanja',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              error,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            FilledButton.icon(
-              onPressed: () {
-                ref.invalidate(searchResultsProvider);
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Pokušaj ponovo'),
-            ),
-          ],
-        ),
-      ),
+      itemBuilder: (context, index) {
+        return SkeletonLoader.propertyCard();
+      },
     );
   }
 }
+
+// Backwards compatibility typedef
+typedef SearchResultsScreen = PremiumSearchResultsScreen;

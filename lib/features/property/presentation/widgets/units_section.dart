@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/models/property_unit.dart';
+import '../../../../../core/theme/theme_extensions.dart';
 
 /// Units section showing all available units in a property
 class UnitsSection extends StatelessWidget {
@@ -75,7 +76,7 @@ class _UnitCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Image
-        _buildImage(),
+        _buildImage(context),
 
         // Content
         Padding(
@@ -110,7 +111,7 @@ class _UnitCard extends StatelessWidget {
         SizedBox(
           width: 200,
           height: 200,
-          child: _buildImage(),
+          child: _buildImage(context),
         ),
 
         // Content (70%)
@@ -135,7 +136,7 @@ class _UnitCard extends StatelessWidget {
                             Text(
                               unit.description!,
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey[700],
+                                    color: context.textColor,
                                   ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -166,20 +167,32 @@ class _UnitCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildImage(BuildContext context) {
     final imageUrl = unit.coverImage ??
         (unit.images.isNotEmpty ? unit.images.first : null);
 
+    // If no image, show placeholder directly
+    if (imageUrl == null) {
+      return Container(
+        color: context.surfaceVariantColor,
+        child: Center(
+          child: Icon(Icons.villa, size: 60, color: context.iconColorSecondary),
+        ),
+      );
+    }
+
     return CachedNetworkImage(
-      imageUrl: imageUrl ?? 'https://via.placeholder.com/400x300?text=No+Image',
+      imageUrl: imageUrl,
       fit: BoxFit.cover,
-      placeholder: (context, url) => Container(
-        color: Colors.grey[200],
+      placeholder: (ctx, url) => Container(
+        color: context.surfaceVariantColor,
         child: const Center(child: CircularProgressIndicator()),
       ),
-      errorWidget: (context, url, error) => Container(
-        color: Colors.grey[200],
-        child: const Icon(Icons.villa, size: 60, color: Colors.grey),
+      errorWidget: (ctx, url, error) => Container(
+        color: context.surfaceVariantColor,
+        child: Center(
+          child: Icon(Icons.villa, size: 60, color: context.iconColorSecondary),
+        ),
       ),
     );
   }
@@ -198,7 +211,7 @@ class _UnitCard extends StatelessWidget {
         Text(
           '${unit.area.toStringAsFixed(0)} m²',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
+                color: context.textColorSecondary,
               ),
         ),
       ],
@@ -213,14 +226,17 @@ class _UnitCard extends StatelessWidget {
         _SpecItem(
           icon: Icons.people_outline,
           label: '${unit.maxGuests} ${unit.maxGuests == 1 ? 'gost' : 'gostiju'}',
+          context: context,
         ),
         _SpecItem(
           icon: Icons.bed_outlined,
           label: '${unit.bedrooms} ${unit.bedrooms == 1 ? 'soba' : 'sobe'}',
+          context: context,
         ),
         _SpecItem(
           icon: Icons.bathtub_outlined,
           label: '${unit.bathrooms} ${unit.bathrooms == 1 ? 'kupaonica' : 'kupaonice'}',
+          context: context,
         ),
       ],
     );
@@ -245,7 +261,7 @@ class _UnitCard extends StatelessWidget {
             Text(
               '/ noć',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
+                    color: context.textColorSecondary,
                   ),
             ),
           ],
@@ -254,7 +270,7 @@ class _UnitCard extends StatelessWidget {
           Text(
             'Min. ${unit.minStayNights} noći',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
+                  color: context.textColorSecondary,
                 ),
           ),
       ],
@@ -267,21 +283,23 @@ class _SpecItem extends StatelessWidget {
   const _SpecItem({
     required this.icon,
     required this.label,
+    required this.context,
   });
 
   final IconData icon;
   final String label;
+  final BuildContext context;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext buildContext) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 18, color: Colors.grey[600]),
+        Icon(icon, size: 18, color: context.iconColorSecondary),
         const SizedBox(width: 4),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(buildContext).textTheme.bodyMedium,
         ),
       ],
     );

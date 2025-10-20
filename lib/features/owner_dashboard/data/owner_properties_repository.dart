@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:typed_data';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,17 +13,38 @@ class OwnerPropertiesRepository {
 
   OwnerPropertiesRepository(this._supabase);
 
-  /// Get all properties for current owner
+  /// Get all properties for current owner with units count
   Future<List<PropertyModel>> getOwnerProperties(String ownerId) async {
     try {
       final response = await _supabase
           .from('properties')
-          .select('*')
+          .select('*, units:units(count)')
           .eq('owner_id', ownerId)
           .order('created_at', ascending: false);
 
       return (response as List)
-          .map((json) => PropertyModel.fromJson(json as Map<String, dynamic>))
+          .map((json) {
+            final propertyJson = Map<String, dynamic>.from(json);
+
+            // Extract units count from aggregated data
+            final unitsData = propertyJson['units'];
+            int unitsCount = 0;
+
+            if (unitsData is List && unitsData.isNotEmpty) {
+              final firstUnit = unitsData[0];
+              if (firstUnit is Map && firstUnit.containsKey('count')) {
+                unitsCount = firstUnit['count'] as int? ?? 0;
+              }
+            }
+
+            // Add units_count to property data
+            propertyJson['units_count'] = unitsCount;
+
+            // Remove units aggregate to avoid confusion
+            propertyJson.remove('units');
+
+            return PropertyModel.fromJson(propertyJson);
+          })
           .toList();
     } catch (e) {
       throw Exception('Failed to fetch properties: $e');
@@ -34,30 +56,35 @@ class OwnerPropertiesRepository {
     required String ownerId,
     required String name,
     required String description,
+    required String propertyType,
     required String location,
-    required double latitude,
-    required double longitude,
+    String? address,
+    double? latitude,
+    double? longitude,
     required List<String> amenities,
     List<String>? images,
     String? coverImage,
+    bool isActive = false,
   }) async {
     try {
       final response = await _supabase.from('properties').insert({
         'owner_id': ownerId,
         'name': name,
         'description': description,
+        'property_type': propertyType,
         'location': location,
+        'address': address,
         'latitude': latitude,
         'longitude': longitude,
         'amenities': amenities,
         'images': images ?? [],
         'cover_image': coverImage,
-        'is_active': true,
+        'is_active': isActive,
         'rating': 0.0,
         'review_count': 0,
       }).select().single();
 
-      return PropertyModel.fromJson(response as Map<String, dynamic>);
+      return PropertyModel.fromJson(response);
     } catch (e) {
       throw Exception('Failed to create property: $e');
     }
@@ -68,7 +95,9 @@ class OwnerPropertiesRepository {
     required String propertyId,
     String? name,
     String? description,
+    String? propertyType,
     String? location,
+    String? address,
     double? latitude,
     double? longitude,
     List<String>? amenities,
@@ -80,7 +109,9 @@ class OwnerPropertiesRepository {
       final updates = <String, dynamic>{};
       if (name != null) updates['name'] = name;
       if (description != null) updates['description'] = description;
+      if (propertyType != null) updates['property_type'] = propertyType;
       if (location != null) updates['location'] = location;
+      if (address != null) updates['address'] = address;
       if (latitude != null) updates['latitude'] = latitude;
       if (longitude != null) updates['longitude'] = longitude;
       if (amenities != null) updates['amenities'] = amenities;
@@ -98,7 +129,7 @@ class OwnerPropertiesRepository {
             .select()
             .single();
 
-        return PropertyModel.fromJson(response as Map<String, dynamic>);
+        return PropertyModel.fromJson(response);
       }
 
       throw Exception('No updates provided');
@@ -220,7 +251,7 @@ class OwnerPropertiesRepository {
         'property_id': propertyId,
         'name': name,
         'description': description,
-        'price_per_night': pricePerNight,
+        'base_price': pricePerNight,
         'max_guests': maxGuests,
         'bedrooms': bedrooms,
         'bathrooms': bathrooms,
@@ -233,7 +264,7 @@ class OwnerPropertiesRepository {
         'is_available': true,
       }).select().single();
 
-      return PropertyUnit.fromJson(response as Map<String, dynamic>);
+      return PropertyUnit.fromJson(response);
     } catch (e) {
       throw Exception('Failed to create unit: $e');
     }
@@ -260,7 +291,7 @@ class OwnerPropertiesRepository {
       final updates = <String, dynamic>{};
       if (name != null) updates['name'] = name;
       if (description != null) updates['description'] = description;
-      if (pricePerNight != null) updates['price_per_night'] = pricePerNight;
+      if (pricePerNight != null) updates['base_price'] = pricePerNight;
       if (maxGuests != null) updates['max_guests'] = maxGuests;
       if (bedrooms != null) updates['bedrooms'] = bedrooms;
       if (bathrooms != null) updates['bathrooms'] = bathrooms;
@@ -282,7 +313,7 @@ class OwnerPropertiesRepository {
             .select()
             .single();
 
-        return PropertyUnit.fromJson(response as Map<String, dynamic>);
+        return PropertyUnit.fromJson(response);
       }
 
       throw Exception('No updates provided');
@@ -317,7 +348,7 @@ class OwnerPropertiesRepository {
 /// Provider for owner properties repository
 @riverpod
 OwnerPropertiesRepository ownerPropertiesRepository(
-  OwnerPropertiesRepositoryRef ref,
+  Ref ref,
 ) {
   return OwnerPropertiesRepository(Supabase.instance.client);
 }

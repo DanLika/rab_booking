@@ -20,8 +20,14 @@ class SearchFilters with _$SearchFilters {
     // Property type
     @Default([]) List<PropertyType> propertyTypes,
 
+    // Single property type filter (for saved searches)
+    String? propertyType,
+
     // Amenities
     @Default([]) List<String> amenities,
+
+    // Minimum rating filter
+    double? minRating,
 
     // Bedrooms & bathrooms
     int? minBedrooms,

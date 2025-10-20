@@ -6,53 +6,25 @@ part of 'user_bookings_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint, type=warning
-
-@ProviderFor(userBookingsRepository)
-const userBookingsRepositoryProvider = UserBookingsRepositoryProvider._();
-
-final class UserBookingsRepositoryProvider
-    extends
-        $FunctionalProvider<
-          UserBookingsRepository,
-          UserBookingsRepository,
-          UserBookingsRepository
-        >
-    with $Provider<UserBookingsRepository> {
-  const UserBookingsRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'userBookingsRepositoryProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$userBookingsRepositoryHash();
-
-  @$internal
-  @override
-  $ProviderElement<UserBookingsRepository> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  UserBookingsRepository create(Ref ref) {
-    return userBookingsRepository(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(UserBookingsRepository value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<UserBookingsRepository>(value),
-    );
-  }
-}
-
 String _$userBookingsRepositoryHash() =>
-    r'2fc6f077201133ae4fe98e578af7ef5fdbc07567';
+    r'3097fe6c10a0a8bfb009140e888460a58c45a54b';
+
+/// See also [userBookingsRepository].
+@ProviderFor(userBookingsRepository)
+final userBookingsRepositoryProvider =
+    AutoDisposeProvider<UserBookingsRepository>.internal(
+      userBookingsRepository,
+      name: r'userBookingsRepositoryProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$userBookingsRepositoryHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef UserBookingsRepositoryRef =
+    AutoDisposeProviderRef<UserBookingsRepository>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

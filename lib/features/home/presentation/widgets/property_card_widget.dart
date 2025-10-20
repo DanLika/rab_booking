@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../core/utils/navigation_helpers.dart';
+import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Property card widget with hover effects
 class PropertyCardWidget extends StatefulWidget {
@@ -26,11 +29,14 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 300), // Increased from 200ms for smoother effect
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.03).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate( // Increased from 1.03 to 1.05 for more dramatic effect
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Cubic(0.4, 0.0, 0.2, 1.0), // Smooth premium curve
+      ),
     );
   }
 
@@ -58,13 +64,31 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget>
         scale: _scaleAnimation,
         child: GestureDetector(
           onTap: () => context.goToPropertyDetails(widget.property.id),
-          child: Card(
-            elevation: _isHovered ? 8 : 2,
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+              boxShadow: [
+                // Azure Blue tinted shadow for premium feel
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  blurRadius: _isHovered ? 24 : 8,
+                  offset: Offset(0, _isHovered ? 12 : 4),
+                ),
+                // Subtle secondary shadow for depth
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: _isHovered ? 0.12 : 0.06),
+                  blurRadius: _isHovered ? 16 : 4,
+                  offset: Offset(0, _isHovered ? 8 : 2),
+                ),
+              ],
             ),
-            child: Column(
+            child: Card(
+              elevation: 0, // Using custom shadows instead
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+              ),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Image
@@ -74,76 +98,87 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget>
                     fit: StackFit.expand,
                     children: [
                       // Property image
-                      Image.network(
-                        widget.property.coverImage ??
-                            widget.property.images.firstOrNull ??
-                            'https://via.placeholder.com/400x250',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: Icon(Icons.villa,
-                                  size: 60, color: Colors.grey),
-                            ),
+                      Builder(
+                        builder: (context) {
+                          final imageUrl = widget.property.coverImage ??
+                              widget.property.images.firstOrNull;
+
+                          if (imageUrl == null) {
+                            return Container(
+                              color: context.surfaceVariantColor,
+                              child: Center(
+                                child: Icon(Icons.villa,
+                                    size: 60, color: context.iconColorSecondary),
+                              ),
+                            );
+                          }
+
+                          return Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: context.surfaceVariantColor,
+                                child: Center(
+                                  child: Icon(Icons.villa,
+                                      size: 60, color: context.iconColorSecondary),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
 
-                      // Gradient overlay at bottom
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
+                      // Premium gradient overlay - full image coverage
+                      Positioned.fill(
                         child: Container(
-                          height: 80,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.4),
-                              ],
-                            ),
+                          decoration: const BoxDecoration(
+                            gradient: AppColors.premiumOverlayGradient,
                           ),
                         ),
                       ),
 
-                      // Rating badge
+                      // Premium rating badge with glassmorphism
                       if (widget.property.rating > 0)
                         Positioned(
                           top: 12,
                           right: 12,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
+                              horizontal: 12,
+                              vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
+                              gradient: AppColors.tertiaryGradient,
+                              borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: AppColors.tertiary.withValues(alpha: 0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.15),
                                   blurRadius: 8,
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  Icons.star,
-                                  size: 16,
-                                  color: Colors.amber[700],
+                                const Icon(
+                                  Icons.star_rounded,
+                                  size: 18,
+                                  color: Colors.white,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   widget.property.rating.toStringAsFixed(1),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 13,
+                                    fontSize: 14,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ],
@@ -178,7 +213,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget>
                           Icon(
                             Icons.location_on_outlined,
                             size: 16,
-                            color: Colors.grey[600],
+                            color: context.iconColorSecondary,
                           ),
                           const SizedBox(width: 4),
                           Expanded(
@@ -188,7 +223,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget>
                                   .textTheme
                                   .bodySmall
                                   ?.copyWith(
-                                    color: Colors.grey[600],
+                                    color: context.textColorSecondary,
                                   ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -216,6 +251,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget>
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -260,8 +296,8 @@ class _AmenityChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(6),
+        color: Theme.of(context).primaryColor.withValues(alpha:0.1),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXS), // 6px modern radius
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

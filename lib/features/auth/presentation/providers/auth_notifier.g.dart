@@ -6,63 +6,23 @@ part of 'auth_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint, type=warning
-/// Auth notifier
+String _$authNotifierHash() => r'526de3173044b1cd1f3a1d4e98a8fc4bf22dcb30';
 
+/// Auth notifier
+///
+/// Copied from [AuthNotifier].
 @ProviderFor(AuthNotifier)
-const authProvider = AuthNotifierProvider._();
-
-/// Auth notifier
-final class AuthNotifierProvider
-    extends $NotifierProvider<AuthNotifier, AuthState> {
-  /// Auth notifier
-  const AuthNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'authProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$authNotifierHash();
-
-  @$internal
-  @override
-  AuthNotifier create() => AuthNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AuthState value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AuthState>(value),
+final authNotifierProvider =
+    AutoDisposeNotifierProvider<AuthNotifier, AuthState>.internal(
+      AuthNotifier.new,
+      name: r'authNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$authNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
     );
-  }
-}
 
-String _$authNotifierHash() => r'7dc764d443787be38ebdcfc518ea4e774cc3af00';
-
-/// Auth notifier
-
-abstract class _$AuthNotifier extends $Notifier<AuthState> {
-  AuthState build();
-  @$mustCallSuper
-  @override
-  void runBuild() {
-    final created = build();
-    final ref = this.ref as $Ref<AuthState, AuthState>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AuthState, AuthState>,
-              AuthState,
-              Object?,
-              Object?
-            >;
-    element.handleValue(ref, created);
-  }
-}
+typedef _$AuthNotifier = AutoDisposeNotifier<AuthState>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

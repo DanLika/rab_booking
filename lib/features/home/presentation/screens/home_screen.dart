@@ -1,358 +1,89 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/hero_section_widget.dart';
-import '../widgets/search_bar_widget.dart';
-import '../widgets/property_card_widget.dart';
-import '../providers/featured_properties_provider.dart';
+import '../widgets/home_hero_section.dart';
+import '../widgets/featured_properties_section.dart';
+import '../widgets/recently_viewed_section.dart';
+import '../widgets/popular_destinations_section.dart';
+import '../widgets/how_it_works_section.dart';
+import '../widgets/testimonials_section.dart';
+import '../widgets/cta_section.dart';
 import '../../../../core/utils/navigation_helpers.dart';
+import '../../../../shared/models/property_model.dart';
+import '../../../../shared/widgets/widgets.dart';
 
-/// Home screen with hero section and featured properties
-class HomeScreen extends ConsumerStatefulWidget {
+/// Premium home screen with all sections
+/// Phase 4: Complete premium home screen implementation
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final ScrollController _scrollController = ScrollController();
-  double _scrollOffset = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    setState(() {
-      _scrollOffset = _scrollController.offset;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 768;
-    final heroHeight = isMobile ? 600.0 : 800.0;
-
-    return Scaffold(
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          // Hero section with parallax
-          SliverToBoxAdapter(
-            child: Stack(
-              children: [
-                // Hero background
-                HeroSectionWidget(scrollOffset: _scrollOffset),
-
-                // Search bar (floating over hero)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: isMobile ? 24 : 40,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isMobile ? 16 : 48,
-                    ),
-                    child: const SearchBarWidget(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Spacing after hero
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 64),
-          ),
-
-          // Featured properties section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 16 : 48,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Section header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Izdvojeni smještaji',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      TextButton(
-                        onPressed: () => context.goToSearch(),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('Vidi sve'),
-                            SizedBox(width: 4),
-                            Icon(Icons.arrow_forward, size: 18),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Najtraženiji smještaji na otoku Rabu',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                  ),
-                  const SizedBox(height: 32),
-                ],
-              ),
-            ),
-          ),
-
-          // Featured properties grid
-          const _FeaturedPropertiesGrid(),
-
-          // Bottom spacing
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 80),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Featured properties grid with loading state
-class _FeaturedPropertiesGrid extends ConsumerWidget {
-  const _FeaturedPropertiesGrid();
-
-  @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final propertiesAsync = ref.watch(featuredPropertiesProvider);
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Determine grid columns based on screen width
-    int crossAxisCount;
-    if (screenWidth < 768) {
-      crossAxisCount = 1; // Mobile
-    } else if (screenWidth < 1200) {
-      crossAxisCount = 2; // Tablet
-    } else {
-      crossAxisCount = 3; // Desktop
-    }
-
-    final isMobile = screenWidth < 768;
-
-    return SliverPadding(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 16 : 48,
-      ),
-      sliver: propertiesAsync.when(
-        data: (properties) {
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 24,
-              mainAxisSpacing: 24,
-              childAspectRatio: 0.8,
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // 1. Premium Hero Section with integrated search
+            HomeHeroSection(
+              title: 'Discover Your Perfect Getaway',
+              subtitle:
+                  'Browse thousands of premium vacation rentals in stunning destinations around the world',
+              backgroundImage:
+                  'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1600',
+              showSearch: true,
+              onSearchPressed: () => context.goToSearch(),
             ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                return PropertyCardWidget(
-                  property: properties[index],
-                );
+
+            // 2. Featured Properties Section
+            FeaturedPropertiesSection(
+              title: 'Featured Properties',
+              subtitle: 'Hand-picked properties for your perfect stay',
+              maxProperties: 6,
+              onPropertyTapped: (PropertyModel property) {
+                context.goToPropertyDetails(property.id);
               },
-              childCount: properties.length,
+              onSeeAllTapped: () => context.goToSearch(),
             ),
-          );
-        },
-        loading: () {
-          // Shimmer loading state
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 24,
-              mainAxisSpacing: 24,
-              childAspectRatio: 0.8,
+
+            // 2.5. Recently Viewed Section (only for logged-in users)
+            const RecentlyViewedSection(
+              title: 'Recently Viewed',
+              subtitle: 'Properties you have viewed recently',
+              maxProperties: 10,
             ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                return const _PropertyCardSkeleton();
-              },
-              childCount: 6,
-            ),
-          );
-        },
-        error: (error, stack) {
-          return SliverToBoxAdapter(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(48.0),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Greška pri učitavanju smještaja',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      error.toString(),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton.icon(
-                      onPressed: () => ref.invalidate(featuredPropertiesProvider),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Pokušaj ponovo'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
 
-/// Property card skeleton (shimmer effect)
-class _PropertyCardSkeleton extends StatefulWidget {
-  const _PropertyCardSkeleton();
-
-  @override
-  State<_PropertyCardSkeleton> createState() => _PropertyCardSkeletonState();
-}
-
-class _PropertyCardSkeletonState extends State<_PropertyCardSkeleton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _shimmerController;
-
-  @override
-  void initState() {
-    super.initState();
-    _shimmerController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _shimmerController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image skeleton
-          Expanded(
-            flex: 3,
-            child: AnimatedBuilder(
-              animation: _shimmerController,
-              builder: (context, child) {
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.grey[300]!,
-                        Colors.grey[200]!,
-                        Colors.grey[300]!,
-                      ],
-                      stops: [
-                        _shimmerController.value - 0.3,
-                        _shimmerController.value,
-                        _shimmerController.value + 0.3,
-                      ],
-                    ),
-                  ),
-                );
+            // 3. Popular Destinations Section
+            PopularDestinationsSection(
+              title: 'Popular Destinations',
+              subtitle: 'Explore the most sought-after vacation spots',
+              onDestinationTapped: (destination) {
+                // Navigate to search with destination filter
+                context.goToSearch();
               },
             ),
-          ),
 
-          // Content skeleton
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    height: 20,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    height: 16,
-                    width: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      Container(
-                        height: 24,
-                        width: 60,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        height: 24,
-                        width: 60,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            // 4. How It Works Section
+            const HowItWorksSection(
+              title: 'How It Works',
+              subtitle: 'Book your dream vacation in three simple steps',
             ),
-          ),
-        ],
+
+            // 5. Testimonials Section
+            const TestimonialsSection(
+              title: 'What Our Guests Say',
+              subtitle: 'Real experiences from real travelers',
+              autoPlay: true,
+            ),
+
+            // 6. Call-to-Action Section
+            CtaSectionPresets.getStarted(
+              onGetStarted: () => context.goToSearch(),
+              onLearnMore: () => context.goToAboutUs(),
+            ),
+
+            // 7. Footer Section
+            const AppFooter(),
+          ],
+        ),
       ),
     );
   }

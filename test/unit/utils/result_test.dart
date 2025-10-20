@@ -135,7 +135,7 @@ void main() {
         final chained = result
             .map((data) => data * 2) // 20
             .map<int>((data) => throw const ValidationException('Error'))
-            .map((data) => (data as int) + 5); // Should not execute
+            .map((data) => data + 5); // Should not execute
 
         expect(chained.isFailure, true);
         expect(chained.exceptionOrNull, isA<ValidationException>());

@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:gotrue/gotrue.dart' as gotrue;
 import '../../data/auth_repository.dart';
+import '../../../../core/services/logging_service.dart';
 
 part 'auth_notifier.g.dart';
 
@@ -103,7 +104,7 @@ class AuthNotifier extends _$AuthNotifier {
       }
     } catch (e) {
       // Profile fetch failed, but user is still authenticated
-      print('Failed to fetch user profile: $e');
+      LoggingService.logError('Failed to fetch user profile', e);
     }
   }
 
@@ -253,6 +254,40 @@ class AuthNotifier extends _$AuthNotifier {
         isLoading: false,
         error: 'Failed to send reset email. Please try again.',
       );
+      rethrow;
+    }
+  }
+
+  /// Update user password (for reset password flow)
+  Future<void> updatePassword(String newPassword) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final repository = ref.read(authRepositoryProvider);
+      await repository.updatePassword(newPassword);
+
+      state = state.copyWith(isLoading: false);
+    } on AuthException catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: _getAuthErrorMessage(e),
+      );
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to update password. Please try again.',
+      );
+      rethrow;
+    }
+  }
+
+  /// Resend email verification
+  Future<void> resendVerificationEmail(String email) async {
+    try {
+      final repository = ref.read(authRepositoryProvider);
+      await repository.resendVerificationEmail(email);
+    } catch (e) {
       rethrow;
     }
   }

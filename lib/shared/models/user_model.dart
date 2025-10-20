@@ -15,10 +15,10 @@ class UserModel with _$UserModel {
     required String email,
 
     /// User's first name
-    required String firstName,
+    @JsonKey(name: 'first_name') required String firstName,
 
     /// User's last name
-    required String lastName,
+    @JsonKey(name: 'last_name') required String lastName,
 
     /// User role (guest, owner, admin)
     required UserRole role,
@@ -27,13 +27,13 @@ class UserModel with _$UserModel {
     String? phone,
 
     /// Optional avatar URL
-    String? avatarUrl,
+    @JsonKey(name: 'avatar_url') String? avatarUrl,
 
     /// Account creation timestamp
-    required DateTime createdAt,
+    @JsonKey(name: 'created_at') required DateTime createdAt,
 
     /// Last update timestamp
-    DateTime? updatedAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _UserModel;
 
   const UserModel._();

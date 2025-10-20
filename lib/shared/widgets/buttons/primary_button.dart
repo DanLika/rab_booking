@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_dimensions.dart';
 
 /// Primary button widget with loading and disabled states
 ///
@@ -54,19 +55,23 @@ class PrimaryButton extends StatelessWidget {
                 : Icon(icon),
             label: Text(text),
             style: FilledButton.styleFrom(
+              // Use design system padding (24px horizontal, 12px vertical for 48px height)
               padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 16,
+                horizontal: AppDimensions.spaceM,
+                vertical: 12,
               ),
+              minimumSize: const Size(0, AppDimensions.buttonHeight),
             ),
           )
         : FilledButton(
             onPressed: isLoading ? null : onPressed,
             style: FilledButton.styleFrom(
+              // Use design system padding (24px horizontal, 12px vertical for 48px height)
               padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 16,
+                horizontal: AppDimensions.spaceM,
+                vertical: 12,
               ),
+              minimumSize: const Size(0, AppDimensions.buttonHeight),
             ),
             child: isLoading
                 ? const SizedBox(

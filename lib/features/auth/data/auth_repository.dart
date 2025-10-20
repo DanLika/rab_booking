@@ -1,5 +1,7 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/services/logging_service.dart';
 
 part 'auth_repository.g.dart';
 
@@ -81,7 +83,7 @@ class AuthRepository {
     } catch (e) {
       // Profile creation failed, but auth was successful
       // User can still login, profile can be created later
-      print('Failed to create user profile: $e');
+      LoggingService.logError('Failed to create user profile', e);
     }
   }
 
@@ -114,6 +116,29 @@ class AuthRepository {
       await _supabase.auth.resetPasswordForEmail(
         email,
         redirectTo: 'rabbooking://reset-password',
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Update user password (for reset password flow)
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      await _supabase.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Resend email verification
+  Future<void> resendVerificationEmail(String email) async {
+    try {
+      await _supabase.auth.resend(
+        type: OtpType.signup,
+        email: email,
       );
     } catch (e) {
       rethrow;
@@ -159,7 +184,7 @@ class AuthRepository {
           .eq('id', userId)
           .single();
 
-      return response as Map<String, dynamic>;
+      return response;
     } catch (e) {
       return null;
     }
@@ -196,6 +221,6 @@ class AuthRepository {
 
 /// Provider for auth repository
 @riverpod
-AuthRepository authRepository(AuthRepositoryRef ref) {
+AuthRepository authRepository(Ref ref) {
   return AuthRepository(Supabase.instance.client);
 }

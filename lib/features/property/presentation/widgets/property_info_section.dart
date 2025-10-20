@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/models/property_model.dart';
-import '../../../../features/search/domain/models/search_filters.dart';
 import '../../../../core/constants/enums.dart';
+import '../../domain/models/property_unit.dart';
+import '../../../../../core/theme/theme_extensions.dart';
 
 /// Property info section with title, location, rating, and quick facts
 class PropertyInfoSection extends StatefulWidget {
   const PropertyInfoSection({
     required this.property,
+    this.units,
     super.key,
   });
 
   final PropertyModel property;
+  final List<PropertyUnit>? units;
 
   @override
   State<PropertyInfoSection> createState() => _PropertyInfoSectionState();
@@ -24,12 +27,14 @@ class _PropertyInfoSectionState extends State<PropertyInfoSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title
+        // Title (30px, bold as per spec)
         Text(
           widget.property.name,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: const TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            height: 1.2,
+          ),
         ),
         const SizedBox(height: 12),
 
@@ -38,7 +43,7 @@ class _PropertyInfoSectionState extends State<PropertyInfoSection> {
           children: [
             // Rating
             if (widget.property.rating > 0) ...[
-              Icon(Icons.star, size: 18, color: Colors.amber[700]),
+              Icon(Icons.star, size: 18, color: Theme.of(context).colorScheme.secondary),
               const SizedBox(width: 4),
               Text(
                 widget.property.rating.toStringAsFixed(1),
@@ -50,22 +55,22 @@ class _PropertyInfoSectionState extends State<PropertyInfoSection> {
               Text(
                 '(${widget.property.reviewCount} recenzija)',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
+                      color: context.textColorSecondary,
                     ),
               ),
               const SizedBox(width: 16),
-              Text('•', style: TextStyle(color: Colors.grey[400])),
+              Text('•', style: TextStyle(color: context.borderColor)),
               const SizedBox(width: 16),
             ],
 
             // Location
-            Icon(Icons.location_on, size: 18, color: Colors.grey[600]),
+            Icon(Icons.location_on, size: 18, color: context.iconColorSecondary),
             const SizedBox(width: 4),
             Expanded(
               child: Text(
                 widget.property.location,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[700],
+                      color: context.textColor,
                       fontWeight: FontWeight.w500,
                     ),
                 maxLines: 1,
@@ -79,33 +84,8 @@ class _PropertyInfoSectionState extends State<PropertyInfoSection> {
         const Divider(),
         const SizedBox(height: 24),
 
-        // Quick facts
-        Wrap(
-          spacing: 24,
-          runSpacing: 16,
-          children: [
-            _QuickFactItem(
-              icon: Icons.people_outline,
-              label: 'Gosti',
-              value: '1-8',
-            ),
-            _QuickFactItem(
-              icon: Icons.bed_outlined,
-              label: 'Spavaće sobe',
-              value: '1-4',
-            ),
-            _QuickFactItem(
-              icon: Icons.bathtub_outlined,
-              label: 'Kupaonice',
-              value: '1-3',
-            ),
-            _QuickFactItem(
-              icon: Icons.square_foot,
-              label: 'Površina',
-              value: '45-120 m²',
-            ),
-          ],
-        ),
+        // Quick facts (dynamic from units)
+        _buildQuickFacts(),
 
         const SizedBox(height: 24),
         const Divider(),
@@ -120,22 +100,22 @@ class _PropertyInfoSectionState extends State<PropertyInfoSection> {
         ),
         const SizedBox(height: 12),
 
-        if (widget.property.description != null)
+        if (widget.property.description.isNotEmpty)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.property.description!,
+                widget.property.description,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      height: 1.6,
-                      color: Colors.grey[800],
+                      height: 1.6, // Line height as per spec
+                      color: context.textColor,
                     ),
                 maxLines: _isDescriptionExpanded ? null : 4,
                 overflow: _isDescriptionExpanded
                     ? TextOverflow.visible
                     : TextOverflow.ellipsis,
               ),
-              if (widget.property.description!.length > 200)
+              if (widget.property.description.length > 500) // Show more if >500 chars
                 TextButton(
                   onPressed: () {
                     setState(() {
@@ -165,21 +145,177 @@ class _PropertyInfoSectionState extends State<PropertyInfoSection> {
     );
   }
 
+  Widget _buildQuickFacts() {
+    // Calculate ranges from units if available
+    if (widget.units != null && widget.units!.isNotEmpty) {
+      final units = widget.units!;
+
+      // Calculate min/max guests
+      final minGuests = units.map((u) => u.maxGuests).reduce((a, b) => a < b ? a : b);
+      final maxGuests = units.map((u) => u.maxGuests).reduce((a, b) => a > b ? a : b);
+      final guestsValue = minGuests == maxGuests ? '$minGuests' : '$minGuests-$maxGuests';
+
+      // Calculate min/max bedrooms
+      final minBedrooms = units.map((u) => u.bedrooms).reduce((a, b) => a < b ? a : b);
+      final maxBedrooms = units.map((u) => u.bedrooms).reduce((a, b) => a > b ? a : b);
+      final bedroomsValue = minBedrooms == maxBedrooms ? '$minBedrooms' : '$minBedrooms-$maxBedrooms';
+
+      // Calculate min/max bathrooms
+      final minBathrooms = units.map((u) => u.bathrooms).reduce((a, b) => a < b ? a : b);
+      final maxBathrooms = units.map((u) => u.bathrooms).reduce((a, b) => a > b ? a : b);
+      final bathroomsValue = minBathrooms == maxBathrooms ? '$minBathrooms' : '$minBathrooms-$maxBathrooms';
+
+      // Calculate min/max area
+      final minArea = units.map((u) => u.area).reduce((a, b) => a < b ? a : b);
+      final maxArea = units.map((u) => u.area).reduce((a, b) => a > b ? a : b);
+      final areaValue = minArea == maxArea ? '${minArea.toInt()} m²' : '${minArea.toInt()}-${maxArea.toInt()} m²';
+
+      return Wrap(
+        spacing: 24,
+        runSpacing: 16,
+        children: [
+          _QuickFactItem(
+            icon: Icons.people_outline,
+            label: 'Gosti',
+            value: guestsValue,
+          ),
+          _QuickFactItem(
+            icon: Icons.bed_outlined,
+            label: 'Spavaće sobe',
+            value: bedroomsValue,
+          ),
+          _QuickFactItem(
+            icon: Icons.bathtub_outlined,
+            label: 'Kupaonice',
+            value: bathroomsValue,
+          ),
+          _QuickFactItem(
+            icon: Icons.square_foot,
+            label: 'Površina',
+            value: areaValue,
+          ),
+        ],
+      );
+    }
+
+    // Fallback to property data or placeholders if units not available
+    return Wrap(
+      spacing: 24,
+      runSpacing: 16,
+      children: [
+        if (widget.property.maxGuests != null)
+          _QuickFactItem(
+            icon: Icons.people_outline,
+            label: 'Gosti',
+            value: '${widget.property.maxGuests}',
+          ),
+        if (widget.property.bedrooms != null)
+          _QuickFactItem(
+            icon: Icons.bed_outlined,
+            label: 'Spavaće sobe',
+            value: '${widget.property.bedrooms}',
+          ),
+        if (widget.property.bathrooms != null)
+          _QuickFactItem(
+            icon: Icons.bathtub_outlined,
+            label: 'Kupaonice',
+            value: '${widget.property.bathrooms}',
+          ),
+      ],
+    );
+  }
+
   Widget _buildAmenitiesGrid() {
     final isMobile = MediaQuery.of(context).size.width < 768;
+
+    // Group amenities by category
+    final basicAmenities = widget.property.amenities.where((a) => _isBasicAmenity(a)).toList();
+    final kitchenAmenities = widget.property.amenities.where((a) => _isKitchenAmenity(a)).toList();
+    final outdoorAmenities = widget.property.amenities.where((a) => _isOutdoorAmenity(a)).toList();
+    final entertainmentAmenities = widget.property.amenities.where((a) => _isEntertainmentAmenity(a)).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (basicAmenities.isNotEmpty)
+          _buildAmenityGroup('Osnovni sadržaji', basicAmenities, isMobile),
+
+        if (kitchenAmenities.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          _buildAmenityGroup('Kuhinja', kitchenAmenities, isMobile),
+        ],
+
+        if (outdoorAmenities.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          _buildAmenityGroup('Vanjski prostor', outdoorAmenities, isMobile),
+        ],
+
+        if (entertainmentAmenities.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          _buildAmenityGroup('Zabava i rekreacija', entertainmentAmenities, isMobile),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAmenityGroup(String title, List<PropertyAmenity> amenities, bool isMobile) {
     final crossAxisCount = isMobile ? 2 : 3;
 
-    return GridView.count(
-      crossAxisCount: crossAxisCount,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 3.5,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 12,
-      children: widget.property.amenities.map((amenity) {
-        return _AmenityItem(amenity: amenity);
-      }).toList(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: crossAxisCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 3.5,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 12,
+          children: amenities.map((amenity) {
+            return _AmenityItem(amenity: amenity);
+          }).toList(),
+        ),
+      ],
     );
+  }
+
+  bool _isBasicAmenity(PropertyAmenity amenity) {
+    return amenity == PropertyAmenity.wifi ||
+        amenity == PropertyAmenity.parking ||
+        amenity == PropertyAmenity.airConditioning ||
+        amenity == PropertyAmenity.heating ||
+        amenity == PropertyAmenity.washingMachine ||
+        amenity == PropertyAmenity.tv ||
+        amenity == PropertyAmenity.petFriendly;
+  }
+
+  bool _isKitchenAmenity(PropertyAmenity amenity) {
+    return amenity == PropertyAmenity.kitchen;
+  }
+
+  bool _isOutdoorAmenity(PropertyAmenity amenity) {
+    return amenity == PropertyAmenity.pool ||
+        amenity == PropertyAmenity.balcony ||
+        amenity == PropertyAmenity.seaView ||
+        amenity == PropertyAmenity.bbq ||
+        amenity == PropertyAmenity.outdoorFurniture ||
+        amenity == PropertyAmenity.beachAccess;
+  }
+
+  bool _isEntertainmentAmenity(PropertyAmenity amenity) {
+    return amenity == PropertyAmenity.fireplace ||
+        amenity == PropertyAmenity.gym ||
+        amenity == PropertyAmenity.hotTub ||
+        amenity == PropertyAmenity.sauna ||
+        amenity == PropertyAmenity.bicycleRental ||
+        amenity == PropertyAmenity.boatMooring;
   }
 }
 
@@ -208,7 +344,7 @@ class _QuickFactItem extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
+                    color: context.textColorSecondary,
                   ),
             ),
             Text(
@@ -270,7 +406,7 @@ class _AmenityItem extends StatelessWidget {
         Icon(
           _getAmenityIcon(amenity),
           size: 20,
-          color: Colors.grey[700],
+          color: context.iconColor,
         ),
         const SizedBox(width: 12),
         Expanded(

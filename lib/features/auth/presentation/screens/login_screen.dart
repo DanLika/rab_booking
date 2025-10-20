@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/navigation_helpers.dart';
 import '../providers/auth_notifier.dart';
 import '../utils/form_validators.dart';
@@ -48,7 +49,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           context.go(widget.redirectTo!);
         } else {
           final authState = ref.read(authNotifierProvider);
-          if (authState.isOwner || authState.isAdmin) {
+          if (authState.isAdmin) {
+            context.goToAdminDashboard();
+          } else if (authState.isOwner) {
             context.goToOwnerDashboard();
           } else {
             context.goToHome();
@@ -127,7 +130,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Text(
                       'Prijavite se na svoj račun',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.grey[600],
+                            color: context.textColorSecondary,
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -197,12 +200,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       child: authState.isLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               height: 20,
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: context.textColorInverted,
                               ),
                             )
                           : const Text('Prijavite se'),
@@ -212,41 +215,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     // Divider
                     Row(
                       children: [
-                        Expanded(child: Divider(color: Colors.grey[300])),
+                        Expanded(child: Divider(color: context.dividerColor)),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'ili',
-                            style: TextStyle(color: Colors.grey[600]),
+                            style: TextStyle(color: context.textColorSecondary),
                           ),
                         ),
-                        Expanded(child: Divider(color: Colors.grey[300])),
+                        Expanded(child: Divider(color: context.dividerColor)),
                       ],
                     ),
                     const SizedBox(height: 24),
 
                     // Google sign in
-                    OutlinedButton.icon(
-                      onPressed: authState.isLoading ? null : _handleGoogleSignIn,
-                      icon: Image.network(
-                        'https://www.google.com/favicon.ico',
-                        width: 20,
-                        height: 20,
-                      ),
-                      label: const Text('Nastavite s Google'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: authState.isLoading ? null : _handleGoogleSignIn,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.network(
+                              'https://www.google.com/favicon.ico',
+                              width: 20,
+                              height: 20,
+                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, size: 20),
+                            ),
+                            const SizedBox(width: 8),
+                            const Flexible(
+                              child: Text(
+                                'Nastavite s Google',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 32),
 
                     // Register link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
                           'Nemate račun?',
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(color: context.textColorSecondary),
                         ),
                         TextButton(
                           onPressed: authState.isLoading

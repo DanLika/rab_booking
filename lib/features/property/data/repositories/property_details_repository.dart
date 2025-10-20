@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../shared/models/property_model.dart';
@@ -18,12 +20,24 @@ class PropertyDetailsRepository {
           .from('properties')
           .select('*')
           .eq('id', propertyId)
-          .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
-      return PropertyModel.fromJson(response as Map<String, dynamic>);
+      if (response == null) {
+        debugPrint('⚠️ Property not found: $propertyId');
+        return null;
+      }
+
+      // Check is_active in memory instead of in query (in case column doesn't exist)
+      final property = PropertyModel.fromJson(response);
+      if (!property.isActive) {
+        debugPrint('⚠️ Property is not active: $propertyId');
+        return null;
+      }
+
+      return property;
     } catch (e) {
-      return null;
+      debugPrint('❌ Error fetching property $propertyId: $e');
+      rethrow; // Rethrow to see actual error
     }
   }
 
@@ -35,13 +49,40 @@ class PropertyDetailsRepository {
           .select('*')
           .eq('property_id', propertyId)
           .eq('is_available', true)
-          .order('price_per_night', ascending: true);
+          .order('base_price', ascending: true);
 
       return (response as List)
           .map((json) => PropertyUnit.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
       return [];
+    }
+  }
+
+  /// Get single unit by ID
+  Future<PropertyUnit?> getUnitById(String unitId) async {
+    try {
+      final response = await _supabase
+          .from('units')
+          .select('*')
+          .eq('id', unitId)
+          .maybeSingle();
+
+      if (response == null) {
+        debugPrint('⚠️ Unit not found: $unitId');
+        return null;
+      }
+
+      final unit = PropertyUnit.fromJson(response);
+      if (!unit.isAvailable) {
+        debugPrint('⚠️ Unit is not available: $unitId');
+        return null;
+      }
+
+      return unit;
+    } catch (e) {
+      debugPrint('❌ Error fetching unit $unitId: $e');
+      rethrow;
     }
   }
 
@@ -120,11 +161,11 @@ class PropertyDetailsRepository {
       final nights = checkOut.difference(checkIn).inDays;
       final unit = await _supabase
           .from('units')
-          .select('price_per_night')
+          .select('base_price')
           .eq('id', unitId)
           .single();
 
-      final pricePerNight = unit['price_per_night'] as double;
+      final pricePerNight = unit['base_price'] as double;
       final subtotal = pricePerNight * nights;
       final serviceFee = subtotal * 0.10; // 10% service fee
       final cleaningFee = 30.0; // Fixed cleaning fee
@@ -132,7 +173,7 @@ class PropertyDetailsRepository {
 
       return {
         'nights': nights,
-        'price_per_night': pricePerNight,
+        'base_price': pricePerNight,
         'subtotal': subtotal,
         'service_fee': serviceFee,
         'cleaning_fee': cleaningFee,
@@ -145,6 +186,6 @@ class PropertyDetailsRepository {
 /// Provider for property details repository
 @riverpod
 PropertyDetailsRepository propertyDetailsRepository(
-    PropertyDetailsRepositoryRef ref) {
+    Ref ref) {
   return PropertyDetailsRepository(Supabase.instance.client);
 }

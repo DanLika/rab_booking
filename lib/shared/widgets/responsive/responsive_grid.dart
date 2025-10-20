@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/breakpoints.dart';
+import '../../../core/constants/app_dimensions.dart';
 
 /// Responsive grid that adapts column count based on screen size
 ///
@@ -59,9 +59,10 @@ class ResponsiveGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         int columns;
-        if (constraints.maxWidth < Breakpoints.mobile) {
+        // Use AppDimensions breakpoints
+        if (constraints.maxWidth < AppDimensions.mobile) {
           columns = mobileColumns;
-        } else if (constraints.maxWidth < Breakpoints.desktop) {
+        } else if (constraints.maxWidth < AppDimensions.tablet) {
           columns = tabletColumns;
         } else {
           columns = desktopColumns;
@@ -119,9 +120,10 @@ class ResponsiveWrap extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
 
     double spacing;
-    if (width < Breakpoints.mobile) {
+    // Use AppDimensions breakpoints
+    if (width < AppDimensions.mobile) {
       spacing = mobileSpacing;
-    } else if (width < Breakpoints.desktop) {
+    } else if (width < AppDimensions.tablet) {
       spacing = tabletSpacing;
     } else {
       spacing = desktopSpacing;

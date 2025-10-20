@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../providers/booking_calendar_notifier.dart';
+import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Advanced booking calendar widget with custom day builders
 class BookingCalendarWidget extends ConsumerStatefulWidget {
@@ -25,6 +27,10 @@ class BookingCalendarWidget extends ConsumerStatefulWidget {
 class _BookingCalendarWidgetState
     extends ConsumerState<BookingCalendarWidget> {
   DateTime _focusedDay = DateTime.now();
+  DateTime _secondMonthFocusedDay = DateTime(
+    DateTime.now().year,
+    DateTime.now().month + 1,
+  );
   CalendarFormat _calendarFormat = CalendarFormat.month;
 
   @override
@@ -32,8 +38,6 @@ class _BookingCalendarWidgetState
     final calendarState = ref.watch(
       bookingCalendarNotifierProvider(widget.unitId),
     );
-
-    final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Column(
       children: [
@@ -65,10 +69,43 @@ class _BookingCalendarWidgetState
             ),
           ),
 
-        // Calendar
-        Container(
+        // Calendar - Responsive (single month mobile, two months desktop)
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= 1024;
+
+            if (isDesktop) {
+              return _buildTwoMonthView(calendarState);
+            } else {
+              return _buildSingleMonthView(calendarState);
+            }
+          },
+        ),
+
+        // Legend
+        const SizedBox(height: 16),
+        _buildLegend(),
+
+        // Error message
+        if (calendarState.error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Text(
+              calendarState.error!,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Build single month view (mobile/tablet)
+  Widget _buildSingleMonthView(BookingCalendarState calendarState) {
+    return Container(
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
+            border: Border.all(color: context.borderColor),
             borderRadius: BorderRadius.circular(12),
           ),
           child: TableCalendar(
@@ -147,42 +184,172 @@ class _BookingCalendarWidgetState
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            calendarStyle: CalendarStyle(
-              cellMargin: const EdgeInsets.all(4),
+            calendarStyle: const CalendarStyle(
+              cellMargin: EdgeInsets.all(4),
               cellPadding: EdgeInsets.zero,
               isTodayHighlighted: false, // We handle today in custom builder
-              selectedDecoration: const BoxDecoration(),
-              selectedTextStyle: const TextStyle(),
+              selectedDecoration: BoxDecoration(),
+              selectedTextStyle: TextStyle(),
             ),
             daysOfWeekStyle: DaysOfWeekStyle(
               weekdayStyle: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
+                color: context.textColorSecondary,
               ),
               weekendStyle: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
+                color: context.textColorSecondary,
               ),
+            ),
+          ),
+        );
+  }
+
+  /// Build two-month view (desktop)
+  Widget _buildTwoMonthView(BookingCalendarState calendarState) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // First month
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: context.borderColor),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: _buildCalendarWidget(
+              focusedDay: _focusedDay,
+              calendarState: calendarState,
+              onPageChanged: (focusedDay) {
+                setState(() {
+                  _focusedDay = focusedDay;
+                });
+              },
             ),
           ),
         ),
 
-        // Legend
-        const SizedBox(height: 16),
-        _buildLegend(),
+        const SizedBox(width: 16),
 
-        // Error message
-        if (calendarState.error != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Text(
-              calendarState.error!,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-              ),
+        // Second month
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: context.borderColor),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: _buildCalendarWidget(
+              focusedDay: _secondMonthFocusedDay,
+              calendarState: calendarState,
+              onPageChanged: (focusedDay) {
+                setState(() {
+                  _secondMonthFocusedDay = focusedDay;
+                });
+              },
             ),
           ),
+        ),
       ],
+    );
+  }
+
+  /// Build calendar widget (shared between single and two-month views)
+  Widget _buildCalendarWidget({
+    required DateTime focusedDay,
+    required BookingCalendarState calendarState,
+    required Function(DateTime) onPageChanged,
+  }) {
+    return TableCalendar(
+      firstDay: DateTime.now(),
+      lastDay: DateTime.now().add(const Duration(days: 365)),
+      focusedDay: focusedDay,
+      calendarFormat: _calendarFormat,
+      startingDayOfWeek: StartingDayOfWeek.monday,
+      availableCalendarFormats: const {
+        CalendarFormat.month: 'Mjesec',
+      },
+      selectedDayPredicate: (day) {
+        return calendarState.isCheckInDay(day) ||
+            calendarState.isCheckOutDay(day);
+      },
+      onDaySelected: (selectedDay, focusedDay) {
+        // Haptic feedback
+        HapticFeedback.selectionClick();
+
+        setState(() {
+          _focusedDay = focusedDay;
+        });
+
+        final notifier = ref.read(
+          bookingCalendarNotifierProvider(widget.unitId).notifier,
+        );
+
+        notifier.selectDate(
+          selectedDay,
+          minStayNights: widget.minStayNights,
+        );
+
+        // Notify parent
+        final updatedState = ref.read(
+          bookingCalendarNotifierProvider(widget.unitId),
+        );
+        widget.onDatesSelected?.call(
+          updatedState.selectedCheckIn,
+          updatedState.selectedCheckOut,
+        );
+      },
+      onFormatChanged: (format) {
+        setState(() {
+          _calendarFormat = format;
+        });
+      },
+      onPageChanged: onPageChanged,
+      enabledDayPredicate: (day) {
+        // Disable past dates
+        if (day.isBefore(
+            DateTime.now().subtract(const Duration(days: 1)))) {
+          return false;
+        }
+
+        // Enable all future dates (booked dates will just look different)
+        return true;
+      },
+      calendarBuilders: CalendarBuilders(
+        defaultBuilder: (context, day, focusedDay) {
+          return _buildCustomDay(context, day, calendarState);
+        },
+        todayBuilder: (context, day, focusedDay) {
+          return _buildCustomDay(context, day, calendarState,
+              isToday: true);
+        },
+        disabledBuilder: (context, day, focusedDay) {
+          return _buildDisabledDay(context, day);
+        },
+      ),
+      headerStyle: HeaderStyle(
+        formatButtonVisible: false,
+        titleCentered: true,
+        titleTextStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+      ),
+      calendarStyle: const CalendarStyle(
+        cellMargin: EdgeInsets.all(4),
+        cellPadding: EdgeInsets.zero,
+        isTodayHighlighted: false, // We handle today in custom builder
+        selectedDecoration: BoxDecoration(),
+        selectedTextStyle: TextStyle(),
+      ),
+      daysOfWeekStyle: DaysOfWeekStyle(
+        weekdayStyle: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: context.textColorSecondary,
+        ),
+        weekendStyle: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: context.textColorSecondary,
+        ),
+      ),
     );
   }
 
@@ -238,49 +405,59 @@ class _BookingCalendarWidgetState
             ),
           ),
 
-          // Check-in indicator (top half - red)
+          // Check-in indicator (top half-circle with gradient)
           if (isCheckIn)
             Positioned(
               top: 0,
               left: 0,
               right: 0,
-              height: 20,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.red.shade600,
-                      Colors.red.shade400.withOpacity(0.7),
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(8),
+              child: ClipPath(
+                clipper: _TopHalfCircleClipper(),
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.topCenter,
+                      radius: 1.2,
+                      colors: [
+                        AppColors.errorDark,
+                        AppColors.error.withValues(alpha: 0.8),
+                        AppColors.errorLight.withValues(alpha: 0.5),
+                      ],
+                      stops: const [0.0, 0.6, 1.0],
+                    ),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(8),
+                    ),
                   ),
                 ),
               ),
             ),
 
-          // Check-out indicator (bottom half - red)
+          // Check-out indicator (bottom half-circle with gradient)
           if (isCheckOut)
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
-              height: 20,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.red.shade400.withOpacity(0.7),
-                      Colors.red.shade600,
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(8),
+              child: ClipPath(
+                clipper: _BottomHalfCircleClipper(),
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.bottomCenter,
+                      radius: 1.2,
+                      colors: [
+                        AppColors.errorDark,
+                        AppColors.error.withValues(alpha: 0.8),
+                        AppColors.errorLight.withValues(alpha: 0.5),
+                      ],
+                      stops: const [0.0, 0.6, 1.0],
+                    ),
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(8),
+                    ),
                   ),
                 ),
               ),
@@ -291,7 +468,7 @@ class _BookingCalendarWidgetState
             Positioned.fill(
               child: CustomPaint(
                 painter: _DiagonalStripesPainter(
-                  color: Colors.blue.shade200,
+                  color: AppColors.infoLight,
                 ),
               ),
             ),
@@ -302,13 +479,13 @@ class _BookingCalendarWidgetState
               child: Center(
                 child: Text(
                   '${day.day}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     shadows: [
                       Shadow(
                         blurRadius: 2,
-                        color: Colors.black26,
+                        color: Colors.black.withValues(alpha: 0.26),
                       ),
                     ],
                   ),
@@ -324,14 +501,14 @@ class _BookingCalendarWidgetState
     return Container(
       margin: const EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: context.surfaceVariantColor,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
         child: Text(
           '${day.day}',
-          style: TextStyle(
-            color: Colors.grey[400],
+          style: const TextStyle(
+            color: AppColors.textDisabled,
           ),
         ),
       ),
@@ -346,22 +523,24 @@ class _BookingCalendarWidgetState
     required bool isToday,
   }) {
     if (isCheckIn || isCheckOut) {
-      return Theme.of(context).primaryColor.withOpacity(0.3);
+      return context.primaryColor.withValues(alpha:0.3);
     }
 
     if (isInRange) {
-      return Theme.of(context).primaryColor.withOpacity(0.2);
+      return context.primaryColor.withValues(alpha:0.2);
     }
 
     if (isBooked) {
-      return Colors.blue.shade50;
+      return context.isDarkMode
+          ? AppColors.infoDark.withValues(alpha: 0.2)
+          : AppColors.info.withValues(alpha: 0.1);
     }
 
     if (isToday) {
-      return Colors.grey[50]!;
+      return context.surfaceVariantColor;
     }
 
-    return Colors.white;
+    return context.surfaceColor;
   }
 
   Color _getTextColor({
@@ -375,14 +554,14 @@ class _BookingCalendarWidgetState
     }
 
     if (isInRange) {
-      return Theme.of(context).primaryColor;
+      return context.primaryColor;
     }
 
     if (isBooked) {
-      return Colors.grey[500]!;
+      return context.textColorTertiary;
     }
 
-    return Colors.grey[800]!;
+    return context.textColor;
   }
 
   Widget _buildLegend() {
@@ -391,20 +570,22 @@ class _BookingCalendarWidgetState
       runSpacing: 8,
       children: [
         _LegendItem(
-          color: Theme.of(context).primaryColor.withOpacity(0.2),
+          color: context.primaryColor.withValues(alpha:0.2),
           label: 'Odabrano',
         ),
-        _LegendItem(
-          color: Colors.red.shade400,
+        const _LegendItem(
+          color: AppColors.error,
           label: 'Check-in/out',
         ),
         _LegendItem(
-          color: Colors.blue.shade50,
+          color: context.isDarkMode
+              ? AppColors.infoDark.withValues(alpha: 0.2)
+              : AppColors.info.withValues(alpha: 0.1),
           label: 'Zauzeto',
           hasStripes: true,
         ),
         _LegendItem(
-          color: Colors.grey[100]!,
+          color: context.surfaceVariantColor,
           label: 'Nedostupno',
         ),
       ],
@@ -438,7 +619,7 @@ class _LegendItem extends StatelessWidget {
           child: hasStripes
               ? CustomPaint(
                   painter: _DiagonalStripesPainter(
-                    color: Colors.blue.shade200,
+                    color: AppColors.infoLight,
                   ),
                 )
               : null,
@@ -481,4 +662,62 @@ class _DiagonalStripesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Custom clipper for top half-circle effect
+class _TopHalfCircleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final radius = size.width / 2;
+
+    // Start at top-left corner
+    path.moveTo(0, 0);
+
+    // Draw arc from left to right (top half-circle)
+    path.arcToPoint(
+      Offset(size.width, 0),
+      radius: Radius.circular(radius),
+      clockwise: false,
+    );
+
+    // Draw down and close
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+/// Custom clipper for bottom half-circle effect
+class _BottomHalfCircleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final radius = size.width / 2;
+
+    // Start at bottom-left corner
+    path.moveTo(0, size.height);
+
+    // Draw arc from left to right (bottom half-circle)
+    path.arcToPoint(
+      Offset(size.width, size.height),
+      radius: Radius.circular(radius),
+      clockwise: true,
+    );
+
+    // Draw up and close
+    path.lineTo(size.width, 0);
+    path.lineTo(0, 0);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

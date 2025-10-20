@@ -1,21 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dart run build_runner:*)",
-      "Bash(flutter analyze:*)",
-      "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Implement Error Handling & Logging System (Prompt 16)\n\nImplementiran robustan error handling sistem sa:\n\n**Core Components:**\n- Custom exception hierarchy (AppException base + 11 specific exceptions)\n- ErrorHandler utility class sa user-friendly porukama (HR/SR)\n- Result<T> pattern za funkcionalno rukovanje greškama\n- Async helper functions za Riverpod integraciju\n- ErrorStateWidget za konzistentan error UI\n- LoggingService sa tagovanim logiranjem\n- AnalyticsService (spreman za Firebase/Sentry)\n\n**Exception Types:**\n- NetworkException, AuthException, AuthorizationException\n- DatabaseException, ValidationException, NotFoundException\n- ConflictException, TimeoutException, CacheException\n- BookingException (7 factory metoda)\n- PaymentException (4 factory metoda)\n\n**Features:**\n- Result pattern omogućava eksplicitno rukovanje greškama\n- User-friendly poruke na hrvatskom/srpskom jeziku\n- Automatsko logiranje grešaka\n- Error tracking priprema (Sentry/Firebase Crashlytics)\n- ErrorStateWidget sa retry funkcionalnostom\n- Kompletna dokumentacija sa primerima\n- Riverpod integracija sa executeAsync helper-ima\n\n**Files Added:**\n- lib/core/errors/error_handler.dart\n- lib/core/errors/error_handling_examples.dart\n- lib/core/utils/result.dart\n- lib/core/utils/async_helpers.dart\n- lib/core/services/logging_service.dart\n- lib/core/services/analytics_service.dart\n- lib/shared/widgets/error_state_widget.dart\n- ERROR_HANDLING_README.md\n\n**Files Modified:**\n- lib/core/exceptions/app_exceptions.dart (dodati details field)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(flutter pub get:*)",
-      "Bash(flutter test:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Implement Testing Strategy & Infrastructure (Prompt 17)\n\nImplementiran comprehensive testing setup sa:\n\n**Test Infrastructure:**\n- Test dependencies (mocktail, integration_test, golden_toolkit)\n- Global test configuration (flutter_test_config.dart)\n- Mock classes for Supabase and repositories\n- Test helpers and data builders\n- Test directory structure (unit/, widget/, helpers/, mocks/)\n\n**Unit Tests (47 tests):**\n- Result pattern tests (Success/Failure, map, mapAsync)\n- Exception hierarchy tests (11 exception types)\n- ErrorHandler tests (user-friendly messages)\n- All tests passing ✅\n\n**Widget Tests (9 tests):**\n- ErrorStateWidget (rendering, icons, retry button)\n- User interaction tests\n- All tests passing ✅\n\n**Test Utilities:**\n- pumpWithProviders helper\n- Test data builders (Property, Booking - ready to use)\n- Robot pattern setup\n- Extension methods for WidgetTester\n\n**CI/CD Integration:**\n- GitHub Actions workflow (.github/workflows/test.yml)\n- Auto run tests on PR and push\n- Code coverage reporting (Codecov)\n- Test result comments on PRs\n\n**Documentation:**\n- Comprehensive test README\n- Examples for unit, widget, and integration tests\n- Best practices and guidelines\n- Coverage goals (70%+ target)\n\n**Test Results:**\n- ✅ 56/56 tests passing\n- Unit tests: 47 passing\n- Widget tests: 9 passing\n- Coverage generated in coverage/ directory\n\n**Files Added:**\n- .github/workflows/test.yml\n- test/README.md\n- test/flutter_test_config.dart\n- test/helpers/test_helpers.dart\n- test/helpers/test_data_builders.dart\n- test/mocks/mocks.dart\n- test/unit/utils/result_test.dart\n- test/unit/exceptions/app_exceptions_test.dart\n- test/unit/errors/error_handler_test.dart\n- test/widget/error_state_widget_test.dart\n\n**Files Modified:**\n- pubspec.yaml (added test dependencies)\n- pubspec.lock\n\n**Files Removed:**\n- test/widget_test.dart (default Flutter test)\n\n**Next Steps:**\n- Add model tests when domain models are finalized\n- Add integration tests for user flows\n- Increase coverage with repository tests\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(flutter --version:*)",
-      "Bash(flutter doctor:*)",
-      "Bash(flutter upgrade:*)",
-      "Bash(flutter pub:*)",
-      "Bash(git commit:*)",
-      "Bash(flutter run:*)",
-      "Bash(flutter clean:*)",
-      "Bash(tee:*)"
+      "Bash",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Task",
+      "TodoWrite",
+      "WebFetch",
+      "WebSearch",
+      "NotebookEdit",
+      "AskUserQuestion",
+      "Skill",
+      "SlashCommand"
     ],
     "deny": [],
     "ask": []

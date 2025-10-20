@@ -11,7 +11,7 @@ class UnitModel with _$UnitModel {
     required String id,
 
     /// Parent property ID
-    required String propertyId,
+    @JsonKey(name: 'property_id') required String propertyId,
 
     /// Unit name/title (e.g., "Apartment A1", "Studio 2")
     required String name,
@@ -20,10 +20,10 @@ class UnitModel with _$UnitModel {
     String? description,
 
     /// Price per night in EUR
-    required double pricePerNight,
+    @JsonKey(name: 'base_price') required double pricePerNight,
 
     /// Maximum number of guests
-    required int maxGuests,
+    @JsonKey(name: 'max_guests') required int maxGuests,
 
     /// Number of bedrooms
     @Default(1) int bedrooms,
@@ -32,22 +32,22 @@ class UnitModel with _$UnitModel {
     @Default(1) int bathrooms,
 
     /// Floor area in square meters
-    double? areaSqm,
+    @JsonKey(name: 'area_sqm') double? areaSqm,
 
     /// List of unit-specific image URLs
     @Default([]) List<String> images,
 
     /// Is unit available for booking
-    @Default(true) bool isAvailable,
+    @JsonKey(name: 'is_available') @Default(true) bool isAvailable,
 
     /// Minimum stay in nights
-    @Default(1) int minStayNights,
+    @JsonKey(name: 'min_stay_nights') @Default(1) int minStayNights,
 
     /// Unit creation timestamp
-    required DateTime createdAt,
+    @JsonKey(name: 'created_at') required DateTime createdAt,
 
     /// Last update timestamp
-    DateTime? updatedAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _UnitModel;
 
   const UnitModel._();

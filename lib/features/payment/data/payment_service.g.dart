@@ -6,50 +6,24 @@ part of 'payment_service.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint, type=warning
-/// Provider for payment service
+String _$paymentServiceHash() => r'ade536f3c332913b7fe0775069a87cb805be598c';
 
+/// Provider for payment service
+///
+/// Copied from [paymentService].
 @ProviderFor(paymentService)
-const paymentServiceProvider = PaymentServiceProvider._();
+final paymentServiceProvider = AutoDisposeProvider<PaymentService>.internal(
+  paymentService,
+  name: r'paymentServiceProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$paymentServiceHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
-/// Provider for payment service
-
-final class PaymentServiceProvider
-    extends $FunctionalProvider<PaymentService, PaymentService, PaymentService>
-    with $Provider<PaymentService> {
-  /// Provider for payment service
-  const PaymentServiceProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'paymentServiceProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$paymentServiceHash();
-
-  @$internal
-  @override
-  $ProviderElement<PaymentService> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  PaymentService create(Ref ref) {
-    return paymentService(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(PaymentService value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<PaymentService>(value),
-    );
-  }
-}
-
-String _$paymentServiceHash() => r'585cfeef1aa67e539b1112a267530429969ce0ca';
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PaymentServiceRef = AutoDisposeProviderRef<PaymentService>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -9,81 +9,94 @@ class AppColors {
   // PRIMARY & SECONDARY COLORS
   // ============================================================================
 
-  /// Primary brand color - Mediterranean Teal
-  /// Used for: primary actions, links, focus states
-  static const Color primary = Color(0xFF0891B2); // Cyan 600
+  /// Primary brand color - Mediterranean Azure Blue
+  /// Used for: primary actions, links, focus states, trust indicators
+  /// Inspired by the crystal-clear Adriatic Sea
+  static const Color primary = Color(0xFF0066FF); // Azure Blue
 
-  /// Primary variant - Darker teal
-  static const Color primaryDark = Color(0xFF0E7490); // Cyan 700
+  /// Primary variant - Deeper ocean blue
+  static const Color primaryDark = Color(0xFF0052CC); // Deep Azure
 
-  /// Primary light - Lighter teal
-  static const Color primaryLight = Color(0xFF06B6D4); // Cyan 500
+  /// Primary light - Sky blue
+  static const Color primaryLight = Color(0xFF3385FF); // Light Azure
 
-  /// Secondary accent color - Sunset Gold
-  /// Used for: CTAs, highlights, special offers
-  static const Color secondary = Color(0xFFF59E0B); // Amber 500
+  /// Secondary accent color - Coral Sunset
+  /// Used for: CTAs, highlights, special offers, energy elements
+  /// Inspired by Mediterranean sunsets and warmth
+  static const Color secondary = Color(0xFFFF6B6B); // Coral Red
 
   /// Secondary dark
-  static const Color secondaryDark = Color(0xFFD97706); // Amber 600
+  static const Color secondaryDark = Color(0xFFE63946); // Deep Coral
 
   /// Secondary light
-  static const Color secondaryLight = Color(0xFFFBBF24); // Amber 400
+  static const Color secondaryLight = Color(0xFFFF8E8E); // Light Coral
+
+  /// Tertiary accent color - Golden Sand
+  /// Used for: premium elements, ratings, highlights
+  /// Inspired by sun-kissed beaches
+  static const Color tertiary = Color(0xFFFFB84D); // Golden Sand
+
+  /// Tertiary dark
+  static const Color tertiaryDark = Color(0xFFFF9500); // Deep Gold
+
+  /// Tertiary light
+  static const Color tertiaryLight = Color(0xFFFFCA80); // Light Gold
 
   // ============================================================================
   // NEUTRAL COLORS - LIGHT THEME
   // ============================================================================
 
-  /// Background color - Warm off-white
-  static const Color backgroundLight = Color(0xFFFAFAF9); // Stone 50
+  /// Background color - Warm White
+  static const Color backgroundLight = Color(0xFFFAFAFA); // Warm White
 
   /// Surface color - Pure white
-  static const Color surfaceLight = Color(0xFFFFFFFF);
+  static const Color surfaceLight = Color(0xFFFFFFFF); // White
 
   /// Surface variant - Light gray
-  static const Color surfaceVariantLight = Color(0xFFF5F5F4); // Stone 100
+  static const Color surfaceVariantLight = Color(0xFFF5F5F5); // Light Gray
 
-  /// Text primary - Dark charcoal
-  static const Color textPrimaryLight = Color(0xFF1C1917); // Stone 900
+  /// Text primary - Dark Gray
+  static const Color textPrimaryLight = Color(0xFF2D3748); // Dark Gray
 
   /// Text secondary - Medium gray
-  static const Color textSecondaryLight = Color(0xFF57534E); // Stone 600
+  static const Color textSecondaryLight = Color(0xFF4A5568); // Medium Gray
 
   /// Text tertiary - Light gray
-  static const Color textTertiaryLight = Color(0xFF78716C); // Stone 500
+  static const Color textTertiaryLight = Color(0xFF718096); // Light Gray
 
   /// Border color - Light border
-  static const Color borderLight = Color(0xFFE7E5E4); // Stone 200
+  static const Color borderLight = Color(0xFFE2E8F0); // Light Border
 
   /// Divider color
-  static const Color dividerLight = Color(0xFFF5F5F4); // Stone 100
+  static const Color dividerLight = Color(0xFFF7FAFC); // Very Light Gray
 
   // ============================================================================
   // NEUTRAL COLORS - DARK THEME
   // ============================================================================
 
-  /// Background color - Deep charcoal
-  static const Color backgroundDark = Color(0xFF0C0A09); // Stone 950
+  /// Background color - Dark Gray
+  static const Color backgroundDark = Color(0xFF1A202C); // Dark Gray
 
-  /// Surface color - Dark gray
-  static const Color surfaceDark = Color(0xFF1C1917); // Stone 900
+  /// Surface color - Slightly lighter
+  static const Color surfaceDark = Color(0xFF2D3748); // Slightly lighter
 
   /// Surface variant - Medium dark
-  static const Color surfaceVariantDark = Color(0xFF292524); // Stone 800
+  static const Color surfaceVariantDark = Color(0xFF4A5568); // Medium dark
 
-  /// Text primary - Off-white
-  static const Color textPrimaryDark = Color(0xFFFAFAF9); // Stone 50
+  /// Text primary - Light Gray
+  static const Color textPrimaryDark = Color(0xFFE2E8F0); // Light Gray
 
-  /// Text secondary - Light gray
-  static const Color textSecondaryDark = Color(0xFFA8A29E); // Stone 400
+  /// Text secondary - Medium light gray
+  static const Color textSecondaryDark = Color(0xFFA0AEC0); // Medium light gray
 
   /// Text tertiary - Medium gray
-  static const Color textTertiaryDark = Color(0xFF78716C); // Stone 500
+  static const Color textTertiaryDark = Color(0xFF718096); // Medium gray
 
   /// Border color - Dark border
-  static const Color borderDark = Color(0xFF292524); // Stone 800
+  static const Color borderDark = Color(0xFF4A5568); // Dark border
 
   /// Divider color
-  static const Color dividerDark = Color(0xFF1C1917); // Stone 900
+  static const Color dividerDark = Color(0xFF2D3748); // Divider
 
   // ============================================================================
   // SEMANTIC COLORS
@@ -108,6 +121,32 @@ class AppColors {
   static const Color info = Color(0xFF3B82F6); // Blue 500
   static const Color infoLight = Color(0xFF60A5FA); // Blue 400
   static const Color infoDark = Color(0xFF2563EB); // Blue 600
+
+  // ============================================================================
+  // STATE COLORS
+  // ============================================================================
+
+  /// Disabled background color
+  static const Color disabled = Color(0xFFE5E7EB); // Gray 200
+
+  /// Disabled text color
+  static const Color textDisabled = Color(0xFF9CA3AF); // Gray 400
+
+  /// Generic text secondary color (theme-agnostic)
+  static const Color textSecondary = Color(0xFF6B7280); // Gray 500
+
+  // ============================================================================
+  // GENERIC/ALIAS COLORS (for compatibility)
+  // ============================================================================
+
+  /// Generic text primary (defaults to light theme)
+  static const Color textPrimary = textPrimaryLight;
+
+  /// Generic surface (defaults to light theme)
+  static const Color surface = surfaceLight;
+
+  /// Generic divider (defaults to light theme)
+  static const Color divider = dividerLight;
 
   // ============================================================================
   // FUNCTIONAL COLORS
@@ -136,46 +175,194 @@ class AppColors {
   // GRADIENT COLORS
   // ============================================================================
 
-  /// Primary gradient (for hero sections, featured cards)
+  /// Primary gradient - Ocean Depths (Azure blue spectrum)
+  /// Use for: hero sections, featured cards, primary backgrounds
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [
-      Color(0xFF06B6D4), // Cyan 500
-      Color(0xFF0891B2), // Cyan 600
+      Color(0xFF3385FF), // Light Azure
+      Color(0xFF0066FF), // Azure Blue
+      Color(0xFF0052CC), // Deep Azure
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Secondary gradient (for CTAs, highlights)
+  /// Secondary gradient - Coral Sunset (Warm coral spectrum)
+  /// Use for: CTAs, highlights, energy elements
   static const LinearGradient secondaryGradient = LinearGradient(
     colors: [
-      Color(0xFFFBBF24), // Amber 400
-      Color(0xFFF59E0B), // Amber 500
+      Color(0xFFFF8E8E), // Light Coral
+      Color(0xFFFF6B6B), // Coral Red
+      Color(0xFFE63946), // Deep Coral
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Sunset gradient (for special sections)
+  /// Tertiary gradient - Golden Hour (Golden sand spectrum)
+  /// Use for: premium elements, special offers, ratings
+  static const LinearGradient tertiaryGradient = LinearGradient(
+    colors: [
+      Color(0xFFFFCA80), // Light Gold
+      Color(0xFFFFB84D), // Golden Sand
+      Color(0xFFFF9500), // Deep Gold
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// Mediterranean Sunset - Multi-color premium gradient
+  /// Use for: special sections, featured content, premium cards
   static const LinearGradient sunsetGradient = LinearGradient(
     colors: [
-      Color(0xFFF59E0B), // Amber 500
-      Color(0xFFF97316), // Orange 500
-      Color(0xFFEC4899), // Pink 500
+      Color(0xFFFFB84D), // Golden Sand
+      Color(0xFFFF6B6B), // Coral Red
+      Color(0xFF0066FF), // Azure Blue
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Overlay gradient (for image overlays)
+  /// Ocean Breeze - Blue to turquoise
+  /// Use for: water-themed sections, calm backgrounds
+  static const LinearGradient oceanGradient = LinearGradient(
+    colors: [
+      Color(0xFF0066FF), // Azure Blue
+      Color(0xFF00C9FF), // Turquoise
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// Luxury Gold - Premium golden gradient
+  /// Use for: VIP elements, premium badges, special offers
+  static const LinearGradient luxuryGradient = LinearGradient(
+    colors: [
+      Color(0xFFFFCA80), // Light Gold
+      Color(0xFFFFB84D), // Golden Sand
+      Color(0xFFFF9500), // Deep Gold
+      Color(0xFFE67E00), // Burnt Gold
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// Overlay gradient (for image overlays - dark vignette)
   static const LinearGradient overlayGradient = LinearGradient(
     colors: [
-      Color(0x00000000), // Transparent
-      Color(0x80000000), // Black 50%
+      Color(0x00000000), // Transparent top
+      Color(0x80000000), // Black 50% bottom
     ],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
+
+  /// Premium overlay - Subtle gradient with primary color tint
+  /// Use for: property card images, hero section images
+  static const LinearGradient premiumOverlayGradient = LinearGradient(
+    colors: [
+      Color(0x000066FF), // Transparent Azure top
+      Color(0x33000000), // Black 20% middle
+      Color(0x80000000), // Black 50% bottom
+    ],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    stops: [0.0, 0.5, 1.0],
+  );
+
+  /// Hero gradient - Bold primary gradient for hero sections
+  static const LinearGradient heroGradient = LinearGradient(
+    colors: [
+      Color(0xFF0066FF), // Azure Blue
+      Color(0xFF0052CC), // Deep Azure
+      Color(0xFF003D99), // Darker Azure
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// CTA gradient - Energetic coral-to-gold for call-to-action buttons
+  static const LinearGradient ctaGradient = LinearGradient(
+    colors: [
+      Color(0xFFFF6B6B), // Coral Red
+      Color(0xFFFF9500), // Deep Gold
+      Color(0xFFFFB84D), // Golden Sand
+    ],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
+  /// Glass morphism gradient (for glass effect backgrounds)
+  static const LinearGradient glassGradient = LinearGradient(
+    colors: [
+      Color(0x1AFFFFFF), // 10% white top
+      Color(0x0DFFFFFF), // 5% white bottom
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// Dark glass gradient (for dark mode glass effects)
+  static const LinearGradient glassGradientDark = LinearGradient(
+    colors: [
+      Color(0x1AFFFFFF), // 10% white top
+      Color(0x0D000000), // 5% black bottom
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // ============================================================================
+  // OPACITY SCALES
+  // ============================================================================
+
+  /// Opacity scale for consistent transparency values
+  static const double opacity0 = 0.0;    // Completely transparent
+  static const double opacity5 = 0.05;   // Barely visible
+  static const double opacity10 = 0.10;  // Very light
+  static const double opacity20 = 0.20;  // Light
+  static const double opacity30 = 0.30;  // Light-medium
+  static const double opacity40 = 0.40;  // Medium
+  static const double opacity50 = 0.50;  // Half transparent
+  static const double opacity60 = 0.60;  // Semi-transparent
+  static const double opacity70 = 0.70;  // Medium-opaque
+  static const double opacity80 = 0.80;  // Almost opaque
+  static const double opacity90 = 0.90;  // Very opaque
+  static const double opacity100 = 1.0;  // Completely solid
+
+  // ============================================================================
+  // SURFACE ELEVATION COLORS (Material Design 3 inspired)
+  // ============================================================================
+
+  /// Surface elevation levels for light theme (subtle brightness variations)
+  static const Color elevation0Light = surfaceLight;        // Base surface (0dp)
+  static const Color elevation1Light = Color(0xFFFEFEFE);  // +1dp (cards)
+  static const Color elevation2Light = Color(0xFFFDFDFD);  // +2dp (floating buttons)
+  static const Color elevation3Light = Color(0xFFFCFCFC);  // +4dp (modals)
+  static const Color elevation4Light = Color(0xFFFBFBFB);  // +8dp (dialogs)
+
+  /// Surface elevation levels for dark theme (brighter on elevation)
+  static const Color elevation0Dark = surfaceDark;          // Base surface (0dp)
+  static const Color elevation1Dark = Color(0xFF2F3642);   // +1dp (cards)
+  static const Color elevation2Dark = Color(0xFF353C49);   // +2dp (floating buttons)
+  static const Color elevation3Dark = Color(0xFF3B4250);   // +4dp (modals)
+  static const Color elevation4Dark = Color(0xFF424957);   // +8dp (dialogs)
+
+  // ============================================================================
+  // SCRIM & BACKDROP COLORS
+  // ============================================================================
+
+  /// Scrim color for modal backdrops (light)
+  static const Color scrimLight = Color(0x66000000); // 40% black
+
+  /// Scrim color for modal backdrops (dark)
+  static const Color scrimDark = Color(0x99000000); // 60% black
+
+  /// Blur backdrop color for glass morphism (light)
+  static const Color blurBackdropLight = Color(0x1AFFFFFF); // 10% white
+
+  /// Blur backdrop color for glass morphism (dark)
+  static const Color blurBackdropDark = Color(0x1A000000); // 10% black
 
   // ============================================================================
   // HELPER METHODS

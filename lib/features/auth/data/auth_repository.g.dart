@@ -6,50 +6,24 @@ part of 'auth_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint, type=warning
-/// Provider for auth repository
+String _$authRepositoryHash() => r'b9113114874a44d746f3b71d30ba28ae369a441f';
 
+/// Provider for auth repository
+///
+/// Copied from [authRepository].
 @ProviderFor(authRepository)
-const authRepositoryProvider = AuthRepositoryProvider._();
+final authRepositoryProvider = AutoDisposeProvider<AuthRepository>.internal(
+  authRepository,
+  name: r'authRepositoryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$authRepositoryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
-/// Provider for auth repository
-
-final class AuthRepositoryProvider
-    extends $FunctionalProvider<AuthRepository, AuthRepository, AuthRepository>
-    with $Provider<AuthRepository> {
-  /// Provider for auth repository
-  const AuthRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'authRepositoryProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$authRepositoryHash();
-
-  @$internal
-  @override
-  $ProviderElement<AuthRepository> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  AuthRepository create(Ref ref) {
-    return authRepository(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AuthRepository value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AuthRepository>(value),
-    );
-  }
-}
-
-String _$authRepositoryHash() => r'f38558f6a952c9635ef6e6739fe87d3a01cedea1';
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AuthRepositoryRef = AutoDisposeProviderRef<AuthRepository>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

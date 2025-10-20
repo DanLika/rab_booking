@@ -1,7 +1,9 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/services/logging_service.dart';
 import '../domain/models/payment_intent_model.dart';
 import '../domain/models/payment_record.dart';
 
@@ -101,7 +103,7 @@ class PaymentService {
           .select()
           .single();
 
-      return PaymentRecord.fromJson(response as Map<String, dynamic>);
+      return PaymentRecord.fromJson(response);
     } catch (e) {
       throw Exception('Failed to save payment record: $e');
     }
@@ -133,7 +135,7 @@ class PaymentService {
       });
     } catch (e) {
       // Log error but don't throw - this is a cleanup operation
-      print('Error handling payment failure: $e');
+      LoggingService.logError('Error handling payment failure', e);
     }
   }
 
@@ -151,6 +153,32 @@ class PaymentService {
           .toList();
     } catch (e) {
       throw Exception('Failed to fetch payment records: $e');
+    }
+  }
+
+  /// Process refund via Supabase Edge Function
+  Future<Map<String, dynamic>> processRefund({
+    required String bookingId,
+    String? reason,
+  }) async {
+    try {
+      final response = await _supabase.functions.invoke(
+        'process-refund',
+        body: {
+          'bookingId': bookingId,
+          'reason': reason ?? 'Cancellation requested by customer',
+        },
+      );
+
+      if (response.status != 200) {
+        final errorData = response.data as Map<String, dynamic>?;
+        throw Exception(errorData?['error'] ?? 'Failed to process refund');
+      }
+
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      LoggingService.logError('Error processing refund', e);
+      throw Exception('Error processing refund: $e');
     }
   }
 
@@ -173,6 +201,6 @@ class PaymentService {
 
 /// Provider for payment service
 @riverpod
-PaymentService paymentService(PaymentServiceRef ref) {
+PaymentService paymentService(Ref ref) {
   return PaymentService(Supabase.instance.client);
 }

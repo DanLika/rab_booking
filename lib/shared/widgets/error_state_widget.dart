@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/constants/app_dimensions.dart';
 
 /// Global error state widget with retry functionality
 ///
@@ -18,25 +20,27 @@ class ErrorStateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(AppDimensions.spaceM), // 24px from design system
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon ?? Icons.error_outline,
-              size: 64,
-              color: Colors.red,
+              size: AppDimensions.iconXL, // 48px from design system
+              color: isDark ? AppColors.errorLight : AppColors.error,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppDimensions.spaceS), // 16px from design system
             Text(
               message,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: AppDimensions.spaceM), // 24px from design system
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),

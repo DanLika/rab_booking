@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'analytics_service.dart';
 
 /// Service for logging messages throughout the application
 ///
@@ -22,11 +23,11 @@ class LoggingService {
   }
 
   /// Log an error message with optional error object and stack trace
-  static void logError(
+  static Future<void> logError(
     String message, [
     dynamic error,
     StackTrace? stackTrace,
-  ]) {
+  ]) async {
     log(message, tag: 'ERROR');
     if (error != null) {
       debugPrint('Error details: $error');
@@ -36,9 +37,16 @@ class LoggingService {
     }
 
     // In production, send to error tracking service
-    if (kReleaseMode) {
-      // TODO: Send to error tracking service (Sentry, Firebase Crashlytics)
-      // await Sentry.captureException(error, stackTrace: stackTrace);
+    if (kReleaseMode && error != null) {
+      // Send to error tracking services (Sentry, Firebase Crashlytics)
+      await AnalyticsService.reportError(
+        error,
+        stackTrace,
+        extra: {
+          'source': 'LoggingService',
+          'log_message': message,
+        },
+      );
     }
   }
 

@@ -6,15 +6,15 @@ part of 'property_unit.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_PropertyUnit _$PropertyUnitFromJson(
+_$PropertyUnitImpl _$$PropertyUnitImplFromJson(
   Map<String, dynamic> json,
-) => _PropertyUnit(
+) => _$PropertyUnitImpl(
   id: json['id'] as String,
-  propertyId: json['propertyId'] as String,
+  propertyId: json['property_id'] as String,
   name: json['name'] as String,
   description: json['description'] as String?,
-  pricePerNight: (json['pricePerNight'] as num).toDouble(),
-  maxGuests: (json['maxGuests'] as num).toInt(),
+  pricePerNight: (json['base_price'] as num).toDouble(),
+  maxGuests: (json['max_guests'] as num).toInt(),
   bedrooms: (json['bedrooms'] as num).toInt(),
   bathrooms: (json['bathrooms'] as num).toInt(),
   area: (json['area'] as num).toDouble(),
@@ -24,35 +24,35 @@ _PropertyUnit _$PropertyUnitFromJson(
   images:
       (json['images'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
-  coverImage: json['coverImage'] as String?,
+  coverImage: json['cover_image'] as String?,
   quantity: (json['quantity'] as num?)?.toInt() ?? 1,
-  minStayNights: (json['minStayNights'] as num?)?.toInt() ?? 1,
-  isAvailable: json['isAvailable'] as bool? ?? true,
-  createdAt: json['createdAt'] == null
+  minStayNights: (json['min_stay_nights'] as num?)?.toInt() ?? 1,
+  isAvailable: json['is_available'] as bool? ?? true,
+  createdAt: json['created_at'] == null
       ? null
-      : DateTime.parse(json['createdAt'] as String),
-  updatedAt: json['updatedAt'] == null
+      : DateTime.parse(json['created_at'] as String),
+  updatedAt: json['updated_at'] == null
       ? null
-      : DateTime.parse(json['updatedAt'] as String),
+      : DateTime.parse(json['updated_at'] as String),
 );
 
-Map<String, dynamic> _$PropertyUnitToJson(_PropertyUnit instance) =>
+Map<String, dynamic> _$$PropertyUnitImplToJson(_$PropertyUnitImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'propertyId': instance.propertyId,
+      'property_id': instance.propertyId,
       'name': instance.name,
       'description': instance.description,
-      'pricePerNight': instance.pricePerNight,
-      'maxGuests': instance.maxGuests,
+      'base_price': instance.pricePerNight,
+      'max_guests': instance.maxGuests,
       'bedrooms': instance.bedrooms,
       'bathrooms': instance.bathrooms,
       'area': instance.area,
       'amenities': instance.amenities,
       'images': instance.images,
-      'coverImage': instance.coverImage,
+      'cover_image': instance.coverImage,
       'quantity': instance.quantity,
-      'minStayNights': instance.minStayNights,
-      'isAvailable': instance.isAvailable,
-      'createdAt': instance.createdAt?.toIso8601String(),
-      'updatedAt': instance.updatedAt?.toIso8601String(),
+      'min_stay_nights': instance.minStayNights,
+      'is_available': instance.isAvailable,
+      'created_at': instance.createdAt?.toIso8601String(),
+      'updated_at': instance.updatedAt?.toIso8601String(),
     };

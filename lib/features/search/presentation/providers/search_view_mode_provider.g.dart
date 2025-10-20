@@ -6,64 +6,27 @@ part of 'search_view_mode_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint, type=warning
-/// Search view mode provider
-
-@ProviderFor(SearchViewModeNotifier)
-const searchViewModeProvider = SearchViewModeNotifierProvider._();
-
-/// Search view mode provider
-final class SearchViewModeNotifierProvider
-    extends $NotifierProvider<SearchViewModeNotifier, SearchViewMode> {
-  /// Search view mode provider
-  const SearchViewModeNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'searchViewModeProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$searchViewModeNotifierHash();
-
-  @$internal
-  @override
-  SearchViewModeNotifier create() => SearchViewModeNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SearchViewMode value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<SearchViewMode>(value),
-    );
-  }
-}
-
 String _$searchViewModeNotifierHash() =>
-    r'8cd1eba0ea6c00244ccda22a4f285f330bc94c99';
+    r'3950e9475918a48f47853f1a99015ab80b323466';
 
 /// Search view mode provider
+///
+/// Copied from [SearchViewModeNotifier].
+@ProviderFor(SearchViewModeNotifier)
+final searchViewModeNotifierProvider =
+    AutoDisposeNotifierProvider<
+      SearchViewModeNotifier,
+      SearchViewMode
+    >.internal(
+      SearchViewModeNotifier.new,
+      name: r'searchViewModeNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$searchViewModeNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
-abstract class _$SearchViewModeNotifier extends $Notifier<SearchViewMode> {
-  SearchViewMode build();
-  @$mustCallSuper
-  @override
-  void runBuild() {
-    final created = build();
-    final ref = this.ref as $Ref<SearchViewMode, SearchViewMode>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<SearchViewMode, SearchViewMode>,
-              SearchViewMode,
-              Object?,
-              Object?
-            >;
-    element.handleValue(ref, created);
-  }
-}
+typedef _$SearchViewModeNotifier = AutoDisposeNotifier<SearchViewMode>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

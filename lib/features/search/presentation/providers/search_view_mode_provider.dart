@@ -2,10 +2,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'search_view_mode_provider.g.dart';
 
-/// View mode for search results (grid or list)
+/// View mode for search results (grid, list, or map)
 enum SearchViewMode {
   grid,
-  list;
+  list,
+  map;
 
   String get displayName {
     switch (this) {
@@ -13,6 +14,8 @@ enum SearchViewMode {
         return 'Grid';
       case SearchViewMode.list:
         return 'List';
+      case SearchViewMode.map:
+        return 'Map';
     }
   }
 }
@@ -26,7 +29,11 @@ class SearchViewModeNotifier extends _$SearchViewModeNotifier {
   }
 
   void toggle() {
-    state = state == SearchViewMode.grid ? SearchViewMode.list : SearchViewMode.grid;
+    state = switch (state) {
+      SearchViewMode.grid => SearchViewMode.list,
+      SearchViewMode.list => SearchViewMode.map,
+      SearchViewMode.map => SearchViewMode.grid,
+    };
   }
 
   void setMode(SearchViewMode mode) {

@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../data/repositories/property_details_repository.dart';
@@ -8,7 +9,7 @@ part 'property_details_provider.g.dart';
 /// Property details provider (fetch by ID)
 @riverpod
 Future<PropertyModel?> propertyDetails(
-  PropertyDetailsRef ref,
+  Ref ref,
   String propertyId,
 ) async {
   final repository = ref.watch(propertyDetailsRepositoryProvider);
@@ -18,11 +19,21 @@ Future<PropertyModel?> propertyDetails(
 /// Units provider (fetch units for a property)
 @riverpod
 Future<List<PropertyUnit>> propertyUnits(
-  PropertyUnitsRef ref,
+  Ref ref,
   String propertyId,
 ) async {
   final repository = ref.watch(propertyDetailsRepositoryProvider);
   return await repository.getUnitsForProperty(propertyId);
+}
+
+/// Single unit provider (fetch unit by ID)
+@riverpod
+Future<PropertyUnit?> unitDetails(
+  Ref ref,
+  String unitId,
+) async {
+  final repository = ref.watch(propertyDetailsRepositoryProvider);
+  return await repository.getUnitById(unitId);
 }
 
 /// Selected dates provider for booking
@@ -102,7 +113,7 @@ class SelectedGuestsNotifier extends _$SelectedGuestsNotifier {
 /// Booking calculation provider (calculates total price)
 @riverpod
 Future<Map<String, dynamic>?> bookingCalculation(
-  BookingCalculationRef ref,
+  Ref ref,
   String unitId,
 ) async {
   final dates = ref.watch(selectedDatesNotifierProvider);
@@ -123,7 +134,7 @@ Future<Map<String, dynamic>?> bookingCalculation(
 /// Blocked dates provider for a unit
 @riverpod
 Future<List<DateTime>> blockedDates(
-  BlockedDatesRef ref,
+  Ref ref,
   String unitId,
 ) async {
   final repository = ref.watch(propertyDetailsRepositoryProvider);
@@ -133,7 +144,7 @@ Future<List<DateTime>> blockedDates(
 /// Unit availability provider
 @riverpod
 Future<bool> unitAvailability(
-  UnitAvailabilityRef ref,
+  Ref ref,
   String unitId,
 ) async {
   final dates = ref.watch(selectedDatesNotifierProvider);

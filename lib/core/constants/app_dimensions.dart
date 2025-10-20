@@ -4,35 +4,35 @@ class AppDimensions {
   AppDimensions._(); // Private constructor
 
   // ============================================================================
-  // SPACING SCALE (based on 4px grid)
+  // SPACING SCALE (based on 8px grid system)
   // ============================================================================
 
-  /// Extra extra small spacing (2px)
-  static const double spaceXXS = 2.0;
+  /// Base spacing unit - 8px (all spacing should be multiples of this)
+  static const double baseUnit = 8.0;
 
-  /// Extra small spacing (4px)
-  static const double spaceXS = 4.0;
+  /// XXS spacing: 4px (0.5 × base unit)
+  static const double spaceXXS = 4.0;
 
-  /// Small spacing (8px)
-  static const double spaceS = 8.0;
+  /// XS spacing: 8px (1 × base unit)
+  static const double spaceXS = 8.0;
 
-  /// Medium spacing (12px)
-  static const double spaceM = 12.0;
+  /// S spacing: 16px (2 × base unit)
+  static const double spaceS = 16.0;
 
-  /// Large spacing (16px)
-  static const double spaceL = 16.0;
+  /// M spacing: 24px (3 × base unit)
+  static const double spaceM = 24.0;
 
-  /// Extra large spacing (24px)
-  static const double spaceXL = 24.0;
+  /// L spacing: 32px (4 × base unit)
+  static const double spaceL = 32.0;
 
-  /// Extra extra large spacing (32px)
-  static const double spaceXXL = 32.0;
+  /// XL spacing: 48px (6 × base unit)
+  static const double spaceXL = 48.0;
 
-  /// Extra extra extra large spacing (48px)
-  static const double spaceXXXL = 48.0;
+  /// XXL spacing: 64px (8 × base unit)
+  static const double spaceXXL = 64.0;
 
-  /// Huge spacing (64px)
-  static const double spaceHuge = 64.0;
+  /// XXXL spacing: 96px (12 × base unit)
+  static const double spaceXXXL = 96.0;
 
   // ============================================================================
   // BREAKPOINTS (for responsive design)
@@ -48,47 +48,60 @@ class AppDimensions {
   static const double desktop = 1440;
 
   // ============================================================================
-  // BORDER RADIUS
+  // BORDER RADIUS (Modern, premium values)
   // ============================================================================
 
-  /// Extra small radius (4px)
-  static const double radiusXS = 4.0;
+  /// Extra small radius (6px) - For micro elements, badges
+  static const double radiusXS = 6.0;
 
-  /// Small radius (8px)
-  static const double radiusS = 8.0;
+  /// Small radius (12px) - For buttons, inputs, chips
+  static const double radiusS = 12.0;
 
-  /// Medium radius (12px)
-  static const double radiusM = 12.0;
+  /// Medium radius (20px) - For cards, modals, panels
+  static const double radiusM = 20.0;
 
-  /// Large radius (16px)
-  static const double radiusL = 16.0;
+  /// Large radius (24px) - For hero sections, featured cards
+  static const double radiusL = 24.0;
 
-  /// Extra large radius (20px)
-  static const double radiusXL = 20.0;
+  /// Extra large radius (32px) - For premium elements, images
+  static const double radiusXL = 32.0;
 
-  /// Full/circular radius (999px)
+  /// Full/circular radius (999px) - For pills, avatars
   static const double radiusFull = 999.0;
+
+  // ============================================================================
+  // BORDER WIDTHS
+  // ============================================================================
+
+  /// Default border width (1px)
+  static const double borderWidth = 1.0;
+
+  /// Focused border width (2px)
+  static const double borderWidthFocus = 2.0;
+
+  /// Thick border width (3px)
+  static const double borderWidthThick = 3.0;
 
   // ============================================================================
   // COMPONENT SIZES
   // ============================================================================
 
-  /// Button height (default)
+  /// Button height (default) - 48px
   static const double buttonHeight = 48.0;
 
-  /// Button height (small)
+  /// Button height (small) - 40px
   static const double buttonHeightSmall = 40.0;
 
-  /// Button height (large)
+  /// Button height (large) - 56px
   static const double buttonHeightLarge = 56.0;
 
-  /// Input field height
-  static const double inputHeight = 56.0;
+  /// Input field height - 48px
+  static const double inputHeight = 48.0;
 
-  /// App bar height (standard)
-  static const double appBarHeight = 56.0;
+  /// App bar height - 64px
+  static const double appBarHeight = 64.0;
 
-  /// Bottom navigation bar height
+  /// Bottom navigation bar height - 64px
   static const double bottomNavHeight = 64.0;
 
   /// Icon size (small)
@@ -102,6 +115,13 @@ class AppDimensions {
 
   /// Icon size (extra large)
   static const double iconSizeXL = 48.0;
+
+  // Icon size aliases (shorter names for convenience)
+  static const double iconXS = 16.0;
+  static const double iconS = 20.0;
+  static const double iconM = 24.0;
+  static const double iconL = 32.0;
+  static const double iconXL = 48.0;
 
   /// Avatar size (small)
   static const double avatarSizeS = 32.0;
@@ -145,6 +165,73 @@ class AppDimensions {
 
   /// Max bottom sheet height
   static const double maxBottomSheetHeight = 0.9; // 90% of screen height
+
+  // ============================================================================
+  // 12-COLUMN GRID SYSTEM
+  // ============================================================================
+
+  /// Total number of grid columns (standard 12-column grid)
+  static const int gridColumns = 12;
+
+  /// Grid gutter size (mobile) - 16px
+  static const double gridGutterMobile = spaceS;
+
+  /// Grid gutter size (tablet) - 24px
+  static const double gridGutterTablet = spaceM;
+
+  /// Grid gutter size (desktop) - 32px
+  static const double gridGutterDesktop = spaceL;
+
+  /// Grid margin (mobile) - 16px
+  static const double gridMarginMobile = spaceS;
+
+  /// Grid margin (tablet) - 24px
+  static const double gridMarginTablet = spaceM;
+
+  /// Grid margin (desktop) - 48px
+  static const double gridMarginDesktop = spaceXL;
+
+  // ============================================================================
+  // CONTAINER MAX-WIDTHS (responsive containers)
+  // ============================================================================
+
+  /// Small container max-width (forms, narrow content)
+  static const double containerXS = 480.0;
+
+  /// Medium container max-width (content sections)
+  static const double containerS = 640.0;
+
+  /// Default container max-width (main content)
+  static const double containerM = 768.0;
+
+  /// Large container max-width (wide layouts)
+  static const double containerL = 1024.0;
+
+  /// Extra large container max-width (full-width sections)
+  static const double containerXL = 1280.0;
+
+  /// Maximum container max-width (ultra-wide screens)
+  static const double containerXXL = 1536.0;
+
+  // ============================================================================
+  // SECTION PADDING SCALES (responsive section spacing)
+  // ============================================================================
+
+  /// Section padding (mobile) - compact: 32px vertical, 16px horizontal
+  static const double sectionPaddingVerticalMobile = spaceL;
+  static const double sectionPaddingHorizontalMobile = spaceS;
+
+  /// Section padding (tablet) - medium: 48px vertical, 32px horizontal
+  static const double sectionPaddingVerticalTablet = spaceXL;
+  static const double sectionPaddingHorizontalTablet = spaceL;
+
+  /// Section padding (desktop) - dramatic: 80px vertical, 48px horizontal
+  static const double sectionPaddingVerticalDesktop = 80.0;
+  static const double sectionPaddingHorizontalDesktop = spaceXL;
+
+  /// Section padding (large desktop) - extra dramatic: 120px vertical, 64px horizontal
+  static const double sectionPaddingVerticalLarge = 120.0;
+  static const double sectionPaddingHorizontalLarge = spaceXXL;
 
   // ============================================================================
   // ELEVATION (Material Design 3 style)

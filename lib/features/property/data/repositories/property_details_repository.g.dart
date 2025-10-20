@@ -6,57 +6,27 @@ part of 'property_details_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint, type=warning
-/// Provider for property details repository
-
-@ProviderFor(propertyDetailsRepository)
-const propertyDetailsRepositoryProvider = PropertyDetailsRepositoryProvider._();
-
-/// Provider for property details repository
-
-final class PropertyDetailsRepositoryProvider
-    extends
-        $FunctionalProvider<
-          PropertyDetailsRepository,
-          PropertyDetailsRepository,
-          PropertyDetailsRepository
-        >
-    with $Provider<PropertyDetailsRepository> {
-  /// Provider for property details repository
-  const PropertyDetailsRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'propertyDetailsRepositoryProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$propertyDetailsRepositoryHash();
-
-  @$internal
-  @override
-  $ProviderElement<PropertyDetailsRepository> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  PropertyDetailsRepository create(Ref ref) {
-    return propertyDetailsRepository(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(PropertyDetailsRepository value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<PropertyDetailsRepository>(value),
-    );
-  }
-}
-
 String _$propertyDetailsRepositoryHash() =>
-    r'd986be8b4b352771b70937e26017824a2010dc3b';
+    r'c0d8c34c572077057b797dc033fc355f1786a6a9';
+
+/// Provider for property details repository
+///
+/// Copied from [propertyDetailsRepository].
+@ProviderFor(propertyDetailsRepository)
+final propertyDetailsRepositoryProvider =
+    AutoDisposeProvider<PropertyDetailsRepository>.internal(
+      propertyDetailsRepository,
+      name: r'propertyDetailsRepositoryProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$propertyDetailsRepositoryHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PropertyDetailsRepositoryRef =
+    AutoDisposeProviderRef<PropertyDetailsRepository>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

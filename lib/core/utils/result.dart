@@ -56,7 +56,7 @@ extension ResultExtension<T> on Result<T> {
         if (e is AppException) {
           return Failure(e);
         }
-        return Failure(DatabaseException('Unexpected error during transformation'));
+        return const Failure(DatabaseException('Unexpected error during transformation'));
       }
     }
     return Failure((this as Failure<T>).exception);
@@ -72,7 +72,7 @@ extension ResultExtension<T> on Result<T> {
         if (e is AppException) {
           return Failure(e);
         }
-        return Failure(DatabaseException('Unexpected error during async transformation'));
+        return const Failure(DatabaseException('Unexpected error during async transformation'));
       }
     }
     return Failure((this as Failure<T>).exception);

@@ -155,7 +155,7 @@ class SupabaseUnitRepository implements UnitRepository {
       final response = await _client
           .from(_tableName)
           .update({
-            'price_per_night': pricePerNight,
+            'base_price': pricePerNight,
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('id', id)
@@ -205,7 +205,7 @@ class SupabaseUnitRepository implements UnitRepository {
         query = query.eq('property_id', propertyId);
       }
       if (maxPrice != null) {
-        query = query.lte('price_per_night', maxPrice);
+        query = query.lte('base_price', maxPrice);
       }
       if (minGuests != null) {
         query = query.gte('max_guests', minGuests);
@@ -215,7 +215,7 @@ class SupabaseUnitRepository implements UnitRepository {
       }
 
       // Order by price (lowest first)
-      final response = await query.order('price_per_night', ascending: true);
+      final response = await query.order('base_price', ascending: true);
 
       return (response as List)
           .map((json) => UnitModel.fromJson(json))

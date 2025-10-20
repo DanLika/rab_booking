@@ -12,7 +12,7 @@ class PropertyModel with _$PropertyModel {
     required String id,
 
     /// Owner user ID
-    required String ownerId,
+    @JsonKey(name: 'owner_id') required String ownerId,
 
     /// Property name/title
     required String name,
@@ -20,8 +20,16 @@ class PropertyModel with _$PropertyModel {
     /// Detailed description
     required String description,
 
+    /// Property type (villa, apartment, studio, etc.)
+    @JsonKey(name: 'property_type')
+    @Default(PropertyType.apartment)
+    PropertyType propertyType,
+
     /// Location (city, address, etc.)
     required String location,
+
+    /// Street address
+    String? address,
 
     /// Latitude coordinate
     double? latitude,
@@ -36,22 +44,37 @@ class PropertyModel with _$PropertyModel {
     @Default([]) List<String> images,
 
     /// Main cover image URL
-    String? coverImage,
+    @JsonKey(name: 'cover_image') String? coverImage,
 
     /// Average rating (0-5)
     @Default(0.0) double rating,
 
     /// Number of reviews
-    @Default(0) int reviewCount,
+    @JsonKey(name: 'review_count') @Default(0) int reviewCount,
+
+    /// Number of units (apartments/rooms) in this property
+    @JsonKey(name: 'units_count') @Default(0) int unitsCount,
 
     /// Property creation timestamp
-    required DateTime createdAt,
+    @JsonKey(name: 'created_at') required DateTime createdAt,
 
     /// Last update timestamp
-    DateTime? updatedAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
 
     /// Is property active/published
-    @Default(true) bool isActive,
+    @JsonKey(name: 'is_active') @Default(true) bool isActive,
+
+    /// Price per night in EUR
+    @JsonKey(name: 'base_price') double? pricePerNight,
+
+    /// Maximum number of guests
+    @JsonKey(name: 'max_guests') int? maxGuests,
+
+    /// Number of bedrooms
+    int? bedrooms,
+
+    /// Number of bathrooms
+    int? bathrooms,
   }) = _PropertyModel;
 
   const PropertyModel._();
@@ -93,4 +116,19 @@ class PropertyModel with _$PropertyModel {
 
   /// Get location display name (can be enhanced with parsing)
   String get locationDisplay => location;
+
+  /// Get formatted price (e.g., "€120")
+  String get formattedPrice {
+    if (pricePerNight == null) return 'Cijena na upit';
+    return '€${pricePerNight!.toStringAsFixed(0)}';
+  }
+
+  /// Get formatted price with "/noć" suffix
+  String get formattedPricePerNight {
+    if (pricePerNight == null) return 'Cijena na upit';
+    return '€${pricePerNight!.toStringAsFixed(0)}/noć';
+  }
+
+  /// Check if property has complete info (for quick info display)
+  bool get hasCompleteInfo => maxGuests != null && bedrooms != null && bathrooms != null;
 }

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:rab_booking/features/booking/domain/models/user_booking.dart';
-import 'package:rab_booking/features/booking/domain/models/booking_status.dart';
+import '../../../../core/constants/app_dimensions.dart';
+import '../../domain/models/user_booking.dart';
+import '../../domain/models/booking_status.dart';
 
 class BookingCard extends StatelessWidget {
   final UserBooking booking;
   final VoidCallback onTap;
+  final VoidCallback? onCancelRequested;
 
   const BookingCard({
     super.key,
     required this.booking,
     required this.onTap,
+    this.onCancelRequested,
   });
 
   @override
@@ -21,7 +24,7 @@ class BookingCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 12)
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -31,7 +34,7 @@ class BookingCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius (upgraded from 8)
                     child: Image.network(
                       booking.propertyImage,
                       width: 100,
@@ -185,7 +188,7 @@ class BookingCard extends StatelessWidget {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.red[50],
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusXS), // 6px modern radius (upgraded from 4)
                   ),
                   child: Row(
                     children: [
@@ -201,6 +204,27 @@ class BookingCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ],
+              // Cancel button (only for upcoming confirmed bookings)
+              if (booking.canCancel && onCancelRequested != null) ...[
+                const SizedBox(height: 12),
+                const Divider(height: 1),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: onCancelRequested,
+                    icon: Icon(Icons.cancel_outlined, size: 18, color: Colors.red[700]),
+                    label: Text(
+                      'Cancel Booking',
+                      style: TextStyle(color: Colors.red[700]),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Colors.red[300]!),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
                   ),
                 ),
               ],
@@ -233,13 +257,17 @@ class BookingCard extends StatelessWidget {
         chipColor = Colors.blue[100]!;
         textColor = Colors.blue[900]!;
         break;
+      case BookingStatus.blocked:
+        chipColor = Colors.grey[300]!;
+        textColor = Colors.grey[900]!;
+        break;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: chipColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
       ),
       child: Text(
         booking.status.displayName,

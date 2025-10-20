@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/enums.dart';
 import '../models/property_model.dart';
 import '../../core/utils/navigation_helpers.dart';
+import '../../core/utils/web_hover_utils.dart';
+import '../../core/services/haptic_service.dart';
+import '../../features/favorites/presentation/providers/favorites_provider.dart';
+import 'animations/animations.dart';
 
 /// Reusable property card widget with image carousel
-class PropertyCard extends StatefulWidget {
+class PropertyCard extends ConsumerStatefulWidget {
   const PropertyCard({
     required this.property,
     this.showFavoriteButton = true,
@@ -16,10 +22,10 @@ class PropertyCard extends StatefulWidget {
   final bool showFavoriteButton;
 
   @override
-  State<PropertyCard> createState() => _PropertyCardState();
+  ConsumerState<PropertyCard> createState() => _PropertyCardState();
 }
 
-class _PropertyCardState extends State<PropertyCard> {
+class _PropertyCardState extends ConsumerState<PropertyCard> {
   int _currentImageIndex = 0;
   final PageController _pageController = PageController();
 
@@ -35,33 +41,43 @@ class _PropertyCardState extends State<PropertyCard> {
       images.add(widget.property.coverImage!);
     }
     images.addAll(widget.property.images);
-    return images.isEmpty
-        ? ['https://via.placeholder.com/400x300?text=No+Image']
-        : images;
+    // Return empty list if no images - will be handled by errorWidget
+    return images;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: () => context.goToPropertyDetails(widget.property.id),
+    return HoverEffect(
+      enableScale: true,
+      enableElevation: true,
+      scale: 1.02,
+      normalElevation: 2,
+      hoverElevation: 8,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+      onTap: () async {
+        await HapticService.buttonPress();
+        if (context.mounted) {
+          context.goToPropertyDetails(widget.property.id);
+        }
+      },
+      child: Card(
+        elevation: 2,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image carousel
-            _buildImageCarousel(),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image carousel with Hero animation
+                _buildImageCarousel(),
 
-            // Property info
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                // Property info
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   // Name
                   Text(
                     widget.property.name,
@@ -96,6 +112,30 @@ class _PropertyCardState extends State<PropertyCard> {
                   ),
                   const SizedBox(height: 12),
 
+                  // Quick info icons (guests, bedrooms, bathrooms)
+                  if (widget.property.hasCompleteInfo)
+                    Row(
+                      children: [
+                        _QuickInfoIcon(
+                          icon: Icons.person_outline,
+                          value: widget.property.maxGuests!,
+                        ),
+                        const SizedBox(width: 16),
+                        _QuickInfoIcon(
+                          icon: Icons.bed_outlined,
+                          value: widget.property.bedrooms!,
+                        ),
+                        const SizedBox(width: 16),
+                        _QuickInfoIcon(
+                          icon: Icons.bathroom_outlined,
+                          value: widget.property.bathrooms!,
+                        ),
+                      ],
+                    ),
+
+                  if (widget.property.hasCompleteInfo)
+                    const SizedBox(height: 12),
+
                   // Rating and review count
                   if (widget.property.rating > 0)
                     Row(
@@ -118,6 +158,18 @@ class _PropertyCardState extends State<PropertyCard> {
                       ],
                     ),
 
+                  if (widget.property.rating > 0)
+                    const SizedBox(height: 12),
+
+                  // Price per night
+                  Text(
+                    widget.property.formattedPricePerNight,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                  ),
+
                   const SizedBox(height: 12),
 
                   // Amenities preview
@@ -130,21 +182,69 @@ class _PropertyCardState extends State<PropertyCard> {
                           .map((amenity) => _AmenityChip(amenity: amenity))
                           .toList(),
                     ),
-                ],
-              ),
+
+                  const SizedBox(height: 16),
+
+                  // View Details button
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius (upgraded from 8)
+                      border: Border.all(
+                        color: Theme.of(context).primaryColor,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Pogledaj detalje',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: Theme.of(context).primaryColor,
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                  ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
       ),
     );
   }
 
   Widget _buildImageCarousel() {
-    return SizedBox(
-      height: 200,
+    // If no images, show placeholder
+    if (_images.isEmpty) {
+      return AspectRatio(
+        aspectRatio: 16 / 9, // 16:9 aspect ratio
+        child: Container(
+          color: Colors.grey[200],
+          child: const Center(
+            child: Icon(Icons.villa, size: 60, color: Colors.grey),
+          ),
+        ),
+      );
+    }
+
+    return AspectRatio(
+      aspectRatio: 16 / 9, // 16:9 aspect ratio for all images
       child: Stack(
         children: [
-          // Image PageView
+          // Image PageView with Hero animation
           PageView.builder(
             controller: _pageController,
             onPageChanged: (index) {
@@ -152,19 +252,21 @@ class _PropertyCardState extends State<PropertyCard> {
             },
             itemCount: _images.length,
             itemBuilder: (context, index) {
-              return CachedNetworkImage(
-                imageUrl: _images[index],
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey[200],
-                  child: const Center(
-                    child: CircularProgressIndicator(),
+              // Use Hero animation for the first (cover) image
+              final heroTag = 'property_${widget.property.id}_image_$index';
+              return Hero(
+                tag: heroTag,
+                child: CachedNetworkImage(
+                  imageUrl: _images[index],
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => const SkeletonLoader(
+                    borderRadius: 0,
                   ),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: Colors.grey[200],
-                  child: const Center(
-                    child: Icon(Icons.villa, size: 60, color: Colors.grey),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: Icon(Icons.villa, size: 60, color: Colors.grey),
+                    ),
                   ),
                 ),
               );
@@ -176,17 +278,7 @@ class _PropertyCardState extends State<PropertyCard> {
             Positioned(
               top: 12,
               right: 12,
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                radius: 18,
-                child: IconButton(
-                  icon: const Icon(Icons.favorite_border, size: 18),
-                  onPressed: () {
-                    // TODO: Implement favorite functionality
-                  },
-                  padding: EdgeInsets.zero,
-                ),
-              ),
+              child: _FavoriteButton(propertyId: widget.property.id),
             ),
 
           // Dots indicator (bottom center)
@@ -207,13 +299,86 @@ class _PropertyCardState extends State<PropertyCard> {
                       shape: BoxShape.circle,
                       color: _currentImageIndex == index
                           ? Colors.white
-                          : Colors.white.withOpacity(0.5),
+                          : Colors.white.withValues(alpha:0.5),
                     ),
                   ),
                 ),
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Quick info icon widget (guests, bedrooms, bathrooms)
+class _QuickInfoIcon extends StatelessWidget {
+  const _QuickInfoIcon({
+    required this.icon,
+    required this.value,
+  });
+
+  final IconData icon;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: Colors.grey[600]),
+        const SizedBox(width: 4),
+        Text(
+          value.toString(),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+}
+
+/// Favorite button widget with state management and animation
+class _FavoriteButton extends ConsumerWidget {
+  const _FavoriteButton({required this.propertyId});
+
+  final String propertyId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final favoritesNotifier = ref.watch(favoritesNotifierProvider);
+    final isFavorite = favoritesNotifier.maybeWhen(
+      data: (favorites) => favorites.contains(propertyId),
+      orElse: () => false,
+    );
+
+    return GestureDetector(
+      onTap: () async {
+        await HapticService.lightImpact();
+
+        try {
+          await ref
+              .read(favoritesNotifierProvider.notifier)
+              .toggleFavorite(propertyId);
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Greška: $e')),
+            );
+          }
+        }
+      },
+      child: AnimatedScale(
+        scale: isFavorite ? 1.1 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        child: CircleAvatar(
+          backgroundColor: Colors.white.withValues(alpha: 0.95),
+          radius: 18,
+          child: Icon(
+            isFavorite ? Icons.favorite : Icons.favorite_border,
+            size: 20,
+            color: isFavorite ? Colors.red : Colors.grey[600],
+          ),
+        ),
       ),
     );
   }
@@ -259,8 +424,8 @@ class _AmenityChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(6),
+        color: Theme.of(context).primaryColor.withValues(alpha:0.1),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXS), // 6px modern radius
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

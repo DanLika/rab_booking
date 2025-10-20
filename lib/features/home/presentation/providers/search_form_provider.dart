@@ -57,7 +57,7 @@ class SearchFormNotifier extends _$SearchFormNotifier {
 
   /// Increment adults
   void incrementAdults() {
-    if (state.adults < 20) {
+    if (state.totalGuests < 16 && state.adults < 16) {
       state = state.copyWith(adults: state.adults + 1);
     }
   }
@@ -71,7 +71,7 @@ class SearchFormNotifier extends _$SearchFormNotifier {
 
   /// Increment children
   void incrementChildren() {
-    if (state.children < 10) {
+    if (state.totalGuests < 16) {
       state = state.copyWith(children: state.children + 1);
     }
   }
@@ -85,7 +85,7 @@ class SearchFormNotifier extends _$SearchFormNotifier {
 
   /// Increment infants
   void incrementInfants() {
-    if (state.infants < 5) {
+    if (state.totalGuests < 16) {
       state = state.copyWith(infants: state.infants + 1);
     }
   }

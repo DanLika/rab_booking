@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/models/date_range.dart';
-import '../../../property/data/repositories/property_details_repository.dart';
 
 part 'booking_calendar_notifier.g.dart';
 

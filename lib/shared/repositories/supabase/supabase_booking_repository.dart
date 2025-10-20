@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/booking_model.dart';
 import '../booking_repository.dart';
-import '../../../core/constants/enums.dart';
+import '../../../features/booking/domain/models/booking_status.dart';
 import '../../../core/exceptions/app_exceptions.dart';
 
 /// Supabase implementation of BookingRepository

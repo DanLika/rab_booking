@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../core/constants/enums.dart';
+import '../../features/booking/domain/models/booking_status.dart';
 
 part 'booking_model.freezed.dart';
 part 'booking_model.g.dart';
@@ -12,46 +12,46 @@ class BookingModel with _$BookingModel {
     required String id,
 
     /// Unit being booked
-    required String unitId,
+    @JsonKey(name: 'unit_id') required String unitId,
 
     /// Guest user ID
-    required String guestId,
+    @JsonKey(name: 'guest_id') required String guestId,
 
     /// Check-in date
-    required DateTime checkIn,
+    @JsonKey(name: 'check_in') required DateTime checkIn,
 
     /// Check-out date
-    required DateTime checkOut,
+    @JsonKey(name: 'check_out') required DateTime checkOut,
 
     /// Booking status
     required BookingStatus status,
 
     /// Total price in EUR
-    required double totalPrice,
+    @JsonKey(name: 'total_price') required double totalPrice,
 
     /// Amount paid (advance payment - 20%)
-    required double paidAmount,
+    @JsonKey(name: 'paid_amount') required double paidAmount,
 
     /// Number of guests
-    required int guestCount,
+    @JsonKey(name: 'guest_count') required int guestCount,
 
     /// Special requests or notes
     String? notes,
 
     /// Stripe payment intent ID
-    String? paymentIntentId,
+    @JsonKey(name: 'payment_intent_id') String? paymentIntentId,
 
     /// Booking creation timestamp
-    required DateTime createdAt,
+    @JsonKey(name: 'created_at') required DateTime createdAt,
 
     /// Last update timestamp
-    DateTime? updatedAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
 
     /// Cancellation reason (if cancelled)
-    String? cancellationReason,
+    @JsonKey(name: 'cancellation_reason') String? cancellationReason,
 
     /// Cancelled at timestamp
-    DateTime? cancelledAt,
+    @JsonKey(name: 'cancelled_at') DateTime? cancelledAt,
   }) = _BookingModel;
 
   const BookingModel._();

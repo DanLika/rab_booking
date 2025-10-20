@@ -45,10 +45,19 @@ class SearchFormState with _$SearchFormState {
       return 'Dolazak - Odlazak';
     }
 
-    final checkIn = '${checkInDate!.day}.${checkInDate!.month}.';
-    final checkOut = '${checkOutDate!.day}.${checkOutDate!.month}.';
+    final checkIn = _formatDate(checkInDate!);
+    final checkOut = _formatDate(checkOutDate!);
 
     return '$checkIn - $checkOut';
+  }
+
+  /// Format date to "22 Oct" format
+  static String _formatDate(DateTime date) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${date.day} ${months[date.month - 1]}';
   }
 
   /// Get number of nights

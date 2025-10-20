@@ -6,64 +6,24 @@ part of 'booking_flow_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint, type=warning
-/// Booking flow notifier
-
-@ProviderFor(BookingFlowNotifier)
-const bookingFlowProvider = BookingFlowNotifierProvider._();
-
-/// Booking flow notifier
-final class BookingFlowNotifierProvider
-    extends $NotifierProvider<BookingFlowNotifier, BookingFlowState> {
-  /// Booking flow notifier
-  const BookingFlowNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'bookingFlowProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$bookingFlowNotifierHash();
-
-  @$internal
-  @override
-  BookingFlowNotifier create() => BookingFlowNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(BookingFlowState value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<BookingFlowState>(value),
-    );
-  }
-}
-
 String _$bookingFlowNotifierHash() =>
-    r'7e83aae7b3a64d4fba4eb4256d4792a0166f881a';
+    r'941adedadb49de6145d4dd529e90976f244d8787';
 
 /// Booking flow notifier
+///
+/// Copied from [BookingFlowNotifier].
+@ProviderFor(BookingFlowNotifier)
+final bookingFlowNotifierProvider =
+    AutoDisposeNotifierProvider<BookingFlowNotifier, BookingFlowState>.internal(
+      BookingFlowNotifier.new,
+      name: r'bookingFlowNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$bookingFlowNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
-abstract class _$BookingFlowNotifier extends $Notifier<BookingFlowState> {
-  BookingFlowState build();
-  @$mustCallSuper
-  @override
-  void runBuild() {
-    final created = build();
-    final ref = this.ref as $Ref<BookingFlowState, BookingFlowState>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<BookingFlowState, BookingFlowState>,
-              BookingFlowState,
-              Object?,
-              Object?
-            >;
-    element.handleValue(ref, created);
-  }
-}
+typedef _$BookingFlowNotifier = AutoDisposeNotifier<BookingFlowState>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

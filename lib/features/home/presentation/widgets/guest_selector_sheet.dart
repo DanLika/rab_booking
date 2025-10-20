@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/theme_extensions.dart';
 import '../providers/search_form_provider.dart';
 
 /// Guest selector bottom sheet
@@ -28,7 +29,7 @@ class GuestSelectorSheet extends ConsumerWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: context.colorScheme.outline.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -42,6 +43,14 @@ class GuestSelectorSheet extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
             ),
+            const SizedBox(height: 8),
+            // Max guests info
+            Text(
+              'Maksimalno 16 gostiju',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+            ),
             const SizedBox(height: 24),
 
             // Adults selector
@@ -52,6 +61,7 @@ class GuestSelectorSheet extends ConsumerWidget {
               onIncrement: formNotifier.incrementAdults,
               onDecrement: formNotifier.decrementAdults,
               minValue: 1,
+              canIncrement: formState.totalGuests < 16,
             ),
             const Divider(height: 32),
 
@@ -63,6 +73,7 @@ class GuestSelectorSheet extends ConsumerWidget {
               onIncrement: formNotifier.incrementChildren,
               onDecrement: formNotifier.decrementChildren,
               minValue: 0,
+              canIncrement: formState.totalGuests < 16,
             ),
             const Divider(height: 32),
 
@@ -74,6 +85,7 @@ class GuestSelectorSheet extends ConsumerWidget {
               onIncrement: formNotifier.incrementInfants,
               onDecrement: formNotifier.decrementInfants,
               minValue: 0,
+              canIncrement: formState.totalGuests < 16,
             ),
             const SizedBox(height: 32),
 
@@ -98,7 +110,7 @@ class GuestSelectorSheet extends ConsumerWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: context.colorScheme.scrim.withValues(alpha: 0.0),
       builder: (context) => const GuestSelectorSheet(),
     );
   }
@@ -113,6 +125,7 @@ class _GuestRow extends StatelessWidget {
     required this.onIncrement,
     required this.onDecrement,
     required this.minValue,
+    this.canIncrement = true,
   });
 
   final String label;
@@ -121,6 +134,7 @@ class _GuestRow extends StatelessWidget {
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
   final int minValue;
+  final bool canIncrement;
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +157,7 @@ class _GuestRow extends StatelessWidget {
               Text(
                 description,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
+                      color: context.colorScheme.onSurfaceVariant,
                     ),
               ),
             ],
@@ -159,7 +173,7 @@ class _GuestRow extends StatelessWidget {
               icon: const Icon(Icons.remove_circle_outline),
               color: canDecrement
                   ? Theme.of(context).primaryColor
-                  : Colors.grey[300],
+                  : context.colorScheme.outline.withValues(alpha: 0.3),
               iconSize: 32,
             ),
 
@@ -177,9 +191,11 @@ class _GuestRow extends StatelessWidget {
 
             // Increment button
             IconButton(
-              onPressed: onIncrement,
+              onPressed: canIncrement ? onIncrement : null,
               icon: const Icon(Icons.add_circle_outline),
-              color: Theme.of(context).primaryColor,
+              color: canIncrement
+                  ? Theme.of(context).primaryColor
+                  : context.colorScheme.outline.withValues(alpha: 0.3),
               iconSize: 32,
             ),
           ],

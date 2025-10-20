@@ -40,8 +40,7 @@ class AuthorizationException extends AppException {
 
 /// Validation exceptions (invalid input data)
 class ValidationException extends AppException {
-  const ValidationException(String message, {String? code, dynamic details})
-      : super(message, code: code ?? 'VALIDATION_ERROR', details: details);
+  const ValidationException(super.message, {super.code = 'VALIDATION_ERROR', super.details});
 
   /// Create validation exception with field-specific error
   factory ValidationException.field(String field, String error) {
@@ -86,8 +85,7 @@ class TimeoutException extends AppException {
 
 /// Booking-specific exceptions
 class BookingException extends AppException {
-  const BookingException(String message, {String? code, dynamic details})
-      : super(message, code: code ?? 'BOOKING_ERROR', details: details);
+  const BookingException(super.message, {super.code = 'BOOKING_ERROR', super.details});
 
   /// Unit is not available for selected dates
   factory BookingException.unitNotAvailable() {
@@ -148,8 +146,7 @@ class BookingException extends AppException {
 
 /// Payment exceptions
 class PaymentException extends AppException {
-  const PaymentException(String message, {String? code, dynamic details})
-      : super(message, code: code ?? 'PAYMENT_ERROR', details: details);
+  const PaymentException(super.message, {super.code = 'PAYMENT_ERROR', super.details});
 
   /// Payment failed
   factory PaymentException.paymentFailed([String? reason]) {

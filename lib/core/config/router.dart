@@ -8,20 +8,46 @@ import '../providers/auth_state_provider.dart';
 import '../utils/navigation_helpers.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/search/presentation/screens/search_results_screen.dart';
+import '../../features/search/presentation/screens/saved_searches_screen.dart';
 import '../../features/property/presentation/screens/property_details_screen.dart';
+import '../../features/property/presentation/screens/review_form_screen.dart';
 import '../../features/booking/presentation/screens/booking_screen.dart';
+import '../../features/booking/presentation/screens/booking_review_screen.dart';
 import '../../features/booking/presentation/screens/user_bookings_screen.dart';
 import '../../features/booking/presentation/screens/booking_detail_screen.dart';
+import '../../features/booking/presentation/screens/booking_success_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
-import '../../features/owner/presentation/screens/owner_dashboard_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/auth/presentation/screens/reset_password_screen.dart';
+import '../../features/auth/presentation/screens/email_verification_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/owner_dashboard_screen.dart';
 import '../../features/owner/presentation/screens/property_management_screen.dart';
 import '../../features/payment/presentation/screens/payment_confirmation_screen.dart';
+import '../../features/payment/presentation/screens/payment_success_screen.dart';
+import '../../features/payment/presentation/screens/payment_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
-import '../../features/bookings/presentation/screens/my_bookings_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
+import '../../features/favorites/presentation/screens/favorites_screen.dart';
+import '../../features/property/data/repositories/reviews_repository.dart'; // For PropertyReview type
 import '../../shared/presentation/widgets/app_scaffold_with_nav.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../features/design_system_demo/design_system_demo_screen.dart';
+import '../../features/legal/presentation/screens/terms_conditions_screen.dart';
+import '../../features/legal/presentation/screens/privacy_policy_screen.dart';
+import '../../features/support/presentation/screens/help_faq_screen.dart';
+import '../../features/support/presentation/screens/contact_screen.dart';
+import '../../features/about/presentation/screens/about_us_screen.dart';
+import '../../features/about/presentation/screens/how_it_works_screen.dart';
+import '../../features/property/presentation/screens/all_reviews_screen.dart';
+
+// Admin screens
+import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../../features/admin/presentation/screens/admin_users_screen.dart';
+import '../../features/admin/presentation/screens/admin_properties_screen.dart';
+import '../../features/admin/presentation/screens/admin_bookings_screen.dart';
+import '../../features/admin/presentation/screens/admin_analytics_screen.dart';
+
 
 /// GoRouter provider with auth integration
 final routerProvider = Provider<GoRouter>((ref) {
@@ -59,6 +85,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       final protectedRoutes = [
         '/booking/',
         '/bookings/',
+        '/payment/',
+        '/favorites',
+        '/notifications',
+        '/saved-searches',
         Routes.paymentConfirm,
         Routes.profile,
         Routes.myBookings,
@@ -129,7 +159,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: Routes.search,
             name: 'search',
             pageBuilder: (context, state) {
-              final query = state.uri.queryParameters['q'];
               final location = state.uri.queryParameters['location'];
               final guestsStr = state.uri.queryParameters['guests'];
               final checkIn = state.uri.queryParameters['checkIn'];
@@ -140,9 +169,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               return CustomTransitionPage(
                 key: state.pageKey,
                 child: SearchResultsScreen(
-                  query: query,
                   location: location,
-                  maxGuests: guests,
+                  guests: guests,
                   checkIn: checkIn,
                   checkOut: checkOut,
                 ),
@@ -168,6 +196,33 @@ final routerProvider = Provider<GoRouter>((ref) {
               transitionsBuilder: _fadeTransition,
             ),
           ),
+          GoRoute(
+            path: '/notifications',
+            name: 'notifications',
+            pageBuilder: (context, state) => CustomTransitionPage(
+              key: state.pageKey,
+              child: const NotificationsScreen(),
+              transitionsBuilder: _fadeTransition,
+            ),
+          ),
+          GoRoute(
+            path: '/favorites',
+            name: 'favorites',
+            pageBuilder: (context, state) => CustomTransitionPage(
+              key: state.pageKey,
+              child: const FavoritesScreen(),
+              transitionsBuilder: _fadeTransition,
+            ),
+          ),
+          GoRoute(
+            path: '/saved-searches',
+            name: 'savedSearches',
+            pageBuilder: (context, state) => CustomTransitionPage(
+              key: state.pageKey,
+              child: const SavedSearchesScreen(),
+              transitionsBuilder: _fadeTransition,
+            ),
+          ),
         ],
       ),
 
@@ -180,6 +235,27 @@ final routerProvider = Provider<GoRouter>((ref) {
           return CustomTransitionPage(
             key: state.pageKey,
             child: PropertyDetailsScreen(propertyId: propertyId),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+
+      // All reviews for a property
+      GoRoute(
+        path: '/property/:propertyId/reviews',
+        name: 'allReviews',
+        pageBuilder: (context, state) {
+          final propertyId = state.pathParameters['propertyId']!;
+          final extra = state.extra as Map<String, dynamic>?;
+
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: AllReviewsScreen(
+              propertyId: propertyId,
+              propertyName: extra?['propertyName'] ?? 'Property',
+              rating: extra?['rating'] ?? 0.0,
+              reviewCount: extra?['reviewCount'] ?? 0,
+            ),
             transitionsBuilder: _slideTransition,
           );
         },
@@ -199,6 +275,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      // Booking review
+      GoRoute(
+        path: Routes.bookingReview,
+        name: 'bookingReview',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const BookingReviewScreen(),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+
       // Booking detail
       GoRoute(
         path: '/bookings/:id',
@@ -213,6 +300,89 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      // Booking success
+      GoRoute(
+        path: '/booking/success/:bookingReference',
+        name: 'bookingSuccess',
+        pageBuilder: (context, state) {
+          final bookingReference = state.pathParameters['bookingReference']!;
+          final extra = state.extra as Map<String, dynamic>?;
+
+          if (extra == null) {
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: const Scaffold(
+                body: Center(child: Text('Invalid booking data')),
+              ),
+              transitionsBuilder: _fadeTransition,
+            );
+          }
+
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: BookingSuccessScreen(
+              bookingReference: bookingReference,
+              propertyName: extra['propertyName'] as String,
+              propertyImage: extra['propertyImage'] as String?,
+              propertyLocation: extra['propertyLocation'] as String,
+              checkIn: DateTime.parse(extra['checkIn'] as String),
+              checkOut: DateTime.parse(extra['checkOut'] as String),
+              guests: extra['guests'] as int,
+              nights: extra['nights'] as int,
+              totalAmount: (extra['totalAmount'] as num).toDouble(),
+              currencySymbol: extra['currencySymbol'] as String? ?? '\$',
+              confirmationEmail: extra['confirmationEmail'] as String,
+            ),
+            transitionsBuilder: _scaleTransition,
+          );
+        },
+      ),
+
+      // Review form
+      GoRoute(
+        path: '/booking/:bookingId/review',
+        name: 'reviewForm',
+        pageBuilder: (context, state) {
+          final bookingId = state.pathParameters['bookingId']!;
+          final extra = state.extra as Map<String, dynamic>?;
+
+          if (extra == null) {
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: const Scaffold(
+                body: Center(child: Text('Invalid review form data')),
+              ),
+              transitionsBuilder: _slideTransition,
+            );
+          }
+
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: ReviewFormScreen(
+              bookingId: bookingId,
+              propertyId: extra['propertyId'] as String,
+              propertyName: extra['propertyName'] as String,
+              existingReview: extra['existingReview'] as PropertyReview?,
+            ),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+
+      // Payment screen (Stripe payment)
+      GoRoute(
+        path: '/payment/:bookingId',
+        name: 'payment',
+        pageBuilder: (context, state) {
+          final bookingId = state.pathParameters['bookingId']!;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: PaymentScreen(bookingId: bookingId),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+
       // Payment confirmation
       GoRoute(
         path: Routes.paymentConfirm,
@@ -222,7 +392,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           return CustomTransitionPage(
             key: state.pageKey,
             child: PaymentConfirmationScreen(bookingId: bookingId),
-            transitionsBuilder: _fadeTransition,
+            transitionsBuilder: _scaleTransition,
+          );
+        },
+      ),
+
+      // Payment success
+      GoRoute(
+        path: '/payment/success/:bookingId',
+        name: 'paymentSuccess',
+        pageBuilder: (context, state) {
+          final bookingId = state.pathParameters['bookingId']!;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: PaymentSuccessScreen(bookingId: bookingId),
+            transitionsBuilder: _scaleTransition,
           );
         },
       ),
@@ -252,6 +436,36 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      GoRoute(
+        path: '/auth/forgot-password',
+        name: 'forgotPassword',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const ForgotPasswordScreen(),
+          transitionsBuilder: _fadeTransition,
+        ),
+      ),
+      GoRoute(
+        path: '/auth/reset-password',
+        name: 'resetPassword',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const ResetPasswordScreen(),
+          transitionsBuilder: _fadeTransition,
+        ),
+      ),
+      GoRoute(
+        path: '/auth/verify-email',
+        name: 'emailVerification',
+        pageBuilder: (context, state) {
+          final email = state.uri.queryParameters['email'];
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: EmailVerificationScreen(email: email),
+            transitionsBuilder: _fadeTransition,
+          );
+        },
+      ),
 
       // Owner routes
       GoRoute(
@@ -276,6 +490,53 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      // Admin routes
+      GoRoute(
+        path: Routes.adminDashboard,
+        name: 'adminDashboard',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const AdminDashboardScreen(),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/users',
+        name: 'adminUsers',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const AdminUsersScreen(),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/properties',
+        name: 'adminProperties',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const AdminPropertiesScreen(),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/bookings',
+        name: 'adminBookings',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const AdminBookingsScreen(),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/analytics',
+        name: 'adminAnalytics',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const AdminAnalyticsScreen(),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+
       // Design System Demo (for development)
       GoRoute(
         path: '/design-system-demo',
@@ -283,9 +544,68 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const DesignSystemDemoScreen(),
+          transitionsBuilder: _rotationTransition,
+        ),
+      ),
+
+      // Legal & Support routes
+      GoRoute(
+        path: Routes.termsConditions,
+        name: 'termsConditions',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const TermsConditionsScreen(),
           transitionsBuilder: _fadeTransition,
         ),
       ),
+      GoRoute(
+        path: Routes.privacyPolicy,
+        name: 'privacyPolicy',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const PrivacyPolicyScreen(),
+          transitionsBuilder: _fadeTransition,
+        ),
+      ),
+      GoRoute(
+        path: Routes.helpFaq,
+        name: 'helpFaq',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const HelpFaqScreen(),
+          transitionsBuilder: _fadeTransition,
+        ),
+      ),
+      GoRoute(
+        path: Routes.contact,
+        name: 'contact',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const ContactScreen(),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+      GoRoute(
+        path: Routes.aboutUs,
+        name: 'aboutUs',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const AboutUsScreen(),
+          transitionsBuilder: _fadeTransition,
+        ),
+      ),
+      GoRoute(
+        path: Routes.howItWorks,
+        name: 'howItWorks',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const HowItWorksScreen(),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+
+      // Note: /notifications, /favorites, and /saved-searches are registered
+      // inside the ShellRoute to show bottom navigation
 
       // 404 route
       GoRoute(
@@ -313,79 +633,130 @@ bool _shouldShowBottomNav(String path) {
   return bottomNavRoutes.any((route) => path == route);
 }
 
-/// Custom page transitions
+/// Custom page transitions with premium effects
+/// Duration: 300ms, Curve: easeInOut (as per spec)
 
-/// Fade transition
+/// Enhanced fade transition with subtle slide
 Widget _fadeTransition(
   BuildContext context,
   Animation<double> animation,
   Animation<double> secondaryAnimation,
   Widget child,
 ) {
+  // Fade with subtle slide from bottom (300ms, easeInOut)
+  const curve = Curves.easeInOut;
+
+  final curvedAnimation = CurvedAnimation(
+    parent: animation,
+    curve: curve,
+  );
+
+  final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(curvedAnimation);
+  final slideAnimation = Tween<Offset>(
+    begin: const Offset(0.0, 0.05),
+    end: Offset.zero,
+  ).animate(curvedAnimation);
+
   return FadeTransition(
-    opacity: animation.drive(CurveTween(curve: Curves.easeInOut)),
-    child: child,
+    opacity: fadeAnimation,
+    child: SlideTransition(
+      position: slideAnimation,
+      child: child,
+    ),
   );
 }
 
-/// Slide transition (from right)
+/// Enhanced slide transition with fade (from right) - 300ms, easeInOut
 Widget _slideTransition(
   BuildContext context,
   Animation<double> animation,
   Animation<double> secondaryAnimation,
   Widget child,
 ) {
-  const begin = Offset(1.0, 0.0);
+  const begin = Offset(0.3, 0.0); // Reduced from 1.0 for smoother feel
   const end = Offset.zero;
-  const curve = Curves.easeInOutCubic;
+  const curve = Curves.easeInOut; // As per spec
 
-  final tween = Tween(begin: begin, end: end).chain(
-    CurveTween(curve: curve),
+  final curvedAnimation = CurvedAnimation(
+    parent: animation,
+    curve: curve,
   );
 
-  return SlideTransition(
-    position: animation.drive(tween),
-    child: child,
+  final slideTween = Tween(begin: begin, end: end);
+  final fadeTween = Tween<double>(begin: 0.0, end: 1.0);
+
+  // Secondary animation for page being exited (fade out slightly)
+  final secondaryCurvedAnimation = CurvedAnimation(
+    parent: secondaryAnimation,
+    curve: curve,
+  );
+
+  final secondaryFadeTween = Tween<double>(begin: 1.0, end: 0.9);
+
+  return FadeTransition(
+    opacity: secondaryCurvedAnimation.drive(secondaryFadeTween),
+    child: FadeTransition(
+      opacity: curvedAnimation.drive(fadeTween),
+      child: SlideTransition(
+        position: curvedAnimation.drive(slideTween),
+        child: child,
+      ),
+    ),
   );
 }
 
-/// Slide transition (from bottom)
-Widget _slideUpTransition(
-  BuildContext context,
-  Animation<double> animation,
-  Animation<double> secondaryAnimation,
-  Widget child,
-) {
-  const begin = Offset(0.0, 1.0);
-  const end = Offset.zero;
-  const curve = Curves.easeOutCubic;
-
-  final tween = Tween(begin: begin, end: end).chain(
-    CurveTween(curve: curve),
-  );
-
-  return SlideTransition(
-    position: animation.drive(tween),
-    child: child,
-  );
-}
-
-/// Scale transition
+/// Scale transition (for modal-like pages)
 Widget _scaleTransition(
   BuildContext context,
   Animation<double> animation,
   Animation<double> secondaryAnimation,
   Widget child,
 ) {
-  return ScaleTransition(
-    scale: animation.drive(
-      Tween<double>(begin: 0.8, end: 1.0).chain(
-        CurveTween(curve: Curves.easeOutCubic),
-      ),
-    ),
-    child: FadeTransition(
-      opacity: animation,
+  const curve = Curves.easeOutBack;
+
+  final curvedAnimation = CurvedAnimation(
+    parent: animation,
+    curve: curve,
+  );
+
+  final scaleTween = Tween<double>(begin: 0.8, end: 1.0);
+  final fadeTween = Tween<double>(begin: 0.0, end: 1.0);
+
+  return FadeTransition(
+    opacity: curvedAnimation.drive(fadeTween),
+    child: ScaleTransition(
+      scale: curvedAnimation.drive(scaleTween),
       child: child,
+    ),
+  );
+}
+
+/// Rotation + fade transition (for special pages)
+Widget _rotationTransition(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  const curve = Curves.easeInOutCubic;
+
+  final curvedAnimation = CurvedAnimation(
+    parent: animation,
+    curve: curve,
+  );
+
+  final rotationTween = Tween<double>(begin: -0.05, end: 0.0); // Slight rotation
+  final fadeTween = Tween<double>(begin: 0.0, end: 1.0);
+  final scaleTween = Tween<double>(begin: 0.9, end: 1.0);
+
+  return FadeTransition(
+    opacity: curvedAnimation.drive(fadeTween),
+    child: ScaleTransition(
+      scale: curvedAnimation.drive(scaleTween),
+      child: RotationTransition(
+        turns: curvedAnimation.drive(rotationTween),
+        child: child,
+      ),
     ),
   );
 }

@@ -57,6 +57,16 @@ class SearchFiltersNotifier extends _$SearchFiltersNotifier {
     state = state.copyWith(propertyTypes: current);
   }
 
+  /// Update property type (single string, for saved searches)
+  void updatePropertyType(String? type) {
+    state = state.copyWith(propertyType: type);
+  }
+
+  /// Update minimum rating
+  void updateMinRating(double? rating) {
+    state = state.copyWith(minRating: rating);
+  }
+
   /// Toggle amenity
   void toggleAmenity(String amenity) {
     final current = List<String>.from(state.amenities);

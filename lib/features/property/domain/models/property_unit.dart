@@ -8,22 +8,22 @@ part 'property_unit.g.dart';
 class PropertyUnit with _$PropertyUnit {
   const factory PropertyUnit({
     required String id,
-    required String propertyId,
+    @JsonKey(name: 'property_id') required String propertyId,
     required String name,
     String? description,
-    required double pricePerNight,
-    required int maxGuests,
+    @JsonKey(name: 'base_price') required double pricePerNight,
+    @JsonKey(name: 'max_guests') required int maxGuests,
     required int bedrooms,
     required int bathrooms,
     required double area,
     @Default([]) List<String> amenities,
     @Default([]) List<String> images,
-    String? coverImage,
+    @JsonKey(name: 'cover_image') String? coverImage,
     @Default(1) int quantity,
-    @Default(1) int minStayNights,
-    @Default(true) bool isAvailable,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    @JsonKey(name: 'min_stay_nights') @Default(1) int minStayNights,
+    @JsonKey(name: 'is_available') @Default(true) bool isAvailable,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _PropertyUnit;
 
   factory PropertyUnit.fromJson(Map<String, dynamic> json) =>

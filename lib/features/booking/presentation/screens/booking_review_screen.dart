@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/enums.dart';
+import '../../../../core/constants/breakpoints.dart';
+import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/navigation_helpers.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../auth/presentation/utils/form_validators.dart';
+import '../../domain/models/booking_status.dart';
 import '../providers/booking_flow_notifier.dart';
 
 /// Booking review screen with guest details and price breakdown
@@ -25,6 +27,7 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _specialRequestsController = TextEditingController();
+  bool _acceptedTerms = false;
 
   @override
   void dispose() {
@@ -41,6 +44,17 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
       return;
     }
 
+    // Check if terms are accepted
+    if (!_acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Morate prihvatiti uslove korištenja'),
+          backgroundColor: context.warningColor,
+        ),
+      );
+      return;
+    }
+
     final bookingFlow = ref.read(bookingFlowNotifierProvider.notifier);
     final state = ref.read(bookingFlowNotifierProvider);
     final authState = ref.read(authNotifierProvider);
@@ -49,9 +63,9 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
     if (authState.user == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Morate biti prijavljeni za rezervaciju'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Morate biti prijavljeni za rezervaciju'),
+            backgroundColor: context.errorColor,
           ),
         );
         context.goToLogin();
@@ -105,20 +119,108 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
       bookingFlow.setError(e.toString());
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Greška: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showBookingErrorDialog(e.toString());
       }
     }
+  }
+
+  /// Show booking error dialog with retry option
+  void _showBookingErrorDialog(String errorMessage) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: context.errorColor, size: 28),
+            const SizedBox(width: 12),
+            const Text('Greška pri rezervaciji'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_getUserFriendlyErrorMessage(errorMessage)),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.surfaceColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, size: 20, color: context.primaryColor),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Molimo provjerite vašu internet vezu i pokušajte ponovo.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textColorSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.goBack();
+            },
+            child: const Text('Odustani'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _proceedToPayment();
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Pokušaj ponovo'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get user-friendly error message for booking errors
+  String _getUserFriendlyErrorMessage(String error) {
+    final errorLower = error.toLowerCase();
+
+    if (errorLower.contains('not authenticated') || errorLower.contains('not logged in')) {
+      return 'Morate biti prijavljeni da biste napravili rezervaciju.';
+    }
+
+    if (errorLower.contains('network') || errorLower.contains('connection') || errorLower.contains('internet')) {
+      return 'Greška u mrežnoj vezi. Provjerite internet konekciju.';
+    }
+
+    if (errorLower.contains('timeout')) {
+      return 'Zahtjev je istekao. Molimo pokušajte ponovo.';
+    }
+
+    if (errorLower.contains('already booked') || errorLower.contains('not available')) {
+      return 'Ovi datumi su već zauzeti. Molimo odaberite druge datume.';
+    }
+
+    if (errorLower.contains('permission') || errorLower.contains('denied')) {
+      return 'Nemate dozvolu za ovu akciju. Molimo kontaktirajte podršku.';
+    }
+
+    // Generic error
+    return 'Došlo je do greške. Molimo pokušajte ponovo.';
   }
 
   @override
   Widget build(BuildContext context) {
     final bookingFlow = ref.watch(bookingFlowNotifierProvider);
-    final isMobile = MediaQuery.of(context).size.width < 768;
+    final isMobile = Breakpoints.isMobile(context);
 
     if (bookingFlow.property == null || bookingFlow.selectedUnit == null) {
       return Scaffold(
@@ -152,6 +254,10 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
 
                 // Price breakdown card
                 _buildPriceBreakdownCard(bookingFlow, isMobile),
+                const SizedBox(height: 24),
+
+                // Terms & Conditions
+                _buildTermsAndConditions(),
                 const SizedBox(height: 32),
 
                 // Proceed to payment button
@@ -161,12 +267,12 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: bookingFlow.isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: context.surfaceColor,
                           ),
                         )
                       : const Text('Nastavi na plaćanje'),
@@ -242,33 +348,71 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
               ),
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _firstNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Ime',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                validator: (value) =>
-                    FormValidators.validateName(value, 'Ime'),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                controller: _lastNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Prezime',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) =>
-                    FormValidators.validateName(value, 'Prezime'),
-              ),
-            ),
-          ],
+        // Responsive row/column for name fields
+        // Column on mobile (< 600px), Row on tablet/desktop
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobileLayout = constraints.maxWidth < 600;
+
+            if (isMobileLayout) {
+              // Stack vertically on mobile
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
+                    controller: _firstNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Ime',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.person_outline),
+                    ),
+                    validator: (value) =>
+                        FormValidators.validateName(value, 'Ime'),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _lastNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Prezime',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                        FormValidators.validateName(value, 'Prezime'),
+                  ),
+                ],
+              );
+            } else {
+              // Side by side on tablet/desktop
+              return Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _firstNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Ime',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person_outline),
+                      ),
+                      validator: (value) =>
+                          FormValidators.validateName(value, 'Ime'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _lastNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Prezime',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) =>
+                          FormValidators.validateName(value, 'Prezime'),
+                    ),
+                  ),
+                ],
+              );
+            }
+          },
         ),
         const SizedBox(height: 16),
         TextFormField(
@@ -358,14 +502,14 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
                   Text(
                     'Za platiti sada (20% avansa)',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
+                          color: context.surfaceColor,
                           fontWeight: FontWeight.bold,
                         ),
                   ),
                   Text(
                     '€${bookingFlow.advanceAmount.toStringAsFixed(2)}',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
+                          color: context.surfaceColor,
                           fontWeight: FontWeight.bold,
                         ),
                   ),
@@ -381,11 +525,11 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: Colors.grey[600]),
+        Icon(icon, size: 20, color: context.textColorSecondary),
         const SizedBox(width: 8),
         Text(
           '$label: ',
-          style: TextStyle(color: Colors.grey[600]),
+          style: TextStyle(color: context.textColorSecondary),
         ),
         Text(
           value,
@@ -416,6 +560,141 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
               : const TextStyle(fontWeight: FontWeight.w600),
         ),
       ],
+    );
+  }
+
+  Widget _buildTermsAndConditions() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: context.borderColor),
+        borderRadius: BorderRadius.circular(8),
+        color: context.surfaceColor,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Checkbox(
+                value: _acceptedTerms,
+                onChanged: (value) {
+                  setState(() {
+                    _acceptedTerms = value ?? false;
+                  });
+                },
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Prihvaćam uslove korištenja i politiku otkazivanja',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: _showCancellationPolicy,
+                        child: Text(
+                          'Pogledaj politiku otkazivanja',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCancellationPolicy() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Politika otkazivanja'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Besplatno otkazivanje',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '• Potpuni povrat novca ako otkažete najmanje 7 dana prije dolaska',
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Djelomični povrat',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '• 50% povrat novca ako otkažete 3-7 dana prije dolaska',
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Bez povrata',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '• Nema povrata novca ako otkažete manje od 3 dana prije dolaska',
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: context.surfaceColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline,
+                        size: 20, color: context.primaryColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Plaćeni avans od 20% služi kao garancija rezervacije. Preostali iznos se plaća prilikom prijave.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textColorSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Zatvori'),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -28,6 +28,17 @@ class Routes {
   // Admin routes
   static const adminDashboard = '/admin/dashboard';
 
+  // Legal & Support routes
+  static const termsConditions = '/legal/terms';
+  static const privacyPolicy = '/legal/privacy';
+  static const helpFaq = '/support/help';
+  static const contact = '/support/contact';
+  static const aboutUs = '/about';
+  static const howItWorks = '/how-it-works';
+  static const notifications = '/notifications';
+  static const favorites = '/favorites';
+  static const savedSearches = '/saved-searches';
+
   // Error routes
   static const notFound = '/404';
 
@@ -104,10 +115,29 @@ extension NavigationExtensions on BuildContext {
 
   void goToPayment(String bookingId) => go(RoutePaths.payment(bookingId));
 
+  void goToBookingSuccess({
+    required String bookingReference,
+    required Map<String, dynamic> bookingDetails,
+  }) {
+    go(
+      '/booking/success/$bookingReference',
+      extra: bookingDetails,
+    );
+  }
+
   void goToPaymentSuccess(String bookingId) =>
       go(RoutePaths.paymentSuccess(bookingId));
 
   void goToForgotPassword() => go('/auth/forgot-password');
+
+  /// Navigate to email verification screen
+  void goToEmailVerification({String? email}) {
+    if (email != null) {
+      go('/auth/verify-email?email=${Uri.encodeComponent(email)}');
+    } else {
+      go('/auth/verify-email');
+    }
+  }
 
   // Auth navigation
   void goToLogin({String? redirectTo}) {
@@ -132,6 +162,9 @@ extension NavigationExtensions on BuildContext {
 
   void goToOwnerPropertyCreate() => go(Routes.ownerPropertyCreate);
 
+  // Admin navigation
+  void goToAdminDashboard() => go(Routes.adminDashboard);
+
   // Profile navigation
   void goToProfile() => go(Routes.profile);
 
@@ -140,11 +173,24 @@ extension NavigationExtensions on BuildContext {
   // Payment navigation
   void goToPaymentConfirm() => go(Routes.paymentConfirm);
 
+  // Legal & Support navigation
+  void goToTermsConditions() => go(Routes.termsConditions);
+  void goToPrivacyPolicy() => go(Routes.privacyPolicy);
+  void goToHelpFaq() => go(Routes.helpFaq);
+  void goToContact() => go(Routes.contact);
+  void goToAboutUs() => go(Routes.aboutUs);
+  void goToHowItWorks() => go(Routes.howItWorks);
+  void goToNotifications() => go(Routes.notifications);
+  void goToFavorites() => go(Routes.favorites);
+  void goToSavedSearches() => go(Routes.savedSearches);
+
   // Push navigation (adds to stack)
   void pushPropertyDetails(String propertyId) =>
       push(RoutePaths.propertyDetails(propertyId));
 
   void pushBooking(String unitId) => push(RoutePaths.booking(unitId));
+
+  void pushBookingReview() => push(Routes.bookingReview);
 
   // Navigation with result
   Future<T?> pushForResult<T>(String location) => push<T>(location);
@@ -160,7 +206,7 @@ extension NavigationExtensions on BuildContext {
   void replaceWithLogin() => replace(Routes.authLogin);
 
   // Navigation state
-  bool canPop() => GoRouter.of(this).canPop();
+  bool canGoBack() => GoRouter.of(this).canPop();
 
   String get currentRoute => GoRouterState.of(this).uri.toString();
 

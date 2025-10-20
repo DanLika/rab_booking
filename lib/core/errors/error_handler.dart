@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../exceptions/app_exceptions.dart';
+import '../services/analytics_service.dart';
 
 /// Utility class for handling errors and converting them to user-friendly messages
 class ErrorHandler {
@@ -58,8 +59,15 @@ class ErrorHandler {
 
     // In production, send to error tracking service
     if (kReleaseMode) {
-      // TODO: Send to error tracking service (Sentry, Firebase Crashlytics)
-      // await Sentry.captureException(error, stackTrace: stackTrace);
+      // Send to error tracking services (Sentry, Firebase Crashlytics)
+      await AnalyticsService.reportError(
+        error,
+        stackTrace,
+        extra: {
+          'source': 'ErrorHandler',
+          'user_friendly_message': getUserFriendlyMessage(error),
+        },
+      );
     }
   }
 

@@ -6,248 +6,119 @@ part of 'auth_state_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint, type=warning
-/// Auth state notifier provider
-
-@ProviderFor(AuthStateNotifier)
-const authStateProvider = AuthStateNotifierProvider._();
-
-/// Auth state notifier provider
-final class AuthStateNotifierProvider
-    extends $NotifierProvider<AuthStateNotifier, AuthState> {
-  /// Auth state notifier provider
-  const AuthStateNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'authStateProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$authStateNotifierHash();
-
-  @$internal
-  @override
-  AuthStateNotifier create() => AuthStateNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AuthState value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AuthState>(value),
-    );
-  }
-}
-
-String _$authStateNotifierHash() => r'45cb170571ad65e485cb0d4309e88c60c364bc56';
-
-/// Auth state notifier provider
-
-abstract class _$AuthStateNotifier extends $Notifier<AuthState> {
-  AuthState build();
-  @$mustCallSuper
-  @override
-  void runBuild() {
-    final created = build();
-    final ref = this.ref as $Ref<AuthState, AuthState>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AuthState, AuthState>,
-              AuthState,
-              Object?,
-              Object?
-            >;
-    element.handleValue(ref, created);
-  }
-}
+String _$isAuthenticatedHash() => r'8fbe995b3c7146737ef59f5508ff6337aa7109d6';
 
 /// Convenience providers
 /// Check if user is authenticated
-
+///
+/// Copied from [isAuthenticated].
 @ProviderFor(isAuthenticated)
-const isAuthenticatedProvider = IsAuthenticatedProvider._();
+final isAuthenticatedProvider = AutoDisposeProvider<bool>.internal(
+  isAuthenticated,
+  name: r'isAuthenticatedProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$isAuthenticatedHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
-/// Convenience providers
-/// Check if user is authenticated
-
-final class IsAuthenticatedProvider
-    extends $FunctionalProvider<bool, bool, bool>
-    with $Provider<bool> {
-  /// Convenience providers
-  /// Check if user is authenticated
-  const IsAuthenticatedProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'isAuthenticatedProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$isAuthenticatedHash();
-
-  @$internal
-  @override
-  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  bool create(Ref ref) {
-    return isAuthenticated(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(bool value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<bool>(value),
-    );
-  }
-}
-
-String _$isAuthenticatedHash() => r'83dc3cbc2f141672dd0d0215580baee9daa2535b';
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef IsAuthenticatedRef = AutoDisposeProviderRef<bool>;
+String _$currentUserHash() => r'dc4c67375f422cfb0c022e83aa9068cf4f6d8afb';
 
 /// Get current user
-
+///
+/// Copied from [currentUser].
 @ProviderFor(currentUser)
-const currentUserProvider = CurrentUserProvider._();
+final currentUserProvider = AutoDisposeProvider<User?>.internal(
+  currentUser,
+  name: r'currentUserProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$currentUserHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
-/// Get current user
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CurrentUserRef = AutoDisposeProviderRef<User?>;
+String _$currentUserIdHash() => r'9ccdbcbbdc3287bebf95c002204c014eca436493';
 
-final class CurrentUserProvider extends $FunctionalProvider<User?, User?, User?>
-    with $Provider<User?> {
-  /// Get current user
-  const CurrentUserProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'currentUserProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+/// Get current user ID
+///
+/// Copied from [currentUserId].
+@ProviderFor(currentUserId)
+final currentUserIdProvider = AutoDisposeProvider<String?>.internal(
+  currentUserId,
+  name: r'currentUserIdProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$currentUserIdHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
-  @override
-  String debugGetCreateSourceHash() => _$currentUserHash();
-
-  @$internal
-  @override
-  $ProviderElement<User?> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  User? create(Ref ref) {
-    return currentUser(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(User? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<User?>(value),
-    );
-  }
-}
-
-String _$currentUserHash() => r'337984727526703c32ee9dbb42ac9ac94111e859';
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CurrentUserIdRef = AutoDisposeProviderRef<String?>;
+String _$currentUserRoleHash() => r'9469373c7816195f5d4bce6d8b37c812f2def30e';
 
 /// Get current user role
-
+///
+/// Copied from [currentUserRole].
 @ProviderFor(currentUserRole)
-const currentUserRoleProvider = CurrentUserRoleProvider._();
+final currentUserRoleProvider = AutoDisposeProvider<UserRole?>.internal(
+  currentUserRole,
+  name: r'currentUserRoleProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$currentUserRoleHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
-/// Get current user role
-
-final class CurrentUserRoleProvider
-    extends $FunctionalProvider<UserRole?, UserRole?, UserRole?>
-    with $Provider<UserRole?> {
-  /// Get current user role
-  const CurrentUserRoleProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'currentUserRoleProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$currentUserRoleHash();
-
-  @$internal
-  @override
-  $ProviderElement<UserRole?> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  UserRole? create(Ref ref) {
-    return currentUserRole(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(UserRole? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<UserRole?>(value),
-    );
-  }
-}
-
-String _$currentUserRoleHash() => r'45a26ea24f9575be675e1b2a50a4d5781a2e14b2';
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CurrentUserRoleRef = AutoDisposeProviderRef<UserRole?>;
+String _$isOwnerOrAdminHash() => r'245ce57af1ca892be6d05ee51febca59ee9531ba';
 
 /// Check if user is owner or admin
-
+///
+/// Copied from [isOwnerOrAdmin].
 @ProviderFor(isOwnerOrAdmin)
-const isOwnerOrAdminProvider = IsOwnerOrAdminProvider._();
+final isOwnerOrAdminProvider = AutoDisposeProvider<bool>.internal(
+  isOwnerOrAdmin,
+  name: r'isOwnerOrAdminProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$isOwnerOrAdminHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
-/// Check if user is owner or admin
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef IsOwnerOrAdminRef = AutoDisposeProviderRef<bool>;
+String _$authStateNotifierHash() => r'bceed6720788638d3dd55ca5b4104419ddf9169f';
 
-final class IsOwnerOrAdminProvider extends $FunctionalProvider<bool, bool, bool>
-    with $Provider<bool> {
-  /// Check if user is owner or admin
-  const IsOwnerOrAdminProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'isOwnerOrAdminProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$isOwnerOrAdminHash();
-
-  @$internal
-  @override
-  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  bool create(Ref ref) {
-    return isOwnerOrAdmin(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(bool value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<bool>(value),
+/// Auth state notifier provider
+///
+/// Copied from [AuthStateNotifier].
+@ProviderFor(AuthStateNotifier)
+final authStateNotifierProvider =
+    AutoDisposeNotifierProvider<AuthStateNotifier, AuthState>.internal(
+      AuthStateNotifier.new,
+      name: r'authStateNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$authStateNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
     );
-  }
-}
 
-String _$isOwnerOrAdminHash() => r'5bf01751eb3878432248a1df2707ce0d204c1344';
+typedef _$AuthStateNotifier = AutoDisposeNotifier<AuthState>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

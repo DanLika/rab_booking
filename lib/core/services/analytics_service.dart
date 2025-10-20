@@ -17,7 +17,7 @@ class AnalyticsService {
   /// 2. Set up Firebase in your project
   /// 3. Uncomment the implementation below
   static Future<void> initializeCrashlytics() async {
-    // TODO: Uncomment when Firebase Crashlytics is set up
+    // Uncomment when Firebase Crashlytics is set up:
     // await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
     // FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
     debugPrint('[ANALYTICS] Firebase Crashlytics initialization placeholder');
@@ -30,7 +30,7 @@ class AnalyticsService {
   /// 2. Get your Sentry DSN from sentry.io
   /// 3. Uncomment the implementation below
   static Future<void> initializeSentry() async {
-    // TODO: Uncomment when Sentry is set up
+    // Uncomment when Sentry is set up:
     // await SentryFlutter.init(
     //   (options) {
     //     options.dsn = 'YOUR_SENTRY_DSN';
@@ -50,7 +50,7 @@ class AnalyticsService {
   static void logEvent(String eventName, {Map<String, dynamic>? parameters}) {
     debugPrint('[ANALYTICS] Event: $eventName, params: $parameters');
 
-    // TODO: Uncomment when Firebase Analytics is set up
+    // Uncomment when Firebase Analytics is set up:
     // await FirebaseAnalytics.instance.logEvent(
     //   name: eventName,
     //   parameters: parameters,
@@ -73,7 +73,7 @@ class AnalyticsService {
   static void setUserId(String userId) {
     debugPrint('[ANALYTICS] Set user ID: $userId');
 
-    // TODO: Uncomment when Firebase Analytics is set up
+    // Uncomment when Firebase Analytics is set up:
     // await FirebaseAnalytics.instance.setUserId(id: userId);
   }
 
@@ -83,7 +83,7 @@ class AnalyticsService {
   static void setUserProperties(Map<String, String> properties) {
     debugPrint('[ANALYTICS] Set user properties: $properties');
 
-    // TODO: Uncomment when Firebase Analytics is set up
+    // Uncomment when Firebase Analytics is set up:
     // for (final entry in properties.entries) {
     //   await FirebaseAnalytics.instance.setUserProperty(
     //     name: entry.key,
@@ -105,7 +105,7 @@ class AnalyticsService {
       return;
     }
 
-    // TODO: Uncomment when error tracking services are set up
+    // Uncomment when error tracking services are set up:
     // Send to Firebase Crashlytics
     // await FirebaseCrashlytics.instance.recordError(
     //   error,
@@ -127,7 +127,7 @@ class AnalyticsService {
   static void logMessage(String message, {String? level}) {
     debugPrint('[ANALYTICS] Message ($level): $message');
 
-    // TODO: Uncomment when error tracking services are set up
+    // Uncomment when error tracking services are set up:
     // await FirebaseCrashlytics.instance.log(message);
     // await Sentry.captureMessage(message, level: _parseSentryLevel(level));
   }
@@ -142,7 +142,7 @@ class AnalyticsService {
   }) {
     debugPrint('[ANALYTICS] Breadcrumb: $message (category: $category)');
 
-    // TODO: Uncomment when Sentry is set up
+    // Uncomment when Sentry is set up:
     // Sentry.addBreadcrumb(
     //   Breadcrumb(
     //     message: message,

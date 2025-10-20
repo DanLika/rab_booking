@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../../core/utils/navigation_helpers.dart';
 import '../providers/property_details_provider.dart';
 import '../widgets/image_gallery_widget.dart';
 import '../widgets/property_info_section.dart';
 import '../widgets/units_section.dart';
-import '../widgets/booking_widget.dart';
-import '../widgets/reviews_section.dart';
 import '../widgets/location_map.dart';
 import '../widgets/host_info.dart';
+import '../widgets/reviews_section.dart';
+import '../widgets/booking_widget.dart';
+import '../widgets/similar_properties_section.dart';
+import '../widgets/amenities_section.dart';
 import '../../domain/models/property_unit.dart';
+import '../../../favorites/presentation/providers/favorites_provider.dart';
+import '../../../search/presentation/providers/recently_viewed_provider.dart';
+import '../../../../shared/widgets/widgets.dart';
 
 /// Property details screen with responsive layout
 class PropertyDetailsScreen extends ConsumerStatefulWidget {
@@ -27,6 +35,7 @@ class PropertyDetailsScreen extends ConsumerStatefulWidget {
 class _PropertyDetailsScreenState
     extends ConsumerState<PropertyDetailsScreen> {
   PropertyUnit? _selectedUnit;
+  dynamic _currentProperty;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +53,18 @@ class _PropertyDetailsScreenState
             return _buildNotFoundState();
           }
 
+          // Store property for FAB access and track view
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_currentProperty != property) {
+              setState(() => _currentProperty = property);
+
+              // Track this property view in recently viewed
+              ref
+                  .read(recentlyViewedNotifierProvider.notifier)
+                  .addView(widget.propertyId);
+            }
+          });
+
           return CustomScrollView(
             slivers: [
               // App Bar
@@ -59,14 +80,44 @@ class _PropertyDetailsScreenState
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.share),
-                    onPressed: () {
-                      // TODO: Implement share
+                    onPressed: () async {
+                      final propertyUrl = 'https://rabbooking.com/property/${widget.propertyId}';
+                      final shareText = '${property.name}\n${property.location}\n\n$propertyUrl';
+
+                      await Share.share(
+                        shareText,
+                        subject: property.name,
+                      );
                     },
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.favorite_border),
-                    onPressed: () {
-                      // TODO: Implement favorite
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final favoritesNotifier = ref.watch(favoritesNotifierProvider);
+                      final isFavorite = favoritesNotifier.maybeWhen(
+                        data: (favorites) => favorites.contains(widget.propertyId),
+                        orElse: () => false,
+                      );
+
+                      return IconButton(
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : null,
+                        ),
+                        onPressed: () async {
+                          try {
+                            await ref
+                                .read(favoritesNotifierProvider.notifier)
+                                .toggleFavorite(widget.propertyId);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Greška: $e')),
+                              );
+                            }
+                          }
+                        },
+                        tooltip: isFavorite ? 'Ukloni iz omiljenih' : 'Dodaj u omiljene',
+                      );
                     },
                   ),
                 ],
@@ -87,6 +138,9 @@ class _PropertyDetailsScreenState
                     isMobile || isTablet
                         ? _buildMobileLayout(property, unitsAsync)
                         : _buildDesktopLayout(property, unitsAsync),
+
+                    // Footer
+                    const AppFooter(),
                   ],
                 ),
               ),
@@ -98,9 +152,9 @@ class _PropertyDetailsScreenState
       ),
 
       // Floating Action Button (mobile only)
-      floatingActionButton: isMobile && _selectedUnit != null
+      floatingActionButton: isMobile && _selectedUnit != null && _currentProperty != null
           ? FloatingActionButton.extended(
-              onPressed: () => _showBookingBottomSheet(context),
+              onPressed: () => _showBookingBottomSheet(context, _currentProperty),
               icon: const Icon(Icons.calendar_today),
               label: Text(
                   'Rezerviraj - €${_selectedUnit!.pricePerNight.toStringAsFixed(0)}'),
@@ -120,11 +174,32 @@ class _PropertyDetailsScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Property Info
-          PropertyInfoSection(property: property),
+          unitsAsync.when(
+            data: (units) => PropertyInfoSection(
+              property: property,
+              units: units,
+            ),
+            loading: () => PropertyInfoSection(property: property),
+            error: (_, stackTrace) => PropertyInfoSection(property: property),
+          ),
 
           const SizedBox(height: 32),
           const Divider(),
           const SizedBox(height: 32),
+
+          // Amenities
+          if (property.amenities.isNotEmpty) ...[
+            PremiumAmenitiesSection(
+              amenities: property.amenities,
+              title: 'Sadržaji',
+              displayStyle: AmenitiesDisplayStyle.grid,
+              expandable: true,
+              initialDisplayCount: 8,
+            ),
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 32),
+          ],
 
           // Units
           unitsAsync.when(
@@ -142,7 +217,7 @@ class _PropertyDetailsScreenState
                 units: units,
                 onSelectUnit: (unit) {
                   setState(() => _selectedUnit = unit);
-                  _showBookingBottomSheet(context);
+                  _showBookingBottomSheet(context, property);
                 },
               );
             },
@@ -156,6 +231,8 @@ class _PropertyDetailsScreenState
 
           // Reviews
           ReviewsSection(
+            propertyId: property.id,
+            propertyName: property.name,
             rating: property.rating,
             reviewCount: property.reviewCount,
           ),
@@ -176,7 +253,18 @@ class _PropertyDetailsScreenState
           const SizedBox(height: 32),
 
           // Host Info
-          const HostInfo(),
+          HostInfo(
+            ownerId: property.ownerId,
+            propertyId: property.id,
+            propertyName: property.name,
+          ),
+
+          const SizedBox(height: 32),
+          const Divider(),
+          const SizedBox(height: 32),
+
+          // Similar Properties
+          SimilarPropertiesSection(propertyId: widget.propertyId),
 
           const SizedBox(height: 100), // Space for FAB
         ],
@@ -200,11 +288,32 @@ class _PropertyDetailsScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Property Info
-                PropertyInfoSection(property: property),
+                unitsAsync.when(
+                  data: (units) => PropertyInfoSection(
+                    property: property,
+                    units: units,
+                  ),
+                  loading: () => PropertyInfoSection(property: property),
+                  error: (_, stackTrace) => PropertyInfoSection(property: property),
+                ),
 
                 const SizedBox(height: 48),
                 const Divider(),
                 const SizedBox(height: 48),
+
+                // Amenities
+                if (property.amenities.isNotEmpty) ...[
+                  PremiumAmenitiesSection(
+                    amenities: property.amenities,
+                    title: 'Sadržaji',
+                    displayStyle: AmenitiesDisplayStyle.grid,
+                    expandable: true,
+                    initialDisplayCount: 12,
+                  ),
+                  const SizedBox(height: 48),
+                  const Divider(),
+                  const SizedBox(height: 48),
+                ],
 
                 // Units
                 unitsAsync.when(
@@ -235,6 +344,8 @@ class _PropertyDetailsScreenState
 
                 // Reviews
                 ReviewsSection(
+                  propertyId: property.id,
+                  propertyName: property.name,
                   rating: property.rating,
                   reviewCount: property.reviewCount,
                 ),
@@ -255,7 +366,18 @@ class _PropertyDetailsScreenState
                 const SizedBox(height: 48),
 
                 // Host Info
-                const HostInfo(),
+                HostInfo(
+                  ownerId: property.ownerId,
+                  propertyId: property.id,
+                  propertyName: property.name,
+                ),
+
+                const SizedBox(height: 48),
+                const Divider(),
+                const SizedBox(height: 48),
+
+                // Similar Properties
+                SimilarPropertiesSection(propertyId: widget.propertyId),
               ],
             ),
           ),
@@ -270,7 +392,7 @@ class _PropertyDetailsScreenState
                 if (_selectedUnit == null || units.isEmpty) {
                   return const SizedBox.shrink();
                 }
-                return _buildStickyBookingWidget();
+                return _buildStickyBookingWidget(property);
               },
               loading: () => const CircularProgressIndicator(),
               error: (error, stack) => const SizedBox.shrink(),
@@ -281,19 +403,22 @@ class _PropertyDetailsScreenState
     );
   }
 
-  Widget _buildStickyBookingWidget() {
+  Widget _buildStickyBookingWidget(dynamic property) {
     if (_selectedUnit == null) return const SizedBox.shrink();
 
     return SingleChildScrollView(
       child: Column(
         children: [
-          BookingWidget(unit: _selectedUnit!),
+          BookingWidget(
+            property: property,
+            unit: _selectedUnit!,
+          ),
         ],
       ),
     );
   }
 
-  void _showBookingBottomSheet(BuildContext context) {
+  void _showBookingBottomSheet(BuildContext context, dynamic property) {
     if (_selectedUnit == null) return;
 
     showModalBottomSheet(
@@ -324,7 +449,10 @@ class _PropertyDetailsScreenState
               // Booking Widget
               Expanded(
                 child: SingleChildScrollView(
-                  child: BookingWidget(unit: _selectedUnit!),
+                  child: BookingWidget(
+                    property: property,
+                    unit: _selectedUnit!,
+                  ),
                 ),
               ),
             ],
@@ -369,7 +497,13 @@ class _PropertyDetailsScreenState
             ),
             const SizedBox(height: 32),
             FilledButton.icon(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                if (context.canGoBack()) {
+                  context.pop();
+                } else {
+                  context.go(Routes.home);
+                }
+              },
               icon: const Icon(Icons.arrow_back),
               label: const Text('Natrag'),
             ),

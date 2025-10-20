@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/utils/navigation_helpers.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../booking/presentation/providers/booking_flow_notifier.dart';
+import '../../../booking/data/booking_notification_service.dart';
 
 /// Payment success screen with booking confirmation
 class PaymentSuccessScreen extends ConsumerStatefulWidget {
@@ -62,9 +64,20 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
           .fetchBookingById(widget.bookingId);
 
       if (booking != null && mounted) {
+        // Send booking confirmation email
+        final notificationService = ref.read(bookingNotificationServiceProvider);
+        final emailSent = await notificationService.sendBookingConfirmation(widget.bookingId);
+
+        if (emailSent) {
+          debugPrint('✅ Booking confirmation email sent successfully');
+        } else {
+          debugPrint('⚠️ Failed to send booking confirmation email (non-blocking)');
+        }
+
         // Optionally update booking flow state with confirmed booking
       }
     } catch (e) {
+      debugPrint('❌ Error loading booking: $e');
       // Handle error silently or show error
     }
   }
@@ -78,7 +91,6 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
   @override
   Widget build(BuildContext context) {
     final bookingFlow = ref.watch(bookingFlowNotifierProvider);
-    final isMobile = MediaQuery.of(context).size.width < 768;
     final dateFormat = DateFormat('dd.MM.yyyy');
 
     return Scaffold(
@@ -89,7 +101,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16 : 24),
+          padding: EdgeInsets.all(Breakpoints.getHorizontalPadding(context)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -328,20 +340,20 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
 
               // Action buttons
               FilledButton.icon(
-                onPressed: () => context.goToMyBookings(),
-                icon: const Icon(Icons.book_online),
-                label: const Text('Pogledaj rezervaciju'),
+                onPressed: () => _navigateToBookingSuccess(),
+                icon: const Icon(Icons.verified),
+                label: const Text('Vidi potvrdu rezervacije'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
               const SizedBox(height: 12),
-              OutlinedButton.icon(
+              TextButton.icon(
                 onPressed: () => context.goToHome(),
                 icon: const Icon(Icons.home),
                 label: const Text('Povratak na početnu'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ],
@@ -387,6 +399,46 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
           ),
         ),
       ],
+    );
+  }
+
+  /// Navigate to detailed booking success screen
+  void _navigateToBookingSuccess() {
+    final bookingFlow = ref.read(bookingFlowNotifierProvider);
+
+    // Validate required data
+    if (bookingFlow.property == null ||
+        bookingFlow.selectedUnit == null ||
+        bookingFlow.checkInDate == null ||
+        bookingFlow.checkOutDate == null) {
+      // Fallback to my bookings if data is missing
+      context.goToMyBookings();
+      return;
+    }
+
+    // Calculate nights
+    final nights = bookingFlow.checkOutDate!
+        .difference(bookingFlow.checkInDate!)
+        .inDays;
+
+    // Prepare booking details
+    final bookingDetails = {
+      'propertyName': bookingFlow.property!.name,
+      'propertyImage': bookingFlow.property!.coverImage,
+      'propertyLocation': bookingFlow.property!.location,
+      'checkIn': bookingFlow.checkInDate!.toIso8601String(),
+      'checkOut': bookingFlow.checkOutDate!.toIso8601String(),
+      'guests': bookingFlow.numberOfGuests,
+      'nights': nights,
+      'totalAmount': bookingFlow.totalPrice,
+      'currencySymbol': '€',
+      'confirmationEmail': bookingFlow.guestEmail ?? '',
+    };
+
+    // Navigate to booking success screen
+    context.goToBookingSuccess(
+      bookingReference: widget.bookingId,
+      bookingDetails: bookingDetails,
     );
   }
 }

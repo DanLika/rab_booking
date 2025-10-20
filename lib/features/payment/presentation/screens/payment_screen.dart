@@ -1,49 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import '../../../../core/utils/navigation_helpers.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/responsive_builder.dart';
+import '../../../../shared/widgets/widgets.dart';
 import '../../../booking/presentation/providers/booking_flow_notifier.dart';
 import '../providers/payment_notifier.dart';
+import '../widgets/payment_card.dart';
+import '../widgets/payment_summary.dart';
 
-/// Payment screen with Stripe CardField integration
-class PaymentScreen extends ConsumerStatefulWidget {
-  const PaymentScreen({
-    required this.bookingId,
-    super.key,
-  });
-
+/// Premium payment processing screen with Stripe integration
+/// Features: Premium UI, Stripe CardField, payment summary, error handling
+class PremiumPaymentScreen extends ConsumerStatefulWidget {
+  /// Booking ID
   final String bookingId;
 
+  const PremiumPaymentScreen({
+    super.key,
+    required this.bookingId,
+  });
+
   @override
-  ConsumerState<PaymentScreen> createState() => _PaymentScreenState();
+  ConsumerState<PremiumPaymentScreen> createState() =>
+      _PremiumPaymentScreenState();
 }
 
-class _PaymentScreenState extends ConsumerState<PaymentScreen> {
-  final _formKey = GlobalKey<FormState>();
-  CardFieldInputDetails? _cardDetails;
+class _PremiumPaymentScreenState extends ConsumerState<PremiumPaymentScreen> {
   bool _isCardComplete = false;
+  bool _hasInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    // Create payment intent when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _createPaymentIntent();
+      if (!_hasInitialized) {
+        _createPaymentIntent();
+        _hasInitialized = true;
+      }
     });
   }
 
   Future<void> _createPaymentIntent() async {
     final bookingFlow = ref.read(bookingFlowNotifierProvider);
 
-    if (bookingFlow.totalPrice == 0) {
+    if (bookingFlow.totalPrice <= 0) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Greška: Nepoznat iznos plaćanja'),
-            backgroundColor: Colors.red,
+            content: Text('Error: Invalid payment amount'),
+            backgroundColor: AppColors.error,
           ),
         );
-        context.goBack();
+        context.pop();
       }
       return;
     }
@@ -58,13 +70,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Greška: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        context.goBack();
+        _showError('Failed to initialize payment: ${e.toString()}');
       }
     }
   }
@@ -73,8 +79,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     if (!_isCardComplete) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Molimo unesite podatke o kartici'),
-          backgroundColor: Colors.orange,
+          content: Text('Please complete card details'),
+          backgroundColor: AppColors.warning,
         ),
       );
       return;
@@ -101,228 +107,151 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       // Check payment status
       final paymentState = ref.read(paymentNotifierProvider);
 
-      if (paymentState.isSuccess) {
+      if (paymentState.isSuccess && mounted) {
         // Navigate to success screen
-        if (mounted) {
-          context.goToPaymentSuccess(widget.bookingId);
-        }
-      } else if (paymentState.isFailed) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(paymentState.error ?? 'Plaćanje nije uspjelo'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        context.go('/booking-success/${widget.bookingId}');
+      } else if (paymentState.isFailed && mounted) {
+        _showPaymentErrorDialog(
+          paymentState.error ?? 'Payment failed',
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Greška: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showPaymentErrorDialog(_getUserFriendlyError(e));
       }
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+      ),
+    );
+  }
+
+  void _showPaymentErrorDialog(String errorMessage) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.error_outline, color: AppColors.error, size: 28),
+            SizedBox(width: AppDimensions.spaceM),
+            Text('Payment Failed'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(errorMessage),
+            const SizedBox(height: AppDimensions.spaceL),
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.spaceM),
+              decoration: BoxDecoration(
+                color: AppColors.withOpacity(
+                  AppColors.info,
+                  AppColors.opacity10,
+                ),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    size: AppDimensions.iconM,
+                    color: AppColors.info,
+                  ),
+                  const SizedBox(width: AppDimensions.spaceM),
+                  Expanded(
+                    child: Text(
+                      'Your booking is still saved. You can try again.',
+                      style: AppTypography.small.copyWith(
+                        color: AppColors.info,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          PremiumButton.text(
+            label: 'Cancel',
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.pop();
+            },
+          ),
+          PremiumButton.primary(
+            label: 'Try Again',
+            icon: Icons.refresh,
+            onPressed: () {
+              Navigator.of(context).pop();
+              _handlePayment();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getUserFriendlyError(Object error) {
+    final errorString = error.toString().toLowerCase();
+
+    if (errorString.contains('canceled')) {
+      return 'Payment was canceled. Please try again.';
+    }
+    if (errorString.contains('declined')) {
+      return 'Card was declined. Please check your details or use a different card.';
+    }
+    if (errorString.contains('insufficient')) {
+      return 'Insufficient funds. Please use a different card.';
+    }
+    if (errorString.contains('expired')) {
+      return 'Card has expired. Please use a valid card.';
+    }
+    if (errorString.contains('timeout')) {
+      return 'Payment timed out. Please check your connection and try again.';
+    }
+
+    return 'Payment failed: ${error.toString()}';
   }
 
   @override
   Widget build(BuildContext context) {
     final bookingFlow = ref.watch(bookingFlowNotifierProvider);
     final paymentState = ref.watch(paymentNotifierProvider);
-    final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Plaćanje'),
+        title: const Text('Secure Payment'),
+        centerTitle: true,
         elevation: 0,
       ),
       body: paymentState.paymentIntent == null
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(isMobile ? 16 : 24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Payment amount card
-                      Card(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              Text(
-                                'Iznos za plaćanje',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '€${bookingFlow.advanceAmount.toStringAsFixed(2)}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .displaySmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '(20% avansa od ukupnog iznosa)',
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Card field section
-                      Text(
-                        'Podaci o kartici',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Stripe CardField
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[300]!),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        child: CardField(
-                          onCardChanged: (card) {
-                            setState(() {
-                              _cardDetails = card;
-                              _isCardComplete = card?.complete ?? false;
-                            });
-                          },
-                          enablePostalCode: true,
-                          countryCode: 'HR',
-                          style: CardFieldInputStyle(
-                            textColor: Colors.black,
-                            fontSize: 16,
-                            placeholderColor: Colors.grey[600],
-                          ),
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            hintText: 'Unesite podatke o kartici',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Security info
-                      Row(
-                        children: [
-                          Icon(Icons.lock_outline,
-                              size: 16, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              'Vaši podaci su sigurni. Koristimo Stripe za sigurno plaćanje.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Payment summary
-                      _buildPaymentSummary(bookingFlow),
-                      const SizedBox(height: 32),
-
-                      // Pay button
-                      FilledButton(
-                        onPressed: paymentState.isProcessing || !_isCardComplete
-                            ? null
-                            : _handlePayment,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: paymentState.isProcessing
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(
-                                'Plati €${bookingFlow.advanceAmount.toStringAsFixed(2)}',
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Test card info (for development)
-                      if (true) // TODO: Only show in development mode
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[50],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.blue[200]!),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.info_outline,
-                                      size: 16, color: Colors.blue[700]),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Test kartica (razvoj):',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue[700],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '4242 4242 4242 4242',
-                                style: TextStyle(
-                                  fontFamily: 'monospace',
-                                  color: Colors.blue[900],
-                                ),
-                              ),
-                              Text(
-                                'MM/GG: bilo koji budući datum',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.blue[700],
-                                ),
-                              ),
-                              Text(
-                                'CVC: bilo koji 3-znamenkasti broj',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.blue[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
+                child: ResponsiveBuilder(
+                  mobile: (context, constraints) => _buildMobileLayout(
+                    bookingFlow,
+                    paymentState,
+                  ),
+                  tablet: (context, constraints) => _buildMobileLayout(
+                    bookingFlow,
+                    paymentState,
+                  ),
+                  desktop: (context, constraints) => _buildDesktopLayout(
+                    bookingFlow,
+                    paymentState,
                   ),
                 ),
               ),
@@ -330,45 +259,149 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     );
   }
 
-  Widget _buildPaymentSummary(BookingFlowState bookingFlow) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+  Widget _buildMobileLayout(
+    BookingFlowState bookingFlow,
+    PaymentState paymentState,
+  ) {
+    return Padding(
+      padding: EdgeInsets.all(context.horizontalPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Payment amount header
+          _buildPaymentAmountHeader(bookingFlow),
+
+          const SizedBox(height: AppDimensions.spaceXL),
+
+          // Payment card widget
+          PremiumPaymentCard(
+            onCardChanged: (card) {
+              setState(() {
+                _isCardComplete = card?.complete ?? false;
+              });
+            },
+            enablePostalCode: true,
+            countryCode: 'HR',
+          ),
+
+          const SizedBox(height: AppDimensions.spaceXL),
+
+          // Payment summary
+          PremiumPaymentSummary(
+            basePrice: bookingFlow.basePrice,
+            serviceFee: bookingFlow.serviceFee,
+            cleaningFee: bookingFlow.cleaningFee,
+            totalAmount: bookingFlow.totalPrice,
+            advancePercentage: 20.0,
+            currencySymbol: '€',
+          ),
+
+          const SizedBox(height: AppDimensions.spaceXXL),
+
+          // Pay button
+          _buildPayButton(paymentState, bookingFlow),
+
+          const SizedBox(height: AppDimensions.spaceXL),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(
+    BookingFlowState bookingFlow,
+    PaymentState paymentState,
+  ) {
+    return MaxWidthContainer(
+      maxWidth: AppDimensions.containerL,
+      padding: EdgeInsets.all(context.horizontalPadding),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left column - Payment form
+          Expanded(
+            flex: 6,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Payment amount header
+                _buildPaymentAmountHeader(bookingFlow),
+
+                const SizedBox(height: AppDimensions.spaceXL),
+
+                // Payment card widget
+                PremiumPaymentCard(
+                  onCardChanged: (card) {
+                    setState(() {
+                      _isCardComplete = card?.complete ?? false;
+                    });
+                  },
+                  enablePostalCode: true,
+                  countryCode: 'HR',
+                ),
+
+                const SizedBox(height: AppDimensions.spaceXXL),
+
+                // Pay button
+                _buildPayButton(paymentState, bookingFlow),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: AppDimensions.spaceXXL),
+
+          // Right column - Summary (sticky)
+          SizedBox(
+            width: 380,
+            child: PremiumPaymentSummary(
+              basePrice: bookingFlow.basePrice,
+              serviceFee: bookingFlow.serviceFee,
+              cleaningFee: bookingFlow.cleaningFee,
+              totalAmount: bookingFlow.totalPrice,
+              advancePercentage: 20.0,
+              currencySymbol: '€',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentAmountHeader(BookingFlowState bookingFlow) {
+    return PremiumCard.elevated(
+      elevation: 1,
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.spaceL),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.withOpacity(AppColors.primary, AppColors.opacity10),
+              AppColors.withOpacity(AppColors.secondary, AppColors.opacity10),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Sažetak plaćanja',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              'Amount to Pay',
+              style: AppTypography.bodyLarge.copyWith(
+                color: AppColors.textSecondaryLight,
+              ),
             ),
-            const Divider(height: 24),
-            _buildSummaryRow('Osnovna cijena',
-                '€${bookingFlow.basePrice.toStringAsFixed(2)}'),
-            const SizedBox(height: 8),
-            _buildSummaryRow('Naknada za uslugu',
-                '€${bookingFlow.serviceFee.toStringAsFixed(2)}'),
-            const SizedBox(height: 8),
-            _buildSummaryRow('Naknada za čišćenje',
-                '€${bookingFlow.cleaningFee.toStringAsFixed(2)}'),
-            const Divider(height: 24),
-            _buildSummaryRow(
-              'Ukupno',
-              '€${bookingFlow.totalPrice.toStringAsFixed(2)}',
-              isTotal: true,
-            ),
-            const SizedBox(height: 8),
-            _buildSummaryRow(
-              'Plaćate sada (20%)',
+            const SizedBox(height: AppDimensions.spaceS),
+            Text(
               '€${bookingFlow.advanceAmount.toStringAsFixed(2)}',
-              isHighlighted: true,
+              style: AppTypography.h1.copyWith(
+                fontWeight: AppTypography.weightBold,
+                color: AppColors.primary,
+              ),
             ),
-            const SizedBox(height: 8),
-            _buildSummaryRow(
-              'Preostalo za platiti',
-              '€${(bookingFlow.totalPrice - bookingFlow.advanceAmount).toStringAsFixed(2)}',
-              isSubdued: true,
+            const SizedBox(height: AppDimensions.spaceXS),
+            Text(
+              '(20% advance of total amount)',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondaryLight,
+              ),
             ),
           ],
         ),
@@ -376,37 +409,23 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     );
   }
 
-  Widget _buildSummaryRow(
-    String label,
-    String value, {
-    bool isTotal = false,
-    bool isHighlighted = false,
-    bool isSubdued = false,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: isTotal || isHighlighted ? FontWeight.bold : null,
-            fontSize: isTotal ? 16 : 14,
-            color: isSubdued ? Colors.grey[600] : null,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: isTotal || isHighlighted ? FontWeight.bold : null,
-            fontSize: isTotal ? 16 : 14,
-            color: isHighlighted
-                ? Theme.of(context).colorScheme.primary
-                : isSubdued
-                    ? Colors.grey[600]
-                    : null,
-          ),
-        ),
-      ],
+  Widget _buildPayButton(
+    PaymentState paymentState,
+    BookingFlowState bookingFlow,
+  ) {
+    return PremiumButton.primary(
+      label: paymentState.isProcessing
+          ? 'Processing...'
+          : 'Pay €${bookingFlow.advanceAmount.toStringAsFixed(2)}',
+      icon: paymentState.isProcessing ? null : Icons.lock_outlined,
+      isFullWidth: true,
+      size: ButtonSize.large,
+      onPressed:
+          paymentState.isProcessing || !_isCardComplete ? null : _handlePayment,
+      isLoading: paymentState.isProcessing,
     );
   }
 }
+
+// Backwards compatibility typedef
+typedef PaymentScreen = PremiumPaymentScreen;

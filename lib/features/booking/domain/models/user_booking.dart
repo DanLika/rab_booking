@@ -1,4 +1,4 @@
-import 'package:rab_booking/features/booking/domain/models/booking_status.dart';
+import 'booking_status.dart';
 
 class UserBooking {
   final String id;

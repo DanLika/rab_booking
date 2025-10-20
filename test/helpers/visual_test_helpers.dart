@@ -222,7 +222,7 @@ class VisualTestHelpers {
   static bool hasSemanticLabel(WidgetTester tester, String label) {
     try {
       final semantics = tester.getSemantics(find.bySemanticsLabel(label));
-      return semantics.label.isNotEmpty ?? false;
+      return semantics.label.isNotEmpty;
     } catch (e) {
       return false;
     }
@@ -249,9 +249,9 @@ class VisualTestHelpers {
 
   /// Calculate relative luminance
   static double _relativeLuminance(Color color) {
-    final r = _linearize(color.red / 255);
-    final g = _linearize(color.green / 255);
-    final b = _linearize(color.blue / 255);
+    final r = _linearize((color.r * 255.0).round() / 255);
+    final g = _linearize((color.g * 255.0).round() / 255);
+    final b = _linearize((color.b * 255.0).round() / 255);
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   }
 

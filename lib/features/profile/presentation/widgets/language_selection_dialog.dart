@@ -84,51 +84,34 @@ class _LanguageSelectionDialogState extends ConsumerState<LanguageSelectionDialo
               mainAxisSize: MainAxisSize.min,
               children: AppLanguage.values.map((language) {
                 final isSelected = selectedLanguage == language.code;
-                return InkWell(
+                return ListTile(
                   onTap: _isLoading ? null : () => _handleLanguageChange(language.code),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    child: Row(
-                      children: [
-                        Radio<String>(
-                          value: language.code,
-                          groupValue: selectedLanguage,
-                          onChanged: _isLoading ? null : _handleLanguageChange,
-                          activeColor: Theme.of(context).primaryColor,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                language.displayName,
-                                style: TextStyle(
-                                  fontWeight:
-                                      isSelected ? FontWeight.bold : FontWeight.normal,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Text(
-                                language.code.toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (isSelected)
-                          Icon(
-                            Icons.check_circle,
-                            color: Theme.of(context).primaryColor,
-                            size: 20,
-                          ),
-                      ],
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                  leading: Icon(
+                    isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                    color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
+                  ),
+                  title: Text(
+                    language.displayName,
+                    style: TextStyle(
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 16,
                     ),
                   ),
+                  subtitle: Text(
+                    language.code.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? Icon(
+                          Icons.check_circle,
+                          color: Theme.of(context).primaryColor,
+                          size: 20,
+                        )
+                      : null,
                 );
               }).toList(),
             ),

@@ -294,38 +294,77 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          RadioListTile<String>(
+                          ListTile(
+                            onTap: () {
+                              setState(() => _selectedRole = 'guest');
+                            },
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                            leading: Icon(
+                              _selectedRole == 'guest'
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_unchecked,
+                              color: _selectedRole == 'guest'
+                                  ? Theme.of(context).primaryColor
+                                  : Colors.grey,
+                            ),
                             title: const Text('Gost'),
                             subtitle: const Text('Želim rezervisati smještaj'),
-                            value: 'guest',
-                            groupValue: _selectedRole,
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            onChanged: (value) {
-                              setState(() => _selectedRole = value!);
-                            },
+                            trailing: _selectedRole == 'guest'
+                                ? Icon(
+                                    Icons.check_circle,
+                                    color: Theme.of(context).primaryColor,
+                                    size: 20,
+                                  )
+                                : null,
                           ),
-                          RadioListTile<String>(
+                          ListTile(
+                            onTap: () {
+                              setState(() => _selectedRole = 'owner');
+                            },
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                            leading: Icon(
+                              _selectedRole == 'owner'
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_unchecked,
+                              color: _selectedRole == 'owner'
+                                  ? Theme.of(context).primaryColor
+                                  : Colors.grey,
+                            ),
                             title: const Text('Vlasnik'),
                             subtitle: const Text('Želim iznajmiti svoj smještaj'),
-                            value: 'owner',
-                            groupValue: _selectedRole,
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            onChanged: (value) {
-                              setState(() => _selectedRole = value!);
-                            },
+                            trailing: _selectedRole == 'owner'
+                                ? Icon(
+                                    Icons.check_circle,
+                                    color: Theme.of(context).primaryColor,
+                                    size: 20,
+                                  )
+                                : null,
                           ),
-                          RadioListTile<String>(
+                          ListTile(
+                            onTap: () {
+                              setState(() => _selectedRole = 'admin');
+                            },
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                            leading: Icon(
+                              _selectedRole == 'admin'
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_unchecked,
+                              color: _selectedRole == 'admin'
+                                  ? Theme.of(context).primaryColor
+                                  : Colors.grey,
+                            ),
                             title: const Text('Administrator'),
                             subtitle: const Text('Potpuna kontrola nad sistemom'),
-                            value: 'admin',
-                            groupValue: _selectedRole,
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            onChanged: (value) {
-                              setState(() => _selectedRole = value!);
-                            },
+                            trailing: _selectedRole == 'admin'
+                                ? Icon(
+                                    Icons.check_circle,
+                                    color: Theme.of(context).primaryColor,
+                                    size: 20,
+                                  )
+                                : null,
                           ),
                         ],
                       ),

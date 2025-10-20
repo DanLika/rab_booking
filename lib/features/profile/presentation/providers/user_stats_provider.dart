@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -5,7 +6,7 @@ part 'user_stats_provider.g.dart';
 
 /// Get user bookings count
 @riverpod
-Future<int> userBookingsCount(UserBookingsCountRef ref, String userId) async {
+Future<int> userBookingsCount(Ref ref, String userId) async {
   final supabase = Supabase.instance.client;
 
   try {
@@ -22,7 +23,7 @@ Future<int> userBookingsCount(UserBookingsCountRef ref, String userId) async {
 
 /// Get user favorites count
 @riverpod
-Future<int> userFavoritesCount(UserFavoritesCountRef ref, String userId) async {
+Future<int> userFavoritesCount(Ref ref, String userId) async {
   final supabase = Supabase.instance.client;
 
   try {
@@ -39,7 +40,7 @@ Future<int> userFavoritesCount(UserFavoritesCountRef ref, String userId) async {
 
 /// Get user reviews count (reviews written by user)
 @riverpod
-Future<int> userReviewsCount(UserReviewsCountRef ref, String userId) async {
+Future<int> userReviewsCount(Ref ref, String userId) async {
   final supabase = Supabase.instance.client;
 
   try {
@@ -56,7 +57,7 @@ Future<int> userReviewsCount(UserReviewsCountRef ref, String userId) async {
 
 /// Get user average rating (for property owners)
 @riverpod
-Future<double?> userAverageRating(UserAverageRatingRef ref, String userId) async {
+Future<double?> userAverageRating(Ref ref, String userId) async {
   final supabase = Supabase.instance.client;
 
   try {

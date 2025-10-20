@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../shared/models/property_model.dart';
@@ -165,6 +166,6 @@ class RecentlyViewedRepository {
 
 /// Provider for RecentlyViewedRepository
 @riverpod
-RecentlyViewedRepository recentlyViewedRepository(RecentlyViewedRepositoryRef ref) {
+RecentlyViewedRepository recentlyViewedRepository(Ref ref) {
   return RecentlyViewedRepository(Supabase.instance.client);
 }

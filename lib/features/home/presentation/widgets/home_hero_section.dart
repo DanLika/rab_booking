@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/theme/app_animations.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/responsive_builder.dart';

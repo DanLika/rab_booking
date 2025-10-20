@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/models/contact_message.dart';
@@ -5,7 +6,7 @@ import '../domain/models/contact_message.dart';
 part 'contact_repository.g.dart';
 
 @riverpod
-ContactRepository contactRepository(ContactRepositoryRef ref) {
+ContactRepository contactRepository(Ref ref) {
   return ContactRepository(Supabase.instance.client);
 }
 

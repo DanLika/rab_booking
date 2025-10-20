@@ -63,6 +63,6 @@ Locale currentLocale(Ref ref) {
   return localeAsync.when(
     data: (locale) => locale,
     loading: () => const Locale(_defaultLanguage),
-    error: (_, __) => const Locale(_defaultLanguage),
+    error: (error, stackTrace) => const Locale(_defaultLanguage),
   );
 }

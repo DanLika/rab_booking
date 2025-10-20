@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../shared/models/user_model.dart';
@@ -22,7 +23,7 @@ class HostStats with _$HostStats {
 /// Provider for host/owner information
 @riverpod
 Future<HostStats> hostInfo(
-  HostInfoRef ref,
+  Ref ref,
   String ownerId,
 ) async {
   final supabase = Supabase.instance.client;

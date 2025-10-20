@@ -326,6 +326,7 @@ class _PremiumSearchResultsScreenState
     BuildContext context,
     SearchFilters filters,
   ) async {
+    final messenger = ScaffoldMessenger.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => SaveSearchDialog(filters: filters),
@@ -333,7 +334,7 @@ class _PremiumSearchResultsScreenState
 
     // Dialog returns true if search was saved successfully
     if (result == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('Pretraga je uspješno sačuvana!'),
           backgroundColor: AppColors.success,

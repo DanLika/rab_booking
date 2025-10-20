@@ -167,7 +167,7 @@ class PropertySearchRepository {
       final propertyIds = properties.map((p) => p.id).toList();
 
       // Fetch units for these properties
-      dynamic unitsQuery = _supabase
+      final dynamic unitsQuery = _supabase
           .from('units')
           .select('id, property_id, base_price, max_guests, bedrooms, bathrooms, is_available')
           .inFilter('property_id', propertyIds)
@@ -187,7 +187,7 @@ class PropertySearchRepository {
       }
 
       // Filter properties that have at least one unit matching criteria
-      var filtered = properties.where((property) {
+      final filtered = properties.where((property) {
         final units = propertyUnitsMap[property.id];
         if (units == null || units.isEmpty) return false;
 

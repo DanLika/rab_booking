@@ -5,6 +5,7 @@ import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:rab_booking/shared/widgets/property_card.dart';
 import 'package:rab_booking/shared/widgets/error_state_widget.dart';
 import 'package:rab_booking/shared/models/property_model.dart';
+import 'package:rab_booking/core/constants/enums.dart';
 
 /// Golden tests for visual regression testing
 /// These tests capture screenshots and compare against baseline images
@@ -32,16 +33,17 @@ void main() {
         description: 'A beautiful apartment',
         amenities: [],
         ownerId: 'owner1',
-        ownerName: 'John Doe',
         propertyType: PropertyType.apartment,
-        lat: 44.7555,
-        lng: 14.7594,
+        latitude: 44.7555,
+        longitude: 14.7594,
+        createdAt: DateTime(2024, 1, 1),
       );
 
       await tester.pumpWidgetBuilder(
-        PropertyCard(
-          property: property,
-          onTap: () {},
+        ProviderScope(
+          child: PropertyCard(
+            property: property,
+          ),
         ),
         surfaceSize: const Size(400, 500),
         wrapper: materialAppWrapper(
@@ -70,16 +72,17 @@ void main() {
         description: 'A beautiful apartment',
         amenities: [],
         ownerId: 'owner1',
-        ownerName: 'John Doe',
         propertyType: PropertyType.apartment,
-        lat: 44.7555,
-        lng: 14.7594,
+        latitude: 44.7555,
+        longitude: 14.7594,
+        createdAt: DateTime(2024, 1, 1),
       );
 
       await tester.pumpWidgetBuilder(
-        PropertyCard(
-          property: property,
-          onTap: () {},
+        ProviderScope(
+          child: PropertyCard(
+            property: property,
+          ),
         ),
         surfaceSize: const Size(400, 500),
         wrapper: materialAppWrapper(
@@ -108,10 +111,10 @@ void main() {
         description: 'A beautiful apartment',
         amenities: [],
         ownerId: 'owner1',
-        ownerName: 'John Doe',
         propertyType: PropertyType.apartment,
-        lat: 44.7555,
-        lng: 14.7594,
+        latitude: 44.7555,
+        longitude: 14.7594,
+        createdAt: DateTime(2024, 1, 1),
       );
 
       final builder = GoldenBuilder.grid(
@@ -120,20 +123,20 @@ void main() {
       )
         ..addScenario(
           'Mobile (360px)',
-          PropertyCard(property: property, onTap: () {}),
+          ProviderScope(child: PropertyCard(property: property)),
         )
         ..addScenario(
           'Tablet (600px)',
           SizedBox(
             width: 600,
-            child: PropertyCard(property: property, onTap: () {}),
+            child: ProviderScope(child: PropertyCard(property: property)),
           ),
         )
         ..addScenario(
           'Desktop (1024px)',
           SizedBox(
             width: 1024,
-            child: PropertyCard(property: property, onTap: () {}),
+            child: ProviderScope(child: PropertyCard(property: property)),
           ),
         );
 

@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../shared/models/property_model.dart';
@@ -7,7 +8,7 @@ part 'similar_properties_repository.g.dart';
 /// Repository for fetching similar properties based on recommendation algorithm
 @riverpod
 SimilarPropertiesRepository similarPropertiesRepository(
-  SimilarPropertiesRepositoryRef ref,
+  Ref ref,
 ) {
   return SimilarPropertiesRepository(Supabase.instance.client);
 }
@@ -40,7 +41,7 @@ class SimilarPropertiesRepository {
       final maxPrice = basePrice * 1.3;
 
       // Build query
-      var query = _supabase
+      final query = _supabase
           .from('properties')
           .select('''
             *,
@@ -106,7 +107,7 @@ class SimilarPropertiesRepository {
     int limit = 6,
   }) async {
     // Try strict matching first
-    var results = await getSimilarProperties(
+    final results = await getSimilarProperties(
       propertyId: propertyId,
       location: location,
       propertyType: propertyType,
@@ -124,7 +125,7 @@ class SimilarPropertiesRepository {
       final minPrice = basePrice * 0.5;
       final maxPrice = basePrice * 1.5;
 
-      var query = _supabase
+      final query = _supabase
           .from('properties')
           .select('''
             *,

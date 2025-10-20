@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../features/auth/presentation/providers/auth_notifier.dart';
@@ -8,7 +9,7 @@ part 'recently_viewed_provider.g.dart';
 /// Provider for user's recently viewed properties
 @riverpod
 Future<List<PropertyModel>> recentlyViewedProperties(
-  RecentlyViewedPropertiesRef ref,
+  Ref ref,
 ) async {
   final authState = ref.watch(authNotifierProvider);
   final userId = authState.user?.id;
@@ -24,7 +25,7 @@ Future<List<PropertyModel>> recentlyViewedProperties(
 /// Provider for recently viewed property IDs (for quick lookups)
 @riverpod
 Future<List<String>> recentlyViewedPropertyIds(
-  RecentlyViewedPropertyIdsRef ref,
+  Ref ref,
 ) async {
   final authState = ref.watch(authNotifierProvider);
   final userId = authState.user?.id;
@@ -40,7 +41,7 @@ Future<List<String>> recentlyViewedPropertyIds(
 /// Provider for recently viewed count
 @riverpod
 Future<int> recentlyViewedCount(
-  RecentlyViewedCountRef ref,
+  Ref ref,
 ) async {
   final authState = ref.watch(authNotifierProvider);
   final userId = authState.user?.id;

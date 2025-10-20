@@ -42,6 +42,23 @@ Future<void> pumpRabBookingApp(
 
 /// Extension on WidgetTester for convenience methods
 extension WidgetTesterX on WidgetTester {
+  /// Pump a widget with ProviderScope
+  Future<void> pumpWithProviders(
+    Widget widget, {
+    List<Override>? overrides,
+  }) async {
+    await pumpWidget(
+      ProviderScope(
+        overrides: overrides ?? [],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          home: widget,
+        ),
+      ),
+    );
+  }
+
   /// Tap and settle
   Future<void> tapAndSettle(Finder finder) async {
     await tap(finder);

@@ -43,7 +43,7 @@ class PriceText extends ConsumerWidget {
         height: 20,
         child: CircularProgressIndicator(strokeWidth: 2),
       ),
-      error: (_, __) {
+      error: (error, stackTrace) {
         // Fallback to EUR
         return Text(
           showPerNight ? '€${priceInEur.toStringAsFixed(2)} / night' : '€${priceInEur.toStringAsFixed(2)}',
@@ -98,7 +98,7 @@ class PriceRichText extends ConsumerWidget {
         height: 20,
         child: CircularProgressIndicator(strokeWidth: 2),
       ),
-      error: (_, __) {
+      error: (error, stackTrace) {
         final fallbackText = '€${priceInEur.toStringAsFixed(2)}';
         return RichText(
           text: TextSpan(

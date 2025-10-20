@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../features/search/data/repositories/property_search_repository.dart';
@@ -95,7 +96,7 @@ class FavoritesNotifier extends _$FavoritesNotifier {
 
 /// Provider for favorite properties with full details
 @riverpod
-Future<List<PropertyModel>> favoriteProperties(FavoritePropertiesRef ref) async {
+Future<List<PropertyModel>> favoriteProperties(Ref ref) async {
   // Get favorite IDs
   final favoriteIds = await ref.watch(favoritesNotifierProvider.future);
 

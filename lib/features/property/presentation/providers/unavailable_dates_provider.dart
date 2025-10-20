@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,7 +7,7 @@ part 'unavailable_dates_provider.g.dart';
 /// Get unavailable dates for a unit
 @riverpod
 Future<List<DateTime>> unitUnavailableDates(
-  UnitUnavailableDatesRef ref,
+  Ref ref,
   String unitId,
 ) async {
   final supabase = Supabase.instance.client;

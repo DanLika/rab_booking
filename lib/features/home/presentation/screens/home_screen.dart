@@ -49,9 +49,9 @@ class HomeScreen extends ConsumerWidget {
             ),
 
             // 2.5. Recently Viewed Section (only for logged-in users, with scroll reveal)
-            SectionReveal(
-              delay: const Duration(milliseconds: 100),
-              child: const RecentlyViewedSection(
+            const SectionReveal(
+              delay: Duration(milliseconds: 100),
+              child: RecentlyViewedSection(
                 title: 'Recently Viewed',
                 subtitle: 'Properties you have viewed recently',
                 maxProperties: 10,
@@ -72,18 +72,18 @@ class HomeScreen extends ConsumerWidget {
             ),
 
             // 4. How It Works Section (with scroll reveal)
-            SectionReveal(
-              delay: const Duration(milliseconds: 100),
-              child: const HowItWorksSection(
+            const SectionReveal(
+              delay: Duration(milliseconds: 100),
+              child: HowItWorksSection(
                 title: 'How It Works',
                 subtitle: 'Book your dream vacation in three simple steps',
               ),
             ),
 
             // 5. Testimonials Section (with scroll reveal)
-            SectionReveal(
-              delay: const Duration(milliseconds: 150),
-              child: const TestimonialsSection(
+            const SectionReveal(
+              delay: Duration(milliseconds: 150),
+              child: TestimonialsSection(
                 title: 'What Our Guests Say',
                 subtitle: 'Real experiences from real travelers',
                 autoPlay: true,

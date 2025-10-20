@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../data/repositories/similar_properties_repository.dart';
@@ -8,7 +9,7 @@ part 'similar_properties_provider.g.dart';
 /// Provider for similar properties based on current property
 @riverpod
 Future<List<PropertyModel>> similarProperties(
-  SimilarPropertiesRef ref,
+  Ref ref,
   String propertyId,
 ) async {
   // Get current property details

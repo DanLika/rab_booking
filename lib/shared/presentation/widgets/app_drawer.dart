@@ -132,7 +132,7 @@ class AppDrawer extends ConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.admin_panel_settings),
                 title: const Text('Admin Dashboard'),
-                selected: context.currentRoute?.startsWith('/admin') ?? false,
+                selected: context.currentRoute.startsWith('/admin'),
                 onTap: () {
                   Navigator.pop(context);
                   context.goToAdminDashboard();

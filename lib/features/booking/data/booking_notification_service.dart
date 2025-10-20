@@ -7,7 +7,7 @@ part 'booking_notification_service.g.dart';
 
 /// Service for sending booking-related notifications via Supabase Edge Functions
 @riverpod
-BookingNotificationService bookingNotificationService(BookingNotificationServiceRef ref) {
+BookingNotificationService bookingNotificationService(Ref ref) {
   return BookingNotificationService(Supabase.instance.client);
 }
 

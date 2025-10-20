@@ -94,15 +94,15 @@ class _SaveSearchDialogState extends ConsumerState<SaveSearchDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Row(
+      title: const Row(
         children: [
           Icon(
             Icons.bookmark_add,
             color: AppColors.primary,
             size: 28,
           ),
-          const SizedBox(width: AppDimensions.spaceM),
-          const Expanded(
+          SizedBox(width: AppDimensions.spaceM),
+          Expanded(
             child: Text('Sačuvaj pretragu'),
           ),
         ],
@@ -198,7 +198,7 @@ class _SaveSearchDialogState extends ConsumerState<SaveSearchDialog> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.error_outline,
                       color: AppColors.error,
                       size: 20,
@@ -294,7 +294,7 @@ class _SaveSearchDialogState extends ConsumerState<SaveSearchDialog> {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.filter_list,
                 size: 16,
                 color: AppColors.primary,

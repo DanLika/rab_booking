@@ -342,58 +342,34 @@ class _UserCard extends ConsumerWidget {
   ) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Change User Role'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Select new role for ${user.fullName}:'),
-            const SizedBox(height: AppDimensions.spaceM),
-            ...UserRole.values.map((role) {
-              return RadioListTile<UserRole>(
-                title: Text(role.name.toUpperCase()),
-                value: role,
-                // ignore: deprecated_member_use
-                groupValue: user.role,
-                // ignore: deprecated_member_use
-                onChanged: (newRole) async {
-                  if (newRole != null) {
-                    try {
-                      await ref
-                          .read(adminRepositoryProvider)
-                          .updateUserRole(user.id, newRole.name);
+      builder: (context) => _RoleChangeDialog(
+        user: user,
+        onRoleChanged: (newRole) async {
+          try {
+            await ref
+                .read(adminRepositoryProvider)
+                .updateUserRole(user.id, newRole.name);
 
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                        ref.invalidate(adminUsersProvider);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('User role updated successfully'),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error: $e'),
-                            backgroundColor: AppColors.error,
-                          ),
-                        );
-                      }
-                    }
-                  }
-                },
+            if (context.mounted) {
+              Navigator.of(context).pop();
+              ref.invalidate(adminUsersProvider);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('User role updated successfully'),
+                ),
               );
-            }),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-        ],
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error: $e'),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            }
+          }
+        },
       ),
     );
   }
@@ -503,6 +479,100 @@ class _RoleBadge extends StatelessWidget {
           fontWeight: FontWeight.bold,
         ),
       ),
+    );
+  }
+}
+
+/// Dialog for changing user role using modern ListTile approach
+class _RoleChangeDialog extends StatefulWidget {
+  final dynamic user;
+  final Future<void> Function(UserRole) onRoleChanged;
+
+  const _RoleChangeDialog({
+    required this.user,
+    required this.onRoleChanged,
+  });
+
+  @override
+  State<_RoleChangeDialog> createState() => _RoleChangeDialogState();
+}
+
+class _RoleChangeDialogState extends State<_RoleChangeDialog> {
+  late UserRole _selectedRole;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedRole = widget.user.role;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Change User Role'),
+      content: _isLoading
+          ? const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Select new role for ${widget.user.fullName}:'),
+                const SizedBox(height: AppDimensions.spaceM),
+                ...UserRole.values.map((role) {
+                  final isSelected = _selectedRole == role;
+                  return ListTile(
+                    onTap: _isLoading
+                        ? null
+                        : () {
+                            setState(() => _selectedRole = role);
+                          },
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    leading: Icon(
+                      isSelected
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      color: isSelected ? AppColors.primary : Colors.grey,
+                    ),
+                    title: Text(
+                      role.name.toUpperCase(),
+                      style: TextStyle(
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    trailing: isSelected
+                        ? const Icon(
+                            Icons.check_circle,
+                            color: AppColors.primary,
+                            size: 20,
+                          )
+                        : null,
+                  );
+                }),
+              ],
+            ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: _isLoading || _selectedRole == widget.user.role
+              ? null
+              : () async {
+                  setState(() => _isLoading = true);
+                  await widget.onRoleChanged(_selectedRole);
+                  if (mounted) {
+                    setState(() => _isLoading = false);
+                  }
+                },
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

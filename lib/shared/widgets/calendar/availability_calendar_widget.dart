@@ -51,7 +51,7 @@ class _AvailabilityCalendarWidgetState
   late DateTime _focusedDay;
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
-  RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOn;
+  final RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOn;
 
   @override
   void initState() {

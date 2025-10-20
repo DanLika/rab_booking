@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../shared/models/property_model.dart';
@@ -60,7 +59,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget>
   Widget build(BuildContext context) {
     // Build semantic label for screen readers
     final semanticLabel = '${widget.property.name}, ${widget.property.location}, '
-        '€${widget.property.basePrice} per night, '
+        '€${widget.property.pricePerNight ?? 0} per night, '
         '${widget.property.rating > 0 ? '${widget.property.rating.toStringAsFixed(1)} stars' : 'No rating yet'}';
 
     return Semantics(
@@ -262,11 +261,8 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget>
         ),
       ),
     ),
-    )
-        .animate()
-        .fadeIn(duration: 400.ms, curve: Curves.easeOut)
-        .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic)
-        .scale(begin: 0.95, end: 1.0, curve: Curves.easeOut);
+  ),
+);
   }
 }
 

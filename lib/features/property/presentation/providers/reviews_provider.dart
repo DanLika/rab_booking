@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/repositories/reviews_repository.dart';
 
@@ -6,7 +7,7 @@ part 'reviews_provider.g.dart';
 /// Get reviews for a property
 @riverpod
 Future<List<PropertyReview>> propertyReviews(
-  PropertyReviewsRef ref,
+  Ref ref,
   String propertyId, {
   int limit = 10,
   int offset = 0,
@@ -26,7 +27,7 @@ Future<List<PropertyReview>> propertyReviews(
 /// Get rating breakdown for a property
 @riverpod
 Future<RatingBreakdown> propertyRatingBreakdown(
-  PropertyRatingBreakdownRef ref,
+  Ref ref,
   String propertyId,
 ) async {
   final repository = ref.watch(reviewsRepositoryProvider);
@@ -36,7 +37,7 @@ Future<RatingBreakdown> propertyRatingBreakdown(
 /// Get review count for a property
 @riverpod
 Future<int> propertyReviewCount(
-  PropertyReviewCountRef ref,
+  Ref ref,
   String propertyId,
 ) async {
   final repository = ref.watch(reviewsRepositoryProvider);
@@ -46,7 +47,7 @@ Future<int> propertyReviewCount(
 /// Get rating distribution for a property
 @riverpod
 Future<Map<int, int>> propertyRatingDistribution(
-  PropertyRatingDistributionRef ref,
+  Ref ref,
   String propertyId,
 ) async {
   final repository = ref.watch(reviewsRepositoryProvider);

@@ -45,41 +45,47 @@ class _ThemeSelectionDialogState extends State<ThemeSelectionDialog> {
     return AlertDialog(
       title: const Text('Odaberi temu'),
       contentPadding: const EdgeInsets.symmetric(vertical: 16),
-      content: RadioGroup<String>(
-        onChanged: (value) {
-          if (value != null) {
-            setState(() => _selectedTheme = value);
-            widget.onThemeSelected(value);
-            Navigator.of(context).pop();
-          }
-        },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: AppThemeMode.values.map((themeMode) {
-            final isSelected = _selectedTheme == themeMode.code;
-            return RadioListTile<String>(
-              value: themeMode.code,
-              title: Text(
-                themeMode.displayName,
-                style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: AppThemeMode.values.map((themeMode) {
+          final isSelected = _selectedTheme == themeMode.code;
+          return ListTile(
+            onTap: () {
+              setState(() => _selectedTheme = themeMode.code);
+              widget.onThemeSelected(themeMode.code);
+              Navigator.of(context).pop();
+            },
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+            leading: Icon(
+              _getThemeIcon(themeMode),
+              color: isSelected ? const Color(0xFF667eea) : Colors.grey,
+            ),
+            title: Text(
+              themeMode.displayName,
+              style: TextStyle(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
-              subtitle: Text(
-                _getThemeDescription(themeMode),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+            ),
+            subtitle: Text(
+              _getThemeDescription(themeMode),
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
               ),
-              secondary: Icon(
-                _getThemeIcon(themeMode),
-                color: isSelected ? const Color(0xFF667eea) : Colors.grey,
-              ),
-              activeColor: const Color(0xFF667eea),
-            );
-          }).toList(),
-        ),
+            ),
+            trailing: isSelected
+                ? const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF667eea),
+                    size: 20,
+                  )
+                : const Icon(
+                    Icons.radio_button_unchecked,
+                    color: Colors.grey,
+                    size: 20,
+                  ),
+          );
+        }).toList(),
       ),
       actions: [
         TextButton(

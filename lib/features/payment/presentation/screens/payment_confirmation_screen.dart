@@ -240,10 +240,7 @@ class _PaymentConfirmationScreenState
                       if (payment['stripe_payment_id'] != null)
                         _buildDetailRow(
                           'ID transakcije',
-                          payment['stripe_payment_id']
-                              .toString()
-                              .substring(0, 20) +
-                              '...',
+                          '${payment['stripe_payment_id'].toString().substring(0, 20)}...',
                         ),
                       _buildDetailRow(
                         'Datum plaćanja',

@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -494,6 +495,6 @@ class ReviewsRepository {
 
 /// Provider for reviews repository
 @riverpod
-ReviewsRepository reviewsRepository(ReviewsRepositoryRef ref) {
+ReviewsRepository reviewsRepository(Ref ref) {
   return ReviewsRepository(Supabase.instance.client);
 }

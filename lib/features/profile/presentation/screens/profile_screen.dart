@@ -371,7 +371,7 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
                           final currencyText = selectedCurrencyAsync.when(
                             data: (currency) => '${currency.code} (${currency.symbol})',
                             loading: () => 'Loading...',
-                            error: (_, __) => 'EUR (€)',
+                            error: (error, stackTrace) => 'EUR (€)',
                           );
 
                           // Language display names
@@ -408,12 +408,13 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
                                 trailing: Switch(
                                   value: isDark,
                                   onChanged: (value) async {
+                                    final messenger = ScaffoldMessenger.of(context);
                                     final themeCode = value ? 'dark' : 'light';
                                     await ref
                                         .read(userPreferencesNotifierProvider.notifier)
                                         .updateTheme(themeCode);
                                     if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      messenger.showSnackBar(
                                         SnackBar(
                                           content: Text(value ? 'Tamna tema aktivirana' : 'Svetla tema aktivirana'),
                                           backgroundColor: AppColors.success,
@@ -637,7 +638,7 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
             loading: () => const AlertDialog(
               content: Center(child: CircularProgressIndicator()),
             ),
-            error: (_, __) => AlertDialog(
+            error: (error, stackTrace) => AlertDialog(
               title: const Text('Error'),
               content: const Text('Failed to load currency settings'),
               actions: [

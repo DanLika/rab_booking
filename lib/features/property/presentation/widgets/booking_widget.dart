@@ -100,7 +100,7 @@ class _PremiumBookingWidgetState extends State<PremiumBookingWidget> {
   /// Open calendar modal for date selection with real-time availability
   void _openCalendarModal() async {
     // Show loading if we need to fetch unavailable dates
-    List<DateTime> unavailableDates = widget.unavailableDates;
+    final List<DateTime> unavailableDates = widget.unavailableDates;
 
     // If unitId is provided, show modal with AsyncValue for real-time data
     await showModalBottomSheet(

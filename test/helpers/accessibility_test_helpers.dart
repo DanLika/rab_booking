@@ -17,7 +17,6 @@ class AccessibilityTestHelpers {
     Finder finder, {
     String? expectedLabel,
   }) {
-    final widget = tester.widget(finder);
     final semantics = tester.getSemantics(finder);
 
     expect(semantics, isNotNull, reason: 'Widget should have semantic properties');
@@ -89,9 +88,6 @@ class AccessibilityTestHelpers {
       await tester.sendKeyUpEvent(LogicalKeyboardKey.tab);
       await tester.pumpAndSettle();
 
-      final currentFocus = FocusManager.instance.primaryFocus;
-      final expectedWidget = tester.widget(expectedOrder[i + 1]);
-
       // Verify focus moved to next expected element
       // This is a simplified check; actual implementation would be more robust
     }
@@ -124,9 +120,9 @@ class AccessibilityTestHelpers {
   }
 
   static double _calculateRelativeLuminance(Color color) {
-    final r = _linearize(color.red / 255);
-    final g = _linearize(color.green / 255);
-    final b = _linearize(color.blue / 255);
+    final r = _linearize(color.r);
+    final g = _linearize(color.g);
+    final b = _linearize(color.b);
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   }
 
@@ -138,7 +134,7 @@ class AccessibilityTestHelpers {
   }
 
   /// Assert color combination meets WCAG AA standard
-  static void assertMeetsWCAG_AA(
+  static void assertMeetsWcagAa(
     Color foreground,
     Color background, {
     bool isLargeText = false,
@@ -155,7 +151,7 @@ class AccessibilityTestHelpers {
   }
 
   /// Assert color combination meets WCAG AAA standard
-  static void assertMeetsWCAG_AAA(
+  static void assertMeetsWcagAaa(
     Color foreground,
     Color background, {
     bool isLargeText = false,
@@ -188,7 +184,7 @@ class AccessibilityTestHelpers {
         final backgroundColor = _getBackgroundColor(tester, texts.at(i));
 
         final isLargeText = (textStyle.fontSize ?? 14) >= 18;
-        assertMeetsWCAG_AA(
+        assertMeetsWcagAa(
           textStyle.color!,
           backgroundColor,
           isLargeText: isLargeText,

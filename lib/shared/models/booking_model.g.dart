@@ -10,7 +10,7 @@ _$BookingModelImpl _$$BookingModelImplFromJson(Map<String, dynamic> json) =>
     _$BookingModelImpl(
       id: json['id'] as String,
       unitId: json['unit_id'] as String,
-      guestId: json['guest_id'] as String,
+      userId: json['user_id'] as String,
       checkIn: DateTime.parse(json['check_in'] as String),
       checkOut: DateTime.parse(json['check_out'] as String),
       status: $enumDecode(_$BookingStatusEnumMap, json['status']),
@@ -33,7 +33,7 @@ Map<String, dynamic> _$$BookingModelImplToJson(_$BookingModelImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'unit_id': instance.unitId,
-      'guest_id': instance.guestId,
+      'user_id': instance.userId,
       'check_in': instance.checkIn.toIso8601String(),
       'check_out': instance.checkOut.toIso8601String(),
       'status': _$BookingStatusEnumMap[instance.status]!,

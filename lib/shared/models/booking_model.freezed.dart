@@ -29,8 +29,8 @@ mixin _$BookingModel {
   String get unitId => throw _privateConstructorUsedError;
 
   /// Guest user ID
-  @JsonKey(name: 'guest_id')
-  String get guestId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'user_id')
+  String get userId => throw _privateConstructorUsedError;
 
   /// Check-in date
   @JsonKey(name: 'check_in')
@@ -98,7 +98,7 @@ abstract class $BookingModelCopyWith<$Res> {
   $Res call({
     String id,
     @JsonKey(name: 'unit_id') String unitId,
-    @JsonKey(name: 'guest_id') String guestId,
+    @JsonKey(name: 'user_id') String userId,
     @JsonKey(name: 'check_in') DateTime checkIn,
     @JsonKey(name: 'check_out') DateTime checkOut,
     BookingStatus status,
@@ -131,7 +131,7 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
   $Res call({
     Object? id = null,
     Object? unitId = null,
-    Object? guestId = null,
+    Object? userId = null,
     Object? checkIn = null,
     Object? checkOut = null,
     Object? status = null,
@@ -155,9 +155,9 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
                 ? _value.unitId
                 : unitId // ignore: cast_nullable_to_non_nullable
                       as String,
-            guestId: null == guestId
-                ? _value.guestId
-                : guestId // ignore: cast_nullable_to_non_nullable
+            userId: null == userId
+                ? _value.userId
+                : userId // ignore: cast_nullable_to_non_nullable
                       as String,
             checkIn: null == checkIn
                 ? _value.checkIn
@@ -225,7 +225,7 @@ abstract class _$$BookingModelImplCopyWith<$Res>
   $Res call({
     String id,
     @JsonKey(name: 'unit_id') String unitId,
-    @JsonKey(name: 'guest_id') String guestId,
+    @JsonKey(name: 'user_id') String userId,
     @JsonKey(name: 'check_in') DateTime checkIn,
     @JsonKey(name: 'check_out') DateTime checkOut,
     BookingStatus status,
@@ -257,7 +257,7 @@ class __$$BookingModelImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? unitId = null,
-    Object? guestId = null,
+    Object? userId = null,
     Object? checkIn = null,
     Object? checkOut = null,
     Object? status = null,
@@ -281,9 +281,9 @@ class __$$BookingModelImplCopyWithImpl<$Res>
             ? _value.unitId
             : unitId // ignore: cast_nullable_to_non_nullable
                   as String,
-        guestId: null == guestId
-            ? _value.guestId
-            : guestId // ignore: cast_nullable_to_non_nullable
+        userId: null == userId
+            ? _value.userId
+            : userId // ignore: cast_nullable_to_non_nullable
                   as String,
         checkIn: null == checkIn
             ? _value.checkIn
@@ -344,7 +344,7 @@ class _$BookingModelImpl extends _BookingModel {
   const _$BookingModelImpl({
     required this.id,
     @JsonKey(name: 'unit_id') required this.unitId,
-    @JsonKey(name: 'guest_id') required this.guestId,
+    @JsonKey(name: 'user_id') required this.userId,
     @JsonKey(name: 'check_in') required this.checkIn,
     @JsonKey(name: 'check_out') required this.checkOut,
     required this.status,
@@ -373,8 +373,8 @@ class _$BookingModelImpl extends _BookingModel {
 
   /// Guest user ID
   @override
-  @JsonKey(name: 'guest_id')
-  final String guestId;
+  @JsonKey(name: 'user_id')
+  final String userId;
 
   /// Check-in date
   @override
@@ -436,7 +436,7 @@ class _$BookingModelImpl extends _BookingModel {
 
   @override
   String toString() {
-    return 'BookingModel(id: $id, unitId: $unitId, guestId: $guestId, checkIn: $checkIn, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, guestCount: $guestCount, notes: $notes, paymentIntentId: $paymentIntentId, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt)';
+    return 'BookingModel(id: $id, unitId: $unitId, userId: $userId, checkIn: $checkIn, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, guestCount: $guestCount, notes: $notes, paymentIntentId: $paymentIntentId, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt)';
   }
 
   @override
@@ -446,7 +446,7 @@ class _$BookingModelImpl extends _BookingModel {
             other is _$BookingModelImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.unitId, unitId) || other.unitId == unitId) &&
-            (identical(other.guestId, guestId) || other.guestId == guestId) &&
+            (identical(other.userId, userId) || other.userId == userId) &&
             (identical(other.checkIn, checkIn) || other.checkIn == checkIn) &&
             (identical(other.checkOut, checkOut) ||
                 other.checkOut == checkOut) &&
@@ -476,7 +476,7 @@ class _$BookingModelImpl extends _BookingModel {
     runtimeType,
     id,
     unitId,
-    guestId,
+    userId,
     checkIn,
     checkOut,
     status,
@@ -509,7 +509,7 @@ abstract class _BookingModel extends BookingModel {
   const factory _BookingModel({
     required final String id,
     @JsonKey(name: 'unit_id') required final String unitId,
-    @JsonKey(name: 'guest_id') required final String guestId,
+    @JsonKey(name: 'user_id') required final String userId,
     @JsonKey(name: 'check_in') required final DateTime checkIn,
     @JsonKey(name: 'check_out') required final DateTime checkOut,
     required final BookingStatus status,
@@ -539,8 +539,8 @@ abstract class _BookingModel extends BookingModel {
 
   /// Guest user ID
   @override
-  @JsonKey(name: 'guest_id')
-  String get guestId;
+  @JsonKey(name: 'user_id')
+  String get userId;
 
   /// Check-in date
   @override

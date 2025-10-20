@@ -46,7 +46,7 @@ class UserBookingsRepository {
               )
             )
           ''')
-          .eq('guest_id', userId)
+          .eq('user_id', userId)
           .order('created_at', ascending: false);
 
       return (response as List).map((booking) {

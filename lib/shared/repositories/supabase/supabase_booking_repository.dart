@@ -75,7 +75,7 @@ class SupabaseBookingRepository implements BookingRepository {
       final response = await _client
           .from(_tableName)
           .select()
-          .eq('guest_id', userId)
+          .eq('user_id', userId)
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -261,7 +261,7 @@ class SupabaseBookingRepository implements BookingRepository {
       final response = await _client
           .from(_tableName)
           .select()
-          .eq('guest_id', userId)
+          .eq('user_id', userId)
           .inFilter('status', ['confirmed', 'pending'])
           .gte('check_in', now)
           .order('check_in', ascending: true);
@@ -282,7 +282,7 @@ class SupabaseBookingRepository implements BookingRepository {
       final response = await _client
           .from(_tableName)
           .select()
-          .eq('guest_id', userId)
+          .eq('user_id', userId)
           .lt('check_out', now)
           .order('check_out', ascending: false);
 
@@ -302,7 +302,7 @@ class SupabaseBookingRepository implements BookingRepository {
       final response = await _client
           .from(_tableName)
           .select()
-          .eq('guest_id', userId)
+          .eq('user_id', userId)
           .eq('status', 'confirmed')
           .lte('check_in', now)
           .gte('check_out', now);
@@ -324,7 +324,7 @@ class SupabaseBookingRepository implements BookingRepository {
       final response = await _client
           .from(_tableName)
           .select()
-          .eq('guest_id', userId)
+          .eq('user_id', userId)
           .eq('status', status.value)
           .order('created_at', ascending: false);
 
@@ -419,7 +419,7 @@ class SupabaseBookingRepository implements BookingRepository {
       var query = _client.from(_tableName).select();
 
       if (userId != null) {
-        query = query.eq('guest_id', userId);
+        query = query.eq('user_id', userId);
       }
 
       if (unitId != null) {

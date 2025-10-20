@@ -38,23 +38,20 @@ class RecentlyViewedRepository {
             viewed_at,
             properties:property_id (
               id,
-              title,
+              name,
               description,
-              price_per_night,
+              base_price,
               location,
               property_type,
-              image_url,
+              cover_image,
               images,
               amenities,
-              guests,
-              bedrooms,
-              bathrooms,
               rating,
               review_count,
               owner_id,
               created_at,
               updated_at,
-              profiles:owner_id (
+              users:owner_id (
                 id,
                 first_name,
                 last_name,
@@ -78,15 +75,15 @@ class RecentlyViewedRepository {
             final propertyData = item['properties'] as Map<String, dynamic>;
 
             // Extract owner data
-            final ownerData = propertyData['profiles'];
+            final ownerData = propertyData['users'];
             if (ownerData != null) {
               propertyData['owner_name'] =
                 '${ownerData['first_name'] ?? ''} ${ownerData['last_name'] ?? ''}'.trim();
               propertyData['owner_avatar'] = ownerData['avatar_url'];
             }
 
-            // Remove the profiles nested object
-            propertyData.remove('profiles');
+            // Remove the users nested object
+            propertyData.remove('users');
 
             final property = PropertyModel.fromJson(propertyData);
             properties.add(property);

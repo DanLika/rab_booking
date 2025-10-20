@@ -15,7 +15,7 @@ class BookingModel with _$BookingModel {
     @JsonKey(name: 'unit_id') required String unitId,
 
     /// Guest user ID
-    @JsonKey(name: 'guest_id') required String guestId,
+    @JsonKey(name: 'user_id') required String userId,
 
     /// Check-in date
     @JsonKey(name: 'check_in') required DateTime checkIn,

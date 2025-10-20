@@ -57,7 +57,7 @@ class OwnerBookingsRepository {
                 *
               )
             ),
-            users:guest_id(
+            users:user_id(
               id,
               first_name,
               last_name,
@@ -246,7 +246,7 @@ class OwnerBookingsRepository {
 
       await _supabase.from('bookings').insert({
         'unit_id': unitId,
-        'guest_id': userId, // Owner blocks their own dates
+        'user_id': userId, // Owner blocks their own dates
         'check_in': checkIn.toIso8601String(),
         'check_out': checkOut.toIso8601String(),
         'status': BookingStatus.blocked.value,

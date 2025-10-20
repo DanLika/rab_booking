@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "RAB Booking - Flutter Web Application",
   "scripts": {
-    "build": "./build.sh",
+    "build": "bash build.sh",
     "install": "echo 'Skipping npm install - using build.sh for Flutter setup'",
     "postinstall": "echo 'Ready for build'"
   },

@@ -96,9 +96,5 @@ flutter:
   uses-material-design: true
   generate: true
 
-  # Assets
-  assets:
-    - assets/images/
-    - assets/icons/
-    - .env.development
-    - .env.production
+  # Assets (web build doesn't need .env files - using lib/core/config/web_config.dart instead)
+  # assets:

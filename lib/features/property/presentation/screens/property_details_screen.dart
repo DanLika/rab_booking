@@ -194,7 +194,6 @@ class _PropertyDetailsScreenState
                     // Simple Image Gallery (MVP - enhanced gallery disabled)
                     ImageGalleryWidget(
                       images: property.images,
-                      heroTag: 'property_${widget.propertyId}',
                     ),
 
                     // Main Content
@@ -353,8 +352,8 @@ class _PropertyDetailsScreenState
           const Divider(),
           const SizedBox(height: 32),
 
-          // Similar Properties
-          SimilarPropertiesSection(propertyId: widget.propertyId),
+          // Similar Properties - DISABLED (not MVP)
+          // SimilarPropertiesSection(propertyId: widget.propertyId),
 
           const SizedBox(height: 100), // Space for FAB
         ],
@@ -411,21 +410,23 @@ class _PropertyDetailsScreenState
                     if (units.isEmpty || _selectedUnit == null) {
                       return const SizedBox.shrink();
                     }
-                    return Column(
-                      children: [
-                        RealtimeCalendarSection(
-                          unit: _selectedUnit!,
-                          isExpandedByDefault: true,
-                          onDateRangeSelected: (start, end) {
-                            // Date range selected - could show booking summary
-                            debugPrint('Selected range: $start - $end');
-                          },
-                        ),
-                        const SizedBox(height: 48),
-                        const Divider(),
-                        const SizedBox(height: 48),
-                      ],
-                    );
+                    // RealtimeCalendarSection - DISABLED (not MVP)
+                    return const SizedBox.shrink();
+                    // return Column(
+                    //   children: [
+                    //     RealtimeCalendarSection(
+                    //       unit: _selectedUnit!,
+                    //       isExpandedByDefault: true,
+                    //       onDateRangeSelected: (start, end) {
+                    //         // Date range selected - could show booking summary
+                    //         debugPrint('Selected range: $start - $end');
+                    //       },
+                    //     ),
+                    //     const SizedBox(height: 48),
+                    //     const Divider(),
+                    //     const SizedBox(height: 48),
+                    //   ],
+                    // );
                   },
                   loading: () => const SizedBox.shrink(),
                   error: (_, __) => const SizedBox.shrink(),
@@ -492,8 +493,8 @@ class _PropertyDetailsScreenState
                 const Divider(),
                 const SizedBox(height: 48),
 
-                // Similar Properties
-                SimilarPropertiesSection(propertyId: widget.propertyId),
+                // Similar Properties - DISABLED (not MVP)
+                // SimilarPropertiesSection(propertyId: widget.propertyId),
               ],
             ),
           ),

@@ -84,9 +84,9 @@ class PaymentInfoRepository {
           response['properties']['payment_info'];
 
       if (paymentInfoData is List && paymentInfoData.isNotEmpty) {
-        return PaymentInfo.fromJson(paymentInfoData.first);
+        return PaymentInfo.fromJson(paymentInfoData.first as Map<String, dynamic>);
       } else if (paymentInfoData is Map) {
-        return PaymentInfo.fromJson(paymentInfoData);
+        return PaymentInfo.fromJson(Map<String, dynamic>.from(paymentInfoData));
       }
 
       return null;

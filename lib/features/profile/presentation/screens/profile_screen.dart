@@ -536,10 +536,10 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
                 ),
               ),
 
-              // Footer
-              const SliverToBoxAdapter(
-                child: AppFooter(),
-              ),
+              // Footer - DISABLED (not MVP)
+              // const SliverToBoxAdapter(
+              //   child: AppFooter(),
+              // ),
             ],
           ),
 

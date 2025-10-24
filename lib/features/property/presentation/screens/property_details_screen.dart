@@ -252,7 +252,7 @@ class _PropertyDetailsScreenState
           if (property.amenities.isNotEmpty) ...[
             PremiumAmenitiesSection(
               amenities: property.amenities,
-              title: l10n.amenities,
+              title: AppLocalizations.of(context)!.amenities,
               displayStyle: AmenitiesDisplayStyle.grid,
               expandable: true,
               initialDisplayCount: 8,
@@ -311,7 +311,7 @@ class _PropertyDetailsScreenState
               );
             },
             loading: () => const CircularProgressIndicator(),
-            error: (error, stack) => Text('${l10n.error}: $error'),
+            error: (error, stack) => Text('${AppLocalizations.of(context)!.error}: $error'),
           ),
 
           const SizedBox(height: 32),
@@ -394,7 +394,7 @@ class _PropertyDetailsScreenState
                 if (property.amenities.isNotEmpty) ...[
                   PremiumAmenitiesSection(
                     amenities: property.amenities,
-                    title: l10n.amenities,
+                    title: AppLocalizations.of(context)!.amenities,
                     displayStyle: AmenitiesDisplayStyle.grid,
                     expandable: true,
                     initialDisplayCount: 12,
@@ -452,7 +452,7 @@ class _PropertyDetailsScreenState
                     );
                   },
                   loading: () => const CircularProgressIndicator(),
-                  error: (error, stack) => Text('${l10n.error}: $error'),
+                  error: (error, stack) => Text('${AppLocalizations.of(context)!.error}: $error'),
                 ),
 
                 const SizedBox(height: 48),

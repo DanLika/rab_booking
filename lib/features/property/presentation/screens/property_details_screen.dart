@@ -17,7 +17,7 @@ import '../widgets/location_map.dart';
 import '../widgets/host_info.dart';
 import '../widgets/reviews_section.dart';
 import '../widgets/booking_widget.dart';
-import '../widgets/similar_properties_section.dart';
+// import '../widgets/similar_properties_section.dart'; // DISABLED - not MVP
 import '../widgets/amenities_section.dart';
 import '../../domain/models/property_unit.dart';
 // import '../../../favorites/presentation/providers/favorites_provider.dart'; // DELETED FEATURE
@@ -191,19 +191,10 @@ class _PropertyDetailsScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Enhanced Image Gallery (favorites disabled)
-                    EnhancedImageGallery(
+                    // Simple Image Gallery (MVP - enhanced gallery disabled)
+                    ImageGalleryWidget(
                       images: property.images,
                       heroTag: 'property_${widget.propertyId}',
-                      onBackPressed: () {
-                        if (context.canGoBack()) {
-                          context.pop();
-                        } else {
-                          context.go(Routes.home);
-                        }
-                      },
-                      // onFavoritePressed removed - favorites feature deleted
-                      // isFavorite removed - favorites feature deleted
                     ),
 
                     // Main Content
@@ -211,8 +202,8 @@ class _PropertyDetailsScreenState
                         ? _buildMobileLayout(property, unitsAsync)
                         : _buildDesktopLayout(property, unitsAsync),
 
-                    // Footer
-                    const AppFooter(),
+                    // Footer - DISABLED (not MVP)
+                    // const AppFooter(),
                   ],
                 ),
               ),
@@ -223,15 +214,15 @@ class _PropertyDetailsScreenState
         error: (error, stack) => _buildErrorState(error.toString()),
       ),
 
-      // Booking FAB (mobile only)
-      floatingActionButton: isMobile && _selectedUnit != null && _currentProperty != null
-          ? BookingFAB(
-              unit: _selectedUnit!,
-              price: _selectedUnit!.pricePerNight,
-              isFloating: true,
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      // Booking FAB (mobile only) - DISABLED (not MVP)
+      // floatingActionButton: isMobile && _selectedUnit != null && _currentProperty != null
+      //     ? BookingFAB(
+      //         unit: _selectedUnit!,
+      //         price: _selectedUnit!.pricePerNight,
+      //         isFloating: true,
+      //       )
+      //     : null,
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -278,21 +269,23 @@ class _PropertyDetailsScreenState
               if (units.isEmpty || _selectedUnit == null) {
                 return const SizedBox.shrink();
               }
-              return Column(
-                children: [
-                  RealtimeCalendarSection(
-                    unit: _selectedUnit!,
-                    isExpandedByDefault: false,
-                    onDateRangeSelected: (start, end) {
-                      // Date range selected - could show booking summary
-                      debugPrint('Selected range: $start - $end');
-                    },
-                  ),
-                  const SizedBox(height: 32),
-                  const Divider(),
-                  const SizedBox(height: 32),
-                ],
-              );
+              // RealtimeCalendarSection - DISABLED (not MVP)
+              return const SizedBox.shrink();
+              // return Column(
+              //   children: [
+              //     RealtimeCalendarSection(
+              //       unit: _selectedUnit!,
+              //       isExpandedByDefault: false,
+              //       onDateRangeSelected: (start, end) {
+              //         // Date range selected - could show booking summary
+              //         debugPrint('Selected range: $start - $end');
+              //       },
+              //     ),
+              //     const SizedBox(height: 32),
+              //     const Divider(),
+              //     const SizedBox(height: 32),
+              //   ],
+              // );
             },
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),

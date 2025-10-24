@@ -25,7 +25,7 @@ export 'bottom_sheets/app_bottom_sheet.dart';
 export 'error_state_widget.dart';
 
 // Property Cards
-export 'property_card.dart';
+// export 'property_card.dart'; // DISABLED - not MVP
 
 // Responsive Widgets
 export 'responsive/responsive_grid.dart';
@@ -63,7 +63,7 @@ export 'animations/skeleton_loader.dart';
 export 'animations/hero_image.dart';
 
 // Footer
-export 'footer/app_footer.dart';
+// export 'footer/app_footer.dart'; // DISABLED - not MVP
 
 // Currency
 export 'price_text.dart';

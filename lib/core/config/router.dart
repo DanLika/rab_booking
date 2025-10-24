@@ -86,7 +86,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (isAuthenticated) {
           // Check if there's a redirect query parameter
           final redirectTo = state.uri.queryParameters['redirect'];
-          return redirectTo ?? Routes.home;
+          return redirectTo ?? Routes.ownerDashboard;
         }
         return null; // Allow access to auth pages
       }
@@ -243,6 +243,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           //   ),
           // ),
         ],
+      ),
+
+      // Root route - redirects to owner dashboard
+      GoRoute(
+        path: '/',
+        redirect: (context, state) => Routes.ownerDashboard,
       ),
 
       // Property details (outside shell for full-screen)

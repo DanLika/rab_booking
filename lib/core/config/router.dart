@@ -41,6 +41,9 @@ import '../../features/support/presentation/screens/contact_screen.dart';
 import '../../features/about/presentation/screens/about_us_screen.dart';
 import '../../features/about/presentation/screens/how_it_works_screen.dart';
 import '../../features/property/presentation/screens/all_reviews_screen.dart';
+import '../../features/calendar/presentation/screens/embed_calendar_screen.dart';
+import '../../features/calendar/presentation/screens/embed_booking_screen.dart';
+import '../../features/booking/presentation/screens/payment_confirmation_screen.dart' as booking_payment;
 
 // Admin screens
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
@@ -71,6 +74,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = authState.isAuthenticated;
       final userRole = authState.role;
       final currentPath = state.uri.path;
+
+      // Embed routes - always public (no authentication required)
+      if (currentPath.startsWith('/embed/')) {
+        return null; // Allow public access to embed routes
+      }
 
       // Auth pages - redirect authenticated users away
       if (currentPath.startsWith('/auth/')) {
@@ -621,6 +629,81 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Note: /notifications, /favorites, and /saved-searches are registered
       // inside the ShellRoute to show bottom navigation
+
+      // Embed routes (for iframe on jasko-rab.com) - Public routes
+      GoRoute(
+        path: '/embed/:unitId',
+        name: 'embedCalendar',
+        pageBuilder: (context, state) {
+          final unitId = state.pathParameters['unitId']!;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: EmbedCalendarScreen(unitId: unitId),
+            transitionsBuilder: _fadeTransition,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/embed/:unitId/booking',
+        name: 'embedBooking',
+        pageBuilder: (context, state) {
+          final unitId = state.pathParameters['unitId']!;
+          final extra = state.extra as Map<String, dynamic>?;
+
+          if (extra == null) {
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: const Scaffold(
+                body: Center(child: Text('Invalid booking data')),
+              ),
+              transitionsBuilder: _fadeTransition,
+            );
+          }
+
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: EmbedBookingScreen(
+              unitId: unitId,
+              unitName: extra['unitName'] as String,
+              selectedDates: extra['selectedDates'] as List<DateTime>,
+              totalPrice: extra['totalPrice'] as double,
+            ),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/embed/:unitId/payment/:bookingId',
+        name: 'embedPayment',
+        pageBuilder: (context, state) {
+          final unitId = state.pathParameters['unitId']!;
+          final bookingId = state.pathParameters['bookingId']!;
+          final extra = state.extra as Map<String, dynamic>?;
+
+          if (extra == null) {
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: const Scaffold(
+                body: Center(child: Text('Invalid payment data')),
+              ),
+              transitionsBuilder: _fadeTransition,
+            );
+          }
+
+          final booking = extra['booking'];
+          final unitName = extra['unitName'] as String;
+
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: booking_payment.PaymentConfirmationScreen(
+              bookingId: bookingId,
+              booking: booking,
+              unitName: unitName,
+            ),
+            transitionsBuilder: _scaleTransition,
+          );
+        },
+      ),
 
       // 404 route
       GoRoute(

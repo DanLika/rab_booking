@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/models/property_model.dart';
-import '../../property/domain/models/property_unit.dart';
+import '../../properties/domain/models/unit.dart'; // Changed from property_unit
 
 part 'owner_properties_repository.g.dart';
 
@@ -214,7 +214,7 @@ class OwnerPropertiesRepository {
   }
 
   /// Get units for property
-  Future<List<PropertyUnit>> getPropertyUnits(String propertyId) async {
+  Future<List<Unit>> getPropertyUnits(String propertyId) async { // Changed from PropertyUnit
     try {
       final response = await _supabase
           .from('units')
@@ -223,7 +223,7 @@ class OwnerPropertiesRepository {
           .order('created_at', ascending: false);
 
       return (response as List)
-          .map((json) => PropertyUnit.fromJson(json as Map<String, dynamic>))
+          .map((json) => Unit.fromJson(json as Map<String, dynamic>)) // Changed from PropertyUnit
           .toList();
     } catch (e) {
       throw Exception('Failed to fetch units: $e');
@@ -231,11 +231,11 @@ class OwnerPropertiesRepository {
   }
 
   /// Create unit
-  Future<PropertyUnit> createUnit({
+  Future<Unit> createUnit({ // Changed from PropertyUnit
     required String propertyId,
     required String name,
     String? description,
-    required double pricePerNight,
+    required double basePrice, // Changed from pricePerNight
     required int maxGuests,
     required int bedrooms,
     required int bathrooms,
@@ -251,7 +251,7 @@ class OwnerPropertiesRepository {
         'property_id': propertyId,
         'name': name,
         'description': description,
-        'base_price': pricePerNight,
+        'base_price': basePrice, // Changed from pricePerNight
         'max_guests': maxGuests,
         'bedrooms': bedrooms,
         'bathrooms': bathrooms,
@@ -264,18 +264,18 @@ class OwnerPropertiesRepository {
         'is_available': true,
       }).select().single();
 
-      return PropertyUnit.fromJson(response);
+      return Unit.fromJson(response); // Changed from PropertyUnit
     } catch (e) {
       throw Exception('Failed to create unit: $e');
     }
   }
 
   /// Update unit
-  Future<PropertyUnit> updateUnit({
+  Future<Unit> updateUnit({ // Changed from PropertyUnit
     required String unitId,
     String? name,
     String? description,
-    double? pricePerNight,
+    double? basePrice, // Changed from pricePerNight
     int? maxGuests,
     int? bedrooms,
     int? bathrooms,
@@ -291,7 +291,7 @@ class OwnerPropertiesRepository {
       final updates = <String, dynamic>{};
       if (name != null) updates['name'] = name;
       if (description != null) updates['description'] = description;
-      if (pricePerNight != null) updates['base_price'] = pricePerNight;
+      if (basePrice != null) updates['base_price'] = basePrice; // Changed from pricePerNight
       if (maxGuests != null) updates['max_guests'] = maxGuests;
       if (bedrooms != null) updates['bedrooms'] = bedrooms;
       if (bathrooms != null) updates['bathrooms'] = bathrooms;
@@ -313,7 +313,7 @@ class OwnerPropertiesRepository {
             .select()
             .single();
 
-        return PropertyUnit.fromJson(response);
+        return Unit.fromJson(response); // Changed from PropertyUnit
       }
 
       throw Exception('No updates provided');

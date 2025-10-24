@@ -9,7 +9,6 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../domain/models/booking_status.dart';
 import '../providers/user_bookings_provider.dart';
-import '../../../property/data/repositories/reviews_repository.dart';
 import '../../../../core/providers/auth_state_provider.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/presentation/widgets/adaptive_scaffold.dart';
@@ -325,15 +324,7 @@ class BookingDetailScreen extends ConsumerWidget {
                     ),
                   ),
                 ],
-
-                if (booking.status == BookingStatus.completed) ...[
-                  SizedBox(height: AppDimensions.spaceXS),
-                  _WriteReviewButton(
-                    bookingId: booking.id,
-                    propertyId: booking.propertyId,
-                    propertyName: booking.propertyName,
-                  ),
-                ],
+                // Reviews feature removed - not needed for MVP
               ],
             ),
           ),
@@ -629,82 +620,4 @@ class _DateCard extends StatelessWidget {
     );
   }
 }
-
-class _WriteReviewButton extends ConsumerWidget {
-  final String bookingId;
-  final String propertyId;
-  final String propertyName;
-
-  const _WriteReviewButton({
-    required this.bookingId,
-    required this.propertyId,
-    required this.propertyName,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final userId = ref.watch(authStateNotifierProvider).user?.id;
-
-    if (userId == null) {
-      return const SizedBox.shrink();
-    }
-
-    return FutureBuilder<PropertyReview?>(
-      future: ref
-          .read(reviewsRepositoryProvider)
-          .getUserReviewForBooking(bookingId: bookingId, userId: userId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: null,
-              child: SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          );
-        }
-
-        final localizations = AppLocalizations.of(context);
-        final existingReview = snapshot.data;
-        final hasReview = existingReview != null;
-
-        return SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () async {
-              final result = await context.push(
-                '/booking/$bookingId/review',
-                extra: {
-                  'propertyId': propertyId,
-                  'propertyName': propertyName,
-                  'existingReview': existingReview,
-                },
-              );
-
-              // Refresh if review was submitted
-              if (result == true) {
-                ref.invalidate(bookingDetailsProvider(bookingId));
-              }
-            },
-            icon: Icon(hasReview ? Icons.edit : Icons.rate_review),
-            label: Text(
-              hasReview
-                  ? localizations.editReview
-                  : localizations.writeReview,
-            ),
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: AppDimensions.spaceS),
-              minimumSize: const Size(double.infinity, 48),
-              backgroundColor:
-                  hasReview ? Colors.orange : Theme.of(context).primaryColor,
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
+// _WriteReviewButton removed - Reviews feature not needed for MVP

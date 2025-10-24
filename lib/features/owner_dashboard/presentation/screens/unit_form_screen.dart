@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../property/domain/models/property_unit.dart';
+import '../../../properties/domain/models/unit.dart'; // Changed from property_unit
 import '../../data/owner_properties_repository.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -16,7 +16,7 @@ class UnitFormScreen extends ConsumerStatefulWidget {
   });
 
   final String propertyId;
-  final PropertyUnit? unit;
+  final Unit? unit;
 
   @override
   ConsumerState<UnitFormScreen> createState() => _UnitFormScreenState();
@@ -53,11 +53,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
     final unit = widget.unit!;
     _nameController.text = unit.name;
     _descriptionController.text = unit.description ?? '';
-    _priceController.text = unit.pricePerNight.toStringAsFixed(0);
+    _priceController.text = unit.basePrice.toStringAsFixed(0);
     _bedroomsController.text = unit.bedrooms.toString();
     _bathroomsController.text = unit.bathrooms.toString();
     _maxGuestsController.text = unit.maxGuests.toString();
-    _areaController.text = unit.area.toStringAsFixed(0);
+    _areaController.text = unit.areaSqm.toStringAsFixed(0);
     _minStayController.text = unit.minStayNights.toString();
     _selectedAmenities = PropertyAmenity.fromStringList(unit.amenities).toSet();
     _existingImages = unit.images.toList();
@@ -554,7 +554,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           description: _descriptionController.text.isEmpty
               ? null
               : _descriptionController.text,
-          pricePerNight: double.parse(_priceController.text),
+          basePrice: double.parse(_priceController.text),
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),
           maxGuests: int.parse(_maxGuestsController.text),
@@ -573,7 +573,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           description: _descriptionController.text.isEmpty
               ? null
               : _descriptionController.text,
-          pricePerNight: double.parse(_priceController.text),
+          basePrice: double.parse(_priceController.text),
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),
           maxGuests: int.parse(_maxGuestsController.text),

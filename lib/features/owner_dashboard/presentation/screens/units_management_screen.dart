@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/owner_properties_repository.dart';
-import '../../../property/domain/models/property_unit.dart';
+import '../../../properties/domain/models/unit.dart'; // Changed from property_unit
 import 'unit_form_screen.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -18,7 +18,7 @@ class UnitsManagementScreen extends ConsumerStatefulWidget {
 
 class _UnitsManagementScreenState
     extends ConsumerState<UnitsManagementScreen> {
-  List<PropertyUnit>? _units;
+  List<Unit>? _units;
   bool _isLoading = true;
   String? _error;
 
@@ -36,7 +36,7 @@ class _UnitsManagementScreenState
 
     try {
       final repository = ref.read(ownerPropertiesRepositoryProvider);
-      final units = await repository.getPropertyUnits(widget.propertyId);
+      final units = await repository.getPropertyUnits(widget.propertyId); // Changed from getUnits
       setState(() {
         _units = units;
         _isLoading = false;
@@ -161,7 +161,7 @@ class _UnitsManagementScreenState
         .then((_) => _loadUnits());
   }
 
-  void _navigateToEditUnit(PropertyUnit unit) {
+  void _navigateToEditUnit(Unit unit) {
     Navigator.of(context)
         .push(
           MaterialPageRoute(
@@ -227,7 +227,7 @@ class _UnitCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  final PropertyUnit unit;
+  final Unit unit;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -280,7 +280,7 @@ class _UnitCard extends StatelessWidget {
                 ),
                 // Price
                 Text(
-                  '€${unit.pricePerNight.toStringAsFixed(0)}/noć',
+                  '€${unit.basePrice.toStringAsFixed(0)}/noć',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).primaryColor,
@@ -313,7 +313,7 @@ class _UnitCard extends StatelessWidget {
                 _buildDetail(
                   context,
                   icon: Icons.aspect_ratio,
-                  label: '${unit.area}m²',
+                  label: '${unit.areaSqm}m²',
                 ),
               ],
             ),

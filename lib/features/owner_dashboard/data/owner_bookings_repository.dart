@@ -3,7 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/models/booking_model.dart';
 import '../../../shared/models/property_model.dart';
-import '../../property/domain/models/property_unit.dart';
+import '../../properties/domain/models/unit.dart'; // Changed from property_unit
 import '../../booking/domain/models/booking_status.dart';
 
 part 'owner_bookings_repository.g.dart';
@@ -12,7 +12,7 @@ part 'owner_bookings_repository.g.dart';
 class OwnerBooking {
   final BookingModel booking;
   final PropertyModel property;
-  final PropertyUnit unit;
+  final Unit unit; // Changed from PropertyUnit
   final String guestName;
   final String guestEmail;
   final String? guestPhone;
@@ -111,7 +111,7 @@ class OwnerBookingsRepository {
         return OwnerBooking(
           booking: BookingModel.fromJson(bookingData),
           property: PropertyModel.fromJson(propertyData),
-          unit: PropertyUnit.fromJson(unitData),
+          unit: Unit.fromJson(unitData), // Changed from PropertyUnit
           guestName: userData != null
               ? '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'.trim()
               : 'Unknown Guest',

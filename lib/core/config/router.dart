@@ -9,12 +9,9 @@ import '../utils/navigation_helpers.dart';
 // import '../../features/home/presentation/screens/home_screen.dart'; // DELETED - AirBnb feature
 // import '../../features/search/presentation/screens/search_results_screen.dart'; // DELETED - AirBnb feature
 // import '../../features/search/presentation/screens/saved_searches_screen.dart'; // DELETED - AirBnb feature
-import '../../features/property/presentation/screens/property_details_screen.dart'; // Using regular version
-// import '../../features/property/presentation/screens/property_details_screen_redesigned.dart'; // DISABLED - not MVP
-import '../../features/property/presentation/screens/review_form_screen.dart';
-import '../../features/booking/presentation/screens/booking_screen.dart';
-// import '../../features/booking/presentation/screens/wizard/booking_wizard_screen.dart'; // DISABLED - using simpler flow
-import '../../features/booking/presentation/screens/booking_review_screen.dart';
+// import '../../features/property/presentation/screens/property_details_screen.dart'; // DELETED - entire property folder removed
+import '../../features/booking/presentation/screens/simple_booking_screen.dart'; // NEW minimal booking
+import '../../features/booking/presentation/screens/bank_transfer_instructions_screen.dart'; // NEW bank transfer
 import '../../features/booking/presentation/screens/user_bookings_screen.dart';
 import '../../features/booking/presentation/screens/booking_detail_screen.dart';
 import '../../features/booking/presentation/screens/booking_success_screen.dart';
@@ -26,12 +23,11 @@ import '../../features/auth/presentation/screens/email_verification_screen.dart'
 import '../../features/owner_dashboard/presentation/screens/owner_dashboard_screen.dart';
 import '../../features/owner/presentation/screens/property_management_screen.dart';
 import '../../features/payment/presentation/screens/payment_confirmation_screen.dart';
-import '../../features/payment/presentation/screens/payment_success_screen.dart';
-import '../../features/payment/presentation/screens/payment_screen.dart';
+// import '../../features/payment/presentation/screens/payment_success_screen.dart'; // DELETED - Stripe payment
+// import '../../features/payment/presentation/screens/payment_screen.dart'; // DELETED - Stripe payment
 import '../../features/profile/presentation/screens/profile_screen.dart';
 // import '../../features/notifications/presentation/screens/notifications_screen.dart'; // DELETED
 // import '../../features/favorites/presentation/screens/favorites_screen.dart'; // DELETED - AirBnb feature
-import '../../features/property/data/repositories/reviews_repository.dart'; // For PropertyReview type
 import '../../shared/presentation/widgets/app_scaffold_with_nav.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 // import '../../features/design_system_demo/design_system_demo_screen.dart'; // DELETED - Demo feature
@@ -41,10 +37,9 @@ import '../../shared/presentation/screens/not_found_screen.dart';
 // import '../../features/support/presentation/screens/contact_screen.dart'; // DELETED - Support feature
 // import '../../features/about/presentation/screens/about_us_screen.dart'; // DELETED - About feature
 // import '../../features/about/presentation/screens/how_it_works_screen.dart'; // DELETED - About feature
-import '../../features/property/presentation/screens/all_reviews_screen.dart';
 import '../../features/calendar/presentation/screens/embed_calendar_screen.dart';
 import '../../features/calendar/presentation/screens/embed_booking_screen.dart';
-import '../../features/booking/presentation/screens/payment_confirmation_screen.dart' as booking_payment;
+// import '../../features/booking/presentation/screens/payment_confirmation_screen.dart' as booking_payment; // DELETED
 
 // Admin screens - DELETED (not part of MVP)
 // import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
@@ -251,51 +246,63 @@ final routerProvider = Provider<GoRouter>((ref) {
         redirect: (context, state) => Routes.ownerDashboard,
       ),
 
-      // Property details (outside shell for full-screen)
-      GoRoute(
-        path: Routes.propertyDetails,
-        name: 'propertyDetails',
-        pageBuilder: (context, state) {
-          final propertyId = state.pathParameters['id']!;
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: PropertyDetailsScreen(propertyId: propertyId), // Using regular version
-            transitionsBuilder: _slideTransition,
-          );
-        },
-      ),
+      // Property details - DELETED (entire property folder removed for MVP)
 
-      // All reviews for a property
+      // Booking flow - NEW Minimal booking screen
       GoRoute(
-        path: '/property/:propertyId/reviews',
-        name: 'allReviews',
+        path: '/booking/:unitId',
+        name: 'simpleBooking',
         pageBuilder: (context, state) {
-          final propertyId = state.pathParameters['propertyId']!;
+          final unitId = state.pathParameters['unitId']!;
           final extra = state.extra as Map<String, dynamic>?;
 
+          if (extra == null) {
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: const Scaffold(
+                body: Center(child: Text('Invalid booking data')),
+              ),
+              transitionsBuilder: _fadeTransition,
+            );
+          }
+
           return CustomTransitionPage(
             key: state.pageKey,
-            child: AllReviewsScreen(
-              propertyId: propertyId,
-              propertyName: extra?['propertyName'] ?? 'Property',
-              rating: extra?['rating'] ?? 0.0,
-              reviewCount: extra?['reviewCount'] ?? 0,
+            child: SimpleBookingScreen(
+              unitId: unitId,
+              selectedDates: extra['selectedDates'] as List<DateTime>,
+              totalPrice: extra['totalPrice'] as double,
             ),
             transitionsBuilder: _slideTransition,
           );
         },
       ),
 
-      // Booking flow - Simple booking screen
+      // Bank transfer instructions
       GoRoute(
-        path: Routes.booking,
-        name: 'booking',
+        path: '/booking/payment-instructions',
+        name: 'bankTransferInstructions',
         pageBuilder: (context, state) {
-          final unitId = state.pathParameters['unitId']!;
+          final extra = state.extra as Map<String, dynamic>?;
+
+          if (extra == null) {
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: const Scaffold(
+                body: Center(child: Text('Invalid payment data')),
+              ),
+              transitionsBuilder: _fadeTransition,
+            );
+          }
+
           return CustomTransitionPage(
             key: state.pageKey,
-            child: BookingScreen(unitId: unitId), // Using simple flow
-            transitionsBuilder: _slideTransition,
+            child: BankTransferInstructionsScreen(
+              bookingId: extra['bookingId'] as String,
+              totalPrice: extra['totalPrice'] as double,
+              guestEmail: extra['guestEmail'] as String,
+            ),
+            transitionsBuilder: _scaleTransition,
           );
         },
       ),
@@ -314,16 +321,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       //   },
       // ),
 
-      // Booking review
-      GoRoute(
-        path: Routes.bookingReview,
-        name: 'bookingReview',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const BookingReviewScreen(),
-          transitionsBuilder: _slideTransition,
-        ),
-      ),
+      // Booking review - DELETED (not needed for MVP)
 
       // Booking detail
       GoRoute(
@@ -377,50 +375,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Review form
-      GoRoute(
-        path: '/booking/:bookingId/review',
-        name: 'reviewForm',
-        pageBuilder: (context, state) {
-          final bookingId = state.pathParameters['bookingId']!;
-          final extra = state.extra as Map<String, dynamic>?;
-
-          if (extra == null) {
-            return CustomTransitionPage(
-              key: state.pageKey,
-              child: const Scaffold(
-                body: Center(child: Text('Invalid review form data')),
-              ),
-              transitionsBuilder: _slideTransition,
-            );
-          }
-
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: ReviewFormScreen(
-              bookingId: bookingId,
-              propertyId: extra['propertyId'] as String,
-              propertyName: extra['propertyName'] as String,
-              existingReview: extra['existingReview'] as PropertyReview?,
-            ),
-            transitionsBuilder: _slideTransition,
-          );
-        },
-      ),
-
-      // Payment screen (Stripe payment)
-      GoRoute(
-        path: '/payment/:bookingId',
-        name: 'payment',
-        pageBuilder: (context, state) {
-          final bookingId = state.pathParameters['bookingId']!;
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: PaymentScreen(bookingId: bookingId),
-            transitionsBuilder: _slideTransition,
-          );
-        },
-      ),
+      // Payment screen - DELETED (Stripe not needed, only bank transfer)
 
       // Payment confirmation
       GoRoute(
@@ -436,19 +391,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Payment success
-      GoRoute(
-        path: '/payment/success/:bookingId',
-        name: 'paymentSuccess',
-        pageBuilder: (context, state) {
-          final bookingId = state.pathParameters['bookingId']!;
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: PaymentSuccessScreen(bookingId: bookingId),
-            transitionsBuilder: _scaleTransition,
-          );
-        },
-      ),
+      // Payment success - DELETED (Stripe not needed)
 
       // Auth routes
       GoRoute(
@@ -714,10 +657,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
           return CustomTransitionPage(
             key: state.pageKey,
-            child: booking_payment.PaymentConfirmationScreen(
+            child: PaymentConfirmationScreen(
               bookingId: bookingId,
-              booking: booking,
-              unitName: unitName,
             ),
             transitionsBuilder: _scaleTransition,
           );

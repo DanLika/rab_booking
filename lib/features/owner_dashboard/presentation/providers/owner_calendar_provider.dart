@@ -5,7 +5,7 @@ import '../../../../shared/models/booking_model.dart';
 import '../../data/owner_bookings_repository.dart';
 import '../../data/owner_properties_repository.dart';
 import '../../../../shared/models/property_model.dart';
-import '../../../property/domain/models/property_unit.dart';
+import '../../../properties/domain/models/unit.dart'; // Changed from property_unit
 import '../../../../core/providers/auth_state_provider.dart';
 
 part 'owner_calendar_provider.g.dart';
@@ -76,7 +76,7 @@ Future<List<PropertyModel>> ownerProperties(Ref ref) async {
 
 /// Units for selected property provider
 @riverpod
-Future<List<PropertyUnit>> selectedPropertyUnits(Ref ref) async {
+Future<List<Unit>> selectedUnits(Ref ref) async {
   final filters = ref.watch(calendarFiltersNotifierProvider);
 
   if (filters.selectedPropertyId == null) {
@@ -84,7 +84,7 @@ Future<List<PropertyUnit>> selectedPropertyUnits(Ref ref) async {
   }
 
   final repository = ref.watch(ownerPropertiesRepositoryProvider);
-  return repository.getPropertyUnits(filters.selectedPropertyId!);
+  return repository.getPropertyUnits(filters.selectedPropertyId!); // Changed from getUnits
 }
 
 /// Calendar bookings provider

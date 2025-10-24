@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../booking/presentation/screens/booking_form_screen.dart';
+import '../../../booking/presentation/screens/simple_booking_screen.dart';
 
-/// Embed Booking Screen - Wrapper oko BookingFormScreen za iframe
-/// Minimalni UI bez navigation bars
+/// Embed Booking Screen - Wrapper for iframe embedding
+/// Minimal UI without navigation bars
 class EmbedBookingScreen extends ConsumerWidget {
   final String unitId;
   final String unitName;
@@ -20,9 +20,8 @@ class EmbedBookingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return BookingFormScreen(
+    return SimpleBookingScreen(
       unitId: unitId,
-      unitName: unitName,
       selectedDates: selectedDates,
       totalPrice: totalPrice,
     );

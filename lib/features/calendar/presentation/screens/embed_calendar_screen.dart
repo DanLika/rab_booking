@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../properties/domain/models/unit.dart';
 import '../../../properties/presentation/providers/units_provider.dart';
-import '../widgets/grid_calendar_widget.dart';
+import '../widgets/year_grid_calendar_widget.dart';
 
 /// Embed Calendar Screen - Standalone calendar for iframe embedding
 /// Javni ekran bez authentifikacije za embedding na jasko-rab.com
@@ -45,7 +45,7 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
 
                 // Kalendar
                 Expanded(
-                  child: GridCalendarWidget(
+                  child: YearGridCalendarWidget(
                     unitId: widget.unitId,
                     enableSelection: true,
                     onDatesSelected: (dates, price) {

@@ -7,7 +7,7 @@ part of 'booking_flow_notifier.dart';
 // **************************************************************************
 
 String _$bookingFlowNotifierHash() =>
-    r'd6e0c2ea84dc96fd278cb2d4bf4107a3244988fe';
+    r'ce2781064b4b8c1f7d43ba2190626cee448d83e7';
 
 /// Booking flow notifier
 ///

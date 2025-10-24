@@ -29,14 +29,14 @@ import '../../features/payment/presentation/screens/payment_confirmation_screen.
 import '../../features/payment/presentation/screens/payment_success_screen.dart';
 import '../../features/payment/presentation/screens/payment_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
-import '../../features/notifications/presentation/screens/notifications_screen.dart';
+// import '../../features/notifications/presentation/screens/notifications_screen.dart'; // DELETED
 // import '../../features/favorites/presentation/screens/favorites_screen.dart'; // DELETED - AirBnb feature
 import '../../features/property/data/repositories/reviews_repository.dart'; // For PropertyReview type
 import '../../shared/presentation/widgets/app_scaffold_with_nav.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 // import '../../features/design_system_demo/design_system_demo_screen.dart'; // DELETED - Demo feature
-import '../../features/legal/presentation/screens/terms_conditions_screen.dart';
-import '../../features/legal/presentation/screens/privacy_policy_screen.dart';
+// import '../../features/legal/presentation/screens/terms_conditions_screen.dart'; // DELETED
+// import '../../features/legal/presentation/screens/privacy_policy_screen.dart'; // DELETED
 // import '../../features/support/presentation/screens/help_faq_screen.dart'; // DELETED - Support feature
 // import '../../features/support/presentation/screens/contact_screen.dart'; // DELETED - Support feature
 // import '../../features/about/presentation/screens/about_us_screen.dart'; // DELETED - About feature
@@ -209,15 +209,17 @@ final routerProvider = Provider<GoRouter>((ref) {
               transitionsBuilder: _fadeTransition,
             ),
           ),
-          GoRoute(
-            path: '/notifications',
-            name: 'notifications',
-            pageBuilder: (context, state) => CustomTransitionPage(
-              key: state.pageKey,
-              child: const NotificationsScreen(),
-              transitionsBuilder: _fadeTransition,
-            ),
-          ),
+
+          // DELETED - Notifications route
+          // GoRoute(
+          //   path: '/notifications',
+          //   name: 'notifications',
+          //   pageBuilder: (context, state) => CustomTransitionPage(
+          //     key: state.pageKey,
+          //     child: const NotificationsScreen(),
+          //     transitionsBuilder: _fadeTransition,
+          //   ),
+          // ),
 
           // DELETED - Favorites route (AirBnb feature)
           // GoRoute(
@@ -579,25 +581,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       //   ),
       // ),
 
-      // Legal & Support routes
-      GoRoute(
-        path: Routes.termsConditions,
-        name: 'termsConditions',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const TermsConditionsScreen(),
-          transitionsBuilder: _fadeTransition,
-        ),
-      ),
-      GoRoute(
-        path: Routes.privacyPolicy,
-        name: 'privacyPolicy',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const PrivacyPolicyScreen(),
-          transitionsBuilder: _fadeTransition,
-        ),
-      ),
+      // DELETED - Legal routes
+      // GoRoute(
+      //   path: Routes.termsConditions,
+      //   name: 'termsConditions',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const TermsConditionsScreen(),
+      //     transitionsBuilder: _fadeTransition,
+      //   ),
+      // ),
+      // GoRoute(
+      //   path: Routes.privacyPolicy,
+      //   name: 'privacyPolicy',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const PrivacyPolicyScreen(),
+      //     transitionsBuilder: _fadeTransition,
+      //   ),
+      // ),
       // DELETED - Support routes (not part of MVP)
       // GoRoute(
       //   path: Routes.helpFaq,

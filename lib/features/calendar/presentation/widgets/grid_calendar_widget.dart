@@ -397,6 +397,10 @@ class _CalendarDayCell extends StatelessWidget {
         borderColor = isSelected ? Colors.green[700]! : Colors.green[300]!;
         break;
       case DayStatus.booked:
+      case DayStatus.checkIn:
+      case DayStatus.checkOut:
+      case DayStatus.sameDayTurnover:
+        // MVP: Treat all booking states as booked (red)
         backgroundColor = Colors.red[100]!; // 🔴 CRVENA
         textColor = Colors.red[900]!;
         borderColor = Colors.red[300]!;

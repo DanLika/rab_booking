@@ -8,9 +8,9 @@ import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/property_details_provider.dart';
 import '../widgets/image_gallery_widget.dart';
-import '../widgets/enhanced_image_gallery.dart';
-import '../widgets/booking_fab.dart';
-import '../widgets/realtime_calendar_section.dart';
+// import '../widgets/enhanced_image_gallery.dart'; // DISABLED - not MVP
+// import '../widgets/booking_fab.dart'; // DISABLED - not MVP
+// import '../widgets/realtime_calendar_section.dart'; // DISABLED - not MVP
 import '../widgets/property_info_section.dart';
 import '../widgets/units_section.dart';
 import '../widgets/location_map.dart';
@@ -20,8 +20,8 @@ import '../widgets/booking_widget.dart';
 import '../widgets/similar_properties_section.dart';
 import '../widgets/amenities_section.dart';
 import '../../domain/models/property_unit.dart';
-import '../../../favorites/presentation/providers/favorites_provider.dart';
-import '../../../search/presentation/providers/recently_viewed_provider.dart';
+// import '../../../favorites/presentation/providers/favorites_provider.dart'; // DELETED FEATURE
+// import '../../../search/presentation/providers/recently_viewed_provider.dart'; // DELETED FEATURE
 import '../../../../shared/widgets/widgets.dart';
 import '../../../../core/utils/seo_utils.dart';
 
@@ -112,10 +112,10 @@ class _PropertyDetailsScreenState
             if (_currentProperty != property) {
               setState(() => _currentProperty = property);
 
-              // Track this property view in recently viewed
-              ref
-                  .read(recentlyViewedNotifierProvider.notifier)
-                  .addView(widget.propertyId);
+              // Track this property view in recently viewed (DISABLED - feature deleted)
+              // ref
+              //     .read(recentlyViewedNotifierProvider.notifier)
+              //     .addView(widget.propertyId);
 
               // Update SEO metadata
               _updateSEO(property, l10n);
@@ -147,41 +147,42 @@ class _PropertyDetailsScreenState
                       );
                     },
                   ),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final favoritesNotifier = ref.watch(favoritesNotifierProvider);
-                      final isFavorite = favoritesNotifier.maybeWhen(
-                        data: (favorites) => favorites.contains(widget.propertyId),
-                        orElse: () => false,
-                      );
-
-                      return Semantics(
-                        label: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
-                        hint: l10n.toggleFavoriteStatus,
-                        button: true,
-                        child: IconButton(
-                          icon: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: isFavorite ? Colors.red : null,
-                          ),
-                          onPressed: () async {
-                            try {
-                              await ref
-                                  .read(favoritesNotifierProvider.notifier)
-                                  .toggleFavorite(widget.propertyId);
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('${l10n.error}: $e')),
-                                );
-                              }
-                            }
-                          },
-                          tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
-                        ),
-                      );
-                    },
-                  ),
+                  // FAVORITES BUTTON - DISABLED (feature deleted)
+                  // Consumer(
+                  //   builder: (context, ref, child) {
+                  //     final favoritesNotifier = ref.watch(favoritesNotifierProvider);
+                  //     final isFavorite = favoritesNotifier.maybeWhen(
+                  //       data: (favorites) => favorites.contains(widget.propertyId),
+                  //       orElse: () => false,
+                  //     );
+                  //
+                  //     return Semantics(
+                  //       label: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
+                  //       hint: l10n.toggleFavoriteStatus,
+                  //       button: true,
+                  //       child: IconButton(
+                  //         icon: Icon(
+                  //           isFavorite ? Icons.favorite : Icons.favorite_border,
+                  //           color: isFavorite ? Colors.red : null,
+                  //         ),
+                  //         onPressed: () async {
+                  //           try {
+                  //             await ref
+                  //                 .read(favoritesNotifierProvider.notifier)
+                  //                 .toggleFavorite(widget.propertyId);
+                  //           } catch (e) {
+                  //             if (context.mounted) {
+                  //               ScaffoldMessenger.of(context).showSnackBar(
+                  //                 SnackBar(content: Text('${l10n.error}: $e')),
+                  //               );
+                  //             }
+                  //           }
+                  //         },
+                  //         tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
+                  //       ),
+                  //     );
+                  //   },
+                  // ),
                 ],
               ),
 
@@ -190,41 +191,19 @@ class _PropertyDetailsScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Enhanced Image Gallery
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final favoritesNotifier = ref.watch(favoritesNotifierProvider);
-                        final isFavorite = favoritesNotifier.maybeWhen(
-                          data: (favorites) => favorites.contains(widget.propertyId),
-                          orElse: () => false,
-                        );
-
-                        return EnhancedImageGallery(
-                          images: property.images,
-                          heroTag: 'property_${widget.propertyId}',
-                          onBackPressed: () {
-                            if (context.canGoBack()) {
-                              context.pop();
-                            } else {
-                              context.go(Routes.home);
-                            }
-                          },
-                          onFavoritePressed: () async {
-                            try {
-                              await ref
-                                  .read(favoritesNotifierProvider.notifier)
-                                  .toggleFavorite(widget.propertyId);
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('${l10n.error}: $e')),
-                                );
-                              }
-                            }
-                          },
-                          isFavorite: isFavorite,
-                        );
+                    // Enhanced Image Gallery (favorites disabled)
+                    EnhancedImageGallery(
+                      images: property.images,
+                      heroTag: 'property_${widget.propertyId}',
+                      onBackPressed: () {
+                        if (context.canGoBack()) {
+                          context.pop();
+                        } else {
+                          context.go(Routes.home);
+                        }
                       },
+                      // onFavoritePressed removed - favorites feature deleted
+                      // isFavorite removed - favorites feature deleted
                     ),
 
                     // Main Content

@@ -9,7 +9,8 @@ import '../utils/navigation_helpers.dart';
 // import '../../features/home/presentation/screens/home_screen.dart'; // DELETED - AirBnb feature
 // import '../../features/search/presentation/screens/search_results_screen.dart'; // DELETED - AirBnb feature
 // import '../../features/search/presentation/screens/saved_searches_screen.dart'; // DELETED - AirBnb feature
-import '../../features/property/presentation/screens/property_details_screen_redesigned.dart';
+import '../../features/property/presentation/screens/property_details_screen.dart'; // Using regular version
+// import '../../features/property/presentation/screens/property_details_screen_redesigned.dart'; // DISABLED - not MVP
 import '../../features/property/presentation/screens/review_form_screen.dart';
 import '../../features/booking/presentation/screens/booking_screen.dart';
 // import '../../features/booking/presentation/screens/wizard/booking_wizard_screen.dart'; // DISABLED - using simpler flow
@@ -250,7 +251,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final propertyId = state.pathParameters['id']!;
           return CustomTransitionPage(
             key: state.pageKey,
-            child: PropertyDetailsScreenRedesigned(propertyId: propertyId),
+            child: PropertyDetailsScreen(propertyId: propertyId), // Using regular version
             transitionsBuilder: _slideTransition,
           );
         },

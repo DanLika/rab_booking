@@ -6,13 +6,13 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/auth_state_provider.dart';
 import '../utils/navigation_helpers.dart';
-import '../../features/home/presentation/screens/home_screen.dart';
-import '../../features/search/presentation/screens/search_results_screen.dart';
-import '../../features/search/presentation/screens/saved_searches_screen.dart';
+// import '../../features/home/presentation/screens/home_screen.dart'; // DELETED - AirBnb feature
+// import '../../features/search/presentation/screens/search_results_screen.dart'; // DELETED - AirBnb feature
+// import '../../features/search/presentation/screens/saved_searches_screen.dart'; // DELETED - AirBnb feature
 import '../../features/property/presentation/screens/property_details_screen_redesigned.dart';
 import '../../features/property/presentation/screens/review_form_screen.dart';
 import '../../features/booking/presentation/screens/booking_screen.dart';
-import '../../features/booking/presentation/screens/wizard/booking_wizard_screen.dart';
+// import '../../features/booking/presentation/screens/wizard/booking_wizard_screen.dart'; // DISABLED - using simpler flow
 import '../../features/booking/presentation/screens/booking_review_screen.dart';
 import '../../features/booking/presentation/screens/user_bookings_screen.dart';
 import '../../features/booking/presentation/screens/booking_detail_screen.dart';
@@ -29,28 +29,28 @@ import '../../features/payment/presentation/screens/payment_success_screen.dart'
 import '../../features/payment/presentation/screens/payment_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
-import '../../features/favorites/presentation/screens/favorites_screen.dart';
+// import '../../features/favorites/presentation/screens/favorites_screen.dart'; // DELETED - AirBnb feature
 import '../../features/property/data/repositories/reviews_repository.dart'; // For PropertyReview type
 import '../../shared/presentation/widgets/app_scaffold_with_nav.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
-import '../../features/design_system_demo/design_system_demo_screen.dart';
+// import '../../features/design_system_demo/design_system_demo_screen.dart'; // DELETED - Demo feature
 import '../../features/legal/presentation/screens/terms_conditions_screen.dart';
 import '../../features/legal/presentation/screens/privacy_policy_screen.dart';
-import '../../features/support/presentation/screens/help_faq_screen.dart';
-import '../../features/support/presentation/screens/contact_screen.dart';
-import '../../features/about/presentation/screens/about_us_screen.dart';
-import '../../features/about/presentation/screens/how_it_works_screen.dart';
+// import '../../features/support/presentation/screens/help_faq_screen.dart'; // DELETED - Support feature
+// import '../../features/support/presentation/screens/contact_screen.dart'; // DELETED - Support feature
+// import '../../features/about/presentation/screens/about_us_screen.dart'; // DELETED - About feature
+// import '../../features/about/presentation/screens/how_it_works_screen.dart'; // DELETED - About feature
 import '../../features/property/presentation/screens/all_reviews_screen.dart';
 import '../../features/calendar/presentation/screens/embed_calendar_screen.dart';
 import '../../features/calendar/presentation/screens/embed_booking_screen.dart';
 import '../../features/booking/presentation/screens/payment_confirmation_screen.dart' as booking_payment;
 
-// Admin screens
-import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
-import '../../features/admin/presentation/screens/admin_users_screen.dart';
-import '../../features/admin/presentation/screens/admin_properties_screen.dart';
-import '../../features/admin/presentation/screens/admin_bookings_screen.dart';
-import '../../features/admin/presentation/screens/admin_analytics_screen.dart';
+// Admin screens - DELETED (not part of MVP)
+// import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
+// import '../../features/admin/presentation/screens/admin_users_screen.dart';
+// import '../../features/admin/presentation/screens/admin_properties_screen.dart';
+// import '../../features/admin/presentation/screens/admin_bookings_screen.dart';
+// import '../../features/admin/presentation/screens/admin_analytics_screen.dart';
 
 
 /// GoRouter provider with auth integration
@@ -65,7 +65,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(() => streamController.close());
 
   return GoRouter(
-    initialLocation: Routes.home,
+    initialLocation: Routes.ownerDashboard, // Changed from home (deleted feature)
     debugLogDiagnostics: true,
     refreshListenable: GoRouterRefreshStream(
       streamController.stream,
@@ -95,9 +95,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/booking/',
         '/bookings/',
         '/payment/',
-        '/favorites',
+        // '/favorites', // DELETED - AirBnb feature
         '/notifications',
-        '/saved-searches',
+        // '/saved-searches', // DELETED - AirBnb feature
         Routes.paymentConfirm,
         Routes.profile,
         Routes.myBookings,
@@ -155,38 +155,41 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
         routes: [
           // Public routes
-          GoRoute(
-            path: Routes.home,
-            name: 'home',
-            pageBuilder: (context, state) => CustomTransitionPage(
-              key: state.pageKey,
-              child: const HomeScreen(),
-              transitionsBuilder: _fadeTransition,
-            ),
-          ),
-          GoRoute(
-            path: Routes.search,
-            name: 'search',
-            pageBuilder: (context, state) {
-              final location = state.uri.queryParameters['location'];
-              final guestsStr = state.uri.queryParameters['guests'];
-              final checkIn = state.uri.queryParameters['checkIn'];
-              final checkOut = state.uri.queryParameters['checkOut'];
+          // DELETED - Home route (AirBnb feature)
+          // GoRoute(
+          //   path: Routes.home,
+          //   name: 'home',
+          //   pageBuilder: (context, state) => CustomTransitionPage(
+          //     key: state.pageKey,
+          //     child: const HomeScreen(),
+          //     transitionsBuilder: _fadeTransition,
+          //   ),
+          // ),
 
-              final guests = guestsStr != null ? int.tryParse(guestsStr) : null;
-
-              return CustomTransitionPage(
-                key: state.pageKey,
-                child: SearchResultsScreen(
-                  location: location,
-                  guests: guests,
-                  checkIn: checkIn,
-                  checkOut: checkOut,
-                ),
-                transitionsBuilder: _slideTransition,
-              );
-            },
-          ),
+          // DELETED - Search route (AirBnb feature)
+          // GoRoute(
+          //   path: Routes.search,
+          //   name: 'search',
+          //   pageBuilder: (context, state) {
+          //     final location = state.uri.queryParameters['location'];
+          //     final guestsStr = state.uri.queryParameters['guests'];
+          //     final checkIn = state.uri.queryParameters['checkIn'];
+          //     final checkOut = state.uri.queryParameters['checkOut'];
+          //
+          //     final guests = guestsStr != null ? int.tryParse(guestsStr) : null;
+          //
+          //     return CustomTransitionPage(
+          //       key: state.pageKey,
+          //       child: SearchResultsScreen(
+          //         location: location,
+          //         guests: guests,
+          //         checkIn: checkIn,
+          //         checkOut: checkOut,
+          //       ),
+          //       transitionsBuilder: _slideTransition,
+          //     );
+          //   },
+          // ),
           GoRoute(
             path: Routes.myBookings,
             name: 'myBookings',
@@ -214,24 +217,28 @@ final routerProvider = Provider<GoRouter>((ref) {
               transitionsBuilder: _fadeTransition,
             ),
           ),
-          GoRoute(
-            path: '/favorites',
-            name: 'favorites',
-            pageBuilder: (context, state) => CustomTransitionPage(
-              key: state.pageKey,
-              child: const FavoritesScreen(),
-              transitionsBuilder: _fadeTransition,
-            ),
-          ),
-          GoRoute(
-            path: '/saved-searches',
-            name: 'savedSearches',
-            pageBuilder: (context, state) => CustomTransitionPage(
-              key: state.pageKey,
-              child: const SavedSearchesScreen(),
-              transitionsBuilder: _fadeTransition,
-            ),
-          ),
+
+          // DELETED - Favorites route (AirBnb feature)
+          // GoRoute(
+          //   path: '/favorites',
+          //   name: 'favorites',
+          //   pageBuilder: (context, state) => CustomTransitionPage(
+          //     key: state.pageKey,
+          //     child: const FavoritesScreen(),
+          //     transitionsBuilder: _fadeTransition,
+          //   ),
+          // ),
+
+          // DELETED - Saved searches route (AirBnb feature)
+          // GoRoute(
+          //   path: '/saved-searches',
+          //   name: 'savedSearches',
+          //   pageBuilder: (context, state) => CustomTransitionPage(
+          //     key: state.pageKey,
+          //     child: const SavedSearchesScreen(),
+          //     transitionsBuilder: _fadeTransition,
+          //   ),
+          // ),
         ],
       ),
 
@@ -270,7 +277,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Booking flow - NEW 6-STEP WIZARD (default)
+      // Booking flow - Simple booking screen
       GoRoute(
         path: Routes.booking,
         name: 'booking',
@@ -278,25 +285,25 @@ final routerProvider = Provider<GoRouter>((ref) {
           final unitId = state.pathParameters['unitId']!;
           return CustomTransitionPage(
             key: state.pageKey,
-            child: BookingWizardScreen(unitId: unitId), // ← Changed to Wizard!
+            child: BookingScreen(unitId: unitId), // Using simple flow
             transitionsBuilder: _slideTransition,
           );
         },
       ),
 
-      // Old booking screen (legacy - for fallback)
-      GoRoute(
-        path: '/booking/legacy/:unitId',
-        name: 'bookingLegacy',
-        pageBuilder: (context, state) {
-          final unitId = state.pathParameters['unitId']!;
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: BookingScreen(unitId: unitId),
-            transitionsBuilder: _slideTransition,
-          );
-        },
-      ),
+      // DISABLED - Wizard booking flow (complex 6-step process)
+      // GoRoute(
+      //   path: '/booking/wizard/:unitId',
+      //   name: 'bookingWizard',
+      //   pageBuilder: (context, state) {
+      //     final unitId = state.pathParameters['unitId']!;
+      //     return CustomTransitionPage(
+      //       key: state.pageKey,
+      //       child: BookingWizardScreen(unitId: unitId),
+      //       transitionsBuilder: _slideTransition,
+      //     );
+      //   },
+      // ),
 
       // Booking review
       GoRoute(
@@ -513,63 +520,63 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Admin routes
-      GoRoute(
-        path: Routes.adminDashboard,
-        name: 'adminDashboard',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const AdminDashboardScreen(),
-          transitionsBuilder: _slideTransition,
-        ),
-      ),
-      GoRoute(
-        path: '/admin/users',
-        name: 'adminUsers',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const AdminUsersScreen(),
-          transitionsBuilder: _slideTransition,
-        ),
-      ),
-      GoRoute(
-        path: '/admin/properties',
-        name: 'adminProperties',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const AdminPropertiesScreen(),
-          transitionsBuilder: _slideTransition,
-        ),
-      ),
-      GoRoute(
-        path: '/admin/bookings',
-        name: 'adminBookings',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const AdminBookingsScreen(),
-          transitionsBuilder: _slideTransition,
-        ),
-      ),
-      GoRoute(
-        path: '/admin/analytics',
-        name: 'adminAnalytics',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const AdminAnalyticsScreen(),
-          transitionsBuilder: _slideTransition,
-        ),
-      ),
+      // DELETED - Admin routes (not part of MVP)
+      // GoRoute(
+      //   path: Routes.adminDashboard,
+      //   name: 'adminDashboard',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const AdminDashboardScreen(),
+      //     transitionsBuilder: _slideTransition,
+      //   ),
+      // ),
+      // GoRoute(
+      //   path: '/admin/users',
+      //   name: 'adminUsers',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const AdminUsersScreen(),
+      //     transitionsBuilder: _slideTransition,
+      //   ),
+      // ),
+      // GoRoute(
+      //   path: '/admin/properties',
+      //   name: 'adminProperties',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const AdminPropertiesScreen(),
+      //     transitionsBuilder: _slideTransition,
+      //   ),
+      // ),
+      // GoRoute(
+      //   path: '/admin/bookings',
+      //   name: 'adminBookings',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const AdminBookingsScreen(),
+      //     transitionsBuilder: _slideTransition,
+      //   ),
+      // ),
+      // GoRoute(
+      //   path: '/admin/analytics',
+      //   name: 'adminAnalytics',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const AdminAnalyticsScreen(),
+      //     transitionsBuilder: _slideTransition,
+      //   ),
+      // ),
 
-      // Design System Demo (for development)
-      GoRoute(
-        path: '/design-system-demo',
-        name: 'designSystemDemo',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const DesignSystemDemoScreen(),
-          transitionsBuilder: _rotationTransition,
-        ),
-      ),
+      // DELETED - Design System Demo (not needed)
+      // GoRoute(
+      //   path: '/design-system-demo',
+      //   name: 'designSystemDemo',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const DesignSystemDemoScreen(),
+      //     transitionsBuilder: _rotationTransition,
+      //   ),
+      // ),
 
       // Legal & Support routes
       GoRoute(
@@ -590,42 +597,45 @@ final routerProvider = Provider<GoRouter>((ref) {
           transitionsBuilder: _fadeTransition,
         ),
       ),
-      GoRoute(
-        path: Routes.helpFaq,
-        name: 'helpFaq',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const HelpFaqScreen(),
-          transitionsBuilder: _fadeTransition,
-        ),
-      ),
-      GoRoute(
-        path: Routes.contact,
-        name: 'contact',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const ContactScreen(),
-          transitionsBuilder: _slideTransition,
-        ),
-      ),
-      GoRoute(
-        path: Routes.aboutUs,
-        name: 'aboutUs',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const AboutUsScreen(),
-          transitionsBuilder: _fadeTransition,
-        ),
-      ),
-      GoRoute(
-        path: Routes.howItWorks,
-        name: 'howItWorks',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const HowItWorksScreen(),
-          transitionsBuilder: _slideTransition,
-        ),
-      ),
+      // DELETED - Support routes (not part of MVP)
+      // GoRoute(
+      //   path: Routes.helpFaq,
+      //   name: 'helpFaq',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const HelpFaqScreen(),
+      //     transitionsBuilder: _fadeTransition,
+      //   ),
+      // ),
+      // GoRoute(
+      //   path: Routes.contact,
+      //   name: 'contact',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const ContactScreen(),
+      //     transitionsBuilder: _slideTransition,
+      //   ),
+      // ),
+
+      // DELETED - About routes (not part of MVP)
+      // GoRoute(
+      //   path: Routes.aboutUs,
+      //   name: 'aboutUs',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const AboutUsScreen(),
+      //     transitionsBuilder: _fadeTransition,
+      //   ),
+      // ),
+      // GoRoute(
+      //   path: Routes.howItWorks,
+      //   name: 'howItWorks',
+      //   pageBuilder: (context, state) => CustomTransitionPage(
+      //     key: state.pageKey,
+      //     child: const HowItWorksScreen(),
+      //     transitionsBuilder: _slideTransition,
+      //   ),
+      // ),
 
       // Note: /notifications, /favorites, and /saved-searches are registered
       // inside the ShellRoute to show bottom navigation
@@ -676,7 +686,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/embed/:unitId/payment/:bookingId',
         name: 'embedPayment',
         pageBuilder: (context, state) {
-          final unitId = state.pathParameters['unitId']!;
+          // unitId is in path but not used in this route
           final bookingId = state.pathParameters['bookingId']!;
           final extra = state.extra as Map<String, dynamic>?;
 
@@ -722,10 +732,11 @@ final routerProvider = Provider<GoRouter>((ref) {
 /// Helper to determine if bottom nav should be shown
 bool _shouldShowBottomNav(String path) {
   final bottomNavRoutes = [
-    Routes.home,
-    Routes.search,
+    // Routes.home, // DELETED - AirBnb feature
+    // Routes.search, // DELETED - AirBnb feature
     Routes.myBookings,
     Routes.profile,
+    Routes.ownerDashboard, // Added for MVP
   ];
 
   return bottomNavRoutes.any((route) => path == route);
@@ -829,35 +840,35 @@ Widget _scaleTransition(
   );
 }
 
-/// Rotation + fade transition (for special pages)
-Widget _rotationTransition(
-  BuildContext context,
-  Animation<double> animation,
-  Animation<double> secondaryAnimation,
-  Widget child,
-) {
-  const curve = Curves.easeInOutCubic;
-
-  final curvedAnimation = CurvedAnimation(
-    parent: animation,
-    curve: curve,
-  );
-
-  final rotationTween = Tween<double>(begin: -0.05, end: 0.0); // Slight rotation
-  final fadeTween = Tween<double>(begin: 0.0, end: 1.0);
-  final scaleTween = Tween<double>(begin: 0.9, end: 1.0);
-
-  return FadeTransition(
-    opacity: curvedAnimation.drive(fadeTween),
-    child: ScaleTransition(
-      scale: curvedAnimation.drive(scaleTween),
-      child: RotationTransition(
-        turns: curvedAnimation.drive(rotationTween),
-        child: child,
-      ),
-    ),
-  );
-}
+/// DELETED - Rotation + fade transition (was used by design system demo)
+// Widget _rotationTransition(
+//   BuildContext context,
+//   Animation<double> animation,
+//   Animation<double> secondaryAnimation,
+//   Widget child,
+// ) {
+//   const curve = Curves.easeInOutCubic;
+//
+//   final curvedAnimation = CurvedAnimation(
+//     parent: animation,
+//     curve: curve,
+//   );
+//
+//   final rotationTween = Tween<double>(begin: -0.05, end: 0.0); // Slight rotation
+//   final fadeTween = Tween<double>(begin: 0.0, end: 1.0);
+//   final scaleTween = Tween<double>(begin: 0.9, end: 1.0);
+//
+//   return FadeTransition(
+//     opacity: curvedAnimation.drive(fadeTween),
+//     child: ScaleTransition(
+//       scale: curvedAnimation.drive(scaleTween),
+//       child: RotationTransition(
+//         turns: curvedAnimation.drive(rotationTween),
+//         child: child,
+//       ),
+//     ),
+//   );
+// }
 
 /// GoRouter refresh stream helper
 class GoRouterRefreshStream extends ChangeNotifier {

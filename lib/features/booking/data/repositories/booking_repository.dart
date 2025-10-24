@@ -206,7 +206,7 @@ class BookingRepository {
           .from('bookings')
           .select('id')
           .eq('unit_id', unitId)
-          .in_('status', ['confirmed', 'pending'])
+          .inFilter('status', ['confirmed', 'pending'])
           .or('check_in.gte.${checkIn.toIso8601String()},check_in.lt.${checkOut.toIso8601String()}')
           .or('check_out.gt.${checkIn.toIso8601String()},check_out.lte.${checkOut.toIso8601String()}');
 

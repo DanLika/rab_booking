@@ -12,20 +12,20 @@ import '../utils/navigation_helpers.dart';
 // import '../../features/property/presentation/screens/property_details_screen.dart'; // DELETED - entire property folder removed
 import '../../features/booking/presentation/screens/simple_booking_screen.dart'; // NEW minimal booking
 import '../../features/booking/presentation/screens/bank_transfer_instructions_screen.dart'; // NEW bank transfer
-import '../../features/booking/presentation/screens/user_bookings_screen.dart';
-import '../../features/booking/presentation/screens/booking_detail_screen.dart';
-import '../../features/booking/presentation/screens/booking_success_screen.dart';
+// import '../../features/booking/presentation/screens/user_bookings_screen.dart'; // DELETED - guest feature
+// import '../../features/booking/presentation/screens/booking_detail_screen.dart'; // DELETED - guest feature
+// import '../../features/booking/presentation/screens/booking_success_screen.dart'; // DELETED - not needed
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/email_verification_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_dashboard_screen.dart';
-import '../../features/owner/presentation/screens/property_management_screen.dart';
-import '../../features/payment/presentation/screens/payment_confirmation_screen.dart';
+// import '../../features/owner/presentation/screens/property_management_screen.dart'; // DELETED - redundant folder
+// import '../../features/payment/presentation/screens/payment_confirmation_screen.dart'; // DELETED - entire payment folder removed
 // import '../../features/payment/presentation/screens/payment_success_screen.dart'; // DELETED - Stripe payment
 // import '../../features/payment/presentation/screens/payment_screen.dart'; // DELETED - Stripe payment
-import '../../features/profile/presentation/screens/profile_screen.dart';
+// import '../../features/profile/presentation/screens/profile_screen.dart'; // DELETED - entire profile folder
 // import '../../features/notifications/presentation/screens/notifications_screen.dart'; // DELETED
 // import '../../features/favorites/presentation/screens/favorites_screen.dart'; // DELETED - AirBnb feature
 import '../../shared/presentation/widgets/app_scaffold_with_nav.dart';
@@ -186,24 +186,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           //     );
           //   },
           // ),
-          GoRoute(
-            path: Routes.myBookings,
-            name: 'myBookings',
-            pageBuilder: (context, state) => CustomTransitionPage(
-              key: state.pageKey,
-              child: const UserBookingsScreen(),
-              transitionsBuilder: _fadeTransition,
-            ),
-          ),
-          GoRoute(
-            path: Routes.profile,
-            name: 'profile',
-            pageBuilder: (context, state) => CustomTransitionPage(
-              key: state.pageKey,
-              child: const ProfileScreen(),
-              transitionsBuilder: _fadeTransition,
-            ),
-          ),
+          // MyBookings - DELETED (guest feature, not needed for SAAS)
+          // Profile - DELETED (guest feature, not needed for SAAS)
 
           // DELETED - Notifications route
           // GoRoute(
@@ -323,73 +307,13 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Booking review - DELETED (not needed for MVP)
 
-      // Booking detail
-      GoRoute(
-        path: '/bookings/:id',
-        name: 'bookingDetail',
-        pageBuilder: (context, state) {
-          final bookingId = state.pathParameters['id']!;
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: BookingDetailScreen(bookingId: bookingId),
-            transitionsBuilder: _slideTransition,
-          );
-        },
-      ),
+      // Booking detail - DELETED (guest feature, not needed for SAAS)
 
-      // Booking success
-      GoRoute(
-        path: '/booking/success/:bookingReference',
-        name: 'bookingSuccess',
-        pageBuilder: (context, state) {
-          final bookingReference = state.pathParameters['bookingReference']!;
-          final extra = state.extra as Map<String, dynamic>?;
-
-          if (extra == null) {
-            return CustomTransitionPage(
-              key: state.pageKey,
-              child: const Scaffold(
-                body: Center(child: Text('Invalid booking data')),
-              ),
-              transitionsBuilder: _fadeTransition,
-            );
-          }
-
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: BookingSuccessScreen(
-              bookingReference: bookingReference,
-              propertyName: extra['propertyName'] as String,
-              propertyImage: extra['propertyImage'] as String?,
-              propertyLocation: extra['propertyLocation'] as String,
-              checkIn: DateTime.parse(extra['checkIn'] as String),
-              checkOut: DateTime.parse(extra['checkOut'] as String),
-              guests: extra['guests'] as int,
-              nights: extra['nights'] as int,
-              totalAmount: (extra['totalAmount'] as num).toDouble(),
-              currencySymbol: extra['currencySymbol'] as String? ?? '\$',
-              confirmationEmail: extra['confirmationEmail'] as String,
-            ),
-            transitionsBuilder: _scaleTransition,
-          );
-        },
-      ),
+      // Booking success - DELETED (guest feature, using bank transfer instructions instead)
 
       // Payment screen - DELETED (Stripe not needed, only bank transfer)
 
-      // Payment confirmation
-      GoRoute(
-        path: Routes.paymentConfirm,
-        name: 'paymentConfirm',
-        pageBuilder: (context, state) {
-          final bookingId = state.uri.queryParameters['bookingId'];
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: PaymentConfirmationScreen(bookingId: bookingId),
-            transitionsBuilder: _scaleTransition,
-          );
-        },
-      ),
+      // Payment confirmation - DELETED (entire payment folder removed, using bank transfer instead)
 
       // Payment success - DELETED (Stripe not needed)
 
@@ -459,18 +383,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           transitionsBuilder: _slideTransition,
         ),
       ),
-      GoRoute(
-        path: Routes.ownerProperty,
-        name: 'ownerProperty',
-        pageBuilder: (context, state) {
-          final propertyId = state.pathParameters['id']!;
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: PropertyManagementScreen(propertyId: propertyId),
-            transitionsBuilder: _slideTransition,
-          );
-        },
-      ),
+      // Owner property - DELETED (redundant, functionality in owner_dashboard)
 
       // DELETED - Admin routes (not part of MVP)
       // GoRoute(

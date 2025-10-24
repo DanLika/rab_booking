@@ -57,7 +57,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
     _bedroomsController.text = unit.bedrooms.toString();
     _bathroomsController.text = unit.bathrooms.toString();
     _maxGuestsController.text = unit.maxGuests.toString();
-    _areaController.text = unit.areaSqm.toStringAsFixed(0);
+    _areaController.text = unit.areaSqm?.toStringAsFixed(0) ?? '0'; // Null safety fix
     _minStayController.text = unit.minStayNights.toString();
     _selectedAmenities = PropertyAmenity.fromStringList(unit.amenities).toSet();
     _existingImages = unit.images.toList();

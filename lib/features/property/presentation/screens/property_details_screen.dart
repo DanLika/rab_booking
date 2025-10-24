@@ -5,8 +5,12 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/utils/navigation_helpers.dart';
 import '../../../../core/utils/responsive_breakpoints.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../providers/property_details_provider.dart';
 import '../widgets/image_gallery_widget.dart';
+import '../widgets/enhanced_image_gallery.dart';
+import '../widgets/booking_fab.dart';
+import '../widgets/realtime_calendar_section.dart';
 import '../widgets/property_info_section.dart';
 import '../widgets/units_section.dart';
 import '../widgets/location_map.dart';
@@ -19,6 +23,7 @@ import '../../domain/models/property_unit.dart';
 import '../../../favorites/presentation/providers/favorites_provider.dart';
 import '../../../search/presentation/providers/recently_viewed_provider.dart';
 import '../../../../shared/widgets/widgets.dart';
+import '../../../../core/utils/seo_utils.dart';
 
 /// Property details screen with responsive layout
 class PropertyDetailsScreen extends ConsumerStatefulWidget {
@@ -39,8 +44,55 @@ class _PropertyDetailsScreenState
   PropertyUnit? _selectedUnit;
   dynamic _currentProperty;
 
+  void _updateSEO(dynamic property, AppLocalizations l10n) {
+    // Update page title
+    SEOUtils.setTitle('${property.name} - ${property.location} | RAB Booking');
+
+    // Update meta description
+    final description = property.description?.isNotEmpty == true
+        ? property.description!.substring(0, property.description!.length > 160 ? 160 : property.description!.length)
+        : 'Luxury vacation rental in ${property.location}, Island Rab, Croatia';
+    SEOUtils.setDescription(description);
+
+    // Update Open Graph
+    SEOUtils.setOpenGraph(
+      title: '${property.name} | RAB Booking',
+      description: description,
+      image: property.images.isNotEmpty ? property.images.first : null,
+      url: 'https://rab-booking.sevalla.app/property/${widget.propertyId}',
+      type: 'product',
+    );
+
+    // Update Twitter Card
+    SEOUtils.setTwitterCard(
+      title: property.name,
+      description: description,
+      image: property.images.isNotEmpty ? property.images.first : null,
+    );
+
+    // Add Product structured data
+    SEOUtils.addProductData(
+      name: property.name,
+      description: description,
+      image: property.images.isNotEmpty ? property.images.first : '',
+      price: property.minPrice.toDouble(),
+      currency: 'EUR',
+      url: 'https://rab-booking.sevalla.app/property/${widget.propertyId}',
+      rating: property.rating,
+      reviewCount: property.reviewCount,
+    );
+
+    // Add breadcrumbs
+    SEOUtils.addBreadcrumbs([
+      BreadcrumbItem(name: 'Home', url: 'https://rab-booking.sevalla.app'),
+      BreadcrumbItem(name: 'Search', url: 'https://rab-booking.sevalla.app/search'),
+      BreadcrumbItem(name: property.name, url: 'https://rab-booking.sevalla.app/property/${widget.propertyId}'),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final propertyAsync = ref.watch(propertyDetailsProvider(widget.propertyId));
     final unitsAsync = ref.watch(propertyUnitsProvider(widget.propertyId));
 
@@ -64,6 +116,9 @@ class _PropertyDetailsScreenState
               ref
                   .read(recentlyViewedNotifierProvider.notifier)
                   .addView(widget.propertyId);
+
+              // Update SEO metadata
+              _updateSEO(property, l10n);
             }
           });
 
@@ -101,8 +156,8 @@ class _PropertyDetailsScreenState
                       );
 
                       return Semantics(
-                        label: isFavorite ? 'Remove from favorites' : 'Add to favorites',
-                        hint: 'Toggle favorite status for this property',
+                        label: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
+                        hint: l10n.toggleFavoriteStatus,
                         button: true,
                         child: IconButton(
                           icon: Icon(
@@ -117,12 +172,12 @@ class _PropertyDetailsScreenState
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Greška: $e')),
+                                  SnackBar(content: Text('${l10n.error}: $e')),
                                 );
                               }
                             }
                           },
-                          tooltip: isFavorite ? 'Ukloni iz omiljenih' : 'Dodaj u omiljene',
+                          tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
                         ),
                       );
                     },
@@ -135,10 +190,41 @@ class _PropertyDetailsScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Image Gallery
-                    ImageGalleryWidget(
-                      images: property.images,
-                      coverImage: property.coverImage,
+                    // Enhanced Image Gallery
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final favoritesNotifier = ref.watch(favoritesNotifierProvider);
+                        final isFavorite = favoritesNotifier.maybeWhen(
+                          data: (favorites) => favorites.contains(widget.propertyId),
+                          orElse: () => false,
+                        );
+
+                        return EnhancedImageGallery(
+                          images: property.images,
+                          heroTag: 'property_${widget.propertyId}',
+                          onBackPressed: () {
+                            if (context.canGoBack()) {
+                              context.pop();
+                            } else {
+                              context.go(Routes.home);
+                            }
+                          },
+                          onFavoritePressed: () async {
+                            try {
+                              await ref
+                                  .read(favoritesNotifierProvider.notifier)
+                                  .toggleFavorite(widget.propertyId);
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('${l10n.error}: $e')),
+                                );
+                              }
+                            }
+                          },
+                          isFavorite: isFavorite,
+                        );
+                      },
                     ),
 
                     // Main Content
@@ -158,18 +244,12 @@ class _PropertyDetailsScreenState
         error: (error, stack) => _buildErrorState(error.toString()),
       ),
 
-      // Floating Action Button (mobile only)
+      // Booking FAB (mobile only)
       floatingActionButton: isMobile && _selectedUnit != null && _currentProperty != null
-          ? Semantics(
-              label: 'Book this property for €${_selectedUnit!.pricePerNight.toStringAsFixed(0)} per night',
-              hint: 'Opens booking screen with date selection',
-              button: true,
-              child: FloatingActionButton.extended(
-                onPressed: () => _showBookingBottomSheet(context, _currentProperty),
-                icon: const Icon(Icons.calendar_today),
-                label: Text(
-                    'Rezerviraj - €${_selectedUnit!.pricePerNight.toStringAsFixed(0)}'),
-              ),
+          ? BookingFAB(
+              unit: _selectedUnit!,
+              price: _selectedUnit!.pricePerNight,
+              isFloating: true,
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -203,7 +283,7 @@ class _PropertyDetailsScreenState
           if (property.amenities.isNotEmpty) ...[
             PremiumAmenitiesSection(
               amenities: property.amenities,
-              title: 'Sadržaji',
+              title: l10n.amenities,
               displayStyle: AmenitiesDisplayStyle.grid,
               expandable: true,
               initialDisplayCount: 8,
@@ -212,6 +292,32 @@ class _PropertyDetailsScreenState
             const Divider(),
             const SizedBox(height: 32),
           ],
+
+          // Real-time Calendar
+          unitsAsync.when(
+            data: (units) {
+              if (units.isEmpty || _selectedUnit == null) {
+                return const SizedBox.shrink();
+              }
+              return Column(
+                children: [
+                  RealtimeCalendarSection(
+                    unit: _selectedUnit!,
+                    isExpandedByDefault: false,
+                    onDateRangeSelected: (start, end) {
+                      // Date range selected - could show booking summary
+                      debugPrint('Selected range: $start - $end');
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  const Divider(),
+                  const SizedBox(height: 32),
+                ],
+              );
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
 
           // Units
           unitsAsync.when(
@@ -234,7 +340,7 @@ class _PropertyDetailsScreenState
               );
             },
             loading: () => const CircularProgressIndicator(),
-            error: (error, stack) => Text('Greška: $error'),
+            error: (error, stack) => Text('${l10n.error}: $error'),
           ),
 
           const SizedBox(height: 32),
@@ -317,7 +423,7 @@ class _PropertyDetailsScreenState
                 if (property.amenities.isNotEmpty) ...[
                   PremiumAmenitiesSection(
                     amenities: property.amenities,
-                    title: 'Sadržaji',
+                    title: l10n.amenities,
                     displayStyle: AmenitiesDisplayStyle.grid,
                     expandable: true,
                     initialDisplayCount: 12,
@@ -326,6 +432,32 @@ class _PropertyDetailsScreenState
                   const Divider(),
                   const SizedBox(height: 48),
                 ],
+
+                // Real-time Calendar
+                unitsAsync.when(
+                  data: (units) {
+                    if (units.isEmpty || _selectedUnit == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return Column(
+                      children: [
+                        RealtimeCalendarSection(
+                          unit: _selectedUnit!,
+                          isExpandedByDefault: true,
+                          onDateRangeSelected: (start, end) {
+                            // Date range selected - could show booking summary
+                            debugPrint('Selected range: $start - $end');
+                          },
+                        ),
+                        const SizedBox(height: 48),
+                        const Divider(),
+                        const SizedBox(height: 48),
+                      ],
+                    );
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
 
                 // Units
                 unitsAsync.when(
@@ -347,7 +479,7 @@ class _PropertyDetailsScreenState
                     );
                   },
                   loading: () => const CircularProgressIndicator(),
-                  error: (error, stack) => Text('Greška: $error'),
+                  error: (error, stack) => Text('${l10n.error}: $error'),
                 ),
 
                 const SizedBox(height: 48),
@@ -538,6 +670,8 @@ class _PropertyDetailsScreenState
   }
 
   Widget _buildNotFoundState() {
+    final l10n = AppLocalizations.of(context)!;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -551,14 +685,14 @@ class _PropertyDetailsScreenState
             ),
             const SizedBox(height: 24),
             Text(
-              'Smještaj nije pronađen',
+              l10n.propertyNotFound,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Ovaj smještaj možda više nije dostupan.',
+              l10n.propertyNoLongerAvailable,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey[600],
                   ),
@@ -574,7 +708,7 @@ class _PropertyDetailsScreenState
                 }
               },
               icon: const Icon(Icons.arrow_back),
-              label: const Text('Natrag'),
+              label: Text(l10n.back),
             ),
           ],
         ),
@@ -583,6 +717,8 @@ class _PropertyDetailsScreenState
   }
 
   Widget _buildErrorState(String error) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -596,7 +732,7 @@ class _PropertyDetailsScreenState
             ),
             const SizedBox(height: 24),
             Text(
-              'Greška prilikom učitavanja',
+              l10n.errorLoadingProperty,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -615,7 +751,7 @@ class _PropertyDetailsScreenState
                 ref.invalidate(propertyDetailsProvider(widget.propertyId));
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Pokušaj ponovo'),
+              label: Text(l10n.tryAgain),
             ),
           ],
         ),

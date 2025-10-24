@@ -5,7 +5,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_extensions.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/navigation_helpers.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../shared/widgets/error_state_widget.dart';

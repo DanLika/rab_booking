@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../shared/models/user_model.dart';
 import '../../../../core/constants/enums.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../../shared/repositories/public_profile_repository.dart';
 
 part 'host_info_provider.g.dart';
 part 'host_info_provider.freezed.dart';
@@ -29,18 +30,37 @@ Future<HostStats> hostInfo(
   final supabase = Supabase.instance.client;
 
   try {
-    // Try to fetch user data (may fail if users table doesn't exist or RLS blocks it)
+    // Fetch user data using PublicProfileRepository
+    final publicProfileRepo = ref.read(publicProfileRepositoryProvider);
+
     UserModel user;
     try {
-      final userResponse = await supabase
-          .from('users')
-          .select()
-          .eq('id', ownerId)
-          .single();
+      final profile = await publicProfileRepo.getPublicProfile(ownerId);
 
-      user = UserModel.fromJson(userResponse);
+      if (profile != null) {
+        // Convert PublicProfile to UserModel
+        user = UserModel(
+          id: profile.id,
+          email: '', // Not available in public profile
+          role: UserRole.fromString(profile.role),
+          createdAt: DateTime.now(), // Not available in public profile
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          avatarUrl: profile.avatarUrl,
+        );
+      } else {
+        // Fallback: Create minimal user model if user not found
+        user = UserModel(
+          id: ownerId,
+          email: 'owner@example.com',
+          role: UserRole.owner,
+          createdAt: DateTime.now(),
+          firstName: 'Property',
+          lastName: 'Owner',
+        );
+      }
     } catch (e) {
-      // Fallback: Create minimal user model if users table is not accessible
+      // Fallback: Create minimal user model if error occurs
       user = UserModel(
         id: ownerId,
         email: 'owner@example.com',

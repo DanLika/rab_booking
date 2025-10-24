@@ -26,7 +26,7 @@ class ProfileService {
 
     try {
       final response = await _supabase
-          .from('profiles')
+          .from('users')
           .select('preferences')
           .eq('id', _userId!)
           .single();
@@ -48,7 +48,7 @@ class ProfileService {
   Future<void> savePreferences(UserPreferences preferences) async {
     if (_userId == null) return;
 
-    await _supabase.from('profiles').update({
+    await _supabase.from('users').update({
       'preferences': preferences.toJson(),
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('id', _userId!);
@@ -184,7 +184,7 @@ class ProfileService {
     final publicUrl = _supabase.storage.from('user-uploads').getPublicUrl(filePath);
 
     // Update profile with new avatar URL
-    await _supabase.from('profiles').update({
+    await _supabase.from('users').update({
       'avatar_url': publicUrl,
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('id', _userId!);
@@ -203,7 +203,7 @@ class ProfileService {
     try {
       // Get current avatar URL
       final response = await _supabase
-          .from('profiles')
+          .from('users')
           .select('avatar_url')
           .eq('id', _userId!)
           .single();
@@ -229,10 +229,9 @@ class ProfileService {
     if (_userId == null) return null;
 
     try {
+      // Use the secure RPC function (SECURITY INVOKER)
       final response = await _supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', _userId!)
+          .rpc('get_profile')
           .single();
 
       return UserModel.fromJson(response);
@@ -257,9 +256,9 @@ class ProfileService {
 
     if (firstName != null) updates['first_name'] = firstName;
     if (lastName != null) updates['last_name'] = lastName;
-    if (phone != null) updates['phone'] = phone;
+    if (phone != null) updates['phone_number'] = phone;
 
-    await _supabase.from('profiles').update(updates).eq('id', _userId!);
+    await _supabase.from('users').update(updates).eq('id', _userId!);
   }
 }
 

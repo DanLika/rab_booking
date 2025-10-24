@@ -504,7 +504,7 @@ class _BookingReviewScreenState extends ConsumerState<BookingReviewScreen> {
                         ),
                   ),
                   Text(
-                    '€${bookingFlow.advanceAmount.toStringAsFixed(2)}',
+                    '€${bookingFlow.advancePaymentAmount.toStringAsFixed(2)}',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: context.surfaceColor,
                           fontWeight: FontWeight.bold,

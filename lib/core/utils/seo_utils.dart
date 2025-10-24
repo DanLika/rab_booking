@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'platform_utils.dart';
 
+// Conditional import for web-specific implementation
+import 'seo_web_stub.dart'
+    if (dart.library.html) 'seo_web_impl.dart' as seo_impl;
+
 /// SEO utilities for web platform
 /// Provides meta tags, structured data, and SEO optimizations
 class SEOUtils {
@@ -13,23 +17,35 @@ class SEOUtils {
   /// Usage: SEOUtils.setTitle('Property Details | Rab Booking');
   static void setTitle(String title) {
     if (!isSupported) return;
-    // In a real implementation, you would use dart:html
-    // html.document.title = title;
-    debugPrint('[SEO] Setting title: $title');
+    try {
+      seo_impl.SeoWebImpl.updateTitle(title);
+      debugPrint('[SEO] Title set: $title');
+    } catch (e) {
+      debugPrint('[SEO] Error setting title: $e');
+    }
   }
 
   /// Set meta description
   static void setDescription(String description) {
     if (!isSupported) return;
-    // In a real implementation, you would update meta tags
-    debugPrint('[SEO] Setting description: $description');
+    try {
+      seo_impl.SeoWebImpl.updateMetaTag('description', description);
+      debugPrint('[SEO] Description set');
+    } catch (e) {
+      debugPrint('[SEO] Error setting description: $e');
+    }
   }
 
   /// Set meta keywords
   static void setKeywords(List<String> keywords) {
     if (!isSupported) return;
-    final keywordsString = keywords.join(', ');
-    debugPrint('[SEO] Setting keywords: $keywordsString');
+    try {
+      final keywordsString = keywords.join(', ');
+      seo_impl.SeoWebImpl.updateMetaTag('keywords', keywordsString);
+      debugPrint('[SEO] Keywords set: $keywordsString');
+    } catch (e) {
+      debugPrint('[SEO] Error setting keywords: $e');
+    }
   }
 
   /// Set Open Graph meta tags for social sharing
@@ -41,12 +57,18 @@ class SEOUtils {
     String? type,
   }) {
     if (!isSupported) return;
-    debugPrint('[SEO] Setting Open Graph:');
-    debugPrint('  - title: $title');
-    debugPrint('  - description: $description');
-    debugPrint('  - image: $image');
-    debugPrint('  - url: $url');
-    debugPrint('  - type: ${type ?? "website"}');
+    try {
+      seo_impl.SeoWebImpl.updateOpenGraphTags(
+        title: title,
+        description: description,
+        image: image,
+        url: url,
+        type: type ?? 'website',
+      );
+      debugPrint('[SEO] Open Graph tags set');
+    } catch (e) {
+      debugPrint('[SEO] Error setting Open Graph: $e');
+    }
   }
 
   /// Set Twitter Card meta tags
@@ -58,24 +80,39 @@ class SEOUtils {
     String cardType = 'summary_large_image',
   }) {
     if (!isSupported) return;
-    debugPrint('[SEO] Setting Twitter Card:');
-    debugPrint('  - card: $cardType');
-    debugPrint('  - title: $title');
-    debugPrint('  - description: $description');
-    debugPrint('  - image: $image');
-    debugPrint('  - site: $site');
+    try {
+      seo_impl.SeoWebImpl.updateTwitterCardTags(
+        title: title,
+        description: description,
+        image: image,
+        cardType: cardType,
+      );
+      debugPrint('[SEO] Twitter Card tags set');
+    } catch (e) {
+      debugPrint('[SEO] Error setting Twitter Card: $e');
+    }
   }
 
   /// Add structured data (JSON-LD) for rich snippets
-  static void addStructuredData(Map<String, dynamic> data) {
+  static void addStructuredData(Map<String, dynamic> data, {String? id}) {
     if (!isSupported) return;
-    debugPrint('[SEO] Adding structured data: $data');
+    try {
+      seo_impl.SeoWebImpl.updateStructuredData(data, id: id);
+      debugPrint('[SEO] Structured data added');
+    } catch (e) {
+      debugPrint('[SEO] Error adding structured data: $e');
+    }
   }
 
   /// Set canonical URL
   static void setCanonical(String url) {
     if (!isSupported) return;
-    debugPrint('[SEO] Setting canonical URL: $url');
+    try {
+      seo_impl.SeoWebImpl.updateCanonical(url);
+      debugPrint('[SEO] Canonical URL set: $url');
+    } catch (e) {
+      debugPrint('[SEO] Error setting canonical: $e');
+    }
   }
 
   /// Add breadcrumb structured data

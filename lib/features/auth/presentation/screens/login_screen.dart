@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/navigation_helpers.dart';
-import '../../../../core/utils/accessibility_utils.dart';
 import '../../../../core/utils/responsive_breakpoints.dart';
+import '../../../../shared/presentation/widgets/adaptive_scaffold.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../providers/auth_notifier.dart';
 import '../utils/form_validators.dart';
 
@@ -61,19 +62,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           }
         }
 
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Uspješno ste se prijavili!'),
+          SnackBar(
+            content: Text(l10n.loginSuccessful),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         final authState = ref.read(authNotifierProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authState.error ?? 'Prijava neuspješna'),
+            content: Text(authState.error ?? l10n.loginFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -86,9 +89,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authNotifierProvider.notifier).signInWithGoogle();
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Google prijava neuspješna'),
+          SnackBar(
+            content: Text(l10n.googleLoginFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -99,23 +103,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+    final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(context.horizontalPadding),
-            child: ResponsiveContainer(
-              maxWidth: 400,
-              child: RepaintBoundary(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+    return AuthScaffold(
+      showBackButton: true,  // Allow user to exit auth flow - NO DEAD END!
+      showLogo: false,       // Show custom logo below instead
+      body: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(context.horizontalPadding),
+          child: ResponsiveContainer(
+            maxWidth: 400,
+            child: RepaintBoundary(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                     // Logo or title
                     Semantics(
-                      label: 'Rab Booking logo',
+                      label: '${l10n.appName} logo',
                       image: true,
                       child: Icon(
                         Icons.villa,
@@ -128,7 +134,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Semantics(
                       header: true,
                       child: Text(
-                        'Dobrodošli nazad',
+                        l10n.welcomeBack,
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -140,7 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Semantics(
                       readOnly: true,
                       child: Text(
-                        'Prijavite se na svoj račun',
+                        l10n.loginToYourAccount,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: context.textColorSecondary,
                             ),
@@ -151,16 +157,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // Email field
                     Semantics(
-                      label: 'Email adresa',
-                      hint: 'Unesite vašu email adresu',
+                      label: l10n.email,
+                      hint: l10n.enterYourEmail,
                       textField: true,
                       child: TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.email_outlined),
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: l10n.email,
+                          prefixIcon: const Icon(Icons.email_outlined),
+                          border: const OutlineInputBorder(),
                         ),
                         validator: FormValidators.validateEmail,
                         enabled: !authState.isLoading,
@@ -170,20 +176,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // Password field
                     Semantics(
-                      label: 'Lozinka',
-                      hint: 'Unesite vašu lozinku',
+                      label: l10n.password,
+                      hint: 'Enter your password',
                       textField: true,
                       obscured: _obscurePassword,
                       child: TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          labelText: 'Lozinka',
+                          labelText: l10n.password,
                           prefixIcon: const Icon(Icons.lock_outlined),
                           border: const OutlineInputBorder(),
                           suffixIcon: Semantics(
-                            label: _obscurePassword ? 'Prikaži lozinku' : 'Sakrij lozinku',
-                            hint: 'Dvostruki dodir za promjenu vidljivosti',
+                            label: _obscurePassword ? 'Show password' : 'Hide password',
+                            hint: 'Double tap to toggle visibility',
                             button: true,
                             child: IconButton(
                               icon: Icon(
@@ -201,7 +207,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Lozinka je obavezna';
+                            return l10n.requiredField;
                           }
                           return null;
                         },
@@ -217,17 +223,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onPressed: authState.isLoading
                             ? null
                             : () => context.goToForgotPassword(),
-                        child: const Text('Zaboravili ste lozinku?'),
+                        child: Text(l10n.forgotPassword),
                       ),
                     ),
                     const SizedBox(height: 24),
 
                     // Login button
                     Semantics(
-                      label: authState.isLoading ? 'Prijavljuje se...' : 'Prijavite se',
+                      label: authState.isLoading ? '${l10n.loading}...' : l10n.signIn,
                       hint: authState.isLoading
-                        ? 'Molimo pričekajte dok se prijavljujete'
-                        : 'Dvostruki dodir za prijavu na račun',
+                        ? 'Please wait while signing in'
+                        : 'Double tap to sign in to your account',
                       button: true,
                       enabled: !authState.isLoading,
                       child: FilledButton(
@@ -245,7 +251,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   color: context.textColorInverted,
                                 ),
                               )
-                            : const Text('Prijavite se'),
+                            : Text(l10n.signIn),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -268,8 +274,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // Google sign in
                     Semantics(
-                      label: 'Prijavite se s Google računom',
-                      hint: 'Dvostruki dodir za prijavu preko Google-a',
+                      label: l10n.signInWithGoogle,
+                      hint: 'Double tap to sign in with Google',
                       button: true,
                       enabled: !authState.isLoading,
                       child: SizedBox(
@@ -296,9 +302,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     const Icon(Icons.g_mobiledata, size: 20),
                               ),
                               const SizedBox(width: 8),
-                              const Flexible(
+                              Flexible(
                                 child: Text(
-                                  'Nastavite s Google',
+                                  l10n.continueWithGoogle,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -315,14 +321,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          'Nemate račun?',
+                          l10n.dontHaveAccount,
                           style: TextStyle(color: context.textColorSecondary),
                         ),
                         TextButton(
                           onPressed: authState.isLoading
                               ? null
                               : () => context.goToRegister(),
-                          child: const Text('Registrirajte se'),
+                          child: Text(l10n.register),
                         ),
                       ],
                     ),
@@ -332,7 +338,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
-      ),
       ),
     );
   }

@@ -102,6 +102,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login => 'Login';
 
   @override
+  String get signIn => 'Sign In';
+
+  @override
   String get register => 'Register';
 
   @override
@@ -136,6 +139,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signInWithGoogle => 'Sign in with Google';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get welcomeBack => 'Welcome Back';
+
+  @override
+  String get loginToYourAccount => 'Sign in to your account';
+
+  @override
+  String get loginSuccessful => 'Successfully logged in!';
+
+  @override
+  String get loginFailed => 'Login failed';
+
+  @override
+  String get googleLoginFailed => 'Google sign-in failed';
+
+  @override
+  String get createNewAccount => 'Create a new account';
+
+  @override
+  String get signUp => 'Sign Up';
+
+  @override
+  String get registrationSuccessful => 'Account successfully created!';
+
+  @override
+  String get registrationFailed => 'Registration failed';
+
+  @override
+  String get googleRegistrationFailed => 'Google registration failed';
+
+  @override
+  String get acceptTermsRequired => 'Please accept terms of service';
+
+  @override
+  String get firstNameRequired => 'Please enter your first name';
+
+  @override
+  String get lastNameRequired => 'Please enter your last name';
+
+  @override
+  String get emailRequired => 'Please enter your email';
+
+  @override
+  String get validEmailRequired => 'Please enter a valid email';
+
+  @override
+  String get passwordRequired => 'Please enter password';
+
+  @override
+  String get passwordTooShort => 'Password must be at least 6 characters';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get confirmPasswordRequired => 'Please confirm password';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get accountType => 'Account Type';
+
+  @override
+  String get guest => 'Guest';
+
+  @override
+  String get guestDescription => 'I want to book accommodation';
+
+  @override
+  String get owner => 'Owner';
+
+  @override
+  String get ownerDescription => 'I want to rent out my property';
+
+  @override
+  String get iAccept => 'I accept ';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get and => ' and ';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get or => 'or';
+
+  @override
+  String get enterYourEmail => 'Enter your email address';
 
   @override
   String get properties => 'Properties';
@@ -225,6 +324,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingConfirmed => 'Booking Confirmed';
 
   @override
+  String get bookingInformation => 'Booking Information';
+
+  @override
+  String get bookingId => 'Booking ID';
+
+  @override
+  String get bookingDate => 'Booking Date';
+
+  @override
+  String get stayDetails => 'Stay Details';
+
+  @override
+  String get arrival => 'Arrival';
+
+  @override
+  String get departure => 'Departure';
+
+  @override
+  String get duration => 'Duration';
+
+  @override
+  String get night => 'night';
+
+  @override
+  String get nightsPlural => 'nights';
+
+  @override
+  String get guestsPlural => 'guests';
+
+  @override
+  String get paymentInformation => 'Payment Information';
+
+  @override
+  String get totalAmount => 'Total Amount';
+
+  @override
+  String get cancellationDetails => 'Cancellation Details';
+
+  @override
+  String get cancelledOn => 'Cancelled On';
+
+  @override
+  String get reason => 'Reason';
+
+  @override
+  String get viewProperty => 'View Property';
+
+  @override
+  String get errorLoadingBooking => 'Error loading booking';
+
+  @override
+  String get tryAgainOrContactSupport => 'Try again or contact support';
+
+  @override
+  String get cancelBookingTitle => 'Cancel Booking';
+
+  @override
+  String get cancelBookingConfirmation =>
+      'Are you sure you want to cancel this booking? This action cannot be undone.';
+
+  @override
+  String get cancellationReason => 'Cancellation Reason';
+
+  @override
+  String get cancellationReasonHint => 'Please specify reason for cancellation';
+
+  @override
+  String get cancellationReasonRequired =>
+      'Please specify reason for cancellation';
+
+  @override
+  String get keepBooking => 'Keep Booking';
+
+  @override
+  String get bookingCancelledSuccessfully => 'Booking successfully cancelled';
+
+  @override
+  String get bookingCancellationFailed => 'Failed to cancel booking';
+
+  @override
   String get writeReview => 'Write a Review';
 
   @override
@@ -261,6 +440,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noFavorites => 'No Favorites Yet';
 
   @override
+  String get toggleFavoriteStatus => 'Toggle favorite status for this property';
+
+  @override
+  String get propertyNotFound => 'Property not found';
+
+  @override
+  String get propertyNoLongerAvailable =>
+      'This property may no longer be available.';
+
+  @override
+  String get errorLoadingProperty => 'Error loading property';
+
+  @override
+  String get tryAgain => 'Try Again';
+
+  @override
   String get noFavoritesDescription =>
       'Add properties to favorites to find them easily later.';
 
@@ -278,9 +473,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newPassword => 'New Password';
-
-  @override
-  String get confirmPassword => 'Confirm Password';
 
   @override
   String get personalInfo => 'Personal Information';
@@ -344,9 +536,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invalidPassword => 'Password must be at least 8 characters';
-
-  @override
-  String get passwordsDoNotMatch => 'Passwords do not match';
 
   @override
   String get requiredField => 'This field is required';
@@ -454,9 +643,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get termsChangesBody =>
       'We reserve the right to modify these terms at any time. Changes will be effective immediately upon posting to the website. Your continued use of the service after changes constitutes acceptance of the new terms.';
-
-  @override
-  String get privacyPolicy => 'Privacy Policy';
 
   @override
   String get privacyPolicyTitle => 'Privacy Policy';
@@ -703,9 +889,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseEnterName => 'Please enter your name';
 
   @override
-  String get enterYourEmail => 'Enter your email address';
-
-  @override
   String get pleaseEnterEmail => 'Please enter your email';
 
   @override
@@ -747,4 +930,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messageSendFailed => 'Failed to send message';
+
+  @override
+  String get homeHeroTitle => 'Discover Your Perfect Getaway on Rab Island';
+
+  @override
+  String get homeHeroSubtitle =>
+      'Premium villas, apartments & vacation homes in the heart of the Adriatic';
+
+  @override
+  String get featuredPropertiesTitle => 'Featured Properties';
+
+  @override
+  String get featuredPropertiesSubtitle =>
+      'Hand-picked properties for your perfect stay';
+
+  @override
+  String get recentlyViewedTitle => 'Recently Viewed';
+
+  @override
+  String get recentlyViewedSubtitle => 'Properties you have viewed recently';
+
+  @override
+  String get popularDestinationsTitle => 'Popular Destinations';
+
+  @override
+  String get popularDestinationsSubtitle =>
+      'Explore the most sought-after vacation spots on Rab Island';
+
+  @override
+  String get howItWorksTitle => 'How It Works';
+
+  @override
+  String get howItWorksSubtitle =>
+      'Book your dream vacation in three simple steps';
+
+  @override
+  String get testimonialsTitle => 'What Our Guests Say';
+
+  @override
+  String get testimonialsSubtitle => 'Real experiences from real travelers';
+
+  @override
+  String get ctaGetStarted => 'Get Started';
+
+  @override
+  String get ctaLearnMore => 'Learn More';
+
+  @override
+  String get seeAll => 'See All';
 }

@@ -1,0 +1,29 @@
+{
+  "search_placeholder": "Searching your dream house",
+  "search_history_title": "Recent",
+  "clear_all": "Clear All",
+  "no_results": "No results found",
+  "found_properties": "Found {count} properties",
+  "loading": "Loading...",
+  "property_types": {
+    "all": "All",
+    "apartments": "Apartments",
+    "villas": "Villas",
+    "studios": "Studios",
+    "houses": "Houses"
+  },
+  "filters": {
+    "title": "Filters",
+    "price_range": "Price Range",
+    "rating": "Rating",
+    "amenities": "Amenities",
+    "apply": "Apply Filters",
+    "reset": "Reset"
+  },
+  "map": "Map",
+  "list": "List",
+  "search": "Search",
+  "per_night": "per night",
+  "view_details": "View Details",
+  "book_now": "Book Now"
+}

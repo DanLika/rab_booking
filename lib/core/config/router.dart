@@ -12,6 +12,7 @@ import '../../features/search/presentation/screens/saved_searches_screen.dart';
 import '../../features/property/presentation/screens/property_details_screen_redesigned.dart';
 import '../../features/property/presentation/screens/review_form_screen.dart';
 import '../../features/booking/presentation/screens/booking_screen.dart';
+import '../../features/booking/presentation/screens/wizard/booking_wizard_screen.dart';
 import '../../features/booking/presentation/screens/booking_review_screen.dart';
 import '../../features/booking/presentation/screens/user_bookings_screen.dart';
 import '../../features/booking/presentation/screens/booking_detail_screen.dart';
@@ -261,10 +262,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Booking flow (outside shell)
+      // Booking flow - NEW 6-STEP WIZARD (default)
       GoRoute(
         path: Routes.booking,
         name: 'booking',
+        pageBuilder: (context, state) {
+          final unitId = state.pathParameters['unitId']!;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: BookingWizardScreen(unitId: unitId), // ← Changed to Wizard!
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+
+      // Old booking screen (legacy - for fallback)
+      GoRoute(
+        path: '/booking/legacy/:unitId',
+        name: 'bookingLegacy',
         pageBuilder: (context, state) {
           final unitId = state.pathParameters['unitId']!;
           return CustomTransitionPage(

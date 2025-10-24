@@ -22,6 +22,9 @@ dependencies:
   # Backend & Database
   supabase_flutter: ^2.9.1
 
+  # HTTP Client
+  http: ^1.2.0
+
   # Navigation
   go_router: ^16.2.5
 
@@ -33,6 +36,7 @@ dependencies:
 
   # Internationalization
   intl: ^0.20.1
+  easy_localization: ^3.0.7
 
   # Image Handling
   cached_network_image: ^3.4.1
@@ -42,12 +46,21 @@ dependencies:
   # Payment
   flutter_stripe: ^11.1.0
 
+  # PDF & Receipt Generation
+  pdf: ^3.10.8
+  printing: ^5.12.0
+  path_provider: ^2.1.2
+
   # Loading States
   shimmer: ^3.0.0
 
   # Animations & Scroll Effects (2025 UX)
   visibility_detector: ^0.4.0+2
   flutter_animate: ^4.5.0
+  lottie: ^3.1.0
+  confetti: ^0.7.0
+  auto_size_text: ^3.0.0
+  step_progress_indicator: ^1.0.2
 
   # URL Launcher
   url_launcher: ^6.3.1
@@ -55,8 +68,10 @@ dependencies:
   # Maps & Location (OpenStreetMap)
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
+  flutter_map_marker_cluster: ^8.2.2
   geolocator: ^14.0.2
   geocoding: ^4.0.0
+  scrollable_positioned_list: ^0.3.8
 
   # JSON Serialization
   freezed_annotation: ^2.4.4
@@ -99,5 +114,9 @@ flutter:
   uses-material-design: true
   generate: true
 
-  # Assets (web build doesn't need .env files - using lib/core/config/web_config.dart instead)
-  # assets:
+  # Assets
+  assets:
+    - assets/animations/
+    - assets/translations/
+    # Note: Add success.json Lottie animation file
+    # Download free success animations from: https://lottiefiles.com

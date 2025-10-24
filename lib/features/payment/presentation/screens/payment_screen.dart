@@ -62,7 +62,7 @@ class _PremiumPaymentScreenState extends ConsumerState<PremiumPaymentScreen> {
 
     try {
       // Convert to cents for Stripe
-      final amountInCents = (bookingFlow.advanceAmount * 100).round();
+      final amountInCents = (bookingFlow.advancePaymentAmount * 100).round();
 
       await ref.read(paymentNotifierProvider.notifier).createPaymentIntent(
             bookingId: widget.bookingId,
@@ -390,7 +390,7 @@ class _PremiumPaymentScreenState extends ConsumerState<PremiumPaymentScreen> {
             ),
             const SizedBox(height: AppDimensions.spaceS),
             Text(
-              '€${bookingFlow.advanceAmount.toStringAsFixed(2)}',
+              '€${bookingFlow.advancePaymentAmount.toStringAsFixed(2)}',
               style: AppTypography.h1.copyWith(
                 fontWeight: AppTypography.weightBold,
                 color: AppColors.primary,
@@ -416,7 +416,7 @@ class _PremiumPaymentScreenState extends ConsumerState<PremiumPaymentScreen> {
     return PremiumButton.primary(
       label: paymentState.isProcessing
           ? 'Processing...'
-          : 'Pay €${bookingFlow.advanceAmount.toStringAsFixed(2)}',
+          : 'Pay €${bookingFlow.advancePaymentAmount.toStringAsFixed(2)}',
       icon: paymentState.isProcessing ? null : Icons.lock_outlined,
       isFullWidth: true,
       size: ButtonSize.large,

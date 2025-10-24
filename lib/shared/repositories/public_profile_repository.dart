@@ -16,10 +16,9 @@ class PublicProfileRepository {
   /// Email and phone are NOT included for privacy
   Future<PublicProfile?> getPublicProfile(String userId) async {
     try {
-      // Use the public_profiles view created in migration
+      // Use the secure RPC function (SECURITY INVOKER)
       final response = await _supabase
-          .from('public_profiles')
-          .select()
+          .rpc('get_public_profiles')
           .eq('id', userId)
           .single();
 
@@ -37,8 +36,7 @@ class PublicProfileRepository {
 
     try {
       final response = await _supabase
-          .from('public_profiles')
-          .select()
+          .rpc('get_public_profiles')
           .inFilter('id', userIds);
 
       return (response as List)
@@ -51,10 +49,12 @@ class PublicProfileRepository {
 
   /// Get public profile using the safe SQL function (alternative method)
   /// This calls the PostgreSQL function directly for extra safety
+  /// Note: This method is now identical to getPublicProfile since both use RPC
   Future<PublicProfile?> getPublicProfileSafe(String userId) async {
     try {
       final response = await _supabase
-          .rpc('get_public_profile', params: {'user_id': userId})
+          .rpc('get_public_profiles')
+          .eq('id', userId)
           .single();
 
       return PublicProfile.fromJson(response);

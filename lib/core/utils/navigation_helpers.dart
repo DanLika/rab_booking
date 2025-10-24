@@ -109,7 +109,11 @@ extension NavigationExtensions on BuildContext {
   void goToPropertyDetails(String propertyId) =>
       go(RoutePaths.propertyDetails(propertyId));
 
+  /// Navigate to booking flow (uses new 6-step wizard by default)
   void goToBooking(String unitId) => go(RoutePaths.booking(unitId));
+
+  /// Legacy: Navigate to old booking screen
+  void goToBookingLegacy(String unitId) => go('/booking/legacy/$unitId');
 
   void goToBookingReview() => go(Routes.bookingReview);
 
@@ -188,7 +192,11 @@ extension NavigationExtensions on BuildContext {
   void pushPropertyDetails(String propertyId) =>
       push(RoutePaths.propertyDetails(propertyId));
 
+  /// Push to booking flow (uses new 6-step wizard by default)
   void pushBooking(String unitId) => push(RoutePaths.booking(unitId));
+
+  /// Legacy: Push to old booking screen
+  void pushBookingLegacy(String unitId) => push('/booking/legacy/$unitId');
 
   void pushBookingReview() => push(Routes.bookingReview);
 

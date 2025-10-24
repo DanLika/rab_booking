@@ -17,7 +17,7 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$BookingFlowState {
-  // Current step: review, payment, success
+  // Current step: 6-step wizard
   BookingStep get currentStep =>
       throw _privateConstructorUsedError; // Selected property and unit
   PropertyModel? get property => throw _privateConstructorUsedError;
@@ -25,18 +25,39 @@ mixin _$BookingFlowState {
       throw _privateConstructorUsedError; // Booking details
   DateTime? get checkInDate => throw _privateConstructorUsedError;
   DateTime? get checkOutDate => throw _privateConstructorUsedError;
-  int get numberOfGuests => throw _privateConstructorUsedError; // Guest details
+  int get numberOfGuests =>
+      throw _privateConstructorUsedError; // Changed default to 1
+  // Guest details
   String? get guestFirstName => throw _privateConstructorUsedError;
   String? get guestLastName => throw _privateConstructorUsedError;
   String? get guestEmail => throw _privateConstructorUsedError;
   String? get guestPhone => throw _privateConstructorUsedError;
   String? get specialRequests =>
-      throw _privateConstructorUsedError; // Price calculation
-  double get basePrice => throw _privateConstructorUsedError;
+      throw _privateConstructorUsedError; // Price calculation (with tax - FlutterFlow style)
+  double get basePrice =>
+      throw _privateConstructorUsedError; // price per night * nights * guests
   double get serviceFee => throw _privateConstructorUsedError;
   double get cleaningFee => throw _privateConstructorUsedError;
-  double get totalPrice => throw _privateConstructorUsedError;
-  double get advanceAmount =>
+  double get taxRate =>
+      throw _privateConstructorUsedError; // 8.25% like FlutterFlow
+  double get taxAmount =>
+      throw _privateConstructorUsedError; // calculated from basePrice
+  double get totalPrice =>
+      throw _privateConstructorUsedError; // basePrice + serviceFee + cleaningFee + taxAmount
+  // Advance payment (20% default)
+  double get advancePaymentPercentage => throw _privateConstructorUsedError;
+  double get advancePaymentAmount => throw _privateConstructorUsedError;
+  bool get isFullPaymentSelected =>
+      throw _privateConstructorUsedError; // Stripe Customer & Payment Methods
+  String? get stripeCustomerId => throw _privateConstructorUsedError;
+  String? get savedPaymentMethodId => throw _privateConstructorUsedError;
+  bool get savePaymentMethod =>
+      throw _privateConstructorUsedError; // Refund policy
+  RefundPolicy? get currentRefundPolicy => throw _privateConstructorUsedError;
+  bool get canCancelBooking => throw _privateConstructorUsedError;
+  double get cancellationFee => throw _privateConstructorUsedError; // E-Receipt
+  String? get receiptPdfUrl => throw _privateConstructorUsedError;
+  bool get receiptEmailSent =>
       throw _privateConstructorUsedError; // Booking ID (created after review)
   String? get bookingId =>
       throw _privateConstructorUsedError; // Loading and error states
@@ -72,8 +93,20 @@ abstract class $BookingFlowStateCopyWith<$Res> {
     double basePrice,
     double serviceFee,
     double cleaningFee,
+    double taxRate,
+    double taxAmount,
     double totalPrice,
-    double advanceAmount,
+    double advancePaymentPercentage,
+    double advancePaymentAmount,
+    bool isFullPaymentSelected,
+    String? stripeCustomerId,
+    String? savedPaymentMethodId,
+    bool savePaymentMethod,
+    RefundPolicy? currentRefundPolicy,
+    bool canCancelBooking,
+    double cancellationFee,
+    String? receiptPdfUrl,
+    bool receiptEmailSent,
     String? bookingId,
     bool isLoading,
     String? error,
@@ -81,6 +114,7 @@ abstract class $BookingFlowStateCopyWith<$Res> {
 
   $PropertyModelCopyWith<$Res>? get property;
   $PropertyUnitCopyWith<$Res>? get selectedUnit;
+  $RefundPolicyCopyWith<$Res>? get currentRefundPolicy;
 }
 
 /// @nodoc
@@ -112,8 +146,20 @@ class _$BookingFlowStateCopyWithImpl<$Res, $Val extends BookingFlowState>
     Object? basePrice = null,
     Object? serviceFee = null,
     Object? cleaningFee = null,
+    Object? taxRate = null,
+    Object? taxAmount = null,
     Object? totalPrice = null,
-    Object? advanceAmount = null,
+    Object? advancePaymentPercentage = null,
+    Object? advancePaymentAmount = null,
+    Object? isFullPaymentSelected = null,
+    Object? stripeCustomerId = freezed,
+    Object? savedPaymentMethodId = freezed,
+    Object? savePaymentMethod = null,
+    Object? currentRefundPolicy = freezed,
+    Object? canCancelBooking = null,
+    Object? cancellationFee = null,
+    Object? receiptPdfUrl = freezed,
+    Object? receiptEmailSent = null,
     Object? bookingId = freezed,
     Object? isLoading = null,
     Object? error = freezed,
@@ -176,14 +222,62 @@ class _$BookingFlowStateCopyWithImpl<$Res, $Val extends BookingFlowState>
                 ? _value.cleaningFee
                 : cleaningFee // ignore: cast_nullable_to_non_nullable
                       as double,
+            taxRate: null == taxRate
+                ? _value.taxRate
+                : taxRate // ignore: cast_nullable_to_non_nullable
+                      as double,
+            taxAmount: null == taxAmount
+                ? _value.taxAmount
+                : taxAmount // ignore: cast_nullable_to_non_nullable
+                      as double,
             totalPrice: null == totalPrice
                 ? _value.totalPrice
                 : totalPrice // ignore: cast_nullable_to_non_nullable
                       as double,
-            advanceAmount: null == advanceAmount
-                ? _value.advanceAmount
-                : advanceAmount // ignore: cast_nullable_to_non_nullable
+            advancePaymentPercentage: null == advancePaymentPercentage
+                ? _value.advancePaymentPercentage
+                : advancePaymentPercentage // ignore: cast_nullable_to_non_nullable
                       as double,
+            advancePaymentAmount: null == advancePaymentAmount
+                ? _value.advancePaymentAmount
+                : advancePaymentAmount // ignore: cast_nullable_to_non_nullable
+                      as double,
+            isFullPaymentSelected: null == isFullPaymentSelected
+                ? _value.isFullPaymentSelected
+                : isFullPaymentSelected // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            stripeCustomerId: freezed == stripeCustomerId
+                ? _value.stripeCustomerId
+                : stripeCustomerId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            savedPaymentMethodId: freezed == savedPaymentMethodId
+                ? _value.savedPaymentMethodId
+                : savedPaymentMethodId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            savePaymentMethod: null == savePaymentMethod
+                ? _value.savePaymentMethod
+                : savePaymentMethod // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            currentRefundPolicy: freezed == currentRefundPolicy
+                ? _value.currentRefundPolicy
+                : currentRefundPolicy // ignore: cast_nullable_to_non_nullable
+                      as RefundPolicy?,
+            canCancelBooking: null == canCancelBooking
+                ? _value.canCancelBooking
+                : canCancelBooking // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            cancellationFee: null == cancellationFee
+                ? _value.cancellationFee
+                : cancellationFee // ignore: cast_nullable_to_non_nullable
+                      as double,
+            receiptPdfUrl: freezed == receiptPdfUrl
+                ? _value.receiptPdfUrl
+                : receiptPdfUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            receiptEmailSent: null == receiptEmailSent
+                ? _value.receiptEmailSent
+                : receiptEmailSent // ignore: cast_nullable_to_non_nullable
+                      as bool,
             bookingId: freezed == bookingId
                 ? _value.bookingId
                 : bookingId // ignore: cast_nullable_to_non_nullable
@@ -228,6 +322,20 @@ class _$BookingFlowStateCopyWithImpl<$Res, $Val extends BookingFlowState>
       return _then(_value.copyWith(selectedUnit: value) as $Val);
     });
   }
+
+  /// Create a copy of BookingFlowState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $RefundPolicyCopyWith<$Res>? get currentRefundPolicy {
+    if (_value.currentRefundPolicy == null) {
+      return null;
+    }
+
+    return $RefundPolicyCopyWith<$Res>(_value.currentRefundPolicy!, (value) {
+      return _then(_value.copyWith(currentRefundPolicy: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -254,8 +362,20 @@ abstract class _$$BookingFlowStateImplCopyWith<$Res>
     double basePrice,
     double serviceFee,
     double cleaningFee,
+    double taxRate,
+    double taxAmount,
     double totalPrice,
-    double advanceAmount,
+    double advancePaymentPercentage,
+    double advancePaymentAmount,
+    bool isFullPaymentSelected,
+    String? stripeCustomerId,
+    String? savedPaymentMethodId,
+    bool savePaymentMethod,
+    RefundPolicy? currentRefundPolicy,
+    bool canCancelBooking,
+    double cancellationFee,
+    String? receiptPdfUrl,
+    bool receiptEmailSent,
     String? bookingId,
     bool isLoading,
     String? error,
@@ -265,6 +385,8 @@ abstract class _$$BookingFlowStateImplCopyWith<$Res>
   $PropertyModelCopyWith<$Res>? get property;
   @override
   $PropertyUnitCopyWith<$Res>? get selectedUnit;
+  @override
+  $RefundPolicyCopyWith<$Res>? get currentRefundPolicy;
 }
 
 /// @nodoc
@@ -295,8 +417,20 @@ class __$$BookingFlowStateImplCopyWithImpl<$Res>
     Object? basePrice = null,
     Object? serviceFee = null,
     Object? cleaningFee = null,
+    Object? taxRate = null,
+    Object? taxAmount = null,
     Object? totalPrice = null,
-    Object? advanceAmount = null,
+    Object? advancePaymentPercentage = null,
+    Object? advancePaymentAmount = null,
+    Object? isFullPaymentSelected = null,
+    Object? stripeCustomerId = freezed,
+    Object? savedPaymentMethodId = freezed,
+    Object? savePaymentMethod = null,
+    Object? currentRefundPolicy = freezed,
+    Object? canCancelBooking = null,
+    Object? cancellationFee = null,
+    Object? receiptPdfUrl = freezed,
+    Object? receiptEmailSent = null,
     Object? bookingId = freezed,
     Object? isLoading = null,
     Object? error = freezed,
@@ -359,14 +493,62 @@ class __$$BookingFlowStateImplCopyWithImpl<$Res>
             ? _value.cleaningFee
             : cleaningFee // ignore: cast_nullable_to_non_nullable
                   as double,
+        taxRate: null == taxRate
+            ? _value.taxRate
+            : taxRate // ignore: cast_nullable_to_non_nullable
+                  as double,
+        taxAmount: null == taxAmount
+            ? _value.taxAmount
+            : taxAmount // ignore: cast_nullable_to_non_nullable
+                  as double,
         totalPrice: null == totalPrice
             ? _value.totalPrice
             : totalPrice // ignore: cast_nullable_to_non_nullable
                   as double,
-        advanceAmount: null == advanceAmount
-            ? _value.advanceAmount
-            : advanceAmount // ignore: cast_nullable_to_non_nullable
+        advancePaymentPercentage: null == advancePaymentPercentage
+            ? _value.advancePaymentPercentage
+            : advancePaymentPercentage // ignore: cast_nullable_to_non_nullable
                   as double,
+        advancePaymentAmount: null == advancePaymentAmount
+            ? _value.advancePaymentAmount
+            : advancePaymentAmount // ignore: cast_nullable_to_non_nullable
+                  as double,
+        isFullPaymentSelected: null == isFullPaymentSelected
+            ? _value.isFullPaymentSelected
+            : isFullPaymentSelected // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        stripeCustomerId: freezed == stripeCustomerId
+            ? _value.stripeCustomerId
+            : stripeCustomerId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        savedPaymentMethodId: freezed == savedPaymentMethodId
+            ? _value.savedPaymentMethodId
+            : savedPaymentMethodId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        savePaymentMethod: null == savePaymentMethod
+            ? _value.savePaymentMethod
+            : savePaymentMethod // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        currentRefundPolicy: freezed == currentRefundPolicy
+            ? _value.currentRefundPolicy
+            : currentRefundPolicy // ignore: cast_nullable_to_non_nullable
+                  as RefundPolicy?,
+        canCancelBooking: null == canCancelBooking
+            ? _value.canCancelBooking
+            : canCancelBooking // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        cancellationFee: null == cancellationFee
+            ? _value.cancellationFee
+            : cancellationFee // ignore: cast_nullable_to_non_nullable
+                  as double,
+        receiptPdfUrl: freezed == receiptPdfUrl
+            ? _value.receiptPdfUrl
+            : receiptPdfUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        receiptEmailSent: null == receiptEmailSent
+            ? _value.receiptEmailSent
+            : receiptEmailSent // ignore: cast_nullable_to_non_nullable
+                  as bool,
         bookingId: freezed == bookingId
             ? _value.bookingId
             : bookingId // ignore: cast_nullable_to_non_nullable
@@ -388,12 +570,12 @@ class __$$BookingFlowStateImplCopyWithImpl<$Res>
 
 class _$BookingFlowStateImpl implements _BookingFlowState {
   const _$BookingFlowStateImpl({
-    this.currentStep = BookingStep.review,
+    this.currentStep = BookingStep.guestDetails,
     this.property,
     this.selectedUnit,
     this.checkInDate,
     this.checkOutDate,
-    this.numberOfGuests = 2,
+    this.numberOfGuests = 1,
     this.guestFirstName,
     this.guestLastName,
     this.guestEmail,
@@ -402,14 +584,26 @@ class _$BookingFlowStateImpl implements _BookingFlowState {
     this.basePrice = 0.0,
     this.serviceFee = 0.0,
     this.cleaningFee = 0.0,
+    this.taxRate = 0.0825,
+    this.taxAmount = 0.0,
     this.totalPrice = 0.0,
-    this.advanceAmount = 0.0,
+    this.advancePaymentPercentage = 0.20,
+    this.advancePaymentAmount = 0.0,
+    this.isFullPaymentSelected = false,
+    this.stripeCustomerId,
+    this.savedPaymentMethodId,
+    this.savePaymentMethod = false,
+    this.currentRefundPolicy,
+    this.canCancelBooking = true,
+    this.cancellationFee = 0.0,
+    this.receiptPdfUrl,
+    this.receiptEmailSent = false,
     this.bookingId,
     this.isLoading = false,
     this.error,
   });
 
-  // Current step: review, payment, success
+  // Current step: 6-step wizard
   @override
   @JsonKey()
   final BookingStep currentStep;
@@ -426,6 +620,7 @@ class _$BookingFlowStateImpl implements _BookingFlowState {
   @override
   @JsonKey()
   final int numberOfGuests;
+  // Changed default to 1
   // Guest details
   @override
   final String? guestFirstName;
@@ -437,10 +632,11 @@ class _$BookingFlowStateImpl implements _BookingFlowState {
   final String? guestPhone;
   @override
   final String? specialRequests;
-  // Price calculation
+  // Price calculation (with tax - FlutterFlow style)
   @override
   @JsonKey()
   final double basePrice;
+  // price per night * nights * guests
   @override
   @JsonKey()
   final double serviceFee;
@@ -449,10 +645,49 @@ class _$BookingFlowStateImpl implements _BookingFlowState {
   final double cleaningFee;
   @override
   @JsonKey()
-  final double totalPrice;
+  final double taxRate;
+  // 8.25% like FlutterFlow
   @override
   @JsonKey()
-  final double advanceAmount;
+  final double taxAmount;
+  // calculated from basePrice
+  @override
+  @JsonKey()
+  final double totalPrice;
+  // basePrice + serviceFee + cleaningFee + taxAmount
+  // Advance payment (20% default)
+  @override
+  @JsonKey()
+  final double advancePaymentPercentage;
+  @override
+  @JsonKey()
+  final double advancePaymentAmount;
+  @override
+  @JsonKey()
+  final bool isFullPaymentSelected;
+  // Stripe Customer & Payment Methods
+  @override
+  final String? stripeCustomerId;
+  @override
+  final String? savedPaymentMethodId;
+  @override
+  @JsonKey()
+  final bool savePaymentMethod;
+  // Refund policy
+  @override
+  final RefundPolicy? currentRefundPolicy;
+  @override
+  @JsonKey()
+  final bool canCancelBooking;
+  @override
+  @JsonKey()
+  final double cancellationFee;
+  // E-Receipt
+  @override
+  final String? receiptPdfUrl;
+  @override
+  @JsonKey()
+  final bool receiptEmailSent;
   // Booking ID (created after review)
   @override
   final String? bookingId;
@@ -465,7 +700,7 @@ class _$BookingFlowStateImpl implements _BookingFlowState {
 
   @override
   String toString() {
-    return 'BookingFlowState(currentStep: $currentStep, property: $property, selectedUnit: $selectedUnit, checkInDate: $checkInDate, checkOutDate: $checkOutDate, numberOfGuests: $numberOfGuests, guestFirstName: $guestFirstName, guestLastName: $guestLastName, guestEmail: $guestEmail, guestPhone: $guestPhone, specialRequests: $specialRequests, basePrice: $basePrice, serviceFee: $serviceFee, cleaningFee: $cleaningFee, totalPrice: $totalPrice, advanceAmount: $advanceAmount, bookingId: $bookingId, isLoading: $isLoading, error: $error)';
+    return 'BookingFlowState(currentStep: $currentStep, property: $property, selectedUnit: $selectedUnit, checkInDate: $checkInDate, checkOutDate: $checkOutDate, numberOfGuests: $numberOfGuests, guestFirstName: $guestFirstName, guestLastName: $guestLastName, guestEmail: $guestEmail, guestPhone: $guestPhone, specialRequests: $specialRequests, basePrice: $basePrice, serviceFee: $serviceFee, cleaningFee: $cleaningFee, taxRate: $taxRate, taxAmount: $taxAmount, totalPrice: $totalPrice, advancePaymentPercentage: $advancePaymentPercentage, advancePaymentAmount: $advancePaymentAmount, isFullPaymentSelected: $isFullPaymentSelected, stripeCustomerId: $stripeCustomerId, savedPaymentMethodId: $savedPaymentMethodId, savePaymentMethod: $savePaymentMethod, currentRefundPolicy: $currentRefundPolicy, canCancelBooking: $canCancelBooking, cancellationFee: $cancellationFee, receiptPdfUrl: $receiptPdfUrl, receiptEmailSent: $receiptEmailSent, bookingId: $bookingId, isLoading: $isLoading, error: $error)';
   }
 
   @override
@@ -501,10 +736,36 @@ class _$BookingFlowStateImpl implements _BookingFlowState {
                 other.serviceFee == serviceFee) &&
             (identical(other.cleaningFee, cleaningFee) ||
                 other.cleaningFee == cleaningFee) &&
+            (identical(other.taxRate, taxRate) || other.taxRate == taxRate) &&
+            (identical(other.taxAmount, taxAmount) ||
+                other.taxAmount == taxAmount) &&
             (identical(other.totalPrice, totalPrice) ||
                 other.totalPrice == totalPrice) &&
-            (identical(other.advanceAmount, advanceAmount) ||
-                other.advanceAmount == advanceAmount) &&
+            (identical(
+                  other.advancePaymentPercentage,
+                  advancePaymentPercentage,
+                ) ||
+                other.advancePaymentPercentage == advancePaymentPercentage) &&
+            (identical(other.advancePaymentAmount, advancePaymentAmount) ||
+                other.advancePaymentAmount == advancePaymentAmount) &&
+            (identical(other.isFullPaymentSelected, isFullPaymentSelected) ||
+                other.isFullPaymentSelected == isFullPaymentSelected) &&
+            (identical(other.stripeCustomerId, stripeCustomerId) ||
+                other.stripeCustomerId == stripeCustomerId) &&
+            (identical(other.savedPaymentMethodId, savedPaymentMethodId) ||
+                other.savedPaymentMethodId == savedPaymentMethodId) &&
+            (identical(other.savePaymentMethod, savePaymentMethod) ||
+                other.savePaymentMethod == savePaymentMethod) &&
+            (identical(other.currentRefundPolicy, currentRefundPolicy) ||
+                other.currentRefundPolicy == currentRefundPolicy) &&
+            (identical(other.canCancelBooking, canCancelBooking) ||
+                other.canCancelBooking == canCancelBooking) &&
+            (identical(other.cancellationFee, cancellationFee) ||
+                other.cancellationFee == cancellationFee) &&
+            (identical(other.receiptPdfUrl, receiptPdfUrl) ||
+                other.receiptPdfUrl == receiptPdfUrl) &&
+            (identical(other.receiptEmailSent, receiptEmailSent) ||
+                other.receiptEmailSent == receiptEmailSent) &&
             (identical(other.bookingId, bookingId) ||
                 other.bookingId == bookingId) &&
             (identical(other.isLoading, isLoading) ||
@@ -529,8 +790,20 @@ class _$BookingFlowStateImpl implements _BookingFlowState {
     basePrice,
     serviceFee,
     cleaningFee,
+    taxRate,
+    taxAmount,
     totalPrice,
-    advanceAmount,
+    advancePaymentPercentage,
+    advancePaymentAmount,
+    isFullPaymentSelected,
+    stripeCustomerId,
+    savedPaymentMethodId,
+    savePaymentMethod,
+    currentRefundPolicy,
+    canCancelBooking,
+    cancellationFee,
+    receiptPdfUrl,
+    receiptEmailSent,
     bookingId,
     isLoading,
     error,
@@ -564,14 +837,26 @@ abstract class _BookingFlowState implements BookingFlowState {
     final double basePrice,
     final double serviceFee,
     final double cleaningFee,
+    final double taxRate,
+    final double taxAmount,
     final double totalPrice,
-    final double advanceAmount,
+    final double advancePaymentPercentage,
+    final double advancePaymentAmount,
+    final bool isFullPaymentSelected,
+    final String? stripeCustomerId,
+    final String? savedPaymentMethodId,
+    final bool savePaymentMethod,
+    final RefundPolicy? currentRefundPolicy,
+    final bool canCancelBooking,
+    final double cancellationFee,
+    final String? receiptPdfUrl,
+    final bool receiptEmailSent,
     final String? bookingId,
     final bool isLoading,
     final String? error,
   }) = _$BookingFlowStateImpl;
 
-  // Current step: review, payment, success
+  // Current step: 6-step wizard
   @override
   BookingStep get currentStep; // Selected property and unit
   @override
@@ -583,7 +868,8 @@ abstract class _BookingFlowState implements BookingFlowState {
   @override
   DateTime? get checkOutDate;
   @override
-  int get numberOfGuests; // Guest details
+  int get numberOfGuests; // Changed default to 1
+  // Guest details
   @override
   String? get guestFirstName;
   @override
@@ -593,17 +879,42 @@ abstract class _BookingFlowState implements BookingFlowState {
   @override
   String? get guestPhone;
   @override
-  String? get specialRequests; // Price calculation
+  String? get specialRequests; // Price calculation (with tax - FlutterFlow style)
   @override
-  double get basePrice;
+  double get basePrice; // price per night * nights * guests
   @override
   double get serviceFee;
   @override
   double get cleaningFee;
   @override
-  double get totalPrice;
+  double get taxRate; // 8.25% like FlutterFlow
   @override
-  double get advanceAmount; // Booking ID (created after review)
+  double get taxAmount; // calculated from basePrice
+  @override
+  double get totalPrice; // basePrice + serviceFee + cleaningFee + taxAmount
+  // Advance payment (20% default)
+  @override
+  double get advancePaymentPercentage;
+  @override
+  double get advancePaymentAmount;
+  @override
+  bool get isFullPaymentSelected; // Stripe Customer & Payment Methods
+  @override
+  String? get stripeCustomerId;
+  @override
+  String? get savedPaymentMethodId;
+  @override
+  bool get savePaymentMethod; // Refund policy
+  @override
+  RefundPolicy? get currentRefundPolicy;
+  @override
+  bool get canCancelBooking;
+  @override
+  double get cancellationFee; // E-Receipt
+  @override
+  String? get receiptPdfUrl;
+  @override
+  bool get receiptEmailSent; // Booking ID (created after review)
   @override
   String? get bookingId; // Loading and error states
   @override

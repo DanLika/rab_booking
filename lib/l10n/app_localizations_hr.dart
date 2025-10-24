@@ -102,6 +102,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get login => 'Prijava';
 
   @override
+  String get signIn => 'Prijavite se';
+
+  @override
   String get register => 'Registracija';
 
   @override
@@ -136,6 +139,102 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get signInWithGoogle => 'Prijavite se sa Google';
+
+  @override
+  String get continueWithGoogle => 'Nastavite s Google';
+
+  @override
+  String get welcomeBack => 'Dobrodošli nazad';
+
+  @override
+  String get loginToYourAccount => 'Prijavite se na svoj račun';
+
+  @override
+  String get loginSuccessful => 'Uspješno ste se prijavili!';
+
+  @override
+  String get loginFailed => 'Prijava neuspješna';
+
+  @override
+  String get googleLoginFailed => 'Google prijava neuspješna';
+
+  @override
+  String get createNewAccount => 'Kreirajte novi račun';
+
+  @override
+  String get signUp => 'Registruj se';
+
+  @override
+  String get registrationSuccessful => 'Račun uspješno kreiran!';
+
+  @override
+  String get registrationFailed => 'Greška pri registraciji';
+
+  @override
+  String get googleRegistrationFailed => 'Google registracija neuspješna';
+
+  @override
+  String get acceptTermsRequired => 'Molimo prihvatite uslove korištenja';
+
+  @override
+  String get firstNameRequired => 'Molimo unesite ime';
+
+  @override
+  String get lastNameRequired => 'Molimo unesite prezime';
+
+  @override
+  String get emailRequired => 'Molimo unesite email';
+
+  @override
+  String get validEmailRequired => 'Molimo unesite validan email';
+
+  @override
+  String get passwordRequired => 'Molimo unesite lozinku';
+
+  @override
+  String get passwordTooShort => 'Lozinka mora imati najmanje 6 karaktera';
+
+  @override
+  String get confirmPassword => 'Potvrdi Lozinku';
+
+  @override
+  String get confirmPasswordRequired => 'Molimo potvrdite lozinku';
+
+  @override
+  String get passwordsDoNotMatch => 'Lozinke se ne poklapaju';
+
+  @override
+  String get accountType => 'Tip računa';
+
+  @override
+  String get guest => 'Gost';
+
+  @override
+  String get guestDescription => 'Želim rezervisati smještaj';
+
+  @override
+  String get owner => 'Vlasnik';
+
+  @override
+  String get ownerDescription => 'Želim iznajmiti svoj smještaj';
+
+  @override
+  String get iAccept => 'Prihvatam ';
+
+  @override
+  String get termsOfService => 'Uslove korištenja';
+
+  @override
+  String get and => ' i ';
+
+  @override
+  String get privacyPolicy => 'Politika Privatnosti';
+
+  @override
+  String get or => 'ili';
+
+  @override
+  String get enterYourEmail => 'Unesite vašu email adresu';
 
   @override
   String get properties => 'Nekretnine';
@@ -225,6 +324,86 @@ class AppLocalizationsHr extends AppLocalizations {
   String get bookingConfirmed => 'Rezervacija Potvrđena';
 
   @override
+  String get bookingInformation => 'Informacije o rezervaciji';
+
+  @override
+  String get bookingId => 'ID rezervacije';
+
+  @override
+  String get bookingDate => 'Datum rezervacije';
+
+  @override
+  String get stayDetails => 'Detalji boravka';
+
+  @override
+  String get arrival => 'Dolazak';
+
+  @override
+  String get departure => 'Odlazak';
+
+  @override
+  String get duration => 'Trajanje';
+
+  @override
+  String get night => 'noć';
+
+  @override
+  String get nightsPlural => 'noći';
+
+  @override
+  String get guestsPlural => 'gostiju';
+
+  @override
+  String get paymentInformation => 'Informacije o plaćanju';
+
+  @override
+  String get totalAmount => 'Ukupan iznos';
+
+  @override
+  String get cancellationDetails => 'Detalji otkazivanja';
+
+  @override
+  String get cancelledOn => 'Otkazano dana';
+
+  @override
+  String get reason => 'Razlog';
+
+  @override
+  String get viewProperty => 'Pogledaj Nekretninu';
+
+  @override
+  String get errorLoadingBooking => 'Greška pri učitavanju rezervacije';
+
+  @override
+  String get tryAgainOrContactSupport =>
+      'Pokušajte ponovo ili kontaktirajte podršku';
+
+  @override
+  String get cancelBookingTitle => 'Otkaži Rezervaciju';
+
+  @override
+  String get cancelBookingConfirmation =>
+      'Jeste li sigurni da želite otkazati ovu rezervaciju? Ova akcija se ne može poništiti.';
+
+  @override
+  String get cancellationReason => 'Razlog Otkazivanja';
+
+  @override
+  String get cancellationReasonHint => 'Molimo navedite razlog otkazivanja';
+
+  @override
+  String get cancellationReasonRequired => 'Molimo navedite razlog otkazivanja';
+
+  @override
+  String get keepBooking => 'Zadrži Rezervaciju';
+
+  @override
+  String get bookingCancelledSuccessfully => 'Rezervacija uspješno otkazana';
+
+  @override
+  String get bookingCancellationFailed => 'Neuspjelo otkazivanje rezervacije';
+
+  @override
   String get writeReview => 'Napiši Recenziju';
 
   @override
@@ -261,6 +440,23 @@ class AppLocalizationsHr extends AppLocalizations {
   String get noFavorites => 'Nemate Omiljenih';
 
   @override
+  String get toggleFavoriteStatus =>
+      'Promeni status omiljenog za ovu nekretninu';
+
+  @override
+  String get propertyNotFound => 'Smještaj nije pronađen';
+
+  @override
+  String get propertyNoLongerAvailable =>
+      'Ovaj smještaj možda više nije dostupan.';
+
+  @override
+  String get errorLoadingProperty => 'Greška prilikom učitavanja';
+
+  @override
+  String get tryAgain => 'Pokušaj ponovo';
+
+  @override
   String get noFavoritesDescription =>
       'Dodajte nekretnine u omiljene kako biste ih lako pronašli kasnije.';
 
@@ -278,9 +474,6 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get newPassword => 'Nova Lozinka';
-
-  @override
-  String get confirmPassword => 'Potvrdi Lozinku';
 
   @override
   String get personalInfo => 'Lične Informacije';
@@ -344,9 +537,6 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get invalidPassword => 'Lozinka mora imati najmanje 8 karaktera';
-
-  @override
-  String get passwordsDoNotMatch => 'Lozinke se ne poklapaju';
 
   @override
   String get requiredField => 'Ovo polje je obavezno';
@@ -454,9 +644,6 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get termsChangesBody =>
       'Zadržavamo pravo da izmenimo ove uslove u bilo kom trenutku. Izmene će stupiti na snagu odmah nakon objavljivanja na veb stranici. Vaše nastavljen korištenje servisa nakon izmena predstavlja prihvatanje novih uslova.';
-
-  @override
-  String get privacyPolicy => 'Politika Privatnosti';
 
   @override
   String get privacyPolicyTitle => 'Politika Privatnosti';
@@ -704,9 +891,6 @@ class AppLocalizationsHr extends AppLocalizations {
   String get pleaseEnterName => 'Molimo unesite vaše ime';
 
   @override
-  String get enterYourEmail => 'Unesite vašu email adresu';
-
-  @override
   String get pleaseEnterEmail => 'Molimo unesite vaš email';
 
   @override
@@ -748,4 +932,53 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get messageSendFailed => 'Slanje poruke nije uspelo';
+
+  @override
+  String get homeHeroTitle => 'Otkrijte Savršen Odmor na Otoku Rabu';
+
+  @override
+  String get homeHeroSubtitle =>
+      'Premium ville, apartmani i kuće za odmor u srcu Jadrana';
+
+  @override
+  String get featuredPropertiesTitle => 'Istaknute Nekretnine';
+
+  @override
+  String get featuredPropertiesSubtitle =>
+      'Ručno odabrane nekretnine za vaš savršen boravak';
+
+  @override
+  String get recentlyViewedTitle => 'Nedavno Pregledano';
+
+  @override
+  String get recentlyViewedSubtitle => 'Nekretnine koje ste nedavno pregledali';
+
+  @override
+  String get popularDestinationsTitle => 'Popularne Destinacije';
+
+  @override
+  String get popularDestinationsSubtitle =>
+      'Istražite najtraženije lokacije za odmor na otoku Rabu';
+
+  @override
+  String get howItWorksTitle => 'Kako Funkcioniše';
+
+  @override
+  String get howItWorksSubtitle =>
+      'Rezervišite svoj san odmor u tri jednostavna koraka';
+
+  @override
+  String get testimonialsTitle => 'Šta Naši Gosti Kažu';
+
+  @override
+  String get testimonialsSubtitle => 'Stvarna iskustva od stvarnih putnika';
+
+  @override
+  String get ctaGetStarted => 'Počnite';
+
+  @override
+  String get ctaLearnMore => 'Saznajte Više';
+
+  @override
+  String get seeAll => 'Pogledaj Sve';
 }

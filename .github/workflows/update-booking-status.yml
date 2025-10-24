@@ -1,0 +1,49 @@
+name: Update Booking Status
+
+# Run every 15 minutes
+on:
+  schedule:
+    # Cron syntax: minute hour day month day-of-week
+    # */15 * * * * = every 15 minutes
+    - cron: '*/15 * * * *'
+
+  # Allow manual trigger from GitHub Actions UI
+  workflow_dispatch:
+
+jobs:
+  update-status:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Call Supabase Edge Function
+        run: |
+          echo "Calling update-booking-status Edge Function..."
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/update-booking-status" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "Response status: $HTTP_CODE"
+          echo "Response body: $BODY"
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "::error::Edge Function returned status $HTTP_CODE"
+            echo "::error::Response: $BODY"
+            exit 1
+          fi
+
+          echo "✓ Booking status update completed successfully"
+          echo "$BODY" | jq '.'
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Booking status update failed at $(date -u)"
+          # Optional: Add Slack/Discord/Email notification here

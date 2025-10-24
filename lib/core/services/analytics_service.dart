@@ -1,14 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'supabase_analytics_service.dart';
 
 /// Analytics and error tracking service
 ///
-/// Provides integration points for:
-/// - Firebase Crashlytics (error tracking)
-/// - Sentry (error tracking)
-/// - Firebase Analytics (event tracking)
-///
-/// Currently set up as placeholder methods that can be activated
-/// by uncommenting and adding the necessary dependencies to pubspec.yaml
+/// Now using Supabase Analytics as the primary analytics backend
+/// Can be extended with Firebase/Sentry for additional tracking
 class AnalyticsService {
   /// Initialize Firebase Crashlytics for error tracking
   ///
@@ -47,10 +43,16 @@ class AnalyticsService {
   /// - User actions (booking_created, payment_completed)
   /// - Feature usage (search_performed, filter_applied)
   /// - Business metrics (property_viewed, booking_cancelled)
-  static void logEvent(String eventName, {Map<String, dynamic>? parameters}) {
+  static Future<void> logEvent(String eventName, {Map<String, dynamic>? parameters}) async {
     debugPrint('[ANALYTICS] Event: $eventName, params: $parameters');
 
-    // Uncomment when Firebase Analytics is set up:
+    // Track with Supabase Analytics
+    await SupabaseAnalyticsService.trackEvent(
+      eventName: eventName,
+      properties: parameters,
+    );
+
+    // Can also send to Firebase Analytics if configured:
     // await FirebaseAnalytics.instance.logEvent(
     //   name: eventName,
     //   parameters: parameters,
@@ -207,9 +209,16 @@ class AnalyticsService {
   }
 
   /// Track property viewed
-  static void logPropertyViewed(String propertyId) {
-    logEvent('property_viewed', parameters: {
-      'property_id': propertyId,
-    });
+  static Future<void> logPropertyViewed(String propertyId, {String? propertyName, double? price}) async {
+    await SupabaseAnalyticsService.trackPropertyView(
+      propertyId: propertyId,
+      propertyName: propertyName ?? '',
+      price: price,
+    );
+  }
+
+  /// Clear analytics session (call on logout)
+  static void clearSession() {
+    SupabaseAnalyticsService.clearSession();
   }
 }

@@ -260,13 +260,13 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
                       const SizedBox(height: 8),
                       _buildPaymentRow(
                         'Plaćeno sada',
-                        '€${bookingFlow.advanceAmount.toStringAsFixed(2)}',
+                        '€${bookingFlow.advancePaymentAmount.toStringAsFixed(2)}',
                         isHighlighted: true,
                       ),
                       const SizedBox(height: 8),
                       _buildPaymentRow(
                         'Preostalo za platiti',
-                        '€${(bookingFlow.totalPrice - bookingFlow.advanceAmount).toStringAsFixed(2)}',
+                        '€${(bookingFlow.totalPrice - bookingFlow.advancePaymentAmount).toStringAsFixed(2)}',
                       ),
                       const SizedBox(height: 16),
                       Container(

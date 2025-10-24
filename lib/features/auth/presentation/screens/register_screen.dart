@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../shared/presentation/widgets/adaptive_scaffold.dart';
 import '../providers/auth_notifier.dart';
 import '../../../../core/utils/navigation_helpers.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({
@@ -31,6 +33,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String _selectedRole = 'guest'; // Default to guest
   bool _acceptTerms = false;
 
+  // Localization getter
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -48,8 +53,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     // Check terms acceptance
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Molimo prihvatite uslove korištenja'),
+        SnackBar(
+          content: Text(l10n.acceptTermsRequired),
           backgroundColor: Colors.orange,
         ),
       );
@@ -71,8 +76,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         final authState = ref.read(authNotifierProvider);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Račun uspješno kreiran!'),
+          SnackBar(
+            content: Text(l10n.registrationSuccessful),
             backgroundColor: Colors.green,
           ),
         );
@@ -91,7 +96,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         final authState = ref.read(authNotifierProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authState.error ?? 'Greška pri registraciji'),
+            content: Text(authState.error ?? l10n.registrationFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -109,8 +114,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Google registracija neuspješna'),
+          SnackBar(
+            content: Text(l10n.googleRegistrationFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -120,7 +125,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final l10n = AppLocalizations.of(context)!;
+
+    return AuthScaffold(
+      showBackButton: true,  // Allow user to exit auth flow - NO DEAD END!
+      showLogo: false,       // Show custom logo below instead
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -141,7 +150,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Rab Booking',
+                      l10n.appName,
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -149,7 +158,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Kreirajte novi račun',
+                      l10n.createNewAccount,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: context.textColorSecondary,
                       ),
@@ -160,15 +169,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     // First Name
                     TextFormField(
                       controller: _firstNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Ime',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person_outline),
+                      decoration: InputDecoration(
+                        labelText: l10n.firstName,
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.person_outline),
                       ),
                       textInputAction: TextInputAction.next,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Molimo unesite ime';
+                          return l10n.firstNameRequired;
                         }
                         return null;
                       },
@@ -178,15 +187,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     // Last Name
                     TextFormField(
                       controller: _lastNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Prezime',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person_outline),
+                      decoration: InputDecoration(
+                        labelText: l10n.lastName,
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.person_outline),
                       ),
                       textInputAction: TextInputAction.next,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Molimo unesite prezime';
+                          return l10n.lastNameRequired;
                         }
                         return null;
                       },
@@ -196,19 +205,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     // Email
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email_outlined),
+                      decoration: InputDecoration(
+                        labelText: l10n.email,
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.email_outlined),
                       ),
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Molimo unesite email';
+                          return l10n.emailRequired;
                         }
                         if (!value.contains('@')) {
-                          return 'Molimo unesite validan email';
+                          return l10n.validEmailRequired;
                         }
                         return null;
                       },
@@ -219,7 +228,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextFormField(
                       controller: _passwordController,
                       decoration: InputDecoration(
-                        labelText: 'Lozinka',
+                        labelText: l10n.password,
                         border: const OutlineInputBorder(),
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
@@ -235,10 +244,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       textInputAction: TextInputAction.next,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Molimo unesite lozinku';
+                          return l10n.passwordRequired;
                         }
                         if (value.length < 6) {
-                          return 'Lozinka mora imati najmanje 6 karaktera';
+                          return l10n.passwordTooShort;
                         }
                         return null;
                       },
@@ -249,7 +258,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextFormField(
                       controller: _confirmPasswordController,
                       decoration: InputDecoration(
-                        labelText: 'Potvrdite lozinku',
+                        labelText: l10n.confirmPassword,
                         border: const OutlineInputBorder(),
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
@@ -266,10 +275,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       onFieldSubmitted: (_) => _handleRegister(),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Molimo potvrdite lozinku';
+                          return l10n.confirmPasswordRequired;
                         }
                         if (value != _passwordController.text) {
-                          return 'Lozinke se ne poklapaju';
+                          return l10n.passwordsDoNotMatch;
                         }
                         return null;
                       },
@@ -288,7 +297,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Tip računa',
+                            l10n.accountType,
                             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -308,8 +317,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   ? Theme.of(context).primaryColor
                                   : Colors.grey,
                             ),
-                            title: const Text('Gost'),
-                            subtitle: const Text('Želim rezervisati smještaj'),
+                            title: Text(l10n.guest),
+                            subtitle: Text(l10n.guestDescription),
                             trailing: _selectedRole == 'guest'
                                 ? Icon(
                                     Icons.check_circle,
@@ -332,8 +341,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   ? Theme.of(context).primaryColor
                                   : Colors.grey,
                             ),
-                            title: const Text('Vlasnik'),
-                            subtitle: const Text('Želim iznajmiti svoj smještaj'),
+                            title: Text(l10n.owner),
+                            subtitle: Text(l10n.ownerDescription),
                             trailing: _selectedRole == 'owner'
                                 ? Icon(
                                     Icons.check_circle,
@@ -359,20 +368,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       dense: true,
                       title: Text.rich(
                         TextSpan(
-                          text: 'Prihvatam ',
+                          text: l10n.iAccept,
                           style: Theme.of(context).textTheme.bodySmall,
                           children: [
                             TextSpan(
-                              text: 'Uslove korištenja',
+                              text: l10n.termsOfService,
                               style: TextStyle(
                                 color: Theme.of(context).primaryColor,
                                 decoration: TextDecoration.underline,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const TextSpan(text: ' i '),
+                            TextSpan(text: l10n.and),
                             TextSpan(
-                              text: 'Politiku privatnosti',
+                              text: l10n.privacyPolicy,
                               style: TextStyle(
                                 color: Theme.of(context).primaryColor,
                                 decoration: TextDecoration.underline,
@@ -400,7 +409,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 color: context.textColorInverted,
                               ),
                             )
-                          : const Text('Registruj se'),
+                          : Text(l10n.signUp),
                     ),
                     const SizedBox(height: 24),
 
@@ -411,7 +420,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'ili',
+                            l10n.or,
                             style: TextStyle(color: context.textColorSecondary),
                           ),
                         ),
@@ -438,9 +447,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, size: 20),
                             ),
                             const SizedBox(width: 8),
-                            const Flexible(
+                            Flexible(
                               child: Text(
-                                'Nastavite s Google',
+                                l10n.continueWithGoogle,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -456,14 +465,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          'Već imate račun? ',
+                          l10n.alreadyHaveAccount,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         TextButton(
                           onPressed: () {
                             context.goToLogin();
                           },
-                          child: const Text('Prijavite se'),
+                          child: Text(l10n.signIn),
                         ),
                       ],
                     ),

@@ -239,6 +239,32 @@ class StorageException extends AppException {
 // GENERIC EXCEPTIONS
 // ============================================================================
 
+/// Exception for authentication errors (user auth)
+class AuthenticationException extends AppException {
+  const AuthenticationException(
+    String message, {
+    String? userMessage,
+    super.originalError,
+    super.stackTrace,
+  }) : super(
+          message: message,
+          userMessage: userMessage ?? 'Authentication failed. Please try again.',
+        );
+}
+
+/// Exception for payment processing errors
+class PaymentException extends AppException {
+  const PaymentException(
+    String message, {
+    String? userMessage,
+    super.originalError,
+    super.stackTrace,
+  }) : super(
+          message: message,
+          userMessage: userMessage ?? 'Payment processing failed. Please try again.',
+        );
+}
+
 /// Exception for unknown/unexpected errors
 class UnknownException extends AppException {
   const UnknownException({

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../shared/repositories/public_profile_repository.dart';
 
 part 'reviews_repository.freezed.dart';
 part 'reviews_repository.g.dart';
@@ -52,8 +53,9 @@ class RatingBreakdown with _$RatingBreakdown {
 /// Reviews repository
 class ReviewsRepository {
   final SupabaseClient _supabase;
+  final PublicProfileRepository _publicProfileRepo;
 
-  ReviewsRepository(this._supabase);
+  ReviewsRepository(this._supabase, this._publicProfileRepo);
 
   /// Get all reviews for a property
   Future<List<PropertyReview>> getPropertyReviews(
@@ -64,17 +66,10 @@ class ReviewsRepository {
     int? filterByRating,
   }) async {
     try {
+      // Fetch reviews without JOIN (avoiding RLS issues)
       dynamic query = _supabase
           .from('reviews')
-          .select('''
-            *,
-            users!inner(
-              id,
-              first_name,
-              last_name,
-              avatar_url
-            )
-          ''')
+          .select('*')
           .eq('property_id', propertyId);
 
       // Apply rating filter
@@ -107,13 +102,44 @@ class ReviewsRepository {
       }
 
       final response = await query;
+      final reviewsList = response as List;
 
-      return (response as List).map((json) {
-        // Map user data to review
-        final userData = json['users'] as Map<String, dynamic>?;
+      // Fetch user data separately using RPC function
+      // Get unique user IDs from reviews
+      final userIds = reviewsList
+          .map((r) => r['user_id'] as String)
+          .toSet()
+          .toList();
+
+      Map<String, Map<String, dynamic>> usersMap = {};
+
+      if (userIds.isNotEmpty) {
+        try {
+          // Fetch all users using PublicProfileRepository
+          final profiles = await _publicProfileRepo.getPublicProfiles(userIds);
+
+          // Create a map of user_id -> user_data
+          for (var profile in profiles) {
+            usersMap[profile.id] = {
+              'id': profile.id,
+              'first_name': profile.firstName,
+              'last_name': profile.lastName,
+              'avatar_url': profile.avatarUrl,
+            };
+          }
+        } catch (e) {
+          // If fetch fails, continue without user data
+          print('Failed to fetch user data for reviews: $e');
+        }
+      }
+
+      // Combine review and user data
+      return reviewsList.map((json) {
         final reviewData = Map<String, dynamic>.from(json);
+        final userId = json['user_id'] as String?;
 
-        if (userData != null) {
+        if (userId != null && usersMap.containsKey(userId)) {
+          final userData = usersMap[userId]!;
           reviewData['user_name'] = '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'.trim();
           reviewData['user_avatar'] = userData['avatar_url'];
         }
@@ -123,6 +149,7 @@ class ReviewsRepository {
     } catch (e) {
       // Return empty list if reviews table doesn't exist or other errors
       // This allows the app to continue working without reviews
+      print('Error fetching reviews: $e');
       return [];
     }
   }
@@ -261,26 +288,23 @@ class ReviewsRepository {
       final response = await _supabase
           .from('reviews')
           .insert(reviewData)
-          .select('''
-            *,
-            users!inner(
-              id,
-              first_name,
-              last_name,
-              avatar_url
-            )
-          ''')
+          .select()
           .single();
 
-      // Map user data
-      final userData = response['users'] as Map<String, dynamic>?;
+      // Fetch user data separately using PublicProfileRepository
       final mappedData = Map<String, dynamic>.from(response);
 
-      if (userData != null) {
-        mappedData['user_name'] =
-            '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'
-                .trim();
-        mappedData['user_avatar'] = userData['avatar_url'];
+      try {
+        final profile = await _publicProfileRepo.getPublicProfile(user.id);
+
+        if (profile != null) {
+          mappedData['user_name'] =
+              '${profile.firstName ?? ''} ${profile.lastName ?? ''}'.trim();
+          mappedData['user_avatar'] = profile.avatarUrl;
+        }
+      } catch (e) {
+        // Continue without user data if fetch fails
+        print('Failed to fetch user data for review: $e');
       }
 
       return PropertyReview.fromJson(mappedData);
@@ -340,26 +364,23 @@ class ReviewsRepository {
           .update(updateData)
           .eq('id', reviewId)
           .eq('user_id', user.id) // Ensure user owns the review
-          .select('''
-            *,
-            users!inner(
-              id,
-              first_name,
-              last_name,
-              avatar_url
-            )
-          ''')
+          .select()
           .single();
 
-      // Map user data
-      final userData = response['users'] as Map<String, dynamic>?;
+      // Fetch user data separately using PublicProfileRepository
       final mappedData = Map<String, dynamic>.from(response);
 
-      if (userData != null) {
-        mappedData['user_name'] =
-            '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'
-                .trim();
-        mappedData['user_avatar'] = userData['avatar_url'];
+      try {
+        final profile = await _publicProfileRepo.getPublicProfile(user.id);
+
+        if (profile != null) {
+          mappedData['user_name'] =
+              '${profile.firstName ?? ''} ${profile.lastName ?? ''}'.trim();
+          mappedData['user_avatar'] = profile.avatarUrl;
+        }
+      } catch (e) {
+        // Continue without user data if fetch fails
+        print('Failed to fetch user data for review: $e');
       }
 
       return PropertyReview.fromJson(mappedData);
@@ -406,26 +427,26 @@ class ReviewsRepository {
           .from('reviews')
           .update(updateData)
           .eq('id', reviewId)
-          .select('''
-            *,
-            users!inner(
-              id,
-              first_name,
-              last_name,
-              avatar_url
-            )
-          ''')
+          .select()
           .single();
 
-      // Map user data
-      final userData = result['users'] as Map<String, dynamic>?;
+      // Fetch user data separately using PublicProfileRepository
       final mappedData = Map<String, dynamic>.from(result);
+      final reviewUserId = result['user_id'] as String?;
 
-      if (userData != null) {
-        mappedData['user_name'] =
-            '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'
-                .trim();
-        mappedData['user_avatar'] = userData['avatar_url'];
+      if (reviewUserId != null) {
+        try {
+          final profile = await _publicProfileRepo.getPublicProfile(reviewUserId);
+
+          if (profile != null) {
+            mappedData['user_name'] =
+                '${profile.firstName ?? ''} ${profile.lastName ?? ''}'.trim();
+            mappedData['user_avatar'] = profile.avatarUrl;
+          }
+        } catch (e) {
+          // Continue without user data if fetch fails
+          print('Failed to fetch user data for review: $e');
+        }
       }
 
       return PropertyReview.fromJson(mappedData);
@@ -461,29 +482,26 @@ class ReviewsRepository {
     try {
       final response = await _supabase
           .from('reviews')
-          .select('''
-            *,
-            users!inner(
-              id,
-              first_name,
-              last_name,
-              avatar_url
-            )
-          ''')
+          .select()
           .eq('booking_id', bookingId)
           .eq('user_id', userId)
           .limit(1)
           .single();
 
-      // Map user data
-      final userData = response['users'] as Map<String, dynamic>?;
+      // Fetch user data separately using PublicProfileRepository
       final mappedData = Map<String, dynamic>.from(response);
 
-      if (userData != null) {
-        mappedData['user_name'] =
-            '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'
-                .trim();
-        mappedData['user_avatar'] = userData['avatar_url'];
+      try {
+        final profile = await _publicProfileRepo.getPublicProfile(userId);
+
+        if (profile != null) {
+          mappedData['user_name'] =
+              '${profile.firstName ?? ''} ${profile.lastName ?? ''}'.trim();
+          mappedData['user_avatar'] = profile.avatarUrl;
+        }
+      } catch (e) {
+        // Continue without user data if fetch fails
+        print('Failed to fetch user data for review: $e');
       }
 
       return PropertyReview.fromJson(mappedData);
@@ -496,5 +514,6 @@ class ReviewsRepository {
 /// Provider for reviews repository
 @riverpod
 ReviewsRepository reviewsRepository(Ref ref) {
-  return ReviewsRepository(Supabase.instance.client);
+  final publicProfileRepo = ref.watch(publicProfileRepositoryProvider);
+  return ReviewsRepository(Supabase.instance.client, publicProfileRepo);
 }

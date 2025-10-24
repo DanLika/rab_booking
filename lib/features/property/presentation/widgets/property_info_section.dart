@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../core/constants/enums.dart';
 import '../../domain/models/property_unit.dart';
@@ -28,13 +29,16 @@ class _PropertyInfoSectionState extends State<PropertyInfoSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Title (30px, bold as per spec)
-        Text(
+        AutoSizeText(
           widget.property.name,
           style: const TextStyle(
             fontSize: 30,
             fontWeight: FontWeight.bold,
             height: 1.2,
           ),
+          maxLines: 2,
+          minFontSize: 20,
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 12),
 
@@ -67,13 +71,14 @@ class _PropertyInfoSectionState extends State<PropertyInfoSection> {
             Icon(Icons.location_on, size: 18, color: context.iconColorSecondary),
             const SizedBox(width: 4),
             Expanded(
-              child: Text(
+              child: AutoSizeText(
                 widget.property.location,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: context.textColor,
                       fontWeight: FontWeight.w500,
                     ),
                 maxLines: 1,
+                minFontSize: 12,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -104,13 +109,14 @@ class _PropertyInfoSectionState extends State<PropertyInfoSection> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              AutoSizeText(
                 widget.property.description,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       height: 1.6, // Line height as per spec
                       color: context.textColor,
                     ),
                 maxLines: _isDescriptionExpanded ? null : 4,
+                minFontSize: 14,
                 overflow: _isDescriptionExpanded
                     ? TextOverflow.visible
                     : TextOverflow.ellipsis,

@@ -1,9 +1,15 @@
+import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../shared/models/property_model.dart';
+import '../../../../shared/models/booking_model.dart';
+import '../../../../shared/providers/repository_providers.dart';
 import '../../../property/domain/models/property_unit.dart';
 import '../../../property/presentation/providers/unavailable_dates_provider.dart';
 import '../../domain/constants/booking_constants.dart';
+import '../../domain/models/refund_policy.dart';
+import '../../domain/models/booking_status.dart';
 
 part 'booking_flow_notifier.freezed.dart';
 part 'booking_flow_notifier.g.dart';
@@ -12,8 +18,8 @@ part 'booking_flow_notifier.g.dart';
 @freezed
 class BookingFlowState with _$BookingFlowState {
   const factory BookingFlowState({
-    // Current step: review, payment, success
-    @Default(BookingStep.review) BookingStep currentStep,
+    // Current step: 6-step wizard
+    @Default(BookingStep.guestDetails) BookingStep currentStep,
 
     // Selected property and unit
     PropertyModel? property,
@@ -22,7 +28,7 @@ class BookingFlowState with _$BookingFlowState {
     // Booking details
     DateTime? checkInDate,
     DateTime? checkOutDate,
-    @Default(2) int numberOfGuests,
+    @Default(1) int numberOfGuests, // Changed default to 1
 
     // Guest details
     String? guestFirstName,
@@ -31,12 +37,32 @@ class BookingFlowState with _$BookingFlowState {
     String? guestPhone,
     String? specialRequests,
 
-    // Price calculation
-    @Default(0.0) double basePrice,
+    // Price calculation (with tax - FlutterFlow style)
+    @Default(0.0) double basePrice, // price per night * nights * guests
     @Default(0.0) double serviceFee,
     @Default(0.0) double cleaningFee,
-    @Default(0.0) double totalPrice,
-    @Default(0.0) double advanceAmount,
+    @Default(0.0825) double taxRate, // 8.25% like FlutterFlow
+    @Default(0.0) double taxAmount, // calculated from basePrice
+    @Default(0.0) double totalPrice, // basePrice + serviceFee + cleaningFee + taxAmount
+
+    // Advance payment (20% default)
+    @Default(0.20) double advancePaymentPercentage,
+    @Default(0.0) double advancePaymentAmount,
+    @Default(false) bool isFullPaymentSelected,
+
+    // Stripe Customer & Payment Methods
+    String? stripeCustomerId,
+    String? savedPaymentMethodId,
+    @Default(false) bool savePaymentMethod,
+
+    // Refund policy
+    RefundPolicy? currentRefundPolicy,
+    @Default(true) bool canCancelBooking,
+    @Default(0.0) double cancellationFee,
+
+    // E-Receipt
+    String? receiptPdfUrl,
+    @Default(false) bool receiptEmailSent,
 
     // Booking ID (created after review)
     String? bookingId,
@@ -47,22 +73,51 @@ class BookingFlowState with _$BookingFlowState {
   }) = _BookingFlowState;
 }
 
-/// Booking flow steps
+/// Booking flow steps - 6-step wizard
 enum BookingStep {
-  review,
-  payment,
-  success;
+  guestDetails,     // 1. Guest information form
+  dateSelection,    // 2. Real-time calendar date picker
+  reviewSummary,    // 3. Review booking details + special requests
+  paymentMethod,    // 4. Select payment amount (20% or full) + saved cards
+  paymentProcessing,// 5. Stripe payment sheet
+  success;          // 6. Success animation + e-receipt
 
   String get label {
     switch (this) {
-      case BookingStep.review:
+      case BookingStep.guestDetails:
+        return 'Podaci gosta';
+      case BookingStep.dateSelection:
+        return 'Datum';
+      case BookingStep.reviewSummary:
         return 'Pregled';
-      case BookingStep.payment:
+      case BookingStep.paymentMethod:
+        return 'Način plaćanja';
+      case BookingStep.paymentProcessing:
         return 'Plaćanje';
       case BookingStep.success:
         return 'Potvrda';
     }
   }
+
+  IconData get icon {
+    switch (this) {
+      case BookingStep.guestDetails:
+        return Icons.person_outline;
+      case BookingStep.dateSelection:
+        return Icons.calendar_month;
+      case BookingStep.reviewSummary:
+        return Icons.assignment_outlined;
+      case BookingStep.paymentMethod:
+        return Icons.payment;
+      case BookingStep.paymentProcessing:
+        return Icons.credit_card;
+      case BookingStep.success:
+        return Icons.check_circle_outline;
+    }
+  }
+
+  int get stepNumber => index + 1;
+  int get totalSteps => BookingStep.values.length;
 }
 
 /// Booking flow notifier
@@ -109,16 +164,32 @@ class BookingFlowNotifier extends _$BookingFlowNotifier {
       // Calculate number of nights
       final nights = checkOut.difference(checkIn).inDays;
 
-      // Calculate prices using BookingConstants
-      final basePrice = unit.pricePerNight * nights;
+      // Calculate base price with guest multiplier (FlutterFlow style)
+      final basePrice = unit.pricePerNight * nights * guests;
+
+      // Calculate tax on base price
+      final taxAmount = basePrice * state.taxRate;
+
+      // Calculate service fee and cleaning fee
       final serviceFee = BookingConstants.calculateServiceFee(basePrice);
       final cleaningFee = BookingConstants.cleaningFeeEur;
-      final totalPrice = BookingConstants.calculateTotalPrice(
-        basePrice: basePrice,
-        customServiceFee: serviceFee,
-        customCleaningFee: cleaningFee,
+
+      // Total price includes tax
+      final totalPrice = basePrice + taxAmount + serviceFee + cleaningFee;
+
+      // Calculate advance payment (20% or full)
+      final advanceAmount = state.isFullPaymentSelected
+        ? totalPrice
+        : totalPrice * state.advancePaymentPercentage;
+
+      // Get applicable refund policy
+      final refundPolicy = RefundPolicies.getApplicablePolicy(
+        checkInDate: checkIn,
       );
-      final advanceAmount = BookingConstants.calculateAdvancePayment(totalPrice);
+
+      final canCancel = RefundPolicies.canCancelBooking(
+        checkInDate: checkIn,
+      );
 
       state = state.copyWith(
         property: property,
@@ -127,11 +198,15 @@ class BookingFlowNotifier extends _$BookingFlowNotifier {
         checkOutDate: checkOut,
         numberOfGuests: guests,
         basePrice: basePrice,
+        taxAmount: taxAmount,
         serviceFee: serviceFee,
         cleaningFee: cleaningFee,
         totalPrice: totalPrice,
-        advanceAmount: advanceAmount,
-        currentStep: BookingStep.review,
+        advancePaymentAmount: advanceAmount,
+        currentRefundPolicy: refundPolicy,
+        canCancelBooking: canCancel,
+        cancellationFee: refundPolicy.calculateCancellationFee(totalPrice),
+        currentStep: BookingStep.guestDetails, // Start at guest details
         isLoading: false,
         error: null,
       );
@@ -143,6 +218,62 @@ class BookingFlowNotifier extends _$BookingFlowNotifier {
         error: 'Greška pri validaciji datuma: $e',
       );
       return false;
+    }
+  }
+
+  /// Initialize booking flow with just unit ID (fetches unit and property data)
+  /// Used by BookingWizardScreen to load unit data on startup
+  Future<void> initializeWithUnit(String unitId) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      // Fetch unit details
+      final unitRepository = ref.read(unitRepositoryProvider);
+      final unitModel = await unitRepository.fetchUnitById(unitId);
+
+      if (unitModel == null) {
+        throw Exception('Unit not found');
+      }
+
+      // Convert UnitModel to PropertyUnit
+      final unit = PropertyUnit(
+        id: unitModel.id,
+        propertyId: unitModel.propertyId,
+        name: unitModel.name,
+        description: unitModel.description,
+        pricePerNight: unitModel.pricePerNight,
+        maxGuests: unitModel.maxGuests,
+        bedrooms: unitModel.bedrooms,
+        bathrooms: unitModel.bathrooms,
+        area: unitModel.areaSqm ?? 0.0,
+        amenities: [], // UnitModel doesn't have amenities
+        images: unitModel.images,
+        isAvailable: unitModel.isAvailable,
+      );
+
+      // Fetch property details
+      final propertyRepository = ref.read(propertyRepositoryProvider);
+      final property = await propertyRepository.fetchPropertyById(unit.propertyId);
+
+      if (property == null) {
+        throw Exception('Property not found for this unit');
+      }
+
+      // Update state with unit and property
+      state = state.copyWith(
+        selectedUnit: unit,
+        property: property,
+        isLoading: false,
+        error: null,
+      );
+
+      debugPrint('✅ Booking flow initialized with unit: ${unit.name}, property: ${property.name}');
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to load unit details: $e',
+      );
+      debugPrint('❌ Failed to initialize booking flow: $e');
     }
   }
 
@@ -163,13 +294,22 @@ class BookingFlowNotifier extends _$BookingFlowNotifier {
     );
   }
 
-  /// Move to next step
+  /// Move to next step (6-step wizard)
   void nextStep() {
     switch (state.currentStep) {
-      case BookingStep.review:
-        state = state.copyWith(currentStep: BookingStep.payment);
+      case BookingStep.guestDetails:
+        state = state.copyWith(currentStep: BookingStep.dateSelection);
         break;
-      case BookingStep.payment:
+      case BookingStep.dateSelection:
+        state = state.copyWith(currentStep: BookingStep.reviewSummary);
+        break;
+      case BookingStep.reviewSummary:
+        state = state.copyWith(currentStep: BookingStep.paymentMethod);
+        break;
+      case BookingStep.paymentMethod:
+        state = state.copyWith(currentStep: BookingStep.paymentProcessing);
+        break;
+      case BookingStep.paymentProcessing:
         state = state.copyWith(currentStep: BookingStep.success);
         break;
       case BookingStep.success:
@@ -181,14 +321,23 @@ class BookingFlowNotifier extends _$BookingFlowNotifier {
   /// Move to previous step
   void previousStep() {
     switch (state.currentStep) {
-      case BookingStep.review:
+      case BookingStep.guestDetails:
         // Already at first step
         break;
-      case BookingStep.payment:
-        state = state.copyWith(currentStep: BookingStep.review);
+      case BookingStep.dateSelection:
+        state = state.copyWith(currentStep: BookingStep.guestDetails);
+        break;
+      case BookingStep.reviewSummary:
+        state = state.copyWith(currentStep: BookingStep.dateSelection);
+        break;
+      case BookingStep.paymentMethod:
+        state = state.copyWith(currentStep: BookingStep.reviewSummary);
+        break;
+      case BookingStep.paymentProcessing:
+        state = state.copyWith(currentStep: BookingStep.paymentMethod);
         break;
       case BookingStep.success:
-        state = state.copyWith(currentStep: BookingStep.payment);
+        state = state.copyWith(currentStep: BookingStep.paymentProcessing);
         break;
     }
   }
@@ -196,6 +345,95 @@ class BookingFlowNotifier extends _$BookingFlowNotifier {
   /// Set booking ID after creation
   void setBookingId(String bookingId) {
     state = state.copyWith(bookingId: bookingId);
+  }
+
+  /// Create booking in database
+  ///
+  /// This should be called BEFORE moving to PaymentMethodStep.
+  /// Creates a booking with initial status and stores the ID in state.
+  Future<String> createBooking() async {
+    // Validate we have all required data
+    if (state.property == null ||
+        state.selectedUnit == null ||
+        state.checkInDate == null ||
+        state.checkOutDate == null ||
+        state.guestFirstName == null ||
+        state.guestLastName == null ||
+        state.guestEmail == null ||
+        state.guestPhone == null) {
+      throw Exception('Missing required booking data');
+    }
+
+    // Get current user
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    if (currentUser == null) {
+      throw Exception('User not authenticated');
+    }
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      // Create booking model
+      final booking = BookingModel(
+        id: '', // Will be generated by database
+        unitId: state.selectedUnit!.id,
+        userId: currentUser.id,
+        checkIn: state.checkInDate!,
+        checkOut: state.checkOutDate!,
+        status: BookingStatus.pending, // Initial status
+        totalPrice: state.totalPrice,
+        paidAmount: 0.0, // Not paid yet
+        guestCount: state.numberOfGuests,
+        notes: state.specialRequests,
+        paymentIntentId: null, // Will be set after payment
+        createdAt: DateTime.now(),
+      );
+
+      // Create in database
+      final bookingRepository = ref.read(bookingRepositoryProvider);
+      final createdBooking = await bookingRepository.createBooking(booking);
+
+      // Update state with booking ID
+      state = state.copyWith(
+        bookingId: createdBooking.id,
+        isLoading: false,
+      );
+
+      return createdBooking.id;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to create booking: $e',
+      );
+      rethrow;
+    }
+  }
+
+  /// Process payment and create booking
+  /// This confirms the Stripe PaymentIntent and creates the booking in database
+  Future<void> processPayment() async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      // Create booking in database
+      final bookingId = await createBooking();
+
+      // Update state with success
+      state = state.copyWith(
+        bookingId: bookingId,
+        isLoading: false,
+        error: null,
+      );
+
+      debugPrint('✅ Payment processed successfully. Booking ID: $bookingId');
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Payment processing failed: $e',
+      );
+      debugPrint('❌ Payment processing error: $e');
+      rethrow;
+    }
   }
 
   /// Set loading state
@@ -230,6 +468,104 @@ class BookingFlowNotifier extends _$BookingFlowNotifier {
         state.guestPhone != null &&
         state.guestPhone!.isNotEmpty;
   }
+
+  /// Recalculate prices with tax and guest multiplier (FlutterFlow style)
+  void recalculatePrices() {
+    if (state.selectedUnit == null || state.checkInDate == null || state.checkOutDate == null) {
+      return;
+    }
+
+    final nights = this.nights;
+    final basePrice = state.selectedUnit!.pricePerNight * nights * state.numberOfGuests;
+    final taxAmount = basePrice * state.taxRate;
+    final serviceFee = BookingConstants.calculateServiceFee(basePrice);
+    final cleaningFee = BookingConstants.cleaningFeeEur;
+    final totalPrice = basePrice + taxAmount + serviceFee + cleaningFee;
+
+    final advanceAmount = state.isFullPaymentSelected
+        ? totalPrice
+        : totalPrice * state.advancePaymentPercentage;
+
+    state = state.copyWith(
+      basePrice: basePrice,
+      taxAmount: taxAmount,
+      serviceFee: serviceFee,
+      cleaningFee: cleaningFee,
+      totalPrice: totalPrice,
+      advancePaymentAmount: advanceAmount,
+      cancellationFee: state.currentRefundPolicy?.calculateCancellationFee(totalPrice) ?? 0.0,
+    );
+  }
+
+  /// Toggle between full payment and advance payment (20%)
+  void toggleFullPayment(bool isFullPayment) {
+    state = state.copyWith(isFullPaymentSelected: isFullPayment);
+    recalculatePrices();
+  }
+
+  /// Update number of guests and recalculate prices
+  void updateNumberOfGuests(int guests) {
+    state = state.copyWith(numberOfGuests: guests);
+    recalculatePrices();
+  }
+
+  /// Update refund policy based on current check-in date
+  void updateRefundPolicy() {
+    if (state.checkInDate == null) return;
+
+    final refundPolicy = RefundPolicies.getApplicablePolicy(
+      checkInDate: state.checkInDate!,
+    );
+
+    final canCancel = RefundPolicies.canCancelBooking(
+      checkInDate: state.checkInDate!,
+    );
+
+    state = state.copyWith(
+      currentRefundPolicy: refundPolicy,
+      canCancelBooking: canCancel,
+      cancellationFee: refundPolicy.calculateCancellationFee(state.totalPrice),
+    );
+  }
+
+  /// Set Stripe Customer ID
+  void setStripeCustomerId(String customerId) {
+    state = state.copyWith(stripeCustomerId: customerId);
+  }
+
+  /// Set saved payment method
+  void setSavedPaymentMethod(String? paymentMethodId) {
+    state = state.copyWith(savedPaymentMethodId: paymentMethodId);
+  }
+
+  /// Toggle save payment method for future bookings
+  void toggleSavePaymentMethod(bool save) {
+    state = state.copyWith(savePaymentMethod: save);
+  }
+
+  /// Set receipt PDF URL after generation
+  void setReceiptPdfUrl(String url) {
+    state = state.copyWith(receiptPdfUrl: url);
+  }
+
+  /// Mark receipt email as sent
+  void markReceiptEmailSent() {
+    state = state.copyWith(receiptEmailSent: true);
+  }
+
+  /// Update receipt status (combines PDF URL and email sent)
+  void updateReceiptStatus({
+    String? receiptPdfUrl,
+    bool? receiptEmailSent,
+  }) {
+    state = state.copyWith(
+      receiptPdfUrl: receiptPdfUrl,
+      receiptEmailSent: receiptEmailSent ?? state.receiptEmailSent,
+    );
+  }
+
+  /// Get current refund policy description
+  String? get refundPolicyDescription => state.currentRefundPolicy?.displayDescription;
 
   /// Check if date range contains any unavailable dates
   bool _hasUnavailableDatesInRange(

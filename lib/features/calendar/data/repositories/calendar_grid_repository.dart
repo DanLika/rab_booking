@@ -48,8 +48,8 @@ class CalendarGridRepository {
         return CalendarDay(
           date: date,
           status: status,
-          price: price,
           bookingId: bookingId,
+          price: price,
         );
       }).toList();
     } catch (e) {

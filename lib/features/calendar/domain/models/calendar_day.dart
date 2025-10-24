@@ -22,6 +22,7 @@ class CalendarDay with _$CalendarDay {
     String? bookingId,
     DateTime? checkInTime,  // e.g., 15:00
     DateTime? checkOutTime, // e.g., 10:00
+    double? price,  // Daily price for this date
   }) = _CalendarDay;
 
   factory CalendarDay.fromJson(Map<String, dynamic> json) =>

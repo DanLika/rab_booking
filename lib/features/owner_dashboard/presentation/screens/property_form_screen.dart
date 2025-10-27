@@ -1,11 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/services/image_service.dart';
 import '../../../../shared/models/property_model.dart';
-import '../../data/owner_properties_repository.dart';
-import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../../shared/providers/repository_providers.dart';
 import '../providers/owner_properties_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -229,7 +229,12 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
       children: PropertyAmenity.values.map((amenity) {
         final isSelected = _selectedAmenities.contains(amenity);
         return FilterChip(
-          label: Text(amenity.displayName),
+          label: Text(
+            amenity.displayName,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.grey[800],
+            ),
+          ),
           selected: isSelected,
           onSelected: (selected) {
             setState(() {
@@ -243,6 +248,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           avatar: Icon(
             _getAmenityIcon(amenity.iconName),
             size: 18,
+            color: isSelected ? Colors.white : Colors.grey[700],
           ),
         );
       }).toList(),
@@ -365,7 +371,13 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: const Icon(Icons.image, size: 40),
+            child: Image.file(
+              File(image.path),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.broken_image, size: 40);
+              },
+            ),
           ),
         ),
         Positioned(
@@ -416,8 +428,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final authState = ref.read(authNotifierProvider);
-      final ownerId = authState.user?.id;
+      final auth = FirebaseAuth.instance;
+      final ownerId = auth.currentUser?.uid;
 
       if (ownerId == null) {
         throw Exception('Korisnik nije prijavljen');
@@ -425,7 +437,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
 
       final repository = ref.read(ownerPropertiesRepositoryProvider);
 
-      // Upload new images to Supabase Storage
+      // Upload new images to Firebase Storage
       List<String> uploadedImageUrls = [];
       if (_selectedImages.isNotEmpty) {
         try {
@@ -434,21 +446,29 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
               ? widget.property!.id
               : 'temp-${DateTime.now().millisecondsSinceEpoch}';
 
-          uploadedImageUrls = await ImageService.uploadPropertyImages(
-            _selectedImages,
-            propertyId: propertyId,
-            onProgress: (current, total) {
-              // Show upload progress
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Uploading images: $current/$total'),
-                    duration: const Duration(milliseconds: 500),
-                  ),
-                );
-              }
-            },
-          );
+          // Upload images one by one
+          for (int i = 0; i < _selectedImages.length; i++) {
+            final image = _selectedImages[i];
+            final bytes = await image.readAsBytes();
+
+            final imageUrl = await repository.uploadPropertyImage(
+              propertyId: propertyId,
+              filePath: image.path,
+              bytes: bytes,
+            );
+
+            uploadedImageUrls.add(imageUrl);
+
+            // Show upload progress
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Uploading images: ${i + 1}/${_selectedImages.length}'),
+                  duration: const Duration(milliseconds: 500),
+                ),
+              );
+            }
+          }
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(

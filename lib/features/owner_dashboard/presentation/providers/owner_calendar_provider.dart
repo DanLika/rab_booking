@@ -1,194 +1,154 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../shared/models/booking_model.dart';
-import '../../data/owner_bookings_repository.dart';
-import '../../data/owner_properties_repository.dart';
 import '../../../../shared/models/property_model.dart';
-import '../../../properties/domain/models/unit.dart'; // Changed from property_unit
-import '../../../../core/providers/auth_state_provider.dart';
+import '../../../../shared/models/unit_model.dart';
+import '../../../../shared/providers/repository_providers.dart';
 
 part 'owner_calendar_provider.g.dart';
 
-/// Calendar filter state
-class CalendarFilters {
-  final String? selectedPropertyId;
-  final String? selectedUnitId;
-  final DateTime focusedMonth;
-
-  const CalendarFilters({
-    this.selectedPropertyId,
-    this.selectedUnitId,
-    required this.focusedMonth,
-  });
-
-  CalendarFilters copyWith({
-    String? selectedPropertyId,
-    String? selectedUnitId,
-    DateTime? focusedMonth,
-  }) {
-    return CalendarFilters(
-      selectedPropertyId: selectedPropertyId ?? this.selectedPropertyId,
-      selectedUnitId: selectedUnitId ?? this.selectedUnitId,
-      focusedMonth: focusedMonth ?? this.focusedMonth,
-    );
-  }
-}
-
-/// Calendar filters notifier
+/// Owner properties provider - returns ALL properties for owner
 @riverpod
-class CalendarFiltersNotifier extends _$CalendarFiltersNotifier {
-  @override
-  CalendarFilters build() {
-    return CalendarFilters(
-      focusedMonth: DateTime.now(),
-    );
-  }
-
-  void selectProperty(String? propertyId) {
-    state = state.copyWith(
-      selectedPropertyId: propertyId,
-      selectedUnitId: null, // Reset unit when property changes
-    );
-  }
-
-  void selectUnit(String? unitId) {
-    state = state.copyWith(selectedUnitId: unitId);
-  }
-
-  void setFocusedMonth(DateTime month) {
-    state = state.copyWith(focusedMonth: month);
-  }
-}
-
-/// Owner properties provider
-@riverpod
-Future<List<PropertyModel>> ownerProperties(Ref ref) async {
+Future<List<PropertyModel>> ownerPropertiesCalendar(Ref ref) async {
   final repository = ref.watch(ownerPropertiesRepositoryProvider);
-  final user = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
 
-  if (user == null) {
+  if (userId == null) {
     throw Exception('User not authenticated');
   }
 
-  return repository.getOwnerProperties(user);
+  return repository.getOwnerProperties(userId);
 }
 
-/// Units for selected property provider
+/// All units provider - returns ALL units for ALL properties (no filtering)
 @riverpod
-Future<List<Unit>> selectedUnits(Ref ref) async {
-  final filters = ref.watch(calendarFiltersNotifierProvider);
+Future<List<UnitModel>> allOwnerUnits(Ref ref) async {
+  final properties = await ref.watch(ownerPropertiesCalendarProvider.future);
+  final repository = ref.watch(ownerPropertiesRepositoryProvider);
 
-  if (filters.selectedPropertyId == null) {
-    return [];
+  List<UnitModel> allUnits = [];
+
+  for (final property in properties) {
+    final units = await repository.getPropertyUnits(property.id);
+    allUnits.addAll(units);
   }
 
-  final repository = ref.watch(ownerPropertiesRepositoryProvider);
-  return repository.getPropertyUnits(filters.selectedPropertyId!); // Changed from getUnits
+  return allUnits;
 }
 
-/// Calendar bookings provider
+/// Calendar bookings provider - returns ALL bookings for owner (no filtering)
 @riverpod
 Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
-  final filters = ref.watch(calendarFiltersNotifierProvider);
   final repository = ref.watch(ownerBookingsRepositoryProvider);
-  final user = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
 
-  if (user == null) {
+  if (userId == null) {
     throw Exception('User not authenticated');
   }
 
-  // Get start and end dates for the current month view
-  // Extend to include prev/next month days shown in calendar
-  final focusedMonth = filters.focusedMonth;
-  final firstDayOfMonth = DateTime(focusedMonth.year, focusedMonth.month, 1);
-  final lastDayOfMonth = DateTime(focusedMonth.year, focusedMonth.month + 1, 0);
+  // Wide date range: 1 year ago to 2 years in future
+  final now = DateTime.now();
+  final startDate = DateTime(now.year - 1, now.month, now.day);
+  final endDate = DateTime(now.year + 2, now.month, now.day);
 
-  // Extend range to show full calendar view (6 weeks)
-  final startDate = firstDayOfMonth.subtract(Duration(days: firstDayOfMonth.weekday));
-  final endDate = lastDayOfMonth.add(Duration(days: 42 - lastDayOfMonth.day));
-
+  // No property/unit filtering - timeline widget shows ALL units
   return repository.getCalendarBookings(
-    ownerId: user,
-    propertyId: filters.selectedPropertyId,
-    unitId: filters.selectedUnitId,
+    ownerId: userId,
+    propertyId: null,  // No property filter
+    unitId: null,      // No unit filter
     startDate: startDate,
     endDate: endDate,
   );
 }
 
-/// Helper provider to get current user ID
-@riverpod
-String? currentUserId(Ref ref) {
-  final user = ref.watch(currentUserProvider);
-  return user?.id;
-}
-
 /// Realtime subscription manager for owner calendar
-/// Automatically refreshes calendar when bookings change
+/// Automatically refreshes calendar when ANY booking changes
 @riverpod
 class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
-  RealtimeChannel? _realtimeSubscription;
+  StreamSubscription<QuerySnapshot>? _bookingsSubscription;
 
   @override
   void build() {
-    // Watch filter changes to update subscription
-    final filters = ref.watch(calendarFiltersNotifierProvider);
-    final userId = ref.watch(currentUserIdProvider);
+    final auth = FirebaseAuth.instance;
+    final userId = auth.currentUser?.uid;
 
     if (userId != null) {
-      _setupRealtimeSubscription(
-        userId: userId,
-        propertyId: filters.selectedPropertyId,
-        unitId: filters.selectedUnitId,
-      );
+      _setupRealtimeSubscription(userId: userId);
     }
 
     // Cancel subscription on dispose
     ref.onDispose(() {
-      _realtimeSubscription?.unsubscribe();
+      _bookingsSubscription?.cancel();
     });
   }
 
-  /// Setup real-time subscription for booking updates
-  void _setupRealtimeSubscription({
-    required String userId,
-    String? propertyId,
-    String? unitId,
-  }) {
-    // Unsubscribe from previous channel
-    _realtimeSubscription?.unsubscribe();
+  /// Setup real-time subscription for ALL owner's bookings
+  void _setupRealtimeSubscription({required String userId}) async {
+    // Cancel previous subscription
+    await _bookingsSubscription?.cancel();
 
-    final supabase = Supabase.instance.client;
+    final firestore = FirebaseFirestore.instance;
 
-    // Create unique channel name based on filters
-    final channelName = 'owner_calendar_${userId}_${propertyId ?? 'all'}_${unitId ?? 'all'}';
+    try {
+      // Get all unit IDs for owner's properties
+      final propertiesSnapshot = await firestore
+          .collection('properties')
+          .where('owner_id', isEqualTo: userId)
+          .get();
 
-    _realtimeSubscription = supabase
-        .channel(channelName)
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'bookings',
-          callback: (payload) {
-            // Invalidate calendar bookings to trigger refresh
-            ref.invalidate(calendarBookingsProvider);
-          },
-        )
-        .subscribe();
+      final propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
+
+      // Get all units for these properties from subcollections
+      List<String> unitIdsToWatch = [];
+      for (final propertyId in propertyIds) {
+        final unitsSnapshot = await firestore
+            .collection('properties')
+            .doc(propertyId)
+            .collection('units')
+            .get();
+
+        unitIdsToWatch.addAll(unitsSnapshot.docs.map((doc) => doc.id));
+      }
+
+      if (unitIdsToWatch.isEmpty) return;
+
+      // Firestore whereIn limit is 10, so if we have more units,
+      // we need to create multiple listeners
+      // For simplicity, we'll listen to the first 10 units
+      // TODO: In production, implement batched listeners for > 10 units
+      final unitsToListen = unitIdsToWatch.take(10).toList();
+
+      // Create Firestore snapshot listener
+      _bookingsSubscription = firestore
+          .collection('bookings')
+          .where('unit_id', whereIn: unitsToListen)
+          .snapshots()
+          .listen(
+        (snapshot) {
+          // When bookings change, invalidate the calendar bookings provider
+          ref.invalidate(calendarBookingsProvider);
+        },
+        onError: (error) {
+          print('Error in calendar realtime subscription: $error');
+        },
+      );
+    } catch (e) {
+      print('Failed to setup realtime subscription: $e');
+    }
   }
 
   /// Manually refresh subscription (useful for debugging)
   void refresh() {
-    final filters = ref.read(calendarFiltersNotifierProvider);
-    final userId = ref.read(currentUserIdProvider);
+    final auth = FirebaseAuth.instance;
+    final userId = auth.currentUser?.uid;
 
     if (userId != null) {
-      _setupRealtimeSubscription(
-        userId: userId,
-        propertyId: filters.selectedPropertyId,
-        unitId: filters.selectedUnitId,
-      );
+      _setupRealtimeSubscription(userId: userId);
     }
   }
 }

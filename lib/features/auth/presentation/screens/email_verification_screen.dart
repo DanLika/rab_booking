@@ -1,307 +1,235 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/theme_extensions.dart';
-import '../../../../core/utils/navigation_helpers.dart';
-import '../providers/auth_notifier.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/router_owner.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
 
-/// Email Verification screen
-/// Shown after user registers to verify their email
+/// Email Verification Screen with resend functionality
 class EmailVerificationScreen extends ConsumerStatefulWidget {
-  const EmailVerificationScreen({
-    this.email,
-    super.key,
-  });
-
-  final String? email;
+  const EmailVerificationScreen({super.key});
 
   @override
-  ConsumerState<EmailVerificationScreen> createState() =>
-      _EmailVerificationScreenState();
+  ConsumerState<EmailVerificationScreen> createState() => _EmailVerificationScreenState();
 }
 
-class _EmailVerificationScreenState
-    extends ConsumerState<EmailVerificationScreen> {
+class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScreen> {
+  Timer? _refreshTimer;
   bool _isResending = false;
-  bool _emailResent = false;
+  int _resendCooldown = 0;
+  Timer? _cooldownTimer;
 
-  Future<void> _handleResendEmail() async {
-    if (widget.email == null) return;
+  @override
+  void initState() {
+    super.initState();
+    // Auto-check verification status every 3 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _checkVerificationStatus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _cooldownTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkVerificationStatus() async {
+    await ref.read(enhancedAuthProvider.notifier).refreshEmailVerificationStatus();
+
+    final authState = ref.read(enhancedAuthProvider);
+    if (!authState.requiresEmailVerification && mounted) {
+      // Email verified! Navigate to calendar
+      context.go(OwnerRoutes.calendarWeek);
+    }
+  }
+
+  Future<void> _resendVerificationEmail() async {
+    if (_resendCooldown > 0) return;
 
     setState(() => _isResending = true);
 
     try {
-      await ref
-          .read(authNotifierProvider.notifier)
-          .resendVerificationEmail(widget.email!);
+      await ref.read(enhancedAuthProvider.notifier).sendEmailVerification();
 
       if (mounted) {
-        setState(() {
-          _emailResent = true;
-          _isResending = false;
-        });
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Email za potvrdu je ponovo poslan!'),
+            content: Text('Verification email sent! Check your inbox.'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
           ),
         );
 
-        // Reset after 3 seconds
-        Future.delayed(const Duration(seconds: 3), () {
-          if (mounted) {
-            setState(() => _emailResent = false);
-          }
+        // Start 60 second cooldown
+        setState(() {
+          _resendCooldown = 60;
+        });
+
+        _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          setState(() {
+            _resendCooldown--;
+            if (_resendCooldown == 0) {
+              timer.cancel();
+            }
+          });
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isResending = false);
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Greška: ${e.toString()}'),
+            content: Text('Failed to send email: $e'),
             backgroundColor: Colors.red,
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isResending = false);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 768;
+    final authState = ref.watch(enhancedAuthProvider);
+    final email = authState.firebaseUser?.email ?? 'your email';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Potvrdite Email'),
-        automaticallyImplyLeading: false,
+        title: const Text('Verify Email'),
       ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(isMobile ? 24 : 48),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 500),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Icon
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.email_outlined,
-                      size: 80,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Icon
+                Icon(
+                  Icons.mark_email_unread_outlined,
+                  size: 100,
+                  color: Theme.of(context).primaryColor,
+                ),
+                const SizedBox(height: 32),
 
-                  // Title
-                  Text(
-                    'Provjerite svoj email',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
+                // Title
+                Text(
+                  'Check your inbox',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
 
-                  // Description
-                  Text(
-                    widget.email != null
-                        ? 'Poslali smo email za potvrdu na:\n${widget.email}'
-                        : 'Poslali smo vam email sa linkom za potvrdu računa.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: context.textColorSecondary,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 32),
+                // Description
+                Text(
+                  'We sent a verification link to',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  email,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
 
-                  // Info Card
-                  Card(
-                    elevation: 0,
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                // Instructions
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                color: Theme.of(context).primaryColor,
-                                size: 20,
+                          Icon(Icons.info_outline, color: Colors.blue.shade700),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Click the link in the email to verify your account',
+                              style: TextStyle(
+                                color: Colors.blue.shade900,
+                                fontSize: 14,
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Sljedeći koraci:',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 16),
-                          _buildStep('1', 'Otvorite svoj email inbox'),
-                          _buildStep('2', 'Pronađite email od RAB Booking'),
-                          _buildStep('3', 'Kliknite na link za potvrdu'),
-                          _buildStep(
-                              '4', 'Prijavite se sa svojim podacima'),
                         ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Resend Email Section
-                  Text(
-                    'Niste dobili email?',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Resend Button
-                  OutlinedButton.icon(
-                    onPressed: _isResending || _emailResent || widget.email == null
-                        ? null
-                        : _handleResendEmail,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    icon: _isResending
-                        ? SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: context.textColorSecondary,
-                            ),
-                          )
-                        : Icon(
-                            _emailResent ? Icons.check : Icons.refresh,
-                            size: 20,
-                          ),
-                    label: Text(
-                      _emailResent
-                          ? 'Email poslan!'
-                          : _isResending
-                              ? 'Šaljem...'
-                              : 'Pošalji ponovo',
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Help Text
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange.shade200),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.lightbulb_outline,
-                          color: Colors.orange.shade700,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Provjerite i spam folder ako ne vidite email nakon nekoliko minuta.',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color: Colors.orange.shade900,
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-
-                  // Divider
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: context.dividerColor)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'ili',
-                          style: TextStyle(color: context.textColorSecondary),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Email may take up to 10 minutes to arrive. Check your spam folder if needed.',
+                        style: TextStyle(
+                          color: Colors.blue.shade700,
+                          fontSize: 12,
                         ),
                       ),
-                      Expanded(child: Divider(color: context.dividerColor)),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                ),
+                const SizedBox(height: 32),
 
-                  // Back to Login
-                  TextButton.icon(
-                    onPressed: () => context.goToLogin(),
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Povratak na prijavu'),
+                // Resend Button
+                OutlinedButton(
+                  onPressed: _resendCooldown > 0 || _isResending ? null : _resendVerificationEmail,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
                   ),
-                ],
-              ),
+                  child: _isResending
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          _resendCooldown > 0
+                              ? 'Resend in ${_resendCooldown}s'
+                              : 'Resend verification email',
+                        ),
+                ),
+                const SizedBox(height: 16),
+
+                // Change Email
+                TextButton(
+                  onPressed: () {
+                    // TODO: Implement change email
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Contact support to change your email'),
+                      ),
+                    );
+                  },
+                  child: const Text('Wrong email?'),
+                ),
+                const SizedBox(height: 32),
+
+                // Back to Login
+                TextButton.icon(
+                  onPressed: () async {
+                    await ref.read(enhancedAuthProvider.notifier).signOut();
+                    if (context.mounted) {
+                      context.go(OwnerRoutes.login);
+                    }
+                  },
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Back to login'),
+                ),
+              ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildStep(String number, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                number,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                text,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

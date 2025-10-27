@@ -6,71 +6,79 @@ part of 'property_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$PropertyModelImpl _$$PropertyModelImplFromJson(Map<String, dynamic> json) =>
-    _$PropertyModelImpl(
-      id: json['id'] as String,
-      ownerId: json['owner_id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      propertyType:
-          $enumDecodeNullable(_$PropertyTypeEnumMap, json['property_type']) ??
-          PropertyType.apartment,
-      location: json['location'] as String,
-      address: json['address'] as String?,
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
-      amenities:
-          (json['amenities'] as List<dynamic>?)
-              ?.map((e) => $enumDecode(_$PropertyAmenityEnumMap, e))
-              .toList() ??
-          const [],
-      images:
-          (json['images'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-      coverImage: json['cover_image'] as String?,
-      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-      reviewCount: (json['review_count'] as num?)?.toInt() ?? 0,
-      unitsCount: (json['units_count'] as num?)?.toInt() ?? 0,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: json['updated_at'] == null
-          ? null
-          : DateTime.parse(json['updated_at'] as String),
-      isActive: json['is_active'] as bool? ?? true,
-      pricePerNight: (json['base_price'] as num?)?.toDouble(),
-      maxGuests: (json['max_guests'] as num?)?.toInt(),
-      bedrooms: (json['bedrooms'] as num?)?.toInt(),
-      bathrooms: (json['bathrooms'] as num?)?.toInt(),
-    );
+_$PropertyModelImpl _$$PropertyModelImplFromJson(
+  Map<String, dynamic> json,
+) => _$PropertyModelImpl(
+  id: json['id'] as String,
+  ownerId: json['owner_id'] as String,
+  name: json['name'] as String,
+  slug: json['slug'] as String?,
+  description: json['description'] as String,
+  propertyType:
+      $enumDecodeNullable(_$PropertyTypeEnumMap, json['property_type']) ??
+      PropertyType.apartment,
+  location: json['location'] as String,
+  city: json['city'] as String?,
+  country: json['country'] as String? ?? 'Croatia',
+  postalCode: json['postal_code'] as String?,
+  address: json['address'] as String?,
+  latlng: geoPointFromJson(json['latlng']),
+  amenities:
+      (json['amenities'] as List<dynamic>?)
+          ?.map((e) => $enumDecode(_$PropertyAmenityEnumMap, e))
+          .toList() ??
+      const [],
+  images:
+      (json['images'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
+  coverImage: json['cover_image'] as String?,
+  rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+  reviewCount: (json['review_count'] as num?)?.toInt() ?? 0,
+  unitsCount: (json['units_count'] as num?)?.toInt() ?? 0,
+  createdAt: const TimestampConverter().fromJson(json['created_at']),
+  updatedAt: const NullableTimestampConverter().fromJson(json['updated_at']),
+  isActive: json['is_active'] as bool? ?? true,
+  pricePerNight: (json['base_price'] as num?)?.toDouble(),
+  maxGuests: (json['max_guests'] as num?)?.toInt(),
+  bedrooms: (json['bedrooms'] as num?)?.toInt(),
+  bathrooms: (json['bathrooms'] as num?)?.toInt(),
+  deletedAt: json['deleted_at'] == null
+      ? null
+      : DateTime.parse(json['deleted_at'] as String),
+);
 
-Map<String, dynamic> _$$PropertyModelImplToJson(_$PropertyModelImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'owner_id': instance.ownerId,
-      'name': instance.name,
-      'description': instance.description,
-      'property_type': _$PropertyTypeEnumMap[instance.propertyType]!,
-      'location': instance.location,
-      'address': instance.address,
-      'latitude': instance.latitude,
-      'longitude': instance.longitude,
-      'amenities': instance.amenities
-          .map((e) => _$PropertyAmenityEnumMap[e]!)
-          .toList(),
-      'images': instance.images,
-      'cover_image': instance.coverImage,
-      'rating': instance.rating,
-      'review_count': instance.reviewCount,
-      'units_count': instance.unitsCount,
-      'created_at': instance.createdAt.toIso8601String(),
-      'updated_at': instance.updatedAt?.toIso8601String(),
-      'is_active': instance.isActive,
-      'base_price': instance.pricePerNight,
-      'max_guests': instance.maxGuests,
-      'bedrooms': instance.bedrooms,
-      'bathrooms': instance.bathrooms,
-    };
+Map<String, dynamic> _$$PropertyModelImplToJson(
+  _$PropertyModelImpl instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'owner_id': instance.ownerId,
+  'name': instance.name,
+  'slug': instance.slug,
+  'description': instance.description,
+  'property_type': _$PropertyTypeEnumMap[instance.propertyType]!,
+  'location': instance.location,
+  'city': instance.city,
+  'country': instance.country,
+  'postal_code': instance.postalCode,
+  'address': instance.address,
+  'latlng': geoPointToJson(instance.latlng),
+  'amenities': instance.amenities
+      .map((e) => _$PropertyAmenityEnumMap[e]!)
+      .toList(),
+  'images': instance.images,
+  'cover_image': instance.coverImage,
+  'rating': instance.rating,
+  'review_count': instance.reviewCount,
+  'units_count': instance.unitsCount,
+  'created_at': const TimestampConverter().toJson(instance.createdAt),
+  'updated_at': const NullableTimestampConverter().toJson(instance.updatedAt),
+  'is_active': instance.isActive,
+  'base_price': instance.pricePerNight,
+  'max_guests': instance.maxGuests,
+  'bedrooms': instance.bedrooms,
+  'bathrooms': instance.bathrooms,
+  'deleted_at': instance.deletedAt?.toIso8601String(),
+};
 
 const _$PropertyTypeEnumMap = {
   PropertyType.villa: 'villa',

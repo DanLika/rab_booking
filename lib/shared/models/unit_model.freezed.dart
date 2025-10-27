@@ -31,12 +31,18 @@ mixin _$UnitModel {
   /// Unit name/title (e.g., "Apartment A1", "Studio 2")
   String get name => throw _privateConstructorUsedError;
 
+  /// URL-friendly slug (e.g., "apartment-a1")
+  String? get slug => throw _privateConstructorUsedError;
+
   /// Unit description
   String? get description => throw _privateConstructorUsedError;
 
   /// Price per night in EUR
   @JsonKey(name: 'base_price')
   double get pricePerNight => throw _privateConstructorUsedError;
+
+  /// Currency code (default: EUR)
+  String? get currency => throw _privateConstructorUsedError;
 
   /// Maximum number of guests
   @JsonKey(name: 'max_guests')
@@ -63,13 +69,23 @@ mixin _$UnitModel {
   @JsonKey(name: 'min_stay_nights')
   int get minStayNights => throw _privateConstructorUsedError;
 
+  /// Maximum stay in nights (null = unlimited)
+  @JsonKey(name: 'max_stay_nights')
+  int? get maxStayNights => throw _privateConstructorUsedError;
+
   /// Unit creation timestamp
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime get createdAt => throw _privateConstructorUsedError;
 
   /// Last update timestamp
   @JsonKey(name: 'updated_at')
+  @NullableTimestampConverter()
   DateTime? get updatedAt => throw _privateConstructorUsedError;
+
+  /// Soft delete timestamp
+  @JsonKey(name: 'deleted_at')
+  DateTime? get deletedAt => throw _privateConstructorUsedError;
 
   /// Serializes this UnitModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -90,8 +106,10 @@ abstract class $UnitModelCopyWith<$Res> {
     String id,
     @JsonKey(name: 'property_id') String propertyId,
     String name,
+    String? slug,
     String? description,
     @JsonKey(name: 'base_price') double pricePerNight,
+    String? currency,
     @JsonKey(name: 'max_guests') int maxGuests,
     int bedrooms,
     int bathrooms,
@@ -99,8 +117,12 @@ abstract class $UnitModelCopyWith<$Res> {
     List<String> images,
     @JsonKey(name: 'is_available') bool isAvailable,
     @JsonKey(name: 'min_stay_nights') int minStayNights,
-    @JsonKey(name: 'created_at') DateTime createdAt,
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @JsonKey(name: 'max_stay_nights') int? maxStayNights,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime createdAt,
+    @JsonKey(name: 'updated_at')
+    @NullableTimestampConverter()
+    DateTime? updatedAt,
+    @JsonKey(name: 'deleted_at') DateTime? deletedAt,
   });
 }
 
@@ -122,8 +144,10 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
     Object? id = null,
     Object? propertyId = null,
     Object? name = null,
+    Object? slug = freezed,
     Object? description = freezed,
     Object? pricePerNight = null,
+    Object? currency = freezed,
     Object? maxGuests = null,
     Object? bedrooms = null,
     Object? bathrooms = null,
@@ -131,8 +155,10 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
     Object? images = null,
     Object? isAvailable = null,
     Object? minStayNights = null,
+    Object? maxStayNights = freezed,
     Object? createdAt = null,
     Object? updatedAt = freezed,
+    Object? deletedAt = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -148,6 +174,10 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
                 ? _value.name
                 : name // ignore: cast_nullable_to_non_nullable
                       as String,
+            slug: freezed == slug
+                ? _value.slug
+                : slug // ignore: cast_nullable_to_non_nullable
+                      as String?,
             description: freezed == description
                 ? _value.description
                 : description // ignore: cast_nullable_to_non_nullable
@@ -156,6 +186,10 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
                 ? _value.pricePerNight
                 : pricePerNight // ignore: cast_nullable_to_non_nullable
                       as double,
+            currency: freezed == currency
+                ? _value.currency
+                : currency // ignore: cast_nullable_to_non_nullable
+                      as String?,
             maxGuests: null == maxGuests
                 ? _value.maxGuests
                 : maxGuests // ignore: cast_nullable_to_non_nullable
@@ -184,6 +218,10 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
                 ? _value.minStayNights
                 : minStayNights // ignore: cast_nullable_to_non_nullable
                       as int,
+            maxStayNights: freezed == maxStayNights
+                ? _value.maxStayNights
+                : maxStayNights // ignore: cast_nullable_to_non_nullable
+                      as int?,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -191,6 +229,10 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
             updatedAt: freezed == updatedAt
                 ? _value.updatedAt
                 : updatedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            deletedAt: freezed == deletedAt
+                ? _value.deletedAt
+                : deletedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
           )
           as $Val,
@@ -211,8 +253,10 @@ abstract class _$$UnitModelImplCopyWith<$Res>
     String id,
     @JsonKey(name: 'property_id') String propertyId,
     String name,
+    String? slug,
     String? description,
     @JsonKey(name: 'base_price') double pricePerNight,
+    String? currency,
     @JsonKey(name: 'max_guests') int maxGuests,
     int bedrooms,
     int bathrooms,
@@ -220,8 +264,12 @@ abstract class _$$UnitModelImplCopyWith<$Res>
     List<String> images,
     @JsonKey(name: 'is_available') bool isAvailable,
     @JsonKey(name: 'min_stay_nights') int minStayNights,
-    @JsonKey(name: 'created_at') DateTime createdAt,
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @JsonKey(name: 'max_stay_nights') int? maxStayNights,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime createdAt,
+    @JsonKey(name: 'updated_at')
+    @NullableTimestampConverter()
+    DateTime? updatedAt,
+    @JsonKey(name: 'deleted_at') DateTime? deletedAt,
   });
 }
 
@@ -242,8 +290,10 @@ class __$$UnitModelImplCopyWithImpl<$Res>
     Object? id = null,
     Object? propertyId = null,
     Object? name = null,
+    Object? slug = freezed,
     Object? description = freezed,
     Object? pricePerNight = null,
+    Object? currency = freezed,
     Object? maxGuests = null,
     Object? bedrooms = null,
     Object? bathrooms = null,
@@ -251,8 +301,10 @@ class __$$UnitModelImplCopyWithImpl<$Res>
     Object? images = null,
     Object? isAvailable = null,
     Object? minStayNights = null,
+    Object? maxStayNights = freezed,
     Object? createdAt = null,
     Object? updatedAt = freezed,
+    Object? deletedAt = freezed,
   }) {
     return _then(
       _$UnitModelImpl(
@@ -268,6 +320,10 @@ class __$$UnitModelImplCopyWithImpl<$Res>
             ? _value.name
             : name // ignore: cast_nullable_to_non_nullable
                   as String,
+        slug: freezed == slug
+            ? _value.slug
+            : slug // ignore: cast_nullable_to_non_nullable
+                  as String?,
         description: freezed == description
             ? _value.description
             : description // ignore: cast_nullable_to_non_nullable
@@ -276,6 +332,10 @@ class __$$UnitModelImplCopyWithImpl<$Res>
             ? _value.pricePerNight
             : pricePerNight // ignore: cast_nullable_to_non_nullable
                   as double,
+        currency: freezed == currency
+            ? _value.currency
+            : currency // ignore: cast_nullable_to_non_nullable
+                  as String?,
         maxGuests: null == maxGuests
             ? _value.maxGuests
             : maxGuests // ignore: cast_nullable_to_non_nullable
@@ -304,6 +364,10 @@ class __$$UnitModelImplCopyWithImpl<$Res>
             ? _value.minStayNights
             : minStayNights // ignore: cast_nullable_to_non_nullable
                   as int,
+        maxStayNights: freezed == maxStayNights
+            ? _value.maxStayNights
+            : maxStayNights // ignore: cast_nullable_to_non_nullable
+                  as int?,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -311,6 +375,10 @@ class __$$UnitModelImplCopyWithImpl<$Res>
         updatedAt: freezed == updatedAt
             ? _value.updatedAt
             : updatedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        deletedAt: freezed == deletedAt
+            ? _value.deletedAt
+            : deletedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
       ),
     );
@@ -324,8 +392,10 @@ class _$UnitModelImpl extends _UnitModel {
     required this.id,
     @JsonKey(name: 'property_id') required this.propertyId,
     required this.name,
+    this.slug,
     this.description,
     @JsonKey(name: 'base_price') required this.pricePerNight,
+    this.currency = 'EUR',
     @JsonKey(name: 'max_guests') required this.maxGuests,
     this.bedrooms = 1,
     this.bathrooms = 1,
@@ -333,8 +403,10 @@ class _$UnitModelImpl extends _UnitModel {
     final List<String> images = const [],
     @JsonKey(name: 'is_available') this.isAvailable = true,
     @JsonKey(name: 'min_stay_nights') this.minStayNights = 1,
-    @JsonKey(name: 'created_at') required this.createdAt,
-    @JsonKey(name: 'updated_at') this.updatedAt,
+    @JsonKey(name: 'max_stay_nights') this.maxStayNights,
+    @JsonKey(name: 'created_at') @TimestampConverter() required this.createdAt,
+    @JsonKey(name: 'updated_at') @NullableTimestampConverter() this.updatedAt,
+    @JsonKey(name: 'deleted_at') this.deletedAt,
   }) : _images = images,
        super._();
 
@@ -354,6 +426,10 @@ class _$UnitModelImpl extends _UnitModel {
   @override
   final String name;
 
+  /// URL-friendly slug (e.g., "apartment-a1")
+  @override
+  final String? slug;
+
   /// Unit description
   @override
   final String? description;
@@ -362,6 +438,11 @@ class _$UnitModelImpl extends _UnitModel {
   @override
   @JsonKey(name: 'base_price')
   final double pricePerNight;
+
+  /// Currency code (default: EUR)
+  @override
+  @JsonKey()
+  final String? currency;
 
   /// Maximum number of guests
   @override
@@ -405,19 +486,31 @@ class _$UnitModelImpl extends _UnitModel {
   @JsonKey(name: 'min_stay_nights')
   final int minStayNights;
 
+  /// Maximum stay in nights (null = unlimited)
+  @override
+  @JsonKey(name: 'max_stay_nights')
+  final int? maxStayNights;
+
   /// Unit creation timestamp
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   final DateTime createdAt;
 
   /// Last update timestamp
   @override
   @JsonKey(name: 'updated_at')
+  @NullableTimestampConverter()
   final DateTime? updatedAt;
+
+  /// Soft delete timestamp
+  @override
+  @JsonKey(name: 'deleted_at')
+  final DateTime? deletedAt;
 
   @override
   String toString() {
-    return 'UnitModel(id: $id, propertyId: $propertyId, name: $name, description: $description, pricePerNight: $pricePerNight, maxGuests: $maxGuests, bedrooms: $bedrooms, bathrooms: $bathrooms, areaSqm: $areaSqm, images: $images, isAvailable: $isAvailable, minStayNights: $minStayNights, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'UnitModel(id: $id, propertyId: $propertyId, name: $name, slug: $slug, description: $description, pricePerNight: $pricePerNight, currency: $currency, maxGuests: $maxGuests, bedrooms: $bedrooms, bathrooms: $bathrooms, areaSqm: $areaSqm, images: $images, isAvailable: $isAvailable, minStayNights: $minStayNights, maxStayNights: $maxStayNights, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
   }
 
   @override
@@ -429,10 +522,13 @@ class _$UnitModelImpl extends _UnitModel {
             (identical(other.propertyId, propertyId) ||
                 other.propertyId == propertyId) &&
             (identical(other.name, name) || other.name == name) &&
+            (identical(other.slug, slug) || other.slug == slug) &&
             (identical(other.description, description) ||
                 other.description == description) &&
             (identical(other.pricePerNight, pricePerNight) ||
                 other.pricePerNight == pricePerNight) &&
+            (identical(other.currency, currency) ||
+                other.currency == currency) &&
             (identical(other.maxGuests, maxGuests) ||
                 other.maxGuests == maxGuests) &&
             (identical(other.bedrooms, bedrooms) ||
@@ -445,10 +541,14 @@ class _$UnitModelImpl extends _UnitModel {
                 other.isAvailable == isAvailable) &&
             (identical(other.minStayNights, minStayNights) ||
                 other.minStayNights == minStayNights) &&
+            (identical(other.maxStayNights, maxStayNights) ||
+                other.maxStayNights == maxStayNights) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
-                other.updatedAt == updatedAt));
+                other.updatedAt == updatedAt) &&
+            (identical(other.deletedAt, deletedAt) ||
+                other.deletedAt == deletedAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -458,8 +558,10 @@ class _$UnitModelImpl extends _UnitModel {
     id,
     propertyId,
     name,
+    slug,
     description,
     pricePerNight,
+    currency,
     maxGuests,
     bedrooms,
     bathrooms,
@@ -467,8 +569,10 @@ class _$UnitModelImpl extends _UnitModel {
     const DeepCollectionEquality().hash(_images),
     isAvailable,
     minStayNights,
+    maxStayNights,
     createdAt,
     updatedAt,
+    deletedAt,
   );
 
   /// Create a copy of UnitModel
@@ -490,8 +594,10 @@ abstract class _UnitModel extends UnitModel {
     required final String id,
     @JsonKey(name: 'property_id') required final String propertyId,
     required final String name,
+    final String? slug,
     final String? description,
     @JsonKey(name: 'base_price') required final double pricePerNight,
+    final String? currency,
     @JsonKey(name: 'max_guests') required final int maxGuests,
     final int bedrooms,
     final int bathrooms,
@@ -499,8 +605,14 @@ abstract class _UnitModel extends UnitModel {
     final List<String> images,
     @JsonKey(name: 'is_available') final bool isAvailable,
     @JsonKey(name: 'min_stay_nights') final int minStayNights,
-    @JsonKey(name: 'created_at') required final DateTime createdAt,
-    @JsonKey(name: 'updated_at') final DateTime? updatedAt,
+    @JsonKey(name: 'max_stay_nights') final int? maxStayNights,
+    @JsonKey(name: 'created_at')
+    @TimestampConverter()
+    required final DateTime createdAt,
+    @JsonKey(name: 'updated_at')
+    @NullableTimestampConverter()
+    final DateTime? updatedAt,
+    @JsonKey(name: 'deleted_at') final DateTime? deletedAt,
   }) = _$UnitModelImpl;
   const _UnitModel._() : super._();
 
@@ -520,6 +632,10 @@ abstract class _UnitModel extends UnitModel {
   @override
   String get name;
 
+  /// URL-friendly slug (e.g., "apartment-a1")
+  @override
+  String? get slug;
+
   /// Unit description
   @override
   String? get description;
@@ -528,6 +644,10 @@ abstract class _UnitModel extends UnitModel {
   @override
   @JsonKey(name: 'base_price')
   double get pricePerNight;
+
+  /// Currency code (default: EUR)
+  @override
+  String? get currency;
 
   /// Maximum number of guests
   @override
@@ -561,15 +681,27 @@ abstract class _UnitModel extends UnitModel {
   @JsonKey(name: 'min_stay_nights')
   int get minStayNights;
 
+  /// Maximum stay in nights (null = unlimited)
+  @override
+  @JsonKey(name: 'max_stay_nights')
+  int? get maxStayNights;
+
   /// Unit creation timestamp
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime get createdAt;
 
   /// Last update timestamp
   @override
   @JsonKey(name: 'updated_at')
+  @NullableTimestampConverter()
   DateTime? get updatedAt;
+
+  /// Soft delete timestamp
+  @override
+  @JsonKey(name: 'deleted_at')
+  DateTime? get deletedAt;
 
   /// Create a copy of UnitModel
   /// with the given fields replaced by the non-null parameter values.

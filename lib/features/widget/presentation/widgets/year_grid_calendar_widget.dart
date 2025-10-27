@@ -318,13 +318,13 @@ class _YearGridCalendarWidgetState
                         ? SystemMouseCursors.forbidden
                         : SystemMouseCursors.click),
                 child: GestureDetector(
-                onTapDown: isPastDate ? null : (details) => _handleDayTapDown(date, details, status),
-                onTapUp: isPastDate ? null : (_) => _handleDayTapUp(date, status),
-                onLongPressStart: isPastDate ? null : (details) => _handleDayLongPress(date, details),
-                onPanStart: isPastDate ? null : (_) => _handleDragStart(date, status),
-                onPanUpdate: isPastDate ? null : (_) => _handleDragUpdate(date),
-                onPanEnd: isPastDate ? null : (_) => _handleDragEnd(),
-                child: SizedBox(
+                  onTapDown: isPastDate ? null : (details) => _handleDayTapDown(date, details, status),
+                  onTapUp: isPastDate ? null : (_) => _handleDayTapUp(date, status),
+                  onLongPressStart: isPastDate ? null : (details) => _handleDayLongPress(date, details),
+                  onPanStart: isPastDate ? null : (_) => _handleDragStart(date, status),
+                  onPanUpdate: isPastDate ? null : (_) => _handleDragUpdate(date),
+                  onPanEnd: isPastDate ? null : (_) => _handleDragEnd(),
+                  child: SizedBox(
                   width: cellSize,
                   height: cellSize,
                   child: Container(
@@ -364,7 +364,8 @@ class _YearGridCalendarWidgetState
                   ),
                 ),
               ),
-            );
+            ),
+          );
           }),
         ],
       ),

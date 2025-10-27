@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../features/booking/domain/models/booking_status.dart';
+import '../../core/constants/enums.dart';
+import '../../core/utils/timestamp_converter.dart';
 
 part 'booking_model.freezed.dart';
 part 'booking_model.g.dart';
@@ -14,26 +15,61 @@ class BookingModel with _$BookingModel {
     /// Unit being booked
     @JsonKey(name: 'unit_id') required String unitId,
 
-    /// Guest user ID
-    @JsonKey(name: 'user_id') required String userId,
+    /// Guest user ID (nullable for anonymous widget bookings)
+    @JsonKey(name: 'user_id') String? userId,
+
+    /// Guest ID (for anonymous widget bookings)
+    @JsonKey(name: 'guest_id') String? guestId,
+
+    /// Owner ID (denormalized)
+    @JsonKey(name: 'owner_id') String? ownerId,
+
+    /// Guest name (for widget bookings without auth)
+    @JsonKey(name: 'guest_name') String? guestName,
+
+    /// Guest email (for widget bookings without auth)
+    @JsonKey(name: 'guest_email') String? guestEmail,
+
+    /// Guest phone (for widget bookings without auth)
+    @JsonKey(name: 'guest_phone') String? guestPhone,
 
     /// Check-in date
+    @TimestampConverter()
     @JsonKey(name: 'check_in') required DateTime checkIn,
 
+    /// Check-in time
+    @JsonKey(name: 'check_in_time') String? checkInTime,
+
+    /// Check-out time
+    @JsonKey(name: 'check_out_time') String? checkOutTime,
+
     /// Check-out date
+    @TimestampConverter()
     @JsonKey(name: 'check_out') required DateTime checkOut,
 
     /// Booking status
     required BookingStatus status,
 
     /// Total price in EUR
-    @JsonKey(name: 'total_price') required double totalPrice,
+    @JsonKey(name: 'total_price') @Default(0.0) double totalPrice,
 
     /// Amount paid (advance payment - 20%)
-    @JsonKey(name: 'paid_amount') required double paidAmount,
+    @JsonKey(name: 'paid_amount') @Default(0.0) double paidAmount,
+
+    /// Advance payment amount (20% of total)
+    @JsonKey(name: 'advance_amount') double? advanceAmount,
+
+    /// Payment method (bank_transfer, stripe, cash, other)
+    @JsonKey(name: 'payment_method') String? paymentMethod,
+
+    /// Payment status (pending, paid, refunded)
+    @JsonKey(name: 'payment_status') String? paymentStatus,
+
+    /// Booking source (widget, admin, direct, api)
+    String? source,
 
     /// Number of guests
-    @JsonKey(name: 'guest_count') required int guestCount,
+    @JsonKey(name: 'guest_count') @Default(1) int guestCount,
 
     /// Special requests or notes
     String? notes,
@@ -42,16 +78,22 @@ class BookingModel with _$BookingModel {
     @JsonKey(name: 'payment_intent_id') String? paymentIntentId,
 
     /// Booking creation timestamp
+    @TimestampConverter()
     @JsonKey(name: 'created_at') required DateTime createdAt,
 
     /// Last update timestamp
+    @NullableTimestampConverter()
     @JsonKey(name: 'updated_at') DateTime? updatedAt,
 
     /// Cancellation reason (if cancelled)
     @JsonKey(name: 'cancellation_reason') String? cancellationReason,
 
     /// Cancelled at timestamp
+    @NullableTimestampConverter()
     @JsonKey(name: 'cancelled_at') DateTime? cancelledAt,
+
+    /// User ID who cancelled the booking
+    @JsonKey(name: 'cancelled_by') String? cancelledBy,
   }) = _BookingModel;
 
   const BookingModel._();

@@ -31,6 +31,9 @@ mixin _$PropertyModel {
   /// Property name/title
   String get name => throw _privateConstructorUsedError;
 
+  /// URL-friendly slug (e.g., "villa-marija")
+  String? get slug => throw _privateConstructorUsedError;
+
   /// Detailed description
   String get description => throw _privateConstructorUsedError;
 
@@ -41,14 +44,22 @@ mixin _$PropertyModel {
   /// Location (city, address, etc.)
   String get location => throw _privateConstructorUsedError;
 
+  /// City name
+  String? get city => throw _privateConstructorUsedError;
+
+  /// Country name
+  String? get country => throw _privateConstructorUsedError;
+
+  /// Postal code
+  @JsonKey(name: 'postal_code')
+  String? get postalCode => throw _privateConstructorUsedError;
+
   /// Street address
   String? get address => throw _privateConstructorUsedError;
 
-  /// Latitude coordinate
-  double? get latitude => throw _privateConstructorUsedError;
-
-  /// Longitude coordinate
-  double? get longitude => throw _privateConstructorUsedError;
+  /// Geographic coordinates (Firestore GeoPoint)
+  @JsonKey(name: 'latlng', fromJson: geoPointFromJson, toJson: geoPointToJson)
+  GeoPoint? get latlng => throw _privateConstructorUsedError;
 
   /// List of amenities
   List<PropertyAmenity> get amenities => throw _privateConstructorUsedError;
@@ -73,10 +84,12 @@ mixin _$PropertyModel {
 
   /// Property creation timestamp
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime get createdAt => throw _privateConstructorUsedError;
 
   /// Last update timestamp
   @JsonKey(name: 'updated_at')
+  @NullableTimestampConverter()
   DateTime? get updatedAt => throw _privateConstructorUsedError;
 
   /// Is property active/published
@@ -96,6 +109,10 @@ mixin _$PropertyModel {
 
   /// Number of bathrooms
   int? get bathrooms => throw _privateConstructorUsedError;
+
+  /// Soft delete timestamp
+  @JsonKey(name: 'deleted_at')
+  DateTime? get deletedAt => throw _privateConstructorUsedError;
 
   /// Serializes this PropertyModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -118,25 +135,32 @@ abstract class $PropertyModelCopyWith<$Res> {
     String id,
     @JsonKey(name: 'owner_id') String ownerId,
     String name,
+    String? slug,
     String description,
     @JsonKey(name: 'property_type') PropertyType propertyType,
     String location,
+    String? city,
+    String? country,
+    @JsonKey(name: 'postal_code') String? postalCode,
     String? address,
-    double? latitude,
-    double? longitude,
+    @JsonKey(name: 'latlng', fromJson: geoPointFromJson, toJson: geoPointToJson)
+    GeoPoint? latlng,
     List<PropertyAmenity> amenities,
     List<String> images,
     @JsonKey(name: 'cover_image') String? coverImage,
     double rating,
     @JsonKey(name: 'review_count') int reviewCount,
     @JsonKey(name: 'units_count') int unitsCount,
-    @JsonKey(name: 'created_at') DateTime createdAt,
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime createdAt,
+    @JsonKey(name: 'updated_at')
+    @NullableTimestampConverter()
+    DateTime? updatedAt,
     @JsonKey(name: 'is_active') bool isActive,
     @JsonKey(name: 'base_price') double? pricePerNight,
     @JsonKey(name: 'max_guests') int? maxGuests,
     int? bedrooms,
     int? bathrooms,
+    @JsonKey(name: 'deleted_at') DateTime? deletedAt,
   });
 }
 
@@ -158,12 +182,15 @@ class _$PropertyModelCopyWithImpl<$Res, $Val extends PropertyModel>
     Object? id = null,
     Object? ownerId = null,
     Object? name = null,
+    Object? slug = freezed,
     Object? description = null,
     Object? propertyType = null,
     Object? location = null,
+    Object? city = freezed,
+    Object? country = freezed,
+    Object? postalCode = freezed,
     Object? address = freezed,
-    Object? latitude = freezed,
-    Object? longitude = freezed,
+    Object? latlng = freezed,
     Object? amenities = null,
     Object? images = null,
     Object? coverImage = freezed,
@@ -177,6 +204,7 @@ class _$PropertyModelCopyWithImpl<$Res, $Val extends PropertyModel>
     Object? maxGuests = freezed,
     Object? bedrooms = freezed,
     Object? bathrooms = freezed,
+    Object? deletedAt = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -192,6 +220,10 @@ class _$PropertyModelCopyWithImpl<$Res, $Val extends PropertyModel>
                 ? _value.name
                 : name // ignore: cast_nullable_to_non_nullable
                       as String,
+            slug: freezed == slug
+                ? _value.slug
+                : slug // ignore: cast_nullable_to_non_nullable
+                      as String?,
             description: null == description
                 ? _value.description
                 : description // ignore: cast_nullable_to_non_nullable
@@ -204,18 +236,26 @@ class _$PropertyModelCopyWithImpl<$Res, $Val extends PropertyModel>
                 ? _value.location
                 : location // ignore: cast_nullable_to_non_nullable
                       as String,
+            city: freezed == city
+                ? _value.city
+                : city // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            country: freezed == country
+                ? _value.country
+                : country // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            postalCode: freezed == postalCode
+                ? _value.postalCode
+                : postalCode // ignore: cast_nullable_to_non_nullable
+                      as String?,
             address: freezed == address
                 ? _value.address
                 : address // ignore: cast_nullable_to_non_nullable
                       as String?,
-            latitude: freezed == latitude
-                ? _value.latitude
-                : latitude // ignore: cast_nullable_to_non_nullable
-                      as double?,
-            longitude: freezed == longitude
-                ? _value.longitude
-                : longitude // ignore: cast_nullable_to_non_nullable
-                      as double?,
+            latlng: freezed == latlng
+                ? _value.latlng
+                : latlng // ignore: cast_nullable_to_non_nullable
+                      as GeoPoint?,
             amenities: null == amenities
                 ? _value.amenities
                 : amenities // ignore: cast_nullable_to_non_nullable
@@ -268,6 +308,10 @@ class _$PropertyModelCopyWithImpl<$Res, $Val extends PropertyModel>
                 ? _value.bathrooms
                 : bathrooms // ignore: cast_nullable_to_non_nullable
                       as int?,
+            deletedAt: freezed == deletedAt
+                ? _value.deletedAt
+                : deletedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
           )
           as $Val,
     );
@@ -287,25 +331,32 @@ abstract class _$$PropertyModelImplCopyWith<$Res>
     String id,
     @JsonKey(name: 'owner_id') String ownerId,
     String name,
+    String? slug,
     String description,
     @JsonKey(name: 'property_type') PropertyType propertyType,
     String location,
+    String? city,
+    String? country,
+    @JsonKey(name: 'postal_code') String? postalCode,
     String? address,
-    double? latitude,
-    double? longitude,
+    @JsonKey(name: 'latlng', fromJson: geoPointFromJson, toJson: geoPointToJson)
+    GeoPoint? latlng,
     List<PropertyAmenity> amenities,
     List<String> images,
     @JsonKey(name: 'cover_image') String? coverImage,
     double rating,
     @JsonKey(name: 'review_count') int reviewCount,
     @JsonKey(name: 'units_count') int unitsCount,
-    @JsonKey(name: 'created_at') DateTime createdAt,
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime createdAt,
+    @JsonKey(name: 'updated_at')
+    @NullableTimestampConverter()
+    DateTime? updatedAt,
     @JsonKey(name: 'is_active') bool isActive,
     @JsonKey(name: 'base_price') double? pricePerNight,
     @JsonKey(name: 'max_guests') int? maxGuests,
     int? bedrooms,
     int? bathrooms,
+    @JsonKey(name: 'deleted_at') DateTime? deletedAt,
   });
 }
 
@@ -326,12 +377,15 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
     Object? id = null,
     Object? ownerId = null,
     Object? name = null,
+    Object? slug = freezed,
     Object? description = null,
     Object? propertyType = null,
     Object? location = null,
+    Object? city = freezed,
+    Object? country = freezed,
+    Object? postalCode = freezed,
     Object? address = freezed,
-    Object? latitude = freezed,
-    Object? longitude = freezed,
+    Object? latlng = freezed,
     Object? amenities = null,
     Object? images = null,
     Object? coverImage = freezed,
@@ -345,6 +399,7 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
     Object? maxGuests = freezed,
     Object? bedrooms = freezed,
     Object? bathrooms = freezed,
+    Object? deletedAt = freezed,
   }) {
     return _then(
       _$PropertyModelImpl(
@@ -360,6 +415,10 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
             ? _value.name
             : name // ignore: cast_nullable_to_non_nullable
                   as String,
+        slug: freezed == slug
+            ? _value.slug
+            : slug // ignore: cast_nullable_to_non_nullable
+                  as String?,
         description: null == description
             ? _value.description
             : description // ignore: cast_nullable_to_non_nullable
@@ -372,18 +431,26 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
             ? _value.location
             : location // ignore: cast_nullable_to_non_nullable
                   as String,
+        city: freezed == city
+            ? _value.city
+            : city // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        country: freezed == country
+            ? _value.country
+            : country // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        postalCode: freezed == postalCode
+            ? _value.postalCode
+            : postalCode // ignore: cast_nullable_to_non_nullable
+                  as String?,
         address: freezed == address
             ? _value.address
             : address // ignore: cast_nullable_to_non_nullable
                   as String?,
-        latitude: freezed == latitude
-            ? _value.latitude
-            : latitude // ignore: cast_nullable_to_non_nullable
-                  as double?,
-        longitude: freezed == longitude
-            ? _value.longitude
-            : longitude // ignore: cast_nullable_to_non_nullable
-                  as double?,
+        latlng: freezed == latlng
+            ? _value.latlng
+            : latlng // ignore: cast_nullable_to_non_nullable
+                  as GeoPoint?,
         amenities: null == amenities
             ? _value._amenities
             : amenities // ignore: cast_nullable_to_non_nullable
@@ -436,6 +503,10 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
             ? _value.bathrooms
             : bathrooms // ignore: cast_nullable_to_non_nullable
                   as int?,
+        deletedAt: freezed == deletedAt
+            ? _value.deletedAt
+            : deletedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
       ),
     );
   }
@@ -448,25 +519,30 @@ class _$PropertyModelImpl extends _PropertyModel {
     required this.id,
     @JsonKey(name: 'owner_id') required this.ownerId,
     required this.name,
+    this.slug,
     required this.description,
     @JsonKey(name: 'property_type') this.propertyType = PropertyType.apartment,
     required this.location,
+    this.city,
+    this.country = 'Croatia',
+    @JsonKey(name: 'postal_code') this.postalCode,
     this.address,
-    this.latitude,
-    this.longitude,
+    @JsonKey(name: 'latlng', fromJson: geoPointFromJson, toJson: geoPointToJson)
+    this.latlng,
     final List<PropertyAmenity> amenities = const [],
     final List<String> images = const [],
     @JsonKey(name: 'cover_image') this.coverImage,
     this.rating = 0.0,
     @JsonKey(name: 'review_count') this.reviewCount = 0,
     @JsonKey(name: 'units_count') this.unitsCount = 0,
-    @JsonKey(name: 'created_at') required this.createdAt,
-    @JsonKey(name: 'updated_at') this.updatedAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() required this.createdAt,
+    @JsonKey(name: 'updated_at') @NullableTimestampConverter() this.updatedAt,
     @JsonKey(name: 'is_active') this.isActive = true,
     @JsonKey(name: 'base_price') this.pricePerNight,
     @JsonKey(name: 'max_guests') this.maxGuests,
     this.bedrooms,
     this.bathrooms,
+    @JsonKey(name: 'deleted_at') this.deletedAt,
   }) : _amenities = amenities,
        _images = images,
        super._();
@@ -487,6 +563,10 @@ class _$PropertyModelImpl extends _PropertyModel {
   @override
   final String name;
 
+  /// URL-friendly slug (e.g., "villa-marija")
+  @override
+  final String? slug;
+
   /// Detailed description
   @override
   final String description;
@@ -500,17 +580,28 @@ class _$PropertyModelImpl extends _PropertyModel {
   @override
   final String location;
 
+  /// City name
+  @override
+  final String? city;
+
+  /// Country name
+  @override
+  @JsonKey()
+  final String? country;
+
+  /// Postal code
+  @override
+  @JsonKey(name: 'postal_code')
+  final String? postalCode;
+
   /// Street address
   @override
   final String? address;
 
-  /// Latitude coordinate
+  /// Geographic coordinates (Firestore GeoPoint)
   @override
-  final double? latitude;
-
-  /// Longitude coordinate
-  @override
-  final double? longitude;
+  @JsonKey(name: 'latlng', fromJson: geoPointFromJson, toJson: geoPointToJson)
+  final GeoPoint? latlng;
 
   /// List of amenities
   final List<PropertyAmenity> _amenities;
@@ -559,11 +650,13 @@ class _$PropertyModelImpl extends _PropertyModel {
   /// Property creation timestamp
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   final DateTime createdAt;
 
   /// Last update timestamp
   @override
   @JsonKey(name: 'updated_at')
+  @NullableTimestampConverter()
   final DateTime? updatedAt;
 
   /// Is property active/published
@@ -589,9 +682,14 @@ class _$PropertyModelImpl extends _PropertyModel {
   @override
   final int? bathrooms;
 
+  /// Soft delete timestamp
+  @override
+  @JsonKey(name: 'deleted_at')
+  final DateTime? deletedAt;
+
   @override
   String toString() {
-    return 'PropertyModel(id: $id, ownerId: $ownerId, name: $name, description: $description, propertyType: $propertyType, location: $location, address: $address, latitude: $latitude, longitude: $longitude, amenities: $amenities, images: $images, coverImage: $coverImage, rating: $rating, reviewCount: $reviewCount, unitsCount: $unitsCount, createdAt: $createdAt, updatedAt: $updatedAt, isActive: $isActive, pricePerNight: $pricePerNight, maxGuests: $maxGuests, bedrooms: $bedrooms, bathrooms: $bathrooms)';
+    return 'PropertyModel(id: $id, ownerId: $ownerId, name: $name, slug: $slug, description: $description, propertyType: $propertyType, location: $location, city: $city, country: $country, postalCode: $postalCode, address: $address, latlng: $latlng, amenities: $amenities, images: $images, coverImage: $coverImage, rating: $rating, reviewCount: $reviewCount, unitsCount: $unitsCount, createdAt: $createdAt, updatedAt: $updatedAt, isActive: $isActive, pricePerNight: $pricePerNight, maxGuests: $maxGuests, bedrooms: $bedrooms, bathrooms: $bathrooms, deletedAt: $deletedAt)';
   }
 
   @override
@@ -602,17 +700,19 @@ class _$PropertyModelImpl extends _PropertyModel {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.ownerId, ownerId) || other.ownerId == ownerId) &&
             (identical(other.name, name) || other.name == name) &&
+            (identical(other.slug, slug) || other.slug == slug) &&
             (identical(other.description, description) ||
                 other.description == description) &&
             (identical(other.propertyType, propertyType) ||
                 other.propertyType == propertyType) &&
             (identical(other.location, location) ||
                 other.location == location) &&
+            (identical(other.city, city) || other.city == city) &&
+            (identical(other.country, country) || other.country == country) &&
+            (identical(other.postalCode, postalCode) ||
+                other.postalCode == postalCode) &&
             (identical(other.address, address) || other.address == address) &&
-            (identical(other.latitude, latitude) ||
-                other.latitude == latitude) &&
-            (identical(other.longitude, longitude) ||
-                other.longitude == longitude) &&
+            (identical(other.latlng, latlng) || other.latlng == latlng) &&
             const DeepCollectionEquality().equals(
               other._amenities,
               _amenities,
@@ -638,7 +738,9 @@ class _$PropertyModelImpl extends _PropertyModel {
             (identical(other.bedrooms, bedrooms) ||
                 other.bedrooms == bedrooms) &&
             (identical(other.bathrooms, bathrooms) ||
-                other.bathrooms == bathrooms));
+                other.bathrooms == bathrooms) &&
+            (identical(other.deletedAt, deletedAt) ||
+                other.deletedAt == deletedAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -648,12 +750,15 @@ class _$PropertyModelImpl extends _PropertyModel {
     id,
     ownerId,
     name,
+    slug,
     description,
     propertyType,
     location,
+    city,
+    country,
+    postalCode,
     address,
-    latitude,
-    longitude,
+    latlng,
     const DeepCollectionEquality().hash(_amenities),
     const DeepCollectionEquality().hash(_images),
     coverImage,
@@ -667,6 +772,7 @@ class _$PropertyModelImpl extends _PropertyModel {
     maxGuests,
     bedrooms,
     bathrooms,
+    deletedAt,
   ]);
 
   /// Create a copy of PropertyModel
@@ -688,25 +794,34 @@ abstract class _PropertyModel extends PropertyModel {
     required final String id,
     @JsonKey(name: 'owner_id') required final String ownerId,
     required final String name,
+    final String? slug,
     required final String description,
     @JsonKey(name: 'property_type') final PropertyType propertyType,
     required final String location,
+    final String? city,
+    final String? country,
+    @JsonKey(name: 'postal_code') final String? postalCode,
     final String? address,
-    final double? latitude,
-    final double? longitude,
+    @JsonKey(name: 'latlng', fromJson: geoPointFromJson, toJson: geoPointToJson)
+    final GeoPoint? latlng,
     final List<PropertyAmenity> amenities,
     final List<String> images,
     @JsonKey(name: 'cover_image') final String? coverImage,
     final double rating,
     @JsonKey(name: 'review_count') final int reviewCount,
     @JsonKey(name: 'units_count') final int unitsCount,
-    @JsonKey(name: 'created_at') required final DateTime createdAt,
-    @JsonKey(name: 'updated_at') final DateTime? updatedAt,
+    @JsonKey(name: 'created_at')
+    @TimestampConverter()
+    required final DateTime createdAt,
+    @JsonKey(name: 'updated_at')
+    @NullableTimestampConverter()
+    final DateTime? updatedAt,
     @JsonKey(name: 'is_active') final bool isActive,
     @JsonKey(name: 'base_price') final double? pricePerNight,
     @JsonKey(name: 'max_guests') final int? maxGuests,
     final int? bedrooms,
     final int? bathrooms,
+    @JsonKey(name: 'deleted_at') final DateTime? deletedAt,
   }) = _$PropertyModelImpl;
   const _PropertyModel._() : super._();
 
@@ -726,6 +841,10 @@ abstract class _PropertyModel extends PropertyModel {
   @override
   String get name;
 
+  /// URL-friendly slug (e.g., "villa-marija")
+  @override
+  String? get slug;
+
   /// Detailed description
   @override
   String get description;
@@ -739,17 +858,27 @@ abstract class _PropertyModel extends PropertyModel {
   @override
   String get location;
 
+  /// City name
+  @override
+  String? get city;
+
+  /// Country name
+  @override
+  String? get country;
+
+  /// Postal code
+  @override
+  @JsonKey(name: 'postal_code')
+  String? get postalCode;
+
   /// Street address
   @override
   String? get address;
 
-  /// Latitude coordinate
+  /// Geographic coordinates (Firestore GeoPoint)
   @override
-  double? get latitude;
-
-  /// Longitude coordinate
-  @override
-  double? get longitude;
+  @JsonKey(name: 'latlng', fromJson: geoPointFromJson, toJson: geoPointToJson)
+  GeoPoint? get latlng;
 
   /// List of amenities
   @override
@@ -781,11 +910,13 @@ abstract class _PropertyModel extends PropertyModel {
   /// Property creation timestamp
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime get createdAt;
 
   /// Last update timestamp
   @override
   @JsonKey(name: 'updated_at')
+  @NullableTimestampConverter()
   DateTime? get updatedAt;
 
   /// Is property active/published
@@ -810,6 +941,11 @@ abstract class _PropertyModel extends PropertyModel {
   /// Number of bathrooms
   @override
   int? get bathrooms;
+
+  /// Soft delete timestamp
+  @override
+  @JsonKey(name: 'deleted_at')
+  DateTime? get deletedAt;
 
   /// Create a copy of PropertyModel
   /// with the given fields replaced by the non-null parameter values.

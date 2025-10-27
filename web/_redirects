@@ -1,0 +1,4 @@
+# Netlify SPA redirect configuration for Flutter web
+# All routes should return index.html for client-side routing
+
+/*    /index.html   200

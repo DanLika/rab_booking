@@ -1,14 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../../core/providers/auth_state_provider.dart';
-import '../../data/property_performance_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../data/firebase/firebase_property_performance_repository.dart';
+import '../../../../shared/providers/repository_providers.dart';
 
 part 'performance_metrics_provider.g.dart';
 
 /// Get occupancy rate
 @riverpod
 Future<double> occupancyRate(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return 0.0;
 
   final repository = ref.watch(propertyPerformanceRepositoryProvider);
@@ -18,7 +20,8 @@ Future<double> occupancyRate(Ref ref) async {
 /// Get occupancy trend
 @riverpod
 Future<double> occupancyTrend(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return 0.0;
 
   final repository = ref.watch(propertyPerformanceRepositoryProvider);
@@ -28,7 +31,8 @@ Future<double> occupancyTrend(Ref ref) async {
 /// Get total bookings count
 @riverpod
 Future<int> totalBookingsCount(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return 0;
 
   final repository = ref.watch(propertyPerformanceRepositoryProvider);
@@ -38,7 +42,8 @@ Future<int> totalBookingsCount(Ref ref) async {
 /// Get bookings trend
 @riverpod
 Future<double> bookingsTrend(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return 0.0;
 
   final repository = ref.watch(propertyPerformanceRepositoryProvider);
@@ -48,7 +53,8 @@ Future<double> bookingsTrend(Ref ref) async {
 /// Get active listings count
 @riverpod
 Future<int> activeListingsCount(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return 0;
 
   final repository = ref.watch(propertyPerformanceRepositoryProvider);
@@ -58,7 +64,8 @@ Future<int> activeListingsCount(Ref ref) async {
 /// Get cancellation rate
 @riverpod
 Future<double> cancellationRate(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return 0.0;
 
   final repository = ref.watch(propertyPerformanceRepositoryProvider);
@@ -68,7 +75,8 @@ Future<double> cancellationRate(Ref ref) async {
 /// Get complete performance stats
 @riverpod
 Future<PerformanceStats> performanceStats(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) {
     return PerformanceStats(
       occupancyRate: 0.0,

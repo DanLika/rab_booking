@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 /// User roles in the system
@@ -288,6 +289,77 @@ enum PropertyType {
     return PropertyType.values.firstWhere(
       (type) => type.value == value,
       orElse: () => PropertyType.apartment,
+    );
+  }
+}
+
+/// Booking status
+@JsonEnum(valueField: 'value')
+enum BookingStatus {
+  pending('pending'),
+  confirmed('confirmed'),
+  cancelled('cancelled'),
+  completed('completed'),
+  inProgress('in_progress'),
+  blocked('blocked');
+
+  const BookingStatus(this.value);
+  final String value;
+
+  String get displayName {
+    switch (this) {
+      case BookingStatus.pending:
+        return 'Pending';
+      case BookingStatus.confirmed:
+        return 'Confirmed';
+      case BookingStatus.cancelled:
+        return 'Cancelled';
+      case BookingStatus.completed:
+        return 'Completed';
+      case BookingStatus.inProgress:
+        return 'In Progress';
+      case BookingStatus.blocked:
+        return 'Blocked';
+    }
+  }
+
+  /// Get color for booking status
+  Color get color {
+    switch (this) {
+      case BookingStatus.pending:
+        return const Color(0xFFFFA726); // Orange
+      case BookingStatus.confirmed:
+        return const Color(0xFF66BB6A); // Green
+      case BookingStatus.cancelled:
+        return const Color(0xFFEF5350); // Red
+      case BookingStatus.completed:
+        return const Color(0xFF42A5F5); // Blue
+      case BookingStatus.inProgress:
+        return const Color(0xFF9C27B0); // Purple
+      case BookingStatus.blocked:
+        return const Color(0xFF757575); // Grey
+    }
+  }
+
+  /// Check if booking can be cancelled
+  bool get canBeCancelled {
+    return this == BookingStatus.pending || this == BookingStatus.confirmed;
+  }
+
+  /// Check if booking is active (currently in use or confirmed)
+  bool get isActive {
+    return this == BookingStatus.confirmed || this == BookingStatus.inProgress;
+  }
+
+  /// Check if booking is in final state (cannot be modified)
+  bool get isFinal {
+    return this == BookingStatus.completed || this == BookingStatus.cancelled;
+  }
+
+  static BookingStatus fromString(String value) {
+    return BookingStatus.values.firstWhere(
+      (status) => status.value == value,
+      orElse: () => BookingStatus.pending,
     );
   }
 }

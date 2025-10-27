@@ -83,19 +83,65 @@ class RecentActivityWidget extends StatelessWidget {
           // Header
           Padding(
             padding: const EdgeInsets.all(AppDimensions.spaceL),
-            child: Row(
-              children: [
-                Text(
-                  'Recent Activity',
-                  style: AppTypography.h3,
-                ),
-                const Spacer(),
-                if (onViewAll != null)
-                  TextButton(
-                    onPressed: onViewAll,
-                    child: const Text('View All'),
-                  ),
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Very narrow screen - stack vertically
+                if (constraints.maxWidth < 300) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Recent Activity',
+                        style: AppTypography.h3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (onViewAll != null) ...[
+                        const SizedBox(height: AppDimensions.spaceXS),
+                        TextButton(
+                          onPressed: onViewAll,
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppDimensions.spaceS,
+                              vertical: AppDimensions.spaceXS,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text('View All'),
+                        ),
+                      ],
+                    ],
+                  );
+                }
+
+                // Normal width - horizontal layout
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Recent Activity',
+                        style: AppTypography.h3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (onViewAll != null) ...[
+                      const SizedBox(width: AppDimensions.spaceS),
+                      TextButton(
+                        onPressed: onViewAll,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.spaceS,
+                            vertical: AppDimensions.spaceXS,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text('View All'),
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
           ),
 

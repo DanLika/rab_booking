@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/owner_properties_repository.dart';
-import '../../../properties/domain/models/unit.dart'; // Changed from property_unit
+import '../../../../shared/models/unit_model.dart';
+import '../../../../shared/providers/repository_providers.dart';
 import 'unit_form_screen.dart';
+import 'unit_pricing_screen.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Units management screen for a property
@@ -18,7 +19,7 @@ class UnitsManagementScreen extends ConsumerStatefulWidget {
 
 class _UnitsManagementScreenState
     extends ConsumerState<UnitsManagementScreen> {
-  List<Unit>? _units;
+  List<UnitModel>? _units;
   bool _isLoading = true;
   String? _error;
 
@@ -55,12 +56,34 @@ class _UnitsManagementScreenState
       appBar: AppBar(
         title: const Text('Upravljanje Jedinicama'),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToAddUnit,
-        icon: const Icon(Icons.add),
-        label: const Text('Dodaj Jedinicu'),
-      ),
       body: _buildBody(),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: FilledButton.icon(
+            onPressed: _navigateToAddUnit,
+            icon: const Icon(Icons.add, size: 24),
+            label: const Text(
+              'Dodaj Novu Jedinicu',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              minimumSize: const Size(double.infinity, 56),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -103,6 +126,7 @@ class _UnitsManagementScreenState
             unit: unit,
             onEdit: () => _navigateToEditUnit(unit),
             onDelete: () => _confirmDeleteUnit(unit.id),
+            onManagePricing: () => _navigateToManagePricing(unit),
           );
         },
       ),
@@ -161,7 +185,7 @@ class _UnitsManagementScreenState
         .then((_) => _loadUnits());
   }
 
-  void _navigateToEditUnit(Unit unit) {
+  void _navigateToEditUnit(UnitModel unit) {
     Navigator.of(context)
         .push(
           MaterialPageRoute(
@@ -172,6 +196,14 @@ class _UnitsManagementScreenState
           ),
         )
         .then((_) => _loadUnits());
+  }
+
+  void _navigateToManagePricing(UnitModel unit) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => UnitPricingScreen(unit: unit),
+      ),
+    );
   }
 
   Future<void> _confirmDeleteUnit(String unitId) async {
@@ -201,7 +233,7 @@ class _UnitsManagementScreenState
 
     if (confirmed == true && mounted) {
       try {
-        await ref.read(ownerPropertiesRepositoryProvider).deleteUnit(unitId);
+        await ref.read(ownerPropertiesRepositoryProvider).deleteUnit(widget.propertyId, unitId);
         _loadUnits();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -225,11 +257,13 @@ class _UnitCard extends StatelessWidget {
     required this.unit,
     required this.onEdit,
     required this.onDelete,
+    required this.onManagePricing,
   });
 
-  final Unit unit;
+  final UnitModel unit;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onManagePricing;
 
   @override
   Widget build(BuildContext context) {
@@ -241,50 +275,52 @@ class _UnitCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Unit name and status
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
                         unit.name,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                       ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: unit.isAvailable
-                              ? AppColors.success.withValues(alpha: 0.1)
-                              : AppColors.surfaceVariantLight,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          unit.isAvailable ? 'Dostupno' : 'Nedostupno',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: unit.isAvailable
-                                    ? AppColors.success
-                                    : AppColors.textPrimaryDark,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Price
+                    Text(
+                      '€${unit.pricePerNight.toStringAsFixed(0)}/noć',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                    ),
+                  ],
                 ),
-                // Price
-                Text(
-                  '€${unit.basePrice.toStringAsFixed(0)}/noć',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor,
-                      ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: unit.isAvailable
+                        ? AppColors.success.withValues(alpha: 0.1)
+                        : AppColors.surfaceVariantLight,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    unit.isAvailable ? 'Dostupno' : 'Nedostupno',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: unit.isAvailable
+                              ? AppColors.success
+                              : AppColors.textPrimaryDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
                 ),
               ],
             ),
@@ -310,11 +346,12 @@ class _UnitCard extends StatelessWidget {
                   icon: Icons.person,
                   label: 'Do ${unit.maxGuests} gostiju',
                 ),
-                _buildDetail(
-                  context,
-                  icon: Icons.aspect_ratio,
-                  label: '${unit.areaSqm}m²',
-                ),
+                if (unit.areaSqm != null)
+                  _buildDetail(
+                    context,
+                    icon: Icons.aspect_ratio,
+                    label: '${unit.areaSqm}m²',
+                  ),
               ],
             ),
 
@@ -334,25 +371,84 @@ class _UnitCard extends StatelessWidget {
             const Divider(),
             const SizedBox(height: 8),
 
-            // Actions
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Uredi'),
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete),
-                  label: const Text('Obriši'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                  ),
-                ),
-              ],
+            // Actions - Responsive layout
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 400;
+
+                if (isMobile) {
+                  // Stack buttons vertically on small screens
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: onManagePricing,
+                        icon: const Icon(Icons.euro_symbol),
+                        label: const Text('Upravljaj Cijenama'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.green.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: onEdit,
+                              icon: const Icon(Icons.edit),
+                              label: const Text('Uredi'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: onDelete,
+                              icon: const Icon(Icons.delete),
+                              label: const Text('Obriši'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.error,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                }
+
+                // Horizontal layout for wider screens
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: onManagePricing,
+                      icon: const Icon(Icons.euro_symbol),
+                      label: const Text('Cijene'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.green.shade700,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        TextButton.icon(
+                          onPressed: onEdit,
+                          icon: const Icon(Icons.edit),
+                          label: const Text('Uredi'),
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton.icon(
+                          onPressed: onDelete,
+                          icon: const Icon(Icons.delete),
+                          label: const Text('Obriši'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),

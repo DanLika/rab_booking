@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "rab-booking-248fc"
+  },
+  "targets": {
+    "rab-booking-248fc": {
+      "hosting": {
+        "owner": [
+          "rab-booking-owner"
+        ],
+        "widget": [
+          "rab-booking-widget"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

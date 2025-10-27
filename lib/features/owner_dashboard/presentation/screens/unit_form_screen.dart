@@ -1,9 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../properties/domain/models/unit.dart'; // Changed from property_unit
-import '../../data/owner_properties_repository.dart';
+import '../../../../shared/models/unit_model.dart';
+import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -16,7 +17,7 @@ class UnitFormScreen extends ConsumerStatefulWidget {
   });
 
   final String propertyId;
-  final Unit? unit;
+  final UnitModel? unit;
 
   @override
   ConsumerState<UnitFormScreen> createState() => _UnitFormScreenState();
@@ -44,7 +45,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
   @override
   void initState() {
     super.initState();
-    if (_isEditing) {
+    if (_isEditing && widget.unit != null) {
       _loadUnitData();
     }
   }
@@ -53,13 +54,12 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
     final unit = widget.unit!;
     _nameController.text = unit.name;
     _descriptionController.text = unit.description ?? '';
-    _priceController.text = unit.basePrice.toStringAsFixed(0);
+    _priceController.text = unit.pricePerNight.toStringAsFixed(0);
     _bedroomsController.text = unit.bedrooms.toString();
     _bathroomsController.text = unit.bathrooms.toString();
     _maxGuestsController.text = unit.maxGuests.toString();
-    _areaController.text = unit.areaSqm?.toStringAsFixed(0) ?? '0'; // Null safety fix
+    _areaController.text = unit.areaSqm?.toStringAsFixed(0) ?? '';
     _minStayController.text = unit.minStayNights.toString();
-    _selectedAmenities = PropertyAmenity.fromStringList(unit.amenities).toSet();
     _existingImages = unit.images.toList();
     _isAvailable = unit.isAvailable;
   }
@@ -126,104 +126,84 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                   ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _bedroomsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Spavaće sobe *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.bed),
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Obavezno';
-                      }
-                      final num = int.tryParse(value);
-                      if (num == null || num < 0) {
-                        return 'Nevažeći broj';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _bathroomsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Kupaonice *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.bathroom),
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Obavezno';
-                      }
-                      final num = int.tryParse(value);
-                      if (num == null || num < 1) {
-                        return 'Min 1';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
+            // Bedrooms
+            TextFormField(
+              controller: _bedroomsController,
+              decoration: const InputDecoration(
+                labelText: 'Spavaće sobe *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.bed),
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Obavezno';
+                }
+                final num = int.tryParse(value);
+                if (num == null || num < 0) {
+                  return 'Nevažeći broj';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _maxGuestsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Max gostiju *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person),
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Obavezno';
-                      }
-                      final num = int.tryParse(value);
-                      if (num == null || num < 1 || num > 16) {
-                        return '1-16';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _areaController,
-                    decoration: const InputDecoration(
-                      labelText: 'Površina (m²) *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.aspect_ratio),
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Obavezno';
-                      }
-                      final num = double.tryParse(value);
-                      if (num == null || num <= 0) {
-                        return 'Nevažeći broj';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
+
+            // Bathrooms
+            TextFormField(
+              controller: _bathroomsController,
+              decoration: const InputDecoration(
+                labelText: 'Kupaonice *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.bathroom),
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Obavezno';
+                }
+                final num = int.tryParse(value);
+                if (num == null || num < 1) {
+                  return 'Min 1';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            // Max guests
+            TextFormField(
+              controller: _maxGuestsController,
+              decoration: const InputDecoration(
+                labelText: 'Max gostiju *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Obavezno';
+                }
+                final num = int.tryParse(value);
+                if (num == null || num < 1 || num > 16) {
+                  return '1-16';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+
+            // Area
+            TextFormField(
+              controller: _areaController,
+              decoration: const InputDecoration(
+                labelText: 'Površina (m²)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.aspect_ratio),
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
             const SizedBox(height: 24),
 
@@ -235,55 +215,49 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                   ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: TextFormField(
-                    controller: _priceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Cijena po noći (€) *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.euro),
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Obavezno';
-                      }
-                      final num = double.tryParse(value);
-                      if (num == null || num <= 0) {
-                        return 'Nevažeći iznos';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _minStayController,
-                    decoration: const InputDecoration(
-                      labelText: 'Min noći *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.nights_stay),
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Obavezno';
-                      }
-                      final num = int.tryParse(value);
-                      if (num == null || num < 1) {
-                        return 'Min 1';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
+            // Price
+            TextFormField(
+              controller: _priceController,
+              decoration: const InputDecoration(
+                labelText: 'Cijena po noći (€) *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.euro),
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Obavezno';
+                }
+                final num = double.tryParse(value);
+                if (num == null || num <= 0) {
+                  return 'Nevažeći iznos';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+
+            // Min nights
+            TextFormField(
+              controller: _minStayController,
+              decoration: const InputDecoration(
+                labelText: 'Min noći *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.nights_stay),
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Obavezno';
+                }
+                final num = int.tryParse(value);
+                if (num == null || num < 1) {
+                  return 'Min 1';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 24),
 
@@ -363,7 +337,12 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
       children: commonAmenities.map((amenity) {
         final isSelected = _selectedAmenities.contains(amenity);
         return FilterChip(
-          label: Text(amenity.displayName),
+          label: Text(
+            amenity.displayName,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.grey[800],
+            ),
+          ),
           selected: isSelected,
           onSelected: (selected) {
             setState(() {
@@ -377,6 +356,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           avatar: Icon(
             _getAmenityIcon(amenity.iconName),
             size: 18,
+            color: isSelected ? Colors.white : Colors.grey[700],
           ),
         );
       }).toList(),
@@ -494,7 +474,13 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: const Icon(Icons.image, size: 40),
+            child: Image.file(
+              File(image.path),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.broken_image, size: 40);
+              },
+            ),
           ),
         ),
         Positioned(
@@ -549,6 +535,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
       if (_isEditing) {
         // Update existing unit
         await repository.updateUnit(
+          propertyId: widget.propertyId,
           unitId: widget.unit!.id,
           name: _nameController.text,
           description: _descriptionController.text.isEmpty

@@ -1,15 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../../core/providers/auth_state_provider.dart';
-import '../../data/revenue_analytics_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../data/firebase/firebase_revenue_analytics_repository.dart';
 import '../widgets/revenue_chart_widget.dart';
+import '../../../../shared/providers/repository_providers.dart';
 
 part 'revenue_analytics_provider.g.dart';
 
 /// Get revenue data for last 7 days
 @riverpod
 Future<List<RevenueDataPoint>> revenueWeekly(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return [];
 
   final repository = ref.watch(revenueAnalyticsRepositoryProvider);
@@ -19,7 +21,8 @@ Future<List<RevenueDataPoint>> revenueWeekly(Ref ref) async {
 /// Get revenue data for last 30 days
 @riverpod
 Future<List<RevenueDataPoint>> revenueMonthly(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return [];
 
   final repository = ref.watch(revenueAnalyticsRepositoryProvider);
@@ -29,7 +32,8 @@ Future<List<RevenueDataPoint>> revenueMonthly(Ref ref) async {
 /// Get total revenue
 @riverpod
 Future<double> totalRevenue(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return 0.0;
 
   final repository = ref.watch(revenueAnalyticsRepositoryProvider);
@@ -39,7 +43,8 @@ Future<double> totalRevenue(Ref ref) async {
 /// Get revenue this month
 @riverpod
 Future<double> revenueThisMonth(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return 0.0;
 
   final repository = ref.watch(revenueAnalyticsRepositoryProvider);
@@ -49,7 +54,8 @@ Future<double> revenueThisMonth(Ref ref) async {
 /// Get revenue trend (percentage change)
 @riverpod
 Future<double> revenueTrend(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return 0.0;
 
   final repository = ref.watch(revenueAnalyticsRepositoryProvider);
@@ -61,7 +67,8 @@ Future<double> revenueTrend(Ref ref) async {
 Future<Map<String, double>> revenueByProperty(
   Ref ref,
 ) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) return {};
 
   final repository = ref.watch(revenueAnalyticsRepositoryProvider);
@@ -71,7 +78,8 @@ Future<Map<String, double>> revenueByProperty(
 /// Get complete revenue stats
 @riverpod
 Future<RevenueStats> revenueStats(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
   if (userId == null) {
     return RevenueStats(
       totalRevenue: 0.0,

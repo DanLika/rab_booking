@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../core/utils/timestamp_converter.dart';
 
 part 'unit_model.freezed.dart';
 part 'unit_model.g.dart';
@@ -16,11 +17,17 @@ class UnitModel with _$UnitModel {
     /// Unit name/title (e.g., "Apartment A1", "Studio 2")
     required String name,
 
+    /// URL-friendly slug (e.g., "apartment-a1")
+    String? slug,
+
     /// Unit description
     String? description,
 
     /// Price per night in EUR
     @JsonKey(name: 'base_price') required double pricePerNight,
+
+    /// Currency code (default: EUR)
+    @Default('EUR') String? currency,
 
     /// Maximum number of guests
     @JsonKey(name: 'max_guests') required int maxGuests,
@@ -43,11 +50,21 @@ class UnitModel with _$UnitModel {
     /// Minimum stay in nights
     @JsonKey(name: 'min_stay_nights') @Default(1) int minStayNights,
 
+    /// Maximum stay in nights (null = unlimited)
+    @JsonKey(name: 'max_stay_nights') int? maxStayNights,
+
     /// Unit creation timestamp
-    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'created_at')
+    @TimestampConverter()
+    required DateTime createdAt,
 
     /// Last update timestamp
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @JsonKey(name: 'updated_at')
+    @NullableTimestampConverter()
+    DateTime? updatedAt,
+
+    /// Soft delete timestamp
+    @JsonKey(name: 'deleted_at') DateTime? deletedAt,
   }) = _UnitModel;
 
   const UnitModel._();

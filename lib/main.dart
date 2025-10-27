@@ -1,46 +1,22 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:universal_io/io.dart' show Platform;
 
-import 'core/config/env_config.dart';
-import 'core/config/router.dart';
+import 'core/config/router_owner.dart';
 import 'core/providers/language_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment configuration (uses WebConfig for web builds)
-  await EnvConfig.load();
-
-  // Validate configuration
-  EnvConfig.validate();
-
-  // Initialize Supabase
-  await Supabase.initialize(
-    url: EnvConfig.supabaseUrl,
-    anonKey: EnvConfig.supabaseAnonKey,
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  // Initialize Stripe (only on Android/iOS, not on web or desktop)
-  if (!kIsWeb) {
-    try {
-      if (Platform.isAndroid || Platform.isIOS) {
-        Stripe.publishableKey = EnvConfig.stripePublishableKey;
-        Stripe.merchantIdentifier = 'merchant.com.rab.booking';
-        await Stripe.instance.applySettings();
-      }
-    } catch (e) {
-      debugPrint('⚠️ Failed to initialize Stripe: $e');
-    }
-  }
 
   runApp(
     const ProviderScope(
@@ -55,7 +31,7 @@ class RabBookingApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(routerProvider);
+    final router = ref.watch(ownerRouterProvider);
     final locale = ref.watch(currentLocaleProvider);
 
     // Watch theme mode from theme provider (uses local SharedPreferences)

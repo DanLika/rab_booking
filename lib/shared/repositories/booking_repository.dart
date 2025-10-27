@@ -1,5 +1,5 @@
 import '../models/booking_model.dart';
-import '../../features/booking/domain/models/booking_status.dart';
+import '../../core/constants/enums.dart';
 
 /// Abstract booking repository interface
 abstract class BookingRepository {

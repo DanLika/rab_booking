@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../data/analytics_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/models/analytics_summary.dart';
-import '../../../../core/providers/auth_state_provider.dart';
+import '../../../../shared/providers/repository_providers.dart';
 
 part 'analytics_provider.g.dart';
 
@@ -11,16 +11,16 @@ class AnalyticsNotifier extends _$AnalyticsNotifier {
   Future<AnalyticsSummary> build({
     required DateRangeFilter dateRange,
   }) async {
-    // Fixed: Use authStateNotifierProvider and .user instead of authStateProvider and .valueOrNull
-    final user = ref.watch(authStateNotifierProvider).user;
+    final auth = FirebaseAuth.instance;
+    final userId = auth.currentUser?.uid;
 
-    if (user == null) {
+    if (userId == null) {
       throw Exception('User not authenticated');
     }
 
     final repository = ref.watch(analyticsRepositoryProvider);
     return repository.getAnalyticsSummary(
-      ownerId: user.id,
+      ownerId: userId,
       dateRange: dateRange,
     );
   }
@@ -28,16 +28,16 @@ class AnalyticsNotifier extends _$AnalyticsNotifier {
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      // Fixed: Use authStateNotifierProvider and .user instead of authStateProvider and .valueOrNull
-      final user = ref.read(authStateNotifierProvider).user;
+      final auth = FirebaseAuth.instance;
+      final userId = auth.currentUser?.uid;
 
-      if (user == null) {
+      if (userId == null) {
         throw Exception('User not authenticated');
       }
 
       final repository = ref.read(analyticsRepositoryProvider);
       return repository.getAnalyticsSummary(
-        ownerId: user.id,
+        ownerId: userId,
         dateRange: dateRange,
       );
     });

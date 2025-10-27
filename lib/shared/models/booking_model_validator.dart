@@ -1,5 +1,5 @@
 import 'booking_model.dart';
-import '../../features/booking/domain/models/booking_status.dart';
+import '../../core/constants/enums.dart';
 
 /// Validation exceptions for BookingModel
 class BookingValidationException implements Exception {

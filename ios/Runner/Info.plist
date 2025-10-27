@@ -62,5 +62,13 @@
 	<!-- Universal Links (HTTPS deep links) -->
 	<key>FlutterDeepLinkingEnabled</key>
 	<true/>
+
+	<!-- Image Picker Permissions -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Potreban je pristup galeriji kako bi mogli dodati fotografije vaših objekata</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Potreban je pristup kameri kako bi mogli fotografirati vaše objekte</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Potreban je pristup galeriji kako bi mogli spremiti fotografije</string>
 </dict>
 </plist>

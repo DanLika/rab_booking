@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../booking/domain/models/booking_status.dart';
-import '../../data/owner_bookings_repository.dart';
-import '../../../../core/providers/auth_state_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/constants/enums.dart';
+import '../../data/firebase/firebase_owner_bookings_repository.dart';
+import '../../../../shared/providers/repository_providers.dart';
 
 part 'owner_bookings_provider.g.dart';
 
-// Note: OwnerBooking is defined in owner_bookings_repository.dart (already imported above)
+// Note: OwnerBooking is defined in firebase_owner_bookings_repository.dart (already imported above)
 
 /// Bookings filter state
 class BookingsFilters {
@@ -79,14 +80,15 @@ class BookingsFiltersNotifier extends _$BookingsFiltersNotifier {
 Future<List<OwnerBooking>> ownerBookings(Ref ref) async {
   final repository = ref.watch(ownerBookingsRepositoryProvider);
   final filters = ref.watch(bookingsFiltersNotifierProvider);
-  final user = ref.watch(currentUserIdProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
 
-  if (user == null) {
+  if (userId == null) {
     throw Exception('User not authenticated');
   }
 
   return repository.getOwnerBookings(
-    ownerId: user,
+    ownerId: userId,
     propertyId: filters.propertyId,
     status: filters.status,
     startDate: filters.startDate,
@@ -94,9 +96,22 @@ Future<List<OwnerBooking>> ownerBookings(Ref ref) async {
   );
 }
 
-/// Helper provider to get current user ID
+/// Recent owner bookings provider (for dashboard activity)
 @riverpod
-String? currentUserId(Ref ref) {
-  final user = ref.watch(currentUserProvider);
-  return user?.id;
+Future<List<OwnerBooking>> recentOwnerBookings(Ref ref) async {
+  final repository = ref.watch(ownerBookingsRepositoryProvider);
+  final auth = FirebaseAuth.instance;
+  final userId = auth.currentUser?.uid;
+
+  if (userId == null) {
+    throw Exception('User not authenticated');
+  }
+
+  final allBookings = await repository.getOwnerBookings(ownerId: userId);
+
+  // Sort by created date and take latest 10
+  final sortedBookings = List<OwnerBooking>.from(allBookings)
+    ..sort((a, b) => b.booking.createdAt.compareTo(a.booking.createdAt));
+
+  return sortedBookings.take(10).toList();
 }

@@ -1,0 +1,123 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is owner or admin
+    function isOwnerOrAdmin() {
+      return isAuthenticated() &&
+        (
+          // Check if user document exists and has owner/admin role
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['owner', 'admin']
+        ) || isAuthenticated(); // Allow all authenticated users for now
+    }
+
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Helper function to check if user owns the property
+    function isPropertyOwner(ownerId) {
+      return isAuthenticated() && request.auth.uid == ownerId;
+    }
+
+    // Users collection - authenticated users only
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    // Properties - owners can CRUD, anyone can read (for widget)
+    match /properties/{propertyId} {
+      allow read: if true; // Public read for widget
+      allow create, update, delete: if isOwnerOrAdmin();
+
+      // Units subcollection - same permissions as properties
+      match /units/{unitId} {
+        allow read: if true; // Public read for widget
+        allow create, update, delete: if isOwnerOrAdmin();
+      }
+    }
+
+    // OLD: Top-level units collection (deprecated - units are now in properties subcollection)
+    // Keeping for backwards compatibility if there are any old documents
+    match /units/{unitId} {
+      allow read: if true; // Public read for widget
+      allow create, update, delete: if isOwnerOrAdmin();
+    }
+
+    // Bookings - guests can create, owners can manage
+    match /bookings/{bookingId} {
+      allow read: if true; // Public read for availability check
+      allow create: if true; // Widget can create bookings
+      allow update, delete: if isOwnerOrAdmin();
+    }
+
+    // Daily prices - owners manage, anyone can read
+    match /daily_prices/{priceId} {
+      allow read: if true; // Widget needs to read prices
+      allow write: if isOwnerOrAdmin();
+    }
+
+    // Additional services - owners manage, anyone can read
+    match /additional_services/{serviceId} {
+      allow read: if true; // Widget needs to read services
+      allow write: if isOwnerOrAdmin();
+    }
+
+    // Email templates - owners manage, anyone can read
+    match /email_templates/{templateId} {
+      allow read: if true; // Functions need to read templates
+      allow write: if isOwnerOrAdmin();
+    }
+
+    // iCal feeds - owners manage, anyone can read
+    match /ical_feeds/{feedId} {
+      allow read: if true; // Functions need to read feeds
+      allow write: if isOwnerOrAdmin();
+    }
+
+    // iCal events - owners manage, anyone can read
+    match /ical_events/{eventId} {
+      allow read: if true; // Widget needs to read events for availability
+      allow write: if isOwnerOrAdmin();
+    }
+
+    // Tenants - owners manage, anyone can read
+    match /tenants/{tenantId} {
+      allow read: if true; // Widget needs to read tenant info
+      allow write: if isOwnerOrAdmin();
+    }
+
+    // Booking Services - junction table for booking ↔ additional_services
+    match /booking_services/{bookingServiceId} {
+      allow read: if true; // Widget needs to read for price calculation
+      allow create: if true; // Widget can add services to booking
+      allow update, delete: if isOwnerOrAdmin();
+    }
+
+    // Notifications - owner notifications for new bookings
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && isOwner(resource.data.user_id);
+      allow write: if false; // Only Cloud Functions can write notifications
+      allow delete: if isAuthenticated() && isOwner(resource.data.user_id);
+    }
+
+    // Login attempts - rate limiting for security
+    match /loginAttempts/{email} {
+      allow read, write: if true; // Anyone can read/write (for rate limiting)
+    }
+
+    // Security events - security audit log
+    match /securityEvents/{eventId} {
+      allow read: if isOwnerOrAdmin();
+      allow write: if true; // Anyone can write security events
+    }
+  }
+}

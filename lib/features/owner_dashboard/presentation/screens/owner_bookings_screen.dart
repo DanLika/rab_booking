@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../booking/domain/models/booking_status.dart';
+import '../../../../core/constants/enums.dart';
 import '../providers/owner_bookings_provider.dart';
 import '../providers/owner_calendar_provider.dart';
-import '../../data/owner_bookings_repository.dart';
+import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../shared/providers/repository_providers.dart';
 
 /// Owner bookings screen with filters and booking management
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
@@ -79,7 +80,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   }
 
   Widget _buildFiltersSection(BookingsFilters filters) {
-    final propertiesAsync = ref.watch(ownerPropertiesProvider);
+    final propertiesAsync = ref.watch(ownerPropertiesCalendarProvider);
 
     return Card(
       child: Padding(

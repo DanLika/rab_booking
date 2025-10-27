@@ -19,11 +19,18 @@ dependencies:
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.6.1
 
-  # Backend & Database
-  supabase_flutter: ^2.9.1
+  # Backend & Database - Firebase
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.3.3
+  cloud_firestore: ^5.5.2
+  firebase_storage: ^12.3.7
+  cloud_functions: ^5.2.2
 
   # HTTP Client
   http: ^1.2.0
+
+  # Reactive Streams
+  rxdart: ^0.28.0
 
   # Navigation
   go_router: ^16.2.5
@@ -31,8 +38,8 @@ dependencies:
   # UI & Styling
   google_fonts: ^6.2.1
 
-  # Calendar
-  table_calendar: ^3.1.2
+  # Calendar - Timeline views for professional booking management
+  syncfusion_flutter_calendar: ^28.1.33
 
   # Internationalization
   intl: ^0.20.1
@@ -42,9 +49,6 @@ dependencies:
   cached_network_image: ^3.4.1
   photo_view: ^0.15.0
   image_picker: ^1.1.2
-
-  # Payment
-  flutter_stripe: ^11.1.0
 
   # PDF & Receipt Generation
   pdf: ^3.10.8
@@ -90,7 +94,6 @@ dependencies:
   # Charts
   fl_chart: ^0.69.2
 
-  gotrue: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -116,7 +119,10 @@ flutter:
 
   # Assets
   assets:
-    - assets/animations/
     - assets/translations/
-    # Note: Add success.json Lottie animation file
-    # Download free success animations from: https://lottiefiles.com
+
+  # Custom Fonts
+  fonts:
+    - family: TablerIcons
+      fonts:
+        - asset: assets/fonts/TablerIcons.ttf

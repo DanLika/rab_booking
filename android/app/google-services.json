@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "592597958982",
+    "project_id": "rab-booking-248fc",
+    "storage_bucket": "rab-booking-248fc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:592597958982:android:28730515db1ea267d3e547",
+        "android_client_info": {
+          "package_name": "com.example.rab_booking"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7edb0FWFzr23pm6xmjmrlehdL1Ysxvwc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

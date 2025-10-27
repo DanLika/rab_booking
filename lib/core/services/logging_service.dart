@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'analytics_service.dart';
+// import 'analytics_service.dart'; // TODO: Implement Firebase Analytics service
 
 /// Service for logging messages throughout the application
 ///
@@ -38,15 +38,16 @@ class LoggingService {
 
     // In production, send to error tracking service
     if (kReleaseMode && error != null) {
+      // TODO: Implement Firebase Analytics/Crashlytics
       // Send to error tracking services (Sentry, Firebase Crashlytics)
-      await AnalyticsService.reportError(
-        error,
-        stackTrace,
-        extra: {
-          'source': 'LoggingService',
-          'log_message': message,
-        },
-      );
+      // await AnalyticsService.reportError(
+      //   error,
+      //   stackTrace,
+      //   extra: {
+      //     'source': 'LoggingService',
+      //     'log_message': message,
+      //   },
+      // );
     }
   }
 

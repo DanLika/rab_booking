@@ -1,5 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/enums.dart';
+import '../../core/utils/geopoint_converter.dart';
+import '../../core/utils/timestamp_converter.dart';
 
 part 'property_model.freezed.dart';
 part 'property_model.g.dart';
@@ -17,6 +20,9 @@ class PropertyModel with _$PropertyModel {
     /// Property name/title
     required String name,
 
+    /// URL-friendly slug (e.g., "villa-marija")
+    String? slug,
+
     /// Detailed description
     required String description,
 
@@ -28,14 +34,21 @@ class PropertyModel with _$PropertyModel {
     /// Location (city, address, etc.)
     required String location,
 
+    /// City name
+    String? city,
+
+    /// Country name
+    @Default('Croatia') String? country,
+
+    /// Postal code
+    @JsonKey(name: 'postal_code') String? postalCode,
+
     /// Street address
     String? address,
 
-    /// Latitude coordinate
-    double? latitude,
-
-    /// Longitude coordinate
-    double? longitude,
+    /// Geographic coordinates (Firestore GeoPoint)
+    @JsonKey(name: 'latlng', fromJson: geoPointFromJson, toJson: geoPointToJson)
+    GeoPoint? latlng,
 
     /// List of amenities
     @Default([]) List<PropertyAmenity> amenities,
@@ -56,10 +69,14 @@ class PropertyModel with _$PropertyModel {
     @JsonKey(name: 'units_count') @Default(0) int unitsCount,
 
     /// Property creation timestamp
-    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'created_at')
+    @TimestampConverter()
+    required DateTime createdAt,
 
     /// Last update timestamp
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @JsonKey(name: 'updated_at')
+    @NullableTimestampConverter()
+    DateTime? updatedAt,
 
     /// Is property active/published
     @JsonKey(name: 'is_active') @Default(true) bool isActive,
@@ -75,6 +92,9 @@ class PropertyModel with _$PropertyModel {
 
     /// Number of bathrooms
     int? bathrooms,
+
+    /// Soft delete timestamp
+    @JsonKey(name: 'deleted_at') DateTime? deletedAt,
   }) = _PropertyModel;
 
   const PropertyModel._();
@@ -95,7 +115,13 @@ class PropertyModel with _$PropertyModel {
   bool get hasImages => images.isNotEmpty || coverImage != null;
 
   /// Check if property has location coordinates
-  bool get hasCoordinates => latitude != null && longitude != null;
+  bool get hasCoordinates => latlng != null;
+
+  /// Get latitude from GeoPoint (for map display)
+  double? get latitude => latlng?.latitude;
+
+  /// Get longitude from GeoPoint (for map display)
+  double? get longitude => latlng?.longitude;
 
   /// Get formatted rating (e.g., "4.5")
   String get formattedRating => rating.toStringAsFixed(1);

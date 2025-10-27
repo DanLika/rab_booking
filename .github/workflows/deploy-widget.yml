@@ -1,0 +1,69 @@
+name: Deploy Widget to Production
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'lib/**'
+      - 'web/**'
+      - 'pubspec.yaml'
+  workflow_dispatch:
+
+jobs:
+  deploy-widget:
+    name: Deploy Widget to Netlify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Flutter web
+        run: |
+          flutter build web \
+            --web-renderer html \
+            --release \
+            --no-source-maps \
+            --base-href /
+
+      - name: Copy embed.js to build
+        run: |
+          mkdir -p build/web/embed
+          cp web/embed/embed.js build/web/embed/
+          cp web/embed/README.md build/web/embed/
+          cp web/embed/example.html build/web/embed/
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v2
+        with:
+          publish-dir: './build/web'
+          production-deploy: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from GitHub Actions - ${{ github.event.head_commit.message }}"
+          enable-pull-request-comment: false
+          enable-commit-comment: true
+          overwrites-pull-request-comment: false
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "✅ Widget deployed successfully to https://widget.rab-booking.com"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Widget deployment failed"

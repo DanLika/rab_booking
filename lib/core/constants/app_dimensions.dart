@@ -1,3 +1,5 @@
+import 'package:flutter/widgets.dart';
+
 /// Application dimensions and spacing constants
 /// Provides consistent spacing, sizing, and breakpoints across the app
 class AppDimensions {
@@ -86,14 +88,14 @@ class AppDimensions {
   // COMPONENT SIZES
   // ============================================================================
 
-  /// Button height (default) - 48px
-  static const double buttonHeight = 48.0;
+  /// Button height (default) - 56px (Modern standard 2024-2025)
+  static const double buttonHeight = 56.0;
 
-  /// Button height (small) - 40px
-  static const double buttonHeightSmall = 40.0;
+  /// Button height (small) - 48px
+  static const double buttonHeightSmall = 48.0;
 
-  /// Button height (large) - 56px
-  static const double buttonHeightLarge = 56.0;
+  /// Button height (large) - 64px
+  static const double buttonHeightLarge = 64.0;
 
   /// Input field height - 48px
   static const double inputHeight = 48.0;
@@ -134,6 +136,28 @@ class AppDimensions {
 
   /// Avatar size (extra large)
   static const double avatarSizeXL = 96.0;
+
+  // ============================================================================
+  // CALENDAR DIMENSIONS
+  // ============================================================================
+
+  /// Calendar cell size (mobile) - 40px
+  static const double calendarCellSizeMobile = 40.0;
+
+  /// Calendar cell size (tablet) - 44px
+  static const double calendarCellSizeTablet = 44.0;
+
+  /// Calendar cell size (desktop) - 48px (Modern standard)
+  static const double calendarCellSizeDesktop = 48.0;
+
+  /// Calendar cell gap (space between cells)
+  static const double calendarCellGap = 0.0; // Cells share borders
+
+  /// Calendar header height
+  static const double calendarHeaderHeight = 56.0;
+
+  /// Calendar month selector height
+  static const double calendarMonthSelectorHeight = 48.0;
 
   // ============================================================================
   // CARD & CONTAINER DIMENSIONS
@@ -333,4 +357,66 @@ class AppDimensions {
     if (width < tablet) return sectionPaddingTablet;
     return sectionPaddingDesktop;
   }
+
+  /// Get calendar cell size based on screen width
+  static double getCalendarCellSize(double width) {
+    if (width < mobile) return calendarCellSizeMobile;
+    if (width < tablet) return calendarCellSizeTablet;
+    return calendarCellSizeDesktop;
+  }
+
+  /// Get responsive horizontal padding (for screen edges)
+  static double getHorizontalPadding(double width) {
+    if (width < mobile) return spaceS;
+    if (width < tablet) return spaceM;
+    return spaceL;
+  }
+
+  /// Get responsive vertical padding (for sections)
+  static double getVerticalPadding(double width) {
+    if (width < mobile) return spaceL;
+    if (width < tablet) return spaceXL;
+    return spaceXXL;
+  }
+}
+
+// ============================================================================
+// EXTENSION METHODS FOR EASY ACCESS
+// ============================================================================
+
+/// Extension on BuildContext for easy access to responsive dimensions
+extension AppDimensionsExtension on BuildContext {
+  /// Get screen width
+  double get screenWidth => MediaQuery.of(this).size.width;
+
+  /// Get screen height
+  double get screenHeight => MediaQuery.of(this).size.height;
+
+  /// Check if mobile
+  bool get isMobile => screenWidth < AppDimensions.mobile;
+
+  /// Check if tablet
+  bool get isTablet =>
+      screenWidth >= AppDimensions.mobile && screenWidth < AppDimensions.tablet;
+
+  /// Check if desktop
+  bool get isDesktop => screenWidth >= AppDimensions.tablet;
+
+  /// Get responsive horizontal padding
+  double get horizontalPadding => AppDimensions.getHorizontalPadding(screenWidth);
+
+  /// Get responsive vertical padding
+  double get verticalPadding => AppDimensions.getVerticalPadding(screenWidth);
+
+  /// Get responsive section padding
+  double get sectionPadding => AppDimensions.getSectionPadding(screenWidth);
+
+  /// Get responsive grid columns
+  int get gridColumns => AppDimensions.getGridColumns(screenWidth);
+
+  /// Get responsive calendar cell size
+  double get calendarCellSize => AppDimensions.getCalendarCellSize(screenWidth);
+
+  /// Get responsive spacing
+  double get responsiveSpacing => AppDimensions.getResponsiveSpacing(screenWidth);
 }

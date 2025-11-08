@@ -49,86 +49,11 @@ class _CalendarViewSwitcherState extends ConsumerState<CalendarViewSwitcher> {
 
     return Column(
       children: [
-        _buildTabBar(currentView),
-        const SizedBox(height: 16),
+        // Tab bar removed - view switching now handled by external controls
         Expanded(
           child: _buildCalendarView(currentView),
         ),
       ],
-    );
-  }
-
-  Widget _buildTabBar(CalendarViewType currentView) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          _buildTabButton(
-            label: 'Week',
-            icon: Icons.view_week,
-            viewType: CalendarViewType.week,
-            isSelected: currentView == CalendarViewType.week,
-          ),
-          _buildTabButton(
-            label: 'Month',
-            icon: Icons.calendar_month,
-            viewType: CalendarViewType.month,
-            isSelected: currentView == CalendarViewType.month,
-          ),
-          // Hide year view on small phones
-          if (!widget.forceMonthView)
-            _buildTabButton(
-              label: 'Year',
-              icon: Icons.calendar_today,
-              viewType: CalendarViewType.year,
-              isSelected: currentView == CalendarViewType.year,
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabButton({
-    required String label,
-    required IconData icon,
-    required CalendarViewType viewType,
-    required bool isSelected,
-  }) {
-    return Expanded(
-      child: InkWell(
-        onTap: () {
-          ref.read(calendarViewProvider.notifier).state = viewType;
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.blue : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? Colors.white : Colors.grey[700],
-                size: 20,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey[700],
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 

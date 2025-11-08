@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../core/services/stripe_service.dart';
-import '../../../../core/services/booking_service.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../../shared/providers/repository_providers.dart';
+import '../../../../core/services/logging_service.dart';
 import '../providers/booking_flow_provider.dart';
 import '../providers/booking_price_provider.dart';
-import '../theme/bedbooking_theme.dart';
+import '../theme/villa_jasko_colors.dart';
+import '../theme/responsive_helper.dart';
+import '../widgets/progress_indicator_widget.dart';
 
 /// Enhanced Payment Screen (Step 2 of Flow B)
 /// Guest Details + Payment Method Selection
@@ -59,10 +64,10 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: VillaJaskoColors.backgroundSurface,
       appBar: AppBar(
-        backgroundColor: BedBookingColors.primaryGreen,
-        foregroundColor: Colors.white,
+        backgroundColor: VillaJaskoColors.primary,
+        foregroundColor: VillaJaskoColors.textOnPrimary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -70,22 +75,35 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
             ref.read(bookingStepProvider.notifier).state = 1;
           },
         ),
-        title: const Text(
+        title: Text(
           'Guest Details & Payment',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 768;
+      body: Column(
+        children: [
+          BookingProgressIndicator(
+            currentStep: 3,
+            onStepTapped: (step) {
+              if (step == 1) context.go('/rooms');
+              if (step == 2) context.go('/summary');
+            },
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = ResponsiveHelper.isMobile(context);
 
-          if (isMobile) {
-            return _buildMobileLayout(room.id, checkIn, checkOut);
-          } else {
-            return _buildDesktopLayout(room.id, checkIn, checkOut);
-          }
-        },
+                if (isMobile) {
+                  return _buildMobileLayout(room.id, checkIn, checkOut);
+                } else {
+                  return _buildDesktopLayout(room.id, checkIn, checkOut);
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -106,10 +124,6 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Progress indicator
-                  _buildProgressIndicator(2),
-                  const SizedBox(height: 32),
-
                   // Guest details section
                   _buildGuestDetailsSection(),
                   const SizedBox(height: 32),
@@ -146,9 +160,12 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
 
   Widget _buildDesktopLayout(
       String unitId, DateTime checkIn, DateTime checkOut) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
         // Main content (65%)
         Expanded(
           flex: 65,
@@ -159,10 +176,6 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Progress indicator
-                  _buildProgressIndicator(2),
-                  const SizedBox(height: 32),
-
                   // Guest details section
                   _buildGuestDetailsSection(),
                   const SizedBox(height: 32),
@@ -183,28 +196,36 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
           ),
         ),
 
-        // Sidebar (35%)
-        Container(
-          width: 400,
-          decoration: BoxDecoration(
-            color: BedBookingColors.backgroundGrey,
-            border: Border(
-              left: BorderSide(color: Colors.grey.shade300),
+        // Sidebar (responsive width)
+        ConstrainedBox(
+          constraints: const BoxConstraints(
+            minWidth: 300,
+            maxWidth: 450,
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.35,
+            decoration: const BoxDecoration(
+              color: VillaJaskoColors.backgroundSidebar,
+              border: Border(
+                left: BorderSide(color: VillaJaskoColors.border),
+              ),
+            ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: _buildDetailedPriceSummary(unitId, checkIn, checkOut),
+                  ),
+                ),
+                _buildBottomButton(unitId, checkIn, checkOut),
+              ],
             ),
           ),
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: _buildDetailedPriceSummary(unitId, checkIn, checkOut),
-                ),
-              ),
-              _buildBottomButton(unitId, checkIn, checkOut),
-            ],
-          ),
         ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -212,78 +233,21 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
   // SHARED COMPONENTS
   // ===================================================================
 
-  Widget _buildProgressIndicator(int currentStep) {
-    return Row(
-      children: [
-        _buildProgressDot(1, 'Room',
-            isActive: false, isCompleted: currentStep > 1),
-        _buildProgressLine(isCompleted: currentStep > 1),
-        _buildProgressDot(2, 'Details',
-            isActive: currentStep == 2, isCompleted: currentStep > 2),
-        _buildProgressLine(isCompleted: currentStep > 2),
-        _buildProgressDot(3, 'Payment',
-            isActive: currentStep == 3, isCompleted: currentStep > 3),
-        _buildProgressLine(isCompleted: currentStep > 3),
-        _buildProgressDot(4, 'Done',
-            isActive: currentStep == 4, isCompleted: currentStep > 4),
-      ],
-    );
-  }
-
-  Widget _buildProgressDot(int step, String label,
-      {required bool isActive, required bool isCompleted}) {
-    return Column(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: isActive || isCompleted
-                ? BedBookingColors.primaryGreen
-                : Colors.grey.shade300,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: isCompleted
-                ? const Icon(Icons.check, color: Colors.white, size: 20)
-                : Text(
-                    step.toString(),
-                    style: TextStyle(
-                      color: isActive ? Colors.white : Colors.grey.shade600,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color:
-                isActive ? BedBookingColors.primaryGreen : Colors.grey.shade600,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProgressLine({required bool isCompleted}) {
-    return Expanded(
-      child: Container(
-        height: 2,
-        margin: const EdgeInsets.only(bottom: 20),
-        color:
-            isCompleted ? BedBookingColors.primaryGreen : Colors.grey.shade300,
-      ),
-    );
-  }
-
   Widget _buildGuestDetailsSection() {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BedBookingCards.cardDecoration,
+      decoration: BoxDecoration(
+        color: VillaJaskoColors.backgroundSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: VillaJaskoColors.border),
+        boxShadow: const [
+          BoxShadow(
+            color: VillaJaskoColors.shadowLight,
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -292,19 +256,23 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: BedBookingColors.primaryGreen.withOpacity(0.1),
+                  color: VillaJaskoColors.primarySurface,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.person,
-                  color: BedBookingColors.primaryGreen,
+                  color: VillaJaskoColors.primary,
                   size: 24,
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Guest Information',
-                style: BedBookingTextStyles.heading2,
+                style: GoogleFonts.inter(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: VillaJaskoColors.textPrimary,
+                ),
               ),
             ],
           ),
@@ -320,7 +288,10 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                   icon: Icons.person_outline,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Required';
+                      return 'First name is required';
+                    }
+                    if (value.length < 2) {
+                      return 'Name must be at least 2 characters';
                     }
                     return null;
                   },
@@ -334,7 +305,10 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                   icon: Icons.person_outline,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Required';
+                      return 'Last name is required';
+                    }
+                    if (value.length < 2) {
+                      return 'Name must be at least 2 characters';
                     }
                     return null;
                   },
@@ -355,8 +329,9 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               if (value == null || value.isEmpty) {
                 return 'Email is required';
               }
-              if (!value.contains('@')) {
-                return 'Enter a valid email';
+              final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+              if (!emailRegex.hasMatch(value)) {
+                return 'Please enter a valid email address';
               }
               return null;
             },
@@ -372,7 +347,11 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
             keyboardType: TextInputType.phone,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Phone is required';
+                return 'Phone number is required';
+              }
+              final phoneRegex = RegExp(r'^\+?[\d\s\-\(\)]+$');
+              if (!phoneRegex.hasMatch(value) || value.replaceAll(RegExp(r'[\s\-\(\)\+]'), '').length < 8) {
+                return 'Please enter a valid phone number';
               }
               return null;
             },
@@ -408,24 +387,24 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       validator: validator,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: BedBookingColors.primaryGreen),
+        prefixIcon: Icon(icon, color: VillaJaskoColors.primary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: VillaJaskoColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(
-            color: BedBookingColors.primaryGreen,
+            color: VillaJaskoColors.primary,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: BedBookingColors.error),
+          borderSide: const BorderSide(color: VillaJaskoColors.error),
         ),
       ),
     );
@@ -434,7 +413,18 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
   Widget _buildPaymentMethodSection() {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BedBookingCards.cardDecoration,
+      decoration: BoxDecoration(
+        color: VillaJaskoColors.backgroundSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: VillaJaskoColors.border),
+        boxShadow: const [
+          BoxShadow(
+            color: VillaJaskoColors.shadowLight,
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -443,19 +433,23 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: BedBookingColors.primaryGreen.withOpacity(0.1),
+                  color: VillaJaskoColors.primarySurface,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.payment,
-                  color: BedBookingColors.primaryGreen,
+                  color: VillaJaskoColors.primary,
                   size: 24,
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Payment Method',
-                style: BedBookingTextStyles.heading2,
+                style: GoogleFonts.inter(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: VillaJaskoColors.textPrimary,
+                ),
               ),
             ],
           ),
@@ -504,13 +498,13 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? BedBookingColors.primaryGreen.withOpacity(0.05)
-              : Colors.white,
+              ? VillaJaskoColors.primarySurface
+              : VillaJaskoColors.backgroundSurface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? BedBookingColors.primaryGreen
-                : Colors.grey.shade300,
+                ? VillaJaskoColors.primary
+                : VillaJaskoColors.border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -524,8 +518,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
-                      ? BedBookingColors.primaryGreen
-                      : Colors.grey.shade400,
+                      ? VillaJaskoColors.primary
+                      : VillaJaskoColors.textTertiary,
                   width: 2,
                 ),
               ),
@@ -535,7 +529,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                         width: 12,
                         height: 12,
                         decoration: const BoxDecoration(
-                          color: BedBookingColors.primaryGreen,
+                          color: VillaJaskoColors.primary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -550,15 +544,15 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? BedBookingColors.primaryGreen.withOpacity(0.2)
-                    : Colors.grey.shade100,
+                    ? VillaJaskoColors.primaryLight
+                    : VillaJaskoColors.backgroundMain,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 icon,
                 color: isSelected
-                    ? BedBookingColors.primaryGreen
-                    : Colors.grey.shade600,
+                    ? VillaJaskoColors.primary
+                    : VillaJaskoColors.textSecondary,
                 size: 28,
               ),
             ),
@@ -572,18 +566,18 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.black87 : Colors.black54,
+                      color: isSelected ? VillaJaskoColors.textPrimary : VillaJaskoColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: Colors.grey.shade600,
+                      color: VillaJaskoColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -597,19 +591,18 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? BedBookingColors.primaryGreen
-                                        .withOpacity(0.1)
-                                    : Colors.grey.shade200,
+                                    ? VillaJaskoColors.primarySurface
+                                    : VillaJaskoColors.backgroundMain,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 badge,
-                                style: TextStyle(
+                                style: GoogleFonts.inter(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   color: isSelected
-                                      ? BedBookingColors.primaryGreen
-                                      : Colors.grey.shade600,
+                                      ? VillaJaskoColors.primary
+                                      : VillaJaskoColors.textSecondary,
                                 ),
                               ),
                             ))
@@ -641,7 +634,18 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
 
         return Container(
           padding: const EdgeInsets.all(24),
-          decoration: BedBookingCards.cardDecoration,
+          decoration: BoxDecoration(
+            color: VillaJaskoColors.backgroundSurface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: VillaJaskoColors.border),
+            boxShadow: const [
+              BoxShadow(
+                color: VillaJaskoColors.shadowLight,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -650,19 +654,23 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: BedBookingColors.primaryGreen.withOpacity(0.1),
+                      color: VillaJaskoColors.primarySurface,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
                       Icons.euro,
-                      color: BedBookingColors.primaryGreen,
+                      color: VillaJaskoColors.primary,
                       size: 24,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
+                  Text(
                     'Payment Amount',
-                    style: BedBookingTextStyles.heading2,
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: VillaJaskoColors.textPrimary,
+                    ),
                   ),
                 ],
               ),
@@ -718,13 +726,13 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? BedBookingColors.primaryGreen.withOpacity(0.05)
-              : Colors.white,
+              ? VillaJaskoColors.primarySurface
+              : VillaJaskoColors.backgroundSurface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? BedBookingColors.primaryGreen
-                : Colors.grey.shade300,
+                ? VillaJaskoColors.primary
+                : VillaJaskoColors.border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -738,8 +746,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
-                      ? BedBookingColors.primaryGreen
-                      : Colors.grey.shade400,
+                      ? VillaJaskoColors.primary
+                      : VillaJaskoColors.textTertiary,
                   width: 2,
                 ),
               ),
@@ -749,7 +757,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                         width: 12,
                         height: 12,
                         decoration: const BoxDecoration(
-                          color: BedBookingColors.primaryGreen,
+                          color: VillaJaskoColors.primary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -768,10 +776,10 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.black87 : Colors.black54,
+                          color: isSelected ? VillaJaskoColors.textPrimary : VillaJaskoColors.textSecondary,
                         ),
                       ),
                       if (recommended) ...[
@@ -782,15 +790,15 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: BedBookingColors.warning,
+                            color: VillaJaskoColors.warning,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
+                          child: Text(
                             'RECOMMENDED',
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: VillaJaskoColors.textOnPrimary,
                             ),
                           ),
                         ),
@@ -800,9 +808,9 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: Colors.grey.shade600,
+                      color: VillaJaskoColors.textSecondary,
                     ),
                   ),
                 ],
@@ -815,21 +823,21 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               children: [
                 Text(
                   '€${amount.toStringAsFixed(0)}',
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: isSelected
-                        ? BedBookingColors.primaryGreen
-                        : Colors.black87,
+                        ? VillaJaskoColors.primary
+                        : VillaJaskoColors.textPrimary,
                   ),
                 ),
                 if (remaining > 0) ...[
                   const SizedBox(height: 2),
                   Text(
                     '+€${remaining.toStringAsFixed(0)} on arrival',
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 11,
-                      color: Colors.grey.shade600,
+                      color: VillaJaskoColors.textSecondary,
                     ),
                   ),
                 ],
@@ -851,28 +859,44 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       },
       controlAffinity: ListTileControlAffinity.leading,
       contentPadding: EdgeInsets.zero,
-      activeColor: BedBookingColors.primaryGreen,
+      activeColor: VillaJaskoColors.primary,
       title: RichText(
         text: TextSpan(
-          style: const TextStyle(fontSize: 14, color: Colors.black87),
+          style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textPrimary),
           children: [
             const TextSpan(text: 'I agree to the '),
             TextSpan(
               text: 'Terms & Conditions',
-              style: TextStyle(
-                color: BedBookingColors.primaryGreen,
+              style: const TextStyle(
+                color: VillaJaskoColors.primary,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
               ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  // Open Terms & Conditions
+                  launchUrl(
+                    Uri.parse('https://jasko-rab.com/terms'),
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
             ),
             const TextSpan(text: ' and '),
             TextSpan(
               text: 'Privacy Policy',
-              style: TextStyle(
-                color: BedBookingColors.primaryGreen,
+              style: const TextStyle(
+                color: VillaJaskoColors.primary,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
               ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  // Open Privacy Policy
+                  launchUrl(
+                    Uri.parse('https://jasko-rab.com/privacy'),
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
             ),
           ],
         ),
@@ -899,10 +923,10 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: BedBookingColors.primaryGreen.withOpacity(0.1),
+            color: VillaJaskoColors.primarySurface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: BedBookingColors.primaryGreen.withOpacity(0.3),
+              color: VillaJaskoColors.primaryLight,
             ),
           ),
           child: Row(
@@ -913,9 +937,9 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 children: [
                   Text(
                     'Amount to Pay',
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: Colors.grey.shade700,
+                      color: VillaJaskoColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -923,19 +947,20 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     _paymentOption == 'deposit'
                         ? '20% Deposit'
                         : 'Full Payment',
-                    style: const TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
+                      color: VillaJaskoColors.textPrimary,
                     ),
                   ),
                 ],
               ),
               Text(
                 '€${amount.toStringAsFixed(0)}',
-                style: const TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: BedBookingColors.primaryGreen,
+                  color: VillaJaskoColors.primary,
                 ),
               ),
             ],
@@ -966,27 +991,42 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
 
         return Container(
           padding: const EdgeInsets.all(20),
-          decoration: BedBookingCards.cardDecoration,
+          decoration: BoxDecoration(
+            color: VillaJaskoColors.backgroundSurface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: VillaJaskoColors.border),
+            boxShadow: const [
+              BoxShadow(
+                color: VillaJaskoColors.shadowLight,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Booking Summary',
-                style: BedBookingTextStyles.heading3,
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: VillaJaskoColors.textPrimary,
+                ),
               ),
-              const Divider(height: 24),
+              const Divider(height: 24, color: VillaJaskoColors.divider),
 
               _buildSummaryRow(
                 '${calculation.nights} nights',
                 calculation.formattedTotal,
               ),
 
-              const Divider(height: 24),
+              const Divider(height: 24, color: VillaJaskoColors.divider),
 
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: BedBookingColors.primaryGreen.withOpacity(0.1),
+                  color: VillaJaskoColors.primarySurface,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -998,17 +1038,18 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                           _paymentOption == 'deposit'
                               ? 'Pay Now (20%)'
                               : 'Pay Now (100%)',
-                          style: const TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: VillaJaskoColors.textPrimary,
                           ),
                         ),
                         Text(
                           '€${amountToPay.toStringAsFixed(0)}',
-                          style: const TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: BedBookingColors.primaryGreen,
+                            color: VillaJaskoColors.primary,
                           ),
                         ),
                       ],
@@ -1020,17 +1061,17 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                         children: [
                           Text(
                             'Pay on Arrival',
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 13,
-                              color: Colors.grey.shade700,
+                              color: VillaJaskoColors.textSecondary,
                             ),
                           ),
                           Text(
                             '€${(calculation.totalPrice - deposit).toStringAsFixed(0)}',
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
+                              color: VillaJaskoColors.textSecondary,
                             ),
                           ),
                         ],
@@ -1054,12 +1095,19 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: BedBookingTextStyles.body),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: VillaJaskoColors.textSecondary,
+            ),
+          ),
           Text(
             value,
-            style: const TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              color: VillaJaskoColors.textPrimary,
             ),
           ),
         ],
@@ -1077,16 +1125,16 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
+      decoration: const BoxDecoration(
+        color: VillaJaskoColors.backgroundSurface,
         border: Border(
-          top: BorderSide(color: Colors.grey.shade200),
+          top: BorderSide(color: VillaJaskoColors.border),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: VillaJaskoColors.shadowLight,
             blurRadius: 10,
-            offset: const Offset(0, -2),
+            offset: Offset(0, -2),
           ),
         ],
       ),
@@ -1100,8 +1148,21 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     : () {
                         ref.read(bookingStepProvider.notifier).state = 1;
                       },
-                style: BedBookingButtons.secondaryButton,
-                child: const Text('Back'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: VillaJaskoColors.primary,
+                  side: const BorderSide(color: VillaJaskoColors.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Back',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -1121,7 +1182,17 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     onPressed: _isProcessing || !_agreedToTerms
                         ? null
                         : () => _handlePayment(amount),
-                    style: BedBookingButtons.primaryButton,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: VillaJaskoColors.primary,
+                      foregroundColor: VillaJaskoColors.textOnPrimary,
+                      disabledBackgroundColor: VillaJaskoColors.buttonDisabled,
+                      disabledForegroundColor: VillaJaskoColors.buttonDisabledText,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
                     child: _isProcessing
                         ? const SizedBox(
                             width: 20,
@@ -1129,14 +1200,17 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                                  AlwaysStoppedAnimation<Color>(VillaJaskoColors.textOnPrimary),
                             ),
                           )
                         : Text(
                             _paymentMethod == 'stripe'
                                 ? 'Pay €${amount.toStringAsFixed(0)}'
                                 : 'Confirm Booking',
-                            style: const TextStyle(fontSize: 16),
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                   );
                 },
@@ -1160,7 +1234,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all required fields'),
-          backgroundColor: BedBookingColors.error,
+          backgroundColor: VillaJaskoColors.error,
         ),
       );
       return;
@@ -1172,7 +1246,6 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
 
     try {
       if (_paymentMethod == 'stripe') {
-        // TODO: Implement Stripe Checkout
         await _handleStripePayment(amount);
       } else {
         // Bank Transfer
@@ -1183,7 +1256,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
-            backgroundColor: BedBookingColors.error,
+            backgroundColor: VillaJaskoColors.error,
           ),
         );
       }
@@ -1209,6 +1282,18 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         throw Exception('Missing booking data');
       }
 
+      // ✅ FIX: Fetch property to get actual owner ID
+      LoggingService.logOperation('Fetching property details...');
+      final propertyRepo = ref.read(propertyRepositoryProvider);
+      final property = await propertyRepo.fetchPropertyById(room.propertyId);
+
+      if (property == null) {
+        throw Exception('Property not found');
+      }
+
+      final ownerId = property.ownerId;
+      LoggingService.logSuccess('Owner ID: $ownerId');
+
       // Calculate total
       final priceCalc = await ref.read(bookingPriceProvider(
         unitId: room.id,
@@ -1221,12 +1306,12 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       final totalPrice = priceCalc.totalPrice;
 
       // Step 1: Create booking
-      debugPrint('🔵 Creating booking...');
-      final bookingService = BookingService();
+      LoggingService.logOperation('Creating booking...');
+      final bookingService = ref.read(bookingServiceProvider);
       final booking = await bookingService.createBooking(
         unitId: room.id,
         propertyId: room.propertyId,
-        ownerId: room.propertyId,
+        ownerId: ownerId,
         checkIn: checkIn,
         checkOut: checkOut,
         guestName: '${_firstNameController.text} ${_lastNameController.text}',
@@ -1239,17 +1324,17 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         notes: _specialRequestsController.text.isNotEmpty ? _specialRequestsController.text : null,
       );
 
-      debugPrint('✅ Booking created: ${booking.id}');
+      LoggingService.logSuccess('Booking created: ${booking.id}');
 
       // Step 2: Create Stripe session
-      debugPrint('🔵 Creating Stripe session...');
-      final stripeService = StripeService();
+      LoggingService.logOperation('Creating Stripe session...');
+      final stripeService = ref.read(stripeServiceProvider);
       final checkoutResult = await stripeService.createCheckoutSession(
         bookingId: booking.id,
         returnUrl: 'https://rab-booking-248fc.web.app/booking',
       );
 
-      debugPrint('✅ Session created: ${checkoutResult.sessionId}');
+      LoggingService.logSuccess('Session created: ${checkoutResult.sessionId}');
 
       // Step 3: Redirect to Stripe
       final url = Uri.parse(checkoutResult.checkoutUrl);
@@ -1260,12 +1345,12 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         throw Exception('Could not launch Stripe URL');
       }
     } catch (e) {
-      debugPrint('❌ Stripe error: $e');
+      await LoggingService.logError('Stripe error', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Payment error: $e'),
-            backgroundColor: BedBookingColors.error,
+            backgroundColor: VillaJaskoColors.error,
             duration: const Duration(seconds: 5),
           ),
         );
@@ -1286,6 +1371,18 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         throw Exception('Missing booking data');
       }
 
+      // ✅ FIX: Fetch property to get actual owner ID
+      LoggingService.logOperation('Fetching property details...');
+      final propertyRepo = ref.read(propertyRepositoryProvider);
+      final property = await propertyRepo.fetchPropertyById(room.propertyId);
+
+      if (property == null) {
+        throw Exception('Property not found');
+      }
+
+      final ownerId = property.ownerId;
+      LoggingService.logSuccess('Owner ID: $ownerId');
+
       final priceCalc = await ref.read(bookingPriceProvider(
         unitId: room.id,
         checkIn: checkIn,
@@ -1294,12 +1391,12 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
 
       if (priceCalc == null) throw Exception('Price calculation failed');
 
-      debugPrint('🔵 Creating bank transfer booking...');
-      final bookingService = BookingService();
+      LoggingService.logOperation('Creating bank transfer booking...');
+      final bookingService = ref.read(bookingServiceProvider);
       final booking = await bookingService.createBooking(
         unitId: room.id,
         propertyId: room.propertyId,
-        ownerId: room.propertyId,
+        ownerId: ownerId,
         checkIn: checkIn,
         checkOut: checkOut,
         guestName: '${_firstNameController.text} ${_lastNameController.text}',
@@ -1312,19 +1409,19 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         notes: _specialRequestsController.text.isNotEmpty ? _specialRequestsController.text : null,
       );
 
-      debugPrint('✅ Bank transfer booking created: ${booking.id}');
+      LoggingService.logSuccess('Bank transfer booking created: ${booking.id}');
 
       // Navigate to confirmation
       if (mounted) {
         ref.read(bookingStepProvider.notifier).state = 3;
       }
     } catch (e) {
-      debugPrint('❌ Bank transfer error: $e');
+      await LoggingService.logError('Bank transfer error', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Booking error: $e'),
-            backgroundColor: BedBookingColors.error,
+            backgroundColor: VillaJaskoColors.error,
             duration: const Duration(seconds: 5),
           ),
         );

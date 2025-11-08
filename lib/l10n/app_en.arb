@@ -334,5 +334,101 @@
   "ctaGetStarted": "Get Started",
   "ctaLearnMore": "Learn More",
   "seeAll": "See All",
-  "viewProperty": "View Property"
+  "viewProperty": "View Property",
+
+  "widgetSelectDates": "Select Dates",
+  "widgetGuestInformation": "Guest Information",
+  "widgetPaymentMethod": "Payment Method",
+  "widgetConfirmation": "Confirmation",
+  "widgetFullName": "Full Name",
+  "widgetEmailAddress": "Email Address",
+  "widgetPhoneNumber": "Phone Number",
+  "widgetSpecialRequests": "Special Requests (Optional)",
+  "widgetSpecialRequestsHint": "Any special requests or notes...",
+  "widgetContinue": "Continue",
+  "widgetPrevious": "Previous",
+  "widgetAdults": "Adults",
+  "widgetChildren": "Children",
+  "widgetNumberOfGuests": "Number of Guests",
+  "widgetTotalNights": "{count, plural, =1{1 Night} other{{count} Nights}}",
+  "@widgetTotalNights": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "widgetSubtotal": "Subtotal",
+  "widgetCleaningFee": "Cleaning Fee",
+  "widgetServiceFee": "Service Fee",
+  "widgetTaxes": "Taxes",
+  "widgetTotal": "Total",
+  "widgetPaymentOptions": "Payment Options",
+  "widgetFullPayment": "Full Payment",
+  "widgetFullPaymentDesc": "Pay 100% now",
+  "widgetDepositPayment": "Deposit Payment",
+  "widgetDepositPaymentDesc": "Pay 20% now, rest on arrival",
+  "widgetSelectPaymentMethod": "Select Payment Method",
+  "widgetBankTransfer": "Bank Transfer",
+  "widgetBankTransferDesc": "Transfer to our bank account (3-day deadline)",
+  "widgetBankTransferNote": "You will receive payment instructions via email",
+  "widgetCreditCard": "Credit Card",
+  "widgetCreditCardDesc": "Pay instantly with Stripe",
+  "widgetCreditCardBadge": "INSTANT",
+  "widgetPayOnArrival": "Pay on Arrival",
+  "widgetPayOnArrivalDesc": "Pay in cash or card at check-in",
+  "widgetBookingReference": "Booking Reference",
+  "widgetBookingConfirmed": "Booking Confirmed!",
+  "widgetThankYou": "Thank you for your booking",
+  "widgetConfirmationSent": "A confirmation email has been sent to {email}",
+  "@widgetConfirmationSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "widgetBankTransferInstructions": "Bank Transfer Instructions",
+  "widgetBankAccountHolder": "Account Holder",
+  "widgetBankName": "Bank",
+  "widgetBankIban": "IBAN",
+  "widgetPaymentReference": "Payment Reference",
+  "widgetPaymentDeadline": "Payment Deadline",
+  "widgetImportantNote": "Important Note",
+  "widgetIncludeReference": "Please include the booking reference in your transfer",
+  "widgetPoweredBy": "Powered by",
+  "widgetAvailable": "Available",
+  "widgetBooked": "Booked",
+  "widgetCheckInOnly": "Check-in only",
+  "widgetCheckOutOnly": "Check-out only",
+  "widgetBlocked": "Blocked",
+  "widgetPricePerNight": "€{price} / night",
+  "@widgetPricePerNight": {
+    "placeholders": {
+      "price": {"type": "String"}
+    }
+  },
+  "widgetSelectCheckIn": "Select check-in date",
+  "widgetSelectCheckOut": "Select check-out date",
+  "widgetMinimumStay": "Minimum stay: {nights} nights",
+  "@widgetMinimumStay": {
+    "placeholders": {
+      "nights": {"type": "int"}
+    }
+  },
+  "widgetDatesNotAvailable": "Selected dates are not available",
+  "widgetPleaseSelectOtherDates": "Please select different dates",
+  "widgetErrorLoadingAvailability": "Error loading availability",
+  "widgetErrorCreatingBooking": "Error creating booking",
+  "widgetPleaseCheckFormErrors": "Please check form errors and try again",
+  "widgetFieldRequired": "This field is required",
+  "widgetInvalidEmail": "Invalid email address",
+  "widgetInvalidPhone": "Invalid phone number",
+  "widgetNameTooShort": "Name must be at least 2 characters",
+  "widgetProcessingPayment": "Processing payment...",
+  "widgetCreatingBooking": "Creating booking...",
+  "widgetPleaseWait": "Please wait",
+  "widgetCancellationPolicy": "Cancellation Policy",
+  "widgetFreeCancellation": "Free cancellation up to 24 hours before check-in",
+  "widgetNoRefund": "No refund after this date",
+  "widgetTermsAndConditions": "By booking, you agree to our Terms & Conditions and Privacy Policy",
+  "widgetMissingParameters": "Missing required parameters",
+  "widgetPropertyNotFound": "Property or unit not found",
+  "widgetContactSupport": "Please contact support"
 }

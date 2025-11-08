@@ -979,4 +979,249 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seeAll => 'See All';
+
+  @override
+  String get widgetSelectDates => 'Select Dates';
+
+  @override
+  String get widgetGuestInformation => 'Guest Information';
+
+  @override
+  String get widgetPaymentMethod => 'Payment Method';
+
+  @override
+  String get widgetConfirmation => 'Confirmation';
+
+  @override
+  String get widgetFullName => 'Full Name';
+
+  @override
+  String get widgetEmailAddress => 'Email Address';
+
+  @override
+  String get widgetPhoneNumber => 'Phone Number';
+
+  @override
+  String get widgetSpecialRequests => 'Special Requests (Optional)';
+
+  @override
+  String get widgetSpecialRequestsHint => 'Any special requests or notes...';
+
+  @override
+  String get widgetContinue => 'Continue';
+
+  @override
+  String get widgetPrevious => 'Previous';
+
+  @override
+  String get widgetAdults => 'Adults';
+
+  @override
+  String get widgetChildren => 'Children';
+
+  @override
+  String get widgetNumberOfGuests => 'Number of Guests';
+
+  @override
+  String widgetTotalNights(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Nights',
+      one: '1 Night',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetSubtotal => 'Subtotal';
+
+  @override
+  String get widgetCleaningFee => 'Cleaning Fee';
+
+  @override
+  String get widgetServiceFee => 'Service Fee';
+
+  @override
+  String get widgetTaxes => 'Taxes';
+
+  @override
+  String get widgetTotal => 'Total';
+
+  @override
+  String get widgetPaymentOptions => 'Payment Options';
+
+  @override
+  String get widgetFullPayment => 'Full Payment';
+
+  @override
+  String get widgetFullPaymentDesc => 'Pay 100% now';
+
+  @override
+  String get widgetDepositPayment => 'Deposit Payment';
+
+  @override
+  String get widgetDepositPaymentDesc => 'Pay 20% now, rest on arrival';
+
+  @override
+  String get widgetSelectPaymentMethod => 'Select Payment Method';
+
+  @override
+  String get widgetBankTransfer => 'Bank Transfer';
+
+  @override
+  String get widgetBankTransferDesc =>
+      'Transfer to our bank account (3-day deadline)';
+
+  @override
+  String get widgetBankTransferNote =>
+      'You will receive payment instructions via email';
+
+  @override
+  String get widgetCreditCard => 'Credit Card';
+
+  @override
+  String get widgetCreditCardDesc => 'Pay instantly with Stripe';
+
+  @override
+  String get widgetCreditCardBadge => 'INSTANT';
+
+  @override
+  String get widgetPayOnArrival => 'Pay on Arrival';
+
+  @override
+  String get widgetPayOnArrivalDesc => 'Pay in cash or card at check-in';
+
+  @override
+  String get widgetBookingReference => 'Booking Reference';
+
+  @override
+  String get widgetBookingConfirmed => 'Booking Confirmed!';
+
+  @override
+  String get widgetThankYou => 'Thank you for your booking';
+
+  @override
+  String widgetConfirmationSent(String email) {
+    return 'A confirmation email has been sent to $email';
+  }
+
+  @override
+  String get widgetBankTransferInstructions => 'Bank Transfer Instructions';
+
+  @override
+  String get widgetBankAccountHolder => 'Account Holder';
+
+  @override
+  String get widgetBankName => 'Bank';
+
+  @override
+  String get widgetBankIban => 'IBAN';
+
+  @override
+  String get widgetPaymentReference => 'Payment Reference';
+
+  @override
+  String get widgetPaymentDeadline => 'Payment Deadline';
+
+  @override
+  String get widgetImportantNote => 'Important Note';
+
+  @override
+  String get widgetIncludeReference =>
+      'Please include the booking reference in your transfer';
+
+  @override
+  String get widgetPoweredBy => 'Powered by';
+
+  @override
+  String get widgetAvailable => 'Available';
+
+  @override
+  String get widgetBooked => 'Booked';
+
+  @override
+  String get widgetCheckInOnly => 'Check-in only';
+
+  @override
+  String get widgetCheckOutOnly => 'Check-out only';
+
+  @override
+  String get widgetBlocked => 'Blocked';
+
+  @override
+  String widgetPricePerNight(String price) {
+    return '€$price / night';
+  }
+
+  @override
+  String get widgetSelectCheckIn => 'Select check-in date';
+
+  @override
+  String get widgetSelectCheckOut => 'Select check-out date';
+
+  @override
+  String widgetMinimumStay(int nights) {
+    return 'Minimum stay: $nights nights';
+  }
+
+  @override
+  String get widgetDatesNotAvailable => 'Selected dates are not available';
+
+  @override
+  String get widgetPleaseSelectOtherDates => 'Please select different dates';
+
+  @override
+  String get widgetErrorLoadingAvailability => 'Error loading availability';
+
+  @override
+  String get widgetErrorCreatingBooking => 'Error creating booking';
+
+  @override
+  String get widgetPleaseCheckFormErrors =>
+      'Please check form errors and try again';
+
+  @override
+  String get widgetFieldRequired => 'This field is required';
+
+  @override
+  String get widgetInvalidEmail => 'Invalid email address';
+
+  @override
+  String get widgetInvalidPhone => 'Invalid phone number';
+
+  @override
+  String get widgetNameTooShort => 'Name must be at least 2 characters';
+
+  @override
+  String get widgetProcessingPayment => 'Processing payment...';
+
+  @override
+  String get widgetCreatingBooking => 'Creating booking...';
+
+  @override
+  String get widgetPleaseWait => 'Please wait';
+
+  @override
+  String get widgetCancellationPolicy => 'Cancellation Policy';
+
+  @override
+  String get widgetFreeCancellation =>
+      'Free cancellation up to 24 hours before check-in';
+
+  @override
+  String get widgetNoRefund => 'No refund after this date';
+
+  @override
+  String get widgetTermsAndConditions =>
+      'By booking, you agree to our Terms & Conditions and Privacy Policy';
+
+  @override
+  String get widgetMissingParameters => 'Missing required parameters';
+
+  @override
+  String get widgetPropertyNotFound => 'Property or unit not found';
+
+  @override
+  String get widgetContactSupport => 'Please contact support';
 }

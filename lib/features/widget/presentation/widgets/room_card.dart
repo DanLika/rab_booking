@@ -45,9 +45,21 @@ class RoomCard extends StatelessWidget {
                         child: Image.network(
                           room.images.first,
                           fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                                strokeWidth: 2,
+                              ),
+                            );
+                          },
                           errorBuilder: (context, error, stackTrace) {
                             return const Center(
-                              child: Icon(Icons.hotel, size: 48, color: Colors.grey),
+                              child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
                             );
                           },
                         ),
@@ -64,7 +76,7 @@ class RoomCard extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -92,7 +104,7 @@ class RoomCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: BedBookingColors.primaryGreen.withOpacity(0.1),
+                        color: BedBookingColors.primaryGreen.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
                           color: BedBookingColors.primaryGreen,
@@ -129,10 +141,10 @@ class RoomCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Row(
+                  const Row(
                     children: [
-                      const Icon(Icons.bed, size: 16, color: BedBookingColors.textGrey),
-                      const SizedBox(width: 6),
+                      Icon(Icons.bed, size: 16, color: BedBookingColors.textGrey),
+                      SizedBox(width: 6),
                       Text(
                         '2 double beds',
                         style: BedBookingTextStyles.small,
@@ -140,10 +152,10 @@ class RoomCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Row(
+                  const Row(
                     children: [
-                      const Icon(Icons.bed, size: 16, color: BedBookingColors.textGrey),
-                      const SizedBox(width: 6),
+                      Icon(Icons.bed, size: 16, color: BedBookingColors.textGrey),
+                      SizedBox(width: 6),
                       Text(
                         '2 single beds',
                         style: BedBookingTextStyles.small,

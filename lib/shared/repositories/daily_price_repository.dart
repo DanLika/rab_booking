@@ -41,6 +41,13 @@ abstract class DailyPriceRepository {
     required double price,
   });
 
+  /// Bulk update prices with full model template
+  Future<List<DailyPriceModel>> bulkUpdatePricesWithModel({
+    required String unitId,
+    required List<DateTime> dates,
+    required DailyPriceModel modelTemplate,
+  });
+
   /// Delete price for specific date (revert to base price)
   Future<void> deletePriceForDate({
     required String unitId,

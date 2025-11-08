@@ -17,7 +17,9 @@
   "dependencies": {
     "firebase-admin": "^12.6.0",
     "firebase-functions": "^6.0.1",
+    "node-ical": "^0.22.1",
     "resend": "^6.2.2",
+    "rrule": "^2.8.1",
     "stripe": "^19.1.0"
   },
   "devDependencies": {

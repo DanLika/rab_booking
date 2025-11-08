@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../services/logging_service.dart';
 
 /// Performance utilities for optimization
 class PerformanceUtils {
@@ -73,8 +74,8 @@ class PerformanceUtils {
 
     const targetFrameTime = Duration(milliseconds: 16);
     if (frameDuration > targetFrameTime) {
-      debugPrint(
-        '⚠️ Slow frame detected: ${frameDuration.inMilliseconds}ms (target: ${targetFrameTime.inMilliseconds}ms)',
+      LoggingService.logWarning(
+        'Slow frame detected: ${frameDuration.inMilliseconds}ms (target: ${targetFrameTime.inMilliseconds}ms)',
       );
     }
   }
@@ -88,7 +89,7 @@ class PerformanceUtils {
       try {
         await precacheImage(NetworkImage(url), context);
       } catch (e) {
-        debugPrint('Failed to precache image: $url - $e');
+        LoggingService.logDebug('Failed to precache image: $url - $e');
       }
     }
   }

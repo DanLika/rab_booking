@@ -27,7 +27,7 @@ class FirebasePropertyPerformanceRepository {
 
   /// Helper method to get all unit IDs for given properties from subcollections
   Future<List<String>> _getUnitIdsForProperties(List<String> propertyIds) async {
-    List<String> unitIds = [];
+    final List<String> unitIds = [];
     for (final propertyId in propertyIds) {
       final unitsSnapshot = await _firestore
           .collection('properties')

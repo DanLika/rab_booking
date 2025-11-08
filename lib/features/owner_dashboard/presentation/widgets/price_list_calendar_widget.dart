@@ -7,7 +7,6 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/price_list_provider.dart';
-import 'calendar_legend_widget.dart';
 
 /// BedBooking-style Price List Calendar
 /// Displays one month at a time with dropdown selector
@@ -49,15 +48,6 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         if (_bulkEditMode && _selectedDays.isNotEmpty)
           _buildSelectionCounter(),
 
-        // Legend (only when NOT in bulk edit mode)
-        if (!_bulkEditMode)
-          const CalendarLegendWidget(
-            showStatusColors: false,
-            showPriceColors: true,
-            showIcons: true,
-            isCompact: true,
-          ),
-
         const SizedBox(height: 16),
 
         // Calendar grid
@@ -83,7 +73,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             // Month selector
             Expanded(
               child: DropdownButtonFormField<DateTime>(
-                value: _selectedMonth,
+                initialValue: _selectedMonth,
                 decoration: const InputDecoration(
                   labelText: 'Odaberi mjesec',
                   border: OutlineInputBorder(),
@@ -141,7 +131,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: AppColors.primary, size: 20),
+          const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
           const SizedBox(width: 8),
           Text(
             '${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan' : 'dana'} odabrano',
@@ -259,7 +249,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
     final hasWeekendPrice = priceData?.weekendPrice != null;
     final blockCheckIn = priceData?.blockCheckIn ?? false;
     final blockCheckOut = priceData?.blockCheckOut ?? false;
-    final hasNotes = priceData?.notes != null && priceData!.notes!.isNotEmpty;
+    final notes = priceData?.notes;
     final hasRestrictions = blockCheckIn || blockCheckOut || (priceData?.minNightsOnArrival != null);
 
     return InkWell(
@@ -319,7 +309,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                       ),
                 ),
                 if (_bulkEditMode && isSelected)
-                  Icon(Icons.check_circle, size: 16, color: AppColors.primary),
+                  const Icon(Icons.check_circle, size: 16, color: AppColors.primary),
               ],
             ),
 
@@ -327,19 +317,24 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '€${price.toStringAsFixed(0)}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: !isAvailable
-                            ? Colors.grey[600]
-                            : hasWeekendPrice && isWeekend
-                                ? Colors.purple[700]
-                                : hasPrice
-                                    ? Colors.blue[700]
-                                    : Colors.grey[700],
-                      ),
-                  textAlign: TextAlign.center,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '€${price.toStringAsFixed(0)}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: !isAvailable
+                              ? Colors.grey[600]
+                              : hasWeekendPrice && isWeekend
+                                  ? Colors.purple[700]
+                                  : hasPrice
+                                      ? Colors.blue[700]
+                                      : Colors.grey[700],
+                        ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 if (!hasPrice && isAvailable)
                   Text(
@@ -362,12 +357,18 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                   const SizedBox(width: 2),
                 if (blockCheckOut)
                   Icon(Icons.logout, size: 12, color: Colors.red[700]),
-                if ((blockCheckIn || blockCheckOut) && hasNotes)
+                if ((blockCheckIn || blockCheckOut) && notes != null && notes.isNotEmpty)
                   const SizedBox(width: 2),
-                if (hasNotes)
-                  Tooltip(
-                    message: priceData!.notes!,
-                    child: Icon(Icons.notes, size: 12, color: Colors.orange[700]),
+                if (notes case final notesText?)
+                  GestureDetector(
+                    onTap: () => _showNotesDialog(context, date, notesText),
+                    child: Tooltip(
+                      message: notesText.length > 50
+                          ? '${notesText.substring(0, 47)}...'
+                          : notesText,
+                      preferBelow: false,
+                      child: Icon(Icons.notes, size: 12, color: Colors.orange[700]),
+                    ),
                   ),
               ],
             ),
@@ -591,6 +592,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
               if (existingPrice != null)
                 TextButton(
                   onPressed: () async {
+                    final navigator = Navigator.of(context);
+                    final messenger = ScaffoldMessenger.of(context);
+
                     // Delete custom price (revert to base price)
                     try {
                       final repository = ref.read(dailyPriceRepositoryProvider);
@@ -602,14 +606,14 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                       ref.invalidate(monthlyPricesProvider);
 
                       if (mounted) {
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        navigator.pop();
+                        messenger.showSnackBar(
                           const SnackBar(content: Text('Vraćeno na osnovnu cijenu')),
                         );
                       }
                     } catch (e) {
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           SnackBar(
                             content: Text('Greška: $e'),
                             backgroundColor: AppColors.error,
@@ -626,10 +630,13 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
               ),
               ElevatedButton(
                 onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final navigator = Navigator.of(context);
+
                   // Save price data
                   final priceText = priceController.text.trim();
                   if (priceText.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(content: Text('Unesite cijenu')),
                     );
                     return;
@@ -637,7 +644,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
                   final price = double.tryParse(priceText);
                   if (price == null || price <= 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(content: Text('Cijena mora biti veća od 0')),
                     );
                     return;
@@ -683,14 +690,14 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     ref.invalidate(monthlyPricesProvider);
 
                     if (mounted) {
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      navigator.pop();
+                      messenger.showSnackBar(
                         const SnackBar(content: Text('Cijena spremljena')),
                       );
                     }
                   } catch (e) {
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         SnackBar(
                           content: Text('Greška: $e'),
                           backgroundColor: AppColors.error,
@@ -750,9 +757,12 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                 onPressed: isProcessing
                     ? null
                     : () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final navigator = Navigator.of(context);
+
                         final priceText = priceController.text.trim();
                         if (priceText.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             const SnackBar(content: Text('Unesite cijenu')),
                           );
                           return;
@@ -760,7 +770,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
                         final price = double.tryParse(priceText);
                         if (price == null || price <= 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             const SnackBar(content: Text('Cijena mora biti veća od 0')),
                           );
                           return;
@@ -784,8 +794,8 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           ref.invalidate(monthlyPricesProvider);
 
                           if (mounted) {
-                            Navigator.of(context).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            navigator.pop();
+                            messenger.showSnackBar(
                               SnackBar(content: Text('Uspješno ažurirano ${_selectedDays.length} cijena')),
                             );
                             // Clear selection
@@ -795,7 +805,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           }
                         } catch (e) {
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               SnackBar(
                                 content: Text('Greška: $e'),
                                 backgroundColor: AppColors.error,
@@ -845,26 +855,39 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                   onPressed: isProcessing
                       ? null
                       : () async {
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
+
                           setState(() => isProcessing = true);
 
                           try {
                             final repository = ref.read(dailyPriceRepositoryProvider);
 
-                            // Set as available for each selected day
-                            for (final date in _selectedDays) {
-                              await repository.setPriceForDate(
-                                unitId: widget.unit.id,
-                                date: date,
-                                price: widget.unit.pricePerNight,
-                              );
-                            }
+                            // Create template model with available=true
+                            final modelTemplate = DailyPriceModel(
+                              id: '',
+                              unitId: widget.unit.id,
+                              date: DateTime.now(),
+                              price: widget.unit.pricePerNight,
+                              available: true,
+                              blockCheckIn: false,
+                              blockCheckOut: false,
+                              createdAt: DateTime.now(),
+                            );
+
+                            // Bulk update using batch operation
+                            await repository.bulkUpdatePricesWithModel(
+                              unitId: widget.unit.id,
+                              dates: _selectedDays.toList(),
+                              modelTemplate: modelTemplate,
+                            );
 
                             // Refresh the price data
                             ref.invalidate(monthlyPricesProvider);
 
                             if (mounted) {
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              navigator.pop();
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan označen' : 'dana označeno'} kao dostupno'),
                                 ),
@@ -876,7 +899,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('Greška: $e'),
                                   backgroundColor: AppColors.error,
@@ -908,27 +931,39 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                   onPressed: isProcessing
                       ? null
                       : () async {
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
+
                           setState(() => isProcessing = true);
 
                           try {
                             final repository = ref.read(dailyPriceRepositoryProvider);
 
-                            // Block dates (set as unavailable)
-                            for (final date in _selectedDays) {
-                              // Create price with available=false
-                              await repository.setPriceForDate(
-                                unitId: widget.unit.id,
-                                date: date,
-                                price: widget.unit.pricePerNight,
-                              );
-                            }
+                            // Create template model with available=false
+                            final modelTemplate = DailyPriceModel(
+                              id: '',
+                              unitId: widget.unit.id,
+                              date: DateTime.now(),
+                              price: widget.unit.pricePerNight,
+                              available: false, // Block dates - set as unavailable
+                              blockCheckIn: false,
+                              blockCheckOut: false,
+                              createdAt: DateTime.now(),
+                            );
+
+                            // Bulk update using batch operation
+                            await repository.bulkUpdatePricesWithModel(
+                              unitId: widget.unit.id,
+                              dates: _selectedDays.toList(),
+                              modelTemplate: modelTemplate,
+                            );
 
                             // Refresh the price data
                             ref.invalidate(monthlyPricesProvider);
 
                             if (mounted) {
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              navigator.pop();
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan blokiran' : 'dana blokirano'}'),
                                 ),
@@ -940,7 +975,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('Greška: $e'),
                                   backgroundColor: AppColors.error,
@@ -972,26 +1007,39 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                   onPressed: isProcessing
                       ? null
                       : () async {
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
+
                           setState(() => isProcessing = true);
 
                           try {
                             final repository = ref.read(dailyPriceRepositoryProvider);
 
-                            // Block check-in for selected days
-                            for (final date in _selectedDays) {
-                              await repository.setPriceForDate(
-                                unitId: widget.unit.id,
-                                date: date,
-                                price: widget.unit.pricePerNight,
-                              );
-                            }
+                            // Create template model with blockCheckIn=true
+                            final modelTemplate = DailyPriceModel(
+                              id: '',
+                              unitId: widget.unit.id,
+                              date: DateTime.now(),
+                              price: widget.unit.pricePerNight,
+                              available: true, // Keep available, just block check-in
+                              blockCheckIn: true, // Block check-in
+                              blockCheckOut: false,
+                              createdAt: DateTime.now(),
+                            );
+
+                            // Bulk update using batch operation
+                            await repository.bulkUpdatePricesWithModel(
+                              unitId: widget.unit.id,
+                              dates: _selectedDays.toList(),
+                              modelTemplate: modelTemplate,
+                            );
 
                             // Refresh the price data
                             ref.invalidate(monthlyPricesProvider);
 
                             if (mounted) {
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              navigator.pop();
+                              messenger.showSnackBar(
                                 const SnackBar(content: Text('Check-in blokiran za odabrane dane')),
                               );
                               // Clear selection
@@ -1001,7 +1049,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('Greška: $e'),
                                   backgroundColor: AppColors.error,
@@ -1025,26 +1073,39 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                   onPressed: isProcessing
                       ? null
                       : () async {
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
+
                           setState(() => isProcessing = true);
 
                           try {
                             final repository = ref.read(dailyPriceRepositoryProvider);
 
-                            // Block check-out for selected days
-                            for (final date in _selectedDays) {
-                              await repository.setPriceForDate(
-                                unitId: widget.unit.id,
-                                date: date,
-                                price: widget.unit.pricePerNight,
-                              );
-                            }
+                            // Create template model with blockCheckOut=true
+                            final modelTemplate = DailyPriceModel(
+                              id: '',
+                              unitId: widget.unit.id,
+                              date: DateTime.now(),
+                              price: widget.unit.pricePerNight,
+                              available: true, // Keep available, just block check-out
+                              blockCheckIn: false,
+                              blockCheckOut: true, // Block check-out
+                              createdAt: DateTime.now(),
+                            );
+
+                            // Bulk update using batch operation
+                            await repository.bulkUpdatePricesWithModel(
+                              unitId: widget.unit.id,
+                              dates: _selectedDays.toList(),
+                              modelTemplate: modelTemplate,
+                            );
 
                             // Refresh the price data
                             ref.invalidate(monthlyPricesProvider);
 
                             if (mounted) {
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              navigator.pop();
+                              messenger.showSnackBar(
                                 const SnackBar(content: Text('Check-out blokiran za odabrane dane')),
                               );
                               // Clear selection
@@ -1054,7 +1115,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             }
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text('Greška: $e'),
                                   backgroundColor: AppColors.error,
@@ -1087,60 +1148,27 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
     );
   }
 
-  Widget _buildColorLegend() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.palette, size: 16, color: Colors.grey[700]),
-              const SizedBox(width: 8),
-              Text(
-                'Legenda:',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
-                ),
-              ),
-            ],
+  /// Show notes dialog with proper text wrapping
+  void _showNotesDialog(BuildContext context, DateTime date, String notes) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Notes - ${DateFormat('d MMM yyyy').format(date)}',
+          style: const TextStyle(fontSize: 16),
+        ),
+        content: SingleChildScrollView(
+          child: Text(
+            notes,
+            style: const TextStyle(fontSize: 14),
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildLegendChip('Osnovna cijena', Colors.white, Colors.grey[300]!),
-              _buildLegendChip('Custom cijena', Colors.blue[50]!, Colors.blue[300]!),
-              _buildLegendChip('Vikend cijena', Colors.purple[50]!, Colors.purple[300]!),
-              _buildLegendChip('Restrikcije', Colors.orange[50]!, Colors.orange[300]!),
-              _buildLegendChip('Nedostupno', Colors.grey[300]!, Colors.grey[600]!),
-            ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildLegendChip(String label, Color bgColor, Color borderColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        border: Border.all(color: borderColor),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 11),
       ),
     );
   }

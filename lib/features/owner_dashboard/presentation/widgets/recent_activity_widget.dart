@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/widgets/widgets.dart';
 
@@ -45,18 +46,8 @@ class ActivityItem {
   }
 
   Color get color {
-    switch (type) {
-      case ActivityType.booking:
-        return AppColors.success;
-      case ActivityType.review:
-        return AppColors.warning;
-      case ActivityType.message:
-        return AppColors.info;
-      case ActivityType.payment:
-        return AppColors.primary;
-      case ActivityType.cancellation:
-        return AppColors.error;
-    }
+    // Use primary color for all activities for a clean, minimalist look
+    return AppColors.primary;
   }
 }
 
@@ -163,7 +154,7 @@ class RecentActivityWidget extends StatelessWidget {
                       size: 64,
                       color: isDark
                           ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight,
+                          : context.textColorSecondary,
                     ),
                     const SizedBox(height: AppDimensions.spaceM),
                     Text(
@@ -171,7 +162,7 @@ class RecentActivityWidget extends StatelessWidget {
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark
                             ? AppColors.textSecondaryDark
-                            : AppColors.textSecondaryLight,
+                            : context.textColorSecondary,
                       ),
                     ),
                   ],
@@ -239,7 +230,7 @@ class _ActivityTile extends StatelessWidget {
         style: AppTypography.small.copyWith(
           color: isDark
               ? AppColors.textSecondaryDark
-              : AppColors.textSecondaryLight,
+              : context.textColorSecondary,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -251,7 +242,7 @@ class _ActivityTile extends StatelessWidget {
           style: AppTypography.small.copyWith(
             color: isDark
                 ? AppColors.textSecondaryDark
-                : AppColors.textSecondaryLight,
+                : context.textColorSecondary,
           ),
           textAlign: TextAlign.end,
           overflow: TextOverflow.ellipsis,

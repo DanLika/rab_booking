@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'realtime_booking_calendar_provider.dart';
 
@@ -25,7 +26,7 @@ class BookingPriceCalculation {
 /// Provider for calculating booking price
 @riverpod
 Future<BookingPriceCalculation?> bookingPrice(
-  BookingPriceRef ref, {
+  Ref ref, {
   required String unitId,
   required DateTime? checkIn,
   required DateTime? checkOut,

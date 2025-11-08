@@ -28,30 +28,53 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedScale(
-        scale: _isHovered ? 1.02 : 1.0,
+      child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
-        child: Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: widget.onTap,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Image
-                _buildImage(),
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _isHovered
+                ? theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())
+                : theme.dividerColor,
+            width: _isHovered ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _isHovered
+                  ? theme.colorScheme.primary.withAlpha((0.12 * 255).toInt())
+                  : theme.colorScheme.shadow.withAlpha((0.06 * 255).toInt()),
+              blurRadius: _isHovered ? 20 : 8,
+              offset: Offset(0, _isHovered ? 8 : 3),
+            ),
+          ],
+        ),
+        transform: Matrix4.translationValues(0, _isHovered ? -4 : 0, 0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onTap,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Image
+                  _buildImage(),
 
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       // Title and type
                       Row(
                         children: [
@@ -61,49 +84,55 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                               children: [
                                 Text(
                                   widget.property.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
+                                  style: theme.textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  widget.property.propertyType.displayNameHR,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        color: Theme.of(context).primaryColor,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    widget.property.propertyType.displayNameHR,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
 
                       // Location
                       Row(
                         children: [
                           Icon(
-                            Icons.location_on,
-                            size: 16,
-                            color: context.iconColorSecondary,
+                            Icons.location_on_rounded,
+                            size: 18,
+                            color: theme.colorScheme.primary,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               widget.property.location,
-                              style:
-                                  Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: context.textColorSecondary,
-                                      ),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                                fontWeight: FontWeight.w500,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -111,9 +140,20 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                         ],
                       ),
 
-                      const SizedBox(height: 12),
-                      const Divider(),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
+                      Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              theme.dividerColor,
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
                       // Stats row
                       Row(
@@ -254,6 +294,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -292,22 +333,37 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
     required IconData icon,
     required String label,
   }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: context.iconColorSecondary),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.textColorSecondary,
-                ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt()),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
+          width: 1,
         ),
-      ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 18, color: theme.colorScheme.primary),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withAlpha((0.8 * 255).toInt()),
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

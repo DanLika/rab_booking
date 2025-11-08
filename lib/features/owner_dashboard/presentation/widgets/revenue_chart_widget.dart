@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/widgets/widgets.dart';
 
@@ -58,7 +59,7 @@ class RevenueChartWidget extends StatelessWidget {
                         style: AppTypography.small.copyWith(
                           color: isDark
                               ? AppColors.textSecondaryDark
-                              : AppColors.textSecondaryLight,
+                              : context.textColorSecondary,
                         ),
                       ),
                     ],
@@ -82,7 +83,7 @@ class RevenueChartWidget extends StatelessWidget {
                     style: AppTypography.small.copyWith(
                       color: isDark
                           ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight,
+                          : context.textColorSecondary,
                     ),
                   ),
                 ],
@@ -104,7 +105,7 @@ class RevenueChartWidget extends StatelessWidget {
                       size: 64,
                       color: isDark
                           ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight,
+                          : context.textColorSecondary,
                     ),
                     const SizedBox(height: AppDimensions.spaceM),
                     Text(
@@ -112,7 +113,7 @@ class RevenueChartWidget extends StatelessWidget {
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark
                             ? AppColors.textSecondaryDark
-                            : AppColors.textSecondaryLight,
+                            : context.textColorSecondary,
                       ),
                     ),
                   ],
@@ -179,7 +180,7 @@ class _BarChart extends StatelessWidget {
                       style: AppTypography.small.copyWith(
                         color: isDark
                             ? AppColors.textSecondaryDark
-                            : AppColors.textSecondaryLight,
+                            : context.textColorSecondary,
                         fontSize: 10,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -253,7 +254,7 @@ class _BarChart extends StatelessWidget {
                             style: AppTypography.small.copyWith(
                               color: isDark
                                   ? AppColors.textSecondaryDark
-                                  : AppColors.textSecondaryLight,
+                                  : context.textColorSecondary,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 1,

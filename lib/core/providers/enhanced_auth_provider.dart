@@ -1,9 +1,12 @@
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/services/rate_limit_service.dart';
 import '../../core/services/security_events_service.dart';
 import '../../core/services/ip_geolocation_service.dart';
+import '../../core/services/logging_service.dart';
+import '../../core/services/storage_service.dart';
 import '../../shared/models/user_model.dart';
 import '../../shared/providers/repository_providers.dart';
 import '../constants/enums.dart';
@@ -67,11 +70,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   ) : super(const EnhancedAuthState()) {
     // Listen to auth state changes
     _auth.authStateChanges().listen((User? user) {
-      print('[ENHANCED_AUTH] authStateChanges: user=${user?.uid}');
+      LoggingService.log('authStateChanges: user=${user?.uid}', tag: 'ENHANCED_AUTH');
       if (user != null) {
         _loadUserProfile(user);
       } else {
-        print('[ENHANCED_AUTH] User signed out, clearing state');
+        LoggingService.log('User signed out, clearing state', tag: 'ENHANCED_AUTH');
         state = const EnhancedAuthState();
       }
     });
@@ -79,12 +82,12 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
   /// Load user profile from Firestore
   Future<void> _loadUserProfile(User firebaseUser) async {
-    print('[ENHANCED_AUTH] Loading user profile for ${firebaseUser.uid}...');
+    LoggingService.log('Loading user profile for ${firebaseUser.uid}...', tag: 'ENHANCED_AUTH');
     try {
       final doc = await _firestore.collection('users').doc(firebaseUser.uid).get();
 
       if (doc.exists && doc.data() != null) {
-        print('[ENHANCED_AUTH] User profile found in Firestore');
+        LoggingService.log('User profile found in Firestore', tag: 'ENHANCED_AUTH');
         final userModel = UserModel.fromJson({...doc.data()!, 'id': doc.id});
 
         // Check email verification status
@@ -100,17 +103,17 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           requiresOnboarding: requiresOnboarding,
         );
 
-        print('[ENHANCED_AUTH] State updated: isAuthenticated=${state.isAuthenticated}, requiresVerification=$requiresVerification, requiresOnboarding=$requiresOnboarding');
+        LoggingService.log('State updated: isAuthenticated=${state.isAuthenticated}, requiresVerification=$requiresVerification, requiresOnboarding=$requiresOnboarding', tag: 'ENHANCED_AUTH');
 
         // Update last login time
         await _updateLastLogin(firebaseUser.uid);
       } else {
-        print('[ENHANCED_AUTH] User profile NOT found, creating new profile...');
+        LoggingService.log('User profile NOT found, creating new profile...', tag: 'ENHANCED_AUTH');
         // Create user profile if it doesn't exist
         await _createUserProfile(firebaseUser);
       }
     } catch (e) {
-      print('[ENHANCED_AUTH] ERROR loading user profile: $e');
+      LoggingService.logError('ERROR loading user profile', e);
       state = EnhancedAuthState(
         firebaseUser: firebaseUser,
         error: 'Failed to load user profile: $e',
@@ -144,24 +147,24 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     required String password,
     bool rememberMe = false,
   }) async {
-    print('[ENHANCED_AUTH] signInWithEmail called for $email, rememberMe=$rememberMe');
+    LoggingService.log('signInWithEmail called for $email, rememberMe=$rememberMe', tag: 'ENHANCED_AUTH');
     try {
       state = state.copyWith(isLoading: true, error: null);
 
       // Check rate limit
       final rateLimit = await _rateLimit.checkRateLimit(email);
       if (rateLimit != null && rateLimit.isLocked) {
-        print('[ENHANCED_AUTH] Rate limit exceeded for $email');
+        LoggingService.log('Rate limit exceeded for $email', tag: 'ENHANCED_AUTH');
         throw _rateLimit.getRateLimitMessage(rateLimit);
       }
 
       // Attempt sign in
-      print('[ENHANCED_AUTH] Calling Firebase signInWithEmailAndPassword...');
+      LoggingService.log('Calling Firebase signInWithEmailAndPassword...', tag: 'ENHANCED_AUTH');
       final credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      print('[ENHANCED_AUTH] Firebase sign in successful for ${credential.user?.uid}');
+      LoggingService.log('Firebase sign in successful for ${credential.user?.uid}', tag: 'ENHANCED_AUTH');
 
       // Reset rate limit on success
       await _rateLimit.resetAttempts(email);
@@ -188,9 +191,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       }
 
       // Auth state listener will handle the rest
-      print('[ENHANCED_AUTH] Sign in completed, auth state listener will load profile');
+      LoggingService.log('Sign in completed, auth state listener will load profile', tag: 'ENHANCED_AUTH');
     } on FirebaseAuthException catch (e) {
-      print('[ENHANCED_AUTH] Firebase sign in FAILED: ${e.code} - ${e.message}');
+      LoggingService.logError('Firebase sign in FAILED: ${e.code} - ${e.message}', e);
       // Record failed attempt
       await _rateLimit.recordFailedAttempt(email);
 
@@ -203,7 +206,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       state = state.copyWith(isLoading: false, error: errorMessage);
       rethrow;
     } catch (e) {
-      print('[ENHANCED_AUTH] Sign in ERROR: $e');
+      LoggingService.logError('Sign in ERROR', e);
       state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
@@ -216,6 +219,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     required String firstName,
     required String lastName,
     String? phone,
+    String? avatarUrl,
+    Uint8List? profileImageBytes,
+    String? profileImageName,
     bool acceptedTerms = false,
     bool acceptedPrivacy = false,
     bool newsletterOptIn = false,
@@ -232,6 +238,22 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         password: password,
       );
 
+      // Upload profile image if provided
+      String? finalAvatarUrl = avatarUrl;
+      if (profileImageBytes != null && profileImageName != null) {
+        try {
+          final storageService = StorageService();
+          finalAvatarUrl = await storageService.uploadProfileImage(
+            userId: credential.user!.uid,
+            imageBytes: profileImageBytes,
+            fileName: profileImageName,
+          );
+        } catch (e) {
+          // If image upload fails, continue without image
+          LoggingService.log('Failed to upload profile image during registration: $e', tag: 'AUTH_ERROR');
+        }
+      }
+
       // Create user profile
       final userModel = UserModel(
         id: credential.user!.uid,
@@ -242,6 +264,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         accountType: AccountType.trial,
         emailVerified: false,
         phone: phone,
+        avatarUrl: finalAvatarUrl,
         displayName: '$firstName $lastName',
         createdAt: DateTime.now(),
       );
@@ -334,6 +357,65 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
   }
 
+  /// Sign in anonymously (for demo purposes)
+  Future<void> signInAnonymously() async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final UserCredential userCredential = await _auth.signInAnonymously();
+
+      if (userCredential.user == null) {
+        throw Exception('Anonymous Sign-In failed: No user returned');
+      }
+
+      // Check if this is a new user
+      final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
+
+      if (isNewUser) {
+        // Create anonymous user profile
+        final userModel = UserModel(
+          id: userCredential.user!.uid,
+          email: 'anonymous@demo.com',
+          firstName: 'Demo',
+          lastName: 'User',
+          role: UserRole.owner,
+          accountType: AccountType.trial,
+          emailVerified: false,
+          displayName: 'Demo User',
+          createdAt: DateTime.now(),
+        );
+
+        await _firestore.collection('users').doc(userCredential.user!.uid).set(userModel.toJson());
+      } else {
+        // Update last login for existing users
+        await _updateLastLogin(userCredential.user!.uid);
+      }
+
+      // Log security event
+      await _security.logEvent(
+        userId: userCredential.user!.uid,
+        type: SecurityEventType.login,
+        metadata: {'provider': 'anonymous', 'isNewUser': isNewUser},
+      );
+
+      state = state.copyWith(isLoading: false);
+    } on FirebaseAuthException catch (e) {
+      LoggingService.log('Anonymous Sign-In error: ${e.code} - ${e.message}', tag: 'AUTH_ERROR');
+      state = state.copyWith(
+        isLoading: false,
+        error: _getAuthErrorMessage(e),
+      );
+      rethrow;
+    } catch (e) {
+      LoggingService.log('Anonymous Sign-In unexpected error: $e', tag: 'AUTH_ERROR');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to sign in anonymously. Please try again.',
+      );
+      rethrow;
+    }
+  }
+
   /// Sign out
   Future<void> signOut() async {
     final userId = _auth.currentUser?.uid;
@@ -351,6 +433,128 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       await _auth.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (e) {
       throw _getAuthErrorMessage(e);
+    }
+  }
+
+  /// Sign in with Google (OAuth)
+  /// NOTE: Requires Firebase configuration with Google Sign-In enabled
+  /// Setup steps in Firebase Console:
+  /// 1. Enable Google Sign-In in Authentication > Sign-in method
+  /// 2. Add SHA-1 and SHA-256 certificates (for Android)
+  /// 3. Download updated google-services.json / GoogleService-Info.plist
+  Future<void> signInWithGoogle() async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      // Create Google Auth Provider
+      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+
+      // Add scopes if needed
+      googleProvider.addScope('email');
+      googleProvider.addScope('profile');
+
+      // Sign in with popup for web, native SDK for mobile
+      final UserCredential userCredential = await _auth.signInWithProvider(googleProvider);
+
+      if (userCredential.user == null) {
+        throw Exception('Google Sign-In failed: No user returned');
+      }
+
+      // Check if this is a new user
+      final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
+
+      if (isNewUser) {
+        // Create user profile in Firestore for new users
+        await _createUserProfile(userCredential.user!);
+      } else {
+        // Update last login for existing users
+        await _updateLastLogin(userCredential.user!.uid);
+      }
+
+      // Log security event
+      await _security.logEvent(
+        userId: userCredential.user!.uid,
+        type: SecurityEventType.login,
+        metadata: {'provider': 'google', 'isNewUser': isNewUser},
+      );
+
+      state = state.copyWith(isLoading: false);
+    } on FirebaseAuthException catch (e) {
+      LoggingService.log('Google Sign-In error: ${e.code} - ${e.message}', tag: 'AUTH_ERROR');
+      state = state.copyWith(
+        isLoading: false,
+        error: _getAuthErrorMessage(e),
+      );
+      rethrow;
+    } catch (e) {
+      LoggingService.log('Google Sign-In unexpected error: $e', tag: 'AUTH_ERROR');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to sign in with Google. Please try again.',
+      );
+      rethrow;
+    }
+  }
+
+  /// Sign in with Apple (OAuth)
+  /// NOTE: Requires Firebase configuration with Apple Sign-In enabled
+  /// Setup steps in Firebase Console:
+  /// 1. Enable Apple Sign-In in Authentication > Sign-in method
+  /// 2. Register Service ID in Apple Developer Portal
+  /// 3. Configure OAuth redirect URLs
+  /// 4. Add Apple Sign-In capability in Xcode (for iOS)
+  Future<void> signInWithApple() async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      // Create Apple Auth Provider
+      final OAuthProvider appleProvider = OAuthProvider('apple.com');
+
+      // Request email and full name scopes
+      appleProvider.addScope('email');
+      appleProvider.addScope('name');
+
+      // Sign in with popup for web, native SDK for mobile
+      final UserCredential userCredential = await _auth.signInWithProvider(appleProvider);
+
+      if (userCredential.user == null) {
+        throw Exception('Apple Sign-In failed: No user returned');
+      }
+
+      // Check if this is a new user
+      final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
+
+      if (isNewUser) {
+        // Create user profile in Firestore for new users
+        // Note: Apple may not provide display name on subsequent logins
+        await _createUserProfile(userCredential.user!);
+      } else {
+        // Update last login for existing users
+        await _updateLastLogin(userCredential.user!.uid);
+      }
+
+      // Log security event
+      await _security.logEvent(
+        userId: userCredential.user!.uid,
+        type: SecurityEventType.login,
+        metadata: {'provider': 'apple', 'isNewUser': isNewUser},
+      );
+
+      state = state.copyWith(isLoading: false);
+    } on FirebaseAuthException catch (e) {
+      LoggingService.log('Apple Sign-In error: ${e.code} - ${e.message}', tag: 'AUTH_ERROR');
+      state = state.copyWith(
+        isLoading: false,
+        error: _getAuthErrorMessage(e),
+      );
+      rethrow;
+    } catch (e) {
+      LoggingService.log('Apple Sign-In unexpected error: $e', tag: 'AUTH_ERROR');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to sign in with Apple. Please try again.',
+      );
+      rethrow;
     }
   }
 
@@ -382,6 +586,58 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
   }
 
+  /// Update user email (Phase 3 feature)
+  /// Re-authenticates user with password, then updates email and sends verification
+  Future<void> updateEmail({
+    required String newEmail,
+    required String currentPassword,
+  }) async {
+    LoggingService.log('Updating email to: $newEmail', tag: 'ENHANCED_AUTH');
+
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No user logged in');
+    }
+
+    if (user.email == null) {
+      throw Exception('Current user has no email');
+    }
+
+    try {
+      // Re-authenticate user with current password
+      LoggingService.log('Re-authenticating user...', tag: 'ENHANCED_AUTH');
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Verify email
+      await user.verifyBeforeUpdateEmail(newEmail);
+
+      // Update email in Firestore
+      LoggingService.log('Updating email in Firestore...', tag: 'ENHANCED_AUTH');
+      await _firestore.collection('users').doc(user.uid).update({
+        'email': newEmail,
+        'emailVerified': false, // Email now requires verification
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      LoggingService.log('Email updated successfully!', tag: 'ENHANCED_AUTH');
+
+      // Reload state to reflect changes
+      state = state.copyWith(
+        requiresEmailVerification: true,
+      );
+    } on FirebaseAuthException catch (e) {
+      LoggingService.logError('Email update failed: ${e.code}', e);
+      throw _getAuthErrorMessage(e);
+    } catch (e) {
+      LoggingService.logError('Email update error', e);
+      rethrow;
+    }
+  }
+
   /// Get user-friendly error message
   String _getAuthErrorMessage(FirebaseAuthException e) {
     switch (e.code) {
@@ -402,6 +658,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         return 'Your account has been disabled. Contact support.';
       case 'too-many-requests':
         return 'Too many attempts. Try again later.';
+      case 'requires-recent-login':
+        return 'This operation requires recent authentication. Please log in again.';
       default:
         return e.message ?? 'An error occurred. Please try again.';
     }

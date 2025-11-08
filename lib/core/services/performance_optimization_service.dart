@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'logging_service.dart';
 
 /// Performance optimization service
 /// Provides caching, memoization, and performance monitoring
@@ -168,24 +169,24 @@ class PerformanceOptimizationService {
   void logPerformanceReport() {
     if (kDebugMode) {
       final report = getPerformanceReport();
-      debugPrint('=== Performance Report ===');
-      debugPrint('Cache size: ${report['cache_size']}');
-      debugPrint('Widgets tracked: ${report['widgets_tracked']}');
-      debugPrint('API endpoints tracked: ${report['api_endpoints_tracked']}');
+      LoggingService.logDebug('=== Performance Report ===');
+      LoggingService.logDebug('Cache size: ${report['cache_size']}');
+      LoggingService.logDebug('Widgets tracked: ${report['widgets_tracked']}');
+      LoggingService.logDebug('API endpoints tracked: ${report['api_endpoints_tracked']}');
 
-      debugPrint('\nAverage Build Times:');
+      LoggingService.logDebug('\nAverage Build Times:');
       final buildTimes = report['average_build_times'] as Map;
       buildTimes.forEach((key, value) {
-        debugPrint('  $key: $value');
+        LoggingService.logDebug('  $key: $value');
       });
 
-      debugPrint('\nAverage API Call Times:');
+      LoggingService.logDebug('\nAverage API Call Times:');
       final apiTimes = report['average_api_times'] as Map;
       apiTimes.forEach((key, value) {
-        debugPrint('  $key: $value');
+        LoggingService.logDebug('  $key: $value');
       });
 
-      debugPrint('=========================');
+      LoggingService.logDebug('=========================');
     }
   }
 

@@ -137,6 +137,6 @@ class FirebaseAdditionalServiceRepository implements AdditionalServiceRepository
   @override
   Future<double> calculateServicesTotal(String bookingId) async {
     final services = await fetchBookingServices(bookingId);
-    return services.fold<double>(0.0, (sum, service) => sum + service.totalPrice);
+    return services.fold<double>(0.0, (total, service) => total + service.totalPrice);
   }
 }

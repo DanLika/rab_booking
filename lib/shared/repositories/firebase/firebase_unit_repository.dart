@@ -9,20 +9,38 @@ class FirebaseUnitRepository implements UnitRepository {
 
   @override
   Future<List<UnitModel>> fetchUnitsByProperty(String propertyId) async {
+    // Units are stored as subcollection under properties/{propertyId}/units
     final snapshot = await _firestore
+        .collection('properties')
+        .doc(propertyId)
         .collection('units')
-        .where('property_id', isEqualTo: propertyId)
         .get();
     return snapshot.docs
-        .map((doc) => UnitModel.fromJson({...doc.data(), 'id': doc.id}))
+        .map((doc) => UnitModel.fromJson({...doc.data(), 'id': doc.id, 'property_id': propertyId}))
         .toList();
   }
 
   @override
   Future<UnitModel?> fetchUnitById(String id) async {
-    final doc = await _firestore.collection('units').doc(id).get();
-    if (!doc.exists) return null;
-    return UnitModel.fromJson({...doc.data()!, 'id': doc.id});
+    // Use collection group query to find unit across all properties
+    // NOTE: Cannot use FieldPath.documentId with collectionGroup without full path
+    // Instead, fetch all units and filter in code
+    final querySnapshot = await _firestore
+        .collectionGroup('units')
+        .get();
+
+    for (final doc in querySnapshot.docs) {
+      if (doc.id == id) {
+        final propertyId = doc.reference.parent.parent?.id;
+        return UnitModel.fromJson({
+          ...doc.data(),
+          'id': doc.id,
+          'property_id': propertyId,
+        });
+      }
+    }
+
+    return null;
   }
 
   @override
@@ -116,11 +134,11 @@ class FirebaseUnitRepository implements UnitRepository {
     var query = _firestore.collection('units').where('id', isNotEqualTo: '');
 
     if (propertyId != null) {
-      query = query.where('property_id', isEqualTo: propertyId) as Query<Map<String, dynamic>>;
+      query = query.where('property_id', isEqualTo: propertyId);
     }
 
     if (availableOnly == true) {
-      query = query.where('is_available', isEqualTo: true) as Query<Map<String, dynamic>>;
+      query = query.where('is_available', isEqualTo: true);
     }
 
     final snapshot = await query.get();

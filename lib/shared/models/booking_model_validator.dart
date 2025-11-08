@@ -86,10 +86,10 @@ extension BookingModelValidator on BookingModel {
     }
 
     // Validate status-specific rules
-    if (status == BookingStatus.cancelled || status == BookingStatus.refunded) {
+    if (status == BookingStatus.cancelled) {
       if (cancellationReason == null || cancellationReason!.trim().isEmpty) {
         throw const BookingValidationException(
-          'Cancellation reason is required for cancelled/refunded bookings',
+          'Cancellation reason is required for cancelled bookings',
         );
       }
     }
@@ -109,7 +109,7 @@ extension BookingModelValidator on BookingModel {
       throw const BookingValidationException('Unit ID cannot be empty');
     }
 
-    if (userId.trim().isEmpty) {
+    if (userId?.trim().isEmpty ?? true) {
       throw const BookingValidationException('User ID cannot be empty');
     }
   }

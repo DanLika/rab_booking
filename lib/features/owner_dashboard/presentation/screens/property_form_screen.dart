@@ -4,12 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/slug_utils.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/owner_properties_provider.dart';
-import '../../../../core/theme/app_colors.dart';
 
-/// Property form screen for add/edit
+/// Modern Property form screen for add/edit with enhanced UI
 class PropertyFormScreen extends ConsumerStatefulWidget {
   const PropertyFormScreen({this.property, super.key});
 
@@ -22,6 +27,7 @@ class PropertyFormScreen extends ConsumerStatefulWidget {
 class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _slugController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
   final _addressController = TextEditingController();
@@ -32,6 +38,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
   List<String> _existingImages = [];
   bool _isPublished = false;
   bool _isLoading = false;
+  bool _isManualSlugEdit = false;
 
   bool get _isEditing => widget.property != null;
 
@@ -46,6 +53,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
   void _loadPropertyData() {
     final property = widget.property!;
     _nameController.text = property.name;
+    _slugController.text = property.slug ?? generateSlug(property.name);
     _descriptionController.text = property.description;
     _selectedType = property.propertyType;
     _locationController.text = property.location;
@@ -53,169 +61,400 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
     _selectedAmenities = property.amenities.toSet();
     _existingImages = property.images.toList();
     _isPublished = property.isActive;
+    _isManualSlugEdit = property.slug != null;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _slugController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
     _addressController.dispose();
     super.dispose();
   }
 
+  void _autoGenerateSlug() {
+    if (!_isManualSlugEdit && _nameController.text.isNotEmpty) {
+      _slugController.text = generateSlug(_nameController.text);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Uredi Nekretninu' : 'Dodaj Nekretninu'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          // Gradient Header
+          Container(
+            height: 200,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF6B4CE6), // Purple
+                  Color(0xFF4A90E2), // Blue
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(isMobile ? 16 : 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 60), // Space for AppBar
+                    Row(
+                      children: [
+                        // Icon
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.apartment,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Title
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _isEditing ? 'Uredi Nekretninu' : 'Nova Nekretnina',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _isEditing ? 'Ažuriraj podatke o nekretnini' : 'Dodaj novu nekretninu u sistem',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Form Content
+          Form(
+            key: _formKey,
+            child: ListView(
+              padding: EdgeInsets.only(
+                top: 180,
+                left: isMobile ? 16 : 24,
+                right: isMobile ? 16 : 24,
+                bottom: 24,
+              ),
+              children: [
+                // Basic Info Section
+                _buildSection(
+                  context,
+                  title: 'Osnovne Informacije',
+                  icon: Icons.info_outline,
+                  children: [
+                    // Property Name
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Naziv nekretnine *',
+                        hintText: 'npr. Villa Mediteran',
+                        isMobile: isMobile,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Naziv je obavezan';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) => _autoGenerateSlug(),
+                    ),
+                    const SizedBox(height: AppDimensions.spaceM),
+                    // URL Slug
+                    TextFormField(
+                      controller: _slugController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'URL Slug',
+                        hintText: 'villa-mediteran',
+                        helperText: 'SEO-friendly URL: /booking/{slug}',
+                        isMobile: isMobile,
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.refresh),
+                          tooltip: 'Regeneriši iz naziva',
+                          onPressed: () {
+                            setState(() {
+                              _isManualSlugEdit = false;
+                              _autoGenerateSlug();
+                            });
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Slug je obavezan';
+                        }
+                        if (!isValidSlug(value)) {
+                          return 'Slug može sadržavati samo mala slova, brojeve i crtice';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) {
+                        if (value.isNotEmpty) {
+                          setState(() => _isManualSlugEdit = true);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: AppDimensions.spaceM),
+                    // Property Type
+                    DropdownButtonFormField<PropertyType>(
+                      value: _selectedType,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Tip nekretnine *',
+                        isMobile: isMobile,
+                      ),
+                      items: PropertyType.values.map((type) {
+                        return DropdownMenuItem(
+                          value: type,
+                          child: Text(type.displayNameHR),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedType = value);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: AppDimensions.spaceM),
+                    // Description
+                    TextFormField(
+                      controller: _descriptionController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Opis *',
+                        hintText: 'Detaljno opišite vašu nekretninu...',
+                        isMobile: isMobile,
+                      ),
+                      maxLines: 5,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Opis je obavezan';
+                        }
+                        if (value.length < 100) {
+                          return 'Opis mora imati najmanje 100 znakova (trenutno: ${value.length})';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.spaceL),
+
+                // Location Section
+                _buildSection(
+                  context,
+                  title: 'Lokacija',
+                  icon: Icons.location_on,
+                  children: [
+                    TextFormField(
+                      controller: _locationController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Lokacija *',
+                        hintText: 'npr. Rab (grad), Otok Rab',
+                        prefixIcon: const Icon(Icons.location_on),
+                        isMobile: isMobile,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Lokacija je obavezna';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppDimensions.spaceM),
+                    TextFormField(
+                      controller: _addressController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Adresa',
+                        hintText: 'Ulica i broj',
+                        prefixIcon: const Icon(Icons.home),
+                        isMobile: isMobile,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.spaceL),
+
+                // Amenities Section
+                _buildSection(
+                  context,
+                  title: 'Sadržaji',
+                  icon: Icons.local_offer,
+                  children: [
+                    _buildAmenitiesGrid(),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.spaceL),
+
+                // Images Section
+                _buildSection(
+                  context,
+                  title: 'Fotografije ${_isEditing ? '' : '(min 3)'}',
+                  icon: Icons.photo_library,
+                  children: [
+                    _buildImagesSection(),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.spaceL),
+
+                // Settings Section
+                _buildSection(
+                  context,
+                  title: 'Postavke',
+                  icon: Icons.settings,
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Objavi odmah'),
+                      subtitle: Text(
+                        _isPublished
+                            ? 'Nekretnina će biti vidljiva korisnicima'
+                            : 'Nekretnina će biti skrivena',
+                      ),
+                      value: _isPublished,
+                      onChanged: (value) => setState(() => _isPublished = value),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.spaceL),
+
+                // Save Button
+                FilledButton(
+                  onPressed: _isLoading ? null : _handleSave,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: const Color(0xFF6B4CE6),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          _isEditing ? 'Spremi Izmjene' : 'Dodaj Nekretninu',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                ),
+                const SizedBox(height: AppDimensions.spaceXL),
+          ],
+        ),
+      ),
+          // Loading Overlay
+          if (_isLoading)
+            Container(
+              color: Colors.black.withAlpha((0.5 * 255).toInt()),
+              child: const Center(
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Čuvanje...', style: TextStyle(fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper: Build a section card with title and icon
+  Widget _buildSection(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    final theme = Theme.of(context);
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Property Name
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Naziv nekretnine *',
-                hintText: 'npr. Villa Mediteran',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Naziv je obavezan';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Property Type
-            DropdownButtonFormField<PropertyType>(
-              initialValue: _selectedType,
-              decoration: const InputDecoration(
-                labelText: 'Tip nekretnine *',
-                border: OutlineInputBorder(),
-              ),
-              items: PropertyType.values.map((type) {
-                return DropdownMenuItem(
-                  value: type,
-                  child: Text(type.displayNameHR),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedType = value);
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Description
-            TextFormField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Opis *',
-                hintText: 'Detaljno opišite vašu nekretninu...',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
-              ),
-              maxLines: 5,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Opis je obavezan';
-                }
-                if (value.length < 100) {
-                  return 'Opis mora imati najmanje 100 znakova (trenutno: ${value.length})';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Location
-            TextFormField(
-              controller: _locationController,
-              decoration: const InputDecoration(
-                labelText: 'Lokacija *',
-                hintText: 'npr. Rab (grad), Otok Rab',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.location_on),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Lokacija je obavezna';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Address
-            TextFormField(
-              controller: _addressController,
-              decoration: const InputDecoration(
-                labelText: 'Adresa',
-                hintText: 'Ulica i broj',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.home),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Amenities section
-            Text(
-              'Sadržaji',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            // Section Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            _buildAmenitiesGrid(),
-            const SizedBox(height: 24),
-
-            // Images section
-            Text(
-              'Fotografije ${_isEditing ? '' : '(min 3)'}',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            _buildImagesSection(),
-            const SizedBox(height: 24),
-
-            // Published toggle
-            SwitchListTile(
-              title: const Text('Objavi odmah'),
-              subtitle: Text(
-                _isPublished
-                    ? 'Nekretnina će biti vidljiva korisnicima'
-                    : 'Nekretnina će biti skrivena',
-              ),
-              value: _isPublished,
-              onChanged: (value) => setState(() => _isPublished = value),
-              contentPadding: EdgeInsets.zero,
-            ),
-            const SizedBox(height: 24),
-
-            // Save button
-            FilledButton(
-              onPressed: _isLoading ? null : _handleSave,
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.all(16),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(_isEditing ? 'Spremi Izmjene' : 'Dodaj Nekretninu'),
-            ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
+            // Section Content
+            ...children,
           ],
         ),
       ),
@@ -223,6 +462,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
   }
 
   Widget _buildAmenitiesGrid() {
+    final theme = Theme.of(context);
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -232,7 +473,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           label: Text(
             amenity.displayName,
             style: TextStyle(
-              color: isSelected ? Colors.white : Colors.grey[800],
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurface,
             ),
           ),
           selected: isSelected,
@@ -248,7 +491,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           avatar: Icon(
             _getAmenityIcon(amenity.iconName),
             size: 18,
-            color: isSelected ? Colors.white : Colors.grey[700],
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
           ),
         );
       }).toList(),
@@ -297,7 +542,10 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             totalImages == 0 ? 'Dodaj fotografije (min 3)' : 'Dodaj još fotografija',
           ),
           style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
 
@@ -307,7 +555,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             child: Text(
               'Ukupno: $totalImages fotografija',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textColorSecondary,
                   ),
             ),
           ),
@@ -316,24 +564,31 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
   }
 
   Widget _buildExistingImageCard(String imageUrl, int index) {
+    final theme = Theme.of(context);
+
     return Stack(
       children: [
         Container(
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.borderLight),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
+            ),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             child: Image.network(
               imageUrl,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  color: AppColors.surfaceVariantLight,
-                  child: const Icon(Icons.broken_image),
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.broken_image,
+                    color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                  ),
                 );
               },
             ),
@@ -348,7 +603,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             },
             icon: const Icon(Icons.close, size: 16),
             style: IconButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: theme.colorScheme.error,
               padding: EdgeInsets.zero,
               minimumSize: const Size(24, 24),
             ),
@@ -359,23 +614,31 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
   }
 
   Widget _buildNewImageCard(XFile image, int index) {
+    final theme = Theme.of(context);
+
     return Stack(
       children: [
         Container(
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.borderLight),
-            color: AppColors.surfaceVariantLight,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
+            ),
+            color: theme.colorScheme.surfaceContainerHighest,
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             child: Image.file(
               File(image.path),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.broken_image, size: 40);
+                return Icon(
+                  Icons.broken_image,
+                  size: 40,
+                  color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                );
               },
             ),
           ),
@@ -389,7 +652,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             },
             icon: const Icon(Icons.close, size: 16),
             style: IconButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: theme.colorScheme.error,
               padding: EdgeInsets.zero,
               minimumSize: const Size(24, 24),
             ),
@@ -417,10 +680,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
 
     final totalImages = _existingImages.length + _selectedImages.length;
     if (!_isEditing && totalImages < 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Morate dodati najmanje 3 fotografije'),
-        ),
+      ErrorDisplayUtils.showWarningSnackBar(
+        context,
+        'Morate dodati najmanje 3 fotografije',
       );
       return;
     }
@@ -438,15 +700,13 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
       final repository = ref.read(ownerPropertiesRepositoryProvider);
 
       // Upload new images to Firebase Storage
-      List<String> uploadedImageUrls = [];
+      final List<String> uploadedImageUrls = [];
       if (_selectedImages.isNotEmpty) {
         try {
-          // Generate temporary property ID for new properties
           final propertyId = _isEditing
               ? widget.property!.id
               : 'temp-${DateTime.now().millisecondsSinceEpoch}';
 
-          // Upload images one by one
           for (int i = 0; i < _selectedImages.length; i++) {
             final image = _selectedImages[i];
             final bytes = await image.readAsBytes();
@@ -459,23 +719,20 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
 
             uploadedImageUrls.add(imageUrl);
 
-            // Show upload progress
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Uploading images: ${i + 1}/${_selectedImages.length}'),
-                  duration: const Duration(milliseconds: 500),
-                ),
+              ErrorDisplayUtils.showInfoSnackBar(
+                context,
+                'Upload fotografija: ${i + 1}/${_selectedImages.length}',
+                duration: const Duration(milliseconds: 500),
               );
             }
           }
         } catch (e) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Greška pri upload-u slika: $e'),
-                backgroundColor: AppColors.error,
-              ),
+            ErrorDisplayUtils.showErrorSnackBar(
+              context,
+              e,
+              userMessage: 'Greška pri uploadu fotografija',
             );
           }
           setState(() => _isLoading = false);
@@ -486,10 +743,10 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
       final allImages = [..._existingImages, ...uploadedImageUrls];
 
       if (_isEditing) {
-        // Update existing property
         await repository.updateProperty(
           propertyId: widget.property!.id,
           name: _nameController.text,
+          slug: _slugController.text,
           description: _descriptionController.text,
           propertyType: _selectedType.value,
           location: _locationController.text,
@@ -502,10 +759,10 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           isActive: _isPublished,
         );
       } else {
-        // Create new property
         await repository.createProperty(
           ownerId: ownerId,
           name: _nameController.text,
+          slug: _slugController.text,
           description: _descriptionController.text,
           propertyType: _selectedType.value,
           location: _locationController.text,
@@ -519,25 +776,25 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
         );
       }
 
-      // Refresh properties list
       ref.invalidate(ownerPropertiesProvider);
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isEditing
-                  ? 'Nekretnina uspješno ažurirana'
-                  : 'Nekretnina uspješno dodana',
-            ),
-          ),
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          _isEditing
+              ? 'Nekretnina uspješno ažurirana'
+              : 'Nekretnina uspješno dodana',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Greška: $e')),
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: _isEditing
+              ? 'Greška pri ažuriranju nekretnine'
+              : 'Greška pri dodavanju nekretnine',
         );
       }
     } finally {

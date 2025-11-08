@@ -205,10 +205,11 @@ class UserProfileRepository {
       CompanyDetails? company;
 
       for (final doc in snapshot.docs) {
-        if (doc.id == 'profile' && doc.data() != null) {
-          profile = UserProfile.fromFirestore(userId, doc.data());
-        } else if (doc.id == 'company' && doc.data() != null) {
-          company = CompanyDetails.fromFirestore(doc.data());
+        final data = doc.data();
+        if (doc.id == 'profile') {
+          profile = UserProfile.fromFirestore(userId, data);
+        } else if (doc.id == 'company') {
+          company = CompanyDetails.fromFirestore(data);
         }
       }
 

@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import '../exceptions/app_exceptions.dart';
-// import '../services/analytics_service.dart'; // TODO: Implement Firebase Analytics service
+import '../services/logging_service.dart';
 
 /// Utility class for handling errors and converting them to user-friendly messages
 class ErrorHandler {
@@ -51,23 +52,22 @@ class ErrorHandler {
 
   /// Log error to console in debug mode and to error tracking service in production
   static Future<void> logError(dynamic error, StackTrace? stackTrace) async {
-    // Log to console in debug mode
-    debugPrint('Error: $error');
-    if (stackTrace != null) {
-      debugPrint('StackTrace: $stackTrace');
-    }
+    // Log using LoggingService
+    await LoggingService.logError('ErrorHandler caught error', error, stackTrace);
 
     // In production, send to error tracking service
     if (kReleaseMode) {
-      // TODO: Implement Firebase Analytics/Crashlytics
-      // Send to error tracking services (Sentry, Firebase Crashlytics)
-      // await AnalyticsService.reportError(
-      //   error,
-      //   stackTrace,
-      //   extra: {
-      //     'source': 'ErrorHandler',
-      //     'user_friendly_message': getUserFriendlyMessage(error),
-      //   },
+      // Send to Firebase Crashlytics
+      await FirebaseCrashlytics.instance.recordError(
+        error,
+        stackTrace,
+        reason: 'ErrorHandler caught error',
+        information: [
+          'source: ErrorHandler',
+          'user_friendly_message: ${getUserFriendlyMessage(error)}',
+        ],
+        printDetails: false,
+      );
       // );
     }
   }

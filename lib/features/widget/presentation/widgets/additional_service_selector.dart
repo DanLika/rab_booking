@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/additional_service_model.dart';
 import '../providers/booking_flow_provider.dart';
-import '../theme/bedbooking_theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 
 /// Additional service selector with quantity counter
 class AdditionalServiceSelector extends ConsumerWidget {
@@ -19,9 +19,16 @@ class AdditionalServiceSelector extends ConsumerWidget {
     final quantity = selectedServices[service.id] ?? 0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BedBookingCards.borderedCard,
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      margin: const EdgeInsets.only(bottom: SpacingTokens.s),
+      decoration: BoxDecoration(
+        color: ColorTokens.light.backgroundCard,
+        borderRadius: BorderTokens.circularSmall,
+        border: Border.all(
+          color: ColorTokens.light.borderDefault,
+          width: BorderTokens.widthThin,
+        ),
+      ),
       child: Row(
         children: [
           // Service name and price
@@ -31,12 +38,21 @@ class AdditionalServiceSelector extends ConsumerWidget {
               children: [
                 Text(
                   service.name,
-                  style: BedBookingTextStyles.bodyBold,
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeS,
+                    fontWeight: FontWeight.w600,
+                    color: ColorTokens.light.textPrimary,
+                    fontFamily: TypographyTokens.primaryFont,
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: SpacingTokens.xxs),
                 Text(
                   _getPriceText(),
-                  style: BedBookingTextStyles.small,
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeXS,
+                    color: ColorTokens.light.textSecondary,
+                    fontFamily: TypographyTokens.primaryFont,
+                  ),
                 ),
               ],
             ),
@@ -59,23 +75,23 @@ class AdditionalServiceSelector extends ConsumerWidget {
                       }
                     : null,
                 icon: Container(
-                  width: 32,
-                  height: 32,
+                  width: ConstraintTokens.minTouchTarget,
+                  height: ConstraintTokens.minTouchTarget,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: quantity > 0
-                          ? BedBookingColors.textDark
-                          : BedBookingColors.borderGrey,
-                      width: 2,
+                          ? ColorTokens.light.textPrimary
+                          : ColorTokens.light.borderDefault,
+                      width: BorderTokens.widthMedium,
                     ),
                   ),
                   child: Icon(
                     Icons.remove,
-                    size: 20,
+                    size: TypographyTokens.fontSizeXXL,
                     color: quantity > 0
-                        ? BedBookingColors.textDark
-                        : BedBookingColors.textGrey,
+                        ? ColorTokens.light.textPrimary
+                        : ColorTokens.light.textSecondary,
                   ),
                 ),
                 padding: EdgeInsets.zero,
@@ -87,7 +103,12 @@ class AdditionalServiceSelector extends ConsumerWidget {
                 alignment: Alignment.center,
                 child: Text(
                   '$quantity',
-                  style: BedBookingTextStyles.bodyBold,
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeS,
+                    fontWeight: FontWeight.w600,
+                    color: ColorTokens.light.textPrimary,
+                    fontFamily: TypographyTokens.primaryFont,
+                  ),
                 ),
               ),
 
@@ -99,19 +120,19 @@ class AdditionalServiceSelector extends ConsumerWidget {
                   ref.read(selectedServicesProvider.notifier).state = updated;
                 },
                 icon: Container(
-                  width: 32,
-                  height: 32,
+                  width: ConstraintTokens.minTouchTarget,
+                  height: ConstraintTokens.minTouchTarget,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: BedBookingColors.textDark,
-                      width: 2,
+                      color: ColorTokens.light.textPrimary,
+                      width: BorderTokens.widthMedium,
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.add,
-                    size: 20,
-                    color: BedBookingColors.textDark,
+                    size: TypographyTokens.fontSizeXXL,
+                    color: ColorTokens.light.textPrimary,
                   ),
                 ),
                 padding: EdgeInsets.zero,

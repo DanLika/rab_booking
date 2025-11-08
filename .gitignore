@@ -65,6 +65,10 @@ supabase/.branches
 *.keystore
 android/key.properties
 
+# Firebase Service Account Keys - NEVER COMMIT!
+firebase-service-account-key.json
+*service-account*.json
+
 # Documentation and debug files
 *.md
 !README.md

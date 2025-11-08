@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import '../services/logging_service.dart';
 
 /// Performance tracker for measuring operation durations
 ///
@@ -82,7 +83,7 @@ class PerformanceLogger {
 
     // Log in debug mode
     if (kDebugMode) {
-      debugPrint('⏱️ Performance [$name]: ${durationMs}ms');
+      LoggingService.logPerformance(name, Duration(milliseconds: durationMs));
     }
   }
 
@@ -118,12 +119,12 @@ class PerformanceLogger {
   /// Log summary of all metrics
   static void logSummary() {
     if (_metrics.isEmpty) {
-      debugPrint('📊 No performance metrics collected');
+      LoggingService.logDebug('📊 No performance metrics collected');
       return;
     }
 
-    debugPrint('📊 Performance Summary:');
-    debugPrint('=' * 60);
+    LoggingService.logDebug('📊 Performance Summary:');
+    LoggingService.logDebug('=' * 60);
 
     _metrics.forEach((name, durations) {
       final avg = getAverage(name);
@@ -131,15 +132,15 @@ class PerformanceLogger {
       final min = getMin(name);
       final count = getCount(name);
 
-      debugPrint('[$name]');
-      debugPrint('  Calls: $count');
-      debugPrint('  Avg: ${avg?.toStringAsFixed(2)}ms');
-      debugPrint('  Min: ${min}ms');
-      debugPrint('  Max: ${max}ms');
-      debugPrint('');
+      LoggingService.logDebug('[$name]');
+      LoggingService.logDebug('  Calls: $count');
+      LoggingService.logDebug('  Avg: ${avg?.toStringAsFixed(2)}ms');
+      LoggingService.logDebug('  Min: ${min}ms');
+      LoggingService.logDebug('  Max: ${max}ms');
+      LoggingService.logDebug('');
     });
 
-    debugPrint('=' * 60);
+    LoggingService.logDebug('=' * 60);
   }
 
   /// Clear all metrics
@@ -280,7 +281,7 @@ class AppPerformanceObserver extends WidgetsBindingObserver {
       final fps = _frameCount / seconds;
 
       if (kDebugMode) {
-        debugPrint('📊 Average FPS: ${fps.toStringAsFixed(2)}');
+        LoggingService.logDebug('📊 Average FPS: ${fps.toStringAsFixed(2)}');
       }
 
       PerformanceLogger.logMetric('app.fps', fps.round());
@@ -293,7 +294,7 @@ class AppPerformanceObserver extends WidgetsBindingObserver {
   @override
   void didHaveMemoryPressure() {
     if (kDebugMode) {
-      debugPrint('⚠️ Memory pressure detected');
+      LoggingService.logWarning('Memory pressure detected');
     }
   }
 }

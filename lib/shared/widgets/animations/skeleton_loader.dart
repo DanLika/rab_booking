@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/responsive_utils.dart';
 
 /// Skeleton loader with shimmer effect
 /// Replaces CircularProgressIndicator for better UX
@@ -25,6 +24,9 @@ class SkeletonLoader extends StatefulWidget {
 
   /// Stats cards skeleton (for profile page)
   static Widget statsCards() => const StatsCardsSkeleton();
+
+  /// Calendar skeleton (for timeline/month/week calendar views)
+  static Widget calendar() => const CalendarSkeleton();
 
   @override
   State<SkeletonLoader> createState() => _SkeletonLoaderState();
@@ -379,19 +381,19 @@ class BookingCardSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(AppDimensions.spaceS),
+      padding: const EdgeInsets.all(AppDimensions.spaceS),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (matches real card)
         border: Border.all(color: Colors.grey[200]!),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Property info
           Row(
             children: [
-              const SkeletonLoader(
+              SkeletonLoader(
                 width: 100,
                 height: 100,
                 borderRadius: 12,
@@ -401,9 +403,9 @@ class BookingCardSkeleton extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SkeletonLoader(width: double.infinity, height: 16),
+                    SkeletonLoader(width: double.infinity, height: 16),
                     SizedBox(height: AppDimensions.spaceXS),
-                    const SkeletonLoader(width: 150, height: 14),
+                    SkeletonLoader(width: 150, height: 14),
                   ],
                 ),
               ),
@@ -412,15 +414,15 @@ class BookingCardSkeleton extends StatelessWidget {
           SizedBox(height: AppDimensions.spaceS),
 
           // Booking details
-          const SkeletonLoader(width: 180, height: 14),
+          SkeletonLoader(width: 180, height: 14),
           SizedBox(height: AppDimensions.spaceXS),
-          const SkeletonLoader(width: 140, height: 14),
+          SkeletonLoader(width: 140, height: 14),
           SizedBox(height: AppDimensions.spaceXS),
-          const SkeletonLoader(width: 100, height: 14),
+          SkeletonLoader(width: 100, height: 14),
           SizedBox(height: AppDimensions.spaceS),
 
           // Status badge
-          const SkeletonLoader(
+          SkeletonLoader(
             width: 100,
             height: 32,
             borderRadius: 16,
@@ -586,6 +588,106 @@ class StatsCardsSkeleton extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Calendar skeleton loader - mimics timeline/month calendar layout
+class CalendarSkeleton extends StatelessWidget {
+  const CalendarSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Calendar header (toolbar) skeleton
+        Container(
+          padding: const EdgeInsets.all(AppDimensions.spaceS),
+          child: Row(
+            children: [
+              const SkeletonLoader(width: 120, height: 40, borderRadius: 20),
+              const Spacer(),
+              Row(
+                children: List.generate(
+                  3,
+                  (index) => const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: SkeletonLoader(width: 40, height: 40, borderRadius: 20),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: AppDimensions.spaceS),
+
+        // Calendar days header skeleton
+        Row(
+          children: List.generate(
+            7,
+            (index) => Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                alignment: Alignment.center,
+                child: const SkeletonLoader(width: 40, height: 14),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: AppDimensions.spaceXS),
+
+        // Calendar grid skeleton (5 weeks)
+        Expanded(
+          child: Column(
+            children: List.generate(
+              5,
+              (weekIndex) => Expanded(
+                child: Row(
+                  children: List.generate(
+                    7,
+                    (dayIndex) => Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(AppDimensions.radiusXS),
+                          border: Border.all(color: Colors.grey[200]!),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Day number
+                            const Padding(
+                              padding: EdgeInsets.all(4),
+                              child: SkeletonLoader(
+                                width: 20,
+                                height: 14,
+                                borderRadius: 4,
+                              ),
+                            ),
+                            // Booking indicator skeleton (optional)
+                            if (weekIndex < 3 && dayIndex % 2 == 0)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4),
+                                child: SkeletonLoader(
+                                  width: double.infinity,
+                                  height: 20,
+                                  borderRadius: AppDimensions.radiusXS,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

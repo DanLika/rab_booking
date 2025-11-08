@@ -25,7 +25,7 @@ class FirebaseAnalyticsRepository {
       }
 
       // Get all units for these properties from subcollections
-      List<String> unitIds = [];
+      final List<String> unitIds = [];
       for (final propertyId in propertyIds) {
         final unitsSnapshot = await _firestore
             .collection('properties')
@@ -40,7 +40,7 @@ class FirebaseAnalyticsRepository {
       }
 
       // Get bookings within date range (in batches)
-      List<Map<String, dynamic>> bookings = [];
+      final List<Map<String, dynamic>> bookings = [];
       for (int i = 0; i < unitIds.length; i += 10) {
         final batch = unitIds.skip(i).take(10).toList();
         final bookingsSnapshot = await _firestore
@@ -61,7 +61,7 @@ class FirebaseAnalyticsRepository {
       // Calculate metrics
       final totalRevenue = bookings.fold<double>(
         0.0,
-        (sum, b) => sum + ((b['total_price'] as num?)?.toDouble() ?? 0.0),
+        (total, b) => total + ((b['total_price'] as num?)?.toDouble() ?? 0.0),
       );
 
       final totalBookings = bookings.length;
@@ -75,17 +75,17 @@ class FirebaseAnalyticsRepository {
 
       final monthlyRevenue = monthlyBookings.fold<double>(
         0.0,
-        (sum, b) => sum + ((b['total_price'] as num?)?.toDouble() ?? 0.0),
+        (total, b) => total + ((b['total_price'] as num?)?.toDouble() ?? 0.0),
       );
 
       // Calculate occupancy rate
       final totalDaysInRange = dateRange.endDate.difference(dateRange.startDate).inDays;
       final bookedDays = bookings.fold<int>(
         0,
-        (sum, b) {
+        (total, b) {
           final checkIn = (b['check_in'] as Timestamp).toDate();
           final checkOut = (b['check_out'] as Timestamp).toDate();
-          return sum + checkOut.difference(checkIn).inDays;
+          return total + checkOut.difference(checkIn).inDays;
         },
       );
       final availableDays = totalDaysInRange * unitIds.length;
@@ -95,7 +95,7 @@ class FirebaseAnalyticsRepository {
       final averageNightlyRate = bookedDays > 0 ? totalRevenue / bookedDays : 0.0;
 
       // Get cancelled bookings for cancellation rate
-      List<Map<String, dynamic>> cancelledBookings = [];
+      final List<Map<String, dynamic>> cancelledBookings = [];
       for (int i = 0; i < unitIds.length; i += 10) {
         final batch = unitIds.skip(i).take(10).toList();
         final cancelledSnapshot = await _firestore
@@ -278,15 +278,15 @@ class FirebaseAnalyticsRepository {
 
       final revenue = bookings.fold<double>(
         0.0,
-        (sum, b) => sum + ((b['total_price'] as num?)?.toDouble() ?? 0.0),
+        (total, b) => total + ((b['total_price'] as num?)?.toDouble() ?? 0.0),
       );
 
       final bookedDays = bookings.fold<int>(
         0,
-        (sum, b) {
+        (total, b) {
           final checkIn = (b['check_in'] as Timestamp).toDate();
           final checkOut = (b['check_out'] as Timestamp).toDate();
-          return sum + checkOut.difference(checkIn).inDays;
+          return total + checkOut.difference(checkIn).inDays;
         },
       );
 

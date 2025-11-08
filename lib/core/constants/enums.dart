@@ -105,7 +105,10 @@ enum PropertyAmenity {
   bicycleRental('bicycle_rental'),
 
   /// Boat mooring
-  boatMooring('boat_mooring');
+  boatMooring('boat_mooring'),
+
+  /// Restaurant on-site
+  restaurant('restaurant');
 
   const PropertyAmenity(this.value);
 
@@ -154,6 +157,8 @@ enum PropertyAmenity {
         return 'Bicycle Rental';
       case PropertyAmenity.boatMooring:
         return 'Boat Mooring';
+      case PropertyAmenity.restaurant:
+        return 'Restaurant';
     }
   }
 
@@ -200,6 +205,8 @@ enum PropertyAmenity {
         return 'pedal_bike';
       case PropertyAmenity.boatMooring:
         return 'sailing';
+      case PropertyAmenity.restaurant:
+        return 'restaurant';
     }
   }
 

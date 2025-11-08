@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-// import 'analytics_service.dart'; // TODO: Implement Firebase Analytics service
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 /// Service for logging messages throughout the application
 ///
@@ -38,16 +38,14 @@ class LoggingService {
 
     // In production, send to error tracking service
     if (kReleaseMode && error != null) {
-      // TODO: Implement Firebase Analytics/Crashlytics
-      // Send to error tracking services (Sentry, Firebase Crashlytics)
-      // await AnalyticsService.reportError(
-      //   error,
-      //   stackTrace,
-      //   extra: {
-      //     'source': 'LoggingService',
-      //     'log_message': message,
-      //   },
-      // );
+      // Send to Firebase Crashlytics
+      await FirebaseCrashlytics.instance.recordError(
+        error,
+        stackTrace,
+        reason: message,
+        information: ['source: LoggingService'],
+        printDetails: false,
+      );
     }
   }
 
@@ -99,6 +97,30 @@ class LoggingService {
   static void logPerformance(String operation, Duration duration) {
     if (kDebugMode) {
       log('$operation took ${duration.inMilliseconds}ms', tag: 'PERFORMANCE');
+    }
+  }
+
+  /// Log success message with ✅ indicator
+  static void logSuccess(String message, {String? tag}) {
+    log('✅ $message', tag: tag);
+  }
+
+  /// Log operation start with 🔵 indicator
+  static void logOperation(String message, {String? tag}) {
+    log('🔵 $message', tag: tag);
+  }
+
+  /// Log cache operation
+  static void logCache(String message) {
+    if (kDebugMode) {
+      log(message, tag: 'CACHE');
+    }
+  }
+
+  /// Log SEO operation
+  static void logSEO(String message) {
+    if (kDebugMode) {
+      log(message, tag: 'SEO');
     }
   }
 }

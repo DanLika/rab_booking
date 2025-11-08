@@ -1,55 +1,88 @@
 import 'package:flutter/material.dart';
+import '../../presentation/theme/minimalist_colors.dart';
 
 /// Status of a date in the calendar
 enum DateStatus {
   available,
   booked,
+  pending, // Pending approval - shown in orange
   blocked,
   partialCheckIn,
   partialCheckOut,
+  disabled, // Past dates that cannot be selected
 }
 
 /// Extension to get color for each status
+/// Colors based on Minimalist Design System (black/white/grey palette)
 extension DateStatusExtension on DateStatus {
   Color getColor() {
     switch (this) {
       case DateStatus.available:
-        return const Color(0xFFC8E6C9); // Light green matching reference
+        return MinimalistColors.statusAvailableBackground; // Light green
       case DateStatus.booked:
-        return const Color(0xFFFFCDD2); // Light pink matching reference
+        return MinimalistColors.statusBookedBackground; // Light red
+      case DateStatus.pending:
+        return MinimalistColors.statusPendingBackground; // Light amber
       case DateStatus.blocked:
-        return const Color(0xFFE0E0E0); // Light gray for invalid days
+        return MinimalistColors.backgroundTertiary; // Light grey
       case DateStatus.partialCheckIn:
-        return const Color(0xFFC8E6C9); // Use available color as base
+        return MinimalistColors.statusAvailableBackground; // Light green
       case DateStatus.partialCheckOut:
-        return const Color(0xFFC8E6C9); // Use available color as base
+        return MinimalistColors.statusAvailableBackground; // Light green
+      case DateStatus.disabled:
+        return MinimalistColors.backgroundTertiary; // Light grey
     }
   }
 
   Color getBorderColor() {
     switch (this) {
       case DateStatus.available:
-        return const Color(0xFFDCDCDC); // Subtle border
+        return MinimalistColors.statusAvailableBorder; // Green border
       case DateStatus.booked:
-        return const Color(0xFFDCDCDC); // Subtle border
+        return MinimalistColors.statusBookedBorder; // Red border
+      case DateStatus.pending:
+        return MinimalistColors.statusPendingBorder; // Amber border
       case DateStatus.blocked:
-        return const Color(0xFFDCDCDC); // Subtle border
+        return MinimalistColors.borderDefault; // Light grey border
       case DateStatus.partialCheckIn:
-        return const Color(0xFFDCDCDC); // Subtle border
+        return MinimalistColors.statusAvailableBorder; // Green border
       case DateStatus.partialCheckOut:
-        return const Color(0xFFDCDCDC); // Subtle border
+        return MinimalistColors.statusAvailableBorder; // Green border
+      case DateStatus.disabled:
+        return MinimalistColors.borderDefault; // Light grey border
     }
   }
 
   Color getDiagonalColor() {
     // Color for diagonal line on check-in/check-out days
+    // When guest checks in/out, the other half is booked (red)
     switch (this) {
       case DateStatus.partialCheckIn:
-        return const Color(0xFFFFCDD2); // Pink for booked part
+        return MinimalistColors.statusBookedBackground; // Light red for booked part
       case DateStatus.partialCheckOut:
-        return const Color(0xFFFFCDD2); // Pink for booked part
+        return MinimalistColors.statusBookedBackground; // Light red for booked part
       default:
         return Colors.transparent;
+    }
+  }
+
+  /// Get display name for legend
+  String getDisplayName() {
+    switch (this) {
+      case DateStatus.available:
+        return 'Available';
+      case DateStatus.booked:
+        return 'Booked';
+      case DateStatus.pending:
+        return 'Pending Approval';
+      case DateStatus.blocked:
+        return 'Blocked';
+      case DateStatus.partialCheckIn:
+        return 'Check-in';
+      case DateStatus.partialCheckOut:
+        return 'Check-out';
+      case DateStatus.disabled:
+        return 'Past Date';
     }
   }
 }

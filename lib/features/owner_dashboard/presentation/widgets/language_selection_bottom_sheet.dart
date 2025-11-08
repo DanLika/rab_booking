@@ -2,72 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/language_provider.dart';
 
-/// Language model for display
-class LanguageOption {
-  final String code;
-  final String nativeName;
-  final String flag;
-
-  const LanguageOption({
-    required this.code,
-    required this.nativeName,
-    required this.flag,
-  });
-}
-
-/// Available languages
-const List<LanguageOption> availableLanguages = [
-  LanguageOption(
-    code: 'en',
-    nativeName: 'English',
-    flag: '🇬🇧',
-  ),
-  LanguageOption(
-    code: 'hr',
-    nativeName: 'Hrvatski',
-    flag: '🇭🇷',
-  ),
-];
-
 /// Show language selection bottom sheet
-Future<void> showLanguageSelectionBottomSheet(
-  BuildContext context,
-  WidgetRef ref,
-) async {
-  await showModalBottomSheet(
+void showLanguageSelectionBottomSheet(BuildContext context, WidgetRef ref) {
+  showModalBottomSheet(
     context: context,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (context) => const LanguageSelectionBottomSheet(),
   );
 }
 
-/// Language Selection Bottom Sheet
+/// Language selection bottom sheet widget
 class LanguageSelectionBottomSheet extends ConsumerWidget {
   const LanguageSelectionBottomSheet({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentLocale = ref.watch(currentLocaleProvider);
-    final currentLanguageCode = currentLocale.languageCode;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: [
-                Icon(
-                  Icons.language,
-                  size: 28,
-                  color: Theme.of(context).primaryColor,
-                ),
+                const Icon(Icons.language),
                 const SizedBox(width: 12),
                 Text(
                   'Select Language',
@@ -78,69 +42,91 @@ class LanguageSelectionBottomSheet extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'Choose your preferred language',
-              style: TextStyle(color: Colors.grey, fontSize: 14),
-            ),
-          ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
 
           // Language options
-          ...availableLanguages.map((lang) {
-            final isSelected = lang.code == currentLanguageCode;
-
-            return RadioListTile<String>(
-              value: lang.code,
-              groupValue: currentLanguageCode,
-              onChanged: (value) async {
-                if (value != null && value != currentLanguageCode) {
-                  await ref
-                      .read(languageNotifierProvider.notifier)
-                      .setLanguage(value);
-
-                  if (context.mounted) {
-                    Navigator.pop(context);
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Language changed to ${lang.nativeName}'),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  }
-                }
-              },
-              title: Row(
-                children: [
-                  Text(
-                    lang.flag,
-                    style: const TextStyle(fontSize: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    lang.nativeName,
-                    style: TextStyle(
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
-              secondary: isSelected
-                  ? Icon(
-                      Icons.check_circle,
-                      color: Theme.of(context).primaryColor,
-                    )
-                  : null,
-            );
-          }),
-
-          const SizedBox(height: 10),
+          _LanguageOption(
+            locale: const Locale('hr'),
+            title: 'Hrvatski',
+            subtitle: 'Croatian',
+            isSelected: currentLocale.languageCode == 'hr',
+            onTap: () {
+              ref.read(languageNotifierProvider.notifier).setLanguage('hr');
+              Navigator.of(context).pop();
+            },
+          ),
+          const Divider(height: 1, indent: 24, endIndent: 24),
+          _LanguageOption(
+            locale: const Locale('en'),
+            title: 'English',
+            subtitle: 'English',
+            isSelected: currentLocale.languageCode == 'en',
+            onTap: () {
+              ref.read(languageNotifierProvider.notifier).setLanguage('en');
+              Navigator.of(context).pop();
+            },
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// Language option tile
+class _LanguageOption extends StatelessWidget {
+  final Locale locale;
+  final String title;
+  final String subtitle;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _LanguageOption({
+    required this.locale,
+    required this.title,
+    required this.subtitle,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isSelected
+              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+              : Colors.grey[200],
+        ),
+        child: Center(
+          child: Text(
+            locale.languageCode.toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isSelected
+                  ? Theme.of(context).primaryColor
+                  : Colors.grey[600],
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      subtitle: Text(subtitle),
+      trailing: isSelected
+          ? Icon(
+              Icons.check_circle,
+              color: Theme.of(context).primaryColor,
+            )
+          : null,
+      onTap: onTap,
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import '../../shared/models/user_model.dart';
+import 'logging_service.dart';
 
 /// Service for logging and managing security events
 ///
@@ -57,7 +59,7 @@ class SecurityEventsService {
       }
     } catch (e) {
       // Don't throw - security logging should not break the app
-      print('Failed to log security event: $e');
+      LoggingService.logError('Failed to log security event', e);
     }
   }
 
@@ -87,7 +89,7 @@ class SecurityEventsService {
         'recentSecurityEvents': limitedEvents,
       });
     } catch (e) {
-      print('Failed to update recent events: $e');
+      LoggingService.logError('Failed to update recent events', e);
     }
   }
 
@@ -144,11 +146,16 @@ class SecurityEventsService {
           },
         );
 
-        // TODO: Send email notification
-        // await _sendSuspiciousActivityEmail(userId, deviceId, location);
+        // Send email notification (Phase 3 security feature)
+        await _sendSuspiciousActivityEmail(
+          userId,
+          deviceId,
+          location,
+          isNewDevice ? 'new_device' : 'new_location',
+        );
       }
     } catch (e) {
-      print('Failed to check suspicious activity: $e');
+      LoggingService.logError('Failed to check suspicious activity', e);
     }
   }
 
@@ -210,7 +217,7 @@ class SecurityEventsService {
           .map((doc) => SecurityEvent.fromFirestore(doc.data()))
           .toList();
     } catch (e) {
-      print('Failed to get security events: $e');
+      LoggingService.logError('Failed to get security events', e);
       return [];
     }
   }
@@ -242,7 +249,7 @@ class SecurityEventsService {
         'lastSeenAt': Timestamp.fromDate(deviceInfo.lastSeenAt),
       }, SetOptions(merge: true));
     } catch (e) {
-      print('Failed to track device: $e');
+      LoggingService.logError('Failed to track device', e);
     }
   }
 
@@ -256,7 +263,7 @@ class SecurityEventsService {
           .doc(deviceId)
           .delete();
     } catch (e) {
-      print('Failed to remove device: $e');
+      LoggingService.logError('Failed to remove device', e);
     }
   }
 
@@ -273,8 +280,52 @@ class SecurityEventsService {
           .map((doc) => DeviceInfo.fromJson(doc.data()))
           .toList();
     } catch (e) {
-      print('Failed to get devices: $e');
+      LoggingService.logError('Failed to get devices', e);
       return [];
+    }
+  }
+
+  /// Send suspicious activity email notification (Phase 3 security feature)
+  Future<void> _sendSuspiciousActivityEmail(
+    String userId,
+    String? deviceId,
+    String? location,
+    String reason,
+  ) async {
+    try {
+      // Get user document to retrieve email and name
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+
+      if (!userDoc.exists) {
+        LoggingService.logWarning('User not found for suspicious activity email: $userId');
+        return;
+      }
+
+      final userData = userDoc.data() as Map<String, dynamic>;
+      final userEmail = userData['email'] as String?;
+      final userName = userData['name'] as String? ?? 'User';
+
+      if (userEmail == null || userEmail.isEmpty) {
+        LoggingService.logWarning('No email found for user: $userId');
+        return;
+      }
+
+      // Call Cloud Function to send email
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('sendSuspiciousActivityAlert');
+
+      await callable.call({
+        'userEmail': userEmail,
+        'userName': userName,
+        'deviceId': deviceId,
+        'location': location,
+        'reason': reason,
+      });
+
+      LoggingService.log('Suspicious activity email sent to $userEmail', tag: 'SECURITY');
+    } catch (e) {
+      // Don't throw - email failure should not break security logging
+      LoggingService.logError('Failed to send suspicious activity email', e);
     }
   }
 }

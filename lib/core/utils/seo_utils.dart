@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'platform_utils.dart';
+import '../services/logging_service.dart';
 
 // Conditional import for web-specific implementation
 import 'seo_web_stub.dart'
@@ -19,9 +20,9 @@ class SEOUtils {
     if (!isSupported) return;
     try {
       seo_impl.SeoWebImpl.updateTitle(title);
-      debugPrint('[SEO] Title set: $title');
+      LoggingService.logSEO('Title set: $title');
     } catch (e) {
-      debugPrint('[SEO] Error setting title: $e');
+      LoggingService.logSEO('Error setting title: $e');
     }
   }
 
@@ -30,9 +31,9 @@ class SEOUtils {
     if (!isSupported) return;
     try {
       seo_impl.SeoWebImpl.updateMetaTag('description', description);
-      debugPrint('[SEO] Description set');
+      LoggingService.logSEO('Description set');
     } catch (e) {
-      debugPrint('[SEO] Error setting description: $e');
+      LoggingService.logSEO('Error setting description: $e');
     }
   }
 
@@ -42,9 +43,9 @@ class SEOUtils {
     try {
       final keywordsString = keywords.join(', ');
       seo_impl.SeoWebImpl.updateMetaTag('keywords', keywordsString);
-      debugPrint('[SEO] Keywords set: $keywordsString');
+      LoggingService.logSEO('Keywords set: $keywordsString');
     } catch (e) {
-      debugPrint('[SEO] Error setting keywords: $e');
+      LoggingService.logSEO('Error setting keywords: $e');
     }
   }
 
@@ -65,9 +66,9 @@ class SEOUtils {
         url: url,
         type: type ?? 'website',
       );
-      debugPrint('[SEO] Open Graph tags set');
+      LoggingService.logSEO('Open Graph tags set');
     } catch (e) {
-      debugPrint('[SEO] Error setting Open Graph: $e');
+      LoggingService.logSEO('Error setting Open Graph: $e');
     }
   }
 
@@ -87,9 +88,9 @@ class SEOUtils {
         image: image,
         cardType: cardType,
       );
-      debugPrint('[SEO] Twitter Card tags set');
+      LoggingService.logSEO('Twitter Card tags set');
     } catch (e) {
-      debugPrint('[SEO] Error setting Twitter Card: $e');
+      LoggingService.logSEO('Error setting Twitter Card: $e');
     }
   }
 
@@ -98,9 +99,9 @@ class SEOUtils {
     if (!isSupported) return;
     try {
       seo_impl.SeoWebImpl.updateStructuredData(data, id: id);
-      debugPrint('[SEO] Structured data added');
+      LoggingService.logSEO('Structured data added');
     } catch (e) {
-      debugPrint('[SEO] Error adding structured data: $e');
+      LoggingService.logSEO('Error adding structured data: $e');
     }
   }
 
@@ -109,9 +110,9 @@ class SEOUtils {
     if (!isSupported) return;
     try {
       seo_impl.SeoWebImpl.updateCanonical(url);
-      debugPrint('[SEO] Canonical URL set: $url');
+      LoggingService.logSEO('Canonical URL set: $url');
     } catch (e) {
-      debugPrint('[SEO] Error setting canonical: $e');
+      LoggingService.logSEO('Error setting canonical: $e');
     }
   }
 

@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/utils/profile_validators.dart';
+import '../widgets/auth_background.dart';
+import '../widgets/glass_card.dart';
+import '../widgets/auth_logo_icon.dart';
+import '../widgets/premium_input_field.dart';
+import '../widgets/gradient_auth_button.dart';
 
 /// Forgot password screen
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -31,7 +37,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     try {
       await ref
-          .read(authProvider.notifier)
+          .read(enhancedAuthProvider.notifier)
           .resetPassword(_emailController.text.trim());
 
       setState(() {
@@ -54,15 +60,23 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reset Password'),
-      ),
-      body: Center(
+      body: AuthBackground(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: _emailSent ? _buildSuccessView() : _buildFormView(),
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height,
+            ),
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.all(
+                  MediaQuery.of(context).size.width < 400 ? 16 : 24
+                ),
+                child: GlassCard(
+                  maxWidth: 460,
+                  child: _emailSent ? _buildSuccessView() : _buildFormView(),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -75,64 +89,84 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(
-            Icons.lock_reset,
-            size: 80,
-            color: Theme.of(context).primaryColor,
+          // Animated Logo - adapts to dark mode
+          Center(
+            child: AuthLogoIcon(
+              size: 90,
+              isWhite: Theme.of(context).brightness == Brightness.dark,
+            ),
           ),
           const SizedBox(height: 24),
+
+          // Title
           Text(
             'Reset Your Password',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
+                  fontSize: 28,
+                  color: const Color(0xFF2D3748),
                 ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
+
+          // Subtitle
           Text(
             'Enter your email address and we\'ll send you instructions to reset your password.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade600,
+                  color: const Color(0xFF718096),
+                  fontSize: 15,
                 ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
-          TextFormField(
+          const SizedBox(height: 40),
+
+          // Email field
+          PremiumInputField(
             controller: _emailController,
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              prefixIcon: Icon(Icons.email_outlined),
-              border: OutlineInputBorder(),
-            ),
+            labelText: 'Email Address',
+            prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!value.contains('@')) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
+            validator: ProfileValidators.validateEmail,
+          ),
+          const SizedBox(height: 32),
+
+          // Send Reset Link Button
+          GradientAuthButton(
+            text: 'Send Reset Link',
+            onPressed: _handleResetPassword,
+            isLoading: _isLoading,
+            icon: Icons.email_outlined,
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _isLoading ? null : _handleResetPassword,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+
+          // Back to Login
+          Center(
+            child: TextButton(
+              onPressed: () => context.go('/login'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.arrow_back,
+                    size: 16,
+                    color: Color(0xFF6B4CE6),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Back to Login',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF6B4CE6),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: _isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Send Reset Link'),
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () => context.go('/login'),
-            child: const Text('Back to Login'),
           ),
         ],
       ),
@@ -141,34 +175,100 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   Widget _buildSuccessView() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(
-          Icons.check_circle,
-          size: 80,
-          color: Colors.green,
+        // Success Icon with gradient background
+        Center(
+          child: Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF10B981), // Green
+                  Color(0xFF059669),
+                ],
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF10B981).withAlpha((0.3 * 255).toInt()),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.check_circle_outline,
+              size: 50,
+              color: Colors.white,
+            ),
+          ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
+
+        // Title
         Text(
           'Email Sent!',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'We\'ve sent password reset instructions to ${_emailController.text}',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey.shade600,
+                fontSize: 28,
+                color: const Color(0xFF2D3748),
               ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 32),
-        ElevatedButton(
+        const SizedBox(height: 12),
+
+        // Subtitle
+        Text(
+          'We\'ve sent password reset instructions to:',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: const Color(0xFF718096),
+                fontSize: 15,
+              ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+
+        // Email address
+        Text(
+          _emailController.text,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: const Color(0xFF6B4CE6),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 40),
+
+        // Return to Login Button
+        GradientAuthButton(
+          text: 'Return to Login',
           onPressed: () => context.go('/login'),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+          isLoading: false,
+          icon: Icons.arrow_forward,
+        ),
+        const SizedBox(height: 16),
+
+        // Resend email option
+        Center(
+          child: TextButton(
+            onPressed: () => setState(() => _emailSent = false),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            ),
+            child: const Text(
+              'Didn\'t receive the email? Resend',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF6B4CE6),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-          child: const Text('Return to Login'),
         ),
       ],
     );

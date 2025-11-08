@@ -1945,6 +1945,456 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'See All'**
   String get seeAll;
+
+  /// No description provided for @widgetSelectDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Dates'**
+  String get widgetSelectDates;
+
+  /// No description provided for @widgetGuestInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest Information'**
+  String get widgetGuestInformation;
+
+  /// No description provided for @widgetPaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Method'**
+  String get widgetPaymentMethod;
+
+  /// No description provided for @widgetConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmation'**
+  String get widgetConfirmation;
+
+  /// No description provided for @widgetFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get widgetFullName;
+
+  /// No description provided for @widgetEmailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Address'**
+  String get widgetEmailAddress;
+
+  /// No description provided for @widgetPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get widgetPhoneNumber;
+
+  /// No description provided for @widgetSpecialRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Special Requests (Optional)'**
+  String get widgetSpecialRequests;
+
+  /// No description provided for @widgetSpecialRequestsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Any special requests or notes...'**
+  String get widgetSpecialRequestsHint;
+
+  /// No description provided for @widgetContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get widgetContinue;
+
+  /// No description provided for @widgetPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get widgetPrevious;
+
+  /// No description provided for @widgetAdults.
+  ///
+  /// In en, this message translates to:
+  /// **'Adults'**
+  String get widgetAdults;
+
+  /// No description provided for @widgetChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'Children'**
+  String get widgetChildren;
+
+  /// No description provided for @widgetNumberOfGuests.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of Guests'**
+  String get widgetNumberOfGuests;
+
+  /// No description provided for @widgetTotalNights.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Night} other{{count} Nights}}'**
+  String widgetTotalNights(int count);
+
+  /// No description provided for @widgetSubtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get widgetSubtotal;
+
+  /// No description provided for @widgetCleaningFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning Fee'**
+  String get widgetCleaningFee;
+
+  /// No description provided for @widgetServiceFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Fee'**
+  String get widgetServiceFee;
+
+  /// No description provided for @widgetTaxes.
+  ///
+  /// In en, this message translates to:
+  /// **'Taxes'**
+  String get widgetTaxes;
+
+  /// No description provided for @widgetTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get widgetTotal;
+
+  /// No description provided for @widgetPaymentOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Options'**
+  String get widgetPaymentOptions;
+
+  /// No description provided for @widgetFullPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Payment'**
+  String get widgetFullPayment;
+
+  /// No description provided for @widgetFullPaymentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay 100% now'**
+  String get widgetFullPaymentDesc;
+
+  /// No description provided for @widgetDepositPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit Payment'**
+  String get widgetDepositPayment;
+
+  /// No description provided for @widgetDepositPaymentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay 20% now, rest on arrival'**
+  String get widgetDepositPaymentDesc;
+
+  /// No description provided for @widgetSelectPaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Payment Method'**
+  String get widgetSelectPaymentMethod;
+
+  /// No description provided for @widgetBankTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank Transfer'**
+  String get widgetBankTransfer;
+
+  /// No description provided for @widgetBankTransferDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer to our bank account (3-day deadline)'**
+  String get widgetBankTransferDesc;
+
+  /// No description provided for @widgetBankTransferNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You will receive payment instructions via email'**
+  String get widgetBankTransferNote;
+
+  /// No description provided for @widgetCreditCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Card'**
+  String get widgetCreditCard;
+
+  /// No description provided for @widgetCreditCardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay instantly with Stripe'**
+  String get widgetCreditCardDesc;
+
+  /// No description provided for @widgetCreditCardBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'INSTANT'**
+  String get widgetCreditCardBadge;
+
+  /// No description provided for @widgetPayOnArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay on Arrival'**
+  String get widgetPayOnArrival;
+
+  /// No description provided for @widgetPayOnArrivalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay in cash or card at check-in'**
+  String get widgetPayOnArrivalDesc;
+
+  /// No description provided for @widgetBookingReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking Reference'**
+  String get widgetBookingReference;
+
+  /// No description provided for @widgetBookingConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking Confirmed!'**
+  String get widgetBookingConfirmed;
+
+  /// No description provided for @widgetThankYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your booking'**
+  String get widgetThankYou;
+
+  /// No description provided for @widgetConfirmationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'A confirmation email has been sent to {email}'**
+  String widgetConfirmationSent(String email);
+
+  /// No description provided for @widgetBankTransferInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank Transfer Instructions'**
+  String get widgetBankTransferInstructions;
+
+  /// No description provided for @widgetBankAccountHolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Holder'**
+  String get widgetBankAccountHolder;
+
+  /// No description provided for @widgetBankName.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank'**
+  String get widgetBankName;
+
+  /// No description provided for @widgetBankIban.
+  ///
+  /// In en, this message translates to:
+  /// **'IBAN'**
+  String get widgetBankIban;
+
+  /// No description provided for @widgetPaymentReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Reference'**
+  String get widgetPaymentReference;
+
+  /// No description provided for @widgetPaymentDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Deadline'**
+  String get widgetPaymentDeadline;
+
+  /// No description provided for @widgetImportantNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Important Note'**
+  String get widgetImportantNote;
+
+  /// No description provided for @widgetIncludeReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Please include the booking reference in your transfer'**
+  String get widgetIncludeReference;
+
+  /// No description provided for @widgetPoweredBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Powered by'**
+  String get widgetPoweredBy;
+
+  /// No description provided for @widgetAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get widgetAvailable;
+
+  /// No description provided for @widgetBooked.
+  ///
+  /// In en, this message translates to:
+  /// **'Booked'**
+  String get widgetBooked;
+
+  /// No description provided for @widgetCheckInOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in only'**
+  String get widgetCheckInOnly;
+
+  /// No description provided for @widgetCheckOutOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-out only'**
+  String get widgetCheckOutOnly;
+
+  /// No description provided for @widgetBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get widgetBlocked;
+
+  /// No description provided for @widgetPricePerNight.
+  ///
+  /// In en, this message translates to:
+  /// **'€{price} / night'**
+  String widgetPricePerNight(String price);
+
+  /// No description provided for @widgetSelectCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Select check-in date'**
+  String get widgetSelectCheckIn;
+
+  /// No description provided for @widgetSelectCheckOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Select check-out date'**
+  String get widgetSelectCheckOut;
+
+  /// No description provided for @widgetMinimumStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum stay: {nights} nights'**
+  String widgetMinimumStay(int nights);
+
+  /// No description provided for @widgetDatesNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected dates are not available'**
+  String get widgetDatesNotAvailable;
+
+  /// No description provided for @widgetPleaseSelectOtherDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select different dates'**
+  String get widgetPleaseSelectOtherDates;
+
+  /// No description provided for @widgetErrorLoadingAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading availability'**
+  String get widgetErrorLoadingAvailability;
+
+  /// No description provided for @widgetErrorCreatingBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Error creating booking'**
+  String get widgetErrorCreatingBooking;
+
+  /// No description provided for @widgetPleaseCheckFormErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check form errors and try again'**
+  String get widgetPleaseCheckFormErrors;
+
+  /// No description provided for @widgetFieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get widgetFieldRequired;
+
+  /// No description provided for @widgetInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email address'**
+  String get widgetInvalidEmail;
+
+  /// No description provided for @widgetInvalidPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid phone number'**
+  String get widgetInvalidPhone;
+
+  /// No description provided for @widgetNameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be at least 2 characters'**
+  String get widgetNameTooShort;
+
+  /// No description provided for @widgetProcessingPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing payment...'**
+  String get widgetProcessingPayment;
+
+  /// No description provided for @widgetCreatingBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating booking...'**
+  String get widgetCreatingBooking;
+
+  /// No description provided for @widgetPleaseWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait'**
+  String get widgetPleaseWait;
+
+  /// No description provided for @widgetCancellationPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation Policy'**
+  String get widgetCancellationPolicy;
+
+  /// No description provided for @widgetFreeCancellation.
+  ///
+  /// In en, this message translates to:
+  /// **'Free cancellation up to 24 hours before check-in'**
+  String get widgetFreeCancellation;
+
+  /// No description provided for @widgetNoRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'No refund after this date'**
+  String get widgetNoRefund;
+
+  /// No description provided for @widgetTermsAndConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'By booking, you agree to our Terms & Conditions and Privacy Policy'**
+  String get widgetTermsAndConditions;
+
+  /// No description provided for @widgetMissingParameters.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing required parameters'**
+  String get widgetMissingParameters;
+
+  /// No description provided for @widgetPropertyNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Property or unit not found'**
+  String get widgetPropertyNotFound;
+
+  /// No description provided for @widgetContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Please contact support'**
+  String get widgetContactSupport;
 }
 
 class _AppLocalizationsDelegate

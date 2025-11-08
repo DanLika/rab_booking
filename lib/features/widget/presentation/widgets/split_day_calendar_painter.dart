@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../domain/models/calendar_date_status.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// Custom painter for calendar cells with diagonal split for check-in/check-out days
 /// This creates the "half-booked" visual effect like in BedBooking
@@ -37,8 +38,26 @@ class SplitDayCalendarPainter extends CustomPainter {
         );
         break;
 
+      case DateStatus.pending:
+        // Solid pending color (orange)
+        paint.color = status.getColor();
+        canvas.drawRect(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          paint,
+        );
+        break;
+
       case DateStatus.blocked:
         // Solid blocked color
+        paint.color = status.getColor();
+        canvas.drawRect(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          paint,
+        );
+        break;
+
+      case DateStatus.disabled:
+        // Solid disabled color (past dates)
         paint.color = status.getColor();
         canvas.drawRect(
           Rect.fromLTWH(0, 0, size.width, size.height),
@@ -68,16 +87,7 @@ class SplitDayCalendarPainter extends CustomPainter {
           ..close();
         canvas.drawPath(availablePath, paint);
 
-        // Draw diagonal line
-        final diagonalPaint = Paint()
-          ..color = Colors.grey.shade600
-          ..strokeWidth = 1.0
-          ..style = PaintingStyle.stroke;
-        canvas.drawLine(
-          Offset(0, 0),
-          Offset(size.width, size.height),
-          diagonalPaint,
-        );
+        // Diagonal line removed for cleaner visual - triangles are self-explanatory
         break;
 
       case DateStatus.partialCheckOut:
@@ -102,28 +112,26 @@ class SplitDayCalendarPainter extends CustomPainter {
           ..close();
         canvas.drawPath(availablePath, paint);
 
-        // Draw diagonal line
-        final diagonalPaint = Paint()
-          ..color = Colors.grey.shade600
-          ..strokeWidth = 1.0
-          ..style = PaintingStyle.stroke;
-        canvas.drawLine(
-          Offset(0, 0),
-          Offset(size.width, size.height),
-          diagonalPaint,
-        );
+        // Diagonal line removed for cleaner visual - triangles are self-explanatory
         break;
     }
 
-    // Draw price text in center of cell
+    // Draw price text in center of cell - prominent and readable
     if (priceText != null && priceText!.isNotEmpty) {
       final textPainter = TextPainter(
         text: TextSpan(
           text: priceText,
           style: TextStyle(
-            color: status == DateStatus.booked ? Colors.black54 : Colors.black87,
-            fontSize: size.width > 30 ? 10 : 8,
-            fontWeight: FontWeight.w600,
+            // Always use black for maximum contrast and readability
+            color: ColorTokens.light.textPrimary,
+            // Responsive font sizes based on cell size - uses design token breakpoints
+            fontSize: size.width > ConstraintTokens.calendarDayCellMinSize
+                ? TypographyTokens.fontSizeS2
+                : (size.width > ConstraintTokens.calendarDayCellMinSize * 0.75
+                    ? TypographyTokens.fontSizeXS2
+                    : TypographyTokens.poweredBySize),
+            // Bold font weight for prominence (was w600)
+            fontWeight: TypographyTokens.bold,
           ),
         ),
         textAlign: TextAlign.center,
@@ -159,7 +167,7 @@ class SplitDayCalendarCell extends StatelessWidget {
     super.key,
     required this.status,
     this.onTap,
-    this.size = 24.0,
+    this.size = IconSizeTokens.large,
     this.isSelected = false,
   });
 
@@ -172,7 +180,7 @@ class SplitDayCalendarCell extends StatelessWidget {
         height: size,
         decoration: BoxDecoration(
           border: isSelected
-              ? Border.all(color: Colors.blue, width: 2)
+              ? Border.all(color: ColorTokens.light.borderFocus, width: BorderTokens.widthThick)
               : null,
         ),
         child: CustomPaint(

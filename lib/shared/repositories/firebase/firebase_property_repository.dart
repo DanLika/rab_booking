@@ -14,15 +14,15 @@ class FirebasePropertyRepository implements PropertyRepository {
     var query = _firestore.collection('properties').where('id', isNotEqualTo: '');
 
     if (filters?.ownerId != null) {
-      query = query.where('owner_id', isEqualTo: filters!.ownerId) as Query<Map<String, dynamic>>;
+      query = query.where('owner_id', isEqualTo: filters!.ownerId);
     }
 
     if (filters?.location != null) {
-      query = query.where('city', isEqualTo: filters!.location) as Query<Map<String, dynamic>>;
+      query = query.where('city', isEqualTo: filters!.location);
     }
 
     if (filters?.minGuests != null) {
-      query = query.where('max_guests', isGreaterThanOrEqualTo: filters!.minGuests) as Query<Map<String, dynamic>>;
+      query = query.where('max_guests', isGreaterThanOrEqualTo: filters!.minGuests);
     }
 
     final snapshot = await query.get();

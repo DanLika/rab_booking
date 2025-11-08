@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../domain/models/payment_option.dart';
 import '../providers/booking_flow_provider.dart';
-import '../theme/bedbooking_theme.dart';
+import '../theme/villa_jasko_colors.dart';
 
 /// Payment option selector (Full payment vs Down payment)
 class PaymentOptionSelector extends ConsumerWidget {
@@ -18,9 +19,13 @@ class PaymentOptionSelector extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Payment',
-          style: BedBookingTextStyles.heading2,
+          style: GoogleFonts.inter(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: VillaJaskoColors.textPrimary,
+          ),
         ),
         const SizedBox(height: 16),
 
@@ -31,9 +36,18 @@ class PaymentOptionSelector extends ConsumerWidget {
           },
           child: Container(
             padding: const EdgeInsets.all(16),
-            decoration: selectedOption == PaymentOption.full
-                ? BedBookingCards.selectedCard
-                : BedBookingCards.borderedCard,
+            decoration: BoxDecoration(
+              color: selectedOption == PaymentOption.full
+                  ? VillaJaskoColors.primarySurface
+                  : VillaJaskoColors.backgroundSurface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: selectedOption == PaymentOption.full
+                    ? VillaJaskoColors.primary
+                    : VillaJaskoColors.border,
+                width: selectedOption == PaymentOption.full ? 2 : 1,
+              ),
+            ),
             child: Row(
               children: [
                 Icon(
@@ -41,8 +55,8 @@ class PaymentOptionSelector extends ConsumerWidget {
                       ? Icons.radio_button_checked
                       : Icons.radio_button_unchecked,
                   color: selectedOption == PaymentOption.full
-                      ? BedBookingColors.primaryGreen
-                      : BedBookingColors.textGrey,
+                      ? VillaJaskoColors.primary
+                      : VillaJaskoColors.textSecondary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -54,18 +68,29 @@ class PaymentOptionSelector extends ConsumerWidget {
                         children: [
                           Text(
                             'Total',
-                            style: BedBookingTextStyles.bodyBold,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: VillaJaskoColors.textPrimary,
+                            ),
                           ),
                           Text(
                             '\$${total.toStringAsFixed(2)} USD',
-                            style: BedBookingTextStyles.bodyBold,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: VillaJaskoColors.textPrimary,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'amount + service payment on place',
-                        style: BedBookingTextStyles.small,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: VillaJaskoColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -84,9 +109,18 @@ class PaymentOptionSelector extends ConsumerWidget {
           },
           child: Container(
             padding: const EdgeInsets.all(16),
-            decoration: selectedOption == PaymentOption.downPayment
-                ? BedBookingCards.selectedCard
-                : BedBookingCards.borderedCard,
+            decoration: BoxDecoration(
+              color: selectedOption == PaymentOption.downPayment
+                  ? VillaJaskoColors.primarySurface
+                  : VillaJaskoColors.backgroundSurface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: selectedOption == PaymentOption.downPayment
+                    ? VillaJaskoColors.primary
+                    : VillaJaskoColors.border,
+                width: selectedOption == PaymentOption.downPayment ? 2 : 1,
+              ),
+            ),
             child: Row(
               children: [
                 Icon(
@@ -94,8 +128,8 @@ class PaymentOptionSelector extends ConsumerWidget {
                       ? Icons.radio_button_checked
                       : Icons.radio_button_unchecked,
                   color: selectedOption == PaymentOption.downPayment
-                      ? BedBookingColors.primaryGreen
-                      : BedBookingColors.textGrey,
+                      ? VillaJaskoColors.primary
+                      : VillaJaskoColors.textSecondary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -107,18 +141,29 @@ class PaymentOptionSelector extends ConsumerWidget {
                         children: [
                           Text(
                             'Down payment',
-                            style: BedBookingTextStyles.bodyBold,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: VillaJaskoColors.textPrimary,
+                            ),
                           ),
                           Text(
                             '\$${downPayment.toStringAsFixed(2)} USD',
-                            style: BedBookingTextStyles.bodyBold,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: VillaJaskoColors.textPrimary,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Prepayment + \$${remaining.toStringAsFixed(2)} USD on place required',
-                        style: BedBookingTextStyles.small,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: VillaJaskoColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),

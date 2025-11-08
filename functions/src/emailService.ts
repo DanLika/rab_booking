@@ -1,4 +1,5 @@
 import {Resend} from "resend";
+import {logError, logSuccess} from "./logger";
 
 // Lazy initialize Resend (to avoid deployment errors)
 let resend: Resend | null = null;
@@ -19,8 +20,8 @@ function getResendClient(): Resend {
 
 // Email sender address
 // TEST MODE: Uses onboarding@resend.dev (emails only go to Resend account owner)
-// PRODUCTION: Change to your verified domain (e.g., "noreply@rab-booking.com")
-const FROM_EMAIL = "onboarding@resend.dev"; // TEST MODE - emails go to ababic785@gmail.com
+// PRODUCTION: Change to your verified domain (e.g., "noreply@yourdomain.com" or duskolicanin1234@gmail.com)
+const FROM_EMAIL = "onboarding@resend.dev"; // TEST MODE - update when you have a custom domain
 const FROM_NAME = "Rab Booking";
 
 /**
@@ -38,7 +39,7 @@ export async function sendBookingConfirmationEmail(
   propertyName: string,
   ownerEmail?: string
 ): Promise<void> {
-  const subject = `Booking Confirmation - ${bookingReference}`;
+  const subject = `[BedBooking] Potvrda rezervacije - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
@@ -138,10 +139,11 @@ export async function sendBookingConfirmationEmail(
       replyTo: ownerEmail || FROM_EMAIL,
       subject: subject,
       html: html,
+      text: stripHtml(html),
     });
-    console.log(`Booking confirmation email sent to ${guestEmail}`);
+    logSuccess("Booking confirmation email sent", {email: guestEmail});
   } catch (error) {
-    console.error("Error sending booking confirmation email:", error);
+    logError("Error sending booking confirmation email", error);
     throw error;
   }
 }
@@ -158,7 +160,7 @@ export async function sendBookingApprovedEmail(
   propertyName: string,
   ownerEmail?: string
 ): Promise<void> {
-  const subject = `Payment Confirmed - ${bookingReference}`;
+  const subject = `[BedBooking] Potvrda plaćanja - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
@@ -214,10 +216,11 @@ export async function sendBookingApprovedEmail(
       replyTo: ownerEmail || FROM_EMAIL,
       subject: subject,
       html: html,
+      text: stripHtml(html),
     });
-    console.log(`Booking approved email sent to ${guestEmail}`);
+    logSuccess("Booking approved email sent", {email: guestEmail});
   } catch (error) {
-    console.error("Error sending booking approved email:", error);
+    logError("Error sending booking approved email", error);
     throw error;
   }
 }
@@ -305,10 +308,11 @@ export async function sendOwnerNotificationEmail(
       to: ownerEmail,
       subject: subject,
       html: html,
+      text: stripHtml(html),
     });
-    console.log(`Owner notification email sent to ${ownerEmail}`);
+    logSuccess("Owner notification email sent", {email: ownerEmail});
   } catch (error) {
-    console.error("Error sending owner notification email:", error);
+    logError("Error sending owner notification email", error);
     throw error;
   }
 }
@@ -323,7 +327,7 @@ export async function sendBookingCancellationEmail(
   reason: string,
   ownerEmail?: string
 ): Promise<void> {
-  const subject = `Booking Cancelled - ${bookingReference}`;
+  const subject = `[BedBooking] Otkazana rezervacija - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
@@ -367,12 +371,475 @@ export async function sendBookingCancellationEmail(
       replyTo: ownerEmail || FROM_EMAIL,
       subject: subject,
       html: html,
+      text: stripHtml(html),
     });
-    console.log(`Booking cancellation email sent to ${guestEmail}`);
+    logSuccess("Booking cancellation email sent", {email: guestEmail});
   } catch (error) {
-    console.error("Error sending cancellation email:", error);
+    logError("Error sending cancellation email", error);
     throw error;
   }
+}
+
+/**
+ * Send custom email to guest (Phase 2 feature)
+ * Allows property owners to send custom messages to guests
+ */
+export async function sendCustomEmailToGuest(
+  guestEmail: string,
+  guestName: string,
+  subject: string,
+  message: string,
+  ownerEmail?: string
+): Promise<void> {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #2c5282; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9f9f9; }
+    .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+    .message { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>${subject}</h1>
+    </div>
+
+    <div class="content">
+      <p>Dear ${guestName},</p>
+      <div class="message">${message}</div>
+      <p>If you have any questions, please feel free to reply to this email.</p>
+    </div>
+
+    <div class="footer">
+      <p>© 2025 Rab Booking. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  try {
+    await getResendClient().emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: guestEmail,
+      replyTo: ownerEmail || FROM_EMAIL,
+      subject: subject,
+      html: html,
+      text: stripHtml(html),
+    });
+    logSuccess("Custom email sent", {email: guestEmail});
+  } catch (error) {
+    logError("Error sending custom email", error);
+    throw error;
+  }
+}
+
+/**
+ * Send suspicious activity alert email (Phase 3 security feature)
+ * Alerts user when login from new device or location is detected
+ */
+export async function sendSuspiciousActivityEmail(
+  userEmail: string,
+  userName: string,
+  deviceId: string | undefined,
+  location: string | undefined,
+  reason: string
+): Promise<void> {
+  const subject = "[BedBooking] 🔒 Sigurnosno upozorenje - Nova prijava detektovana";
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #FF5722; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background: #f9f9f9; }
+    .alert-box { background: #fff3e0; border-left: 4px solid #FF9800; padding: 15px; margin: 15px 0; }
+    .info-box { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
+    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔒 Security Alert</h1>
+      <p>New login activity detected</p>
+    </div>
+
+    <div class="content">
+      <p>Hi ${userName},</p>
+      <p>We detected a login to your Rab Booking account from a ${reason === "new_device" ? "new device" : "new location"}.</p>
+
+      <div class="info-box">
+        <h3>Login Details</h3>
+        <p><strong>When:</strong> ${new Date().toLocaleString("en-GB")}</p>
+        ${deviceId ? `<p><strong>Device ID:</strong> ${deviceId}</p>` : ""}
+        ${location ? `<p><strong>Location:</strong> ${location}</p>` : ""}
+        <p><strong>Reason:</strong> ${reason === "new_device" ? "Login from new device" : "Login from new location"}</p>
+      </div>
+
+      <div class="alert-box">
+        <h3>⚠️ Was this you?</h3>
+        <p>If you recognize this activity, you can safely ignore this email.</p>
+        <p><strong>If this wasn't you:</strong></p>
+        <ul>
+          <li>Change your password immediately</li>
+          <li>Review your account activity</li>
+          <li>Contact support if you see any suspicious changes</li>
+        </ul>
+      </div>
+
+      <p>This is an automated security alert to keep your account safe.</p>
+    </div>
+
+    <div class="footer">
+      <p>© 2025 Rab Booking Security Team</p>
+      <p>This email cannot be replied to. For support, please log into your dashboard.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  try {
+    await getResendClient().emails.send({
+      from: `${FROM_NAME} Security <${FROM_EMAIL}>`,
+      to: userEmail,
+      subject: subject,
+      html: html,
+      text: stripHtml(html),
+    });
+    logSuccess("Suspicious activity alert sent", {email: userEmail});
+  } catch (error) {
+    logError("Error sending suspicious activity email", error);
+    throw error;
+  }
+}
+
+/**
+ * Send pending booking request email to guest (no payment required)
+ */
+export async function sendPendingBookingRequestEmail(
+  guestEmail: string,
+  guestName: string,
+  bookingReference: string,
+  checkIn: Date,
+  checkOut: Date,
+  totalAmount: number,
+  unitName: string,
+  propertyName: string
+): Promise<void> {
+  const subject = `[BedBooking] Zahtjev za rezervaciju primljen - ${bookingReference}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background: #f9f9f9; }
+    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+    .highlight { background: #fff9c4; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FBC02D; }
+    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 Booking Request Received</h1>
+      <p>Reference: ${bookingReference}</p>
+    </div>
+
+    <div class="content">
+      <p>Dear ${guestName},</p>
+      <p>Thank you for your booking request! We have received your reservation and it is pending approval from the property owner.</p>
+
+      <div class="booking-details">
+        <h3>Booking Details</h3>
+        <div class="detail-row">
+          <span>Property:</span>
+          <strong>${propertyName}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Unit:</span>
+          <strong>${unitName}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Check-in:</span>
+          <strong>${formatDate(checkIn)}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Check-out:</span>
+          <strong>${formatDate(checkOut)}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Reference:</span>
+          <strong>${bookingReference}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Total Amount:</span>
+          <strong>€${totalAmount.toFixed(2)}</strong>
+        </div>
+      </div>
+
+      <div class="highlight">
+        <p><strong>⏳ Pending Approval</strong></p>
+        <p>The property owner will review your booking request and contact you shortly with payment details if approved.</p>
+        <p>You will receive a confirmation email once your booking is approved.</p>
+      </div>
+
+      <p>If you have any questions, please don't hesitate to contact the property owner.</p>
+    </div>
+
+    <div class="footer">
+      <p>© 2025 Rab Booking. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  try {
+    await getResendClient().emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: guestEmail,
+      subject: subject,
+      html: html,
+      text: stripHtml(html),
+    });
+    logSuccess("Pending booking request email sent to guest", {email: guestEmail});
+  } catch (error) {
+    logError("Error sending pending booking request email", error);
+    throw error;
+  }
+}
+
+/**
+ * Send pending booking notification to owner (no payment)
+ */
+export async function sendPendingBookingOwnerNotification(
+  ownerEmail: string,
+  ownerName: string,
+  guestName: string,
+  guestEmail: string,
+  guestPhone: string,
+  bookingReference: string,
+  checkIn: Date,
+  checkOut: Date,
+  totalAmount: number,
+  unitName: string,
+  guestCount: number,
+  notes?: string
+): Promise<void> {
+  const subject = `Nova rezervacija za odobrenje - ${bookingReference}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background: #f9f9f9; }
+    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
+    .alert { background: #fff9c4; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FBC02D; }
+    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
+    .action-btn { display: inline-block; padding: 12px 24px; background: #6B8E23; color: white; text-decoration: none; border-radius: 6px; margin: 10px 5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔔 Nova rezervacija za odobrenje!</h1>
+      <p>Čeka vašu potvrdu</p>
+    </div>
+
+    <div class="content">
+      <p>Poštovani ${ownerName},</p>
+      <p>Primili ste novu rezervaciju putem booking widgeta koja zahtijeva vaše odobrenje.</p>
+
+      <div class="booking-details">
+        <h3>Detalji rezervacije</h3>
+        <p><strong>Jedinica:</strong> ${unitName}</p>
+        <p><strong>Gost:</strong> ${guestName}</p>
+        <p><strong>Email:</strong> ${guestEmail}</p>
+        <p><strong>Telefon:</strong> ${guestPhone}</p>
+        <p><strong>Broj gostiju:</strong> ${guestCount}</p>
+        <p><strong>Check-in:</strong> ${formatDate(checkIn)}</p>
+        <p><strong>Check-out:</strong> ${formatDate(checkOut)}</p>
+        <p><strong>Referenca:</strong> ${bookingReference}</p>
+        ${notes ? `<p><strong>Napomena:</strong> ${notes}</p>` : ""}
+      </div>
+
+      <div class="booking-details">
+        <h3>Cijena</h3>
+        <p><strong>Ukupno:</strong> €${totalAmount.toFixed(2)}</p>
+      </div>
+
+      <div class="alert">
+        <p><strong>⚠️ Akcija potrebna:</strong></p>
+        <p>Prijavite se u Owner Dashboard da odobrite ili odbijete ovu rezervaciju.</p>
+        <p>Nakon odobrenja, kontaktirajte gosta sa detaljima plaćanja.</p>
+      </div>
+
+      <p style="text-align: center;">
+        <a href="#" class="action-btn">Prijavite se u Dashboard</a>
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>© 2025 Rab Booking. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  try {
+    await getResendClient().emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: ownerEmail,
+      subject: subject,
+      html: html,
+      text: stripHtml(html),
+    });
+    logSuccess("Pending booking owner notification sent", {email: ownerEmail});
+  } catch (error) {
+    logError("Error sending pending booking owner notification", error);
+    throw error;
+  }
+}
+
+/**
+ * Send booking rejection email to guest
+ */
+export async function sendBookingRejectedEmail(
+  guestEmail: string,
+  guestName: string,
+  bookingReference: string,
+  checkIn: Date,
+  checkOut: Date,
+  unitName: string,
+  propertyName: string,
+  reason?: string
+): Promise<void> {
+  const subject = `[BedBooking] Zahtjev za rezervaciju odbijen - ${bookingReference}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #EF4444; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background: #f9f9f9; }
+    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+    .highlight { background: #FEE2E2; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #EF4444; }
+    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>❌ Booking Request Declined</h1>
+      <p>Reference: ${bookingReference}</p>
+    </div>
+
+    <div class="content">
+      <p>Dear ${guestName},</p>
+      <p>We regret to inform you that your booking request has been declined by the property owner.</p>
+
+      <div class="booking-details">
+        <h3>Booking Details</h3>
+        <div class="detail-row">
+          <span>Property:</span>
+          <strong>${propertyName}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Unit:</span>
+          <strong>${unitName}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Check-in:</span>
+          <strong>${formatDate(checkIn)}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Check-out:</span>
+          <strong>${formatDate(checkOut)}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Reference:</span>
+          <strong>${bookingReference}</strong>
+        </div>
+      </div>
+
+      ${reason ? `
+      <div class="highlight">
+        <p><strong>Reason:</strong></p>
+        <p>${reason}</p>
+      </div>
+      ` : ""}
+
+      <p>We apologize for any inconvenience. Please feel free to browse our other available properties or contact us for alternative dates.</p>
+    </div>
+
+    <div class="footer">
+      <p>© 2025 Rab Booking. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  try {
+    await getResendClient().emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: guestEmail,
+      subject: subject,
+      html: html,
+      text: stripHtml(html),
+    });
+    logSuccess("Booking rejection email sent to guest", {email: guestEmail});
+  } catch (error) {
+    logError("Error sending booking rejection email", error);
+    throw error;
+  }
+}
+
+/**
+ * Helper: Strip HTML tags for plain text email fallback
+ */
+function stripHtml(html: string): string {
+  return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "") // Remove style tags
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "") // Remove script tags
+    .replace(/<[^>]+>/g, "") // Remove all HTML tags
+    .replace(/&nbsp;/g, " ") // Replace &nbsp; with space
+    .replace(/&amp;/g, "&") // Replace &amp; with &
+    .replace(/&lt;/g, "<") // Replace &lt; with <
+    .replace(/&gt;/g, ">") // Replace &gt; with >
+    .replace(/&quot;/g, '"') // Replace &quot; with "
+    .replace(/&#39;/g, "'") // Replace &#39; with '
+    .replace(/\n\s*\n\s*\n/g, "\n\n") // Remove excessive blank lines
+    .trim();
 }
 
 /**

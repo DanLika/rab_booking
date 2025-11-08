@@ -10,7 +10,7 @@ class FirebaseRevenueAnalyticsRepository {
 
   /// Helper method to get all unit IDs for given properties from subcollections
   Future<List<String>> _getUnitIdsForProperties(List<String> propertyIds) async {
-    List<String> unitIds = [];
+    final List<String> unitIds = [];
     for (final propertyId in propertyIds) {
       final unitsSnapshot = await _firestore
           .collection('properties')
@@ -151,7 +151,7 @@ class FirebaseRevenueAnalyticsRepository {
       if (propertyIds.isEmpty) return 0.0;
 
       // Get all units for these properties
-      List<String> unitIds = [];
+      final List<String> unitIds = [];
       for (int i = 0; i < propertyIds.length; i += 10) {
         final batch = propertyIds.skip(i).take(10).toList();
         final unitsSnapshot = await _firestore
@@ -228,7 +228,7 @@ class FirebaseRevenueAnalyticsRepository {
     if (propertyIds.isEmpty) return 0.0;
 
     // Get all units for these properties
-    List<String> unitIds = [];
+    final List<String> unitIds = [];
     for (int i = 0; i < propertyIds.length; i += 10) {
       final batch = propertyIds.skip(i).take(10).toList();
       final unitsSnapshot = await _firestore

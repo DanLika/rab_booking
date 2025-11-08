@@ -11,6 +11,13 @@ class OverviewScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pregled'),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            tooltip: 'Menu',
+          ),
+        ),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'overview'),
       body: const SingleChildScrollView(

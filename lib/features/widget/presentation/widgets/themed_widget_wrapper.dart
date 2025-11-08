@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../theme/bedbooking_theme_data.dart';
+import '../theme/villa_jasko_theme_data.dart';
 import '../../domain/models/widget_config.dart';
 
 /// Wrapper widget that applies theme and configuration to booking widgets
 /// Wraps the widget screens with MaterialApp to apply light/dark mode
+/// Uses Azure Blue design system from DESIGN_SYSTEM.md
 class ThemedWidgetWrapper extends StatelessWidget {
   final Widget child;
   final WidgetConfig? config;
@@ -18,14 +19,14 @@ class ThemedWidgetWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     // Get theme mode from config
     final themeMode = config != null
-        ? BedBookingTheme.themeModeFromString(config!.themeMode)
+        ? VillaJaskoTheme.themeModeFromString(config!.themeMode)
         : ThemeMode.system;
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'BedBooking Widget',
-      theme: BedBookingTheme.lightTheme,
-      darkTheme: BedBookingTheme.darkTheme,
+      title: 'Villa Jasko Booking Widget',
+      theme: VillaJaskoTheme.lightTheme,
+      darkTheme: VillaJaskoTheme.darkTheme,
       themeMode: themeMode,
       home: child,
     );
@@ -47,14 +48,14 @@ class ThemedWidgetWrapperProvider extends StatelessWidget {
   Widget build(BuildContext context) {
     // Get theme mode from config
     final themeMode = config != null
-        ? BedBookingTheme.themeModeFromString(config!.themeMode)
+        ? VillaJaskoTheme.themeModeFromString(config!.themeMode)
         : ThemeMode.system;
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'BedBooking Widget',
-      theme: BedBookingTheme.lightTheme,
-      darkTheme: BedBookingTheme.darkTheme,
+      title: 'Villa Jasko Booking Widget',
+      theme: VillaJaskoTheme.lightTheme,
+      darkTheme: VillaJaskoTheme.darkTheme,
       themeMode: themeMode,
       home: builder(config),
     );

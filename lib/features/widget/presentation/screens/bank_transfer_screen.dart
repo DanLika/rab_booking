@@ -50,8 +50,8 @@ class BankTransferScreen extends ConsumerWidget {
                   child: Container(
                     width: 80,
                     height: 80,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFC8E6C9),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFC8E6C9),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(

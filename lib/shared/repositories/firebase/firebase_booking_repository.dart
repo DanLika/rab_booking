@@ -215,7 +215,6 @@ class FirebaseBookingRepository implements BookingRepository {
 
   @override
   Future<List<BookingModel>> getCurrentBookings(String userId) async {
-    final now = DateTime.now();
     final snapshot = await _firestore
         .collection('bookings')
         .where('user_id', isEqualTo: userId)

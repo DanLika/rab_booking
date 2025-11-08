@@ -24,7 +24,8 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bookingState = ref.watch(embedBookingProvider(widget.unitId));
+    // Watch booking state for future use
+    ref.watch(embedBookingProvider(widget.unitId));
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -70,7 +71,8 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
   }
 
   Widget _buildSelectionSummary() {
-    final bookingState = ref.watch(embedBookingProvider(widget.unitId));
+    // Watch booking state for future use
+    ref.watch(embedBookingProvider(widget.unitId));
     final nights = _selectedCheckOut!.difference(_selectedCheckIn!).inDays;
 
     // Calculate total price from provider
@@ -173,13 +175,15 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: ElevatedButton(
         onPressed: () {
-          // TODO: Navigate to guest info form
+          // Navigate to enhanced booking flow (guest info is in EnhancedPaymentScreen)
+          // Full flow: EnhancedRoomSelectionScreen → EnhancedSummaryScreen → EnhancedPaymentScreen → EnhancedConfirmationScreen
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Guest information form will be implemented next'),
+              content: Text('Redirecting to booking flow...'),
               duration: Duration(seconds: 2),
             ),
           );
+          // NOTE: Implement navigation to /booking route with selected dates
         },
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),

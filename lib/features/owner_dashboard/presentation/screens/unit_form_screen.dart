@@ -2,11 +2,19 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/config/router_owner.dart';
+import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/slug_utils.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
+import '../widgets/embed_code_generator_dialog.dart';
 
 /// Unit form screen for add/edit
 class UnitFormScreen extends ConsumerStatefulWidget {
@@ -26,6 +34,7 @@ class UnitFormScreen extends ConsumerStatefulWidget {
 class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _slugController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _bedroomsController = TextEditingController(text: '1');
@@ -34,11 +43,12 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
   final _areaController = TextEditingController();
   final _minStayController = TextEditingController(text: '1');
 
-  Set<PropertyAmenity> _selectedAmenities = {};
+  final Set<PropertyAmenity> _selectedAmenities = {};
   final List<XFile> _selectedImages = [];
   List<String> _existingImages = [];
   bool _isAvailable = true;
   bool _isLoading = false;
+  bool _isManualSlugEdit = false;
 
   bool get _isEditing => widget.unit != null;
 
@@ -53,6 +63,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
   void _loadUnitData() {
     final unit = widget.unit!;
     _nameController.text = unit.name;
+    _slugController.text = unit.slug ?? generateSlug(unit.name);
     _descriptionController.text = unit.description ?? '';
     _priceController.text = unit.pricePerNight.toStringAsFixed(0);
     _bedroomsController.text = unit.bedrooms.toString();
@@ -62,11 +73,15 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
     _minStayController.text = unit.minStayNights.toString();
     _existingImages = unit.images.toList();
     _isAvailable = unit.isAvailable;
+
+    // If editing existing unit, consider slug as manually set
+    _isManualSlugEdit = unit.slug != null;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _slugController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
     _bedroomsController.dispose();
@@ -77,241 +92,520 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
     super.dispose();
   }
 
+  /// Auto-generate slug from unit name
+  void _autoGenerateSlug() {
+    if (!_isManualSlugEdit && _nameController.text.isNotEmpty) {
+      _slugController.text = generateSlug(_nameController.text);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Uredi Jedinicu' : 'Dodaj Jedinicu'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Unit Name
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Naziv jedinice *',
-                hintText: 'npr. Apartman prizemlje',
-                border: OutlineInputBorder(),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          // Gradient Header
+          Container(
+            height: 200,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF6B4CE6), // Purple
+                  Color(0xFF4A90E2), // Blue
+                ],
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Naziv je obavezan';
-                }
-                return null;
-              },
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(isMobile ? 16 : 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 60), // Space for AppBar
+                    Row(
+                      children: [
+                        // Icon
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            _isEditing ? Icons.edit_note : Icons.add_home_work,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Title
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _isEditing ? 'Uredi Jedinicu' : 'Nova Jedinica',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _isEditing ? 'Ažuriraj podatke jedinice' : 'Dodaj novu jedinicu objektu',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Form Content
+          Form(
+            key: _formKey,
+            child: ListView(
+              padding: EdgeInsets.only(
+                left: isMobile ? 16 : 24,
+                right: isMobile ? 16 : 24,
+                top: 180, // Offset for gradient header
+                bottom: 16,
+              ),
+              children: [
+                // Basic Info Section
+                _buildSection(
+                  context,
+                  title: 'Osnovne informacije',
+                  icon: Icons.info_outline,
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Naziv jedinice *',
+                        hintText: 'npr. Apartman prizemlje',
+                        prefixIcon: const Icon(Icons.meeting_room),
+                        isMobile: isMobile,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Naziv je obavezan';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) => _autoGenerateSlug(),
+                    ),
+                    const SizedBox(height: AppDimensions.spaceM),
+                    TextFormField(
+                      controller: _slugController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'URL Slug',
+                        hintText: 'apartman-prizemlje',
+                        helperText: 'SEO-friendly URL: /booking/{slug}',
+                        prefixIcon: const Icon(Icons.link),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.refresh),
+                          tooltip: 'Regeneriši iz naziva',
+                          onPressed: () {
+                            setState(() {
+                              _isManualSlugEdit = false;
+                              _autoGenerateSlug();
+                            });
+                          },
+                        ),
+                        isMobile: isMobile,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Slug je obavezan';
+                        }
+                        if (!isValidSlug(value)) {
+                          return 'Slug može sadržavati samo mala slova, brojeve i crtice';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) {
+                        if (value.isNotEmpty) {
+                          setState(() => _isManualSlugEdit = true);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: AppDimensions.spaceM),
+                    TextFormField(
+                      controller: _descriptionController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Opis',
+                        hintText: 'Dodatne informacije o jedinici...',
+                        prefixIcon: const Icon(Icons.description),
+                        isMobile: isMobile,
+                      ),
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.spaceM),
+
+                // Capacity Section
+                _buildSection(
+                  context,
+                  title: 'Kapacitet',
+                  icon: Icons.people_outline,
+                  children: [
+                    TextFormField(
+                      controller: _bedroomsController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Spavaće sobe *',
+                        prefixIcon: const Icon(Icons.bed),
+                        isMobile: isMobile,
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Obavezno';
+                        }
+                        final num = int.tryParse(value);
+                        if (num == null || num < 0) {
+                          return 'Nevažeći broj';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppDimensions.spaceS),
+                    TextFormField(
+                      controller: _bathroomsController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Kupaonice *',
+                        prefixIcon: const Icon(Icons.bathroom),
+                        isMobile: isMobile,
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Obavezno';
+                        }
+                        final num = int.tryParse(value);
+                        if (num == null || num < 1) {
+                          return 'Min 1';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppDimensions.spaceS),
+                    TextFormField(
+                      controller: _maxGuestsController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Max gostiju *',
+                        prefixIcon: const Icon(Icons.person),
+                        isMobile: isMobile,
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Obavezno';
+                        }
+                        final num = int.tryParse(value);
+                        if (num == null || num < 1 || num > 16) {
+                          return '1-16';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppDimensions.spaceS),
+                    TextFormField(
+                      controller: _areaController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Površina (m²)',
+                        prefixIcon: const Icon(Icons.aspect_ratio),
+                        isMobile: isMobile,
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.spaceM),
+
+                // Pricing Section
+                _buildSection(
+                  context,
+                  title: 'Cijena i uvjeti',
+                  icon: Icons.euro,
+                  children: [
+                    TextFormField(
+                      controller: _priceController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Cijena po noći (€) *',
+                        prefixIcon: const Icon(Icons.payments),
+                        isMobile: isMobile,
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Obavezno';
+                        }
+                        final num = double.tryParse(value);
+                        if (num == null || num <= 0) {
+                          return 'Nevažeći iznos';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppDimensions.spaceS),
+                    TextFormField(
+                      controller: _minStayController,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        context,
+                        labelText: 'Min noći *',
+                        prefixIcon: const Icon(Icons.nights_stay),
+                        isMobile: isMobile,
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Obavezno';
+                        }
+                        final num = int.tryParse(value);
+                        if (num == null || num < 1) {
+                          return 'Min 1';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.spaceM),
+
+                // Amenities Section
+                _buildSection(
+                  context,
+                  title: 'Sadržaji',
+                  icon: Icons.star_outline,
+                  children: [
+                    _buildAmenitiesGrid(),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.spaceM),
+
+                // Images Section
+                _buildSection(
+                  context,
+                  title: 'Fotografije',
+                  icon: Icons.photo_library_outlined,
+                  children: [
+                    _buildImagesSection(),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.spaceM),
+
+                // Availability Section
+                _buildSection(
+                  context,
+                  title: 'Dostupnost',
+                  icon: Icons.toggle_on_outlined,
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Dostupno za rezervaciju'),
+                      subtitle: Text(
+                        _isAvailable
+                            ? 'Jedinica će biti dostupna za rezervacije'
+                            : 'Jedinica neće biti prikazana',
+                      ),
+                      value: _isAvailable,
+                      onChanged: (value) => setState(() => _isAvailable = value),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.spaceM),
+
+                // Save Button
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _isLoading ? null : _handleSave,
+                    style: FilledButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        vertical: isMobile ? 16 : 20,
+                        horizontal: 24,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: Icon(_isEditing ? Icons.save : Icons.add),
+                    label: Text(
+                      _isEditing ? 'Spremi Izmjene' : 'Dodaj Jedinicu',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+
+                // Widget Settings & Embed Code section (only when editing)
+                if (_isEditing && widget.unit != null) ...[
+                  const SizedBox(height: AppDimensions.spaceM),
+                  _buildSection(
+                    context,
+                    title: 'Embed Widget',
+                    icon: Icons.widgets,
+                    children: [
+                      Text(
+                        'Integrirajte booking widget na vašu web stranicu',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spaceM),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          context.push(OwnerRoutes.unitWidgetSettings.replaceAll(':id', widget.unit!.id));
+                        },
+                        icon: const Icon(Icons.settings),
+                        label: const Text('Postavke Widgeta'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spaceS),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => EmbedCodeGeneratorDialog(
+                              unitId: widget.unit!.id,
+                              unitSlug: widget.unit!.slug,
+                              unitName: widget.unit!.name,
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.code),
+                        label: const Text('Generiši Embed Kod'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
+            const SizedBox(height: AppDimensions.spaceXL),
+          ],
+        ),
+      ),
+
+          // Loading Overlay
+          if (_isLoading)
+            Container(
+              color: Colors.black.withAlpha((0.5 * 255).toInt()),
+              child: const Center(
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text(
+                          'Spremanje...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper method to build consistent section cards
+  Widget _buildSection(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
-
-            // Description
-            TextFormField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Opis',
-                hintText: 'Dodatne informacije o jedinici...',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 24),
-
-            // Capacity section
-            Text(
-              'Kapacitet',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            // Bedrooms
-            TextFormField(
-              controller: _bedroomsController,
-              decoration: const InputDecoration(
-                labelText: 'Spavaće sobe *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.bed),
-              ),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Obavezno';
-                }
-                final num = int.tryParse(value);
-                if (num == null || num < 0) {
-                  return 'Nevažeći broj';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-
-            // Bathrooms
-            TextFormField(
-              controller: _bathroomsController,
-              decoration: const InputDecoration(
-                labelText: 'Kupaonice *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.bathroom),
-              ),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Obavezno';
-                }
-                final num = int.tryParse(value);
-                if (num == null || num < 1) {
-                  return 'Min 1';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            // Max guests
-            TextFormField(
-              controller: _maxGuestsController,
-              decoration: const InputDecoration(
-                labelText: 'Max gostiju *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
-              ),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Obavezno';
-                }
-                final num = int.tryParse(value);
-                if (num == null || num < 1 || num > 16) {
-                  return '1-16';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-
-            // Area
-            TextFormField(
-              controller: _areaController,
-              decoration: const InputDecoration(
-                labelText: 'Površina (m²)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.aspect_ratio),
-              ),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            ),
-            const SizedBox(height: 24),
-
-            // Pricing section
-            Text(
-              'Cijena i uvjeti',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            // Price
-            TextFormField(
-              controller: _priceController,
-              decoration: const InputDecoration(
-                labelText: 'Cijena po noći (€) *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.euro),
-              ),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Obavezno';
-                }
-                final num = double.tryParse(value);
-                if (num == null || num <= 0) {
-                  return 'Nevažeći iznos';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-
-            // Min nights
-            TextFormField(
-              controller: _minStayController,
-              decoration: const InputDecoration(
-                labelText: 'Min noći *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.nights_stay),
-              ),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Obavezno';
-                }
-                final num = int.tryParse(value);
-                if (num == null || num < 1) {
-                  return 'Min 1';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // Amenities section
-            Text(
-              'Sadržaji',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            _buildAmenitiesGrid(),
-            const SizedBox(height: 24),
-
-            // Images section
-            Text(
-              'Fotografije',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            _buildImagesSection(),
-            const SizedBox(height: 24),
-
-            // Available toggle
-            SwitchListTile(
-              title: const Text('Dostupno za rezervaciju'),
-              subtitle: Text(
-                _isAvailable
-                    ? 'Jedinica će biti dostupna za rezervacije'
-                    : 'Jedinica neće biti prikazana',
-              ),
-              value: _isAvailable,
-              onChanged: (value) => setState(() => _isAvailable = value),
-              contentPadding: EdgeInsets.zero,
-            ),
-            const SizedBox(height: 24),
-
-            // Save button
-            FilledButton(
-              onPressed: _isLoading ? null : _handleSave,
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.all(16),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(_isEditing ? 'Spremi Izmjene' : 'Dodaj Jedinicu'),
-            ),
-            const SizedBox(height: 32),
+            ...children,
           ],
         ),
       ),
@@ -319,6 +613,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
   }
 
   Widget _buildAmenitiesGrid() {
+    final theme = Theme.of(context);
+
     // Show most common amenities for units
     final commonAmenities = [
       PropertyAmenity.wifi,
@@ -340,7 +636,9 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           label: Text(
             amenity.displayName,
             style: TextStyle(
-              color: isSelected ? Colors.white : Colors.grey[800],
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurface,
             ),
           ),
           selected: isSelected,
@@ -356,7 +654,9 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           avatar: Icon(
             _getAmenityIcon(amenity.iconName),
             size: 18,
-            color: isSelected ? Colors.white : Colors.grey[700],
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
           ),
         );
       }).toList(),
@@ -400,7 +700,10 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           icon: const Icon(Icons.add_photo_alternate),
           label: Text(totalImages == 0 ? 'Dodaj fotografije' : 'Dodaj još'),
           style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
 
@@ -410,7 +713,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
             child: Text(
               'Ukupno: $totalImages fotografija',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textColorSecondary,
                   ),
             ),
           ),
@@ -419,24 +722,31 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
   }
 
   Widget _buildExistingImageCard(String imageUrl, int index) {
+    final theme = Theme.of(context);
+
     return Stack(
       children: [
         Container(
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.borderLight),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
+            ),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             child: Image.network(
               imageUrl,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  color: AppColors.surfaceVariantLight,
-                  child: const Icon(Icons.broken_image),
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.broken_image,
+                    color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                  ),
                 );
               },
             ),
@@ -451,7 +761,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
             },
             icon: const Icon(Icons.close, size: 16),
             style: IconButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: theme.colorScheme.error,
               padding: EdgeInsets.zero,
               minimumSize: const Size(24, 24),
             ),
@@ -462,23 +772,31 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
   }
 
   Widget _buildNewImageCard(XFile image, int index) {
+    final theme = Theme.of(context);
+
     return Stack(
       children: [
         Container(
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.borderLight),
-            color: AppColors.surfaceVariantLight,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
+            ),
+            color: theme.colorScheme.surfaceContainerHighest,
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             child: Image.file(
               File(image.path),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.broken_image, size: 40);
+                return Icon(
+                  Icons.broken_image,
+                  size: 40,
+                  color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                );
               },
             ),
           ),
@@ -492,7 +810,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
             },
             icon: const Icon(Icons.close, size: 16),
             style: IconButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: theme.colorScheme.error,
               padding: EdgeInsets.zero,
               minimumSize: const Size(24, 24),
             ),
@@ -538,6 +856,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
           propertyId: widget.propertyId,
           unitId: widget.unit!.id,
           name: _nameController.text,
+          slug: _slugController.text,
           description: _descriptionController.text.isEmpty
               ? null
               : _descriptionController.text,
@@ -557,6 +876,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
         await repository.createUnit(
           propertyId: widget.propertyId,
           name: _nameController.text,
+          slug: _slugController.text,
           description: _descriptionController.text.isEmpty
               ? null
               : _descriptionController.text,
@@ -574,20 +894,22 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isEditing
-                  ? 'Jedinica uspješno ažurirana'
-                  : 'Jedinica uspješno dodana',
-            ),
-          ),
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          _isEditing
+              ? 'Jedinica uspješno ažurirana'
+              : 'Jedinica uspješno dodana',
         );
       }
     } catch (e) {
+      // FIXED: Use ErrorDisplayUtils for user-friendly error messages
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Greška: $e')),
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: _isEditing
+              ? 'Greška pri ažuriranju jedinice'
+              : 'Greška pri dodavanju jedinice',
         );
       }
     } finally {

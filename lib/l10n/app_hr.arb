@@ -334,5 +334,101 @@
   "ctaGetStarted": "Počnite",
   "ctaLearnMore": "Saznajte Više",
   "seeAll": "Pogledaj Sve",
-  "viewProperty": "Pogledaj Nekretninu"
+  "viewProperty": "Pogledaj Nekretninu",
+
+  "widgetSelectDates": "Odaberite Datume",
+  "widgetGuestInformation": "Podaci o Gostu",
+  "widgetPaymentMethod": "Način Plaćanja",
+  "widgetConfirmation": "Potvrda",
+  "widgetFullName": "Puno Ime i Prezime",
+  "widgetEmailAddress": "Email Adresa",
+  "widgetPhoneNumber": "Broj Telefona",
+  "widgetSpecialRequests": "Posebni Zahtjevi (Opciono)",
+  "widgetSpecialRequestsHint": "Bilo koji posebni zahtjevi ili napomene...",
+  "widgetContinue": "Nastavi",
+  "widgetPrevious": "Nazad",
+  "widgetAdults": "Odrasli",
+  "widgetChildren": "Djeca",
+  "widgetNumberOfGuests": "Broj Gostiju",
+  "widgetTotalNights": "{count, plural, =1{1 Noć} few{{count} Noći} other{{count} Noći}}",
+  "@widgetTotalNights": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "widgetSubtotal": "Međuzbir",
+  "widgetCleaningFee": "Naknada za Čišćenje",
+  "widgetServiceFee": "Naknada za Uslugu",
+  "widgetTaxes": "Porezi",
+  "widgetTotal": "Ukupno",
+  "widgetPaymentOptions": "Opcije Plaćanja",
+  "widgetFullPayment": "Puna Uplata",
+  "widgetFullPaymentDesc": "Platite 100% sada",
+  "widgetDepositPayment": "Avansna Uplata",
+  "widgetDepositPaymentDesc": "Platite 20% sada, ostatak pri dolasku",
+  "widgetSelectPaymentMethod": "Odaberite Način Plaćanja",
+  "widgetBankTransfer": "Bankovna Uplata",
+  "widgetBankTransferDesc": "Uplata na naš bankovni račun (rok 3 dana)",
+  "widgetBankTransferNote": "Dobit ćete upute za plaćanje putem emaila",
+  "widgetCreditCard": "Kreditna Kartica",
+  "widgetCreditCardDesc": "Platite instant putem Stripe",
+  "widgetCreditCardBadge": "INSTANT",
+  "widgetPayOnArrival": "Plaćanje Pri Dolasku",
+  "widgetPayOnArrivalDesc": "Platite gotovinom ili karticom pri check-in",
+  "widgetBookingReference": "Referenca Rezervacije",
+  "widgetBookingConfirmed": "Rezervacija Potvrđena!",
+  "widgetThankYou": "Hvala na vašoj rezervaciji",
+  "widgetConfirmationSent": "Email potvrda je poslana na {email}",
+  "@widgetConfirmationSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "widgetBankTransferInstructions": "Upute za Bankovnu Uplatu",
+  "widgetBankAccountHolder": "Vlasnik Računa",
+  "widgetBankName": "Banka",
+  "widgetBankIban": "IBAN",
+  "widgetPaymentReference": "Referenca Plaćanja",
+  "widgetPaymentDeadline": "Rok za Uplatu",
+  "widgetImportantNote": "Važna Napomena",
+  "widgetIncludeReference": "Molimo uključite referencu rezervacije u vašoj uplati",
+  "widgetPoweredBy": "Powered by",
+  "widgetAvailable": "Dostupno",
+  "widgetBooked": "Rezervisano",
+  "widgetCheckInOnly": "Samo dolazak",
+  "widgetCheckOutOnly": "Samo odlazak",
+  "widgetBlocked": "Blokirano",
+  "widgetPricePerNight": "€{price} / noć",
+  "@widgetPricePerNight": {
+    "placeholders": {
+      "price": {"type": "String"}
+    }
+  },
+  "widgetSelectCheckIn": "Odaberite datum dolaska",
+  "widgetSelectCheckOut": "Odaberite datum odlaska",
+  "widgetMinimumStay": "Minimalni boravak: {nights} noći",
+  "@widgetMinimumStay": {
+    "placeholders": {
+      "nights": {"type": "int"}
+    }
+  },
+  "widgetDatesNotAvailable": "Odabrani datumi nisu dostupni",
+  "widgetPleaseSelectOtherDates": "Molimo odaberite druge datume",
+  "widgetErrorLoadingAvailability": "Greška pri učitavanju dostupnosti",
+  "widgetErrorCreatingBooking": "Greška pri kreiranju rezervacije",
+  "widgetPleaseCheckFormErrors": "Molimo provjerite greške u formi i pokušajte ponovo",
+  "widgetFieldRequired": "Ovo polje je obavezno",
+  "widgetInvalidEmail": "Neispravna email adresa",
+  "widgetInvalidPhone": "Neispravan broj telefona",
+  "widgetNameTooShort": "Ime mora imati najmanje 2 karaktera",
+  "widgetProcessingPayment": "Obrada plaćanja...",
+  "widgetCreatingBooking": "Kreiranje rezervacije...",
+  "widgetPleaseWait": "Molimo sačekajte",
+  "widgetCancellationPolicy": "Politika Otkazivanja",
+  "widgetFreeCancellation": "Besplatno otkazivanje do 24 sata prije dolaska",
+  "widgetNoRefund": "Bez povrata novca nakon ovog datuma",
+  "widgetTermsAndConditions": "Rezervacijom prihvatate naše Uvjete korištenja i Politiku privatnosti",
+  "widgetMissingParameters": "Nedostaju obavezni parametri",
+  "widgetPropertyNotFound": "Nekretnina ili jedinica nije pronađena",
+  "widgetContactSupport": "Molimo kontaktirajte podršku"
 }

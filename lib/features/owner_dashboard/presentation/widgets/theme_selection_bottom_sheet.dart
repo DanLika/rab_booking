@@ -2,58 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/theme_provider.dart';
 
-/// Theme option model for display
-class ThemeOption {
-  final ThemeMode mode;
-  final String title;
-  final String description;
-  final IconData icon;
-
-  const ThemeOption({
-    required this.mode,
-    required this.title,
-    required this.description,
-    required this.icon,
-  });
-}
-
-/// Available theme options
-const List<ThemeOption> availableThemes = [
-  ThemeOption(
-    mode: ThemeMode.system,
-    title: 'System',
-    description: 'Follow system theme',
-    icon: Icons.brightness_auto,
-  ),
-  ThemeOption(
-    mode: ThemeMode.light,
-    title: 'Light',
-    description: 'Light mode',
-    icon: Icons.light_mode,
-  ),
-  ThemeOption(
-    mode: ThemeMode.dark,
-    title: 'Dark',
-    description: 'Dark mode',
-    icon: Icons.dark_mode,
-  ),
-];
-
 /// Show theme selection bottom sheet
-Future<void> showThemeSelectionBottomSheet(
-  BuildContext context,
-  WidgetRef ref,
-) async {
-  await showModalBottomSheet(
+void showThemeSelectionBottomSheet(BuildContext context, WidgetRef ref) {
+  showModalBottomSheet(
     context: context,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (context) => const ThemeSelectionBottomSheet(),
   );
 }
 
-/// Theme Selection Bottom Sheet
+/// Theme selection bottom sheet widget
 class ThemeSelectionBottomSheet extends ConsumerWidget {
   const ThemeSelectionBottomSheet({super.key});
 
@@ -62,21 +22,16 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
     final currentThemeMode = ref.watch(currentThemeModeProvider);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: [
-                Icon(
-                  Icons.palette,
-                  size: 28,
-                  color: Theme.of(context).primaryColor,
-                ),
+                const Icon(Icons.brightness_6_outlined),
                 const SizedBox(width: 12),
                 Text(
                   'Select Theme',
@@ -87,83 +42,102 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'Choose your preferred color theme',
-              style: TextStyle(color: Colors.grey, fontSize: 14),
-            ),
-          ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
 
           // Theme options
-          ...availableThemes.map((theme) {
-            final isSelected = theme.mode == currentThemeMode;
-
-            return RadioListTile<ThemeMode>(
-              value: theme.mode,
-              groupValue: currentThemeMode,
-              onChanged: (value) async {
-                if (value != null && value != currentThemeMode) {
-                  await ref
-                      .read(themeNotifierProvider.notifier)
-                      .setThemeMode(value);
-
-                  if (context.mounted) {
-                    Navigator.pop(context);
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Theme changed to ${theme.title}'),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  }
-                }
-              },
-              title: Row(
-                children: [
-                  Icon(
-                    theme.icon,
-                    color: isSelected
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey,
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        theme.title,
-                        style: TextStyle(
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                      Text(
-                        theme.description,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              secondary: isSelected
-                  ? Icon(
-                      Icons.check_circle,
-                      color: Theme.of(context).primaryColor,
-                    )
-                  : null,
-            );
-          }),
-
-          const SizedBox(height: 10),
+          _ThemeOption(
+            themeMode: ThemeMode.light,
+            icon: Icons.light_mode,
+            title: 'Light',
+            subtitle: 'Always use light theme',
+            isSelected: currentThemeMode == ThemeMode.light,
+            onTap: () {
+              ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
+              Navigator.of(context).pop();
+            },
+          ),
+          const Divider(height: 1, indent: 24, endIndent: 24),
+          _ThemeOption(
+            themeMode: ThemeMode.dark,
+            icon: Icons.dark_mode,
+            title: 'Dark',
+            subtitle: 'Always use dark theme',
+            isSelected: currentThemeMode == ThemeMode.dark,
+            onTap: () {
+              ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
+              Navigator.of(context).pop();
+            },
+          ),
+          const Divider(height: 1, indent: 24, endIndent: 24),
+          _ThemeOption(
+            themeMode: ThemeMode.system,
+            icon: Icons.brightness_auto,
+            title: 'System Default',
+            subtitle: 'Follow system theme',
+            isSelected: currentThemeMode == ThemeMode.system,
+            onTap: () {
+              ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
+              Navigator.of(context).pop();
+            },
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// Theme option tile
+class _ThemeOption extends StatelessWidget {
+  final ThemeMode themeMode;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ThemeOption({
+    required this.themeMode,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isSelected
+              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+              : Colors.grey[200],
+        ),
+        child: Icon(
+          icon,
+          color: isSelected
+              ? Theme.of(context).primaryColor
+              : Colors.grey[600],
+        ),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      subtitle: Text(subtitle),
+      trailing: isSelected
+          ? Icon(
+              Icons.check_circle,
+              color: Theme.of(context).primaryColor,
+            )
+          : null,
+      onTap: onTap,
     );
   }
 }

@@ -3,7 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../providers/week_calendar_provider.dart';
+import '../providers/calendar_view_provider.dart';
 import 'split_day_calendar_painter.dart';
+import '../theme/responsive_helper.dart';
+import 'calendar_hover_tooltip.dart';
+import 'calendar_view_switcher.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 
 class WeekCalendarWidget extends ConsumerStatefulWidget {
   final String unitId;
@@ -23,6 +29,8 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
   DateTime _currentWeekStart = _getWeekStart(DateTime.now());
+  DateTime? _hoveredDate; // For hover tooltip (desktop)
+  Offset _mousePosition = Offset.zero; // Track mouse position for tooltip
 
   static DateTime _getWeekStart(DateTime date) {
     return date.subtract(Duration(days: date.weekday - 1));
@@ -32,112 +40,350 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
   Widget build(BuildContext context) {
     final calendarData = ref.watch(weekCalendarDataProvider((widget.unitId, _currentWeekStart)));
 
-    return Column(
-      children: [
-        _buildWeekNavigation(),
-        const SizedBox(height: 16),
-        _buildLegend(),
-        const SizedBox(height: 16),
-        Expanded(
-          child: calendarData.when(
-            data: (data) => _buildWeekView(data),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => Center(
-              child: Text('Error: $error'),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWeekNavigation() {
-    final weekEnd = _currentWeekStart.add(const Duration(days: 6));
-    final weekLabel = _currentWeekStart.month == weekEnd.month
-        ? '${DateFormat.MMMd().format(_currentWeekStart)} - ${DateFormat.d().format(weekEnd)}, ${DateFormat.y().format(_currentWeekStart)}'
-        : '${DateFormat.MMMd().format(_currentWeekStart)} - ${DateFormat.yMMMd().format(weekEnd)}';
-
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        // Clear selection when clicking outside calendar
+        if (_rangeStart != null || _rangeEnd != null) {
+          setState(() {
+            _rangeStart = null;
+            _rangeEnd = null;
+          });
+          widget.onRangeSelected?.call(null, null);
+        }
+      },
+      child: Stack(
         children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: () {
-              setState(() {
-                _currentWeekStart = _currentWeekStart.subtract(const Duration(days: 7));
-              });
-            },
+          Column(
+            children: [
+              // Unified combined header for all screen sizes
+              _buildCombinedHeader(context),
+              const SizedBox(height: SpacingTokens.m),
+              Expanded(
+                child: calendarData.when(
+                  data: (data) => _buildWeekView(data),
+                  loading: () => _buildWeekSkeleton(),
+                  error: (error, stack) => Center(
+                    child: Text('Error: $error'),
+                  ),
+                ),
+              ),
+            ],
           ),
-          Text(
-            weekLabel,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          // Hover tooltip overlay (desktop)
+          if (_hoveredDate != null)
+            calendarData.when(
+              data: (data) => _buildHoverTooltip(data),
+              loading: () => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: () {
-              setState(() {
-                _currentWeekStart = _currentWeekStart.add(const Duration(days: 7));
-              });
-            },
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildLegend() {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 8,
-      alignment: WrapAlignment.center,
+  Widget _buildViewSwitcher(BuildContext context) {
+    final currentView = ref.watch(calendarViewProvider);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: ColorTokens.light.backgroundSecondary,
+        borderRadius: BorderTokens.circularMedium,
+      ),
+      child: Row(
+        children: [
+          _buildViewTab('Week', Icons.view_week, CalendarViewType.week, currentView == CalendarViewType.week),
+          _buildViewTab('Month', Icons.calendar_month, CalendarViewType.month, currentView == CalendarViewType.month),
+          _buildViewTab('Year', Icons.calendar_today, CalendarViewType.year, currentView == CalendarViewType.year),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildViewTab(String label, IconData icon, CalendarViewType viewType, bool isSelected) {
+    return Expanded(
+      child: Semantics(
+        label: '$label view',
+        button: true,
+        selected: isSelected,
+        child: InkWell(
+          onTap: () {
+            ref.read(calendarViewProvider.notifier).state = viewType;
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
+            decoration: BoxDecoration(
+              color: isSelected ? ColorTokens.light.buttonPrimary : Colors.transparent,
+              borderRadius: BorderTokens.circularMedium,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? ColorTokens.light.buttonPrimaryText : ColorTokens.light.textSecondary,
+                  size: IconSizeTokens.small,
+                  semanticLabel: label,
+                ),
+                const SizedBox(height: SpacingTokens.xxs),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected ? ColorTokens.light.buttonPrimaryText : ColorTokens.light.textSecondary,
+                    fontSize: TypographyTokens.fontSizeS2,
+                    fontWeight: isSelected ? TypographyTokens.bold : TypographyTokens.regular,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCombinedHeader(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: ConstraintTokens.maxWideContentWidth * 0.82),
+        child: Container(
+          padding: SpacingTokens.allM,
+          decoration: BoxDecoration(
+            color: ColorTokens.light.backgroundSecondary,
+            borderRadius: BorderTokens.circularRounded,
+            boxShadow: ShadowTokens.light,
+          ),
+          child: Row(
+            children: [
+              // View Switcher - 70%
+              Expanded(
+                flex: 7,
+                child: _buildViewSwitcher(context),
+              ),
+              const SizedBox(width: SpacingTokens.s2),
+
+              // Compact Navigation - 30%
+              Expanded(
+                flex: 3,
+                child: _buildCompactWeekNavigation(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildCompactWeekNavigation() {
+    final weekEndDate = _currentWeekStart.add(const Duration(days: 6));
+    final isSameMonth = _currentWeekStart.month == weekEndDate.month;
+
+    // Format: "Oct 27 - Nov 2" or "Oct 27-30" (if same month)
+    final weekStart = DateFormat.MMMd().format(_currentWeekStart);
+    final weekEnd = isSameMonth
+        ? DateFormat.d().format(weekEndDate)
+        : DateFormat.MMMd().format(weekEndDate);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        _buildLegendItem('Available', DateStatus.available),
-        _buildLegendItem('Booked', DateStatus.booked),
-        _buildLegendItem('Blocked', DateStatus.blocked),
+        IconButton(
+          icon: const Icon(Icons.chevron_left, size: IconSizeTokens.small),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: ConstraintTokens.iconContainerSmall, minHeight: ConstraintTokens.iconContainerSmall),
+          tooltip: 'Previous week',
+          onPressed: () {
+            setState(() {
+              _currentWeekStart = _currentWeekStart.subtract(const Duration(days: 7));
+            });
+          },
+        ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$weekStart - $weekEnd',
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeM,
+                fontWeight: TypographyTokens.bold,
+                color: ColorTokens.light.textPrimary,
+              ),
+            ),
+            Text(
+              DateFormat.y().format(_currentWeekStart),
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeXS2,
+                fontWeight: TypographyTokens.medium,
+                color: ColorTokens.light.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        IconButton(
+          icon: const Icon(Icons.chevron_right, size: IconSizeTokens.small),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: ConstraintTokens.iconContainerSmall, minHeight: ConstraintTokens.iconContainerSmall),
+          tooltip: 'Next week',
+          onPressed: () {
+            setState(() {
+              _currentWeekStart = _currentWeekStart.add(const Duration(days: 7));
+            });
+          },
+        ),
       ],
+    );
+  }
+
+
+  Widget _buildLegend() {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final legendPadding = isMobile ? SpacingTokens.xs2 : SpacingTokens.s;
+    final spacing = isMobile ? SpacingTokens.s2 : SpacingTokens.m2;
+
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: legendPadding, horizontal: isMobile ? SpacingTokens.s : SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: ColorTokens.light.backgroundSecondary,
+        borderRadius: BorderTokens.circularMedium,
+      ),
+      child: Wrap(
+        spacing: spacing,
+        runSpacing: isMobile ? SpacingTokens.xs2 : SpacingTokens.s,
+        alignment: WrapAlignment.center,
+        children: [
+          _buildLegendItem('Available', DateStatus.available),
+          _buildLegendItem('Booked', DateStatus.booked),
+          _buildLegendItem('Check-in', DateStatus.partialCheckIn),
+          _buildLegendItem('Check-out', DateStatus.partialCheckOut),
+        ],
+      ),
     );
   }
 
   Widget _buildLegendItem(String label, DateStatus status) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final boxSize = isMobile ? IconSizeTokens.large : IconSizeTokens.xl;
+    final fontSize = isMobile ? TypographyTokens.fontSizeXS2 : TypographyTokens.fontSizeS2;
+    final spaceBetween = isMobile ? SpacingTokens.xs2 : SpacingTokens.s;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 16,
-          height: 16,
+          width: boxSize,
+          height: boxSize,
           decoration: BoxDecoration(
             color: status.getColor(),
-            border: Border.all(color: status.getBorderColor()),
-            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: status.getBorderColor(),
+              width: BorderTokens.widthMedium,
+            ),
+            borderRadius: BorderTokens.circularTiny,
           ),
+          child: status == DateStatus.partialCheckIn || status == DateStatus.partialCheckOut
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(BorderTokens.radiusSharp + 1),
+                  child: CustomPaint(
+                    painter: SplitDayCalendarPainter(
+                      status: status,
+                      borderColor: status.getBorderColor(),
+                    ),
+                  ),
+                )
+              : null,
         ),
-        const SizedBox(width: 4),
+        SizedBox(width: spaceBetween),
         Text(
           label,
-          style: const TextStyle(fontSize: 12),
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: TypographyTokens.semiBold,
+            color: ColorTokens.light.textPrimary,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildWeekView(Map<String, CalendarDateInfo> data) {
-    return Column(
-      children: [
-        _buildWeekHeader(),
-        const SizedBox(height: 8),
-        Expanded(
-          child: _buildWeekDays(data),
+  Widget _buildWeekSkeleton() {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: ConstraintTokens.maxWideContentWidth * 0.82),
+        child: Column(
+          children: [
+            _buildWeekHeader(),
+            const SizedBox(height: SpacingTokens.s),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: List.generate(
+                  7,
+                  (index) {
+                    final widgets = <Widget>[];
+                    widgets.add(
+                      Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.all(BorderTokens.widthThin),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: ColorTokens.light.borderDefault,
+                              width: BorderTokens.widthThin / 2,
+                            ),
+                          ),
+                          child: const SkeletonLoader(),
+                        ),
+                      ),
+                    );
+                    if (index < 6) {
+                      widgets.add(
+                        Container(
+                          width: BorderTokens.widthMedium,
+                          color: ColorTokens.light.borderStrong,
+                        ),
+                      );
+                    }
+                    return widgets;
+                  },
+                ).expand((element) => element).toList(),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildWeekView(Map<String, CalendarDateInfo> data) {
+    // Dynamic max height based on screen size (40% of screen height)
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxHeight = screenHeight * OpacityTokens.semiTransparent + (screenHeight * 0.1);
+
+    // Constrain week view to max 980px on desktop to prevent excessive width
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: ConstraintTokens.maxWideContentWidth * 0.82),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: maxHeight,
+            minHeight: ConstraintTokens.bottomSheetPeekHeight * 2, // Ensure minimum usable height
+          ),
+          child: Column(
+            children: [
+              _buildWeekHeader(),
+              const SizedBox(height: SpacingTokens.s),
+              _buildLegend(),
+              const SizedBox(height: SpacingTokens.s),
+              Expanded(
+                child: _buildWeekDays(data),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -148,17 +394,21 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
       children: weekDays.map((day) {
         return Expanded(
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
-              border: Border.all(color: Colors.grey[300]!),
+              color: ColorTokens.light.backgroundTertiary,
+              border: Border.all(
+                color: ColorTokens.light.borderStrong,
+                width: BorderTokens.widthMedium,
+              ),
             ),
             child: Text(
               day,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+              style: TextStyle(
+                fontWeight: TypographyTokens.bold,
+                fontSize: TypographyTokens.fontSizeM,
+                color: ColorTokens.light.textPrimary,
               ),
             ),
           ),
@@ -168,14 +418,33 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
   }
 
   Widget _buildWeekDays(Map<String, CalendarDateInfo> data) {
+    // Build day columns with vertical separators between them
+    final dayWidgets = <Widget>[];
+
+    for (int index = 0; index < 7; index++) {
+      final date = _currentWeekStart.add(Duration(days: index));
+
+      // Add day column
+      dayWidgets.add(
+        Expanded(
+          child: _buildDayColumn(date, data),
+        ),
+      );
+
+      // Add separator after each day except the last one
+      if (index < 6) {
+        dayWidgets.add(
+          Container(
+            width: BorderTokens.widthMedium,
+            color: ColorTokens.light.borderStrong,
+          ),
+        );
+      }
+    }
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: List.generate(7, (index) {
-        final date = _currentWeekStart.add(Duration(days: index));
-        return Expanded(
-          child: _buildDayColumn(date, data),
-        );
-      }),
+      children: dayWidgets,
     );
   }
 
@@ -195,26 +464,51 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     // Get price text for display
     final priceText = dateInfo.formattedPrice;
 
-    return GestureDetector(
-      onTap: () => _onDateTapped(date, dateInfo),
-      child: Container(
-        margin: const EdgeInsets.all(1),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isRangeStart || isRangeEnd
-                ? Colors.blue.shade700
-                : isToday
-                    ? Colors.orange.shade700
-                    : Colors.grey.shade300,
-            width: isRangeStart || isRangeEnd || isToday ? 2 : 0.5,
+    final isHovered = _hoveredDate != null && _isSameDay(date, _hoveredDate!);
+
+    final dateLabel = DateFormat('EEEE, MMMM d').format(date);
+    final statusDescription = dateInfo.status.getDisplayName();
+    final priceDescription = dateInfo.price != null ? 'Price: ${dateInfo.formattedPrice}' : '';
+    final accessibilityLabel = '$dateLabel. $statusDescription. $priceDescription';
+
+    return Semantics(
+      label: accessibilityLabel,
+      button: true,
+      enabled: dateInfo.status == DateStatus.available ||
+              dateInfo.status == DateStatus.partialCheckIn ||
+              dateInfo.status == DateStatus.partialCheckOut,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hoveredDate = date),
+        onExit: (_) => setState(() => _hoveredDate = null),
+        onHover: (event) => setState(() => _mousePosition = event.position),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _onDateTapped(date, dateInfo, data),
+          child: Container(
+          margin: const EdgeInsets.all(BorderTokens.widthThin),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isRangeStart || isRangeEnd
+                  ? ColorTokens.light.borderFocus // Black for selection
+                  : isToday
+                      ? ColorTokens.light.borderStrong // Medium grey for today
+                      : isHovered
+                          ? ColorTokens.light.borderStrong // Medium grey on hover
+                          : ColorTokens.light.borderDefault, // Light grey default
+              width: isRangeStart || isRangeEnd || isToday || isHovered ? BorderTokens.widthThick : BorderTokens.widthThin / 2,
+            ),
           ),
-        ),
         child: Stack(
           children: [
             // Background with diagonal split and price
             CustomPaint(
               painter: SplitDayCalendarPainter(
-                status: isInRange ? DateStatus.available : dateInfo.status,
+                // Preserve partialCheckIn/Out status even when in range
+                status: isInRange &&
+                        dateInfo.status != DateStatus.partialCheckIn &&
+                        dateInfo.status != DateStatus.partialCheckOut
+                    ? DateStatus.available
+                    : dateInfo.status,
                 borderColor: dateInfo.status.getBorderColor(),
                 priceText: priceText,
               ),
@@ -225,50 +519,68 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs2, vertical: SpacingTokens.xxs),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(4),
+                    color: isToday
+                        ? ColorTokens.withOpacity(ColorTokens.light.buttonPrimary, OpacityTokens.almostOpaque)
+                        : ColorTokens.withOpacity(ColorTokens.light.backgroundPrimary, OpacityTokens.mostlyVisible + 0.35),
+                    borderRadius: BorderTokens.circularTiny,
+                    border: isToday
+                        ? Border.all(
+                            color: ColorTokens.light.buttonPrimary,
+                            width: BorderTokens.widthThick,
+                          )
+                        : null,
                   ),
                   child: Text(
                     date.day.toString(),
                     style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
-                      color: Colors.black87,
+                      fontSize: TypographyTokens.fontSizeM2 + 5,
+                      fontWeight: isToday ? TypographyTokens.bold : TypographyTokens.semiBold,
+                      color: isToday
+                          ? ColorTokens.light.textOnPrimary
+                          : ColorTokens.light.textPrimary,
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: SpacingTokens.xs),
                 if (isRangeStart)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs, vertical: SpacingTokens.xxs),
                     decoration: BoxDecoration(
-                      color: Colors.blue[700],
-                      borderRadius: BorderRadius.circular(3),
+                      color: ColorTokens.withOpacity(ColorTokens.light.backgroundPrimary, OpacityTokens.almostOpaque),
+                      border: Border.all(
+                        color: ColorTokens.light.borderFocus,
+                        width: BorderTokens.widthMedium,
+                      ),
+                      borderRadius: BorderTokens.circularTiny,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Check-in',
                       style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        fontSize: TypographyTokens.poweredBySize,
+                        fontWeight: TypographyTokens.bold,
+                        color: ColorTokens.light.textPrimary,
                       ),
                     ),
                   ),
                 if (isRangeEnd)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs, vertical: SpacingTokens.xxs),
                     decoration: BoxDecoration(
-                      color: Colors.blue[700],
-                      borderRadius: BorderRadius.circular(3),
+                      color: ColorTokens.withOpacity(ColorTokens.light.backgroundPrimary, OpacityTokens.almostOpaque),
+                      border: Border.all(
+                        color: ColorTokens.light.borderFocus,
+                        width: BorderTokens.widthMedium,
+                      ),
+                      borderRadius: BorderTokens.circularTiny,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Check-out',
                       style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        fontSize: TypographyTokens.poweredBySize,
+                        fontWeight: TypographyTokens.bold,
+                        color: ColorTokens.light.textPrimary,
                       ),
                     ),
                   ),
@@ -276,6 +588,8 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
             ),
           ],
         ),
+        ),
+      ),
       ),
     );
   }
@@ -283,15 +597,63 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
   Widget _buildEmptyDay() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        border: Border.all(color: Colors.grey[300]!),
+        color: ColorTokens.light.backgroundSecondary,
+        border: Border.all(
+          color: ColorTokens.light.borderLight,
+          width: BorderTokens.widthThin / 2,
+        ),
+      ),
+      child: Opacity(
+        opacity: OpacityTokens.mostlyVisible,
+        child: Container(),
       ),
     );
   }
 
-  void _onDateTapped(DateTime date, CalendarDateInfo dateInfo) {
-    if (dateInfo.status != DateStatus.available) {
-      // Can't select booked or blocked dates
+  Widget _buildHoverTooltip(Map<String, CalendarDateInfo> data) {
+    if (_hoveredDate == null) return const SizedBox.shrink();
+
+    final key = _getDateKey(_hoveredDate!);
+    final dateInfo = data[key];
+
+    if (dateInfo == null) return const SizedBox.shrink();
+
+    // Use actual mouse position for tooltip
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Position tooltip near mouse, offset slightly to avoid cursor overlap
+    final tooltipWidth = ConstraintTokens.maxCardWidth / 2;
+    final tooltipHeight = ConstraintTokens.calendarCellMinHeight * 2;
+
+    // Offset tooltip to the right and up from cursor
+    double xPosition = _mousePosition.dx + SpacingTokens.s2;
+    double yPosition = _mousePosition.dy - tooltipHeight - SpacingTokens.s2;
+
+    // Keep tooltip within screen bounds
+    if (xPosition + tooltipWidth > screenWidth) {
+      xPosition = _mousePosition.dx - tooltipWidth - SpacingTokens.s2; // Show on left instead
+    }
+    if (yPosition < SpacingTokens.m2) {
+      yPosition = _mousePosition.dy + SpacingTokens.m2; // Show below cursor instead
+    }
+
+    xPosition = xPosition.clamp(SpacingTokens.m2, screenWidth - tooltipWidth - SpacingTokens.m2);
+    yPosition = yPosition.clamp(SpacingTokens.m2, screenHeight - tooltipHeight - SpacingTokens.m2);
+
+    return CalendarHoverTooltip(
+      date: _hoveredDate!,
+      price: dateInfo.price,
+      status: dateInfo.status,
+      position: Offset(xPosition, yPosition),
+    );
+  }
+
+  void _onDateTapped(DateTime date, CalendarDateInfo dateInfo, Map<String, CalendarDateInfo> data) {
+    if (dateInfo.status != DateStatus.available &&
+        dateInfo.status != DateStatus.partialCheckIn &&
+        dateInfo.status != DateStatus.partialCheckOut) {
+      // Can't select booked, pending, blocked, or disabled dates
       return;
     }
 
@@ -301,7 +663,28 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
         _rangeStart = date;
         _rangeEnd = null;
       } else if (_rangeStart != null && _rangeEnd == null) {
-        // Complete range
+        // Complete range - validate no booked dates in between
+        final DateTime start = date.isBefore(_rangeStart!) ? date : _rangeStart!;
+        final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
+
+        // Check if there are any booked/pending dates in the range
+        if (_hasBlockedDatesInRange(start, end, data)) {
+          // Reset selection and show error
+          _rangeStart = null;
+          _rangeEnd = null;
+
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Cannot select dates. There are already booked dates in this range.'),
+              backgroundColor: ColorTokens.light.error,
+              duration: AnimationTokens.notification,
+            ),
+          );
+          return;
+        }
+
+        // No blocked dates, set the range
         if (date.isBefore(_rangeStart!)) {
           _rangeEnd = _rangeStart;
           _rangeStart = date;
@@ -312,6 +695,24 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     });
 
     widget.onRangeSelected?.call(_rangeStart, _rangeEnd);
+  }
+
+  /// Check if there are any booked or pending dates between start and end (inclusive)
+  bool _hasBlockedDatesInRange(DateTime start, DateTime end, Map<String, CalendarDateInfo> data) {
+    DateTime current = start;
+    while (current.isBefore(end) || _isSameDay(current, end)) {
+      final key = _getDateKey(current);
+      final dateInfo = data[key];
+
+      if (dateInfo != null &&
+          (dateInfo.status == DateStatus.booked ||
+           dateInfo.status == DateStatus.pending)) {
+        return true; // Found a blocked date
+      }
+
+      current = current.add(const Duration(days: 1));
+    }
+    return false; // No blocked dates found
   }
 
   bool _isDateInRange(DateTime date) {

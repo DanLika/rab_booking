@@ -4,6 +4,7 @@ import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../widget/domain/models/payment_option.dart';
 
 /// Owner bookings model with extended property/unit info
 class OwnerBooking {
@@ -60,8 +61,8 @@ class FirebaseOwnerBookingsRepository {
 
       // Step 2: Get all units for these properties (if not filtering by specific unit)
       List<String> unitIds = [];
-      Map<String, UnitModel> unitsMap = {};
-      Map<String, String> unitToPropertyMap = {};
+      final Map<String, UnitModel> unitsMap = {};
+      final Map<String, String> unitToPropertyMap = {};
 
       if (unitId != null) {
         // Get specific unit - need to find which property it belongs to
@@ -101,7 +102,7 @@ class FirebaseOwnerBookingsRepository {
       if (unitIds.isEmpty) return [];
 
       // Step 3: Get bookings for these units (in batches of 10)
-      List<BookingModel> bookings = [];
+      final List<BookingModel> bookings = [];
       for (int i = 0; i < unitIds.length; i += 10) {
         final batch = unitIds.skip(i).take(10).toList();
         var query = _firestore
@@ -110,13 +111,13 @@ class FirebaseOwnerBookingsRepository {
 
         // Apply filters
         if (status != null) {
-          query = query.where('status', isEqualTo: status.value) as Query<Map<String, dynamic>>;
+          query = query.where('status', isEqualTo: status.value);
         }
         if (startDate != null) {
-          query = query.where('check_in', isGreaterThanOrEqualTo: startDate) as Query<Map<String, dynamic>>;
+          query = query.where('check_in', isGreaterThanOrEqualTo: startDate);
         }
         if (endDate != null) {
-          query = query.where('check_out', isLessThanOrEqualTo: endDate) as Query<Map<String, dynamic>>;
+          query = query.where('check_out', isLessThanOrEqualTo: endDate);
         }
 
         final bookingsSnapshot = await query.get();
@@ -128,7 +129,7 @@ class FirebaseOwnerBookingsRepository {
       }
 
       // Step 4: Get properties data
-      Map<String, PropertyModel> propertiesMap = {};
+      final Map<String, PropertyModel> propertiesMap = {};
       final uniquePropertyIds = unitToPropertyMap.values.toSet().toList();
       for (int i = 0; i < uniquePropertyIds.length; i += 10) {
         final batch = uniquePropertyIds.skip(i).take(10).toList();
@@ -141,7 +142,7 @@ class FirebaseOwnerBookingsRepository {
       }
 
       // Step 5: Get user (guest) data for each booking (skip null userIds from widget bookings)
-      Map<String, Map<String, dynamic>> usersMap = {};
+      final Map<String, Map<String, dynamic>> usersMap = {};
       final uniqueUserIds = bookings
           .map((b) => b.userId)
           .where((id) => id != null)
@@ -198,12 +199,14 @@ class FirebaseOwnerBookingsRepository {
   }
 
   /// Get bookings for calendar view (grouped by unit)
+  /// Includes both regular bookings AND iCal events (Booking.com, Airbnb, etc.)
   Future<Map<String, List<BookingModel>>> getCalendarBookings({
     required String ownerId,
     String? propertyId,
     String? unitId,
     required DateTime startDate,
     required DateTime endDate,
+    bool includeIcalEvents = true, // Optional: include external bookings
   }) async {
     try {
       // Step 1: Get units
@@ -245,6 +248,10 @@ class FirebaseOwnerBookingsRepository {
         final batch = unitIds.skip(i).take(10).toList();
 
         // Get bookings where check_in <= endDate AND check_out >= startDate
+        // NOTE: Firestore allows only ONE inequality filter per query
+        // We filter by check_in on server, then check_out on client
+        // OPTIMIZATION: Could add compound index (unit_id + check_out + check_in)
+        // but requires schema migration - current approach works well for <1000 bookings/unit
         final bookingsSnapshot = await _firestore
             .collection('bookings')
             .where('unit_id', whereIn: batch)
@@ -254,14 +261,32 @@ class FirebaseOwnerBookingsRepository {
         for (final doc in bookingsSnapshot.docs) {
           final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
 
-          // Client-side filter for check_out >= startDate (Firestore limitation)
-          if (booking.checkOut.isAfter(startDate) || booking.checkOut.isAtSameMomentAs(startDate)) {
-            final unitId = booking.unitId;
-            if (!bookingsByUnit.containsKey(unitId)) {
-              bookingsByUnit[unitId] = [];
-            }
-            bookingsByUnit[unitId]!.add(booking);
+          // OPTIMIZED: Client-side filter with early exit
+          if (booking.checkOut.isBefore(startDate)) {
+            continue; // Skip bookings that ended before range
           }
+
+          final unitId = booking.unitId;
+          if (!bookingsByUnit.containsKey(unitId)) {
+            bookingsByUnit[unitId] = [];
+          }
+          bookingsByUnit[unitId]!.add(booking);
+        }
+      }
+
+      // Step 3: OPTIONAL - Add iCal events as "pseudo-bookings" (Booking.com, Airbnb, etc.)
+      if (includeIcalEvents) {
+        try {
+          await _addIcalEventsToCalendar(
+            bookingsByUnit: bookingsByUnit,
+            unitIds: unitIds,
+            startDate: startDate,
+            endDate: endDate,
+          );
+        } catch (icalError) {
+          // GRACEFUL FALLBACK: If iCal query fails, continue with regular bookings
+          // This ensures calendar works even if owner has no iCal feeds or there's an error
+          print('⚠️ iCal events query failed (non-critical): $icalError');
         }
       }
 
@@ -273,6 +298,106 @@ class FirebaseOwnerBookingsRepository {
       return bookingsByUnit;
     } catch (e) {
       throw Exception('Failed to fetch calendar bookings: $e');
+    }
+  }
+
+  /// OPTIONAL: Add iCal events (Booking.com, Airbnb, etc.) to calendar bookings
+  /// Converts iCal events to pseudo-BookingModel objects for display
+  /// Gracefully fails if no iCal feeds exist or query fails
+  Future<void> _addIcalEventsToCalendar({
+    required Map<String, List<BookingModel>> bookingsByUnit,
+    required List<String> unitIds,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    // Query iCal events in batches (Firestore whereIn limit is 10)
+    for (int i = 0; i < unitIds.length; i += 10) {
+      final batch = unitIds.skip(i).take(10).toList();
+
+      final icalSnapshot = await _firestore
+          .collection('ical_events')
+          .where('unit_id', whereIn: batch)
+          .where('start_date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
+          .get();
+
+      // Convert iCal events to pseudo-BookingModel objects
+      for (final doc in icalSnapshot.docs) {
+        try {
+          final data = doc.data();
+          final startDateTimestamp = data['start_date'] as Timestamp;
+          final endDateTimestamp = data['end_date'] as Timestamp;
+          final eventStartDate = startDateTimestamp.toDate();
+          final eventEndDate = endDateTimestamp.toDate();
+
+          // Skip events that ended before range
+          if (eventEndDate.isBefore(startDate)) {
+            continue;
+          }
+
+          final unitId = data['unit_id'] as String;
+          final source = data['source'] as String? ?? 'ical';
+          final guestName = data['guest_name'] as String? ?? 'External Booking';
+
+          // Create pseudo-BookingModel for iCal event
+          // Using special ID prefix 'ical_' to distinguish from regular bookings
+          final pseudoBooking = BookingModel(
+            id: 'ical_${doc.id}', // Special prefix to identify iCal bookings
+            unitId: unitId,
+            userId: null, // External bookings have no user
+            checkIn: eventStartDate,
+            checkOut: eventEndDate,
+            guestCount: 1,
+            totalPrice: 0.0, // External bookings don't have price in our system
+            paidAmount: 0.0,
+            status: BookingStatus.confirmed, // Always show as confirmed
+            paymentMethod: 'on_place', // External bookings payment tracked elsewhere
+            guestName: '$guestName ($source)', // e.g., "Booking.com Guest (booking_com)"
+            guestEmail: null, // External bookings don't have email
+            guestPhone: null,
+            notes: 'Imported from $source via iCal sync',
+            createdAt: eventStartDate,
+            updatedAt: eventStartDate,
+          );
+
+          // Add to bookings map
+          if (!bookingsByUnit.containsKey(unitId)) {
+            bookingsByUnit[unitId] = [];
+          }
+          bookingsByUnit[unitId]!.add(pseudoBooking);
+        } catch (parseError) {
+          // Skip malformed iCal events
+          print('⚠️ Failed to parse iCal event ${doc.id}: $parseError');
+        }
+      }
+    }
+  }
+
+  /// Approve pending booking (owner approval workflow)
+  Future<void> approveBooking(String bookingId) async {
+    try {
+      await _firestore.collection('bookings').doc(bookingId).update({
+        'status': BookingStatus.confirmed.value,
+        'approved_at': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+      // Email notification will be sent by onBookingStatusChange Cloud Function
+    } catch (e) {
+      throw Exception('Failed to approve booking: $e');
+    }
+  }
+
+  /// Reject pending booking (owner approval workflow)
+  Future<void> rejectBooking(String bookingId, {String? reason}) async {
+    try {
+      await _firestore.collection('bookings').doc(bookingId).update({
+        'status': BookingStatus.cancelled.value,
+        'rejection_reason': reason ?? 'Rejected by owner',
+        'rejected_at': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+      // Email notification will be sent by onBookingStatusChange Cloud Function
+    } catch (e) {
+      throw Exception('Failed to reject booking: $e');
     }
   }
 
@@ -289,7 +414,8 @@ class FirebaseOwnerBookingsRepository {
   }
 
   /// Cancel booking with reason
-  Future<void> cancelBooking(String bookingId, String reason) async {
+  /// Note: Cancellation email is automatically sent by onBookingStatusChange Cloud Function trigger
+  Future<void> cancelBooking(String bookingId, String reason, {bool sendEmail = true}) async {
     try {
       await _firestore.collection('bookings').doc(bookingId).update({
         'status': BookingStatus.cancelled.value,
@@ -297,6 +423,9 @@ class FirebaseOwnerBookingsRepository {
         'cancelled_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });
+
+      // Email is automatically sent by onBookingStatusChange Cloud Function
+      // when status changes to 'cancelled'
     } catch (e) {
       throw Exception('Failed to cancel booking: $e');
     }
@@ -311,6 +440,15 @@ class FirebaseOwnerBookingsRepository {
       });
     } catch (e) {
       throw Exception('Failed to complete booking: $e');
+    }
+  }
+
+  /// Permanently delete booking
+  Future<void> deleteBooking(String bookingId) async {
+    try {
+      await _firestore.collection('bookings').doc(bookingId).delete();
+    } catch (e) {
+      throw Exception('Failed to delete booking: $e');
     }
   }
 

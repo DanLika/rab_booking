@@ -1,18 +1,23 @@
 import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
 import Stripe from "stripe";
+import {defineSecret} from "firebase-functions/params";
 import {
   sendBookingApprovedEmail,
   sendOwnerNotificationEmail,
 } from "./emailService";
 import {admin, db} from "./firebase";
-import {getStripeClient} from "./stripe";
+import {getStripeClient, stripeSecretKey} from "./stripe";
+import {createPaymentNotification} from "./notificationService";
+
+// Define webhook secret
+const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 
 /**
  * Cloud Function: Create Stripe Checkout Session
  *
  * Creates a Stripe checkout session for 20% deposit payment
  */
-export const createStripeCheckoutSession = onCall(async (request) => {
+export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, async (request) => {
   const {bookingId, returnUrl} = request.data;
 
   if (!bookingId) {
@@ -128,7 +133,7 @@ export const createStripeCheckoutSession = onCall(async (request) => {
  *
  * Listens for payment success events from Stripe and updates booking status
  */
-export const handleStripeWebhook = onRequest(async (req, res) => {
+export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeWebhookSecret]}, async (req, res) => {
   const sig = req.headers["stripe-signature"];
 
   if (!sig) {
@@ -137,7 +142,7 @@ export const handleStripeWebhook = onRequest(async (req, res) => {
     return;
   }
 
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
+  const webhookSecret = stripeWebhookSecret.value();
   if (!webhookSecret) {
     console.error("STRIPE_WEBHOOK_SECRET not configured");
     res.status(500).send("Webhook secret not configured");
@@ -248,6 +253,23 @@ export const handleStripeWebhook = onRequest(async (req, res) => {
         }
       } catch (error) {
         console.error("Failed to send notification email to owner:", error);
+      }
+
+      // Create in-app payment notification for owner
+      try {
+        const ownerId = propertyData?.owner_id;
+        if (ownerId) {
+          await createPaymentNotification(
+            ownerId,
+            bookingId,
+            booking.guest_name || "Guest",
+            booking.deposit_amount || 0
+          );
+          console.log(`In-app payment notification created for owner ${ownerId}`);
+        }
+      } catch (notificationError) {
+        console.error("Failed to create in-app payment notification:", notificationError);
+        // Continue - notification failure shouldn't break the flow
       }
 
       res.json({received: true, booking_id: bookingId, status: "confirmed"});

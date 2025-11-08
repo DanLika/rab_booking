@@ -27,9 +27,9 @@ class AccessibilityUtils {
   /// Calculate relative luminance of a color
   /// Based on WCAG 2.1 formula
   static double _calculateRelativeLuminance(Color color) {
-    final r = _sRGBtoLinear(color.red / 255);
-    final g = _sRGBtoLinear(color.green / 255);
-    final b = _sRGBtoLinear(color.blue / 255);
+    final r = _sRGBtoLinear(((color.r * 255.0).round() & 0xff) / 255);
+    final g = _sRGBtoLinear(((color.g * 255.0).round() & 0xff) / 255);
+    final b = _sRGBtoLinear(((color.b * 255.0).round() & 0xff) / 255);
 
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   }
@@ -43,7 +43,7 @@ class AccessibilityUtils {
   }
 
   /// Check if color combination meets WCAG AAA standard
-  static bool meetsWCAG_AAA({
+  static bool meetsWcagAaa({
     required Color foreground,
     required Color background,
     bool isLargeText = false,
@@ -54,7 +54,7 @@ class AccessibilityUtils {
   }
 
   /// Check if color combination meets WCAG AA standard
-  static bool meetsWCAG_AA({
+  static bool meetsWcagAa({
     required Color foreground,
     required Color background,
     bool isLargeText = false,
@@ -81,7 +81,7 @@ class AccessibilityUtils {
     required Color background,
     bool isLargeText = false,
   }) {
-    if (meetsWCAG_AAA(
+    if (meetsWcagAaa(
       foreground: foreground,
       background: background,
       isLargeText: isLargeText,
@@ -97,21 +97,21 @@ class AccessibilityUtils {
     for (var i = 0; i < 100; i++) {
       if (shouldDarken) {
         adjusted = Color.fromRGBO(
-          (adjusted.red * 0.95).round().clamp(0, 255),
-          (adjusted.green * 0.95).round().clamp(0, 255),
-          (adjusted.blue * 0.95).round().clamp(0, 255),
-          adjusted.opacity,
+          (((adjusted.r * 255.0).round() & 0xff) * 0.95).round().clamp(0, 255),
+          (((adjusted.g * 255.0).round() & 0xff) * 0.95).round().clamp(0, 255),
+          (((adjusted.b * 255.0).round() & 0xff) * 0.95).round().clamp(0, 255),
+          adjusted.a,
         );
       } else {
         adjusted = Color.fromRGBO(
-          math.min(255, (adjusted.red * 1.05).round()),
-          math.min(255, (adjusted.green * 1.05).round()),
-          math.min(255, (adjusted.blue * 1.05).round()),
-          adjusted.opacity,
+          math.min(255, (((adjusted.r * 255.0).round() & 0xff) * 1.05).round()),
+          math.min(255, (((adjusted.g * 255.0).round() & 0xff) * 1.05).round()),
+          math.min(255, (((adjusted.b * 255.0).round() & 0xff) * 1.05).round()),
+          adjusted.a,
         );
       }
 
-      if (meetsWCAG_AAA(
+      if (meetsWcagAaa(
         foreground: adjusted,
         background: background,
         isLargeText: isLargeText,
@@ -259,7 +259,7 @@ class AccessibleColorPalette {
 
     // Gradually adjust until we meet contrast requirements
     for (var i = 0; i < 10; i++) {
-      if (AccessibilityUtils.meetsWCAG_AAA(
+      if (AccessibilityUtils.meetsWcagAaa(
         foreground: foreground,
         background: background,
       )) {
@@ -276,23 +276,23 @@ class AccessibleColorPalette {
   /// Validate entire color scheme for accessibility
   static Map<String, bool> validateColorScheme(ColorScheme scheme) {
     return {
-      'primary_on_surface': AccessibilityUtils.meetsWCAG_AAA(
+      'primary_on_surface': AccessibilityUtils.meetsWcagAaa(
         foreground: scheme.primary,
         background: scheme.surface,
       ),
-      'onPrimary_on_primary': AccessibilityUtils.meetsWCAG_AAA(
+      'onPrimary_on_primary': AccessibilityUtils.meetsWcagAaa(
         foreground: scheme.onPrimary,
         background: scheme.primary,
       ),
-      'secondary_on_surface': AccessibilityUtils.meetsWCAG_AAA(
+      'secondary_on_surface': AccessibilityUtils.meetsWcagAaa(
         foreground: scheme.secondary,
         background: scheme.surface,
       ),
-      'onSecondary_on_secondary': AccessibilityUtils.meetsWCAG_AAA(
+      'onSecondary_on_secondary': AccessibilityUtils.meetsWcagAaa(
         foreground: scheme.onSecondary,
         background: scheme.secondary,
       ),
-      'error_on_surface': AccessibilityUtils.meetsWCAG_AAA(
+      'error_on_surface': AccessibilityUtils.meetsWcagAaa(
         foreground: scheme.error,
         background: scheme.surface,
       ),

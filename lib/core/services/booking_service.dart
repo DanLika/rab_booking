@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/constants/enums.dart';
 import '../../shared/models/booking_model.dart';
+import 'logging_service.dart';
 
 /// Service for managing bookings in Firestore
 ///
@@ -29,8 +29,9 @@ class BookingService {
   /// - [guestPhone]: Guest's phone number
   /// - [guestCount]: Number of guests (adults + children)
   /// - [totalPrice]: Total price for the stay
-  /// - [paymentOption]: 'deposit' (20%) or 'full' (100%)
-  /// - [paymentMethod]: 'stripe' or 'bank_transfer'
+  /// - [paymentOption]: 'deposit' (20%), 'full' (100%), or 'none' (no payment)
+  /// - [paymentMethod]: 'stripe', 'bank_transfer', or 'none'
+  /// - [requireOwnerApproval]: If true, booking starts as pending approval
   /// - [notes]: Special requests/notes (optional)
   ///
   /// Returns: BookingModel with generated ID and booking reference
@@ -45,31 +46,47 @@ class BookingService {
     required String guestPhone,
     required int guestCount,
     required double totalPrice,
-    required String paymentOption, // 'deposit' or 'full'
-    required String paymentMethod, // 'stripe' or 'bank_transfer'
+    required String paymentOption, // 'deposit', 'full', or 'none'
+    required String paymentMethod, // 'stripe', 'bank_transfer', or 'none'
+    bool requireOwnerApproval = false,
     String? notes,
   }) async {
     try {
-      debugPrint('🔵 [BookingService] Creating booking...');
-      debugPrint('   Unit: $unitId');
-      debugPrint('   Guest: $guestName ($guestEmail)');
-      debugPrint('   Dates: $checkIn to $checkOut');
-      debugPrint('   Total: €$totalPrice');
-      debugPrint('   Payment: $paymentOption via $paymentMethod');
+      LoggingService.logOperation('[BookingService] Creating booking...');
+      LoggingService.logDebug('   Unit: $unitId');
+      LoggingService.logDebug('   Guest: $guestName ($guestEmail)');
+      LoggingService.logDebug('   Dates: $checkIn to $checkOut');
+      LoggingService.logDebug('   Total: €$totalPrice');
+      LoggingService.logDebug('   Payment: $paymentOption via $paymentMethod');
 
       // Generate booking ID and reference
       final bookingId = _uuid.v4();
       final bookingReference = _generateBookingReference();
 
-      // Calculate deposit amount (20% or 100%)
-      final depositAmount = paymentOption == 'deposit'
-          ? totalPrice * 0.2
-          : totalPrice;
+      // Calculate deposit amount (20%, 100%, or 0 for no payment)
+      final depositAmount = paymentOption == 'none'
+          ? 0.0
+          : paymentOption == 'deposit'
+              ? totalPrice * 0.2
+              : totalPrice;
 
-      // Determine initial status
-      final status = paymentMethod == 'bank_transfer'
-          ? BookingStatus.pending // Pending payment confirmation
-          : BookingStatus.pending; // Pending Stripe payment
+      // Determine initial status based on widget mode and payment method
+      BookingStatus status;
+      String paymentStatusValue;
+
+      if (requireOwnerApproval || paymentMethod == 'none') {
+        // bookingPending mode or no payment - requires owner approval
+        status = BookingStatus.pending;
+        paymentStatusValue = 'not_required'; // Payment not required for pending bookings
+      } else if (paymentMethod == 'bank_transfer') {
+        // Bank transfer - pending payment confirmation
+        status = BookingStatus.pending;
+        paymentStatusValue = 'pending';
+      } else {
+        // Stripe payment - pending Stripe checkout completion
+        status = BookingStatus.pending;
+        paymentStatusValue = 'pending';
+      }
 
       // Create booking model
       final booking = BookingModel(
@@ -86,7 +103,7 @@ class BookingService {
         paidAmount: 0, // Not paid yet
         advanceAmount: depositAmount,
         paymentMethod: paymentMethod,
-        paymentStatus: 'pending',
+        paymentStatus: paymentStatusValue,
         source: 'widget',
         guestCount: guestCount,
         notes: notes,
@@ -100,16 +117,17 @@ class BookingService {
         'booking_reference': bookingReference, // Required by Stripe Cloud Function
         'property_id': propertyId, // Required by Stripe Cloud Function
         'deposit_amount': depositAmount, // Required by Stripe Cloud Function
+        'require_owner_approval': requireOwnerApproval, // For pending approval workflow
       };
 
       await docRef.set(bookingData);
 
-      debugPrint('✅ [BookingService] Booking created: $bookingReference (ID: $bookingId)');
-      debugPrint('   Deposit amount: €${depositAmount.toStringAsFixed(2)}');
+      LoggingService.logSuccess('[BookingService] Booking created: $bookingReference (ID: $bookingId)');
+      LoggingService.logDebug('   Deposit amount: €${depositAmount.toStringAsFixed(2)}');
 
       return booking;
     } catch (e) {
-      debugPrint('❌ [BookingService] Error creating booking: $e');
+      await LoggingService.logError('[BookingService] Error creating booking', e);
       throw BookingServiceException('Failed to create booking: $e');
     }
   }
@@ -128,7 +146,7 @@ class BookingService {
         ...doc.data()!,
       });
     } catch (e) {
-      debugPrint('❌ [BookingService] Error fetching booking: $e');
+      await LoggingService.logError('[BookingService] Error fetching booking', e);
       throw BookingServiceException('Failed to fetch booking: $e');
     }
   }
@@ -151,7 +169,7 @@ class BookingService {
         ...query.docs.first.data(),
       });
     } catch (e) {
-      debugPrint('❌ [BookingService] Error fetching booking by reference: $e');
+      await LoggingService.logError('[BookingService] Error fetching booking by reference', e);
       throw BookingServiceException('Failed to fetch booking: $e');
     }
   }
@@ -167,9 +185,9 @@ class BookingService {
         'updated_at': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ [BookingService] Booking $bookingId status updated to $status');
+      LoggingService.logSuccess('[BookingService] Booking $bookingId status updated to $status');
     } catch (e) {
-      debugPrint('❌ [BookingService] Error updating booking status: $e');
+      await LoggingService.logError('[BookingService] Error updating booking status', e);
       throw BookingServiceException('Failed to update booking status: $e');
     }
   }
@@ -189,9 +207,9 @@ class BookingService {
         'updated_at': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ [BookingService] Booking $bookingId cancelled');
+      LoggingService.logSuccess('[BookingService] Booking $bookingId cancelled');
     } catch (e) {
-      debugPrint('❌ [BookingService] Error cancelling booking: $e');
+      await LoggingService.logError('[BookingService] Error cancelling booking', e);
       throw BookingServiceException('Failed to cancel booking: $e');
     }
   }

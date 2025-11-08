@@ -180,8 +180,49 @@ class AppColors {
   static const Color statusCompleted = Color(0xFF6B7280); // Gray 500
 
   // ============================================================================
+  // AUTH SCREEN COLORS (Premium Purple-Blue Theme)
+  // ============================================================================
+
+  /// Auth primary color - Modern Purple
+  static const Color authPrimary = Color(0xFF6B4CE6); // Purple
+
+  /// Auth secondary color - Lighter Blue
+  static const Color authSecondary = Color(0xFF4A90E2); // Blue
+
+  /// Auth background gradient start - Beige
+  static const Color authBackgroundStart = Color(0xFFFAF8F3); // Beige
+
+  /// Auth background gradient end - White
+  static const Color authBackgroundEnd = Color(0xFFFFFFFF); // White
+
+  /// Auth illustration color - Dark Gray
+  static const Color authIllustration = Color(0xFF2C2C2C); // Dark Gray
+
+  // ============================================================================
   // GRADIENT COLORS
   // ============================================================================
+
+  /// Auth gradient - Modern Purple to Blue
+  /// Use for: auth buttons, auth accents
+  static const LinearGradient authGradient = LinearGradient(
+    colors: [
+      Color(0xFF6B4CE6), // Purple
+      Color(0xFF4A90E2), // Blue
+    ],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
+  /// Auth background gradient - Beige to White diagonal
+  /// Use for: auth screen background
+  static const LinearGradient authBackgroundGradient = LinearGradient(
+    colors: [
+      Color(0xFFFAF8F3), // Beige
+      Color(0xFFFFFFFF), // White
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   /// Primary gradient - Ocean Depths (Azure blue spectrum)
   /// Use for: hero sections, featured cards, primary backgrounds

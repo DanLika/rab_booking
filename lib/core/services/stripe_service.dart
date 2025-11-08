@@ -1,5 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:flutter/foundation.dart';
+import 'logging_service.dart';
 
 /// Service for Stripe payment integration
 ///
@@ -28,7 +28,7 @@ class StripeService {
     String? returnUrl,
   }) async {
     try {
-      debugPrint('🔵 [StripeService] Creating checkout session for booking: $bookingId');
+      LoggingService.logOperation('[StripeService] Creating checkout session for booking: $bookingId');
 
       final result = await _functions
           .httpsCallable('createStripeCheckoutSession')
@@ -46,7 +46,7 @@ class StripeService {
         );
       }
 
-      debugPrint('✅ [StripeService] Checkout session created: ${data['sessionId']}');
+      LoggingService.logSuccess('[StripeService] Checkout session created: ${data['sessionId']}');
 
       return StripeCheckoutResult(
         success: true,
@@ -54,13 +54,13 @@ class StripeService {
         checkoutUrl: data['checkoutUrl'] as String,
       );
     } on FirebaseFunctionsException catch (e) {
-      debugPrint('❌ [StripeService] Firebase Functions error: ${e.code} - ${e.message}');
+      await LoggingService.logError('[StripeService] Firebase Functions error: ${e.code} - ${e.message}', e);
       throw StripeServiceException(
         'Failed to create checkout session: ${e.message}',
         e.code,
       );
     } catch (e) {
-      debugPrint('❌ [StripeService] Unexpected error: $e');
+      await LoggingService.logError('[StripeService] Unexpected error', e);
       throw StripeServiceException(
         'Unexpected error creating checkout session',
         e.toString(),
@@ -73,7 +73,7 @@ class StripeService {
   /// Calls the existing Cloud Function: getStripeAccountStatus
   Future<StripeAccountStatus> getAccountStatus() async {
     try {
-      debugPrint('🔵 [StripeService] Getting Stripe account status');
+      LoggingService.logOperation('[StripeService] Getting Stripe account status');
 
       final result = await _functions
           .httpsCallable('getStripeAccountStatus')
@@ -81,11 +81,11 @@ class StripeService {
 
       final data = result.data as Map<String, dynamic>;
 
-      debugPrint('✅ [StripeService] Account status retrieved');
+      LoggingService.logSuccess('[StripeService] Account status retrieved');
 
       return StripeAccountStatus.fromMap(data);
     } on FirebaseFunctionsException catch (e) {
-      debugPrint('❌ [StripeService] Error getting account status: ${e.message}');
+      await LoggingService.logError('[StripeService] Error getting account status: ${e.message}', e);
       throw StripeServiceException(
         'Failed to get account status: ${e.message}',
         e.code,
@@ -101,7 +101,7 @@ class StripeService {
     required String refreshUrl,
   }) async {
     try {
-      debugPrint('🔵 [StripeService] Creating Stripe Connect account');
+      LoggingService.logOperation('[StripeService] Creating Stripe Connect account');
 
       final result = await _functions
           .httpsCallable('createStripeConnectAccount')
@@ -119,7 +119,7 @@ class StripeService {
         );
       }
 
-      debugPrint('✅ [StripeService] Connect account created');
+      LoggingService.logSuccess('[StripeService] Connect account created');
 
       return StripeConnectResult(
         success: true,
@@ -127,7 +127,7 @@ class StripeService {
         onboardingUrl: data['onboardingUrl'] as String,
       );
     } on FirebaseFunctionsException catch (e) {
-      debugPrint('❌ [StripeService] Error creating Connect account: ${e.message}');
+      await LoggingService.logError('[StripeService] Error creating Connect account: ${e.message}', e);
       throw StripeServiceException(
         'Failed to create Connect account: ${e.message}',
         e.code,
@@ -140,7 +140,7 @@ class StripeService {
   /// Calls the existing Cloud Function: createStripeDashboardLink
   Future<String> createDashboardLink() async {
     try {
-      debugPrint('🔵 [StripeService] Creating dashboard link');
+      LoggingService.logOperation('[StripeService] Creating dashboard link');
 
       final result = await _functions
           .httpsCallable('createStripeDashboardLink')
@@ -155,11 +155,11 @@ class StripeService {
         );
       }
 
-      debugPrint('✅ [StripeService] Dashboard link created');
+      LoggingService.logSuccess('[StripeService] Dashboard link created');
 
       return data['dashboardUrl'] as String;
     } on FirebaseFunctionsException catch (e) {
-      debugPrint('❌ [StripeService] Error creating dashboard link: ${e.message}');
+      await LoggingService.logError('[StripeService] Error creating dashboard link: ${e.message}', e);
       throw StripeServiceException(
         'Failed to create dashboard link: ${e.message}',
         e.code,

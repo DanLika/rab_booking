@@ -4,25 +4,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/enhanced_login_screen.dart';
+import '../services/logging_service.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/enhanced_register_screen.dart';
 import '../../features/auth/presentation/screens/email_verification_screen.dart';
+import '../../features/auth/presentation/screens/privacy_policy_screen.dart';
+import '../../features/auth/presentation/screens/terms_conditions_screen.dart';
 import '../../features/owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import '../../features/owner_dashboard/presentation/screens/analytics_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/overview_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/properties_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/calendar_week_view_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/owner_calendar_main_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_bookings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/property_form_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/unit_form_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/unit_pricing_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/units_management_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/widget_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/notifications_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/profile_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/edit_profile_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/change_password_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/notification_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/price_list_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/onboarding_welcome_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/onboarding_wizard_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/onboarding_success_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/ical_sync_settings_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/guides/stripe_guide_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/guides/ical_guide_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
+import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
 import '../../features/widget/presentation/screens/embed_calendar_screen.dart';
 import '../../features/widget/presentation/screens/enhanced_booking_flow_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
@@ -53,16 +67,27 @@ class OwnerRoutes {
   static const String embedUnit = '/embed/units/:id';
   static const String booking = '/booking';
 
+  // Onboarding routes
+  static const String onboardingWelcome = '/onboarding/welcome';
+  static const String onboardingWizard = '/onboarding/wizard';
+  static const String onboardingSuccess = '/onboarding/success';
+
   // Auth routes
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String emailVerification = '/email-verification';
+  static const String privacyPolicy = '/privacy-policy';
+  static const String termsConditions = '/terms-conditions';
+  static const String cookiesPolicy = '/cookies-policy';
 
   // Owner dashboard routes
   static const String overview = '/owner/overview';
   static const String properties = '/owner/properties';
+  static const String calendar = '/owner/calendar'; // Main calendar (redirects to last view)
   static const String calendarWeek = '/owner/calendar/week';
+  static const String calendarMonth = '/owner/calendar/month';
+  static const String calendarTimeline = '/owner/calendar/timeline';
   static const String bookings = '/owner/bookings';
   static const String analytics = '/owner/analytics';
   static const String propertyNew = '/owner/properties/new';
@@ -71,13 +96,21 @@ class OwnerRoutes {
   static const String unitNew = '/owner/units/new';
   static const String unitEdit = '/owner/units/:id/edit';
   static const String unitPricing = '/owner/units/:id/pricing';
+  static const String unitWidgetSettings = '/owner/units/:id/widget-settings';
   static const String notifications = '/owner/notifications';
   static const String profile = '/owner/profile';
   static const String profileEdit = '/owner/profile/edit';
   static const String profileChangePassword = '/owner/profile/change-password';
   static const String profileNotifications = '/owner/profile/notifications';
   static const String priceList = '/owner/price-list';
+  // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
+  static const String icalIntegration = '/owner/integrations/ical';
+  // Guides
+  static const String guideStripe = '/owner/guides/stripe';
+  static const String guideIcal = '/owner/guides/ical';
+  static const String guideEmbedWidget = '/owner/guides/embed-widget';
+  static const String guideFaq = '/owner/guides/faq';
   static const String notFound = '/404';
 }
 
@@ -93,49 +126,70 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       // Use the watched authState from above
       final isAuthenticated = authState.isAuthenticated;
+      final requiresOnboarding = authState.requiresOnboarding;
       final isLoggingIn = state.matchedLocation == OwnerRoutes.login ||
           state.matchedLocation == OwnerRoutes.register ||
           state.matchedLocation == OwnerRoutes.forgotPassword;
 
-      print('[ROUTER] redirect called:');
-      print('  - matchedLocation: ${state.matchedLocation}');
-      print('  - isAuthenticated: $isAuthenticated');
-      print('  - firebaseUser: ${authState.firebaseUser?.uid}');
-      print('  - userModel: ${authState.userModel?.id}');
-      print('  - isLoading: ${authState.isLoading}');
+      LoggingService.log('redirect called:', tag: 'ROUTER');
+      LoggingService.log('  - matchedLocation: ${state.matchedLocation}', tag: 'ROUTER');
+      LoggingService.log('  - isAuthenticated: $isAuthenticated', tag: 'ROUTER');
+      LoggingService.log('  - requiresOnboarding: $requiresOnboarding', tag: 'ROUTER');
+      LoggingService.log('  - firebaseUser: ${authState.firebaseUser?.uid}', tag: 'ROUTER');
+      LoggingService.log('  - userModel: ${authState.userModel?.id}', tag: 'ROUTER');
+      LoggingService.log('  - isLoading: ${authState.isLoading}', tag: 'ROUTER');
 
       // Allow public access to embed and booking routes (no auth required)
       final isPublicRoute = state.matchedLocation.startsWith('/embed/') ||
           state.matchedLocation.startsWith('/booking');
       if (isPublicRoute) {
-        print('  → Allowing public route');
+        LoggingService.log('  → Allowing public route', tag: 'ROUTER');
+        return null; // Allow access
+      }
+
+      // Allow access to onboarding welcome screen (public - shown before auth)
+      final isOnboardingWelcome = state.matchedLocation == OwnerRoutes.onboardingWelcome;
+      if (isOnboardingWelcome) {
+        LoggingService.log('  → Allowing onboarding welcome (public)', tag: 'ROUTER');
         return null; // Allow access
       }
 
       // Redirect root to appropriate page
       if (state.matchedLocation == '/') {
         if (isAuthenticated) {
-          print('  → Redirecting / to calendar (authenticated)');
+          if (requiresOnboarding) {
+            LoggingService.log('  → Redirecting / to onboarding wizard (authenticated, needs onboarding)', tag: 'ROUTER');
+            return OwnerRoutes.onboardingWizard;
+          }
+          LoggingService.log('  → Redirecting / to calendar (authenticated)', tag: 'ROUTER');
           return OwnerRoutes.calendarWeek;
         } else {
-          print('  → Redirecting / to login (not authenticated)');
+          LoggingService.log('  → Redirecting / to login (not authenticated)', tag: 'ROUTER');
           return OwnerRoutes.login;
         }
       }
 
+      // If authenticated and requires onboarding, redirect to wizard (except if already on wizard/success)
+      final isOnboardingRoute = state.matchedLocation == OwnerRoutes.onboardingWizard ||
+          state.matchedLocation == OwnerRoutes.onboardingSuccess;
+      if (isAuthenticated && requiresOnboarding && !isOnboardingRoute) {
+        LoggingService.log('  → Redirecting to onboarding wizard (needs onboarding)', tag: 'ROUTER');
+        return OwnerRoutes.onboardingWizard;
+      }
+
       // Redirect to login if not authenticated and trying to access protected routes
-      if (!isAuthenticated && !isLoggingIn) {
-        print('  → Redirecting to login (not authenticated)');
+      if (!isAuthenticated && !isLoggingIn && !isOnboardingWelcome) {
+        LoggingService.log('  → Redirecting to login (not authenticated)', tag: 'ROUTER');
         return OwnerRoutes.login;
       }
 
-      // Redirect to calendar (timeline view) if authenticated and trying to access login
-      if (isAuthenticated && isLoggingIn) {
-        print('  → Redirecting to calendar (authenticated, was on login)');
+      // Redirect to calendar (timeline view) if authenticated, doesn't need onboarding, and trying to access login
+      if (isAuthenticated && !requiresOnboarding && isLoggingIn) {
+        LoggingService.log('  → Redirecting to calendar (authenticated, was on login)', tag: 'ROUTER');
         return OwnerRoutes.calendarWeek; // Changed from overview to calendar
       }
 
-      print('  → No redirect needed');
+      LoggingService.log('  → No redirect needed', tag: 'ROUTER');
       return null;
     },
     routes: [
@@ -157,6 +211,20 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
+      // Onboarding routes (public - shown BEFORE auth)
+      GoRoute(
+        path: OwnerRoutes.onboardingWelcome,
+        builder: (context, state) => const OnboardingWelcomeScreen(),
+      ),
+      GoRoute(
+        path: OwnerRoutes.onboardingWizard,
+        builder: (context, state) => const OnboardingWizardScreen(),
+      ),
+      GoRoute(
+        path: OwnerRoutes.onboardingSuccess,
+        builder: (context, state) => const OnboardingSuccessScreen(),
+      ),
+
       // Auth routes
       GoRoute(
         path: OwnerRoutes.login,
@@ -174,6 +242,14 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.emailVerification,
         builder: (context, state) => const EmailVerificationScreen(),
       ),
+      GoRoute(
+        path: OwnerRoutes.privacyPolicy,
+        builder: (context, state) => const PrivacyPolicyScreen(),
+      ),
+      GoRoute(
+        path: OwnerRoutes.termsConditions,
+        builder: (context, state) => const TermsConditionsScreen(),
+      ),
 
       // Owner main screens
       GoRoute(
@@ -184,9 +260,22 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.properties,
         builder: (context, state) => const PropertiesScreen(),
       ),
+      // Calendar routes with main container
+      GoRoute(
+        path: OwnerRoutes.calendar,
+        builder: (context, state) => const OwnerCalendarMainScreen(),
+      ),
       GoRoute(
         path: OwnerRoutes.calendarWeek,
-        builder: (context, state) => const CalendarWeekViewScreen(),
+        builder: (context, state) => const OwnerCalendarMainScreen(),
+      ),
+      GoRoute(
+        path: OwnerRoutes.calendarMonth,
+        builder: (context, state) => const OwnerCalendarMainScreen(),
+      ),
+      GoRoute(
+        path: OwnerRoutes.calendarTimeline,
+        builder: (context, state) => const OwnerCalendarMainScreen(),
       ),
       GoRoute(
         path: OwnerRoutes.bookings,
@@ -239,6 +328,13 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           return UnitPricingLoader(unitId: unitId);
         },
       ),
+      GoRoute(
+        path: OwnerRoutes.unitWidgetSettings,
+        builder: (context, state) {
+          final unitId = state.pathParameters['id'] ?? '';
+          return WidgetSettingsLoader(unitId: unitId);
+        },
+      ),
 
       // Notifications route
       GoRoute(
@@ -268,6 +364,40 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: OwnerRoutes.priceList,
         builder: (context, state) => const PriceListScreen(),
+      ),
+
+      // Integrations routes
+      GoRoute(
+        path: OwnerRoutes.stripeIntegration,
+        builder: (context, state) => const StripeConnectSetupScreen(),
+      ),
+      GoRoute(
+        path: OwnerRoutes.icalIntegration,
+        builder: (context, state) => const IcalSyncSettingsScreen(),
+      ),
+
+      // Guide routes
+      GoRoute(
+        path: OwnerRoutes.guideStripe,
+        builder: (context, state) => const StripeGuideScreen(),
+      ),
+      GoRoute(
+        path: OwnerRoutes.guideIcal,
+        builder: (context, state) => const IcalGuideScreen(),
+      ),
+      GoRoute(
+        path: OwnerRoutes.guideEmbedWidget,
+        builder: (context, state) => const EmbedWidgetGuideScreen(),
+      ),
+      GoRoute(
+        path: OwnerRoutes.guideFaq,
+        builder: (context, state) => const FAQScreen(),
+      ),
+
+      // Cookies Policy route
+      GoRoute(
+        path: OwnerRoutes.cookiesPolicy,
+        builder: (context, state) => const CookiesPolicyScreen(),
       ),
 
       // 404
@@ -354,6 +484,38 @@ class UnitPricingLoader extends ConsumerWidget {
           return const NotFoundScreen();
         }
         return UnitPricingScreen(unit: unit);
+      },
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => Scaffold(
+        body: Center(
+          child: Text('Error loading unit: $error'),
+        ),
+      ),
+    );
+  }
+}
+
+/// Widget Settings Loader - Fetches unit and loads widget settings screen
+class WidgetSettingsLoader extends ConsumerWidget {
+  final String unitId;
+
+  const WidgetSettingsLoader({required this.unitId, super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unitAsync = ref.watch(unitByIdAcrossPropertiesProvider(unitId));
+
+    return unitAsync.when(
+      data: (unit) {
+        if (unit == null) {
+          return const NotFoundScreen();
+        }
+        return WidgetSettingsScreen(
+          propertyId: unit.propertyId,
+          unitId: unitId,
+        );
       },
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),

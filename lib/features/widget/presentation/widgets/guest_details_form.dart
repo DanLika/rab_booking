@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../domain/models/guest_details.dart';
 import '../../validators/booking_validators.dart';
 import '../providers/booking_flow_provider.dart';
-import '../theme/bedbooking_theme.dart';
+import '../theme/responsive_helper.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// Guest details form with validation
 class GuestDetailsForm extends ConsumerStatefulWidget {
@@ -67,184 +69,186 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Your details (to reservation and payment)',
-            style: BedBookingTextStyles.heading2,
+            style: GoogleFonts.inter(
+              fontSize: isMobile ? TypographyTokens.fontSizeXL : TypographyTokens.fontSizeXXL,
+              fontWeight: TypographyTokens.semiBold,
+              color: ColorTokens.light.textPrimary,
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: SpacingTokens.l),
 
-          // Name field
-          const Text(
-            'Name and surname',
-            style: BedBookingTextStyles.bodyBold,
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _nameController,
-            validator: BookingValidators.validateName,
-            decoration: InputDecoration(
+          // Name and Email row (Desktop: Row, Mobile: Column)
+          if (isMobile) ...[
+            _buildTextField(
+              controller: _nameController,
+              label: 'Name and surname',
+              icon: Icons.person,
               hintText: 'John Doe',
-              filled: true,
-              fillColor: BedBookingColors.backgroundGrey,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.borderGrey,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.borderGrey,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.primaryGreen,
-                  width: 2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.error,
-                ),
-              ),
+              validator: BookingValidators.validateName,
             ),
-          ),
-          const SizedBox(height: 20),
-
-          // Email field
-          const Text(
-            'Email address',
-            style: BedBookingTextStyles.bodyBold,
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _emailController,
-            validator: BookingValidators.validateEmail,
-            keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(
+            const SizedBox(height: SpacingTokens.m2),
+            _buildTextField(
+              controller: _emailController,
+              label: 'Email address',
+              icon: Icons.email,
               hintText: 'john.doe@example.com',
-              filled: true,
-              fillColor: BedBookingColors.backgroundGrey,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.borderGrey,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.borderGrey,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.primaryGreen,
-                  width: 2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.error,
-                ),
-              ),
+              validator: BookingValidators.validateEmail,
+              keyboardType: TextInputType.emailAddress,
             ),
-          ),
-          const SizedBox(height: 20),
+          ] else
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    controller: _nameController,
+                    label: 'Name and surname',
+                    icon: Icons.person,
+                    hintText: 'John Doe',
+                    validator: BookingValidators.validateName,
+                  ),
+                ),
+                const SizedBox(width: SpacingTokens.m2),
+                Expanded(
+                  child: _buildTextField(
+                    controller: _emailController,
+                    label: 'Email address',
+                    icon: Icons.email,
+                    hintText: 'john.doe@example.com',
+                    validator: BookingValidators.validateEmail,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: SpacingTokens.m2),
 
           // Phone field
-          const Text(
-            'Phone number',
-            style: BedBookingTextStyles.bodyBold,
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
+          _buildTextField(
             controller: _phoneController,
+            label: 'Phone number',
+            icon: Icons.phone,
+            hintText: '+385951234567',
             validator: BookingValidators.validatePhone,
             keyboardType: TextInputType.phone,
-            decoration: InputDecoration(
-              hintText: '+385951234567',
-              filled: true,
-              fillColor: BedBookingColors.backgroundGrey,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.borderGrey,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.borderGrey,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.primaryGreen,
-                  width: 2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.error,
-                ),
-              ),
-            ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: SpacingTokens.m2),
 
           // Message field (optional)
-          const Text(
-            'Message (optional)',
-            style: BedBookingTextStyles.bodyBold,
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
+          _buildTextField(
             controller: _messageController,
+            label: 'Message (optional)',
+            icon: Icons.message,
+            hintText: 'Any special requests?',
             validator: (value) => BookingValidators.validateMessage(value),
             maxLines: 3,
             maxLength: 255,
-            decoration: InputDecoration(
-              hintText: 'Any special requests?',
-              filled: true,
-              fillColor: BedBookingColors.backgroundGrey,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.borderGrey,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.borderGrey,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(
-                  color: BedBookingColors.primaryGreen,
-                  width: 2,
-                ),
-              ),
-              counterText: '${_messageController.text.length}/255',
-            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required String hintText,
+    String? Function(String?)? validator,
+    TextInputType? keyboardType,
+    int? maxLines,
+    int? maxLength,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: TypographyTokens.fontSizeM,
+            fontWeight: TypographyTokens.semiBold,
+            color: ColorTokens.light.textPrimary,
+          ),
+        ),
+        const SizedBox(height: SpacingTokens.s),
+        TextFormField(
+          controller: controller,
+          validator: validator,
+          keyboardType: keyboardType,
+          maxLines: maxLines ?? 1,
+          maxLength: maxLength,
+          decoration: InputDecoration(
+            hintText: hintText,
+            filled: true,
+            fillColor: ColorTokens.light.backgroundCard,
+            prefixIcon: Icon(
+              icon,
+              color: ColorTokens.light.primary,
+              size: IconSizeTokens.medium,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderTokens.circularMedium,
+              borderSide: BorderSide(
+                color: ColorTokens.light.borderDefault,
+                width: BorderTokens.widthThin,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderTokens.circularMedium,
+              borderSide: BorderSide(
+                color: ColorTokens.light.borderDefault,
+                width: BorderTokens.widthThin,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderTokens.circularMedium,
+              borderSide: BorderSide(
+                color: ColorTokens.light.primary,
+                width: BorderTokens.widthThick,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderTokens.circularMedium,
+              borderSide: BorderSide(
+                color: ColorTokens.light.error,
+                width: BorderTokens.widthThin,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderTokens.circularMedium,
+              borderSide: BorderSide(
+                color: ColorTokens.light.error,
+                width: BorderTokens.widthThick,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: SpacingTokens.m,
+              vertical: SpacingTokens.m - 2,
+            ),
+            hintStyle: GoogleFonts.inter(
+              fontSize: TypographyTokens.fontSizeM,
+              color: ColorTokens.light.textSecondary,
+            ),
+            counterText: maxLength != null ? '${controller.text.length}/$maxLength' : null,
+            counterStyle: GoogleFonts.inter(
+              fontSize: TypographyTokens.fontSizeS,
+              color: ColorTokens.light.textSecondary,
+            ),
+          ),
+          style: GoogleFonts.inter(
+            fontSize: TypographyTokens.fontSizeM,
+            color: ColorTokens.light.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 

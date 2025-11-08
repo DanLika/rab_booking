@@ -7,6 +7,7 @@ class CalendarLegendWidget extends StatelessWidget {
   final bool showStatusColors;
   final bool showPriceColors;
   final bool showIcons;
+  final bool showSources;
   final bool isCompact;
 
   const CalendarLegendWidget({
@@ -14,6 +15,7 @@ class CalendarLegendWidget extends StatelessWidget {
     this.showStatusColors = true,
     this.showPriceColors = false,
     this.showIcons = true,
+    this.showSources = true,
     this.isCompact = false,
   });
 
@@ -141,7 +143,58 @@ class CalendarLegendWidget extends StatelessWidget {
               ),
             ],
 
-            if ((showStatusColors || showPriceColors) && showIcons)
+            if ((showStatusColors || showPriceColors) && showSources)
+              SizedBox(height: isCompact ? 8 : 12),
+
+            if (showSources) ...[
+              Text(
+                'Izvori rezervacija:',
+                style: TextStyle(
+                  fontSize: isCompact ? 10 : 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: isCompact ? 8 : 12,
+                runSpacing: 6,
+                children: [
+                  _IconLegendItem(
+                    icon: Icons.web,
+                    label: 'Widget',
+                    color: Colors.green,
+                    isCompact: isCompact,
+                  ),
+                  _IconLegendItem(
+                    icon: Icons.person,
+                    label: 'Manualno',
+                    color: Colors.grey,
+                    isCompact: isCompact,
+                  ),
+                  _IconLegendItem(
+                    icon: Icons.sync,
+                    label: 'iCal sync',
+                    color: Colors.blue,
+                    isCompact: isCompact,
+                  ),
+                  _IconLegendItem(
+                    icon: Icons.public,
+                    label: 'Booking.com',
+                    color: Colors.orange,
+                    isCompact: isCompact,
+                  ),
+                  _IconLegendItem(
+                    icon: Icons.home,
+                    label: 'Airbnb',
+                    color: Colors.red,
+                    isCompact: isCompact,
+                  ),
+                ],
+              ),
+            ],
+
+            if ((showStatusColors || showPriceColors || showSources) && showIcons)
               SizedBox(height: isCompact ? 8 : 12),
 
             if (showIcons) ...[
@@ -218,7 +271,7 @@ class _LegendItem extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(2),
             border: Border.all(
-              color: borderColor ?? color.withOpacity(0.5),
+              color: borderColor ?? color.withValues(alpha: 0.5),
               width: 1,
             ),
           ),

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/booking_flow_provider.dart';
 import '../providers/booking_price_provider.dart';
-import '../theme/bedbooking_theme.dart';
+import '../theme/villa_jasko_colors.dart';
+import '../theme/responsive_helper.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../widgets/progress_indicator_widget.dart';
 
 /// Enhanced Summary & Additional Services Screen (Step 1 of Flow B)
 class EnhancedSummaryScreen extends ConsumerStatefulWidget {
@@ -35,10 +39,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: VillaJaskoColors.backgroundSurface,
       appBar: AppBar(
-        backgroundColor: BedBookingColors.primaryGreen,
-        foregroundColor: Colors.white,
+        backgroundColor: VillaJaskoColors.primary,
+        foregroundColor: VillaJaskoColors.textOnPrimary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -46,23 +50,37 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
             ref.read(bookingStepProvider.notifier).state = 0;
           },
         ),
-        title: const Text(
+        title: Text(
           'Booking Summary',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 768;
+      body: Column(
+        children: [
+          BookingProgressIndicator(
+            currentStep: 2,
+            onStepTapped: (step) {
+              if (step == 1) {
+                context.go('/rooms');
+              }
+            },
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = ResponsiveHelper.isMobile(context);
 
-          if (isMobile) {
-            return _buildMobileLayout(room, checkIn, checkOut, adults, children);
-          } else {
-            return _buildDesktopLayout(
-                room, checkIn, checkOut, adults, children);
-          }
-        },
+                if (isMobile) {
+                  return _buildMobileLayout(room, checkIn, checkOut, adults, children);
+                } else {
+                  return _buildDesktopLayout(
+                      room, checkIn, checkOut, adults, children);
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -122,9 +140,12 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     int adults,
     int children,
   ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
         // Main content (70%)
         Expanded(
           flex: 7,
@@ -152,10 +173,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
         // Sidebar (30%)
         Container(
           width: 400,
-          decoration: BoxDecoration(
-            color: BedBookingColors.backgroundGrey,
+          decoration: const BoxDecoration(
+            color: VillaJaskoColors.backgroundSidebar,
             border: Border(
-              left: BorderSide(color: Colors.grey.shade300),
+              left: BorderSide(color: VillaJaskoColors.border),
             ),
           ),
           child: Column(
@@ -170,7 +191,9 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
             ],
           ),
         ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -201,17 +224,17 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
           height: 36,
           decoration: BoxDecoration(
             color: isActive || isCompleted
-                ? BedBookingColors.primaryGreen
-                : Colors.grey.shade300,
+                ? VillaJaskoColors.primary
+                : VillaJaskoColors.dayDisabled,
             shape: BoxShape.circle,
           ),
           child: Center(
             child: isCompleted
-                ? const Icon(Icons.check, color: Colors.white, size: 20)
+                ? const Icon(Icons.check, color: VillaJaskoColors.textOnPrimary, size: 20)
                 : Text(
                     step.toString(),
-                    style: TextStyle(
-                      color: isActive ? Colors.white : Colors.grey.shade600,
+                    style: GoogleFonts.inter(
+                      color: isActive ? VillaJaskoColors.textOnPrimary : VillaJaskoColors.textSecondary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -220,11 +243,11 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(
+          style: GoogleFonts.inter(
             fontSize: 12,
             color: isActive
-                ? BedBookingColors.primaryGreen
-                : Colors.grey.shade600,
+                ? VillaJaskoColors.primary
+                : VillaJaskoColors.textSecondary,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -238,8 +261,8 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
         height: 2,
         margin: const EdgeInsets.only(bottom: 20),
         color: isCompleted
-            ? BedBookingColors.primaryGreen
-            : Colors.grey.shade300,
+            ? VillaJaskoColors.primary
+            : VillaJaskoColors.border,
       ),
     );
   }
@@ -255,13 +278,24 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BedBookingCards.cardDecoration,
+      decoration: BoxDecoration(
+        color: VillaJaskoColors.backgroundSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: VillaJaskoColors.border),
+        boxShadow: const [
+          BoxShadow(
+            color: VillaJaskoColors.shadowLight,
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Your Booking Details',
-            style: BedBookingTextStyles.heading2,
+            style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: VillaJaskoColors.textPrimary),
           ),
           const Divider(height: 24),
 
@@ -281,8 +315,8 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                       return Container(
                         width: 120,
                         height: 90,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.hotel, size: 40),
+                        color: VillaJaskoColors.dayDisabled,
+                        child: const Icon(Icons.hotel, size: 40, color: VillaJaskoColors.textSecondary),
                       );
                     },
                   ),
@@ -294,36 +328,35 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                   children: [
                     Text(
                       room.name,
-                      style: BedBookingTextStyles.heading3,
+                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.people,
                           size: 16,
-                          color: Colors.grey.shade600,
+                          color: VillaJaskoColors.textSecondary,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '$adults adults' +
-                              (children > 0 ? ', $children children' : ''),
-                          style: BedBookingTextStyles.small,
+                          '$adults adults${children > 0 ? ', $children children' : ''}',
+                          style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.king_bed,
                           size: 16,
-                          color: Colors.grey.shade600,
+                          color: VillaJaskoColors.textSecondary,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${room.bedrooms} ${room.bedrooms == 1 ? 'bedroom' : 'bedrooms'}',
-                          style: BedBookingTextStyles.small,
+                          style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
                         ),
                       ],
                     ),
@@ -354,24 +387,24 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: BedBookingColors.primaryGreen.withOpacity(0.1),
+              color: VillaJaskoColors.primarySurface,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
+                const Icon(
                   Icons.nightlight_round,
                   size: 20,
-                  color: BedBookingColors.primaryGreen,
+                  color: VillaJaskoColors.primary,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '$nights ${nights == 1 ? 'Night' : 'Nights'}',
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: BedBookingColors.primaryGreen,
+                    color: VillaJaskoColors.primary,
                   ),
                 ),
               ],
@@ -386,7 +419,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: BedBookingColors.backgroundGrey,
+        color: VillaJaskoColors.backgroundSidebar,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -394,18 +427,18 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
         children: [
           Text(
             label,
-            style: BedBookingTextStyles.small,
+            style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
           ),
           const SizedBox(height: 4),
           Text(
             DateFormat('MMM d, yyyy').format(date),
-            style: BedBookingTextStyles.bodyBold,
+            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
           ),
           Text(
             DateFormat('EEEE').format(date),
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: VillaJaskoColors.textSecondary,
             ),
           ),
         ],
@@ -442,14 +475,14 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Additional Services',
-          style: BedBookingTextStyles.heading2,
+          style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: VillaJaskoColors.textPrimary),
         ),
         const SizedBox(height: 4),
         Text(
           'Enhance your stay with optional extras',
-          style: BedBookingTextStyles.small,
+          style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
         ),
         const SizedBox(height: 16),
 
@@ -462,14 +495,14 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
             decoration: BoxDecoration(
               border: Border.all(
                 color: isSelected
-                    ? BedBookingColors.primaryGreen
-                    : Colors.grey.shade300,
+                    ? VillaJaskoColors.primary
+                    : VillaJaskoColors.border,
                 width: isSelected ? 2 : 1,
               ),
               borderRadius: BorderRadius.circular(12),
               color: isSelected
-                  ? BedBookingColors.primaryGreen.withOpacity(0.05)
-                  : Colors.white,
+                  ? VillaJaskoColors.primarySurface
+                  : VillaJaskoColors.backgroundSurface,
             ),
             child: CheckboxListTile(
               value: isSelected,
@@ -483,13 +516,13 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: BedBookingColors.primaryGreen.withOpacity(0.1),
+                      color: VillaJaskoColors.primarySurface,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       service['icon'] as IconData,
                       size: 24,
-                      color: BedBookingColors.primaryGreen,
+                      color: VillaJaskoColors.primary,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -499,11 +532,11 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                       children: [
                         Text(
                           service['name'] as String,
-                          style: BedBookingTextStyles.bodyBold,
+                          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
                         ),
                         Text(
                           service['description'] as String,
-                          style: BedBookingTextStyles.small,
+                          style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
                         ),
                       ],
                     ),
@@ -514,14 +547,14 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                 padding: const EdgeInsets.only(left: 56, top: 4),
                 child: Text(
                   '+€${(service['price'] as double).toStringAsFixed(0)} per night',
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: BedBookingColors.primaryGreen,
+                    color: VillaJaskoColors.primary,
                   ),
                 ),
               ),
-              activeColor: BedBookingColors.primaryGreen,
+              activeColor: VillaJaskoColors.primary,
               controlAffinity: ListTileControlAffinity.leading,
             ),
           );
@@ -560,13 +593,24 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
 
         return Container(
           padding: const EdgeInsets.all(20),
-          decoration: BedBookingCards.cardDecoration,
+          decoration: BoxDecoration(
+            color: VillaJaskoColors.backgroundSurface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: VillaJaskoColors.border),
+            boxShadow: const [
+              BoxShadow(
+                color: VillaJaskoColors.shadowLight,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Price Summary',
-                style: BedBookingTextStyles.heading3,
+                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
               ),
               const Divider(height: 24),
 
@@ -598,10 +642,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: BedBookingColors.primaryGreen.withOpacity(0.1),
+                  color: VillaJaskoColors.primarySurface,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: BedBookingColors.primaryGreen.withOpacity(0.3),
+                    color: VillaJaskoColors.primaryLight,
                   ),
                 ),
                 child: Column(
@@ -609,19 +653,20 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Deposit (20%)',
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
+                            color: VillaJaskoColors.textPrimary,
                           ),
                         ),
                         Text(
                           '€${deposit.toStringAsFixed(0)}',
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: BedBookingColors.primaryGreen,
+                            color: VillaJaskoColors.primary,
                           ),
                         ),
                       ],
@@ -632,17 +677,17 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                       children: [
                         Text(
                           'Pay on arrival',
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: Colors.grey.shade600,
+                            color: VillaJaskoColors.textSecondary,
                           ),
                         ),
                         Text(
                           '€${remaining.toStringAsFixed(0)}',
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade700,
+                            color: VillaJaskoColors.textSecondary,
                           ),
                         ),
                       ],
@@ -663,7 +708,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
       error: (error, stack) => Center(
         child: Text(
           'Error loading price',
-          style: TextStyle(color: Colors.red.shade700),
+          style: GoogleFonts.inter(color: VillaJaskoColors.error),
         ),
       ),
     );
@@ -678,22 +723,22 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: isBold ? 16 : 14,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
               color: isHighlighted
-                  ? BedBookingColors.primaryGreen
-                  : Colors.black87,
+                  ? VillaJaskoColors.primary
+                  : VillaJaskoColors.textPrimary,
             ),
           ),
           Text(
             amount,
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: isBold ? 18 : 14,
               fontWeight: FontWeight.bold,
               color: isHighlighted
-                  ? BedBookingColors.primaryGreen
-                  : Colors.black87,
+                  ? VillaJaskoColors.primary
+                  : VillaJaskoColors.textPrimary,
             ),
           ),
         ],
@@ -704,16 +749,16 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
   Widget _buildBottomButtons() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
+      decoration: const BoxDecoration(
+        color: VillaJaskoColors.backgroundSurface,
         border: Border(
-          top: BorderSide(color: Colors.grey.shade200),
+          top: BorderSide(color: VillaJaskoColors.border),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: VillaJaskoColors.shadowLight,
             blurRadius: 10,
-            offset: const Offset(0, -2),
+            offset: Offset(0, -2),
           ),
         ],
       ),
@@ -725,8 +770,15 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                 onPressed: () {
                   ref.read(bookingStepProvider.notifier).state = 0;
                 },
-                style: BedBookingButtons.secondaryButton,
-                child: const Text('Back'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: VillaJaskoColors.primary,
+                  side: const BorderSide(color: VillaJaskoColors.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text('Back', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
               ),
             ),
             const SizedBox(width: 12),
@@ -736,8 +788,16 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                 onPressed: () {
                   ref.read(bookingStepProvider.notifier).state = 2;
                 },
-                style: BedBookingButtons.primaryButton,
-                child: const Text('Continue to Payment'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: VillaJaskoColors.primary,
+                  foregroundColor: VillaJaskoColors.textOnPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text('Continue to Payment', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
               ),
             ),
           ],

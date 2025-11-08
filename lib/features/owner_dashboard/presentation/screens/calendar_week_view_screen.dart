@@ -10,6 +10,8 @@ class CalendarWeekViewScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kalendar'),
@@ -21,7 +23,7 @@ class CalendarWeekViewScreen extends ConsumerWidget {
         onPressed: () => _showCreateBookingDialog(context),
         icon: const Icon(Icons.add),
         label: const Text('Nova rezervacija'),
-        backgroundColor: Colors.green,
+        backgroundColor: theme.colorScheme.primary,
       ),
     );
   }

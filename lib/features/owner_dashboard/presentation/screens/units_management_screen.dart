@@ -5,6 +5,8 @@ import '../../../../shared/providers/repository_providers.dart';
 import 'unit_form_screen.dart';
 import 'unit_pricing_screen.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/utils/error_display_utils.dart';
 
 /// Units management screen for a property
 class UnitsManagementScreen extends ConsumerStatefulWidget {
@@ -60,10 +62,10 @@ class _UnitsManagementScreenState
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Theme.of(context).colorScheme.shadow.withAlpha((0.1 * 255).toInt()),
               blurRadius: 4,
               offset: const Offset(0, -2),
             ),
@@ -97,7 +99,11 @@ class _UnitsManagementScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(height: 16),
             Text('Greška: $_error'),
             const SizedBox(height: 16),
@@ -134,17 +140,23 @@ class _UnitsManagementScreenState
   }
 
   Widget _buildEmptyState() {
+    final theme = Theme.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.apartment, size: 120, color: AppColors.textDisabled),
+            Icon(
+              Icons.apartment,
+              size: 120,
+              color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+            ),
             const SizedBox(height: 24),
             Text(
               'Nema dodanih jedinica',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
               textAlign: TextAlign.center,
@@ -152,8 +164,8 @@ class _UnitsManagementScreenState
             const SizedBox(height: 12),
             Text(
               'Dodajte prvu jedinicu (apartman, sobu, studio) za ovu nekretninu',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textSecondaryLight,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                    color: context.textColorSecondary,
                   ),
               textAlign: TextAlign.center,
             ),
@@ -223,7 +235,7 @@ class _UnitsManagementScreenState
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
             child: const Text('Obriši'),
           ),
@@ -236,14 +248,17 @@ class _UnitsManagementScreenState
         await ref.read(ownerPropertiesRepositoryProvider).deleteUnit(widget.propertyId, unitId);
         _loadUnits();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Jedinica uspješno obrisana')),
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            'Jedinica uspješno obrisana',
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Greška: $e')),
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: 'Greška pri brisanju jedinice',
           );
         }
       }
@@ -267,6 +282,8 @@ class _UnitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
@@ -284,7 +301,7 @@ class _UnitCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         unit.name,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                       ),
@@ -293,9 +310,9 @@ class _UnitCard extends StatelessWidget {
                     // Price
                     Text(
                       '€${unit.pricePerNight.toStringAsFixed(0)}/noć',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).primaryColor,
+                            color: theme.colorScheme.primary,
                           ),
                     ),
                   ],
@@ -308,16 +325,16 @@ class _UnitCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: unit.isAvailable
-                        ? AppColors.success.withValues(alpha: 0.1)
-                        : AppColors.surfaceVariantLight,
+                        ? const Color(0xFF10B981).withAlpha((0.1 * 255).toInt())
+                        : theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     unit.isAvailable ? 'Dostupno' : 'Nedostupno',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    style: theme.textTheme.bodySmall?.copyWith(
                           color: unit.isAvailable
-                              ? AppColors.success
-                              : AppColors.textPrimaryDark,
+                              ? const Color(0xFF10B981)
+                              : theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                           fontWeight: FontWeight.w600,
                         ),
                   ),
@@ -360,7 +377,7 @@ class _UnitCard extends StatelessWidget {
               Text(
                 unit.description!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textColorSecondary,
                     ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -386,7 +403,7 @@ class _UnitCard extends StatelessWidget {
                         icon: const Icon(Icons.euro_symbol),
                         label: const Text('Upravljaj Cijenama'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.green.shade700,
+                          foregroundColor: const Color(0xFF10B981),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -406,7 +423,7 @@ class _UnitCard extends StatelessWidget {
                               icon: const Icon(Icons.delete),
                               label: const Text('Obriši'),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: AppColors.error,
+                                foregroundColor: theme.colorScheme.error,
                               ),
                             ),
                           ),
@@ -425,7 +442,7 @@ class _UnitCard extends StatelessWidget {
                       icon: const Icon(Icons.euro_symbol),
                       label: const Text('Cijene'),
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.green.shade700,
+                        foregroundColor: const Color(0xFF10B981),
                       ),
                     ),
                     Row(
@@ -441,7 +458,7 @@ class _UnitCard extends StatelessWidget {
                           icon: const Icon(Icons.delete),
                           label: const Text('Obriši'),
                           style: TextButton.styleFrom(
-                            foregroundColor: AppColors.error,
+                            foregroundColor: theme.colorScheme.error,
                           ),
                         ),
                       ],
@@ -464,12 +481,12 @@ class _UnitCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: AppColors.textSecondaryLight),
+        Icon(icon, size: 16, color: context.textColorSecondary),
         const SizedBox(width: 4),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textColorSecondary,
               ),
         ),
       ],

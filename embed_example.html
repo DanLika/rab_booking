@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BedBooking Widget - Embed Example</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #0066FF;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .widget-wrapper {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .widget-header {
+            background: #0066FF;
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        /* Responsive iframe container */
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%; /* Default 1:1 aspect ratio */
+            height: 0;
+            overflow: hidden;
+        }
+
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Different height options */
+        .iframe-container.tall {
+            padding-bottom: 120%; /* Taller for calendar + form */
+        }
+
+        .iframe-container.medium {
+            padding-bottom: 80%; /* Medium height */
+        }
+
+        .iframe-container.fixed {
+            padding-bottom: 0;
+            height: 800px; /* Fixed height */
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .iframe-container {
+                padding-bottom: 130%; /* More height on mobile */
+            }
+        }
+
+        .code-section {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .code-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .code-block .tag {
+            color: #e06c75;
+        }
+
+        .code-block .attr {
+            color: #d19a66;
+        }
+
+        .code-block .string {
+            color: #98c379;
+        }
+
+        .code-block .comment {
+            color: #5c6370;
+            font-style: italic;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #0066FF;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box strong {
+            color: #0066FF;
+        }
+
+        .btn-copy {
+            background: #0066FF;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .btn-copy:hover {
+            background: #0052cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 BedBooking Widget - Embed Example</h1>
+        <p class="description">
+            Ovo je primer kako embedovati BedBooking booking widget na vaš sajt.
+            Widget je deployovan na Firebase Hosting i spremam je za korištenje.
+        </p>
+
+        <div class="info-box">
+            <strong>Widget URL:</strong> https://rab-booking-widget.web.app<br>
+            <strong>Parametar:</strong> <code>?unit=UNIT_ID</code> (obavezan)<br>
+            <strong>Kalendar zauzima:</strong> 75% ekrana kada nema guest forme, 35% kada je forma vidljiva<br>
+            <strong>Guest validacija:</strong> Automatski limitira broj gostiju na maxGuests za unit
+        </div>
+
+        <!-- Live Widget Demo -->
+        <div class="widget-wrapper">
+            <div class="widget-header">
+                Live Widget Demo - Villa Jasko Unit
+            </div>
+            <div class="iframe-container fixed">
+                <!-- ZAMENI "YOUR_UNIT_ID" sa pravim unitId iz Firestore -->
+                <iframe
+                    src="https://rab-booking-widget.web.app?unit=YOUR_UNIT_ID"
+                    title="BedBooking Widget"
+                    loading="lazy"
+                    allow="payment"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                ></iframe>
+            </div>
+        </div>
+
+        <!-- CODE EXAMPLES -->
+        <div class="code-section">
+            <h3>📋 Embed Kod za Tvoj Sajt</h3>
+            <p style="color: #666; margin-bottom: 15px;">
+                Kopiraj ovaj kod i zalijepi na stranicu gdje želiš prikazati booking widget:
+            </p>
+
+            <div class="code-block"><span class="comment">&lt;!-- BedBooking Widget Embed --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"bedbooking-widget-container"</span> <span class="attr">style</span>=<span class="string">"width: 100%; max-width: 1200px; margin: 0 auto;"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;iframe</span>
+        <span class="attr">src</span>=<span class="string">"https://rab-booking-widget.web.app?unit=YOUR_UNIT_ID"</span>
+        <span class="attr">width</span>=<span class="string">"100%"</span>
+        <span class="attr">height</span>=<span class="string">"800"</span>
+        <span class="attr">frameborder</span>=<span class="string">"0"</span>
+        <span class="attr">style</span>=<span class="string">"border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"</span>
+        <span class="attr">title</span>=<span class="string">"Booking Calendar Widget"</span>
+        <span class="attr">loading</span>=<span class="string">"lazy"</span>
+        <span class="attr">allow</span>=<span class="string">"payment"</span>
+        <span class="attr">sandbox</span>=<span class="string">"allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"</span>
+    <span class="tag">&gt;&lt;/iframe&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+
+<span class="comment">&lt;!-- NAPOMENA: Zameni "YOUR_UNIT_ID" sa pravim ID-om apartmana iz Firestore --&gt;</span></div>
+
+            <button class="btn-copy" onclick="copyEmbedCode()">📋 Kopiraj Embed Kod</button>
+        </div>
+
+        <!-- RESPONSIVE VERSION -->
+        <div class="code-section">
+            <h3>📱 Responsive Embed (Prilagođava se ekranu)</h3>
+            <p style="color: #666; margin-bottom: 15px;">
+                Responsive verzija koja se automatski prilagođava mobilnim uređajima:
+            </p>
+
+            <div class="code-block"><span class="tag">&lt;style&gt;</span>
+    .bedbooking-responsive-wrapper {
+        position: relative;
+        width: 100%;
+        padding-bottom: 100%; <span class="comment">/* 1:1 aspect ratio */</span>
+        height: 0;
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .bedbooking-responsive-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    <span class="comment">/* Mobile - više visine */</span>
+    @media (max-width: 768px) {
+        .bedbooking-responsive-wrapper {
+            padding-bottom: 130%;
+        }
+    }
+
+    <span class="comment">/* Desktop - manje visine */</span>
+    @media (min-width: 1024px) {
+        .bedbooking-responsive-wrapper {
+            padding-bottom: 0;
+            height: 900px;
+        }
+    }
+<span class="tag">&lt;/style&gt;</span>
+
+<span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"bedbooking-responsive-wrapper"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;iframe</span>
+        <span class="attr">src</span>=<span class="string">"https://rab-booking-widget.web.app?unit=YOUR_UNIT_ID"</span>
+        <span class="attr">title</span>=<span class="string">"Booking Widget"</span>
+        <span class="attr">loading</span>=<span class="string">"lazy"</span>
+        <span class="attr">allow</span>=<span class="string">"payment"</span>
+        <span class="attr">sandbox</span>=<span class="string">"allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"</span>
+    <span class="tag">&gt;&lt;/iframe&gt;</span>
+<span class="tag">&lt;/div&gt;</span></div>
+
+            <button class="btn-copy" onclick="copyResponsiveCode()">📋 Kopiraj Responsive Kod</button>
+        </div>
+
+        <!-- WORDPRESS SHORTCODE -->
+        <div class="code-section">
+            <h3>🔌 WordPress Integration</h3>
+            <p style="color: #666; margin-bottom: 15px;">
+                Za WordPress, možeš koristiti ovaj shortcode (dodaj u functions.php):
+            </p>
+
+            <div class="code-block"><span class="comment">// Add to your theme's functions.php</span>
+<span class="attr">function</span> bedbooking_widget_shortcode($atts) {
+    $atts = shortcode_atts(array(
+        <span class="string">'unit'</span> => <span class="string">''</span>,
+        <span class="string">'height'</span> => <span class="string">'800'</span>
+    ), $atts);
+
+    <span class="attr">if</span> (empty($atts[<span class="string">'unit'</span>])) {
+        <span class="attr">return</span> <span class="string">'&lt;p&gt;Please provide unit ID&lt;/p&gt;'</span>;
+    }
+
+    $url = <span class="string">'https://rab-booking-widget.web.app?unit='</span> . esc_attr($atts[<span class="string">'unit'</span>]);
+    $height = esc_attr($atts[<span class="string">'height'</span>]);
+
+    <span class="attr">return</span> <span class="string">'&lt;div class="bedbooking-widget"&gt;
+        &lt;iframe
+            src="'</span> . $url . <span class="string">'"
+            width="100%"
+            height="'</span> . $height . <span class="string">'"
+            frameborder="0"
+            style="border: none; border-radius: 12px;"
+            loading="lazy"
+            allow="payment"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+        &gt;&lt;/iframe&gt;
+    &lt;/div&gt;'</span>;
+}
+add_shortcode(<span class="string">'bedbooking'</span>, <span class="string">'bedbooking_widget_shortcode'</span>);
+
+<span class="comment">// Usage in WordPress post/page:</span>
+<span class="comment">// [bedbooking unit="YOUR_UNIT_ID"]</span>
+<span class="comment">// [bedbooking unit="YOUR_UNIT_ID" height="900"]</span></div>
+
+            <button class="btn-copy" onclick="copyWordPressCode()">📋 Kopiraj WordPress Kod</button>
+        </div>
+
+        <!-- IMPORTANT NOTES -->
+        <div class="info-box" style="background: #fff3cd; border-left-color: #ffc107; margin-top: 30px;">
+            <strong>⚠️ Važne Napomene:</strong><br><br>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li><strong>Unit ID:</strong> Zameni "YOUR_UNIT_ID" sa pravim ID-om iz Firestore (Properties → Units → unitId)</li>
+                <li><strong>Visina:</strong> Preporučujem minimum 800px za desktop, 130vh za mobile</li>
+                <li><strong>Security:</strong> Sandbox atributi omogućavaju sigurno embedovanje sa payment funkcionalnostima</li>
+                <li><strong>Performance:</strong> <code>loading="lazy"</code> optimizuje učitavanje</li>
+                <li><strong>Kalendar:</strong> Zauzima 75% ekrana, 35% kada je guest forma vidljiva</li>
+                <li><strong>Guest Validation:</strong> Automatski limitira broj gostiju prema unit.maxGuests</li>
+                <li><strong>Timeline:</strong> Ne prikazuje se na kalendaru, samo u booking flow-u</li>
+            </ul>
+        </div>
+
+        <!-- TESTING SECTION -->
+        <div class="code-section">
+            <h3>🧪 Testiranje Widgeta</h3>
+            <p style="color: #666; margin-bottom: 15px;">
+                Testiraj widget direktno u browser-u:
+            </p>
+            <div style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                <strong>Direct URL:</strong><br>
+                <a href="https://rab-booking-widget.web.app?unit=YOUR_UNIT_ID" target="_blank" style="color: #0066FF;">
+                    https://rab-booking-widget.web.app?unit=YOUR_UNIT_ID
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function copyEmbedCode() {
+            const code = `<div class="bedbooking-widget-container" style="width: 100%; max-width: 1200px; margin: 0 auto;">
+    <iframe
+        src="https://rab-booking-widget.web.app?unit=YOUR_UNIT_ID"
+        width="100%"
+        height="800"
+        frameborder="0"
+        style="border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+        title="Booking Calendar Widget"
+        loading="lazy"
+        allow="payment"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+    ></iframe>
+</div>`;
+            copyToClipboard(code);
+        }
+
+        function copyResponsiveCode() {
+            const code = `<style>
+    .bedbooking-responsive-wrapper {
+        position: relative;
+        width: 100%;
+        padding-bottom: 100%;
+        height: 0;
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .bedbooking-responsive-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    @media (max-width: 768px) {
+        .bedbooking-responsive-wrapper {
+            padding-bottom: 130%;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .bedbooking-responsive-wrapper {
+            padding-bottom: 0;
+            height: 900px;
+        }
+    }
+</style>
+
+<div class="bedbooking-responsive-wrapper">
+    <iframe
+        src="https://rab-booking-widget.web.app?unit=YOUR_UNIT_ID"
+        title="Booking Widget"
+        loading="lazy"
+        allow="payment"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+    ></iframe>
+</div>`;
+            copyToClipboard(code);
+        }
+
+        function copyWordPressCode() {
+            const code = `// Add to your theme's functions.php
+function bedbooking_widget_shortcode($atts) {
+    $atts = shortcode_atts(array(
+        'unit' => '',
+        'height' => '800'
+    ), $atts);
+
+    if (empty($atts['unit'])) {
+        return '<p>Please provide unit ID</p>';
+    }
+
+    $url = 'https://rab-booking-widget.web.app?unit=' . esc_attr($atts['unit']);
+    $height = esc_attr($atts['height']);
+
+    return '<div class="bedbooking-widget">
+        <iframe
+            src="' . $url . '"
+            width="100%"
+            height="' . $height . '"
+            frameborder="0"
+            style="border: none; border-radius: 12px;"
+            loading="lazy"
+            allow="payment"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+        ></iframe>
+    </div>';
+}
+add_shortcode('bedbooking', 'bedbooking_widget_shortcode');
+
+// Usage: [bedbooking unit="YOUR_UNIT_ID"]`;
+            copyToClipboard(code);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Kod kopiran u clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('❌ Greška pri kopiranju. Molim kopiraj ručno.');
+            });
+        }
+    </script>
+</body>
+</html>

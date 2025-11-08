@@ -1,20 +1,21 @@
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
+import '../../../../core/services/logging_service.dart';
+import '../../../widget/data/repositories/firebase_widget_settings_repository.dart';
 
 /// Firebase implementation of Owner Properties Repository
 class FirebaseOwnerPropertiesRepository {
   final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
   final FirebaseStorage _storage;
+  final FirebaseWidgetSettingsRepository _widgetSettingsRepository;
 
   FirebaseOwnerPropertiesRepository(
     this._firestore,
-    this._auth,
     this._storage,
+    this._widgetSettingsRepository,
   );
 
   /// Get all properties for current owner with units count
@@ -100,18 +101,34 @@ class FirebaseOwnerPropertiesRepository {
   /// This is useful when we only have the unitId and need to find which property it belongs to
   Future<UnitModel?> getUnitByIdAcrossProperties(String unitId) async {
     try {
+      // NOTE: Cannot use FieldPath.documentId with collectionGroup without full path
+      // Instead, get all units and filter in code
       final snapshot = await _firestore
           .collectionGroup('units')
-          .where(FieldPath.documentId, isEqualTo: unitId)
-          .limit(1)
           .get();
 
       if (snapshot.docs.isEmpty) {
         return null;
       }
 
-      final doc = snapshot.docs.first;
-      return UnitModel.fromJson({...doc.data(), 'id': doc.id});
+      // Find unit with matching ID
+      for (final doc in snapshot.docs) {
+        if (doc.id == unitId) {
+          final data = doc.data();
+
+          // Extract propertyId from document path
+          // Path format: properties/{propertyId}/units/{unitId}
+          final propertyId = doc.reference.parent.parent?.id;
+
+          return UnitModel.fromJson({
+            ...data,
+            'id': doc.id,
+            'property_id': propertyId,
+          });
+        }
+      }
+
+      return null;
     } catch (e) {
       throw Exception('Failed to fetch unit: $e');
     }
@@ -124,6 +141,7 @@ class FirebaseOwnerPropertiesRepository {
     required String description,
     required String propertyType,
     required String location,
+    String? slug,
     String? address,
     double? latitude,
     double? longitude,
@@ -136,6 +154,7 @@ class FirebaseOwnerPropertiesRepository {
       final docRef = await _firestore.collection('properties').add({
         'owner_id': ownerId,
         'name': name,
+        'slug': slug,
         'description': description,
         'property_type': propertyType,
         'location': location,
@@ -164,6 +183,7 @@ class FirebaseOwnerPropertiesRepository {
   Future<PropertyModel> updateProperty({
     required String propertyId,
     String? name,
+    String? slug,
     String? description,
     String? propertyType,
     String? location,
@@ -178,6 +198,7 @@ class FirebaseOwnerPropertiesRepository {
     try {
       final updates = <String, dynamic>{};
       if (name != null) updates['name'] = name;
+      if (slug != null) updates['slug'] = slug;
       if (description != null) updates['description'] = description;
       if (propertyType != null) updates['property_type'] = propertyType;
       if (location != null) {
@@ -320,6 +341,7 @@ class FirebaseOwnerPropertiesRepository {
   Future<UnitModel> createUnit({
     required String propertyId,
     required String name,
+    String? slug,
     String? description,
     required double basePrice,
     required int maxGuests,
@@ -340,6 +362,7 @@ class FirebaseOwnerPropertiesRepository {
           .add({
         'property_id': propertyId, // Keep for reference
         'name': name,
+        'slug': slug,
         'description': description,
         'base_price': basePrice,
         'max_guests': maxGuests,
@@ -357,7 +380,21 @@ class FirebaseOwnerPropertiesRepository {
       });
 
       final doc = await docRef.get();
-      return UnitModel.fromJson({...doc.data()!, 'id': doc.id});
+      final unitId = doc.id;
+
+      // Auto-create default widget settings for this unit
+      try {
+        await _widgetSettingsRepository.createDefaultSettings(
+          propertyId: propertyId,
+          unitId: unitId,
+        );
+        LoggingService.log('Widget settings auto-created for unit: $unitId', tag: 'OwnerPropertiesRepository');
+      } catch (e) {
+        // Log error but don't fail unit creation
+        LoggingService.log('Warning: Failed to create widget settings for unit $unitId: $e', tag: 'OwnerPropertiesRepository');
+      }
+
+      return UnitModel.fromJson({...doc.data()!, 'id': unitId});
     } catch (e) {
       throw Exception('Failed to create unit: $e');
     }
@@ -368,6 +405,7 @@ class FirebaseOwnerPropertiesRepository {
     required String propertyId,
     required String unitId,
     String? name,
+    String? slug,
     String? description,
     double? basePrice,
     int? maxGuests,
@@ -384,6 +422,7 @@ class FirebaseOwnerPropertiesRepository {
     try {
       final updates = <String, dynamic>{};
       if (name != null) updates['name'] = name;
+      if (slug != null) updates['slug'] = slug;
       if (description != null) updates['description'] = description;
       if (basePrice != null) updates['base_price'] = basePrice;
       if (maxGuests != null) updates['max_guests'] = maxGuests;

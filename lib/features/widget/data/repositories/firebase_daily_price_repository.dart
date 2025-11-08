@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../shared/models/daily_price_model.dart';
 import '../../../../shared/repositories/daily_price_repository.dart';
+import '../../../../core/services/logging_service.dart';
 
 /// Firebase implementation of daily price repository
 class FirebaseDailyPriceRepository implements DailyPriceRepository {
@@ -27,7 +28,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
       final priceData = snapshot.docs.first.data();
       return (priceData['price'] as num?)?.toDouble();
     } catch (e) {
-      print('Error getting price for date: $e');
+      LoggingService.logError('Error getting price for date', e);
       return null;
     }
   }
@@ -54,14 +55,14 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
             try {
               return DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});
             } catch (e) {
-              print('Error parsing daily price: $e');
+              LoggingService.logError('Error parsing daily price', e);
               return null;
             }
           })
           .whereType<DailyPriceModel>()
           .toList();
     } catch (e) {
-      print('Error getting prices for date range: $e');
+      LoggingService.logError('Error getting prices for date range', e);
       return [];
     }
   }
@@ -110,7 +111,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
 
       return total;
     } catch (e) {
-      print('Error calculating booking price: $e');
+      LoggingService.logError('Error calculating booking price', e);
       return 0.0;
     }
   }
@@ -120,14 +121,38 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     required String unitId,
     required DateTime date,
     required double price,
+    DailyPriceModel? priceModel,
   }) async {
     final dateOnly = DateTime(date.year, date.month, date.day);
     final now = DateTime.now();
 
+    // If priceModel is provided, use all its fields
+    if (priceModel != null) {
+      final data = priceModel.copyWith(
+        unitId: unitId,
+        date: dateOnly,
+        updatedAt: now,
+      ).toJson();
+
+      // Remove ID from JSON before saving
+      data.remove('id');
+
+      final docRef = await _firestore.collection('daily_prices').add(data);
+
+      return priceModel.copyWith(
+        id: docRef.id,
+        unitId: unitId,
+        date: dateOnly,
+        updatedAt: now,
+      );
+    }
+
+    // Otherwise, create basic price entry
     final data = {
       'unit_id': unitId,
       'date': Timestamp.fromDate(dateOnly),
       'price': price,
+      'available': true, // Default to available
       'created_at': Timestamp.fromDate(now),
     };
 
@@ -192,6 +217,56 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     return createdPrices;
   }
 
+  /// Bulk update prices with full DailyPriceModel support
+  /// Supports all fields including availability, restrictions, etc.
+  @override
+  Future<List<DailyPriceModel>> bulkUpdatePricesWithModel({
+    required String unitId,
+    required List<DateTime> dates,
+    required DailyPriceModel modelTemplate,
+  }) async {
+    final List<DailyPriceModel> createdPrices = [];
+    final batch = _firestore.batch();
+    int operationCount = 0;
+    const maxBatchSize = 500; // Firestore limit
+
+    for (final date in dates) {
+      final dateOnly = DateTime(date.year, date.month, date.day);
+      final docRef = _firestore.collection('daily_prices').doc();
+
+      // Create model for this specific date
+      final model = modelTemplate.copyWith(
+        id: docRef.id,
+        unitId: unitId,
+        date: dateOnly,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      // Convert to JSON and remove ID
+      final data = model.toJson();
+      data.remove('id');
+
+      batch.set(docRef, data);
+      operationCount++;
+
+      createdPrices.add(model);
+
+      // Commit batch if reaching limit
+      if (operationCount >= maxBatchSize) {
+        await batch.commit();
+        operationCount = 0;
+      }
+    }
+
+    // Commit remaining operations
+    if (operationCount > 0) {
+      await batch.commit();
+    }
+
+    return createdPrices;
+  }
+
   @override
   Future<void> deletePriceForDate({
     required String unitId,
@@ -248,14 +323,14 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
             try {
               return DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});
             } catch (e) {
-              print('Error parsing daily price: $e');
+              LoggingService.logError('Error parsing daily price', e);
               return null;
             }
           })
           .whereType<DailyPriceModel>()
           .toList();
     } catch (e) {
-      print('Error fetching all prices for unit: $e');
+      LoggingService.logError('Error fetching all prices for unit', e);
       return [];
     }
   }
@@ -297,7 +372,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
             try {
               return DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});
             } catch (e) {
-              print('Error parsing daily price: $e');
+              LoggingService.logError('Error parsing daily price', e);
               return null;
             }
           })

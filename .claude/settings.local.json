@@ -14,7 +14,8 @@
       "NotebookEdit",
       "AskUserQuestion",
       "Skill",
-      "SlashCommand"
+      "SlashCommand",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

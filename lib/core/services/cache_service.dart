@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'logging_service.dart';
 
 /// Entry in cache with value and timestamp
 class _CacheEntry<T> {
@@ -44,7 +44,7 @@ class CacheService<T> {
       timestamp: DateTime.now(),
     );
 
-    debugPrint('Cache: Set key "$key" with TTL ${ttl.inMinutes}m');
+    LoggingService.logCache('Set key "$key" with TTL ${ttl.inMinutes}m');
   }
 
   /// Get a value from cache
@@ -52,17 +52,17 @@ class CacheService<T> {
   T? get(String key) {
     final entry = _cache[key];
     if (entry == null) {
-      debugPrint('Cache: Miss for key "$key" (not found)');
+      LoggingService.logCache('Miss for key "$key" (not found)');
       return null;
     }
 
     if (entry.isExpired(ttl)) {
       _cache.remove(key);
-      debugPrint('Cache: Miss for key "$key" (expired)');
+      LoggingService.logCache('Miss for key "$key" (expired)');
       return null;
     }
 
-    debugPrint('Cache: Hit for key "$key"');
+    LoggingService.logCache('Hit for key "$key"');
     return entry.value;
   }
 
@@ -82,7 +82,7 @@ class CacheService<T> {
   /// Remove a specific key from cache
   void invalidate(String key) {
     _cache.remove(key);
-    debugPrint('Cache: Invalidated key "$key"');
+    LoggingService.logCache('Invalidated key "$key"');
   }
 
   /// Remove all keys matching a pattern
@@ -96,14 +96,14 @@ class CacheService<T> {
       _cache.remove(key);
     }
 
-    debugPrint('Cache: Invalidated ${keysToRemove.length} keys matching "$pattern"');
+    LoggingService.logCache('Invalidated ${keysToRemove.length} keys matching "$pattern"');
   }
 
   /// Clear all cache entries
   void clear() {
     final count = _cache.length;
     _cache.clear();
-    debugPrint('Cache: Cleared $count entries');
+    LoggingService.logCache('Cleared $count entries');
   }
 
   /// Get cache statistics
@@ -137,7 +137,7 @@ class CacheService<T> {
       _cache.remove(key);
     }
 
-    debugPrint('Cache: Cleaned ${expiredKeys.length} expired entries');
+    LoggingService.logCache('Cleaned ${expiredKeys.length} expired entries');
   }
 
   /// Get or set pattern: Get from cache, or fetch and cache if not available
@@ -152,7 +152,7 @@ class CacheService<T> {
     }
 
     // Fetch new data
-    debugPrint('Cache: Fetching data for key "$key"');
+    LoggingService.logCache('Fetching data for key "$key"');
     final value = await fetcher();
 
     // Store in cache

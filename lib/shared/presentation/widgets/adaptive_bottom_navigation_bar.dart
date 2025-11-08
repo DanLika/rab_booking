@@ -2,8 +2,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/navigation_helpers.dart';
 
 /// Adaptive Bottom Navigation Bar
@@ -99,7 +97,7 @@ class _AdaptiveBottomNavigationBarState
     final currentRoute = GoRouterState.of(context).uri.path;
 
     // Determine current index based on route
-    int currentIndex = _getIndexFromRoute(currentRoute);
+    final int currentIndex = _getIndexFromRoute(currentRoute);
 
     // Mobile apps: Always visible (no animation)
     // Web: Animated slide up/down
@@ -143,34 +141,34 @@ class _AdaptiveBottomNavigationBarState
   }
 
   List<Widget> _buildDestinations(BuildContext context) {
-    return [
+    return const [
       NavigationDestination(
-        icon: const Icon(Icons.home_outlined),
-        selectedIcon: const Icon(Icons.home),
+        icon: Icon(Icons.home_outlined),
+        selectedIcon: Icon(Icons.home),
         label: 'Home',
         tooltip: 'Go to Home',
       ),
       NavigationDestination(
-        icon: const Icon(Icons.search_outlined),
-        selectedIcon: const Icon(Icons.search),
+        icon: Icon(Icons.search_outlined),
+        selectedIcon: Icon(Icons.search),
         label: 'Search',
         tooltip: 'Search properties',
       ),
       NavigationDestination(
-        icon: const Icon(Icons.bookmark_outline),
-        selectedIcon: const Icon(Icons.bookmark),
+        icon: Icon(Icons.bookmark_outline),
+        selectedIcon: Icon(Icons.bookmark),
         label: 'Favorites',
         tooltip: 'View favorites',
       ),
       NavigationDestination(
-        icon: const Icon(Icons.calendar_today_outlined),
-        selectedIcon: const Icon(Icons.calendar_today),
+        icon: Icon(Icons.calendar_today_outlined),
+        selectedIcon: Icon(Icons.calendar_today),
         label: 'Bookings',
         tooltip: 'My bookings',
       ),
       NavigationDestination(
-        icon: const Icon(Icons.person_outline),
-        selectedIcon: const Icon(Icons.person),
+        icon: Icon(Icons.person_outline),
+        selectedIcon: Icon(Icons.person),
         label: 'Profile',
         tooltip: 'My profile',
       ),

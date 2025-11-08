@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/booking_flow_provider.dart';
-import '../theme/bedbooking_theme.dart';
+import '../theme/villa_jasko_colors.dart';
+import '../theme/responsive_helper.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../widgets/year_grid_calendar_widget.dart';
 
 // Using providers from booking_flow_provider.dart:
@@ -17,10 +19,12 @@ import '../widgets/year_grid_calendar_widget.dart';
 /// Shows integrated calendar + available rooms
 class EnhancedRoomSelectionScreen extends ConsumerStatefulWidget {
   final String? propertyId;
+  final String? unitId;
 
   const EnhancedRoomSelectionScreen({
     super.key,
     this.propertyId,
+    this.unitId,
   });
 
   @override
@@ -37,12 +41,21 @@ class _EnhancedRoomSelectionScreenState
   String? _selectedUnitId;
 
   @override
+  void initState() {
+    super.initState();
+    // Pre-select unit if provided from URL
+    if (widget.unitId != null) {
+      _selectedUnitId = widget.unitId;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: VillaJaskoColors.backgroundSurface,
       appBar: AppBar(
-        backgroundColor: BedBookingColors.primaryGreen,
-        foregroundColor: Colors.white,
+        backgroundColor: VillaJaskoColors.primary,
+        foregroundColor: VillaJaskoColors.backgroundSurface,
         elevation: 0,
         title: const Text(
           'Book Your Stay',
@@ -53,16 +66,23 @@ class _EnhancedRoomSelectionScreenState
         ),
         centerTitle: true,
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 768;
+      body: Column(
+        children: [
+          // Progress indicator removed - calendar selection is not part of booking flow timeline
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = ResponsiveHelper.isMobile(context);
 
-          if (isMobile) {
-            return _buildMobileLayout();
-          } else {
-            return _buildDesktopLayout();
-          }
-        },
+                if (isMobile) {
+                  return _buildMobileLayout();
+                } else {
+                  return _buildDesktopLayout();
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -81,27 +101,47 @@ class _EnhancedRoomSelectionScreenState
 
           // Calendar section
           if (_selectedUnitId != null) ...[
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Text(
-                'Select your dates',
-                style: BedBookingTextStyles.heading2,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Select your dates',
+                    style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Click start date, then click end date to select your stay',
+                    style: GoogleFonts.inter(fontSize: 13, color: VillaJaskoColors.textSecondary),
+                  ),
+                ],
               ),
             ),
-            SizedBox(
-              height: 500,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: YearGridCalendarWidget(
-                  unitId: _selectedUnitId!,
-                  onRangeSelected: (start, end) {
-                    setState(() {
-                      _checkIn = start;
-                      _checkOut = end;
-                    });
-                  },
-                ),
-              ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final screenHeight = MediaQuery.of(context).size.height;
+                final isMobile = MediaQuery.of(context).size.width < 600;
+                final calendarHeight = isMobile
+                    ? screenHeight * 0.5
+                    : (screenHeight * 0.6).clamp(400.0, 600.0);
+
+                return SizedBox(
+                  height: calendarHeight,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: YearGridCalendarWidget(
+                      unitId: _selectedUnitId!,
+                      onRangeSelected: (start, end) {
+                        setState(() {
+                          _checkIn = start;
+                          _checkOut = end;
+                        });
+                      },
+                    ),
+                  ),
+                );
+              },
             ),
           ],
 
@@ -111,9 +151,9 @@ class _EnhancedRoomSelectionScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Choose your room',
-                  style: BedBookingTextStyles.heading2,
+                  style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
                 ),
                 const SizedBox(height: 16),
                 _buildRoomsList(),
@@ -136,16 +176,19 @@ class _EnhancedRoomSelectionScreenState
   // ===================================================================
 
   Widget _buildDesktopLayout() {
-    return Row(
-      children: [
-        // Left: Room list (30%)
-        Expanded(
-          flex: 3,
-          child: Container(
-            decoration: BoxDecoration(
-              color: BedBookingColors.backgroundGrey,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1400),
+        child: Row(
+          children: [
+            // Left: Room list (30%)
+            Expanded(
+              flex: 3,
+              child: Container(
+            decoration: const BoxDecoration(
+              color: VillaJaskoColors.backgroundMain,
               border: Border(
-                right: BorderSide(color: Colors.grey.shade300),
+                right: BorderSide(color: VillaJaskoColors.border),
               ),
             ),
             child: SingleChildScrollView(
@@ -153,9 +196,9 @@ class _EnhancedRoomSelectionScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Choose your room',
-                    style: BedBookingTextStyles.heading2,
+                    style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
                   ),
                   const SizedBox(height: 20),
                   _buildRoomsList(),
@@ -169,7 +212,7 @@ class _EnhancedRoomSelectionScreenState
         Expanded(
           flex: 7,
           child: Container(
-            color: Colors.white,
+            color: VillaJaskoColors.backgroundSurface,
             child: Column(
               children: [
                 // Date selection header
@@ -180,14 +223,26 @@ class _EnhancedRoomSelectionScreenState
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: YearGridCalendarWidget(
-                        unitId: _selectedUnitId!,
-                        onRangeSelected: (start, end) {
-                          setState(() {
-                            _checkIn = start;
-                            _checkOut = end;
-                          });
-                        },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Click start date, then click end date to select your stay',
+                            style: GoogleFonts.inter(fontSize: 13, color: VillaJaskoColors.textSecondary),
+                          ),
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: YearGridCalendarWidget(
+                              unitId: _selectedUnitId!,
+                              onRangeSelected: (start, end) {
+                                setState(() {
+                                  _checkIn = start;
+                                  _checkOut = end;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   )
@@ -197,17 +252,17 @@ class _EnhancedRoomSelectionScreenState
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.hotel_outlined,
                             size: 80,
-                            color: Colors.grey.shade300,
+                            color: VillaJaskoColors.border,
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'Select a room to view availability',
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 16,
-                              color: Colors.grey.shade600,
+                              color: VillaJaskoColors.textSecondary,
                             ),
                           ),
                         ],
@@ -226,7 +281,9 @@ class _EnhancedRoomSelectionScreenState
             ),
           ),
         ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -237,10 +294,10 @@ class _EnhancedRoomSelectionScreenState
   Widget _buildDateSelectionHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
+      decoration: const BoxDecoration(
+        color: VillaJaskoColors.backgroundSurface,
         border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200),
+          bottom: BorderSide(color: VillaJaskoColors.border),
         ),
       ),
       child: Column(
@@ -278,10 +335,10 @@ class _EnhancedRoomSelectionScreenState
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: BedBookingColors.primaryGreen.withOpacity(0.1),
+                color: VillaJaskoColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: BedBookingColors.primaryGreen.withOpacity(0.3),
+                  color: VillaJaskoColors.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -289,9 +346,9 @@ class _EnhancedRoomSelectionScreenState
                   Expanded(
                     child: _buildDateDisplay('Check-in', _checkIn!),
                   ),
-                  Icon(
+                  const Icon(
                     Icons.arrow_forward,
-                    color: BedBookingColors.primaryGreen,
+                    color: VillaJaskoColors.primary,
                   ),
                   Expanded(
                     child: _buildDateDisplay('Check-out', _checkOut!),
@@ -322,15 +379,15 @@ class _EnhancedRoomSelectionScreenState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: BedBookingColors.backgroundGrey,
+        color: VillaJaskoColors.backgroundMain,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: VillaJaskoColors.border),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: BedBookingColors.textGrey),
+          Icon(icon, size: 20, color: VillaJaskoColors.textSecondary),
           const SizedBox(width: 8),
-          Text(label, style: BedBookingTextStyles.small),
+          Text(label, style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary)),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.remove_circle_outline, size: 20),
@@ -342,7 +399,7 @@ class _EnhancedRoomSelectionScreenState
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               count.toString(),
-              style: BedBookingTextStyles.bodyBold,
+              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
             ),
           ),
           IconButton(
@@ -362,9 +419,9 @@ class _EnhancedRoomSelectionScreenState
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: GoogleFonts.inter(
             fontSize: 12,
-            color: Colors.grey.shade600,
+            color: VillaJaskoColors.textSecondary,
           ),
         ),
         const SizedBox(height: 4),
@@ -380,12 +437,21 @@ class _EnhancedRoomSelectionScreenState
   }
 
   Widget _buildRoomsList() {
-    final propertyRepo = ref.watch(propertyRepositoryProvider);
+    // If propertyId is not provided, show error
+    if (widget.propertyId == null || widget.propertyId!.isEmpty) {
+      return const Center(
+        child: Text(
+          'Error: Property ID not provided',
+          style: TextStyle(color: VillaJaskoColors.error),
+        ),
+      );
+    }
 
-    return FutureBuilder(
-      future: propertyRepo.fetchProperties(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+    // Fetch units for the specific property from URL
+    return FutureBuilder<List<UnitModel>>(
+      future: ref.watch(unitRepositoryProvider).fetchUnitsByProperty(widget.propertyId!),
+      builder: (context, unitsSnapshot) {
+        if (unitsSnapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(40),
@@ -394,43 +460,23 @@ class _EnhancedRoomSelectionScreenState
           );
         }
 
-        if (snapshot.hasError) {
+        if (unitsSnapshot.hasError) {
           return Center(
             child: Text(
-              'Error loading properties: ${snapshot.error}',
-              style: const TextStyle(color: BedBookingColors.error),
+              'Error loading rooms: ${unitsSnapshot.error}',
+              style: const TextStyle(color: VillaJaskoColors.error),
             ),
           );
         }
 
-        final properties = snapshot.data ?? [];
-        if (properties.isEmpty) {
-          return const Center(
-            child: Text('No properties available'),
-          );
+        final units = unitsSnapshot.data ?? <UnitModel>[];
+
+        if (units.isEmpty) {
+          return const Center(child: Text('No rooms available'));
         }
 
-        // Get first property (or use propertyId if provided)
-        final property = properties.first;
-
-        return FutureBuilder<List<UnitModel>>(
-          future:
-              ref.watch(unitRepositoryProvider).fetchUnitsByProperty(property.id),
-          builder: (context, unitsSnapshot) {
-            if (unitsSnapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final units = unitsSnapshot.data ?? <UnitModel>[];
-
-            if (units.isEmpty) {
-              return const Center(child: Text('No rooms available'));
-            }
-
-            return Column(
-              children: units.map((unit) => _buildRoomCard(unit)).toList(),
-            );
-          },
+        return Column(
+          children: units.map((unit) => _buildRoomCard(unit)).toList(),
         );
       },
     );
@@ -449,18 +495,18 @@ class _EnhancedRoomSelectionScreenState
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: VillaJaskoColors.backgroundSurface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? BedBookingColors.primaryGreen
-                : Colors.grey.shade300,
+                ? VillaJaskoColors.primary
+                : VillaJaskoColors.border,
             width: isSelected ? 3 : 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: BedBookingColors.primaryGreen.withOpacity(0.2),
+                    color: VillaJaskoColors.primary.withValues(alpha: 0.2),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),
@@ -482,7 +528,7 @@ class _EnhancedRoomSelectionScreenState
                     return Container(
                       width: 100,
                       height: 80,
-                      color: Colors.grey[300],
+                      color: VillaJaskoColors.border,
                       child: const Icon(Icons.hotel, size: 40),
                     );
                   },
@@ -497,31 +543,31 @@ class _EnhancedRoomSelectionScreenState
                 children: [
                   Text(
                     unit.name,
-                    style: BedBookingTextStyles.heading3,
+                    style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.people,
                         size: 16,
-                        color: Colors.grey.shade600,
+                        color: VillaJaskoColors.textSecondary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '${unit.maxGuests} guests',
-                        style: BedBookingTextStyles.small,
+                        style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
                       ),
                       const SizedBox(width: 12),
-                      Icon(
+                      const Icon(
                         Icons.king_bed,
                         size: 16,
-                        color: Colors.grey.shade600,
+                        color: VillaJaskoColors.textSecondary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '${unit.bedrooms} ${unit.bedrooms == 1 ? 'bedroom' : 'bedrooms'}',
-                        style: BedBookingTextStyles.small,
+                        style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
                       ),
                     ],
                   ),
@@ -529,7 +575,7 @@ class _EnhancedRoomSelectionScreenState
                     const SizedBox(height: 8),
                     Text(
                       unit.description!,
-                      style: BedBookingTextStyles.small,
+                      style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -543,13 +589,13 @@ class _EnhancedRoomSelectionScreenState
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
-                  color: BedBookingColors.primaryGreen,
+                decoration: const BoxDecoration(
+                  color: VillaJaskoColors.primary,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.check,
-                  color: Colors.white,
+                  color: VillaJaskoColors.backgroundSurface,
                   size: 24,
                 ),
               ),
@@ -564,16 +610,16 @@ class _EnhancedRoomSelectionScreenState
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+      decoration: const BoxDecoration(
+        color: VillaJaskoColors.backgroundSurface,
         border: Border(
-          top: BorderSide(color: Colors.grey.shade200),
+          top: BorderSide(color: VillaJaskoColors.border),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Color(0x0D000000),
             blurRadius: 10,
-            offset: const Offset(0, -2),
+            offset: Offset(0, -2),
           ),
         ],
       ),
@@ -582,10 +628,9 @@ class _EnhancedRoomSelectionScreenState
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () => _handleContinue(),
-            style: BedBookingButtons.primaryButton.copyWith(
-              padding: const WidgetStatePropertyAll(
-                EdgeInsets.symmetric(vertical: 18),
-              ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VillaJaskoColors.primary,
+              padding: const EdgeInsets.symmetric(vertical: 18),
             ),
             child: Text(
               'Continue - $nights ${nights == 1 ? 'night' : 'nights'}',
@@ -597,23 +642,65 @@ class _EnhancedRoomSelectionScreenState
     );
   }
 
-  void _handleContinue() {
+  Future<void> _handleContinue() async {
     // Store selected data in booking flow state
     ref.read(checkInDateProvider.notifier).state = _checkIn;
     ref.read(checkOutDateProvider.notifier).state = _checkOut;
     ref.read(adultsCountProvider.notifier).state = _adults;
     ref.read(childrenCountProvider.notifier).state = _children;
 
-    // Find and store selected unit
-    final unitRepo = ref.read(unitRepositoryProvider);
-    unitRepo.fetchUnitById(_selectedUnitId!).then((unit) {
-      if (unit != null) {
-        ref.read(selectedRoomProvider.notifier).state = unit;
-      }
-    });
+    // Find and store selected unit - AWAIT to prevent race condition
+    try {
+      final unitRepo = ref.read(unitRepositoryProvider);
+      final unit = await unitRepo.fetchUnitById(_selectedUnitId!);
 
-    // Navigate to Step 1
-    ref.read(bookingStepProvider.notifier).state = 1;
+      if (unit == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unit not found. Please try again.'),
+              backgroundColor: Color(0xFFEF4444),
+            ),
+          );
+        }
+        return;
+      }
+
+      // VALIDATE GUEST CAPACITY before continuing
+      final totalGuests = _adults + _children;
+      if (totalGuests > unit.maxGuests) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Maximum ${unit.maxGuests} ${unit.maxGuests == 1 ? 'guest' : 'guests'} allowed for this unit. You selected $totalGuests guests.',
+              ),
+              backgroundColor: const Color(0xFFEF4444),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Check if widget is still mounted before updating providers
+      if (!mounted) return;
+
+      // Store unit only after successful fetch and validation
+      ref.read(selectedRoomProvider.notifier).state = unit;
+
+      // Navigate to Step 1 - ONLY after unit is loaded and validated
+      ref.read(bookingStepProvider.notifier).state = 1;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading unit: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
   }
 }
 

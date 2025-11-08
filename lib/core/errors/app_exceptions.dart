@@ -1,5 +1,6 @@
 /// Application-wide exception classes for better error handling
 /// and user-friendly error messages
+library;
 
 /// Base class for all application exceptions
 abstract class AppException implements Exception {
@@ -31,14 +32,11 @@ abstract class AppException implements Exception {
 /// Exception for network connectivity issues
 class NetworkException extends AppException {
   const NetworkException({
-    String message = 'Network error occurred',
-    String? userMessage,
+    super.message = 'Network error occurred',
+    super.userMessage,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'No internet connection. Please check your network.',
-        );
+  });
 }
 
 /// Exception for API/Server errors
@@ -46,28 +44,22 @@ class ServerException extends AppException {
   final int? statusCode;
 
   const ServerException({
-    String message = 'Server error occurred',
-    String? userMessage,
+    super.message = 'Server error occurred',
+    super.userMessage,
     this.statusCode,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'Server error. Please try again later.',
-        );
+  });
 }
 
 /// Exception for timeout errors
 class TimeoutException extends AppException {
   const TimeoutException({
-    String message = 'Request timed out',
-    String? userMessage,
+    super.message = 'Request timed out',
+    super.userMessage,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'Request took too long. Please try again.',
-        );
+  });
 }
 
 // ============================================================================
@@ -77,27 +69,21 @@ class TimeoutException extends AppException {
 /// Exception for authentication errors
 class AuthException extends AppException {
   const AuthException({
-    String message = 'Authentication error',
-    String? userMessage,
+    super.message = 'Authentication error',
+    super.userMessage,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'Authentication failed. Please log in again.',
-        );
+  });
 }
 
 /// Exception for authorization/permission errors
 class PermissionException extends AppException {
   const PermissionException({
-    String message = 'Permission denied',
-    String? userMessage,
+    super.message = 'Permission denied',
+    super.userMessage,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'You don\'t have permission to perform this action.',
-        );
+  });
 }
 
 // ============================================================================
@@ -109,15 +95,12 @@ class ValidationException extends AppException {
   final Map<String, String>? fieldErrors;
 
   const ValidationException({
-    String message = 'Validation error',
-    String? userMessage,
+    super.message = 'Validation error',
+    super.userMessage,
     this.fieldErrors,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'Please check your input and try again.',
-        );
+  });
 
   /// Get error for a specific field
   String? getFieldError(String field) => fieldErrors?[field];
@@ -126,14 +109,11 @@ class ValidationException extends AppException {
 /// Exception for data not found errors
 class NotFoundException extends AppException {
   const NotFoundException({
-    String message = 'Data not found',
-    String? userMessage,
+    super.message = 'Data not found',
+    super.userMessage,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'The requested data was not found.',
-        );
+  });
 }
 
 // ============================================================================
@@ -143,14 +123,11 @@ class NotFoundException extends AppException {
 /// Exception for file upload errors
 class FileUploadException extends AppException {
   const FileUploadException({
-    String message = 'File upload failed',
-    String? userMessage,
+    super.message = 'File upload failed',
+    super.userMessage,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'Failed to upload file. Please try again.',
-        );
+  });
 }
 
 /// Exception for file size errors
@@ -159,16 +136,13 @@ class FileSizeException extends AppException {
   final int? actualSize;
 
   const FileSizeException({
-    String message = 'File too large',
-    String? userMessage,
+    super.message = 'File too large',
+    super.userMessage,
     this.maxSize,
     this.actualSize,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'File is too large. Please choose a smaller file.',
-        );
+  });
 
   @override
   String getUserMessage() {
@@ -186,15 +160,12 @@ class FileTypeException extends AppException {
   final String? allowedTypes;
 
   const FileTypeException({
-    String message = 'Invalid file type',
-    String? userMessage,
+    super.message = 'Invalid file type',
+    super.userMessage,
     this.allowedTypes,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'Invalid file type. Please choose a different file.',
-        );
+  });
 
   @override
   String getUserMessage() {
@@ -212,27 +183,21 @@ class FileTypeException extends AppException {
 /// Exception for database errors
 class DatabaseException extends AppException {
   const DatabaseException({
-    String message = 'Database error',
-    String? userMessage,
+    super.message = 'Database error',
+    super.userMessage,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'A database error occurred. Please try again.',
-        );
+  });
 }
 
 /// Exception for storage errors
 class StorageException extends AppException {
   const StorageException({
-    String message = 'Storage error',
-    String? userMessage,
+    super.message = 'Storage error',
+    super.userMessage,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'A storage error occurred. Please try again.',
-        );
+  });
 }
 
 // ============================================================================
@@ -268,12 +233,9 @@ class PaymentException extends AppException {
 /// Exception for unknown/unexpected errors
 class UnknownException extends AppException {
   const UnknownException({
-    String message = 'An unexpected error occurred',
-    String? userMessage,
+    super.message = 'An unexpected error occurred',
+    super.userMessage,
     super.originalError,
     super.stackTrace,
-  }) : super(
-          message: message,
-          userMessage: userMessage ?? 'An unexpected error occurred. Please try again.',
-        );
+  });
 }

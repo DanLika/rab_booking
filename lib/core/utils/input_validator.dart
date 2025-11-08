@@ -11,9 +11,6 @@ class InputValidator {
   /// Maximum allowed length for location strings
   static const int maxLocationLength = 100;
 
-  /// Regex for allowed characters in search (alphanumeric + common punctuation)
-  static final RegExp _searchPattern = RegExp(r"^[a-zA-Z0-9\s\-.,'()]+$");
-
   /// Regex for detecting potential SQL injection patterns
   static final RegExp _sqlInjectionPattern = RegExp(
     r'(\bOR\b|\bAND\b|\bUNION\b|\bSELECT\b|\bDROP\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|--|;|\/\*|\*\/)',

@@ -22,28 +22,71 @@ final yearCalendarDataProvider = FutureProvider.family<Map<String, CalendarDateI
     // Build calendar data map
     final Map<String, CalendarDateInfo> calendarData = {};
 
-    // Initialize all dates in the year as available
+    // Get today normalized to midnight for comparison
+    final today = DateTime.now();
+    final todayNormalized = DateTime(today.year, today.month, today.day);
+
+    // Initialize all dates in the year as available or disabled (past dates)
     for (int month = 1; month <= 12; month++) {
       final daysInMonth = DateTime(year, month + 1, 0).day;
       for (int day = 1; day <= daysInMonth; day++) {
         final date = DateTime(year, month, day);
         final key = _getDateKey(date);
+
+        // Mark past dates as disabled
+        final isPast = date.isBefore(todayNormalized);
+
         calendarData[key] = CalendarDateInfo(
           date: date,
-          status: DateStatus.available,
+          status: isPast ? DateStatus.disabled : DateStatus.available,
         );
       }
     }
 
-    // Mark booked dates
+    // Mark booked dates with partial CheckIn/CheckOut support
     for (final booking in bookings) {
-      DateTime current = booking.checkIn;
-      while (current.isBefore(booking.checkOut) || _isSameDay(current, booking.checkOut)) {
+      final checkIn = DateTime(
+        booking.checkIn.year,
+        booking.checkIn.month,
+        booking.checkIn.day,
+      );
+      final checkOut = DateTime(
+        booking.checkOut.year,
+        booking.checkOut.month,
+        booking.checkOut.day,
+      );
+
+      DateTime current = checkIn;
+      while (current.isBefore(checkOut) || _isSameDay(current, checkOut)) {
         final key = _getDateKey(current);
         if (calendarData.containsKey(key)) {
+          // Check if date is in the past
+          final isPast = current.isBefore(todayNormalized);
+
+          final isCheckIn = _isSameDay(current, checkIn);
+          final isCheckOut = _isSameDay(current, checkOut);
+
+          DateStatus status;
+          if (isPast) {
+            // Past dates should remain disabled regardless of booking status
+            status = DateStatus.disabled;
+          } else if (isCheckIn && isCheckOut) {
+            // Single day booking
+            status = DateStatus.booked;
+          } else if (isCheckIn) {
+            // First day - diagonal split (morning available, evening booked)
+            status = DateStatus.partialCheckIn;
+          } else if (isCheckOut) {
+            // Last day - diagonal split (morning booked, evening available)
+            status = DateStatus.partialCheckOut;
+          } else {
+            // Full day booked
+            status = DateStatus.booked;
+          }
+
           calendarData[key] = CalendarDateInfo(
             date: current,
-            status: DateStatus.booked,
+            status: status,
           );
         }
         current = current.add(const Duration(days: 1));

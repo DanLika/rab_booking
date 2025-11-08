@@ -1,7 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/router_owner.dart';
 import 'core/providers/language_provider.dart';
@@ -9,6 +12,7 @@ import 'core/providers/theme_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
+import 'features/owner_dashboard/presentation/providers/owner_calendar_view_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,9 +22,27 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Initialize SharedPreferences
+  final sharedPreferences = await SharedPreferences.getInstance();
+
+  // Initialize Firebase Crashlytics (Phase 3)
+  if (kReleaseMode) {
+    // Pass all uncaught errors from the framework to Crashlytics
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+    // Pass all uncaught asynchronous errors to Crashlytics
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  }
+
   runApp(
-    const ProviderScope(
-      child: RabBookingApp(),
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: const RabBookingApp(),
     ),
   );
 }

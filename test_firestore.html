@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firestore Test</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Firebase Firestore Connection Test</h1>
+    <div id="status">Testing...</div>
+    <pre id="output"></pre>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, collection, getDocs, query, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: 'AIzaSyB2J8MaHvIU1sw4ItO3tzsn5LC9pDvgD5s',
+            authDomain: 'rab-booking-248fc.firebaseapp.com',
+            projectId: 'rab-booking-248fc',
+            storageBucket: 'rab-booking-248fc.firebasestorage.app',
+            messagingSenderId: '592597958982',
+            appId: '1:592597958982:web:7703de3f5a2ab47d'
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const statusEl = document.getElementById('status');
+        const outputEl = document.getElementById('output');
+
+        async function testFirestore() {
+            try {
+                statusEl.textContent = 'Status: Connecting to Firestore...';
+                outputEl.textContent = '';
+
+                // Test 1: List all properties (first 5)
+                statusEl.textContent = 'Status: Fetching properties...';
+                const propertiesRef = collection(db, 'properties');
+                const q = query(propertiesRef, limit(5));
+                const snapshot = await getDocs(q);
+
+                outputEl.textContent += `\n=== PROPERTIES (${snapshot.size} found) ===\n\n`;
+
+                for (const docSnap of snapshot.docs) {
+                    const data = docSnap.data();
+                    outputEl.textContent += `Property ID: ${docSnap.id}\n`;
+                    outputEl.textContent += `Name: ${data.name || 'N/A'}\n`;
+                    outputEl.textContent += `Owner ID: ${data.owner_id || 'N/A'}\n`;
+                    outputEl.textContent += `Created: ${data.created_at}\n`;
+                    outputEl.textContent += `\nFull data:\n${JSON.stringify(data, null, 2)}\n`;
+                    outputEl.textContent += `\n${'='.repeat(50)}\n\n`;
+
+                    // Try to get units for this property
+                    const unitsRef = collection(db, 'properties', docSnap.id, 'units');
+                    const unitsSnap = await getDocs(unitsRef);
+                    outputEl.textContent += `  Units: ${unitsSnap.size}\n`;
+                    unitsSnap.forEach(u => {
+                        outputEl.textContent += `    - Unit ID: ${u.id}, Name: ${u.data().name || 'N/A'}\n`;
+                        outputEl.textContent += `      TEST LINK: http://localhost:8080/?property=${docSnap.id}&unit=${u.id}\n`;
+                    });
+                    outputEl.textContent += `\n`;
+                }
+
+                // Test 2: Try specific property ID
+                outputEl.textContent += `\n\n=== TESTING SPECIFIC PROPERTY ===\n\n`;
+                const propertyId = 'fg5nlt3aLIx4HWJeqIlq';
+                outputEl.textContent += `Fetching property: ${propertyId}\n`;
+
+                const docRef = doc(db, 'properties', propertyId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    outputEl.textContent += `✅ Property EXISTS!\n`;
+                    outputEl.textContent += `Data:\n${JSON.stringify(docSnap.data(), null, 2)}\n`;
+                } else {
+                    outputEl.textContent += `❌ Property NOT FOUND in Firestore!\n`;
+                }
+
+                statusEl.textContent = 'Status: ✅ Test completed successfully!';
+            } catch (error) {
+                statusEl.textContent = `Status: ❌ Error!`;
+                outputEl.textContent += `\n\n❌ ERROR:\n${error.message}\n${error.stack}`;
+            }
+        }
+
+        // Run test
+        testFirestore();
+    </script>
+</body>
+</html>

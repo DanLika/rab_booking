@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../providers/year_calendar_provider.dart';
+import '../providers/calendar_view_provider.dart';
+import '../theme/responsive_helper.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
+import 'calendar_view_switcher.dart';
 
 class YearCalendarWidget extends ConsumerStatefulWidget {
   final String unitId;
@@ -29,13 +33,12 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
     return Column(
       children: [
-        _buildYearSelector(),
-        const SizedBox(height: 16),
-        _buildLegend(),
-        const SizedBox(height: 16),
+        // Combined header matching month/week view layout
+        _buildCombinedHeader(context),
+        const SizedBox(height: SpacingTokens.m),
         Expanded(
           child: calendarData.when(
-            data: (data) => _buildYearGrid(data),
+            data: (data) => _buildYearGridWithIntegratedSelector(data),
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stack) => Center(
               child: Text('Error: $error'),
@@ -46,27 +49,131 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  Widget _buildYearSelector() {
+  Widget _buildViewSwitcher(BuildContext context) {
+    final currentView = ref.watch(calendarViewProvider);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: ColorTokens.light.backgroundSecondary,
+        borderRadius: BorderTokens.circularMedium,
+      ),
+      child: Row(
+        children: [
+          // Week view hidden but code kept for future use
+          // _buildViewTab('Week', Icons.view_week, CalendarViewType.week, currentView == CalendarViewType.week),
+          _buildViewTab('Month', Icons.calendar_month, CalendarViewType.month, currentView == CalendarViewType.month),
+          _buildViewTab('Year', Icons.calendar_today, CalendarViewType.year, currentView == CalendarViewType.year),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildViewTab(String label, IconData icon, CalendarViewType viewType, bool isSelected) {
+    return Expanded(
+      child: Semantics(
+        label: '$label view',
+        button: true,
+        selected: isSelected,
+        child: InkWell(
+          onTap: () {
+            ref.read(calendarViewProvider.notifier).state = viewType;
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
+            decoration: BoxDecoration(
+              color: isSelected ? ColorTokens.light.buttonPrimary : Colors.transparent,
+              borderRadius: BorderTokens.circularMedium,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? ColorTokens.light.buttonPrimaryText : ColorTokens.light.textSecondary,
+                  size: IconSizeTokens.small,
+                  semanticLabel: label,
+                ),
+                const SizedBox(height: SpacingTokens.xxs),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected ? ColorTokens.light.buttonPrimaryText : ColorTokens.light.textSecondary,
+                    fontSize: TypographyTokens.fontSizeS2,
+                    fontWeight: isSelected ? TypographyTokens.bold : TypographyTokens.regular,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCombinedHeader(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 980),
+        child: Container(
+          padding: SpacingTokens.allM,
+          decoration: BoxDecoration(
+            color: ColorTokens.light.backgroundSecondary,
+            borderRadius: BorderTokens.circularRounded,
+            boxShadow: ShadowTokens.light,
+          ),
+          child: Row(
+            children: [
+              // View Switcher - 70%
+              Expanded(
+                flex: 7,
+                child: _buildViewSwitcher(context),
+              ),
+              const SizedBox(width: SpacingTokens.s2),
+
+              // Compact Navigation - 30%
+              Expanded(
+                flex: 3,
+                child: _buildCompactYearNavigation(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactYearNavigation() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: const Icon(Icons.chevron_left),
+          icon: const Icon(Icons.chevron_left, size: IconSizeTokens.small),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(
+            minWidth: ConstraintTokens.iconContainerSmall,
+            minHeight: ConstraintTokens.iconContainerSmall,
+          ),
           onPressed: () {
             setState(() {
               _currentYear--;
             });
           },
         ),
-        SelectableText(
+        Text(
           _currentYear.toString(),
           style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontSize: TypographyTokens.fontSizeM,
+            fontWeight: TypographyTokens.bold,
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.chevron_right),
+          icon: const Icon(Icons.chevron_right, size: IconSizeTokens.small),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(
+            minWidth: ConstraintTokens.iconContainerSmall,
+            minHeight: ConstraintTokens.iconContainerSmall,
+          ),
           onPressed: () {
             setState(() {
               _currentYear++;
@@ -77,89 +184,82 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  Widget _buildLegend() {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 8,
-      alignment: WrapAlignment.center,
-      children: [
-        _buildLegendItem('Available', DateStatus.available),
-        _buildLegendItem('Booked', DateStatus.booked),
-      ],
-    );
-  }
 
-  Widget _buildLegendItem(String label, DateStatus status) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: status.getColor(),
-            border: Border.all(color: status.getBorderColor()),
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(width: 4),
-        SelectableText(
-          label,
-          style: const TextStyle(fontSize: 12),
-        ),
-      ],
-    );
-  }
+  Widget _buildYearGridWithIntegratedSelector(Map<String, CalendarDateInfo> data) {
+    // Get responsive cell size
+    final cellSize = ResponsiveHelper.getYearCellSize(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 1024;
 
-
-  Widget _buildYearGrid(Map<String, CalendarDateInfo> data) {
-    // 32 columns: 1 for month label + 31 for days
-    // 13 rows: 1 for day headers + 12 for months
-    const columns = 32;
-    const rows = 13;
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return Padding(
+      padding: EdgeInsets.all(isDesktop ? SpacingTokens.m : SpacingTokens.xs),
       child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: SizedBox(
-          width: columns * 28.0, // 28px per column
-          child: Column(
-            children: [
-              _buildHeaderRow(),
-              ...List.generate(12, (monthIndex) => _buildMonthRow(monthIndex + 1, data)),
-            ],
+        scrollDirection: Axis.horizontal,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: SizedBox(
+            width: ConstraintTokens.monthLabelWidth + (31 * cellSize), // Month label width + 31 day columns
+            child: Column(
+              children: [
+                _buildHeaderRowWithYearSelector(cellSize),
+                const SizedBox(height: SpacingTokens.xs),
+                ...List.generate(12, (monthIndex) => _buildMonthRow(monthIndex + 1, data, cellSize)),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeaderRow() {
+  Widget _buildHeaderRowWithYearSelector(double cellSize) {
     return Row(
       children: [
-        // Empty cell for month label column
+        // Static "Month" label in top-left corner
         Container(
-          width: 50,
-          height: 28,
+          width: ConstraintTokens.monthLabelWidth,
+          height: cellSize,
           alignment: Alignment.center,
-          color: Colors.grey[200],
+          decoration: BoxDecoration(
+            color: ColorTokens.light.buttonPrimary,
+            border: Border.all(
+              color: ColorTokens.light.borderDefault,
+              width: BorderTokens.widthThin,
+            ),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(BorderTokens.radiusSubtle),
+            ),
+          ),
+          child: Text(
+            'Month',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: TypographyTokens.fontSizeXS2,
+              color: ColorTokens.light.buttonPrimaryText,
+            ),
+          ),
         ),
         // Day number headers
         ...List.generate(31, (dayIndex) {
           return Container(
-            width: 28,
-            height: 28,
+            width: cellSize,
+            height: cellSize,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
-              border: Border.all(color: Colors.grey[300]!, width: 0.5),
+              color: ColorTokens.light.backgroundTertiary,
+              border: Border.all(
+                color: ColorTokens.light.borderDefault,
+                width: BorderTokens.widthThin,
+              ),
+              borderRadius: dayIndex == 30
+                  ? const BorderRadius.only(topRight: Radius.circular(BorderTokens.radiusSubtle))
+                  : BorderRadius.zero,
             ),
             child: Text(
               (dayIndex + 1).toString(),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 10,
+                fontSize: TypographyTokens.fontSizeXS2,
               ),
             ),
           );
@@ -168,38 +268,45 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  Widget _buildMonthRow(int month, Map<String, CalendarDateInfo> data) {
+
+  Widget _buildMonthRow(int month, Map<String, CalendarDateInfo> data, double cellSize) {
     final monthName = DateFormat.MMM().format(DateTime(_currentYear, month));
 
     return Row(
       children: [
         // Month label
         Container(
-          width: 50,
-          height: 28,
+          width: ConstraintTokens.monthLabelWidth,
+          height: cellSize,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: Colors.grey[200],
-            border: Border.all(color: Colors.grey[300]!, width: 0.5),
+            color: ColorTokens.light.backgroundTertiary,
+            border: Border.all(
+              color: ColorTokens.light.borderDefault,
+              width: BorderTokens.widthThin,
+            ),
+            borderRadius: month == 12
+                ? const BorderRadius.only(bottomLeft: Radius.circular(BorderTokens.radiusSubtle))
+                : BorderRadius.zero,
           ),
           child: Text(
             monthName,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 10,
+              fontSize: TypographyTokens.fontSizeXS2,
             ),
           ),
         ),
         // Day cells
         ...List.generate(31, (dayIndex) {
           final day = dayIndex + 1;
-          return _buildDayCell(month, day, data);
+          return _buildDayCell(month, day, data, cellSize);
         }),
       ],
     );
   }
 
-  Widget _buildDayCell(int month, int day, Map<String, CalendarDateInfo> data) {
+  Widget _buildDayCell(int month, int day, Map<String, CalendarDateInfo> data, double cellSize) {
     // Check if this day exists in this month
     try {
       final date = DateTime(_currentYear, month, day);
@@ -208,7 +315,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
       if (dateInfo == null) {
         // Day doesn't exist in this month or no data
-        return _buildEmptyCell();
+        return _buildEmptyCell(cellSize);
       }
 
       final isInRange = _isDateInRange(date);
@@ -220,18 +327,20 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       final isPartialCheckOut = dateInfo.status == DateStatus.partialCheckOut;
 
       return GestureDetector(
-        onTap: () => _onDateTapped(date, dateInfo),
+        onTap: () => _onDateTapped(date, dateInfo, data),
         child: Container(
-          width: 28,
-          height: 28,
+          width: cellSize,
+          height: cellSize,
           decoration: BoxDecoration(
-            color: isInRange ? Colors.blue[100]! : dateInfo.status.getColor(),
+            color: isInRange ? ColorTokens.light.backgroundTertiary : dateInfo.status.getColor(),
             border: Border.all(
               color: isRangeStart || isRangeEnd
-                  ? Colors.blue[700]!
+                  ? ColorTokens.light.borderStrong
                   : dateInfo.status.getBorderColor(),
-              width: isRangeStart || isRangeEnd ? 2.0 : 0.5,
+              width: isRangeStart || isRangeEnd ? BorderTokens.widthMedium : BorderTokens.widthThin,
             ),
+            borderRadius: BorderTokens.circularTiny,
+            boxShadow: ColorTokens.light.shadowMinimal,
           ),
           child: (isPartialCheckIn || isPartialCheckOut)
               ? CustomPaint(
@@ -245,24 +354,30 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       );
     } catch (e) {
       // Invalid date (e.g., Feb 30)
-      return _buildEmptyCell();
+      return _buildEmptyCell(cellSize);
     }
   }
 
-  Widget _buildEmptyCell() {
+  Widget _buildEmptyCell(double cellSize) {
     return Container(
-      width: 28,
-      height: 28,
+      width: cellSize,
+      height: cellSize,
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        border: Border.all(color: Colors.grey[300]!, width: 0.5),
+        color: ColorTokens.light.backgroundSecondary,
+        border: Border.all(
+          color: ColorTokens.light.borderLight,
+          width: BorderTokens.widthThin,
+        ),
+        borderRadius: BorderTokens.circularTiny,
       ),
     );
   }
 
-  void _onDateTapped(DateTime date, CalendarDateInfo dateInfo) {
-    if (dateInfo.status != DateStatus.available) {
-      // Can't select booked or blocked dates
+  void _onDateTapped(DateTime date, CalendarDateInfo dateInfo, Map<String, CalendarDateInfo> data) {
+    if (dateInfo.status != DateStatus.available &&
+        dateInfo.status != DateStatus.partialCheckIn &&
+        dateInfo.status != DateStatus.partialCheckOut) {
+      // Can't select booked, pending, blocked, or disabled dates
       return;
     }
 
@@ -272,7 +387,28 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         _rangeStart = date;
         _rangeEnd = null;
       } else if (_rangeStart != null && _rangeEnd == null) {
-        // Complete range
+        // Complete range - validate no booked dates in between
+        final DateTime start = date.isBefore(_rangeStart!) ? date : _rangeStart!;
+        final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
+
+        // Check if there are any booked/pending dates in the range
+        if (_hasBlockedDatesInRange(start, end, data)) {
+          // Reset selection and show error
+          _rangeStart = null;
+          _rangeEnd = null;
+
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Cannot select dates. There are already booked dates in this range.'),
+              backgroundColor: ColorTokens.light.error,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          return;
+        }
+
+        // No blocked dates, set the range
         if (date.isBefore(_rangeStart!)) {
           _rangeEnd = _rangeStart;
           _rangeStart = date;
@@ -283,6 +419,24 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     });
 
     widget.onRangeSelected?.call(_rangeStart, _rangeEnd);
+  }
+
+  /// Check if there are any booked or pending dates between start and end (inclusive)
+  bool _hasBlockedDatesInRange(DateTime start, DateTime end, Map<String, CalendarDateInfo> data) {
+    DateTime current = start;
+    while (current.isBefore(end) || _isSameDay(current, end)) {
+      final key = _getDateKey(current);
+      final dateInfo = data[key];
+
+      if (dateInfo != null &&
+          (dateInfo.status == DateStatus.booked ||
+           dateInfo.status == DateStatus.pending)) {
+        return true; // Found a blocked date
+      }
+
+      current = current.add(const Duration(days: 1));
+    }
+    return false; // No blocked dates found
   }
 
   bool _isDateInRange(DateTime date) {

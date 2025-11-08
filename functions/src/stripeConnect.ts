@@ -1,13 +1,13 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
-import {getStripeClient} from "./stripe";
+import {getStripeClient, stripeSecretKey} from "./stripe";
 
 /**
  * Cloud Function: Create or Get Stripe Connect Account
  *
  * Creates a Stripe Express account for the owner if they don't have one
  */
-export const createStripeConnectAccount = onCall(async (request) => {
+export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, async (request) => {
   // Check authentication
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -83,7 +83,7 @@ export const createStripeConnectAccount = onCall(async (request) => {
  *
  * Returns the status of owner's Stripe account
  */
-export const getStripeAccountStatus = onCall(async (request) => {
+export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async (request) => {
   // Check authentication
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -164,7 +164,7 @@ export const getStripeAccountStatus = onCall(async (request) => {
  *
  * Creates a login link to Stripe Express Dashboard
  */
-export const createStripeDashboardLink = onCall(async (request) => {
+export const createStripeDashboardLink = onCall({secrets: [stripeSecretKey]}, async (request) => {
   // Check authentication
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -211,7 +211,7 @@ export const createStripeDashboardLink = onCall(async (request) => {
  *
  * Disconnects owner's Stripe account from the platform
  */
-export const disconnectStripeAccount = onCall(async (request) => {
+export const disconnectStripeAccount = onCall({secrets: [stripeSecretKey]}, async (request) => {
   // Check authentication
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -265,7 +265,7 @@ export const disconnectStripeAccount = onCall(async (request) => {
  *
  * Returns recent transactions for owner's Stripe account
  */
-export const getStripeTransactions = onCall(async (request) => {
+export const getStripeTransactions = onCall({secrets: [stripeSecretKey]}, async (request) => {
   // Check authentication
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");

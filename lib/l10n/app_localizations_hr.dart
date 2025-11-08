@@ -981,4 +981,254 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get seeAll => 'Pogledaj Sve';
+
+  @override
+  String get widgetSelectDates => 'Odaberite Datume';
+
+  @override
+  String get widgetGuestInformation => 'Podaci o Gostu';
+
+  @override
+  String get widgetPaymentMethod => 'Način Plaćanja';
+
+  @override
+  String get widgetConfirmation => 'Potvrda';
+
+  @override
+  String get widgetFullName => 'Puno Ime i Prezime';
+
+  @override
+  String get widgetEmailAddress => 'Email Adresa';
+
+  @override
+  String get widgetPhoneNumber => 'Broj Telefona';
+
+  @override
+  String get widgetSpecialRequests => 'Posebni Zahtjevi (Opciono)';
+
+  @override
+  String get widgetSpecialRequestsHint =>
+      'Bilo koji posebni zahtjevi ili napomene...';
+
+  @override
+  String get widgetContinue => 'Nastavi';
+
+  @override
+  String get widgetPrevious => 'Nazad';
+
+  @override
+  String get widgetAdults => 'Odrasli';
+
+  @override
+  String get widgetChildren => 'Djeca';
+
+  @override
+  String get widgetNumberOfGuests => 'Broj Gostiju';
+
+  @override
+  String widgetTotalNights(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Noći',
+      few: '$count Noći',
+      one: '1 Noć',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetSubtotal => 'Međuzbir';
+
+  @override
+  String get widgetCleaningFee => 'Naknada za Čišćenje';
+
+  @override
+  String get widgetServiceFee => 'Naknada za Uslugu';
+
+  @override
+  String get widgetTaxes => 'Porezi';
+
+  @override
+  String get widgetTotal => 'Ukupno';
+
+  @override
+  String get widgetPaymentOptions => 'Opcije Plaćanja';
+
+  @override
+  String get widgetFullPayment => 'Puna Uplata';
+
+  @override
+  String get widgetFullPaymentDesc => 'Platite 100% sada';
+
+  @override
+  String get widgetDepositPayment => 'Avansna Uplata';
+
+  @override
+  String get widgetDepositPaymentDesc =>
+      'Platite 20% sada, ostatak pri dolasku';
+
+  @override
+  String get widgetSelectPaymentMethod => 'Odaberite Način Plaćanja';
+
+  @override
+  String get widgetBankTransfer => 'Bankovna Uplata';
+
+  @override
+  String get widgetBankTransferDesc =>
+      'Uplata na naš bankovni račun (rok 3 dana)';
+
+  @override
+  String get widgetBankTransferNote =>
+      'Dobit ćete upute za plaćanje putem emaila';
+
+  @override
+  String get widgetCreditCard => 'Kreditna Kartica';
+
+  @override
+  String get widgetCreditCardDesc => 'Platite instant putem Stripe';
+
+  @override
+  String get widgetCreditCardBadge => 'INSTANT';
+
+  @override
+  String get widgetPayOnArrival => 'Plaćanje Pri Dolasku';
+
+  @override
+  String get widgetPayOnArrivalDesc =>
+      'Platite gotovinom ili karticom pri check-in';
+
+  @override
+  String get widgetBookingReference => 'Referenca Rezervacije';
+
+  @override
+  String get widgetBookingConfirmed => 'Rezervacija Potvrđena!';
+
+  @override
+  String get widgetThankYou => 'Hvala na vašoj rezervaciji';
+
+  @override
+  String widgetConfirmationSent(String email) {
+    return 'Email potvrda je poslana na $email';
+  }
+
+  @override
+  String get widgetBankTransferInstructions => 'Upute za Bankovnu Uplatu';
+
+  @override
+  String get widgetBankAccountHolder => 'Vlasnik Računa';
+
+  @override
+  String get widgetBankName => 'Banka';
+
+  @override
+  String get widgetBankIban => 'IBAN';
+
+  @override
+  String get widgetPaymentReference => 'Referenca Plaćanja';
+
+  @override
+  String get widgetPaymentDeadline => 'Rok za Uplatu';
+
+  @override
+  String get widgetImportantNote => 'Važna Napomena';
+
+  @override
+  String get widgetIncludeReference =>
+      'Molimo uključite referencu rezervacije u vašoj uplati';
+
+  @override
+  String get widgetPoweredBy => 'Powered by';
+
+  @override
+  String get widgetAvailable => 'Dostupno';
+
+  @override
+  String get widgetBooked => 'Rezervisano';
+
+  @override
+  String get widgetCheckInOnly => 'Samo dolazak';
+
+  @override
+  String get widgetCheckOutOnly => 'Samo odlazak';
+
+  @override
+  String get widgetBlocked => 'Blokirano';
+
+  @override
+  String widgetPricePerNight(String price) {
+    return '€$price / noć';
+  }
+
+  @override
+  String get widgetSelectCheckIn => 'Odaberite datum dolaska';
+
+  @override
+  String get widgetSelectCheckOut => 'Odaberite datum odlaska';
+
+  @override
+  String widgetMinimumStay(int nights) {
+    return 'Minimalni boravak: $nights noći';
+  }
+
+  @override
+  String get widgetDatesNotAvailable => 'Odabrani datumi nisu dostupni';
+
+  @override
+  String get widgetPleaseSelectOtherDates => 'Molimo odaberite druge datume';
+
+  @override
+  String get widgetErrorLoadingAvailability =>
+      'Greška pri učitavanju dostupnosti';
+
+  @override
+  String get widgetErrorCreatingBooking => 'Greška pri kreiranju rezervacije';
+
+  @override
+  String get widgetPleaseCheckFormErrors =>
+      'Molimo provjerite greške u formi i pokušajte ponovo';
+
+  @override
+  String get widgetFieldRequired => 'Ovo polje je obavezno';
+
+  @override
+  String get widgetInvalidEmail => 'Neispravna email adresa';
+
+  @override
+  String get widgetInvalidPhone => 'Neispravan broj telefona';
+
+  @override
+  String get widgetNameTooShort => 'Ime mora imati najmanje 2 karaktera';
+
+  @override
+  String get widgetProcessingPayment => 'Obrada plaćanja...';
+
+  @override
+  String get widgetCreatingBooking => 'Kreiranje rezervacije...';
+
+  @override
+  String get widgetPleaseWait => 'Molimo sačekajte';
+
+  @override
+  String get widgetCancellationPolicy => 'Politika Otkazivanja';
+
+  @override
+  String get widgetFreeCancellation =>
+      'Besplatno otkazivanje do 24 sata prije dolaska';
+
+  @override
+  String get widgetNoRefund => 'Bez povrata novca nakon ovog datuma';
+
+  @override
+  String get widgetTermsAndConditions =>
+      'Rezervacijom prihvatate naše Uvjete korištenja i Politiku privatnosti';
+
+  @override
+  String get widgetMissingParameters => 'Nedostaju obavezni parametri';
+
+  @override
+  String get widgetPropertyNotFound => 'Nekretnina ili jedinica nije pronađena';
+
+  @override
+  String get widgetContactSupport => 'Molimo kontaktirajte podršku';
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'logging_service.dart';
 
 /// IP Geolocation result
 class GeoLocationResult {
@@ -71,7 +72,7 @@ class IpGeolocationService {
         if (result != null) return result;
       } catch (e) {
         // Continue to next provider
-        print('Geolocation provider failed: $e');
+        LoggingService.logError('Geolocation provider failed', e);
       }
     }
 

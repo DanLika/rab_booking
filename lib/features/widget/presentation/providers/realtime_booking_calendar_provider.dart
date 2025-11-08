@@ -1,6 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../data/repositories/firebase_booking_calendar_repository_v2.dart';
+import '../../data/repositories/firebase_booking_calendar_repository.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../../../../shared/providers/repository_providers.dart';
 
@@ -8,17 +8,17 @@ part 'realtime_booking_calendar_provider.g.dart';
 
 /// Repository provider (V2 with price support)
 @riverpod
-FirebaseBookingCalendarRepositoryV2 bookingCalendarRepository(
-  BookingCalendarRepositoryRef ref,
+FirebaseBookingCalendarRepository bookingCalendarRepository(
+  Ref ref,
 ) {
   final firestore = ref.watch(firestoreProvider);
-  return FirebaseBookingCalendarRepositoryV2(firestore);
+  return FirebaseBookingCalendarRepository(firestore);
 }
 
 /// Realtime calendar data provider for year view
 @riverpod
 Stream<Map<DateTime, CalendarDateInfo>> realtimeYearCalendar(
-  RealtimeYearCalendarRef ref,
+  Ref ref,
   String unitId,
   int year,
 ) {
@@ -29,7 +29,7 @@ Stream<Map<DateTime, CalendarDateInfo>> realtimeYearCalendar(
 /// Realtime calendar data provider for month view
 @riverpod
 Stream<Map<DateTime, CalendarDateInfo>> realtimeMonthCalendar(
-  RealtimeMonthCalendarRef ref,
+  Ref ref,
   String unitId,
   int year,
   int month,
@@ -45,7 +45,7 @@ Stream<Map<DateTime, CalendarDateInfo>> realtimeMonthCalendar(
 /// Check date availability
 @riverpod
 Future<bool> checkDateAvailability(
-  CheckDateAvailabilityRef ref, {
+  Ref ref, {
   required String unitId,
   required DateTime checkIn,
   required DateTime checkOut,

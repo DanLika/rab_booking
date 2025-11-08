@@ -3,14 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../shared/models/booking_model.dart';
-import '../../../../shared/models/unit_model.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/utils/error_display_utils.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/price_list_provider.dart';
-import '../../../../shared/models/daily_price_model.dart';
+import '../providers/owner_calendar_provider.dart';
 
 /// Dialog za kreiranje nove rezervacije
 class BookingCreateDialog extends ConsumerStatefulWidget {
@@ -85,11 +85,11 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     final unitsAsync = ref.watch(ownerUnitsProvider);
 
     return AlertDialog(
-      title: Row(
+      title: const Row(
         children: [
           Icon(Icons.add_circle, color: AppColors.primary),
-          const SizedBox(width: 8),
-          const Text('Nova rezervacija'),
+          SizedBox(width: 8),
+          Text('Nova rezervacija'),
         ],
       ),
       content: SizedBox(
@@ -117,7 +117,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                     }
 
                     return DropdownButtonFormField<String>(
-                      value: _selectedUnitId,
+                      initialValue: _selectedUnitId,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.bed_outlined),
@@ -378,7 +378,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<BookingStatus>(
-                        value: _status,
+                        initialValue: _status,
                         decoration: const InputDecoration(
                           labelText: 'Status',
                           border: OutlineInputBorder(),
@@ -419,7 +419,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _paymentMethod,
+                        initialValue: _paymentMethod,
                         decoration: const InputDecoration(
                           labelText: 'Plaćanje',
                           border: OutlineInputBorder(),
@@ -632,7 +632,28 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
     try {
       final repository = ref.read(bookingRepositoryProvider);
-      final authState = ref.read(authProvider);
+      final authState = ref.read(enhancedAuthProvider);
+
+      // FIXED: Validate booking overlap before creating
+      final bookingsMap = await ref.read(calendarBookingsProvider.future);
+      final unitBookings = bookingsMap[_selectedUnitId!] ?? [];
+
+      // Check for overlapping bookings
+      bool hasOverlap = false;
+      for (final existingBooking in unitBookings) {
+        // Check if dates overlap
+        if (_checkInDate.isBefore(existingBooking.checkOut) &&
+            _checkOutDate.isAfter(existingBooking.checkIn)) {
+          hasOverlap = true;
+          break;
+        }
+      }
+
+      if (hasOverlap) {
+        setState(() => _isSaving = false);
+        _showError('Izabrani datumi se preklapaju s postojećom rezervacijom');
+        return;
+      }
 
       final totalPrice = double.parse(_totalPriceController.text.trim());
       final guestCount = int.parse(_guestCountController.text.trim());
@@ -665,16 +686,21 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       await repository.createBooking(booking);
 
       if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Rezervacija uspješno kreirana'),
-            backgroundColor: Colors.green,
-          ),
+        Navigator.of(context).pop(true); // Return true to indicate success
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          'Rezervacija uspješno kreirana',
         );
       }
     } catch (e) {
-      _showError('Greška pri kreiranju rezervacije: $e');
+      // FIXED: Use ErrorDisplayUtils for user-friendly error messages
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: 'Greška pri kreiranju rezervacije',
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);

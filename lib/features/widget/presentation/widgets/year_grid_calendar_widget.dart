@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import 'split_day_calendar_painter.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// Year-view grid calendar widget inspired by BedBooking
 /// Shows 12 months × 31 days in a grid with diagonal splits for check-in/check-out
@@ -34,6 +35,7 @@ class _YearGridCalendarWidgetState
   DateTime? _hoverDate; // For hover tooltip
   DateTime? _dragStart; // For drag-to-select
   bool _isDragging = false;
+  Offset _mousePosition = Offset.zero; // Track mouse position for tooltip
 
   // For tap info panel (mobile)
   DateTime? _tappedDate;
@@ -56,9 +58,9 @@ class _YearGridCalendarWidgetState
         Column(
           children: [
             _buildHeader(),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpacingTokens.m),
             _buildLegend(),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpacingTokens.m),
             Expanded(
               child: calendarData.when(
                 data: (data) => _buildYearGrid(data),
@@ -88,10 +90,11 @@ class _YearGridCalendarWidgetState
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: SpacingTokens.allM,
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(8),
+        color: ColorTokens.light.backgroundSecondary,
+        borderRadius: BorderTokens.circularRounded,
+        boxShadow: ShadowTokens.light,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -106,16 +109,23 @@ class _YearGridCalendarWidgetState
           ),
           Text(
             'Yearly view',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeL,
+              fontWeight: TypographyTokens.semiBold,
+              color: ColorTokens.light.textPrimary,
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: SpacingTokens.m,
+              vertical: SpacingTokens.s,
+            ),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: ColorTokens.light.borderDefault,
+                width: BorderTokens.widthThin,
+              ),
+              borderRadius: BorderTokens.circularSubtle,
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
@@ -155,9 +165,9 @@ class _YearGridCalendarWidgetState
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildLegendItem('Available', const Color(0xFFC8E6C9)),
-        const SizedBox(width: 24),
-        _buildLegendItem('Booked', const Color(0xFFFFCDD2)),
+        _buildLegendItem('Available', ColorTokens.light.statusAvailableBackground),
+        const SizedBox(width: SpacingTokens.l),
+        _buildLegendItem('Booked', ColorTokens.light.statusBookedBackground),
       ],
     );
   }
@@ -167,17 +177,24 @@ class _YearGridCalendarWidgetState
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 20,
-          height: 20,
+          width: IconSizeTokens.medium,
+          height: IconSizeTokens.medium,
           decoration: BoxDecoration(
             color: color,
-            border: Border.all(color: Colors.grey.shade300, width: 0.5),
+            border: Border.all(
+              color: ColorTokens.light.borderDefault,
+              width: BorderTokens.widthThin,
+            ),
+            borderRadius: BorderTokens.circularSubtle,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: SpacingTokens.s),
         Text(
           label,
-          style: const TextStyle(fontSize: 14),
+          style: TextStyle(
+            fontSize: TypographyTokens.fontSizeM,
+            color: ColorTokens.light.textPrimary,
+          ),
         ),
       ],
     );
@@ -186,18 +203,25 @@ class _YearGridCalendarWidgetState
   Widget _buildYearGrid(Map<DateTime, CalendarDateInfo> data) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Responsive cell sizing based on screen size
+        final responsiveCellSize = SpacingTokens.yearCalendarCellSize(context);
+
         // Calculate cell size based on available width
         // Reserve space for month labels
-        final monthLabelWidth = 60.0;
-        final availableWidth = constraints.maxWidth - monthLabelWidth - 20;
-        final cellSize = (availableWidth / 31).clamp(18.0, 32.0);
+        final monthLabelWidth = ConstraintTokens.monthLabelWidth;
+        final availableWidth = constraints.maxWidth - monthLabelWidth - SpacingTokens.m2;
+        // Use responsive size but clamp based on available width
+        final cellSize = (availableWidth / 31).clamp(
+          responsiveCellSize * OpacityTokens.badgeSubtle, // Minimum 80% of responsive size (0.8 * size)
+          responsiveCellSize * 1.2, // Maximum 120% of responsive size
+        );
 
         return SingleChildScrollView(
           child: Column(
             children: [
               // Day numbers header (1-31)
               _buildDayNumbersHeader(cellSize, monthLabelWidth),
-              const SizedBox(height: 4),
+              const SizedBox(height: SpacingTokens.xs),
 
               // 12 month rows
               ...List.generate(12, (monthIndex) {
@@ -223,14 +247,14 @@ class _YearGridCalendarWidgetState
           final dayNumber = dayIndex + 1;
           return SizedBox(
             width: cellSize,
-            height: 24,
+            height: IconSizeTokens.large,
             child: Center(
               child: Text(
                 dayNumber.toString(),
                 style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey.shade700,
-                  fontWeight: FontWeight.w500,
+                  fontSize: TypographyTokens.fontSizeXS2,
+                  color: ColorTokens.light.textSecondary,
+                  fontWeight: TypographyTokens.medium,
                 ),
               ),
             ),
@@ -250,7 +274,7 @@ class _YearGridCalendarWidgetState
     final daysInMonth = DateTime(_currentYear, month + 1, 0).day;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xxs),
       child: Row(
         children: [
           // Month label
@@ -258,9 +282,10 @@ class _YearGridCalendarWidgetState
             width: monthLabelWidth,
             child: Text(
               monthName,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeM,
+                fontWeight: TypographyTokens.semiBold,
+                color: ColorTokens.light.textPrimary,
               ),
             ),
           ),
@@ -276,11 +301,12 @@ class _YearGridCalendarWidgetState
                 height: cellSize,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F5),
+                    color: ColorTokens.light.backgroundTertiary,
                     border: Border.all(
-                      color: Colors.grey.shade200,
-                      width: 0.5,
+                      color: ColorTokens.light.borderLight,
+                      width: BorderTokens.widthThin,
                     ),
+                    borderRadius: BorderTokens.circularTiny, // Subtle radius for softer visual
                   ),
                 ),
               );
@@ -312,6 +338,7 @@ class _YearGridCalendarWidgetState
               child: MouseRegion(
                 onEnter: isPastDate ? null : (_) => _handleDayHoverEnter(date),
                 onExit: isPastDate ? null : (_) => _handleDayHoverExit(),
+                onHover: isPastDate ? null : (event) => setState(() => _mousePosition = event.position),
                 cursor: isPastDate
                     ? SystemMouseCursors.forbidden
                     : (status == DateStatus.booked || status == DateStatus.blocked
@@ -329,34 +356,33 @@ class _YearGridCalendarWidgetState
                   height: cellSize,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isPastDate ? const Color(0xFFE5E7EB) : null,
+                      color: isPastDate ? ColorTokens.light.backgroundTertiary : null,
                       border: Border.all(
                         color: isSelected
-                            ? Colors.blue.shade700
-                            : (isInRange ? Colors.blue.shade300 : Colors.grey.shade300),
-                        width: isSelected ? 2 : 0.5,
+                            ? ColorTokens.light.borderFocus // Black for selection
+                            : (isInRange
+                                ? ColorTokens.light.borderMedium
+                                : ColorTokens.light.borderDefault),
+                        width: isSelected ? BorderTokens.widthThick : BorderTokens.widthMedium,
                       ),
-                      // Hover effect
+                      borderRadius: BorderTokens.circularTiny, // Subtle radius for softer visual
+                      // Hover effect - subtle shadow
                       boxShadow: _hoverDate == date && !isPastDate
-                          ? [BoxShadow(
-                              color: Colors.blue.shade200,
-                              blurRadius: 4,
-                              spreadRadius: 1,
-                            )]
-                          : null,
+                          ? ShadowTokens.calendarCellHover
+                          : ShadowTokens.subtle,
                     ),
                     child: isPastDate
                         ? Center(
                             child: Icon(
                               Icons.block,
-                              size: cellSize * 0.5,
-                              color: Colors.grey.shade400,
+                              size: cellSize * OpacityTokens.mostlyVisible,
+                              color: ColorTokens.light.textDisabled,
                             ),
                           )
                         : CustomPaint(
                             painter: SplitDayCalendarPainter(
                               status: status,
-                              borderColor: Colors.grey.shade400,
+                              borderColor: ColorTokens.light.borderDefault,
                               priceText: priceText,
                             ),
                             child: const SizedBox.expand(),
@@ -463,8 +489,8 @@ class _YearGridCalendarWidgetState
                 content: Text(
                   'Minimum stay is ${widget.minStayNights} ${widget.minStayNights == 1 ? 'night' : 'nights'}. You selected $nights ${nights == 1 ? 'night' : 'nights'}.',
                 ),
-                backgroundColor: Colors.red.shade700,
-                duration: const Duration(seconds: 3),
+                backgroundColor: ColorTokens.light.error,
+                duration: AnimationTokens.notification,
               ),
             );
           }
@@ -536,8 +562,8 @@ class _YearGridCalendarWidgetState
                 content: Text(
                   'Minimum stay is ${widget.minStayNights} ${widget.minStayNights == 1 ? 'night' : 'nights'}.',
                 ),
-                backgroundColor: Colors.red.shade700,
-                duration: const Duration(seconds: 2),
+                backgroundColor: ColorTokens.light.error,
+                duration: AnimationTokens.fast,
               ),
             );
           }
@@ -567,71 +593,93 @@ class _YearGridCalendarWidgetState
         final status = dateInfo?.status ?? DateStatus.available;
         final price = dateInfo?.price;
 
+        // Use actual mouse position for tooltip
+        final screenWidth = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.of(context).size.height;
+
+        // Tooltip dimensions
+        final tooltipWidth = ConstraintTokens.maxCardWidth * 0.55;
+        final tooltipHeight = ConstraintTokens.calendarCellMinHeight * 2;
+
+        // Position tooltip near mouse, offset slightly to avoid cursor overlap
+        double xPosition = _mousePosition.dx + SpacingTokens.s2;
+        double yPosition = _mousePosition.dy - tooltipHeight - SpacingTokens.s2;
+
+        // Keep tooltip within screen bounds
+        if (xPosition + tooltipWidth > screenWidth) {
+          xPosition = _mousePosition.dx - tooltipWidth - SpacingTokens.s2; // Show on left instead
+        }
+        if (yPosition < SpacingTokens.m2) {
+          yPosition = _mousePosition.dy + SpacingTokens.m2; // Show below cursor instead
+        }
+
+        xPosition = xPosition.clamp(SpacingTokens.m2, screenWidth - tooltipWidth - SpacingTokens.m2);
+        yPosition = yPosition.clamp(SpacingTokens.m2, screenHeight - tooltipHeight - SpacingTokens.m2);
+
         return Positioned(
-          left: 0,
-          right: 0,
-          bottom: 20,
-          child: Center(
-            child: Material(
-              elevation: 8,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Date
-                    Text(
-                      DateFormat('EEEE, MMMM d, yyyy').format(_hoverDate!),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+          left: xPosition,
+          top: yPosition,
+          child: Material(
+            elevation: 4.0,
+            borderRadius: BorderTokens.circularRounded,
+            child: Container(
+              width: tooltipWidth,
+              padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s2),
+              decoration: BoxDecoration(
+                color: ColorTokens.light.backgroundPrimary,
+                borderRadius: BorderTokens.circularRounded,
+                border: Border.all(color: ColorTokens.light.borderDefault, width: BorderTokens.widthThin),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Date
+                  Text(
+                    DateFormat('EEEE, MMMM d, yyyy').format(_hoverDate!),
+                    style: TextStyle(
+                      fontWeight: TypographyTokens.bold,
+                      fontSize: TypographyTokens.fontSizeM,
+                      color: ColorTokens.light.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: SpacingTokens.s),
+                  // Status
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: IconSizeTokens.xs,
+                        height: IconSizeTokens.xs,
+                        decoration: BoxDecoration(
+                          color: status.getColor(),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: ColorTokens.light.borderDefault),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Status
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: status.getColor(),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _getStatusLabel(status),
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Price
-                    if (price != null && status == DateStatus.available) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(width: SpacingTokens.s),
                       Text(
-                        '€${price.toStringAsFixed(0)} per night',
+                        _getStatusLabel(status),
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green.shade700,
+                          fontSize: TypographyTokens.fontSizeS2,
+                          color: ColorTokens.light.textSecondary,
                         ),
                       ),
                     ],
+                  ),
+                  // Price
+                  if (price != null && status == DateStatus.available) ...[
+                    const SizedBox(height: SpacingTokens.s),
+                    Text(
+                      '€${price.toStringAsFixed(0)} per night',
+                      style: TextStyle(
+                        fontSize: TypographyTokens.fontSizeM,
+                        fontWeight: TypographyTokens.semiBold,
+                        color: ColorTokens.light.success,
+                      ),
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
           ),
@@ -652,9 +700,9 @@ class _YearGridCalendarWidgetState
         final price = dateInfo?.price;
 
         return Positioned(
-          left: 16,
-          right: 16,
-          bottom: 80,
+          left: SpacingTokens.m,
+          right: SpacingTokens.m,
+          bottom: SpacingTokens.xxl + SpacingTokens.m,
           child: GestureDetector(
             onTap: () {
               setState(() {
@@ -663,14 +711,15 @@ class _YearGridCalendarWidgetState
               });
             },
             child: Material(
-              elevation: 12,
-              borderRadius: BorderRadius.circular(12),
+              elevation: 8.0,
+              borderRadius: BorderTokens.circularRounded,
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(SpacingTokens.m2),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade200, width: 2),
+                  color: ColorTokens.light.backgroundPrimary,
+                  borderRadius: BorderTokens.circularRounded,
+                  border: Border.all(color: ColorTokens.light.borderDefault, width: BorderTokens.widthThin),
+                  boxShadow: ColorTokens.light.shadowMedium,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -682,74 +731,78 @@ class _YearGridCalendarWidgetState
                       children: [
                         Text(
                           DateFormat('MMM d, yyyy').format(_tappedDate!),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                          style: TextStyle(
+                            fontWeight: TypographyTokens.bold,
+                            fontSize: TypographyTokens.fontSizeL,
+                            color: ColorTokens.light.textPrimary,
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close, size: 20),
-                          onPressed: () {
-                            setState(() {
-                              _tappedDate = null;
-                              _tapPosition = null;
-                            });
-                          },
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
+                        SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: IconButton(
+                            icon: const Icon(Icons.close, size: IconSizeTokens.medium),
+                            onPressed: () {
+                              setState(() {
+                                _tappedDate = null;
+                                _tapPosition = null;
+                              });
+                            },
+                          ),
                         ),
                       ],
                     ),
-                    const Divider(height: 16),
+                    Divider(height: SpacingTokens.m, color: ColorTokens.light.borderDefault),
                     // Status
                     Row(
                       children: [
                         Container(
-                          width: 16,
-                          height: 16,
+                          width: IconSizeTokens.small,
+                          height: IconSizeTokens.small,
                           decoration: BoxDecoration(
                             color: status.getColor(),
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.grey.shade300),
+                            border: Border.all(color: ColorTokens.light.borderDefault),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: SpacingTokens.s2),
                         Text(
                           _getStatusLabel(status),
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
+                          style: TextStyle(
+                            fontSize: TypographyTokens.fontSizeM2,
+                            fontWeight: TypographyTokens.medium,
+                            color: ColorTokens.light.textPrimary,
                           ),
                         ),
                       ],
                     ),
                     // Price
                     if (price != null && status == DateStatus.available) ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: SpacingTokens.s2),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                          horizontal: SpacingTokens.s2,
+                          vertical: SpacingTokens.s,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(6),
+                          color: ColorTokens.light.statusAvailableBackground,
+                          borderRadius: BorderTokens.circularSmall,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                               Icons.euro,
-                              size: 16,
-                              color: Colors.green.shade700,
+                              size: IconSizeTokens.small,
+                              color: ColorTokens.light.success,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: SpacingTokens.xs),
                             Text(
                               '${price.toStringAsFixed(0)} per night',
                               style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green.shade700,
+                                fontSize: TypographyTokens.fontSizeM2,
+                                fontWeight: TypographyTokens.bold,
+                                color: ColorTokens.light.success,
                               ),
                             ),
                           ],
@@ -758,12 +811,12 @@ class _YearGridCalendarWidgetState
                     ],
                     // Tap to select hint
                     if (status == DateStatus.available) ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: SpacingTokens.s2),
                       Text(
                         'Tap to select this date',
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
+                          fontSize: TypographyTokens.fontSizeS,
+                          color: ColorTokens.light.textSecondary,
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -786,8 +839,12 @@ class _YearGridCalendarWidgetState
         return 'Available';
       case DateStatus.booked:
         return 'Booked';
+      case DateStatus.pending:
+        return 'Pending';
       case DateStatus.blocked:
         return 'Not Available';
+      case DateStatus.disabled:
+        return 'Disabled';
       case DateStatus.partialCheckIn:
         return 'Check-in Day';
       case DateStatus.partialCheckOut:

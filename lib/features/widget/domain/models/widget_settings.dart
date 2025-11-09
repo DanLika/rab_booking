@@ -23,6 +23,15 @@ class WidgetSettings {
   // Contact Information (for calendar_only mode)
   final ContactOptions contactOptions;
 
+  // Email Notifications
+  final EmailNotificationConfig emailConfig;
+
+  // External Calendar Integration
+  final ExternalCalendarConfig? externalCalendarConfig;
+
+  // Tax/Legal Disclaimer
+  final TaxLegalConfig taxLegalConfig;
+
   // Theming
   final ThemeOptions? themeOptions;
 
@@ -44,6 +53,9 @@ class WidgetSettings {
     this.allowGuestCancellation = true,
     this.cancellationDeadlineHours = 48,
     required this.contactOptions,
+    required this.emailConfig,
+    this.externalCalendarConfig,
+    required this.taxLegalConfig,
     this.themeOptions,
     this.blurConfig,
     required this.createdAt,
@@ -69,6 +81,11 @@ class WidgetSettings {
       allowGuestCancellation: data['allow_guest_cancellation'] ?? true,
       cancellationDeadlineHours: data['cancellation_deadline_hours'] ?? 48,
       contactOptions: ContactOptions.fromMap(data['contact_options'] ?? {}),
+      emailConfig: EmailNotificationConfig.fromMap(data['email_config'] ?? {}),
+      externalCalendarConfig: data['external_calendar_config'] != null
+          ? ExternalCalendarConfig.fromMap(data['external_calendar_config'])
+          : null,
+      taxLegalConfig: TaxLegalConfig.fromMap(data['tax_legal_config'] ?? {}),
       themeOptions: data['theme_options'] != null
           ? ThemeOptions.fromMap(data['theme_options'])
           : null,
@@ -92,6 +109,9 @@ class WidgetSettings {
       'allow_guest_cancellation': allowGuestCancellation,
       'cancellation_deadline_hours': cancellationDeadlineHours,
       'contact_options': contactOptions.toMap(),
+      'email_config': emailConfig.toMap(),
+      'external_calendar_config': externalCalendarConfig?.toMap(),
+      'tax_legal_config': taxLegalConfig.toMap(),
       'theme_options': themeOptions?.toMap(),
       'blur_config': blurConfig?.toMap(),
       'created_at': Timestamp.fromDate(createdAt),
@@ -126,6 +146,9 @@ class WidgetSettings {
     bool? allowGuestCancellation,
     int? cancellationDeadlineHours,
     ContactOptions? contactOptions,
+    EmailNotificationConfig? emailConfig,
+    ExternalCalendarConfig? externalCalendarConfig,
+    TaxLegalConfig? taxLegalConfig,
     ThemeOptions? themeOptions,
     BlurConfig? blurConfig,
     DateTime? createdAt,
@@ -142,6 +165,9 @@ class WidgetSettings {
       allowGuestCancellation: allowGuestCancellation ?? this.allowGuestCancellation,
       cancellationDeadlineHours: cancellationDeadlineHours ?? this.cancellationDeadlineHours,
       contactOptions: contactOptions ?? this.contactOptions,
+      emailConfig: emailConfig ?? this.emailConfig,
+      externalCalendarConfig: externalCalendarConfig ?? this.externalCalendarConfig,
+      taxLegalConfig: taxLegalConfig ?? this.taxLegalConfig,
       themeOptions: themeOptions ?? this.themeOptions,
       blurConfig: blurConfig ?? this.blurConfig,
       createdAt: createdAt ?? this.createdAt,
@@ -216,6 +242,10 @@ class BankTransferConfig {
   final String? iban;
   final String? swift;
   final String? accountHolder;
+  final int paymentDeadlineDays; // Days until payment deadline (1-14, default: 3)
+  final bool enableQrCode; // Show EPC QR code for bank transfer
+  final String? customNotes; // Custom notes from owner (max 500 chars)
+  final bool useCustomNotes; // If true, show customNotes; if false, show default legal notes
 
   const BankTransferConfig({
     this.enabled = false,
@@ -225,6 +255,10 @@ class BankTransferConfig {
     this.iban,
     this.swift,
     this.accountHolder,
+    this.paymentDeadlineDays = 3,
+    this.enableQrCode = true,
+    this.customNotes,
+    this.useCustomNotes = false,
   });
 
   factory BankTransferConfig.fromMap(Map<String, dynamic> map) {
@@ -236,6 +270,10 @@ class BankTransferConfig {
       iban: map['iban'],
       swift: map['swift'],
       accountHolder: map['account_holder'],
+      paymentDeadlineDays: (map['payment_deadline_days'] ?? 3).clamp(1, 14),
+      enableQrCode: map['enable_qr_code'] ?? true,
+      customNotes: map['custom_notes'],
+      useCustomNotes: map['use_custom_notes'] ?? false,
     );
   }
 
@@ -248,6 +286,10 @@ class BankTransferConfig {
       'iban': iban,
       'swift': swift,
       'account_holder': accountHolder,
+      'payment_deadline_days': paymentDeadlineDays,
+      'enable_qr_code': enableQrCode,
+      'custom_notes': customNotes,
+      'use_custom_notes': useCustomNotes,
     };
   }
 
@@ -282,6 +324,10 @@ class BankTransferConfig {
     String? iban,
     String? swift,
     String? accountHolder,
+    int? paymentDeadlineDays,
+    bool? enableQrCode,
+    String? customNotes,
+    bool? useCustomNotes,
   }) {
     return BankTransferConfig(
       enabled: enabled ?? this.enabled,
@@ -291,6 +337,10 @@ class BankTransferConfig {
       iban: iban ?? this.iban,
       swift: swift ?? this.swift,
       accountHolder: accountHolder ?? this.accountHolder,
+      paymentDeadlineDays: paymentDeadlineDays ?? this.paymentDeadlineDays,
+      enableQrCode: enableQrCode ?? this.enableQrCode,
+      customNotes: customNotes ?? this.customNotes,
+      useCustomNotes: useCustomNotes ?? this.useCustomNotes,
     );
   }
 }
@@ -499,6 +549,247 @@ class BlurConfig {
       enableAppBarBlur: enableAppBarBlur ?? this.enableAppBarBlur,
       enableModalBlur: enableModalBlur ?? this.enableModalBlur,
       enableOverlayBlur: enableOverlayBlur ?? this.enableOverlayBlur,
+    );
+  }
+}
+
+/// Email notification configuration
+class EmailNotificationConfig {
+  final bool enabled; // Master toggle for all email notifications
+  final bool sendBookingConfirmation; // Send confirmation email after booking
+  final bool sendPaymentReceipt; // Send receipt email after payment
+  final bool sendOwnerNotification; // Notify owner when new booking is created
+  final bool requireEmailVerification; // Require email verification before booking
+  final String? resendApiKey; // Resend API key for sending emails
+  final String? fromEmail; // From email address (e.g., "noreply@example.com")
+  final String? fromName; // From name (e.g., "Property Name")
+
+  const EmailNotificationConfig({
+    this.enabled = false,
+    this.sendBookingConfirmation = true,
+    this.sendPaymentReceipt = true,
+    this.sendOwnerNotification = true,
+    this.requireEmailVerification = false,
+    this.resendApiKey,
+    this.fromEmail,
+    this.fromName,
+  });
+
+  factory EmailNotificationConfig.fromMap(Map<String, dynamic> map) {
+    return EmailNotificationConfig(
+      enabled: map['enabled'] ?? false,
+      sendBookingConfirmation: map['send_booking_confirmation'] ?? true,
+      sendPaymentReceipt: map['send_payment_receipt'] ?? true,
+      sendOwnerNotification: map['send_owner_notification'] ?? true,
+      requireEmailVerification: map['require_email_verification'] ?? false,
+      resendApiKey: map['resend_api_key'],
+      fromEmail: map['from_email'],
+      fromName: map['from_name'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'enabled': enabled,
+      'send_booking_confirmation': sendBookingConfirmation,
+      'send_payment_receipt': sendPaymentReceipt,
+      'send_owner_notification': sendOwnerNotification,
+      'require_email_verification': requireEmailVerification,
+      'resend_api_key': resendApiKey,
+      'from_email': fromEmail,
+      'from_name': fromName,
+    };
+  }
+
+  /// Check if email system is properly configured
+  bool get isConfigured {
+    return enabled && resendApiKey != null && fromEmail != null;
+  }
+
+  EmailNotificationConfig copyWith({
+    bool? enabled,
+    bool? sendBookingConfirmation,
+    bool? sendPaymentReceipt,
+    bool? sendOwnerNotification,
+    bool? requireEmailVerification,
+    String? resendApiKey,
+    String? fromEmail,
+    String? fromName,
+  }) {
+    return EmailNotificationConfig(
+      enabled: enabled ?? this.enabled,
+      sendBookingConfirmation: sendBookingConfirmation ?? this.sendBookingConfirmation,
+      sendPaymentReceipt: sendPaymentReceipt ?? this.sendPaymentReceipt,
+      sendOwnerNotification: sendOwnerNotification ?? this.sendOwnerNotification,
+      requireEmailVerification: requireEmailVerification ?? this.requireEmailVerification,
+      resendApiKey: resendApiKey ?? this.resendApiKey,
+      fromEmail: fromEmail ?? this.fromEmail,
+      fromName: fromName ?? this.fromName,
+    );
+  }
+}
+
+/// External calendar integration configuration (e.g., Booking.com, Airbnb)
+class ExternalCalendarConfig {
+  final bool enabled; // Master toggle for external calendar sync
+  final bool syncBookingCom; // Sync with Booking.com
+  final String? bookingComAccountId; // Booking.com account/property ID
+  final String? bookingComAccessToken; // OAuth access token
+  final bool syncAirbnb; // Sync with Airbnb
+  final String? airbnbAccountId; // Airbnb account/listing ID
+  final String? airbnbAccessToken; // OAuth access token
+  final int syncIntervalMinutes; // How often to sync (default: 60 minutes)
+  final DateTime? lastSyncedAt; // Last successful sync timestamp
+
+  const ExternalCalendarConfig({
+    this.enabled = false,
+    this.syncBookingCom = false,
+    this.bookingComAccountId,
+    this.bookingComAccessToken,
+    this.syncAirbnb = false,
+    this.airbnbAccountId,
+    this.airbnbAccessToken,
+    this.syncIntervalMinutes = 60,
+    this.lastSyncedAt,
+  });
+
+  factory ExternalCalendarConfig.fromMap(Map<String, dynamic> map) {
+    return ExternalCalendarConfig(
+      enabled: map['enabled'] ?? false,
+      syncBookingCom: map['sync_booking_com'] ?? false,
+      bookingComAccountId: map['booking_com_account_id'],
+      bookingComAccessToken: map['booking_com_access_token'],
+      syncAirbnb: map['sync_airbnb'] ?? false,
+      airbnbAccountId: map['airbnb_account_id'],
+      airbnbAccessToken: map['airbnb_access_token'],
+      syncIntervalMinutes: map['sync_interval_minutes'] ?? 60,
+      lastSyncedAt: map['last_synced_at'] != null
+          ? DateTime.parse(map['last_synced_at'])
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'enabled': enabled,
+      'sync_booking_com': syncBookingCom,
+      'booking_com_account_id': bookingComAccountId,
+      'booking_com_access_token': bookingComAccessToken,
+      'sync_airbnb': syncAirbnb,
+      'airbnb_account_id': airbnbAccountId,
+      'airbnb_access_token': airbnbAccessToken,
+      'sync_interval_minutes': syncIntervalMinutes,
+      'last_synced_at': lastSyncedAt?.toIso8601String(),
+    };
+  }
+
+  /// Check if any external calendar is connected
+  bool get hasConnectedCalendar {
+    return enabled && ((syncBookingCom && bookingComAccessToken != null) ||
+        (syncAirbnb && airbnbAccessToken != null));
+  }
+
+  /// Check if sync is due (based on interval)
+  bool get isSyncDue {
+    if (lastSyncedAt == null) return true;
+    final timeSinceSync = DateTime.now().difference(lastSyncedAt!);
+    return timeSinceSync.inMinutes >= syncIntervalMinutes;
+  }
+
+  ExternalCalendarConfig copyWith({
+    bool? enabled,
+    bool? syncBookingCom,
+    String? bookingComAccountId,
+    String? bookingComAccessToken,
+    bool? syncAirbnb,
+    String? airbnbAccountId,
+    String? airbnbAccessToken,
+    int? syncIntervalMinutes,
+    DateTime? lastSyncedAt,
+  }) {
+    return ExternalCalendarConfig(
+      enabled: enabled ?? this.enabled,
+      syncBookingCom: syncBookingCom ?? this.syncBookingCom,
+      bookingComAccountId: bookingComAccountId ?? this.bookingComAccountId,
+      bookingComAccessToken: bookingComAccessToken ?? this.bookingComAccessToken,
+      syncAirbnb: syncAirbnb ?? this.syncAirbnb,
+      airbnbAccountId: airbnbAccountId ?? this.airbnbAccountId,
+      airbnbAccessToken: airbnbAccessToken ?? this.airbnbAccessToken,
+      syncIntervalMinutes: syncIntervalMinutes ?? this.syncIntervalMinutes,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+    );
+  }
+}
+
+/// Tax and legal disclaimer configuration
+class TaxLegalConfig {
+  final bool enabled; // Master toggle - show disclaimer or not
+  final bool useDefaultText; // true = use default, false = use custom
+  final String? customText; // Custom text if useDefaultText = false
+
+  const TaxLegalConfig({
+    this.enabled = true, // Enabled by default for legal compliance
+    this.useDefaultText = true, // Use default Croatian tax text
+    this.customText,
+  });
+
+  factory TaxLegalConfig.fromMap(Map<String, dynamic> map) {
+    return TaxLegalConfig(
+      enabled: map['enabled'] ?? true,
+      useDefaultText: map['use_default_text'] ?? true,
+      customText: map['custom_text'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'enabled': enabled,
+      'use_default_text': useDefaultText,
+      'custom_text': customText,
+    };
+  }
+
+  /// Get the disclaimer text to display
+  String get disclaimerText {
+    if (!enabled) return '';
+
+    if (useDefaultText) {
+      return '''VAŽNO - Pravne i porezne informacije:
+
+• Boravišna pristojba: Gosti su dužni platiti boravišnu pristojbu prema Zakonu o boravišnoj pristojbi (NN 52/22). Iznos pristojbe ovisi o kategoriji smještaja i dobi gosta.
+
+• Fiskalizacija: Vlasnik smještajnog objekta je obvezan izdati fiskalizirani račun za pružene usluge prema Zakonu o fiskalizaciji (NN 115/16).
+
+• Prijavljivanje gostiju: Gosti moraju biti prijavljeni u eVisitor sustav u roku od 24 sata od dolaska prema Zakonu o ugostiteljskoj djelatnosti (NN 85/15).
+
+• Turistička naknada: Dodatno se naplaćuje turistička naknada prema odluci jedinice lokalne samouprave.
+
+• Odgovornost vlasnika: Vlasnik objekta je u potpunosti odgovoran za ispunjavanje svih zakonskih obveza vezanih uz iznajmljivanje smještaja, uključujući plaćanje poreza na dohodak.
+
+• Booking platforma: Ova platforma olakšava direktnu komunikaciju između vlasnika i gostiju. Ne preuzimamo odgovornost za porezne obveze vlasnika niti za pravnu usklađenost poslovanja.
+
+Rezervacijom prihvaćate gore navedene uvjete i obveze.''';
+    } else {
+      return customText ?? '';
+    }
+  }
+
+  /// Short version for emails (3-4 key points)
+  String get shortDisclaimerText {
+    if (!enabled) return '';
+
+    return '''Napomena: Boravišna pristojba i turistička naknada se naplaćuju dodatno prema hrvatskim zakonima. Vlasnik objekta je odgovoran za fiskalizaciju i prijavljivanje gostiju u eVisitor sustav.''';
+  }
+
+  TaxLegalConfig copyWith({
+    bool? enabled,
+    bool? useDefaultText,
+    String? customText,
+  }) {
+    return TaxLegalConfig(
+      enabled: enabled ?? this.enabled,
+      useDefaultText: useDefaultText ?? this.useDefaultText,
+      customText: customText ?? this.customText,
     );
   }
 }

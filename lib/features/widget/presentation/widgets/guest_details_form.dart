@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../domain/models/guest_details.dart';
 import '../../validators/booking_validators.dart';
 import '../providers/booking_flow_provider.dart';
+import '../providers/widget_config_provider.dart';
+import '../providers/widget_settings_provider.dart';
 import '../theme/responsive_helper.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
@@ -151,6 +153,82 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
             validator: (value) => BookingValidators.validateMessage(value),
             maxLines: 3,
             maxLength: 255,
+          ),
+
+          // Tax/Legal Disclaimer
+          Consumer(
+            builder: (context, ref, _) {
+              final widgetConfig = ref.watch(widgetConfigProvider);
+              final propertyId = widgetConfig.propertyId;
+              final unitId = widgetConfig.unitId;
+
+              if (propertyId == null || unitId == null) {
+                return const SizedBox.shrink();
+              }
+
+              final widgetSettingsAsync = ref.watch(widgetSettingsProvider((propertyId, unitId)));
+
+              return widgetSettingsAsync.when(
+                data: (widgetSettings) {
+                  final disclaimerText = widgetSettings?.taxLegalConfig.disclaimerText ?? '';
+
+                  if (disclaimerText.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Column(
+                    children: [
+                      const SizedBox(height: SpacingTokens.l),
+                      Container(
+                        padding: const EdgeInsets.all(SpacingTokens.m),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.blue.shade200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 20,
+                                  color: Colors.blue.shade700,
+                                ),
+                                const SizedBox(width: SpacingTokens.s),
+                                Text(
+                                  'Važna Napomena',
+                                  style: GoogleFonts.inter(
+                                    fontSize: TypographyTokens.fontSizeM,
+                                    fontWeight: TypographyTokens.semiBold,
+                                    color: ColorTokens.light.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: SpacingTokens.s),
+                            Text(
+                              disclaimerText,
+                              style: GoogleFonts.inter(
+                                fontSize: TypographyTokens.fontSizeS,
+                                color: ColorTokens.light.textSecondary,
+                                height: 1.6,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              );
+            },
           ),
         ],
       ),

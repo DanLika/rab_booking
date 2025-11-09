@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
@@ -324,7 +325,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                              colors: [AppColors.primary, AppColors.authSecondary],
                             ),
                             shape: BoxShape.circle,
                           ),

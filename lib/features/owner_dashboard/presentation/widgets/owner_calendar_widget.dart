@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/calendar_view_mode.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../providers/owner_calendar_view_provider.dart';
@@ -90,7 +91,7 @@ class _OwnerCalendarWidgetState extends ConsumerState<OwnerCalendarWidget> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF6B4CE6) : Colors.transparent,
+          color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(

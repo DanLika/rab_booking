@@ -57,7 +57,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   // Theme Options
   bool _showBranding = true;
-  Color _primaryColor = const Color(0xFF1976D2);
+  Color _primaryColor = AppColors.primary;
   String _themeMode = 'system'; // 'light', 'dark', 'system'
 
   // Blur/Glassmorphism Options
@@ -160,7 +160,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     try {
       return Color(int.parse(hexColor.replaceFirst('#', '0xFF')));
     } catch (e) {
-      return const Color(0xFF1976D2);
+      return AppColors.primary;
     }
   }
 

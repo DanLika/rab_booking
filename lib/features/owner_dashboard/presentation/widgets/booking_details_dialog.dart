@@ -33,7 +33,7 @@ class BookingDetailsDialog extends ConsumerWidget {
             padding: const EdgeInsets.all(8),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                colors: [AppColors.primary, AppColors.authSecondary],
               ),
               borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
@@ -337,7 +337,7 @@ class _SectionHeader extends StatelessWidget {
           padding: const EdgeInsets.all(6),
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+              colors: [AppColors.primary, AppColors.authSecondary],
             ),
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Reusable gradient AppBar for owner dashboard screens
 /// Provides consistent styling across all pages with customizable title and actions
@@ -25,8 +26,8 @@ class OwnerStandardAppBar extends StatelessWidget {
 
     // Always use Purple-Blue gradient (same for light and dark mode)
     const gradientColors = [
-      Color(0xFF6B4CE6), // Purple
-      Color(0xFF4A90E2), // Blue
+      AppColors.primary, // Purple
+      AppColors.authSecondary, // Blue
     ];
 
     // Always white text and icons (same for light and dark mode)

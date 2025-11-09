@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/models/calendar_view_mode.dart';
 
 /// Calendar view switcher widget
@@ -85,7 +86,7 @@ class CalendarViewSwitcher extends StatelessWidget {
         backgroundColor: WidgetStateProperty.resolveWith<Color>(
           (Set<WidgetState> states) {
             if (states.contains(WidgetState.selected)) {
-              return const Color(0xFF6B4CE6); // Purple when selected
+              return AppColors.primary; // Purple when selected
             }
             return Colors.transparent;
           },
@@ -99,7 +100,7 @@ class CalendarViewSwitcher extends StatelessWidget {
           },
         ),
         side: WidgetStateProperty.all(
-          BorderSide(color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt())),
+          BorderSide(color: AppColors.primary.withAlpha((0.3 * 255).toInt())),
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/calendar_view_mode.dart';
 import '../../domain/models/calendar_filter_options.dart';
 import '../providers/owner_calendar_view_provider.dart';
@@ -83,7 +84,7 @@ class _OwnerCalendarMainScreenState
       body: _buildCurrentView(currentView),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showCreateBookingDialog,
-        backgroundColor: const Color(0xFF6B4CE6),
+        backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           'Nova rezervacija',

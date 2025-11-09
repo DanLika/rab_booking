@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/minimalist_colors.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// "Powered by BedBooking" badge widget
 /// Shows at the bottom of the widget for branding
 /// Can be hidden for premium users via configuration
 /// Very small and subtle - barely noticeable
-class PoweredByBedBookingBadge extends StatelessWidget {
+class PoweredByBedBookingBadge extends ConsumerWidget {
+  final WidgetColorScheme colors;
+
   /// Whether to show the badge
   /// Set to false for premium/white-label customers
   final bool show;
@@ -20,13 +22,14 @@ class PoweredByBedBookingBadge extends StatelessWidget {
 
   const PoweredByBedBookingBadge({
     super.key,
+    required this.colors,
     this.show = true,
     this.alignment = MainAxisAlignment.center,
     this.padding = const EdgeInsets.all(8),
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (!show) {
       return const SizedBox.shrink();
     }
@@ -39,17 +42,17 @@ class PoweredByBedBookingBadge extends StatelessWidget {
           mainAxisAlignment: alignment,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.bolt,
               size: 8, // Very small icon
-              color: MinimalistColors.textTertiary,
+              color: colors.textTertiary,
             ),
             const SizedBox(width: SpacingTokens.xs / 2),
             Text(
               'Powered by ',
               style: GoogleFonts.inter(
                 fontSize: TypographyTokens.poweredBySize, // 9px - very small
-                color: MinimalistColors.textTertiary,
+                color: colors.textTertiary,
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -57,7 +60,7 @@ class PoweredByBedBookingBadge extends StatelessWidget {
               'BedBooking',
               style: GoogleFonts.inter(
                 fontSize: TypographyTokens.poweredBySize, // 9px - very small
-                color: MinimalistColors.textSecondary,
+                color: colors.textSecondary,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.2,
               ),
@@ -71,16 +74,18 @@ class PoweredByBedBookingBadge extends StatelessWidget {
 
 /// Compact version of the badge for tight spaces
 /// Even smaller and more subtle than the regular version
-class PoweredByBedBookingBadgeCompact extends StatelessWidget {
+class PoweredByBedBookingBadgeCompact extends ConsumerWidget {
+  final WidgetColorScheme colors;
   final bool show;
 
   const PoweredByBedBookingBadgeCompact({
     super.key,
+    required this.colors,
     this.show = true,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (!show) {
       return const SizedBox.shrink();
     }
@@ -93,10 +98,10 @@ class PoweredByBedBookingBadgeCompact extends StatelessWidget {
           vertical: SpacingTokens.xs,
         ),
         decoration: BoxDecoration(
-          color: MinimalistColors.backgroundSecondary,
+          color: colors.backgroundSecondary,
           borderRadius: BorderTokens.circularSubtle,
           border: Border.all(
-            color: MinimalistColors.borderLight,
+            color: colors.borderLight,
             width: BorderTokens.widthThin / 2,
           ),
           boxShadow: ShadowTokens.subtle,
@@ -104,10 +109,10 @@ class PoweredByBedBookingBadgeCompact extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.bolt,
               size: 8, // Very small
-              color: MinimalistColors.textSecondary,
+              color: colors.textSecondary,
             ),
             const SizedBox(width: SpacingTokens.xs),
             Text(
@@ -115,7 +120,7 @@ class PoweredByBedBookingBadgeCompact extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: TypographyTokens.poweredBySize, // 9px
                 fontWeight: FontWeight.w600,
-                color: MinimalistColors.textSecondary,
+                color: colors.textSecondary,
                 letterSpacing: 0.2,
               ),
             ),

@@ -71,6 +71,8 @@ class FirebaseWidgetSettingsRepository {
           showWhatsApp: false,
           customMessage: 'Kontaktirajte nas za rezervaciju!',
         ),
+        emailConfig: const EmailNotificationConfig(), // Default disabled email config
+        taxLegalConfig: const TaxLegalConfig(), // Default enabled tax/legal config
         requireOwnerApproval: true, // Owner approval required for bookings
         allowGuestCancellation: true,
         cancellationDeadlineHours: 48,

@@ -7,8 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/services/logging_service.dart';
 import '../providers/booking_flow_provider.dart';
+import '../providers/theme_provider.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 import '../providers/booking_price_provider.dart';
-import '../theme/villa_jasko_colors.dart';
 import '../theme/responsive_helper.dart';
 import '../widgets/progress_indicator_widget.dart';
 import '../components/adaptive_glass_card.dart';
@@ -52,6 +53,9 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     final room = ref.watch(selectedRoomProvider);
     final checkIn = ref.watch(checkInDateProvider);
     final checkOut = ref.watch(checkOutDateProvider);
@@ -87,6 +91,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       body: Column(
         children: [
           BookingProgressIndicator(
+            colors: colors,
             currentStep: 3,
             onStepTapped: (step) {
               if (step == 1) context.go('/rooms');
@@ -207,10 +212,10 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
           ),
           child: Container(
             width: MediaQuery.of(context).size.width * 0.35,
-            decoration: const BoxDecoration(
-              color: VillaJaskoColors.backgroundSidebar,
+            decoration: BoxDecoration(
+              color: colors.backgroundPrimary,
               border: Border(
-                left: BorderSide(color: VillaJaskoColors.border),
+                left: BorderSide(color: colors.borderDefault),
               ),
             ),
             child: Column(
@@ -418,12 +423,12 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: VillaJaskoColors.primarySurface,
+                  color: colors.primarySurface,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.payment,
-                  color: VillaJaskoColors.primary,
+                  color: colors.primary,
                   size: 24,
                 ),
               ),
@@ -433,7 +438,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: VillaJaskoColors.textPrimary,
+                  color: colors.textPrimary,
                 ),
               ),
             ],
@@ -483,13 +488,13 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? VillaJaskoColors.primarySurface
-              : VillaJaskoColors.backgroundSurface,
+              ? colors.primarySurface
+              : colors.backgroundCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? VillaJaskoColors.primary
-                : VillaJaskoColors.border,
+                ? colors.primary
+                : colors.borderDefault,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -503,8 +508,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
-                      ? VillaJaskoColors.primary
-                      : VillaJaskoColors.textTertiary,
+                      ? colors.primary
+                      : colors.textSecondary,
                   width: 2,
                 ),
               ),
@@ -513,8 +518,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                       child: Container(
                         width: 12,
                         height: 12,
-                        decoration: const BoxDecoration(
-                          color: VillaJaskoColors.primary,
+                        decoration: BoxDecoration(
+                          color: colors.primary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -529,15 +534,15 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? VillaJaskoColors.primaryLight
-                    : VillaJaskoColors.backgroundMain,
+                    ? colors.primaryLight
+                    : colors.backgroundPrimary,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 icon,
                 color: isSelected
-                    ? VillaJaskoColors.primary
-                    : VillaJaskoColors.textSecondary,
+                    ? colors.primary
+                    : colors.textSecondary,
                 size: 28,
               ),
             ),
@@ -554,7 +559,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? VillaJaskoColors.textPrimary : VillaJaskoColors.textSecondary,
+                      color: isSelected ? colors.textPrimary : colors.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -564,7 +569,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: VillaJaskoColors.textSecondary,
+                      color: colors.textSecondary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -580,8 +585,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? VillaJaskoColors.primarySurface
-                                    : VillaJaskoColors.backgroundMain,
+                                    ? colors.primarySurface
+                                    : colors.backgroundPrimary,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -590,8 +595,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   color: isSelected
-                                      ? VillaJaskoColors.primary
-                                      : VillaJaskoColors.textSecondary,
+                                      ? colors.primary
+                                      : colors.textSecondary,
                                 ),
                               ),
                             ))
@@ -706,13 +711,13 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? VillaJaskoColors.primarySurface
-              : VillaJaskoColors.backgroundSurface,
+              ? colors.primarySurface
+              : colors.backgroundCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? VillaJaskoColors.primary
-                : VillaJaskoColors.border,
+                ? colors.primary
+                : colors.borderDefault,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -726,8 +731,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
-                      ? VillaJaskoColors.primary
-                      : VillaJaskoColors.textTertiary,
+                      ? colors.primary
+                      : colors.textSecondary,
                   width: 2,
                 ),
               ),
@@ -736,8 +741,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                       child: Container(
                         width: 12,
                         height: 12,
-                        decoration: const BoxDecoration(
-                          color: VillaJaskoColors.primary,
+                        decoration: BoxDecoration(
+                          color: colors.primary,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -759,7 +764,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? VillaJaskoColors.textPrimary : VillaJaskoColors.textSecondary,
+                          color: isSelected ? colors.textPrimary : colors.textSecondary,
                         ),
                       ),
                       if (recommended) ...[
@@ -770,7 +775,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: VillaJaskoColors.warning,
+                            color: colors.warning,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -778,7 +783,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: VillaJaskoColors.textOnPrimary,
+                              color: colors.backgroundCard,
                             ),
                           ),
                         ),
@@ -790,7 +795,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: VillaJaskoColors.textSecondary,
+                      color: colors.textSecondary,
                     ),
                   ),
                 ],
@@ -807,8 +812,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: isSelected
-                        ? VillaJaskoColors.primary
-                        : VillaJaskoColors.textPrimary,
+                        ? colors.primary
+                        : colors.textPrimary,
                   ),
                 ),
                 if (remaining > 0) ...[
@@ -817,7 +822,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     '+€${remaining.toStringAsFixed(0)} on arrival',
                     style: GoogleFonts.inter(
                       fontSize: 11,
-                      color: VillaJaskoColors.textSecondary,
+                      color: colors.textSecondary,
                     ),
                   ),
                 ],
@@ -839,16 +844,16 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       },
       controlAffinity: ListTileControlAffinity.leading,
       contentPadding: EdgeInsets.zero,
-      activeColor: VillaJaskoColors.primary,
+      activeColor: colors.primary,
       title: RichText(
         text: TextSpan(
-          style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textPrimary),
+          style: GoogleFonts.inter(fontSize: 14, color: colors.textPrimary),
           children: [
             const TextSpan(text: 'I agree to the '),
             TextSpan(
               text: 'Terms & Conditions',
               style: const TextStyle(
-                color: VillaJaskoColors.primary,
+                color: colors.primary,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
               ),
@@ -865,7 +870,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
             TextSpan(
               text: 'Privacy Policy',
               style: const TextStyle(
-                color: VillaJaskoColors.primary,
+                color: colors.primary,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
               ),
@@ -903,10 +908,10 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: VillaJaskoColors.primarySurface,
+            color: colors.primarySurface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: VillaJaskoColors.primaryLight,
+              color: colors.primaryLight,
             ),
           ),
           child: Row(
@@ -919,7 +924,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     'Amount to Pay',
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: VillaJaskoColors.textSecondary,
+                      color: colors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -930,7 +935,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: VillaJaskoColors.textPrimary,
+                      color: colors.textPrimary,
                     ),
                   ),
                 ],
@@ -940,7 +945,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: VillaJaskoColors.primary,
+                  color: colors.primary,
                 ),
               ),
             ],
@@ -972,12 +977,12 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: VillaJaskoColors.backgroundSurface,
+            color: colors.backgroundCard,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: VillaJaskoColors.border),
+            border: Border.all(color: colors.borderDefault),
             boxShadow: const [
               BoxShadow(
-                color: VillaJaskoColors.shadowLight,
+                color: Color(0x0D000000),
                 blurRadius: 8,
                 offset: Offset(0, 2),
               ),
@@ -991,22 +996,22 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: VillaJaskoColors.textPrimary,
+                  color: colors.textPrimary,
                 ),
               ),
-              const Divider(height: 24, color: VillaJaskoColors.divider),
+              const Divider(height: 24, color: colors.borderDefault),
 
               _buildSummaryRow(
                 '${calculation.nights} nights',
                 calculation.formattedTotal,
               ),
 
-              const Divider(height: 24, color: VillaJaskoColors.divider),
+              const Divider(height: 24, color: colors.borderDefault),
 
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: VillaJaskoColors.primarySurface,
+                  color: colors.primarySurface,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -1021,7 +1026,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: VillaJaskoColors.textPrimary,
+                            color: colors.textPrimary,
                           ),
                         ),
                         Text(
@@ -1029,7 +1034,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: VillaJaskoColors.primary,
+                            color: colors.primary,
                           ),
                         ),
                       ],
@@ -1043,7 +1048,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                             'Pay on Arrival',
                             style: GoogleFonts.inter(
                               fontSize: 13,
-                              color: VillaJaskoColors.textSecondary,
+                              color: colors.textSecondary,
                             ),
                           ),
                           Text(
@@ -1051,7 +1056,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: VillaJaskoColors.textSecondary,
+                              color: colors.textSecondary,
                             ),
                           ),
                         ],
@@ -1079,7 +1084,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
             label,
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: VillaJaskoColors.textSecondary,
+              color: colors.textSecondary,
             ),
           ),
           Text(
@@ -1087,7 +1092,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: VillaJaskoColors.textPrimary,
+              color: colors.textPrimary,
             ),
           ),
         ],
@@ -1105,14 +1110,14 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: VillaJaskoColors.backgroundSurface,
+      decoration: BoxDecoration(
+        color: colors.backgroundCard,
         border: Border(
-          top: BorderSide(color: VillaJaskoColors.border),
+          top: BorderSide(color: colors.borderDefault),
         ),
         boxShadow: [
           BoxShadow(
-            color: VillaJaskoColors.shadowLight,
+            color: Color(0x0D000000),
             blurRadius: 10,
             offset: Offset(0, -2),
           ),
@@ -1129,8 +1134,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                         ref.read(bookingStepProvider.notifier).state = 1;
                       },
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: VillaJaskoColors.primary,
-                  side: const BorderSide(color: VillaJaskoColors.primary),
+                  foregroundColor: colors.primary,
+                  side: const BorderSide(color: colors.primary),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -1163,10 +1168,10 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                         ? null
                         : () => _handlePayment(amount),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: VillaJaskoColors.primary,
-                      foregroundColor: VillaJaskoColors.textOnPrimary,
-                      disabledBackgroundColor: VillaJaskoColors.buttonDisabled,
-                      disabledForegroundColor: VillaJaskoColors.buttonDisabledText,
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.backgroundCard,
+                      disabledBackgroundColor: colors.borderDefault,
+                      disabledForegroundColor: colors.borderDefaultText,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -1180,7 +1185,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor:
-                                  AlwaysStoppedAnimation<Color>(VillaJaskoColors.textOnPrimary),
+                                  AlwaysStoppedAnimation<Color>(colors.backgroundCard),
                             ),
                           )
                         : Text(
@@ -1330,7 +1335,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Payment error: $e'),
-            backgroundColor: VillaJaskoColors.error,
+            backgroundColor: colors.error,
             duration: const Duration(seconds: 5),
           ),
         );
@@ -1401,7 +1406,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Booking error: $e'),
-            backgroundColor: VillaJaskoColors.error,
+            backgroundColor: colors.error,
             duration: const Duration(seconds: 5),
           ),
         );

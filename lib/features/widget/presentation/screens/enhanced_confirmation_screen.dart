@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/booking_flow_provider.dart';
-import '../theme/villa_jasko_colors.dart';
+import '../providers/theme_provider.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 import '../theme/responsive_helper.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/powered_by_badge.dart';
@@ -30,6 +31,9 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     final room = ref.watch(selectedRoomProvider);
     final checkIn = ref.watch(checkInDateProvider);
     final checkOut = ref.watch(checkOutDateProvider);
@@ -45,6 +49,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
       body: Column(
         children: [
           BookingProgressIndicator(
+            colors: colors,
             currentStep: 4,
             onStepTapped: (step) {
               // Allow navigation back during confirmation
@@ -102,7 +107,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                       const SizedBox(height: 32),
 
                       // Footer
-                      _buildFooter(),
+                      _buildFooter(colors),
                           ],
                         ),
                       ),
@@ -132,11 +137,11 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50), // Success green
+                  color: const colors.success, // Success green
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                      color: const colors.success.withValues(alpha: 0.3),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -160,7 +165,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
           style: GoogleFonts.inter(
             fontSize: 32,
             fontWeight: FontWeight.bold,
-            color: VillaJaskoColors.textPrimary,
+            color: colors.textPrimary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -172,9 +177,9 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: VillaJaskoColors.backgroundMain,
+        color: colors.backgroundPrimary,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VillaJaskoColors.border),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         children: [
@@ -182,7 +187,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
             'Booking Reference',
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: VillaJaskoColors.textSecondary,
+              color: colors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -196,19 +201,19 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2,
-                  color: VillaJaskoColors.textPrimary,
+                  color: colors.textPrimary,
                 ),
               ),
               const SizedBox(width: 12),
               IconButton(
-                icon: const Icon(Icons.copy, size: 20, color: VillaJaskoColors.textSecondary),
+                icon: const Icon(Icons.copy, size: 20, color: colors.textSecondary),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: reference));
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Reference copied to clipboard'),
                       duration: Duration(seconds: 2),
-                      backgroundColor: VillaJaskoColors.success,
+                      backgroundColor: colors.success,
                     ),
                   );
                 },
@@ -225,17 +230,17 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: VillaJaskoColors.success.withValues(alpha: 0.1),
+        color: colors.success.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: VillaJaskoColors.success.withValues(alpha: 0.3),
+          color: colors.success.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
         children: [
           Icon(
             isStripePayment ? Icons.check_circle : Icons.pending_actions,
-            color: VillaJaskoColors.success,
+            color: colors.success,
             size: 32,
           ),
           const SizedBox(width: 16),
@@ -250,7 +255,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: VillaJaskoColors.textPrimary,
+                    color: colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -260,7 +265,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                       : 'Your booking is pending. Please complete the bank transfer to confirm.',
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    color: VillaJaskoColors.textSecondary,
+                    color: colors.textSecondary,
                   ),
                 ),
               ],
@@ -288,10 +293,10 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
             style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: VillaJaskoColors.textPrimary,
+              color: colors.textPrimary,
             ),
           ),
-          const Divider(height: 24, color: VillaJaskoColors.divider),
+          const Divider(height: 24, color: colors.borderDefault),
 
           // Room name
           _buildDetailRow(
@@ -337,13 +342,13 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: VillaJaskoColors.success.withValues(alpha: 0.1),
+            color: colors.success.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon,
             size: 20,
-            color: VillaJaskoColors.success,
+            color: colors.success,
           ),
         ),
         const SizedBox(width: 12),
@@ -355,7 +360,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                 label,
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: VillaJaskoColors.textSecondary,
+                  color: colors.textSecondary,
                 ),
               ),
               const SizedBox(height: 2),
@@ -364,7 +369,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: VillaJaskoColors.textPrimary,
+                  color: colors.textPrimary,
                 ),
               ),
             ],
@@ -418,7 +423,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: VillaJaskoColors.backgroundMain,
+        color: colors.backgroundPrimary,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -429,7 +434,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
             style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: VillaJaskoColors.textPrimary,
+              color: colors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -446,14 +451,14 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                     Container(
                       width: 40,
                       height: 40,
-                      decoration: const BoxDecoration(
-                        color: VillaJaskoColors.success,
+                      decoration: BoxDecoration(
+                        color: colors.success,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child: Icon(
                           step['icon'] as IconData,
-                          color: VillaJaskoColors.textOnPrimary,
+                          color: colors.backgroundCard,
                           size: 20,
                         ),
                       ),
@@ -468,7 +473,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: VillaJaskoColors.textPrimary,
+                              color: colors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -476,7 +481,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                             step['description'] as String,
                             style: GoogleFonts.inter(
                               fontSize: 14,
-                              color: VillaJaskoColors.textSecondary,
+                              color: colors.textSecondary,
                             ),
                           ),
                         ],
@@ -490,7 +495,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                     margin: const EdgeInsets.only(left: 20),
                     width: 2,
                     height: 24,
-                    color: VillaJaskoColors.success.withValues(alpha: 0.3),
+                    color: colors.success.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -513,14 +518,14 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                 onPressed: () {
                   _downloadPDF(context);
                 },
-                icon: const Icon(Icons.picture_as_pdf, color: VillaJaskoColors.primary),
+                icon: const Icon(Icons.picture_as_pdf, color: colors.primary),
                 label: Text('Download PDF', style: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
-                  color: VillaJaskoColors.primary,
+                  color: colors.primary,
                 )),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: VillaJaskoColors.primary,
-                  side: const BorderSide(color: VillaJaskoColors.primary, width: 2),
+                  foregroundColor: colors.primary,
+                  side: const BorderSide(color: colors.primary, width: 2),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -534,14 +539,14 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                 onPressed: () {
                   _emailConfirmation(context);
                 },
-                icon: const Icon(Icons.email_outlined, color: VillaJaskoColors.primary),
+                icon: const Icon(Icons.email_outlined, color: colors.primary),
                 label: Text('Email Me', style: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
-                  color: VillaJaskoColors.primary,
+                  color: colors.primary,
                 )),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: VillaJaskoColors.primary,
-                  side: const BorderSide(color: VillaJaskoColors.primary, width: 2),
+                  foregroundColor: colors.primary,
+                  side: const BorderSide(color: colors.primary, width: 2),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -559,14 +564,14 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
               _resetBookingFlow(ref);
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
-            icon: const Icon(Icons.home, color: VillaJaskoColors.textOnPrimary),
+            icon: const Icon(Icons.home, color: colors.backgroundCard),
             label: Text('Back to Home', style: GoogleFonts.inter(
               fontWeight: FontWeight.w600,
-              color: VillaJaskoColors.textOnPrimary,
+              color: colors.backgroundCard,
             )),
             style: ElevatedButton.styleFrom(
-              backgroundColor: VillaJaskoColors.primary,
-              foregroundColor: VillaJaskoColors.textOnPrimary,
+              backgroundColor: colors.primary,
+              foregroundColor: colors.backgroundCard,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -582,14 +587,14 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
             onPressed: () {
               _showContactInfo(context);
             },
-            icon: const Icon(Icons.help_outline, color: VillaJaskoColors.primary),
+            icon: const Icon(Icons.help_outline, color: colors.primary),
             label: Text('Need Help?', style: GoogleFonts.inter(
               fontWeight: FontWeight.w600,
-              color: VillaJaskoColors.primary,
+              color: colors.primary,
             )),
             style: OutlinedButton.styleFrom(
-              foregroundColor: VillaJaskoColors.primary,
-              side: const BorderSide(color: VillaJaskoColors.primary, width: 2),
+              foregroundColor: colors.primary,
+              side: const BorderSide(color: colors.primary, width: 2),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -601,7 +606,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(WidgetColorScheme colors) {
     return Column(
       children: [
         const Divider(),
@@ -611,6 +616,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
         // NOTE: Currently respects URL parameter only (config.showPoweredByBadge)
         // TODO: Add Firestore settings check using DynamicThemeService.shouldShowBranding()
         PoweredByBedBookingBadge(
+          colors: colors,
           show: config?.showPoweredByBadge ?? true,
         ),
 
@@ -619,7 +625,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
           '© ${DateTime.now().year} BedBooking. All rights reserved.',
           style: GoogleFonts.inter(
             fontSize: 11,
-            color: VillaJaskoColors.textTertiary,
+            color: colors.textSecondary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -738,11 +744,11 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
   Widget _buildContactRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: VillaJaskoColors.success),
+        Icon(icon, size: 20, color: colors.success),
         const SizedBox(width: 12),
         Text(text, style: GoogleFonts.inter(
           fontSize: 15,
-          color: VillaJaskoColors.textPrimary,
+          color: colors.textPrimary,
         )),
       ],
     );
@@ -756,7 +762,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
           'PDF download feature coming soon!',
           style: GoogleFonts.inter(),
         ),
-        backgroundColor: VillaJaskoColors.primary,
+        backgroundColor: colors.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -773,7 +779,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
           'Confirmation email sent!',
           style: GoogleFonts.inter(),
         ),
-        backgroundColor: VillaJaskoColors.success,
+        backgroundColor: colors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),

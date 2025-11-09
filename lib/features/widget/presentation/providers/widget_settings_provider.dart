@@ -79,6 +79,8 @@ final defaultWidgetSettingsProvider = Provider<WidgetSettings>((ref) {
       showPhone: true,
       customMessage: 'Kontaktirajte nas za rezervaciju!',
     ),
+    emailConfig: const EmailNotificationConfig(), // Default disabled email config
+    taxLegalConfig: const TaxLegalConfig(), // Default enabled tax/legal config
     requireOwnerApproval: true, // Default: require approval
     allowGuestCancellation: true,
     cancellationDeadlineHours: 48,

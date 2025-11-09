@@ -393,7 +393,7 @@ class BankTransferScreen extends ConsumerWidget {
           const Divider(height: SpacingTokens.l),
           _buildPriceRow('Ukupna Cijena', calculation.formattedTotal, colors, false),
           const SizedBox(height: SpacingTokens.s),
-          _buildPriceRow('Depozit (${calculation.depositPercentage}%)', calculation.formattedDeposit, colors, true),
+          _buildPriceRow('Depozit (${(calculation.depositAmount / calculation.totalPrice * 100).round()}%)', calculation.formattedDeposit, colors, true),
           const SizedBox(height: SpacingTokens.s),
           _buildPriceRow('Preostalo', calculation.formattedRemaining, colors, false),
         ],

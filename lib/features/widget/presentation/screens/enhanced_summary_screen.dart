@@ -4,7 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/booking_flow_provider.dart';
 import '../providers/booking_price_provider.dart';
-import '../theme/villa_jasko_colors.dart';
+import '../providers/theme_provider.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 import '../theme/responsive_helper.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/progress_indicator_widget.dart';
@@ -24,6 +25,9 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     final room = ref.watch(selectedRoomProvider);
     final checkIn = ref.watch(checkInDateProvider);
     final checkOut = ref.watch(checkOutDateProvider);
@@ -39,10 +43,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     }
 
     return Scaffold(
-      backgroundColor: VillaJaskoColors.backgroundSurface,
+      backgroundColor: colors.backgroundCard,
       appBar: AppBar(
-        backgroundColor: VillaJaskoColors.primary,
-        foregroundColor: VillaJaskoColors.textOnPrimary,
+        backgroundColor: colors.primary,
+        foregroundColor: colors.backgroundCard,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -59,6 +63,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
       body: Column(
         children: [
           BookingProgressIndicator(
+            colors: colors,
             currentStep: 2,
             onStepTapped: (step) {
               if (step == 1) {
@@ -72,10 +77,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                 final isMobile = ResponsiveHelper.isMobile(context);
 
                 if (isMobile) {
-                  return _buildMobileLayout(room, checkIn, checkOut, adults, children);
+                  return _buildMobileLayout(colors, room, checkIn, checkOut, adults, children);
                 } else {
                   return _buildDesktopLayout(
-                      room, checkIn, checkOut, adults, children);
+                      colors, room, checkIn, checkOut, adults, children);
                 }
               },
             ),
@@ -90,6 +95,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
   // ===================================================================
 
   Widget _buildMobileLayout(
+    WidgetColorScheme colors,
     dynamic room,
     DateTime checkIn,
     DateTime checkOut,
@@ -105,26 +111,26 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Progress indicator
-                _buildProgressIndicator(1),
+                _buildProgressIndicator(colors, 1),
                 const SizedBox(height: 32),
 
                 // Booking details card
-                _buildBookingDetailsCard(room, checkIn, checkOut, adults, children),
+                _buildBookingDetailsCard(colors, room, checkIn, checkOut, adults, children),
                 const SizedBox(height: 24),
 
                 // Additional services
-                _buildAdditionalServicesSection(),
+                _buildAdditionalServicesSection(colors),
                 const SizedBox(height: 24),
 
                 // Price summary (mobile)
-                _buildPriceSummaryCard(room.id, checkIn, checkOut),
+                _buildPriceSummaryCard(colors, room.id, checkIn, checkOut),
               ],
             ),
           ),
         ),
 
         // Bottom buttons
-        _buildBottomButtons(),
+        _buildBottomButtons(colors),
       ],
     );
   }
@@ -134,6 +140,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
   // ===================================================================
 
   Widget _buildDesktopLayout(
+    WidgetColorScheme colors,
     dynamic room,
     DateTime checkIn,
     DateTime checkOut,
@@ -155,7 +162,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Progress indicator
-                _buildProgressIndicator(1),
+                _buildProgressIndicator(colors, 1),
                 const SizedBox(height: 32),
 
                 // Booking details card
@@ -164,7 +171,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                 const SizedBox(height: 32),
 
                 // Additional services
-                _buildAdditionalServicesSection(),
+                _buildAdditionalServicesSection(colors),
               ],
             ),
           ),
@@ -173,10 +180,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
         // Sidebar (30%)
         Container(
           width: 400,
-          decoration: const BoxDecoration(
-            color: VillaJaskoColors.backgroundSidebar,
+          decoration: BoxDecoration(
+            color: colors.backgroundPrimary,
             border: Border(
-              left: BorderSide(color: VillaJaskoColors.border),
+              left: BorderSide(color: colors.borderDefault),
             ),
           ),
           child: Column(
@@ -184,10 +191,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
-                  child: _buildPriceSummaryCard(room.id, checkIn, checkOut),
+                  child: _buildPriceSummaryCard(colors, room.id, checkIn, checkOut),
                 ),
               ),
-              _buildBottomButtons(),
+              _buildBottomButtons(colors),
             ],
           ),
         ),
@@ -201,24 +208,24 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
   // SHARED COMPONENTS
   // ===================================================================
 
-  Widget _buildProgressIndicator(int currentStep) {
+  Widget _buildProgressIndicator(WidgetColorScheme colors, int currentStep) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _buildProgressDot(1, 'Room', isActive: currentStep == 1, isCompleted: currentStep > 1),
-          _buildProgressLine(isCompleted: currentStep > 1),
-          _buildProgressDot(2, 'Details', isActive: currentStep == 2, isCompleted: currentStep > 2),
-          _buildProgressLine(isCompleted: currentStep > 2),
-          _buildProgressDot(3, 'Payment', isActive: currentStep == 3, isCompleted: currentStep > 3),
-          _buildProgressLine(isCompleted: currentStep > 3),
-          _buildProgressDot(4, 'Done', isActive: currentStep == 4, isCompleted: currentStep > 4),
+          _buildProgressDot(colors, 1, 'Room', isActive: currentStep == 1, isCompleted: currentStep > 1),
+          _buildProgressLine(colors, isCompleted: currentStep > 1),
+          _buildProgressDot(colors, 2, 'Details', isActive: currentStep == 2, isCompleted: currentStep > 2),
+          _buildProgressLine(colors, isCompleted: currentStep > 2),
+          _buildProgressDot(colors, 3, 'Payment', isActive: currentStep == 3, isCompleted: currentStep > 3),
+          _buildProgressLine(colors, isCompleted: currentStep > 3),
+          _buildProgressDot(colors, 4, 'Done', isActive: currentStep == 4, isCompleted: currentStep > 4),
         ],
       ),
     );
   }
 
-  Widget _buildProgressDot(int step, String label,
+  Widget _buildProgressDot(WidgetColorScheme colors, int step, String label,
       {required bool isActive, required bool isCompleted}) {
     return Column(
       children: [
@@ -227,17 +234,17 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
           height: 36,
           decoration: BoxDecoration(
             color: isActive || isCompleted
-                ? VillaJaskoColors.primary
-                : VillaJaskoColors.dayDisabled,
+                ? colors.primary
+                : colors.borderDefault,
             shape: BoxShape.circle,
           ),
           child: Center(
             child: isCompleted
-                ? const Icon(Icons.check, color: VillaJaskoColors.textOnPrimary, size: 20)
+                ? const Icon(Icons.check, color: colors.backgroundCard, size: 20)
                 : Text(
                     step.toString(),
                     style: GoogleFonts.inter(
-                      color: isActive ? VillaJaskoColors.textOnPrimary : VillaJaskoColors.textSecondary,
+                      color: isActive ? colors.backgroundCard : colors.textSecondary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -249,8 +256,8 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
           style: GoogleFonts.inter(
             fontSize: 12,
             color: isActive
-                ? VillaJaskoColors.primary
-                : VillaJaskoColors.textSecondary,
+                ? colors.primary
+                : colors.textSecondary,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -258,18 +265,18 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     );
   }
 
-  Widget _buildProgressLine({required bool isCompleted}) {
+  Widget _buildProgressLine(WidgetColorScheme colors, {required bool isCompleted}) {
     return Container(
       width: 40,
       height: 2,
       margin: const EdgeInsets.only(bottom: 20, left: 4, right: 4),
       color: isCompleted
-          ? VillaJaskoColors.primary
-          : VillaJaskoColors.border,
+          ? colors.primary
+          : colors.borderDefault,
     );
   }
 
-  Widget _buildBookingDetailsCard(
+  _buildBookingDetailsCard(WidgetColorScheme colors,
     dynamic room,
     DateTime checkIn,
     DateTime checkOut,
@@ -281,12 +288,12 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: VillaJaskoColors.backgroundSurface,
+        color: colors.backgroundCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VillaJaskoColors.border),
+        border: Border.all(color: colors.borderDefault),
         boxShadow: const [
           BoxShadow(
-            color: VillaJaskoColors.shadowLight,
+            color: Color(0x0D000000),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -297,7 +304,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
         children: [
           Text(
             'Your Booking Details',
-            style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: VillaJaskoColors.textPrimary),
+            style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: colors.textPrimary),
           ),
           const Divider(height: 24),
 
@@ -317,8 +324,8 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                       return Container(
                         width: 120,
                         height: 90,
-                        color: VillaJaskoColors.dayDisabled,
-                        child: const Icon(Icons.hotel, size: 40, color: VillaJaskoColors.textSecondary),
+                        color: colors.borderDefault,
+                        child: const Icon(Icons.hotel, size: 40, color: colors.textSecondary),
                       );
                     },
                   ),
@@ -330,7 +337,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                   children: [
                     Text(
                       room.name,
-                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
+                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: colors.textPrimary),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -340,13 +347,13 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                         const Icon(
                           Icons.people,
                           size: 16,
-                          color: VillaJaskoColors.textSecondary,
+                          color: colors.textSecondary,
                         ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             '$adults adults${children > 0 ? ', $children children' : ''}',
-                            style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
+                            style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -359,13 +366,13 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                         const Icon(
                           Icons.king_bed,
                           size: 16,
-                          color: VillaJaskoColors.textSecondary,
+                          color: colors.textSecondary,
                         ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             '${room.bedrooms} ${room.bedrooms == 1 ? 'bedroom' : 'bedrooms'}',
-                            style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
+                            style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -384,11 +391,11 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildDateInfoBox('Check-in', checkIn),
+                child: _buildDateInfoBox(colors, 'Check-in', checkIn),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: _buildDateInfoBox('Check-out', checkOut),
+                child: _buildDateInfoBox(colors, 'Check-out', checkOut),
               ),
             ],
           ),
@@ -399,7 +406,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: VillaJaskoColors.primarySurface,
+              color: colors.primarySurface,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -408,7 +415,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                 const Icon(
                   Icons.nightlight_round,
                   size: 20,
-                  color: VillaJaskoColors.primary,
+                  color: colors.primary,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -416,7 +423,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: VillaJaskoColors.primary,
+                    color: colors.primary,
                   ),
                 ),
               ],
@@ -427,11 +434,11 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     );
   }
 
-  Widget _buildDateInfoBox(String label, DateTime date) {
+  Widget _buildDateInfoBox(WidgetColorScheme colors, String label, DateTime date) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: VillaJaskoColors.backgroundSidebar,
+        color: colors.backgroundPrimary,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -439,18 +446,18 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
+            style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
           ),
           const SizedBox(height: 4),
           Text(
             DateFormat('MMM d, yyyy').format(date),
-            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
+            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
           ),
           Text(
             DateFormat('EEEE').format(date),
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: VillaJaskoColors.textSecondary,
+              color: colors.textSecondary,
             ),
           ),
         ],
@@ -458,7 +465,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     );
   }
 
-  Widget _buildAdditionalServicesSection() {
+  Widget _buildAdditionalServicesSection(colors) {
     // Demo additional services
     final services = [
       {
@@ -489,12 +496,12 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
       children: [
         Text(
           'Additional Services',
-          style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: VillaJaskoColors.textPrimary),
+          style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: colors.textPrimary),
         ),
         const SizedBox(height: 4),
         Text(
           'Enhance your stay with optional extras',
-          style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
+          style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
         ),
         const SizedBox(height: 16),
 
@@ -512,14 +519,14 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
               decoration: BoxDecoration(
                 border: Border.all(
                   color: isSelected
-                      ? VillaJaskoColors.primary
-                      : VillaJaskoColors.border,
+                      ? colors.primary
+                      : colors.borderDefault,
                   width: isSelected ? 2 : 1,
                 ),
                 borderRadius: BorderRadius.circular(12),
                 color: isSelected
-                    ? VillaJaskoColors.primarySurface
-                    : VillaJaskoColors.backgroundSurface,
+                    ? colors.primarySurface
+                    : colors.backgroundCard,
               ),
               child: CheckboxListTile(
                 value: isSelected,
@@ -533,13 +540,13 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: VillaJaskoColors.primarySurface,
+                        color: colors.primarySurface,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         service['icon'] as IconData,
                         size: 24,
-                        color: VillaJaskoColors.primary,
+                        color: colors.primary,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -549,13 +556,13 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                         children: [
                           Text(
                             service['name'] as String,
-                            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
+                            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             service['description'] as String,
-                            style: GoogleFonts.inter(fontSize: 14, color: VillaJaskoColors.textSecondary),
+                            style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -571,11 +578,11 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: VillaJaskoColors.primary,
+                      color: colors.primary,
                     ),
                   ),
                 ),
-                activeColor: VillaJaskoColors.primary,
+                activeColor: colors.primary,
                 controlAffinity: ListTileControlAffinity.leading,
               ),
             );
@@ -585,7 +592,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     );
   }
 
-  Widget _buildPriceSummaryCard(
+  _buildPriceSummaryCard(WidgetColorScheme colors,
       String unitId, DateTime checkIn, DateTime checkOut) {
     final priceCalc = ref.watch(bookingPriceProvider(
       unitId: unitId,
@@ -616,12 +623,12 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: VillaJaskoColors.backgroundSurface,
+            color: colors.backgroundCard,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: VillaJaskoColors.border),
+            border: Border.all(color: colors.borderDefault),
             boxShadow: const [
               BoxShadow(
-                color: VillaJaskoColors.shadowLight,
+                color: Color(0x0D000000),
                 blurRadius: 8,
                 offset: Offset(0, 2),
               ),
@@ -632,18 +639,18 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
             children: [
               Text(
                 'Price Summary',
-                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: VillaJaskoColors.textPrimary),
+                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: colors.textPrimary),
               ),
               const Divider(height: 24),
 
-              _buildPriceRow(
+              _buildPriceRow(colors,
                 '${calculation.nights} nights',
                 calculation.formattedTotal,
               ),
 
               if (servicesTotal > 0) ...[
                 const SizedBox(height: 8),
-                _buildPriceRow(
+                _buildPriceRow(colors,
                   'Additional services',
                   '€${servicesTotal.toStringAsFixed(0)}',
                   isHighlighted: true,
@@ -652,7 +659,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
 
               const Divider(height: 24),
 
-              _buildPriceRow(
+              _buildPriceRow(colors,
                 'Total',
                 '€${grandTotal.toStringAsFixed(0)}',
                 isBold: true,
@@ -664,10 +671,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: VillaJaskoColors.primarySurface,
+                  color: colors.primarySurface,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: VillaJaskoColors.primaryLight,
+                    color: colors.primaryLight,
                   ),
                 ),
                 child: Column(
@@ -680,7 +687,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: VillaJaskoColors.textPrimary,
+                            color: colors.textPrimary,
                           ),
                         ),
                         Text(
@@ -688,7 +695,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: VillaJaskoColors.primary,
+                            color: colors.primary,
                           ),
                         ),
                       ],
@@ -701,7 +708,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                           'Pay on arrival',
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: VillaJaskoColors.textSecondary,
+                            color: colors.textSecondary,
                           ),
                         ),
                         Text(
@@ -709,7 +716,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: VillaJaskoColors.textSecondary,
+                            color: colors.textSecondary,
                           ),
                         ),
                       ],
@@ -730,13 +737,13 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
       error: (error, stack) => Center(
         child: Text(
           'Error loading price',
-          style: GoogleFonts.inter(color: VillaJaskoColors.error),
+          style: GoogleFonts.inter(color: colors.error),
         ),
       ),
     );
   }
 
-  Widget _buildPriceRow(String label, String amount,
+  Widget _buildPriceRow(WidgetColorScheme colors, String label, String amount,
       {bool isBold = false, bool isHighlighted = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -749,8 +756,8 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
               fontSize: isBold ? 16 : 14,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
               color: isHighlighted
-                  ? VillaJaskoColors.primary
-                  : VillaJaskoColors.textPrimary,
+                  ? colors.primary
+                  : colors.textPrimary,
             ),
           ),
           Text(
@@ -759,8 +766,8 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
               fontSize: isBold ? 18 : 14,
               fontWeight: FontWeight.bold,
               color: isHighlighted
-                  ? VillaJaskoColors.primary
-                  : VillaJaskoColors.textPrimary,
+                  ? colors.primary
+                  : colors.textPrimary,
             ),
           ),
         ],
@@ -768,17 +775,17 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     );
   }
 
-  Widget _buildBottomButtons() {
+  Widget _buildBottomButtons(colors) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: VillaJaskoColors.backgroundSurface,
+      decoration: BoxDecoration(
+        color: colors.backgroundCard,
         border: Border(
-          top: BorderSide(color: VillaJaskoColors.border),
+          top: BorderSide(color: colors.borderDefault),
         ),
         boxShadow: [
           BoxShadow(
-            color: VillaJaskoColors.shadowLight,
+            color: Color(0x0D000000),
             blurRadius: 10,
             offset: Offset(0, -2),
           ),
@@ -793,8 +800,8 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                   ref.read(bookingStepProvider.notifier).state = 0;
                 },
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: VillaJaskoColors.primary,
-                  side: const BorderSide(color: VillaJaskoColors.primary),
+                  foregroundColor: colors.primary,
+                  side: BorderSide(color: colors.primary),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -811,8 +818,8 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                   ref.read(bookingStepProvider.notifier).state = 2;
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: VillaJaskoColors.primary,
-                  foregroundColor: VillaJaskoColors.textOnPrimary,
+                  backgroundColor: colors.primary,
+                  foregroundColor: colors.backgroundCard,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   elevation: 0,
                   shape: RoundedRectangleBorder(

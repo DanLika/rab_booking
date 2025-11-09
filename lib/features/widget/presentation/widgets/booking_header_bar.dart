@@ -3,19 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/booking_flow_provider.dart';
-import '../theme/villa_jasko_colors.dart';
 import '../theme/responsive_helper.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// Azure Blue header bar with date/guest selector
 /// Responsive: Desktop (horizontal row), Mobile (vertical stack)
+/// Now supports dark mode via WidgetColorScheme
 class BookingHeaderBar extends ConsumerWidget {
   final VoidCallback? onDateTap;
   final VoidCallback? onGuestTap;
+  final WidgetColorScheme colors;
 
   const BookingHeaderBar({
     super.key,
     this.onDateTap,
     this.onGuestTap,
+    required this.colors,
   });
 
   @override
@@ -32,22 +35,16 @@ class BookingHeaderBar extends ConsumerWidget {
         horizontal: isMobile ? 12 : 20,
         vertical: isMobile ? 12 : 16,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            VillaJaskoColors.primary,
-            VillaJaskoColors.primaryHover, // Darker Purple
+            colors.primary,
+            colors.primary,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: VillaJaskoColors.shadowMedium,
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        boxShadow: colors.shadowMedium,
       ),
       child: isMobile
           ? Column(
@@ -79,19 +76,13 @@ class BookingHeaderBar extends ConsumerWidget {
           vertical: isMobile ? 12 : 14,
         ),
         decoration: BoxDecoration(
-          color: VillaJaskoColors.backgroundSurface,
+          color: colors.backgroundCard,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: VillaJaskoColors.border.withValues(alpha: 0.2),
+            color: colors.borderDefault.withValues(alpha: 0.2),
             width: 1,
           ),
-          boxShadow: const [
-            BoxShadow(
-              color: VillaJaskoColors.shadowLight,
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
+          boxShadow: colors.shadowLight,
         ),
         child: Row(
           mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
@@ -100,7 +91,7 @@ class BookingHeaderBar extends ConsumerWidget {
             Icon(
               Icons.calendar_today,
               size: isMobile ? 18 : 20,
-              color: VillaJaskoColors.primary,
+              color: colors.primary,
             ),
             const SizedBox(width: 12),
             Flexible(
@@ -112,8 +103,8 @@ class BookingHeaderBar extends ConsumerWidget {
                   fontSize: isMobile ? 13 : 14,
                   fontWeight: FontWeight.w600,
                   color: checkIn != null
-                      ? VillaJaskoColors.textPrimary
-                      : VillaJaskoColors.textSecondary,
+                      ? colors.textPrimary
+                      : colors.textSecondary,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -123,7 +114,7 @@ class BookingHeaderBar extends ConsumerWidget {
               child: Icon(
                 Icons.arrow_forward,
                 size: isMobile ? 14 : 16,
-                color: VillaJaskoColors.primary,
+                color: colors.primary,
               ),
             ),
             Flexible(
@@ -135,8 +126,8 @@ class BookingHeaderBar extends ConsumerWidget {
                   fontSize: isMobile ? 13 : 14,
                   fontWeight: FontWeight.w600,
                   color: checkOut != null
-                      ? VillaJaskoColors.textPrimary
-                      : VillaJaskoColors.textSecondary,
+                      ? colors.textPrimary
+                      : colors.textSecondary,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -157,19 +148,13 @@ class BookingHeaderBar extends ConsumerWidget {
           vertical: isMobile ? 12 : 14,
         ),
         decoration: BoxDecoration(
-          color: VillaJaskoColors.backgroundSurface,
+          color: colors.backgroundCard,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: VillaJaskoColors.border.withValues(alpha: 0.2),
+            color: colors.borderDefault.withValues(alpha: 0.2),
             width: 1,
           ),
-          boxShadow: const [
-            BoxShadow(
-              color: VillaJaskoColors.shadowLight,
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
+          boxShadow: colors.shadowLight,
         ),
         child: Row(
           mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
@@ -178,7 +163,7 @@ class BookingHeaderBar extends ConsumerWidget {
             Icon(
               Icons.people,
               size: isMobile ? 18 : 20,
-              color: VillaJaskoColors.primary,
+              color: colors.primary,
             ),
             const SizedBox(width: 12),
             Text(
@@ -186,7 +171,7 @@ class BookingHeaderBar extends ConsumerWidget {
               style: GoogleFonts.inter(
                 fontSize: isMobile ? 14 : 16,
                 fontWeight: FontWeight.w600,
-                color: VillaJaskoColors.textPrimary,
+                color: colors.textPrimary,
               ),
             ),
             if (children > 0) ...[
@@ -194,7 +179,7 @@ class BookingHeaderBar extends ConsumerWidget {
                 ', ',
                 style: GoogleFonts.inter(
                   fontSize: isMobile ? 14 : 16,
-                  color: VillaJaskoColors.textPrimary,
+                  color: colors.textPrimary,
                 ),
               ),
               Text(
@@ -202,15 +187,15 @@ class BookingHeaderBar extends ConsumerWidget {
                 style: GoogleFonts.inter(
                   fontSize: isMobile ? 14 : 16,
                   fontWeight: FontWeight.w600,
-                  color: VillaJaskoColors.textPrimary,
+                  color: colors.textPrimary,
                 ),
               ),
             ],
             const SizedBox(width: 8),
-            const Icon(
+            Icon(
               Icons.arrow_drop_down,
               size: 22,
-              color: VillaJaskoColors.primary,
+              color: colors.primary,
             ),
           ],
         ),

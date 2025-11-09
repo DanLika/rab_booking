@@ -61,19 +61,19 @@ class PaymentMethodSelector extends ConsumerWidget {
                       description:
                           'Instant confirmation with credit card payment via Stripe. Secure and fast.',
                       badge: 'INSTANT',
-                    )
-                  else
-                    _buildPaymentOption(
-                      context: context,
-                      ref: ref,
-                      method: PaymentMethod.onPlace,
-                      isSelected: selectedMethod == PaymentMethod.onPlace,
-                      icon: Icons.credit_card_off,
-                      title: 'Pay on Arrival',
-                      description:
-                          'Pay the full amount when you arrive at the property.',
-                      badge: null,
                     ),
+                  if (enableStripe) const SizedBox(height: SpacingTokens.m),
+                  _buildPaymentOption(
+                    context: context,
+                    ref: ref,
+                    method: PaymentMethod.onPlace,
+                    isSelected: selectedMethod == PaymentMethod.onPlace,
+                    icon: Icons.credit_card_off,
+                    title: 'Pay on Arrival',
+                    description:
+                        'Pay the full amount when you arrive at the property.',
+                    badge: null,
+                  ),
                 ],
               )
             : Row(
@@ -92,30 +92,33 @@ class PaymentMethodSelector extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: SpacingTokens.m),
+                  if (enableStripe)
+                    Expanded(
+                      child: _buildPaymentOption(
+                        context: context,
+                        ref: ref,
+                        method: PaymentMethod.stripe,
+                        isSelected: selectedMethod == PaymentMethod.stripe,
+                        icon: Icons.credit_card,
+                        title: 'Credit Card',
+                        description:
+                            'Instant confirmation with credit card payment via Stripe. Secure and fast.',
+                        badge: 'INSTANT',
+                      ),
+                    ),
+                  if (enableStripe) const SizedBox(width: SpacingTokens.m),
                   Expanded(
-                    child: enableStripe
-                        ? _buildPaymentOption(
-                            context: context,
-                            ref: ref,
-                            method: PaymentMethod.stripe,
-                            isSelected: selectedMethod == PaymentMethod.stripe,
-                            icon: Icons.credit_card,
-                            title: 'Credit Card',
-                            description:
-                                'Instant confirmation with credit card payment via Stripe. Secure and fast.',
-                            badge: 'INSTANT',
-                          )
-                        : _buildPaymentOption(
-                            context: context,
-                            ref: ref,
-                            method: PaymentMethod.onPlace,
-                            isSelected: selectedMethod == PaymentMethod.onPlace,
-                            icon: Icons.credit_card_off,
-                            title: 'Pay on Arrival',
-                            description:
-                                'Pay the full amount when you arrive at the property.',
-                            badge: null,
-                          ),
+                    child: _buildPaymentOption(
+                      context: context,
+                      ref: ref,
+                      method: PaymentMethod.onPlace,
+                      isSelected: selectedMethod == PaymentMethod.onPlace,
+                      icon: Icons.credit_card_off,
+                      title: 'Pay on Arrival',
+                      description:
+                          'Pay the full amount when you arrive at the property.',
+                      badge: null,
+                    ),
                   ),
                 ],
               ),

@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../domain/models/payment_option.dart';
 import '../providers/booking_flow_provider.dart';
-import '../theme/villa_jasko_colors.dart';
 
 /// Payment option selector (Full payment vs Down payment)
 class PaymentOptionSelector extends ConsumerWidget {
-  const PaymentOptionSelector({super.key});
+  final WidgetColorScheme colors;
+
+  const PaymentOptionSelector({
+    super.key,
+    required this.colors,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,7 +29,7 @@ class PaymentOptionSelector extends ConsumerWidget {
           style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: VillaJaskoColors.textPrimary,
+            color: colors.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -38,13 +43,13 @@ class PaymentOptionSelector extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: selectedOption == PaymentOption.full
-                  ? VillaJaskoColors.primarySurface
-                  : VillaJaskoColors.backgroundSurface,
+                  ? colors.primarySurface
+                  : colors.backgroundCard,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: selectedOption == PaymentOption.full
-                    ? VillaJaskoColors.primary
-                    : VillaJaskoColors.border,
+                    ? colors.primary
+                    : colors.borderDefault,
                 width: selectedOption == PaymentOption.full ? 2 : 1,
               ),
             ),
@@ -55,8 +60,8 @@ class PaymentOptionSelector extends ConsumerWidget {
                       ? Icons.radio_button_checked
                       : Icons.radio_button_unchecked,
                   color: selectedOption == PaymentOption.full
-                      ? VillaJaskoColors.primary
-                      : VillaJaskoColors.textSecondary,
+                      ? colors.primary
+                      : colors.textSecondary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -71,7 +76,7 @@ class PaymentOptionSelector extends ConsumerWidget {
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: VillaJaskoColors.textPrimary,
+                              color: colors.textPrimary,
                             ),
                           ),
                           Text(
@@ -79,7 +84,7 @@ class PaymentOptionSelector extends ConsumerWidget {
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: VillaJaskoColors.textPrimary,
+                              color: colors.textPrimary,
                             ),
                           ),
                         ],
@@ -89,7 +94,7 @@ class PaymentOptionSelector extends ConsumerWidget {
                         'amount + service payment on place',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: VillaJaskoColors.textSecondary,
+                          color: colors.textSecondary,
                         ),
                       ),
                     ],
@@ -111,13 +116,13 @@ class PaymentOptionSelector extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: selectedOption == PaymentOption.downPayment
-                  ? VillaJaskoColors.primarySurface
-                  : VillaJaskoColors.backgroundSurface,
+                  ? colors.primarySurface
+                  : colors.backgroundCard,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: selectedOption == PaymentOption.downPayment
-                    ? VillaJaskoColors.primary
-                    : VillaJaskoColors.border,
+                    ? colors.primary
+                    : colors.borderDefault,
                 width: selectedOption == PaymentOption.downPayment ? 2 : 1,
               ),
             ),
@@ -128,8 +133,8 @@ class PaymentOptionSelector extends ConsumerWidget {
                       ? Icons.radio_button_checked
                       : Icons.radio_button_unchecked,
                   color: selectedOption == PaymentOption.downPayment
-                      ? VillaJaskoColors.primary
-                      : VillaJaskoColors.textSecondary,
+                      ? colors.primary
+                      : colors.textSecondary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -144,7 +149,7 @@ class PaymentOptionSelector extends ConsumerWidget {
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: VillaJaskoColors.textPrimary,
+                              color: colors.textPrimary,
                             ),
                           ),
                           Text(
@@ -152,7 +157,7 @@ class PaymentOptionSelector extends ConsumerWidget {
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: VillaJaskoColors.textPrimary,
+                              color: colors.textPrimary,
                             ),
                           ),
                         ],
@@ -162,7 +167,7 @@ class PaymentOptionSelector extends ConsumerWidget {
                         'Prepayment + \$${remaining.toStringAsFixed(2)} USD on place required',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: VillaJaskoColors.textSecondary,
+                          color: colors.textSecondary,
                         ),
                       ),
                     ],

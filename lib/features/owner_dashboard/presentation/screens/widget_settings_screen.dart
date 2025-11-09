@@ -451,9 +451,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Odaberite kako će widget funkcionirati:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              ),
             ),
             const SizedBox(height: 12),
             ...WidgetMode.values.map((mode) => InkWell(
@@ -474,7 +477,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         border: Border.all(
                           color: _selectedMode == mode
                               ? Theme.of(context).colorScheme.primary
-                              : Colors.grey,
+                              : Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                           width: 2,
                         ),
                       ),
@@ -498,7 +501,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           Text(mode.displayName),
                           Text(
                             mode.description,
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                            ),
                           ),
                         ],
                       ),
@@ -746,9 +752,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Kontakt opcije koje će biti prikazane u widgetu:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -848,9 +857,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Konfigurirajte email notifikacije za goste i vlasnike:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -968,9 +980,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Sinhronizujte rezervacije sa eksternim platformama:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -1108,9 +1123,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Poreska i pravna napomena za goste:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -1253,15 +1271,19 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   }
 
   Widget _buildThemeSection() {
+    final theme = Theme.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Prilagodite izgled widgeta:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -1285,8 +1307,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: _themeMode == mode
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey,
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                           width: 2,
                         ),
                       ),
@@ -1297,7 +1319,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                                 height: 10,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: theme.colorScheme.primary,
                                 ),
                               ),
                             )
@@ -1310,7 +1332,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                               ? Icons.dark_mode
                               : Icons.settings_brightness,
                       size: 20,
-                      color: Colors.grey,
+                      color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                     ),
                     const SizedBox(width: 8),
                     Text(

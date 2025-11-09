@@ -59,7 +59,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         if (_hoveredDate != null)
           Positioned.fill(
             child: IgnorePointer(
-              ignoring: false,
               child: calendarData.when(
                 data: (data) => _buildHoverTooltip(data, colors),
                 loading: () => const SizedBox.shrink(),

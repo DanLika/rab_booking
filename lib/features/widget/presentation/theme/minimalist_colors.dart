@@ -209,10 +209,10 @@ class MinimalistColorsDark {
   static const Color borderBlack = Color(0xFFFFFFFF);
 
   // ==================== CALENDAR STATUS COLORS ====================
-  // Darker versions of status colors
+  // Brighter versions for dark mode (more visible against dark background)
 
-  /// Available date - dark mint green background
-  static const Color statusAvailableBackground = Color(0xFF1A3D35);
+  /// Available date - mint green background (brighter for visibility)
+  static const Color statusAvailableBackground = Color(0xFF2D6B5E);
 
   /// Available date - mint green border
   static const Color statusAvailableBorder = Color(0xFF5CD4B4);
@@ -220,8 +220,8 @@ class MinimalistColorsDark {
   /// Available date - teal text
   static const Color statusAvailableText = Color(0xFF5CD4B4);
 
-  /// Booked date - dark pink background
-  static const Color statusBookedBackground = Color(0xFF3D1A28);
+  /// Booked date - pink background (brighter for visibility)
+  static const Color statusBookedBackground = Color(0xFF6B2D47);
 
   /// Booked date - pink border
   static const Color statusBookedBorder = Color(0xFFFF8FB8);
@@ -229,8 +229,8 @@ class MinimalistColorsDark {
   /// Booked date - pink text
   static const Color statusBookedText = Color(0xFFFF8FB8);
 
-  /// Pending date - dark amber background
-  static const Color statusPendingBackground = Color(0xFF3D3318);
+  /// Pending date - amber background (brighter for visibility)
+  static const Color statusPendingBackground = Color(0xFF6B5A2D);
 
   /// Pending date - amber border
   static const Color statusPendingBorder = Color(0xFFF59E0B);

@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/villa_jasko_colors.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 import '../theme/responsive_helper.dart';
 
 /// Modern progress indicator showing booking steps
 /// Responsive: Desktop (horizontal with labels), Mobile (compact with icons)
 /// 4 Steps: Room Selection → Summary → Payment → Confirmation
-class BookingProgressIndicator extends StatelessWidget {
+class BookingProgressIndicator extends ConsumerWidget {
+  final WidgetColorScheme colors;
   final int currentStep; // 1, 2, 3, or 4
   final Function(int)? onStepTapped; // Optional navigation callback
 
   const BookingProgressIndicator({
     super.key,
+    required this.colors,
     required this.currentStep,
     this.onStepTapped,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isMobile = ResponsiveHelper.isMobile(context);
 
     return Container(
@@ -25,11 +28,11 @@ class BookingProgressIndicator extends StatelessWidget {
         vertical: isMobile ? 16 : 24,
         horizontal: isMobile ? 12 : 24,
       ),
-      decoration: const BoxDecoration(
-        color: VillaJaskoColors.backgroundSurface,
+      decoration: BoxDecoration(
+        color: colors.backgroundCard,
         border: Border(
           bottom: BorderSide(
-            color: VillaJaskoColors.border,
+            color: colors.borderDefault,
             width: 1,
           ),
         ),
@@ -141,8 +144,8 @@ class BookingProgressIndicator extends StatelessWidget {
     required bool isMobile,
   }) {
     final color = isActive || isCompleted
-        ? VillaJaskoColors.primary
-        : VillaJaskoColors.textSecondary;
+        ? colors.primary
+        : colors.textSecondary;
 
     // Allow navigation back to completed steps only
     final canNavigate = isCompleted && onStepTapped != null;
@@ -157,10 +160,10 @@ class BookingProgressIndicator extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: isActive || isCompleted
-                ? const LinearGradient(
+                ? LinearGradient(
                     colors: [
-                      VillaJaskoColors.primary,
-                      VillaJaskoColors.primaryHover, // Darker Purple
+                      colors.primary,
+                      colors.primaryHover,
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -168,33 +171,25 @@ class BookingProgressIndicator extends StatelessWidget {
                 : null,
             color: isActive || isCompleted
                 ? null
-                : VillaJaskoColors.backgroundMain,
+                : colors.backgroundPrimary,
             border: Border.all(
               color: color,
               width: isActive ? 3 : 2,
             ),
-            boxShadow: isActive
-                ? const [
-                    BoxShadow(
-                      color: VillaJaskoColors.shadowLight,
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                : null,
+            boxShadow: isActive ? colors.shadowLight : null,
           ),
           child: Center(
             child: isCompleted
                 ? Icon(
                     Icons.check,
                     size: isMobile ? 20 : 24,
-                    color: VillaJaskoColors.textOnPrimary,
+                    color: colors.textOnPrimary,
                   )
                 : isActive
                     ? Icon(
                         icon,
                         size: isMobile ? 20 : 24,
-                        color: VillaJaskoColors.textOnPrimary,
+                        color: colors.textOnPrimary,
                       )
                     : Text(
                         '$number',
@@ -227,7 +222,7 @@ class BookingProgressIndicator extends StatelessWidget {
             height: 3,
             width: isMobile ? 30 : 50,
             decoration: BoxDecoration(
-              color: VillaJaskoColors.primary,
+              color: colors.primary,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -256,8 +251,8 @@ class BookingProgressIndicator extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 40),
         decoration: BoxDecoration(
           color: isCompleted
-              ? VillaJaskoColors.primary
-              : VillaJaskoColors.border,
+              ? colors.primary
+              : colors.borderDefault,
           borderRadius: BorderRadius.circular(1),
         ),
       ),

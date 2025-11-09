@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../widgets/calendar_view_switcher.dart';
 import '../providers/booking_price_provider.dart';
 import '../providers/widget_settings_provider.dart';
+import '../providers/theme_provider.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -171,25 +172,33 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     super.dispose();
   }
 
+  // Helper to get color based on theme
+  Color _getColor(bool isDarkMode, Color light, Color dark) => isDarkMode ? dark : light;
+
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = ref.watch(themeProvider);
+
+    // Helper function to get theme-aware colors
+    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+
     // Show loading screen during validation
     if (_isValidating) {
-      return const Scaffold(
-        backgroundColor: MinimalistColors.backgroundPrimary,
+      return Scaffold(
+        backgroundColor: getColor(MinimalistColors.backgroundPrimary, MinimalistColorsDark.backgroundPrimary),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(
-                color: MinimalistColors.buttonPrimary,
+                color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               Text(
                 'Loading booking widget...',
                 style: TextStyle(
                   fontSize: 16,
-                  color: MinimalistColors.textSecondary,
+                  color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
                 ),
               ),
             ],
@@ -201,34 +210,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Show error screen if validation failed
     if (_validationError != null) {
       return Scaffold(
-        backgroundColor: MinimalistColors.backgroundPrimary,
+        backgroundColor: getColor(MinimalistColors.backgroundPrimary, MinimalistColorsDark.backgroundPrimary),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.error_outline,
                   size: 64,
-                  color: MinimalistColors.error,
+                  color: getColor(MinimalistColors.error, MinimalistColorsDark.error),
                 ),
                 const SizedBox(height: 24),
-                const Text(
+                Text(
                   'Configuration Error',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: MinimalistColors.textPrimary,
+                    color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   _validationError!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: MinimalistColors.textSecondary,
+                    color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -239,8 +248,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   icon: const Icon(Icons.refresh),
                   label: const Text('Retry'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: MinimalistColors.buttonPrimary,
-                    foregroundColor: MinimalistColors.buttonPrimaryText,
+                    backgroundColor: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
+                    foregroundColor: getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 12,
@@ -258,7 +267,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: getColor(MinimalistColors.backgroundPrimary, MinimalistColorsDark.backgroundPrimary),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final screenWidth = constraints.maxWidth;
@@ -285,14 +294,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: _buildContactInfoBar(),
+                  child: _buildContactInfoBar(isDarkMode),
                 ),
 
               // Floating draggable booking summary bar (booking modes - shown when dates selected)
               if (widgetMode != WidgetMode.calendarOnly &&
                   _checkIn != null &&
                   _checkOut != null)
-                _buildFloatingDraggablePillBar(unitId, constraints),
+                _buildFloatingDraggablePillBar(unitId, constraints, isDarkMode),
             ],
           );
         },
@@ -301,15 +310,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   }
 
   /// Build contact info bar for calendar-only mode
-  Widget _buildContactInfoBar() {
+  Widget _buildContactInfoBar(bool isDarkMode) {
     final contactOptions = _widgetSettings?.contactOptions;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? MinimalistColorsDark.backgroundPrimary : MinimalistColors.backgroundPrimary,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: isDarkMode ? MinimalistColorsDark.borderLight : MinimalistColors.borderLight,
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -329,10 +338,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 contactOptions!.customMessage!.isNotEmpty) ...[
               Text(
                 contactOptions.customMessage!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: MinimalistColors.textPrimary,
+                  color: isDarkMode ? MinimalistColorsDark.textPrimary : MinimalistColors.textPrimary,
                 ),
               ),
               const SizedBox(height: SpacingTokens.m),
@@ -460,7 +469,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   }
 
   /// Build floating draggable pill bar that overlays the calendar
-  Widget _buildFloatingDraggablePillBar(String unitId, BoxConstraints constraints) {
+  Widget _buildFloatingDraggablePillBar(String unitId, BoxConstraints constraints, bool isDarkMode) {
     // Watch price calculation
     final priceCalc = ref.watch(bookingPriceProvider(
       unitId: unitId,
@@ -543,14 +552,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 width: pillBarWidth,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
+                  color: (isDarkMode ? MinimalistColorsDark.backgroundPrimary : MinimalistColors.backgroundPrimary).withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: MinimalistColors.borderLight,
+                    color: isDarkMode ? MinimalistColorsDark.borderLight : MinimalistColors.borderLight,
                     width: 1,
                   ),
                 ),
-                child: _buildPillBarContent(calculation),
+                child: _buildPillBarContent(calculation, isDarkMode),
               ),
             ),
           ),
@@ -562,7 +571,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   }
 
   /// Build the content of the pill bar (dates, price, buttons)
-  Widget _buildPillBarContent(BookingPriceCalculation calculation) {
+  Widget _buildPillBarContent(BookingPriceCalculation calculation, bool isDarkMode) {
     // Check screen width for responsive layout
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth >= 768;

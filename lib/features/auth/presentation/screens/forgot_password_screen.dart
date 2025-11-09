@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/profile_validators.dart';
+import '../../../widget/presentation/theme/minimalist_colors.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/auth_logo_icon.dart';
@@ -50,7 +51,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -102,7 +105,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: 28,
-                  color: const Color(0xFF2D3748),
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -112,7 +115,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           Text(
             'Enter your email address and we\'ll send you instructions to reset your password.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF718096),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 15,
                 ),
             textAlign: TextAlign.center,
@@ -145,20 +148,20 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     Icons.arrow_back,
                     size: 16,
-                    color: Color(0xFF6B4CE6),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
                     'Back to Login',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Color(0xFF6B4CE6),
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -172,27 +175,22 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Widget _buildSuccessView() {
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Success Icon with gradient background
+        // Success Icon with theme-based background
         Center(
           child: Container(
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF10B981), // Green
-                  Color(0xFF059669),
-                ],
-              ),
+              color: AppColors.success,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF10B981).withAlpha((0.3 * 255).toInt()),
+                  color: AppColors.success.withAlpha((0.3 * 255).toInt()),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -210,10 +208,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         // Title
         Text(
           'Email Sent!',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+          style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 fontSize: 28,
-                color: const Color(0xFF2D3748),
+                color: theme.colorScheme.onSurface,
               ),
           textAlign: TextAlign.center,
         ),
@@ -222,8 +220,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         // Subtitle
         Text(
           'We\'ve sent password reset instructions to:',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF718096),
+          style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
                 fontSize: 15,
               ),
           textAlign: TextAlign.center,
@@ -233,8 +231,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         // Email address
         Text(
           _emailController.text,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF6B4CE6),
+          style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.primary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -258,11 +256,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             ),
-            child: const Text(
+            child: Text(
               'Didn\'t receive the email? Resend',
               style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF6B4CE6),
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),

@@ -7,6 +7,7 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
+import '../../../widget/presentation/theme/minimalist_colors.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/premium_input_field.dart';
@@ -173,9 +174,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                       style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             fontSize: 28,
-                            color: isDark
-                                ? theme.colorScheme.onSurface
-                                : const Color(0xFF2D3748),
+                            color: theme.colorScheme.onSurface,
                           ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
@@ -187,9 +186,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                     Text(
                       'Start managing your properties today',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                            color: isDark
-                                ? theme.colorScheme.onSurfaceVariant
-                                : const Color(0xFF718096),
+                            color: theme.colorScheme.onSurfaceVariant,
                             fontSize: 15,
                           ),
                       textAlign: TextAlign.center,
@@ -244,9 +241,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                          color: isDark
-                              ? theme.colorScheme.onSurfaceVariant
-                              : const Color(0xFF718096),
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                         onPressed: () {
                           setState(() => _obscurePassword = !_obscurePassword);
@@ -270,9 +265,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                          color: isDark
-                              ? theme.colorScheme.onSurfaceVariant
-                              : const Color(0xFF718096),
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                         onPressed: () {
                           setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
@@ -295,18 +288,14 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                         text: TextSpan(
                           style: TextStyle(
                             fontSize: 13,
-                            color: isDark
-                                ? theme.colorScheme.onSurfaceVariant
-                                : const Color(0xFF4A5568),
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                           children: [
                             const TextSpan(text: 'I accept the '),
                             TextSpan(
                               text: 'Terms & Conditions',
                               style: TextStyle(
-                                color: isDark
-                                    ? theme.colorScheme.primary
-                                    : const Color(0xFF6B4CE6),
+                                color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.w600,
                                 decoration: TextDecoration.underline,
                               ),
@@ -336,18 +325,14 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                         text: TextSpan(
                           style: TextStyle(
                             fontSize: 13,
-                            color: isDark
-                                ? theme.colorScheme.onSurfaceVariant
-                                : const Color(0xFF4A5568),
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                           children: [
                             const TextSpan(text: 'I accept the '),
                             TextSpan(
                               text: 'Privacy Policy',
                               style: TextStyle(
-                                color: isDark
-                                    ? theme.colorScheme.primary
-                                    : const Color(0xFF6B4CE6),
+                                color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.w600,
                                 decoration: TextDecoration.underline,
                               ),
@@ -377,9 +362,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                         'Send me updates and promotional offers',
                         style: TextStyle(
                           fontSize: 13,
-                          color: isDark
-                              ? theme.colorScheme.onSurfaceVariant
-                              : const Color(0xFF4A5568),
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -407,18 +390,14 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                           text: TextSpan(
                             style: theme.textTheme.bodyMedium?.copyWith(
                                   fontSize: 14,
-                                  color: isDark
-                                      ? theme.colorScheme.onSurfaceVariant
-                                      : const Color(0xFF4A5568),
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
                             children: [
                               const TextSpan(text: 'Already have an account? '),
                               TextSpan(
                                 text: 'Login',
                                 style: TextStyle(
-                                  color: isDark
-                                      ? theme.colorScheme.primary
-                                      : const Color(0xFF6B4CE6),
+                                  color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -441,13 +420,12 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
 
   Widget _buildPasswordStrengthIndicator() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final color = _passwordStrength == PasswordStrength.weak
-        ? const Color(0xFFEF4444) // Red
+        ? AppColors.error
         : _passwordStrength == PasswordStrength.medium
-            ? const Color(0xFFF97316) // Orange
-            : const Color(0xFF10B981); // Green
+            ? theme.colorScheme.tertiary
+            : AppColors.success;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -473,9 +451,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                         : _passwordStrength == PasswordStrength.medium
                             ? 0.66
                             : 1.0,
-                    backgroundColor: isDark
-                        ? theme.colorScheme.surfaceContainerHighest
-                        : Colors.grey.shade300,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
                     color: color,
                     minHeight: 6,
                   ),
@@ -528,7 +504,6 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     required Widget child,
   }) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -542,9 +517,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
             ),
-            activeColor: isDark
-                ? theme.colorScheme.primary
-                : const Color(0xFF6B4CE6),
+            activeColor: theme.colorScheme.primary,
             materialTapTargetSize: MaterialTapTargetSize.padded,
           ),
         ),

@@ -370,18 +370,13 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
 
   Widget _buildLegalNotice() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-          ? Colors.orange.shade900.withValues(alpha: 0.2)
-          : Colors.orange.shade50,
+        color: theme.colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
         border: Border.all(
-          color: isDark
-            ? Colors.orange.shade700.withValues(alpha: 0.5)
-            : Colors.orange.shade300,
+          color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
           width: 2,
         ),
         borderRadius: BorderRadius.circular(12),
@@ -393,7 +388,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
             children: [
               Icon(
                 Icons.warning_amber_rounded,
-                color: isDark ? Colors.orange.shade400 : Colors.orange.shade700,
+                color: theme.colorScheme.tertiary,
                 size: 28,
               ),
               const SizedBox(width: 12),
@@ -403,7 +398,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.orange.shade300 : Colors.orange.shade900,
+                    color: theme.colorScheme.tertiary,
                   ),
                 ),
               ),
@@ -414,7 +409,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
             'This is a template document. Please consult with a legal advisor to ensure compliance with Croatian and EU laws, including GDPR regulations.',
             style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 14,
-              color: isDark ? Colors.orange.shade200 : Colors.orange.shade900,
+              color: theme.colorScheme.onSurfaceVariant,
               height: 1.5,
             ),
           ),

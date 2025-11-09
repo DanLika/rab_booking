@@ -57,13 +57,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         ),
         // Hover tooltip overlay (desktop) - highest z-index
         if (_hoveredDate != null)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: calendarData.when(
-                data: (data) => _buildHoverTooltip(data, colors),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
+          IgnorePointer(
+            child: calendarData.when(
+              data: (data) => _buildHoverTooltip(data, colors),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
             ),
           ),
       ],
@@ -362,12 +360,16 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     xPosition = xPosition.clamp(20, screenWidth - tooltipWidth - 20);
     yPosition = yPosition.clamp(20, screenHeight - tooltipHeight - 20);
 
-    return CalendarHoverTooltip(
-      date: _hoveredDate!,
-      price: dateInfo.price,
-      status: dateInfo.status,
-      position: Offset(xPosition, yPosition),
-      colors: colors,
+    return Positioned(
+      left: xPosition,
+      top: yPosition,
+      child: CalendarHoverTooltip(
+        date: _hoveredDate!,
+        price: dateInfo.price,
+        status: dateInfo.status,
+        position: Offset(xPosition, yPosition),
+        colors: colors,
+      ),
     );
   }
 

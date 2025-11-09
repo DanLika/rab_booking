@@ -646,12 +646,16 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     xPosition = xPosition.clamp(SpacingTokens.m2, screenWidth - tooltipWidth - SpacingTokens.m2);
     yPosition = yPosition.clamp(SpacingTokens.m2, screenHeight - tooltipHeight - SpacingTokens.m2);
 
-    return CalendarHoverTooltip(
-      date: _hoveredDate!,
-      price: dateInfo.price,
-      status: dateInfo.status,
-      position: Offset(xPosition, yPosition),
-      colors: colors,
+    return Positioned(
+      left: xPosition,
+      top: yPosition,
+      child: CalendarHoverTooltip(
+        date: _hoveredDate!,
+        price: dateInfo.price,
+        status: dateInfo.status,
+        position: Offset(xPosition, yPosition),
+        colors: colors,
+      ),
     );
   }
 

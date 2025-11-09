@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../widget/presentation/theme/minimalist_colors.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Email Verification Screen with resend functionality
@@ -56,10 +57,12 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Verification email sent! Check your inbox.'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: const Text('Verification email sent! Check your inbox.'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            duration: const Duration(seconds: 3),
           ),
         );
 
@@ -82,7 +85,9 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to send email: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -158,15 +163,17 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
+                  color: Theme.of(context).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.shade200),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
+                  ),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.info_outline,
                       size: 20,
-                      color: Colors.orange.shade700,
+                      color: Theme.of(context).colorScheme.tertiary,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -174,7 +181,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                         'You will be logged out and need to verify the new email',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.orange.shade900,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -207,9 +214,11 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
 
                 if (mounted) {
                   messenger.showSnackBar(
-                    const SnackBar(
-                      content: Text('Email updated! Check your new inbox for verification.'),
-                      backgroundColor: Colors.green,
+                    SnackBar(
+                      content: const Text('Email updated! Check your new inbox for verification.'),
+                      backgroundColor: AppColors.success,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                   );
                 }
@@ -218,7 +227,9 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                   messenger.showSnackBar(
                     SnackBar(
                       content: Text('Failed to update email: $e'),
-                      backgroundColor: Colors.red,
+                      backgroundColor: AppColors.error,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                   );
                 }
@@ -289,20 +300,24 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).toInt()),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+                      width: 0.5,
+                    ),
                   ),
                   child: Column(
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.info_outline, color: Colors.blue.shade700),
+                          Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               'Click the link in the email to verify your account',
                               style: TextStyle(
-                                color: Colors.blue.shade900,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 fontSize: 14,
                               ),
                             ),
@@ -313,7 +328,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                       Text(
                         'Email may take up to 10 minutes to arrive. Check your spam folder if needed.',
                         style: TextStyle(
-                          color: Colors.blue.shade700,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.8 * 255).toInt()),
                           fontSize: 12,
                         ),
                       ),

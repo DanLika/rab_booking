@@ -482,16 +482,27 @@ class _UnitCard extends StatelessWidget {
                 final isMobile = constraints.maxWidth < 400;
 
                 if (isMobile) {
-                  // Stack buttons vertically on small screens
+                  // Stack buttons vertically on small screens - Minimalist
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       OutlinedButton.icon(
                         onPressed: onManagePricing,
-                        icon: const Icon(Icons.euro_symbol),
+                        icon: const Icon(Icons.euro_symbol, size: 17),
                         label: const Text('Upravljaj Cijenama'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.success,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 11,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          side: BorderSide(
+                            color: AppColors.success.withAlpha((0.4 * 255).toInt()),
+                            width: 1,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -500,18 +511,42 @@ class _UnitCard extends StatelessWidget {
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: onEdit,
-                              icon: const Icon(Icons.edit),
+                              icon: const Icon(Icons.edit_outlined, size: 17),
                               label: const Text('Uredi'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 11,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                side: BorderSide(
+                                  color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                                  width: 1,
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: onDelete,
-                              icon: const Icon(Icons.delete),
+                              icon: const Icon(Icons.delete_outline, size: 17),
                               label: const Text('Obriši'),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: theme.colorScheme.error,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 11,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                side: BorderSide(
+                                  color: theme.colorScheme.error.withAlpha((0.4 * 255).toInt()),
+                                  width: 1,
+                                ),
                               ),
                             ),
                           ),
@@ -521,35 +556,66 @@ class _UnitCard extends StatelessWidget {
                   );
                 }
 
-                // Horizontal layout for wider screens
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Horizontal layout for wider screens - Minimalist
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    TextButton.icon(
+                    OutlinedButton.icon(
                       onPressed: onManagePricing,
-                      icon: const Icon(Icons.euro_symbol),
+                      icon: const Icon(Icons.euro_symbol, size: 17),
                       label: const Text('Cijene'),
-                      style: TextButton.styleFrom(
+                      style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.success,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 11,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        side: BorderSide(
+                          color: AppColors.success.withAlpha((0.4 * 255).toInt()),
+                          width: 1,
+                        ),
                       ),
                     ),
-                    Row(
-                      children: [
-                        TextButton.icon(
-                          onPressed: onEdit,
-                          icon: const Icon(Icons.edit),
-                          label: const Text('Uredi'),
+                    OutlinedButton.icon(
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_outlined, size: 17),
+                      label: const Text('Uredi'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 11,
                         ),
-                        const SizedBox(width: 8),
-                        TextButton.icon(
-                          onPressed: onDelete,
-                          icon: const Icon(Icons.delete),
-                          label: const Text('Obriši'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: theme.colorScheme.error,
-                          ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ],
+                        side: BorderSide(
+                          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline, size: 17),
+                      label: const Text('Obriši'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: theme.colorScheme.error,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 11,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        side: BorderSide(
+                          color: theme.colorScheme.error.withAlpha((0.4 * 255).toInt()),
+                          width: 1,
+                        ),
+                      ),
                     ),
                   ],
                 );

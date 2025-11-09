@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_color_extensions.dart';
 import '../widgets/recent_activity_widget.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../widgets/booking_details_dialog.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_bookings_provider.dart';
@@ -166,8 +167,14 @@ class DashboardOverviewTab extends ConsumerWidget {
           activities: activities,
           onViewAll: () => context.go(OwnerRoutes.bookings),
           onActivityTap: (bookingId) {
-            // Navigate to booking details
-            context.push('${OwnerRoutes.bookings}/$bookingId');
+            // Find booking and show details dialog
+            final ownerBooking = bookings.firstWhere(
+              (b) => b.booking.id == bookingId,
+            );
+            showDialog(
+              context: context,
+              builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
+            );
           },
         );
       },

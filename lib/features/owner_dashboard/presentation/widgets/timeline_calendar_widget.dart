@@ -457,14 +457,14 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
               panEnabled: true,
               scaleEnabled: true,
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Fixed unit names column
                   _buildUnitNamesColumn(units),
 
                   // Scrollable timeline grid
-                  Expanded(
-                    child: SingleChildScrollView(
+                  SingleChildScrollView(
                       controller: _horizontalScrollController,
                       scrollDirection: Axis.horizontal,
                       child: SingleChildScrollView(
@@ -480,7 +480,6 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

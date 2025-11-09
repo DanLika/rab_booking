@@ -76,7 +76,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   context.horizontalPadding,
                   isMobile ? 8 : 12,
                 ),
-                child: _buildFiltersSection(filters, isMobile),
+                child: _buildFiltersSection(filters, isMobile, theme, viewMode),
               ),
 
               // Bookings content
@@ -164,7 +164,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
-  Widget _buildFiltersSection(BookingsFilters filters, bool isMobile) {
+  Widget _buildFiltersSection(
+    BookingsFilters filters,
+    bool isMobile,
+    ThemeData theme,
+    BookingsViewMode viewMode,
+  ) {
     final propertiesAsync = ref.watch(ownerPropertiesCalendarProvider);
 
     return Card(
@@ -191,14 +196,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primary, AppColors.secondary],
-                    ),
+                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.filter_list,
-                    color: const Color(0xFFFFFFFF),
+                    color: theme.colorScheme.primary,
                     size: 18,
                   ),
                 ),
@@ -210,21 +213,50 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   ),
                 ),
                 const Spacer(),
-                if (filters.hasActiveFilters)
+
+                // View mode toggle button
+                Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _ViewModeButton(
+                        icon: Icons.view_agenda_outlined,
+                        isSelected: viewMode == BookingsViewMode.card,
+                        onTap: () => ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.card),
+                        tooltip: 'Card pogled',
+                      ),
+                      _ViewModeButton(
+                        icon: Icons.table_rows_outlined,
+                        isSelected: viewMode == BookingsViewMode.table,
+                        onTap: () => ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.table),
+                        tooltip: 'Tabela pogled',
+                      ),
+                    ],
+                  ),
+                ),
+
+                if (filters.hasActiveFilters) ...[
+                  const SizedBox(width: 8),
                   TextButton.icon(
                     onPressed: () {
                       ref
                           .read(bookingsFiltersNotifierProvider.notifier)
                           .clearFilters();
                     },
-                    icon: const Icon(Icons.clear, size: 18),
-                    label: const Text('Očisti filtere'),
+                    icon: const Icon(Icons.close, size: 16),
+                    label: const Text('Očisti'),
                     style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ),
+                ],
               ],
             ),
             SizedBox(height: isMobile ? 12 : 16),
@@ -401,14 +433,15 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           ),
           style: OutlinedButton.styleFrom(
             padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 16 : 24,
-              vertical: isMobile ? 16 : 20,
+              horizontal: isMobile ? 14 : 20,
+              vertical: isMobile ? 14 : 18,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             side: BorderSide(
-              color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+              color: theme.colorScheme.outline.withAlpha((0.25 * 255).toInt()),
+              width: 1,
             ),
           ),
         );
@@ -586,74 +619,58 @@ class _BookingCard extends ConsumerWidget {
     final isMobile = screenWidth < 600;
 
     return Card(
-      elevation: 2,
-      shadowColor: AppColors.primary.withAlpha((0.1 * 255).toInt()),
+      elevation: 0.5,
+      shadowColor: theme.colorScheme.shadow.withAlpha((0.05 * 255).toInt()),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
-          width: 1,
+          color: theme.colorScheme.outline.withAlpha((0.08 * 255).toInt()),
+          width: 0.5,
         ),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Colored Header Section
+            // Header Section - Minimalist Design
             Container(
               padding: EdgeInsets.all(isMobile ? 12 : 16),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    booking.status.color.withAlpha((0.15 * 255).toInt()),
-                    booking.status.color.withAlpha((0.08 * 255).toInt()),
-                  ],
-                ),
+                color: booking.status.color.withAlpha((0.06 * 255).toInt()),
                 border: Border(
                   bottom: BorderSide(
-                    color: booking.status.color.withAlpha((0.2 * 255).toInt()),
-                    width: 2,
+                    color: booking.status.color.withAlpha((0.15 * 255).toInt()),
+                    width: 1.5,
                   ),
                 ),
               ),
               child: Row(
                 children: [
-                  // Status badge with icon
+                  // Status badge with icon - Minimalist
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 8,
+                      vertical: 7,
                     ),
                     decoration: BoxDecoration(
                       color: booking.status.color,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: booking.status.color.withAlpha(
-                            (0.3 * 255).toInt(),
-                          ),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           _getStatusIcon(booking.status),
-                          color: const Color(0xFFFFFFFF),
+                          color: Colors.white,
                           size: 20,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           booking.status.displayName,
                           style: const TextStyle(
-                            color: const Color(0xFFFFFFFF),
+                            color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
@@ -662,44 +679,29 @@ class _BookingCard extends ConsumerWidget {
                     ),
                   ),
                   const Spacer(),
-                  // Booking ID with icon
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: theme.colorScheme.outline.withAlpha(
-                          (0.3 * 255).toInt(),
+                  // Booking ID - Minimalist
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.tag,
+                        size: 16,
+                        color: theme.colorScheme.onSurface.withAlpha(
+                          (0.5 * 255).toInt(),
                         ),
                       ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.tag,
-                          size: 14,
+                      const SizedBox(width: 4),
+                      Text(
+                        '#${booking.id.length > 8 ? booking.id.substring(0, 8) : booking.id}',
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withAlpha(
-                            (0.6 * 255).toInt(),
+                            (0.65 * 255).toInt(),
                           ),
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'monospace',
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '#${booking.id.length > 8 ? booking.id.substring(0, 8) : booking.id}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withAlpha(
-                              (0.7 * 255).toInt(),
-                            ),
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -712,21 +714,21 @@ class _BookingCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Guest info with premium avatar
+                  // Guest info - Minimalist
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(
-                            (0.1 * 255).toInt(),
+                          color: theme.colorScheme.primary.withAlpha(
+                            (0.08 * 255).toInt(),
                           ),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.person_outline,
-                          color: AppColors.primary,
-                          size: 22,
+                          color: theme.colorScheme.primary,
+                          size: 20,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1026,22 +1028,26 @@ class _BookingCard extends ConsumerWidget {
                 builder: (context, constraints) {
                   final isActionMobile = constraints.maxWidth < 600;
 
-                  // Build list of action buttons
+                  // Build list of action buttons - Minimalist Design
                   final actionButtons = <Widget>[
                     // View Details button
                     OutlinedButton.icon(
                       onPressed: () {
                         _showBookingDetails(context, ref, ownerBooking);
                       },
-                      icon: const Icon(Icons.visibility_outlined, size: 18),
+                      icon: const Icon(Icons.visibility_outlined, size: 17),
                       label: const Text('Detalji'),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(
-                          horizontal: isActionMobile ? 12 : 16,
-                          vertical: isActionMobile ? 10 : 12,
+                          horizontal: isActionMobile ? 14 : 16,
+                          vertical: isActionMobile ? 11 : 13,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        side: BorderSide(
+                          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                          width: 1,
                         ),
                       ),
                     ),
@@ -1052,17 +1058,19 @@ class _BookingCard extends ConsumerWidget {
                         onPressed: () {
                           _approveBooking(context, ref, booking.id);
                         },
-                        icon: const Icon(Icons.check_circle, size: 18),
+                        icon: const Icon(Icons.check_circle_outline, size: 17),
                         label: const Text('Odobri'),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.success,
+                          foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(
-                            horizontal: isActionMobile ? 12 : 16,
-                            vertical: isActionMobile ? 10 : 12,
+                            horizontal: isActionMobile ? 14 : 16,
+                            vertical: isActionMobile ? 11 : 13,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                          elevation: 0,
                         ),
                       ),
 
@@ -1072,16 +1080,20 @@ class _BookingCard extends ConsumerWidget {
                         onPressed: () {
                           _rejectBooking(context, ref, booking.id);
                         },
-                        icon: const Icon(Icons.cancel, size: 18),
+                        icon: const Icon(Icons.cancel_outlined, size: 17),
                         label: const Text('Odbij'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.error,
                           padding: EdgeInsets.symmetric(
-                            horizontal: isActionMobile ? 12 : 16,
-                            vertical: isActionMobile ? 10 : 12,
+                            horizontal: isActionMobile ? 14 : 16,
+                            vertical: isActionMobile ? 11 : 13,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          side: BorderSide(
+                            color: AppColors.error.withAlpha((0.4 * 255).toInt()),
+                            width: 1,
                           ),
                         ),
                       ),
@@ -1093,17 +1105,19 @@ class _BookingCard extends ConsumerWidget {
                         onPressed: () {
                           _completeBooking(context, ref, booking.id);
                         },
-                        icon: const Icon(Icons.done_all, size: 18),
+                        icon: const Icon(Icons.done_all_outlined, size: 17),
                         label: const Text('Završi'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.textPrimaryDark,
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(
-                            horizontal: isActionMobile ? 12 : 16,
-                            vertical: isActionMobile ? 10 : 12,
+                            horizontal: isActionMobile ? 14 : 16,
+                            vertical: isActionMobile ? 11 : 13,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                          elevation: 0,
                         ),
                       ),
 
@@ -1113,16 +1127,20 @@ class _BookingCard extends ConsumerWidget {
                         onPressed: () {
                           _cancelBooking(context, ref, booking.id);
                         },
-                        icon: const Icon(Icons.cancel_outlined, size: 18),
+                        icon: const Icon(Icons.close, size: 17),
                         label: const Text('Otkaži'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.error,
                           padding: EdgeInsets.symmetric(
-                            horizontal: isActionMobile ? 12 : 16,
-                            vertical: isActionMobile ? 10 : 12,
+                            horizontal: isActionMobile ? 14 : 16,
+                            vertical: isActionMobile ? 11 : 13,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          side: BorderSide(
+                            color: AppColors.error.withAlpha((0.4 * 255).toInt()),
+                            width: 1,
                           ),
                         ),
                       ),
@@ -1219,7 +1237,7 @@ class _BookingCard extends ConsumerWidget {
                       ),
                       child: const Icon(
                         Icons.check_circle,
-                        color: const Color(0xFFFFFFFF),
+                        color: Colors.white,
                         size: 24,
                       ),
                     ),
@@ -1230,7 +1248,7 @@ class _BookingCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFFFFFFFF),
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -1256,8 +1274,9 @@ class _BookingCard extends ConsumerWidget {
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
                           style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           child: const Text('Odustani'),
@@ -1267,9 +1286,12 @@ class _BookingCard extends ConsumerWidget {
                           onPressed: () => Navigator.of(context).pop(true),
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.success,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
                             ),
+                            elevation: 0,
                           ),
                           child: const Text('Odobri'),
                         ),
@@ -1347,7 +1369,7 @@ class _BookingCard extends ConsumerWidget {
                       ),
                       child: const Icon(
                         Icons.cancel,
-                        color: const Color(0xFFFFFFFF),
+                        color: Colors.white,
                         size: 24,
                       ),
                     ),
@@ -1358,7 +1380,7 @@ class _BookingCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFFFFFFFF),
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -1395,8 +1417,9 @@ class _BookingCard extends ConsumerWidget {
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
                           style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           child: const Text('Odustani'),
@@ -1406,9 +1429,12 @@ class _BookingCard extends ConsumerWidget {
                           onPressed: () => Navigator.of(context).pop(true),
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.error,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
                             ),
+                            elevation: 0,
                           ),
                           child: const Text('Odbij'),
                         ),
@@ -1490,7 +1516,7 @@ class _BookingCard extends ConsumerWidget {
                       ),
                       child: const Icon(
                         Icons.task_alt,
-                        color: const Color(0xFFFFFFFF),
+                        color: Colors.white,
                         size: 24,
                       ),
                     ),
@@ -1501,7 +1527,7 @@ class _BookingCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFFFFFFFF),
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -1526,8 +1552,9 @@ class _BookingCard extends ConsumerWidget {
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
                           style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           child: const Text('Otkaži'),
@@ -1536,9 +1563,11 @@ class _BookingCard extends ConsumerWidget {
                         FilledButton(
                           onPressed: () => Navigator.of(context).pop(true),
                           style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
                             ),
+                            elevation: 0,
                           ),
                           child: const Text('Završi'),
                         ),
@@ -1616,7 +1645,7 @@ class _BookingCard extends ConsumerWidget {
                       ),
                       child: const Icon(
                         Icons.cancel_outlined,
-                        color: const Color(0xFFFFFFFF),
+                        color: Colors.white,
                         size: 24,
                       ),
                     ),
@@ -1627,7 +1656,7 @@ class _BookingCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFFFFFFFF),
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -1678,8 +1707,9 @@ class _BookingCard extends ConsumerWidget {
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
                           style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           child: const Text('Odustani'),
@@ -1689,9 +1719,12 @@ class _BookingCard extends ConsumerWidget {
                           onPressed: () => Navigator.of(context).pop(true),
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.error,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
                             ),
+                            elevation: 0,
                           ),
                           child: const Text('Otkaži rezervaciju'),
                         ),
@@ -1780,13 +1813,13 @@ class _BookingDetailsDialog extends StatelessWidget {
             // Gradient Header
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFF6B4CE6), // Purple
-                    Color(0xFF4A90E2), // Blue
+                    AppColors.primary,
+                    AppColors.authSecondary,
                   ],
                 ),
               ),
@@ -1800,7 +1833,7 @@ class _BookingDetailsDialog extends StatelessWidget {
                     ),
                     child: const Icon(
                       Icons.receipt_long,
-                      color: const Color(0xFFFFFFFF),
+                      color: Colors.white,
                       size: 24,
                     ),
                   ),
@@ -1811,7 +1844,7 @@ class _BookingDetailsDialog extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFFFFFFFF),
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -2045,16 +2078,18 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+            color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: Icon(icon, size: 20, color: const Color(0xFF6B4CE6)),
+          child: Icon(icon, size: 20, color: theme.colorScheme.primary),
         ),
         const SizedBox(width: 12),
         Expanded(child: child),
@@ -2092,6 +2127,50 @@ class _PaymentInfoColumn extends StatelessWidget {
         const SizedBox(height: 4),
         Text(value, style: valueStyle),
       ],
+    );
+  }
+}
+
+/// View mode toggle button widget
+class _ViewModeButton extends StatelessWidget {
+  const _ViewModeButton({
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+    required this.tooltip,
+  });
+
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isSelected
+              ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+              : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
     );
   }
 }

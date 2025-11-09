@@ -405,19 +405,23 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
                   const SizedBox(height: 32),
 
-                  ElevatedButton(
+                  FilledButton.icon(
                     onPressed: _isSaving ? null : _saveSettings,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.all(16),
-                      backgroundColor: AppColors.authPrimary,
-                    ),
-                    child: _isSaving
+                    icon: _isSaving
                         ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Sačuvaj Postavke', style: TextStyle(fontSize: 16)),
+                        : const Icon(Icons.save_outlined, size: 20),
+                    label: Text(_isSaving ? 'Čuvanje...' : 'Sačuvaj Postavke'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      minimumSize: const Size(double.infinity, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -430,7 +434,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(icon, size: 24, color: AppColors.authPrimary),
+          Icon(
+            icon,
+            size: 24,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(width: 8),
           Text(
             title,
@@ -1176,16 +1184,22 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey[300]!),
+                    border: Border.all(
+                      color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.info_outline, size: 20, color: Colors.blue),
+                          Icon(
+                            Icons.info_outline,
+                            size: 20,
+                            color: theme.colorScheme.primary,
+                          ),
                           const SizedBox(width: 8),
                           const Text(
                             'Pregled Podrazumijevanog Teksta:',
@@ -1240,14 +1254,20 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
+                  color: theme.colorScheme.errorContainer.withAlpha((0.3 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[200]!),
+                  border: Border.all(
+                    color: theme.colorScheme.error.withAlpha((0.2 * 255).toInt()),
+                  ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.warning_amber, color: Colors.orange[700], size: 20),
+                    Icon(
+                      Icons.warning_amber,
+                      color: theme.colorScheme.error,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -1255,7 +1275,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         'Vi ste odgovorni za točnost i pravnu ispravnost teksta.',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.orange[900],
+                          color: theme.colorScheme.onErrorContainer,
                           height: 1.4,
                         ),
                       ),
@@ -1358,9 +1378,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Frosted glass efekti za moderan izgled',
-              style: TextStyle(fontSize: 13, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -1395,8 +1418,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: _blurIntensity == intensity
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                             width: 2,
                           ),
                         ),
@@ -1407,16 +1430,16 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                                   height: 10,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: theme.colorScheme.primary,
                                   ),
                                 ),
                               )
                             : null,
                       ),
-                      const Icon(
+                      Icon(
                         Icons.blur_on,
                         size: 20,
-                        color: Colors.grey,
+                        color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -1498,7 +1521,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   decoration: BoxDecoration(
                     color: _primaryColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey),
+                    border: Border.all(
+                      color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                    ),
                   ),
                 ),
               ),
@@ -1520,6 +1545,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   }
 
   void _showColorPicker() {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1551,7 +1577,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   color: color,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: _primaryColor == color ? Colors.black : Colors.grey,
+                    color: _primaryColor == color
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                     width: _primaryColor == color ? 3 : 1,
                   ),
                 ),

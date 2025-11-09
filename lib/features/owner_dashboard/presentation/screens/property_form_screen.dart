@@ -379,7 +379,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                   padding: const EdgeInsets.all(8),
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                      colors: [AppColors.primary, AppColors.authSecondary],
                     ),
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),

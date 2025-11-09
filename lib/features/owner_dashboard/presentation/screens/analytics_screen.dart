@@ -146,7 +146,7 @@ class _FilterChip extends StatelessWidget {
       onSelected: (_) => onSelected(),
       selectedColor: AppColors.authPrimary,
       labelStyle: TextStyle(
-        color: selected ? const Color(0xFFFFFFFF) : AppColors.textPrimary,
+        color: selected ? Colors.white : AppColors.textPrimary,
       ),
     );
   }
@@ -524,7 +524,7 @@ class _TopPropertiesList extends StatelessWidget {
               child: Text(
                 '${index + 1}',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: const Color(0xFFFFFFFF),
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),

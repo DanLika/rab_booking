@@ -62,7 +62,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                   color: isDark
-                                      ? const Color(0xFFFFFFFF)
+                                      ? Colors.white
                                       : AppColors.primaryDark,
                                 ),
                               ),
@@ -374,7 +374,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
               ? AppColors.authPrimary
               : AppColors.borderLight,
           foregroundColor: isExpanded
-              ? const Color(0xFFFFFFFF)
+              ? Colors.white
               : AppColors.textDisabled,
           child: Text('$stepNumber'),
         ),
@@ -446,7 +446,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                 ),
                 child: const Icon(
                   Icons.image,
-                  color: Color(0xFFFFFFFF),
+                  color: Colors.white,
                   size: 24,
                 ),
               ),
@@ -458,7 +458,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                     color: theme.brightness == Brightness.dark
-                        ? const Color(0xFFFFFFFF)
+                        ? Colors.white
                         : AppColors.primary,
                   ),
                 ),
@@ -564,7 +564,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.borderLight),
       ),
@@ -603,7 +603,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             child: Text(
               number,
               style: const TextStyle(
-                color: Color(0xFFFFFFFF),
+                color: Colors.white,
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
               ),
@@ -644,7 +644,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? const Color(0xFFFFFFFF) : null,
+                      color: isDark ? Colors.white : null,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -705,7 +705,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? const Color(0xFFFFFFFF) : null,
+                      color: isDark ? Colors.white : null,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -750,7 +750,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: isDark ? const Color(0xFFFFFFFF) : null,
+              color: isDark ? Colors.white : null,
             ),
             overflow: TextOverflow.ellipsis,
             maxLines: 2,

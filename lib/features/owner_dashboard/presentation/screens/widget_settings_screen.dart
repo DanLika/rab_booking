@@ -408,7 +408,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       appBar: CommonAppBar(
         title: 'Postavke Widgeta',
@@ -1225,7 +1224,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   }
 
   Widget _buildTaxLegalSection() {
-    final theme = Theme.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1408,7 +1406,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   }
 
   Widget _buildThemeSection() {
-    final theme = Theme.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1687,7 +1684,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   }
 
   void _showColorPicker() {
-    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

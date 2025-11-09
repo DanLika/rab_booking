@@ -45,7 +45,9 @@
       "Read(~/.bashrc)",
       "Read(~/.gitconfig)",
       "Bash(nc:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(find:*)",
+      "Bash(/dev/tcp/127.0.0.1/58259)"
     ],
     "deny": [
       "Read(.env)",

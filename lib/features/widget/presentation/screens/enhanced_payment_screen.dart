@@ -982,11 +982,11 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
             color: colors.backgroundCard,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: colors.borderDefault),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Color(0x0D000000),
+                color: Colors.black.withAlpha((0.05 * 255).toInt()),
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -1117,11 +1117,11 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       decoration: BoxDecoration(
         color: colors.backgroundCard,
         border: Border(top: BorderSide(color: colors.borderDefault)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0D000000),
+            color: Colors.black.withAlpha((0.05 * 255).toInt()),
             blurRadius: 10,
-            offset: Offset(0, -2),
+            offset: const Offset(0, -2),
           ),
         ],
       ),

@@ -32,6 +32,8 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Focus(
       onFocusChange: (hasFocus) {
         setState(() => _isFocused = hasFocus);
@@ -43,7 +45,7 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
           boxShadow: _isFocused
               ? [
                   BoxShadow(
-                    color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
                     blurRadius: 20,
                     spreadRadius: 0,
                   ),
@@ -56,27 +58,28 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
           keyboardType: widget.keyboardType,
           validator: widget.validator,
           maxLines: widget.maxLines,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,
+            color: theme.colorScheme.onSurface,
           ),
           decoration: InputDecoration(
             labelText: widget.labelText,
             labelStyle: TextStyle(
-              color: _isFocused ? const Color(0xFF6B4CE6) : Colors.grey.shade600,
+              color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
             prefixIcon: widget.prefixIcon != null
                 ? Icon(
                     widget.prefixIcon,
-                    color: _isFocused ? const Color(0xFF6B4CE6) : Colors.grey.shade500,
+                    color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
                     size: 20,
                   )
                 : null,
             suffixIcon: widget.suffixIcon,
             filled: true,
-            fillColor: Colors.white.withAlpha((0.7 * 255).toInt()),
+            fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt()),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
@@ -84,35 +87,35 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: Colors.grey.shade300,
+                color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
                 width: 1.5,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: Colors.grey.shade300,
+                color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
                 width: 1.5,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF6B4CE6),
+              borderSide: BorderSide(
+                color: theme.colorScheme.primary,
                 width: 2,
               ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: Colors.red.shade400,
+                color: theme.colorScheme.error,
                 width: 1.5,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: Colors.red.shade400,
+                color: theme.colorScheme.error,
                 width: 2,
               ),
             ),

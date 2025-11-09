@@ -5,10 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/calendar_view_mode.dart';
 import '../providers/owner_calendar_view_provider.dart';
 import '../providers/owner_calendar_provider.dart';
-import '../providers/calendar_filters_provider.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/booking_create_dialog.dart';
-import '../../utils/calendar_grid_calculator.dart';
 import 'owner_week_calendar_screen.dart';
 import 'owner_month_calendar_screen.dart';
 import 'owner_timeline_calendar_screen.dart';
@@ -58,11 +56,7 @@ class _OwnerCalendarMainScreenState
   @override
   Widget build(BuildContext context) {
     final currentView = ref.watch(ownerCalendarViewProvider);
-    final isCompact =
-        MediaQuery.of(context).size.width <
-        CalendarGridCalculator.mobileBreakpoint;
     final location = GoRouterState.of(context).matchedLocation;
-    final filters = ref.watch(calendarFiltersProvider);
 
     // Extract current route for drawer
     String currentRoute = 'calendar/week'; // Default

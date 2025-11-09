@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Premium gradient button for auth screens with animations
 class GradientAuthButton extends StatefulWidget {
@@ -50,6 +51,8 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -59,18 +62,11 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
         child: Container(
           height: 56,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xFF6B4CE6), // Purple
-                Color(0xFF4A90E2), // Blue
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
+            gradient: AppColors.authGradient,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
+                color: AppColors.authPrimary.withAlpha((0.3 * 255).toInt()),
                 blurRadius: _isHovered ? 25 : 15,
                 offset: Offset(0, _isHovered ? 8 : 4),
               ),
@@ -101,7 +97,7 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
                               ],
                               colors: [
                                 Colors.transparent,
-                                Colors.white.withAlpha((0.3 * 255).toInt()),
+                                theme.colorScheme.onPrimary.withAlpha((0.3 * 255).toInt()),
                                 Colors.transparent,
                               ],
                             ),
@@ -113,12 +109,12 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
                   // Button content
                   Center(
                     child: widget.isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
                             ),
                           )
                         : Row(
@@ -127,15 +123,15 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
                               if (widget.icon != null) ...[
                                 Icon(
                                   widget.icon,
-                                  color: Colors.white,
+                                  color: theme.colorScheme.onPrimary,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
                               ],
                               Text(
                                 widget.text,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.5,

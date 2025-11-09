@@ -96,7 +96,6 @@ class OwnerAppDrawer extends ConsumerWidget {
               title: 'Podešavanja',
               isExpanded: currentRoute.startsWith('properties') ||
                   currentRoute.startsWith('units') ||
-                  currentRoute == 'price-list' ||
                   currentRoute == 'widget-settings' ||
                   currentRoute.startsWith('integrations'),
               children: [
@@ -132,11 +131,6 @@ class OwnerAppDrawer extends ConsumerWidget {
                   title: 'Smještajne jedinice',
                   isSelected: currentRoute == 'properties',
                   onTap: () => context.go(OwnerRoutes.properties),
-                ),
-                _DrawerSubItem(
-                  title: 'Cjenovnik',
-                  isSelected: currentRoute == 'price-list',
-                  onTap: () => context.go(OwnerRoutes.priceList),
                 ),
               ],
             ),

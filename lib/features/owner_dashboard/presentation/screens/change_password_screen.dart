@@ -176,7 +176,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           child: const Icon(
                             Icons.lock_reset,
                             size: 40,
-                            color: Color(0xFFFFFFFF),
+                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 24),

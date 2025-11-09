@@ -102,6 +102,8 @@ class GlassCard extends StatelessWidget {
 
   /// Build normal card without blur (fallback)
   Widget _buildNormalCard(BuildContext context, bool isDark, BorderRadius borderRadius) {
+    final theme = Theme.of(context);
+
     return Container(
       width: width,
       height: height,
@@ -109,13 +111,11 @@ class GlassCard extends StatelessWidget {
       padding: padding ?? const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF1E1E1E)
+            ? theme.colorScheme.surface
             : Colors.white,
         borderRadius: borderRadius,
         border: Border.all(
-          color: isDark
-              ? const Color(0xFF383838)
-              : const Color(0xFFE0E0E0),
+          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
           width: 1.0,
         ),
         boxShadow: shadows ?? _getDefaultShadows(isDark),
@@ -285,7 +285,7 @@ class GlassContainer extends StatelessWidget {
         padding: padding,
         alignment: alignment,
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          color: isDark ? theme.colorScheme.surface : Colors.white,
           borderRadius: effectiveBorderRadius,
         ),
         child: child,

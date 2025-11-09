@@ -480,29 +480,21 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 child: const SizedBox.expand(),
               ),
             ),
-            // Day number overlay
-            Positioned(
-              top: SpacingTokens.xs,
-              left: SpacingTokens.xs,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SpacingTokens.xs,
-                  vertical: SpacingTokens.xxs,
-                ),
-                decoration: BoxDecoration(
-                  color: ColorTokens.withOpacity(
-                    ColorTokens.pureWhite,
-                    OpacityTokens.almostOpaque,
-                  ),
-                  borderRadius: BorderTokens.circularSubtle,
-                ),
-                child: Text(
-                  date.day.toString(),
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeS,
-                    fontWeight: TypographyTokens.semiBold,
-                    color: colors.textPrimary,
-                  ),
+            // Day number overlay - centered
+            Center(
+              child: Text(
+                date.day.toString(),
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeL,
+                  fontWeight: TypographyTokens.bold,
+                  color: colors.textPrimary,
+                  shadows: [
+                    Shadow(
+                      offset: const Offset(0, 1),
+                      blurRadius: 2.0,
+                      color: colors.backgroundPrimary.withValues(alpha: 0.3),
+                    ),
+                  ],
                 ),
               ),
             ),

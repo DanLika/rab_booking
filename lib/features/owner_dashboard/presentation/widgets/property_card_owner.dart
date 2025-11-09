@@ -61,38 +61,60 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
           borderRadius: BorderRadius.circular(16),
           child: Material(
             color: Colors.transparent,
-            child: InkWell(
-              onTap: widget.onTap,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final isMobile = constraints.maxWidth < 400;
-                  final isSmallMobile = constraints.maxWidth < 350;
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 400;
+                final isSmallMobile = constraints.maxWidth < 350;
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Image
-                      _buildImage(isSmallMobile, isMobile),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Tappable area (Image + Main Info)
+                    InkWell(
+                      onTap: widget.onTap,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Image
+                          _buildImage(isSmallMobile, isMobile),
 
-                      // Content
-                      Padding(
-                        padding: EdgeInsets.all(
-                          isSmallMobile ? 14 : (isMobile ? 16 : 20),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: _buildContent(
-                            context,
-                            theme,
-                            isMobile,
-                            isSmallMobile,
+                          // Main Content (without action buttons)
+                          Padding(
+                            padding: EdgeInsets.all(
+                              isSmallMobile ? 14 : (isMobile ? 16 : 20),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: _buildMainContent(
+                                context,
+                                theme,
+                                isMobile,
+                                isSmallMobile,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  );
-                },
-              ),
+                    ),
+
+                    // Action buttons (separate, not tappable for main action)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        isSmallMobile ? 14 : (isMobile ? 16 : 20),
+                        0,
+                        isSmallMobile ? 14 : (isMobile ? 16 : 20),
+                        isSmallMobile ? 14 : (isMobile ? 16 : 20),
+                      ),
+                      child: _buildActions(
+                        context,
+                        theme,
+                        isMobile,
+                        isSmallMobile,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -100,7 +122,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
     );
   }
 
-  List<Widget> _buildContent(
+  List<Widget> _buildMainContent(
     BuildContext context,
     ThemeData theme,
     bool isMobile,
@@ -235,106 +257,129 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
           ),
         ],
       ),
+    ];
+  }
 
-      SizedBox(height: isSmallMobile ? 10 : (isMobile ? 12 : 16)),
+  Widget _buildActions(
+    BuildContext context,
+    ThemeData theme,
+    bool isMobile,
+    bool isSmallMobile,
+  ) {
+    return Column(
+      children: [
+        Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.transparent,
+                theme.dividerColor,
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: isSmallMobile ? 10 : (isMobile ? 12 : 16)),
 
-      // Actions row
-      LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth < 400) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        widget.property.isActive ? 'Objavljeno' : 'Skriveno',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: widget.property.isActive
-                              ? theme.colorScheme.tertiary
-                              : theme.colorScheme.error.withAlpha(
-                                  (0.8 * 255).toInt(),
-                                ),
+        // Actions row
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 400) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.property.isActive ? 'Objavljeno' : 'Skriveno',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: widget.property.isActive
+                                ? theme.colorScheme.tertiary
+                                : theme.colorScheme.error.withAlpha(
+                                    (0.8 * 255).toInt(),
+                                  ),
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Switch(
-                      value: widget.property.isActive,
-                      onChanged: widget.onTogglePublished,
-                    ),
-                  ],
+                      Switch(
+                        value: widget.property.isActive,
+                        onChanged: widget.onTogglePublished,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        onPressed: widget.onEdit,
+                        icon: const Icon(Icons.edit_outlined),
+                        tooltip: 'Uredi',
+                      ),
+                      IconButton(
+                        onPressed: widget.onDelete,
+                        icon: const Icon(Icons.delete_outline),
+                        color: context.errorColor,
+                        tooltip: 'Obriši',
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                // Published toggle
+                Flexible(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.property.isActive ? 'Objavljeno' : 'Skriveno',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: widget.property.isActive
+                                ? theme.colorScheme.tertiary
+                                : theme.colorScheme.error.withAlpha(
+                                    (0.8 * 255).toInt(),
+                                  ),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Switch(
+                        value: widget.property.isActive,
+                        onChanged: widget.onTogglePublished,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      onPressed: widget.onEdit,
-                      icon: const Icon(Icons.edit_outlined),
-                      tooltip: 'Uredi',
-                    ),
-                    IconButton(
-                      onPressed: widget.onDelete,
-                      icon: const Icon(Icons.delete_outline),
-                      color: context.errorColor,
-                      tooltip: 'Obriši',
-                    ),
-                  ],
+
+                // Edit button
+                IconButton(
+                  onPressed: widget.onEdit,
+                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: 'Uredi',
+                ),
+
+                // Delete button
+                IconButton(
+                  onPressed: widget.onDelete,
+                  icon: const Icon(Icons.delete_outline),
+                  color: context.errorColor,
+                  tooltip: 'Obriši',
                 ),
               ],
             );
-          }
-          return Row(
-            children: [
-              // Published toggle
-              Flexible(
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        widget.property.isActive ? 'Objavljeno' : 'Skriveno',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: widget.property.isActive
-                              ? theme.colorScheme.tertiary
-                              : theme.colorScheme.error.withAlpha(
-                                  (0.8 * 255).toInt(),
-                                ),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Switch(
-                      value: widget.property.isActive,
-                      onChanged: widget.onTogglePublished,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Edit button
-              IconButton(
-                onPressed: widget.onEdit,
-                icon: const Icon(Icons.edit_outlined),
-                tooltip: 'Uredi',
-              ),
-
-              // Delete button
-              IconButton(
-                onPressed: widget.onDelete,
-                icon: const Icon(Icons.delete_outline),
-                color: context.errorColor,
-                tooltip: 'Obriši',
-              ),
-            ],
-          );
-        },
-      ),
-    ];
+          },
+        ),
+      ],
+    );
   }
 
   Widget _buildImage(bool isSmallMobile, bool isMobile) {

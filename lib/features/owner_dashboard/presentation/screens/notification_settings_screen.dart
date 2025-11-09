@@ -462,14 +462,14 @@ class _NotificationSettingsScreenState
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF000000).withAlpha((0.04 * 255).toInt()),
+            color: Colors.black.withAlpha((0.04 * 255).toInt()),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: const Color(0x00000000)),
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           leading: Container(
@@ -521,9 +521,9 @@ class _NotificationSettingsScreenState
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0x00000000),
+                    Colors.transparent,
                     AppColors.borderLight,
-                    Color(0x00000000),
+                    Colors.transparent,
                   ],
                 ),
               ),

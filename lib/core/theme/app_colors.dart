@@ -238,12 +238,23 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
-  /// Auth background gradient - Beige to White diagonal
-  /// Use for: auth screen background
+  /// Auth background gradient - Beige to White diagonal (Light Mode)
+  /// Use for: auth screen background in light mode
   static const LinearGradient authBackgroundGradient = LinearGradient(
     colors: [
       Color(0xFFFAF8F3), // Beige
       Color(0xFFFFFFFF), // White
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// Auth background gradient - Dark gray gradient (Dark Mode)
+  /// Use for: auth screen background in dark mode
+  static const LinearGradient authBackgroundGradientDark = LinearGradient(
+    colors: [
+      Color(0xFF0D0D0D), // Very dark gray (slightly lighter than pure black)
+      Color(0xFF1A1A1A), // Dark gray
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

@@ -419,9 +419,9 @@ class DashboardOverviewTab extends ConsumerWidget {
         : AppColors.primary;
 
     // Theme-aware text and icon colors - full opacity
-    final textColor = const Color(0xFFFFFFFF);
-    final iconColor = const Color(0xFFFFFFFF);
-    final iconBgColor = const Color(0xFFFFFFFF).withAlpha((0.2 * 255).toInt());
+    final textColor = Colors.white;
+    final iconColor = Colors.white;
+    final iconBgColor = Colors.white.withAlpha((0.2 * 255).toInt());
 
     return TweenAnimationBuilder<double>(
       duration: Duration(milliseconds: 600 + animationDelay),

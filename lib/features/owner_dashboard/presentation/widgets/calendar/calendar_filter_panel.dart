@@ -51,13 +51,13 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.filter_list, color: Color(0xFFFFFFFF)),
+                const Icon(Icons.filter_list, color: Colors.white),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'Filteri',
                     style: theme.textTheme.titleLarge?.copyWith(
-                      color: const Color(0xFFFFFFFF),
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -69,7 +69,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFFFFF),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -84,7 +84,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                 const SizedBox(width: 12),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close, color: Color(0xFFFFFFFF)),
+                  icon: const Icon(Icons.close, color: Colors.white),
                 ),
               ],
             ),
@@ -197,7 +197,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                     onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: const Color(0xFFFFFFFF),
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: const Text('Primijeni'),
@@ -258,7 +258,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                       child: Text(
                         '$activeCount',
                         style: const TextStyle(
-                          color: Color(0xFFFFFFFF),
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
@@ -410,7 +410,7 @@ void showCalendarFilterPanel(BuildContext context) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: const Color(0x00000000),
+    backgroundColor: Colors.transparent,
     builder: (context) => const CalendarFilterPanel(),
   );
 }

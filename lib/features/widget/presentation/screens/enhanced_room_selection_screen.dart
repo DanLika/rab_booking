@@ -627,11 +627,11 @@ class _EnhancedRoomSelectionScreenState
         border: Border(
           top: BorderSide(color: colors.borderDefault),
         ),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0D000000),
+            color: Colors.black.withAlpha((0.05 * 255).toInt()),
             blurRadius: 10,
-            offset: Offset(0, -2),
+            offset: const Offset(0, -2),
           ),
         ],
       ),

@@ -39,30 +39,32 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Header with month selector and bulk edit toggle
-        _buildHeader(isMobile),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header with month selector and bulk edit toggle
+          _buildHeader(isMobile),
 
-        const SizedBox(height: 16),
-
-        // Selected days counter (in bulk edit mode)
-        if (_bulkEditMode && _selectedDays.isNotEmpty) ...[
-          _buildSelectionCounter(),
           const SizedBox(height: 16),
+
+          // Selected days counter (in bulk edit mode)
+          if (_bulkEditMode && _selectedDays.isNotEmpty) ...[
+            _buildSelectionCounter(),
+            const SizedBox(height: 16),
+          ],
+
+          // Calendar grid - constrained height for GridView
+          _buildCalendarGrid(),
+
+          const SizedBox(height: 16),
+
+          // Action buttons
+          if (_bulkEditMode && _selectedDays.isNotEmpty)
+            _buildBulkEditActions(isMobile),
         ],
-
-        // Calendar grid - constrained height for GridView
-        _buildCalendarGrid(),
-
-        const SizedBox(height: 16),
-
-        // Action buttons
-        if (_bulkEditMode && _selectedDays.isNotEmpty)
-          _buildBulkEditActions(isMobile),
-      ],
+      ),
     );
   }
 

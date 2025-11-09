@@ -85,17 +85,19 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
   }
 
   Widget _buildPlaceholder() {
+    final theme = Theme.of(context);
+
     return Container(
       width: widget.size,
       height: widget.size,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF6B4CE6), // Purple
-            Color(0xFF4A90E2), // Blue
+            theme.colorScheme.primary,
+            theme.colorScheme.secondary,
           ],
         ),
       ),
@@ -105,7 +107,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
           style: TextStyle(
             fontSize: widget.size * 0.4,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: theme.colorScheme.onPrimary,
           ),
         ),
       ),
@@ -114,6 +116,8 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Center(
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
@@ -125,12 +129,12 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
                   width: 4,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF6B4CE6).withAlpha((0.2 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
                     blurRadius: 20,
                     spreadRadius: 2,
                     offset: const Offset(0, 4),
@@ -146,13 +150,13 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.black.withAlpha((0.4 * 255).toInt()),
+                    color: theme.colorScheme.shadow.withAlpha((0.4 * 255).toInt()),
                   ),
                   child: Center(
                     child: Icon(
                       Icons.camera_alt,
                       size: widget.size * 0.25,
-                      color: Colors.white,
+                      color: theme.colorScheme.onPrimary,
                     ),
                   ),
                 ),
@@ -171,21 +175,21 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Color(0xFF6B4CE6),
-                          Color(0xFF4A90E2),
+                          theme.colorScheme.primary,
+                          theme.colorScheme.secondary,
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white,
+                        color: theme.colorScheme.surface,
                         width: 3,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF6B4CE6).withAlpha((0.4 * 255).toInt()),
+                          color: theme.colorScheme.primary.withAlpha((0.4 * 255).toInt()),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -196,7 +200,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                           ? Icons.edit
                           : Icons.add_a_photo,
                       size: 20,
-                      color: Colors.white,
+                      color: theme.colorScheme.onPrimary,
                     ),
                   ),
                 ),

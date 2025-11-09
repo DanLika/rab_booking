@@ -51,6 +51,11 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
           .get();
 
       return snapshot.docs
+          .where((doc) {
+            final data = doc.data();
+            // Skip documents without valid date or unit_id field
+            return data['date'] != null && data['unit_id'] != null;
+          })
           .map((doc) {
             try {
               return DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});
@@ -319,6 +324,11 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
           .get();
 
       return snapshot.docs
+          .where((doc) {
+            final data = doc.data();
+            // Skip documents without valid date or unit_id field
+            return data['date'] != null && data['unit_id'] != null;
+          })
           .map((doc) {
             try {
               return DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});
@@ -368,6 +378,11 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs
+          .where((doc) {
+            final data = doc.data();
+            // Skip documents without valid date or unit_id field
+            return data['date'] != null && data['unit_id'] != null;
+          })
           .map((doc) {
             try {
               return DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});

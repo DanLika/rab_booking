@@ -90,8 +90,12 @@ class FirebaseBookingCalendarRepository {
         // Parse prices
         final Map<String, double> priceMap = {};
         for (final doc in pricesSnapshot.docs) {
+          final data = doc.data();
+          // Skip documents without valid date field
+          if (data['date'] == null) continue;
+
           try {
-            final price = DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});
+            final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
             final key = '${price.date.year}-${price.date.month}-${price.date.day}';
             priceMap[key] = price.price;
           } catch (e) {
@@ -184,8 +188,12 @@ class FirebaseBookingCalendarRepository {
         // Parse prices
         final Map<String, double> priceMap = {};
         for (final doc in pricesSnapshot.docs) {
+          final data = doc.data();
+          // Skip documents without valid date field
+          if (data['date'] == null) continue;
+
           try {
-            final price = DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});
+            final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
             final key = '${price.date.year}-${price.date.month}-${price.date.day}';
             priceMap[key] = price.price;
           } catch (e) {
@@ -514,8 +522,12 @@ class FirebaseBookingCalendarRepository {
 
       double total = 0.0;
       for (final doc in pricesSnapshot.docs) {
+        final data = doc.data();
+        // Skip documents without valid date field
+        if (data['date'] == null) continue;
+
         try {
-          final price = DailyPriceModel.fromJson({...doc.data(), 'id': doc.id});
+          final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
           total += price.price;
         } catch (e) {
           LoggingService.logError('Error parsing price', e);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Premium auth background with gradient
 class AuthBackground extends StatelessWidget {
@@ -16,20 +17,9 @@ class AuthBackground extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDarkMode
-              ? [
-                  const Color(0xFF1A1A1A), // Dark gray
-                  const Color(0xFF2D2D2D), // Lighter dark gray
-                ]
-              : [
-                  const Color(0xFFFAF8F3), // Beige
-                  const Color(0xFFFFFFFF), // White
-                ],
-          stops: const [0.0, 1.0],
-        ),
+        gradient: isDarkMode
+            ? AppColors.authBackgroundGradientDark
+            : AppColors.authBackgroundGradient,
       ),
       child: child,
     );

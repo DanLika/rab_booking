@@ -18,8 +18,6 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: CommonAppBar(

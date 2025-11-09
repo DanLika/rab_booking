@@ -114,7 +114,7 @@ class CalendarLegendWidget extends StatelessWidget {
                 runSpacing: 6,
                 children: [
                   _LegendItem(
-                    color: isDark ? AppColors.surfaceDark : const Color(0xFFFFFFFF),
+                    color: isDark ? AppColors.surfaceDark : Colors.white,
                     label: 'Osnovna',
                     borderColor: isDark ? AppColors.borderDark : AppColors.borderLight,
                     isCompact: isCompact,

@@ -120,7 +120,7 @@ class PropertiesScreen extends ConsumerWidget {
                                     child: const Icon(
                                       Icons.add_business,
                                       size: 40,
-                                      color: Color(0xFFFFFFFF),
+                                      color: Colors.white,
                                     ),
                                   ),
                                   const SizedBox(height: 16),
@@ -172,7 +172,7 @@ class PropertiesScreen extends ConsumerWidget {
                       child: const CircularProgressIndicator(
                         strokeWidth: 3,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Color(0xFFFFFFFF),
+                          Colors.white,
                         ),
                       ),
                     ),

@@ -358,7 +358,7 @@ class BookingBlockWidget extends StatelessWidget {
 
   Color _getTextColor(BookingStatus status) {
     // White text works well on all status colors for contrast
-    return const Color(0xFFFFFFFF);
+    return Colors.white;
   }
 
   /// FIXED: Build semantic label for screen readers

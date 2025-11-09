@@ -446,43 +446,34 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
 
           const Divider(height: 1),
 
-          // Units and reservations with InteractiveViewer for pinch-to-zoom
+          // Units and reservations without InteractiveViewer to avoid unbounded constraints
           Expanded(
-            child: InteractiveViewer(
-              transformationController: _transformationController,
-              minScale: _minZoomScale,
-              maxScale: _maxZoomScale,
-              constrained: true,
-              boundaryMargin: const EdgeInsets.all(AppDimensions.spaceXL),
-              panEnabled: true,
-              scaleEnabled: true,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Fixed unit names column
-                  _buildUnitNamesColumn(units),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Fixed unit names column
+                _buildUnitNamesColumn(units),
 
-                  // Scrollable timeline grid
-                  Expanded(
+                // Scrollable timeline grid
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _horizontalScrollController,
+                    scrollDirection: Axis.horizontal,
                     child: SingleChildScrollView(
-                      controller: _horizontalScrollController,
-                      scrollDirection: Axis.horizontal,
-                      child: SingleChildScrollView(
-                        controller: _verticalScrollController,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildTimelineGrid(units, bookingsByUnit, dates),
-                            // Summary bar (if enabled)
-                            if (_showSummary)
-                              _buildSummaryBar(bookingsByUnit, dates),
-                          ],
-                        ),
+                      controller: _verticalScrollController,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildTimelineGrid(units, bookingsByUnit, dates),
+                          // Summary bar (if enabled)
+                          if (_showSummary)
+                            _buildSummaryBar(bookingsByUnit, dates),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

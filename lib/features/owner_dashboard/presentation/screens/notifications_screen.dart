@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../providers/notifications_provider.dart';
 import '../../domain/models/notification_model.dart';
@@ -16,7 +15,6 @@ class NotificationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationsAsync = ref.watch(notificationsStreamProvider);
     final groupedNotifications = ref.watch(groupedNotificationsProvider);
-    final authState = ref.watch(enhancedAuthProvider);
     final actions = ref.watch(notificationActionsProvider);
 
     return Scaffold(
@@ -87,7 +85,7 @@ class NotificationsScreen extends ConsumerWidget {
                                     AppColors.primary.withAlpha(
                                       (0.2 * 255).toInt(),
                                     ),
-                                    const Color(0x00000000),
+                                    Colors.transparent,
                                   ],
                                 ),
                               ),
@@ -220,7 +218,7 @@ class NotificationsScreen extends ConsumerWidget {
         ),
         child: const Icon(
           Icons.delete_outline,
-          color: Color(0xFFFFFFFF),
+          color: Colors.white,
           size: 28,
         ),
       ),
@@ -421,7 +419,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
           ],
         ),
         child: Material(
-          color: const Color(0x00000000),
+          color: Colors.transparent,
           child: InkWell(
             onTap: widget.onTap,
             borderRadius: BorderRadius.circular(16),

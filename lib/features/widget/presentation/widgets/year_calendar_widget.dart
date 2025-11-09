@@ -57,12 +57,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         ),
         // Hover tooltip overlay (desktop) - highest z-index
         if (_hoveredDate != null)
-          IgnorePointer(
-            child: calendarData.when(
-              data: (data) => _buildHoverTooltip(data, colors),
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
+          calendarData.when(
+            data: (data) => _buildHoverTooltip(data, colors),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
           ),
       ],
     );

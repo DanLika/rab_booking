@@ -435,18 +435,13 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
 
   Widget _buildGDPRNotice() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-          ? Colors.blue.shade900.withValues(alpha: 0.2)
-          : Colors.blue.shade50,
+        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
         border: Border.all(
-          color: isDark
-            ? Colors.blue.shade700.withValues(alpha: 0.5)
-            : Colors.blue.shade300,
+          color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
           width: 2,
         ),
         borderRadius: BorderRadius.circular(12),
@@ -458,7 +453,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
             children: [
               Icon(
                 Icons.info_outline,
-                color: isDark ? Colors.blue.shade400 : Colors.blue.shade700,
+                color: theme.colorScheme.primary,
                 size: 28,
               ),
               const SizedBox(width: 12),
@@ -468,7 +463,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.blue.shade300 : Colors.blue.shade900,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
               ),
@@ -479,7 +474,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
             'This privacy policy template is designed to comply with GDPR requirements. However, you should have it reviewed by a legal professional to ensure full compliance with your specific data processing activities.',
             style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 14,
-              color: isDark ? Colors.blue.shade200 : Colors.blue.shade900,
+              color: theme.colorScheme.onSurfaceVariant,
               height: 1.5,
             ),
           ),

@@ -360,18 +360,13 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
 
   Widget _buildPrivacyPolicyLink() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-          ? Colors.blue.shade900.withValues(alpha: 0.2)
-          : Colors.blue.shade50,
+        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
         border: Border.all(
-          color: isDark
-            ? Colors.blue.shade700.withValues(alpha: 0.5)
-            : Colors.blue.shade300,
+          color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
           width: 2,
         ),
         borderRadius: BorderRadius.circular(12),
@@ -383,7 +378,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
             children: [
               Icon(
                 Icons.info_outline,
-                color: isDark ? Colors.blue.shade400 : Colors.blue.shade700,
+                color: theme.colorScheme.primary,
                 size: 28,
               ),
               const SizedBox(width: 12),
@@ -393,7 +388,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.blue.shade300 : Colors.blue.shade700,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
               ),
@@ -404,7 +399,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
             'For comprehensive information about data collection, processing, and your rights under GDPR, please read our full Privacy Policy.',
             style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 14,
-              color: isDark ? Colors.blue.shade200 : Colors.blue.shade900,
+              color: theme.colorScheme.onSurfaceVariant,
               height: 1.5,
             ),
           ),
@@ -422,8 +417,8 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
               icon: const Icon(Icons.arrow_forward),
               label: const Text('View Privacy Policy'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isDark ? Colors.blue.shade600 : Colors.blue.shade700,
-                foregroundColor: Colors.white,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -438,18 +433,13 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
 
   Widget _buildLegalNotice() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-          ? Colors.orange.shade900.withValues(alpha: 0.2)
-          : Colors.orange.shade50,
+        color: theme.colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
         border: Border.all(
-          color: isDark
-            ? Colors.orange.shade700.withValues(alpha: 0.5)
-            : Colors.orange.shade300,
+          color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
           width: 2,
         ),
         borderRadius: BorderRadius.circular(12),
@@ -461,7 +451,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
             children: [
               Icon(
                 Icons.warning_amber_rounded,
-                color: isDark ? Colors.orange.shade400 : Colors.orange.shade700,
+                color: theme.colorScheme.tertiary,
                 size: 28,
               ),
               const SizedBox(width: 12),
@@ -471,7 +461,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.orange.shade300 : Colors.orange.shade700,
+                    color: theme.colorScheme.tertiary,
                   ),
                 ),
               ),
@@ -486,7 +476,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
             '• Consider consulting with a legal professional to ensure compliance with GDPR, ePrivacy Directive, and other applicable laws',
             style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 14,
-              color: isDark ? Colors.orange.shade200 : Colors.orange.shade900,
+              color: theme.colorScheme.onSurfaceVariant,
               height: 1.5,
             ),
           ),

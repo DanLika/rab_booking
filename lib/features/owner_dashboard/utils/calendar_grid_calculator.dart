@@ -23,10 +23,23 @@ class CalendarGridCalculator {
   static const double desktopDayCellWidth = 120;
 
   /// Header height (date headers row)
-  static const double headerHeight = 60;
+  static const double mobileHeaderHeight = 50; // Reduced for mobile to save space
+  static const double tabletHeaderHeight = 55;
+  static const double desktopHeaderHeight = 60;
 
   /// Minimum touch target size (for mobile accessibility)
   static const double minTouchTargetSize = 44;
+
+  /// Get header height based on screen width
+  static double getHeaderHeight(double screenWidth) {
+    if (screenWidth < mobileBreakpoint) {
+      return mobileHeaderHeight;
+    } else if (screenWidth < tabletBreakpoint) {
+      return tabletHeaderHeight;
+    } else {
+      return desktopHeaderHeight;
+    }
+  }
 
   /// Get row header width based on screen width and text scale factor
   static double getRowHeaderWidth(double screenWidth, {double textScaleFactor = 1.0}) {

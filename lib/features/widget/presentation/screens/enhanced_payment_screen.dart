@@ -11,6 +11,7 @@ import '../providers/booking_price_provider.dart';
 import '../theme/villa_jasko_colors.dart';
 import '../theme/responsive_helper.dart';
 import '../widgets/progress_indicator_widget.dart';
+import '../components/adaptive_glass_card.dart';
 
 /// Enhanced Payment Screen (Step 2 of Flow B)
 /// Guest Details + Payment Method Selection
@@ -63,12 +64,14 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: VillaJaskoColors.backgroundSurface,
-      appBar: AppBar(
-        backgroundColor: VillaJaskoColors.primary,
-        foregroundColor: VillaJaskoColors.textOnPrimary,
-        elevation: 0,
+      backgroundColor: colorScheme.surface,
+      appBar: AdaptiveBlurredAppBar(
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -234,20 +237,11 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
   // ===================================================================
 
   Widget _buildGuestDetailsSection() {
-    return Container(
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return AdaptiveGlassCard(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: VillaJaskoColors.backgroundSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VillaJaskoColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: VillaJaskoColors.shadowLight,
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -256,12 +250,12 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: VillaJaskoColors.primarySurface,
+                  color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.person,
-                  color: VillaJaskoColors.primary,
+                  color: colorScheme.primary,
                   size: 24,
                 ),
               ),
@@ -271,7 +265,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: VillaJaskoColors.textPrimary,
+                  color: theme.textTheme.bodyLarge!.color,
                 ),
               ),
             ],
@@ -281,7 +275,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
           // First Name & Last Name
           Row(
             children: [
-              Expanded(
+              Flexible(
                 child: _buildTextField(
                   controller: _firstNameController,
                   label: 'First Name',
@@ -298,7 +292,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              Expanded(
+              Flexible(
                 child: _buildTextField(
                   controller: _lastNameController,
                   label: 'Last Name',
@@ -380,6 +374,9 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
     TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
@@ -387,44 +384,32 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       validator: validator,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: VillaJaskoColors.primary),
+        prefixIcon: Icon(icon, color: colorScheme.primary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: VillaJaskoColors.border),
+          borderSide: BorderSide(color: theme.dividerColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: VillaJaskoColors.primary,
+          borderSide: BorderSide(
+            color: colorScheme.primary,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: VillaJaskoColors.error),
+          borderSide: BorderSide(color: colorScheme.error),
         ),
       ),
     );
   }
 
   Widget _buildPaymentMethodSection() {
-    return Container(
+    return AdaptiveGlassCard(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: VillaJaskoColors.backgroundSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VillaJaskoColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: VillaJaskoColors.shadowLight,
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -571,6 +556,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                       fontWeight: FontWeight.bold,
                       color: isSelected ? VillaJaskoColors.textPrimary : VillaJaskoColors.textSecondary,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -579,6 +566,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                       fontSize: 13,
                       color: VillaJaskoColors.textSecondary,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -632,20 +621,11 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         final deposit = calculation.totalPrice * 0.2;
         final fullAmount = calculation.totalPrice;
 
-        return Container(
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
+        return AdaptiveGlassCard(
           padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: VillaJaskoColors.backgroundSurface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: VillaJaskoColors.border),
-            boxShadow: const [
-              BoxShadow(
-                color: VillaJaskoColors.shadowLight,
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -654,12 +634,12 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: VillaJaskoColors.primarySurface,
+                      color: colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.euro,
-                      color: VillaJaskoColors.primary,
+                      color: colorScheme.primary,
                       size: 24,
                     ),
                   ),
@@ -669,7 +649,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: VillaJaskoColors.textPrimary,
+                      color: theme.textTheme.bodyLarge!.color,
                     ),
                   ),
                 ],
@@ -1232,9 +1212,9 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
     // Validate form
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all required fields'),
-          backgroundColor: VillaJaskoColors.error,
+        SnackBar(
+          content: const Text('Please fill in all required fields'),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;
@@ -1256,7 +1236,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
-            backgroundColor: VillaJaskoColors.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

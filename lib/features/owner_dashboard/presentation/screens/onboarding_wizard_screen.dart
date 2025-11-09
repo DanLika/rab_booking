@@ -108,7 +108,7 @@ class OnboardingWizardScreen extends ConsumerWidget {
             onPressed: canGoNext ? () => _handleNext(context, ref, state, isLastStep) : null,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.authPrimary,
               foregroundColor: Colors.white,
             ),
             child: const Row(
@@ -225,7 +225,7 @@ class OnboardingWizardScreen extends ConsumerWidget {
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.warning,
             ),
             child: const Text('Preskoči'),
           ),
@@ -268,7 +268,7 @@ class _StepIndicator extends StatelessWidget {
             color: isCompleted
                 ? AppColors.success
                 : isActive
-                    ? AppColors.primary
+                    ? AppColors.authPrimary
                     : Colors.grey[300],
           ),
           child: Center(
@@ -289,7 +289,7 @@ class _StepIndicator extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-            color: isActive ? AppColors.primary : Colors.grey[600],
+            color: isActive ? AppColors.authPrimary : Colors.grey[600],
           ),
         ),
       ],

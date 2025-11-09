@@ -9,7 +9,6 @@ import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
-import '../widgets/auth_logo_icon.dart';
 import '../widgets/premium_input_field.dart';
 import '../widgets/gradient_auth_button.dart';
 import '../widgets/profile_image_picker.dart';
@@ -77,7 +76,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('You must accept the Terms & Conditions and Privacy Policy'),
-          backgroundColor: const Color(0xFFEF4444),
+          backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -119,7 +118,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: const Color(0xFFEF4444),
+            backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             duration: const Duration(seconds: 4),
@@ -131,18 +130,20 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: AuthBackground(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height,
-            ),
-            child: Center(
-              child: Padding(
-                padding: EdgeInsets.all(
-                  MediaQuery.of(context).size.width < 400 ? 16 : 24
-                ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width < 400 ? 16 : 24,
+                vertical: 24,
+              ),
+              child: Center(
                 child: GlassCard(
                   maxWidth: 460,
                   child: Form(
@@ -154,8 +155,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                     // Profile Image Picker
                     ProfileImagePicker(
                       size: 100,
-                      initials: _fullNameController.text.isNotEmpty
-                          ? _fullNameController.text.substring(0, 1)
+                      initials: _fullNameController.text.trim().isNotEmpty
+                          ? _fullNameController.text.trim().substring(0, 1).toUpperCase()
                           : null,
                       onImageSelected: (bytes, name) {
                         setState(() {
@@ -169,23 +170,31 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                     // Title
                     Text(
                       'Create Account',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             fontSize: 28,
-                            color: const Color(0xFF2D3748),
+                            color: isDark
+                                ? theme.colorScheme.onSurface
+                                : const Color(0xFF2D3748),
                           ),
                       textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
 
                     // Subtitle
                     Text(
                       'Start managing your properties today',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF718096),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isDark
+                                ? theme.colorScheme.onSurfaceVariant
+                                : const Color(0xFF718096),
                             fontSize: 15,
                           ),
                       textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 32),
 
@@ -235,7 +244,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                          color: const Color(0xFF718096),
+                          color: isDark
+                              ? theme.colorScheme.onSurfaceVariant
+                              : const Color(0xFF718096),
                         ),
                         onPressed: () {
                           setState(() => _obscurePassword = !_obscurePassword);
@@ -259,7 +270,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                          color: const Color(0xFF718096),
+                          color: isDark
+                              ? theme.colorScheme.onSurfaceVariant
+                              : const Color(0xFF718096),
                         ),
                         onPressed: () {
                           setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
@@ -272,7 +285,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                         );
                       },
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
                     // Terms & Conditions Checkbox
                     _buildCheckbox(
@@ -280,16 +293,20 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                       onChanged: (value) => setState(() => _acceptedTerms = value!),
                       child: RichText(
                         text: TextSpan(
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: Color(0xFF4A5568),
+                            color: isDark
+                                ? theme.colorScheme.onSurfaceVariant
+                                : const Color(0xFF4A5568),
                           ),
                           children: [
                             const TextSpan(text: 'I accept the '),
                             TextSpan(
                               text: 'Terms & Conditions',
-                              style: const TextStyle(
-                                color: Color(0xFF6B4CE6),
+                              style: TextStyle(
+                                color: isDark
+                                    ? theme.colorScheme.primary
+                                    : const Color(0xFF6B4CE6),
                                 fontWeight: FontWeight.w600,
                                 decoration: TextDecoration.underline,
                               ),
@@ -305,6 +322,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                             const TextSpan(text: ' *'),
                           ],
                         ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -315,16 +334,20 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                       onChanged: (value) => setState(() => _acceptedPrivacy = value!),
                       child: RichText(
                         text: TextSpan(
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: Color(0xFF4A5568),
+                            color: isDark
+                                ? theme.colorScheme.onSurfaceVariant
+                                : const Color(0xFF4A5568),
                           ),
                           children: [
                             const TextSpan(text: 'I accept the '),
                             TextSpan(
                               text: 'Privacy Policy',
-                              style: const TextStyle(
-                                color: Color(0xFF6B4CE6),
+                              style: TextStyle(
+                                color: isDark
+                                    ? theme.colorScheme.primary
+                                    : const Color(0xFF6B4CE6),
                                 fontWeight: FontWeight.w600,
                                 decoration: TextDecoration.underline,
                               ),
@@ -340,6 +363,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                             const TextSpan(text: ' *'),
                           ],
                         ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -348,15 +373,19 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                     _buildCheckbox(
                       value: _newsletterOptIn,
                       onChanged: (value) => setState(() => _newsletterOptIn = value!),
-                      child: const Text(
+                      child: Text(
                         'Send me updates and promotional offers',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF4A5568),
+                          color: isDark
+                              ? theme.colorScheme.onSurfaceVariant
+                              : const Color(0xFF4A5568),
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 32),
 
                     // Register Button
                     GradientAuthButton(
@@ -376,16 +405,20 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                         ),
                         child: RichText(
                           text: TextSpan(
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: theme.textTheme.bodyMedium?.copyWith(
                                   fontSize: 14,
-                                  color: const Color(0xFF4A5568),
+                                  color: isDark
+                                      ? theme.colorScheme.onSurfaceVariant
+                                      : const Color(0xFF4A5568),
                                 ),
-                            children: const [
-                              TextSpan(text: 'Already have an account? '),
+                            children: [
+                              const TextSpan(text: 'Already have an account? '),
                               TextSpan(
                                 text: 'Login',
                                 style: TextStyle(
-                                  color: Color(0xFF6B4CE6),
+                                  color: isDark
+                                      ? theme.colorScheme.primary
+                                      : const Color(0xFF6B4CE6),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -407,6 +440,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   }
 
   Widget _buildPasswordStrengthIndicator() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final color = _passwordStrength == PasswordStrength.weak
         ? const Color(0xFFEF4444) // Red
         : _passwordStrength == PasswordStrength.medium
@@ -437,7 +473,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                         : _passwordStrength == PasswordStrength.medium
                             ? 0.66
                             : 1.0,
-                    backgroundColor: Colors.grey.shade300,
+                    backgroundColor: isDark
+                        ? theme.colorScheme.surfaceContainerHighest
+                        : Colors.grey.shade300,
                     color: color,
                     minHeight: 6,
                   ),
@@ -489,19 +527,25 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     required ValueChanged<bool?> onChanged,
     required Widget child,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 20,
-          width: 20,
+          height: 48,
+          width: 48,
           child: Checkbox(
             value: value,
             onChanged: onChanged,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
             ),
-            activeColor: const Color(0xFF6B4CE6),
+            activeColor: isDark
+                ? theme.colorScheme.primary
+                : const Color(0xFF6B4CE6),
+            materialTapTargetSize: MaterialTapTargetSize.padded,
           ),
         ),
         const SizedBox(width: 8),

@@ -176,13 +176,13 @@ class _PremiumDialogWidget extends StatelessWidget {
                   height: 56,
                   decoration: BoxDecoration(
                     color: iconColor?.withValues(alpha: 0.1) ??
-                        AppColors.primary.withValues(alpha: 0.1),
+                        AppColors.authPrimary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     icon,
                     size: 32,
-                    color: iconColor ?? AppColors.primary,
+                    color: iconColor ?? AppColors.authPrimary,
                   ),
                 ),
               ),
@@ -259,7 +259,7 @@ class _LoadingDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.authPrimary),
             ),
             if (message != null) ...[
               const SizedBox(height: AppDimensions.spaceM),

@@ -97,7 +97,7 @@ class _AnimatedButtonState extends State<AnimatedButton>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = widget.backgroundColor ??
-        (isDark ? AppColors.primaryDark : AppColors.primary);
+        (isDark ? AppColors.authPrimaryDark : AppColors.authPrimary);
     final fgColor = widget.foregroundColor ?? Colors.white;
 
     return GestureDetector(
@@ -177,7 +177,7 @@ class RippleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: backgroundColor ?? AppColors.primary,
+      color: backgroundColor ?? AppColors.authPrimary,
       borderRadius: BorderRadius.circular(borderRadius),
       child: InkWell(
         onTap: onPressed == null
@@ -326,7 +326,7 @@ class _PulseButtonState extends State<PulseButton>
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = widget.backgroundColor ?? AppColors.primary;
+    final bgColor = widget.backgroundColor ?? AppColors.authPrimary;
     final pulseColor = widget.pulseColor ?? bgColor;
 
     return AnimatedBuilder(
@@ -448,7 +448,7 @@ class _RotatingIconButtonState extends State<RotatingIconButton>
             alignment: Alignment.center,
             child: Icon(
               widget.icon,
-              color: widget.iconColor ?? AppColors.primary,
+              color: widget.iconColor ?? AppColors.authPrimary,
               size: widget.size * 0.5,
             ),
           ),
@@ -533,7 +533,7 @@ class _BouncyButtonState extends State<BouncyButton>
         child: Container(
           padding: widget.padding,
           decoration: BoxDecoration(
-            color: widget.backgroundColor ?? AppColors.primary,
+            color: widget.backgroundColor ?? AppColors.authPrimary,
             borderRadius: BorderRadius.circular(widget.borderRadius),
           ),
           child: widget.child,

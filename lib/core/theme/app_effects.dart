@@ -244,7 +244,7 @@ class AppEffects {
           color: Colors.transparent,
           width: 2,
         ),
-        gradient: AppColors.primaryGradient,
+        gradient: AppColors.authGradient,
       );
 
   /// Gradient border effect with secondary color

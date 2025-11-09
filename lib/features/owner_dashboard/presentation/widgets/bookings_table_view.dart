@@ -36,12 +36,13 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
     return Card(
       elevation: 2,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Selection action bar
           if (_selectedBookingIds.isNotEmpty)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: AppColors.authPrimary.withValues(alpha: 0.1),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -70,7 +71,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               ),
             ),
           // Table
-          Expanded(
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Container(
@@ -253,7 +257,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       case 'ical':
         displayName = 'iCal';
         icon = Icons.sync;
-        color = Colors.blue;
+        color = AppColors.authSecondary;
         break;
       case 'booking_com':
       case 'booking.com':

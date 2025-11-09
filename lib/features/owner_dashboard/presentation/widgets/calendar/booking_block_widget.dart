@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/theme/app_colors.dart';
 
 /// Draggable booking block widget for calendar grid
 /// Shows booking information as a colored block spanning multiple days
@@ -11,7 +12,7 @@ class BookingBlockWidget extends StatelessWidget {
   final double height;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
-  final VoidCallback? onSecondaryTap;
+  final void Function(TapDownDetails)? onSecondaryTapDown;
   final bool isDraggable;
   final bool showGuestName;
   final bool showCheckInOut;
@@ -23,7 +24,7 @@ class BookingBlockWidget extends StatelessWidget {
     required this.height,
     this.onTap,
     this.onLongPress,
-    this.onSecondaryTap,
+    this.onSecondaryTapDown,
     this.isDraggable = true,
     this.showGuestName = true,
     this.showCheckInOut = true,
@@ -33,6 +34,12 @@ class BookingBlockWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor(booking.status);
     final isCompact = height < 50 || width < 80;
+
+    // FIXED: Prevent badge overlap on small blocks
+    final showBadges = height >= 40 && width >= 60;
+    final hasSourceBadge = booking.source != null &&
+                          booking.source != 'widget' &&
+                          booking.source != 'manual';
 
     // FIXED: Add accessibility semantics
     final semanticsLabel = _buildSemanticLabel();
@@ -44,7 +51,7 @@ class BookingBlockWidget extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         onLongPress: onLongPress,
-        onSecondaryTap: onSecondaryTap,
+        onSecondaryTapDown: onSecondaryTapDown,
         child: Container(
         width: width,
         height: height,
@@ -73,8 +80,8 @@ class BookingBlockWidget extends StatelessWidget {
                 child: _buildContent(context, isCompact),
               ),
 
-              // Check-in indicator (modern badge)
-              if (showCheckInOut)
+              // Check-in indicator (modern badge) - FIXED: Only show if enough space
+              if (showCheckInOut && showBadges)
                 Positioned(
                   left: 2,
                   top: 2,
@@ -113,8 +120,8 @@ class BookingBlockWidget extends StatelessWidget {
                   ),
                 ),
 
-              // Check-out indicator (modern badge)
-              if (showCheckInOut)
+              // Check-out indicator (modern badge) - FIXED: Only show if enough space
+              if (showCheckInOut && showBadges)
                 Positioned(
                   right: 2,
                   bottom: 2,
@@ -153,11 +160,11 @@ class BookingBlockWidget extends StatelessWidget {
                   ),
                 ),
 
-              // Source badge (if iCal, Booking.com, Airbnb)
-              if (booking.source != null && booking.source != 'widget' && booking.source != 'manual')
+              // Source badge (if iCal, Booking.com, Airbnb) - FIXED: Only show if enough space
+              if (hasSourceBadge && showBadges && width >= 100)
                 Positioned(
                   right: 4,
-                  top: 4,
+                  top: showCheckInOut ? 20 : 4, // Move down if check-in badge is present
                   child: _buildSourceBadge(booking.source!),
                 ),
             ],
@@ -202,7 +209,7 @@ class BookingBlockWidget extends StatelessWidget {
       // Compact view: only guest name
       return Center(
         child: Text(
-          booking.guestName ?? 'Guest',
+          booking.guestName ?? 'Gost',
           style: TextStyle(
             color: textColor,
             fontSize: 11,
@@ -224,7 +231,7 @@ class BookingBlockWidget extends StatelessWidget {
       children: [
         if (showGuestName)
           Text(
-            booking.guestName ?? 'Guest',
+            booking.guestName ?? 'Gost',
             style: TextStyle(
               color: textColor,
               fontSize: 12,
@@ -288,7 +295,7 @@ class BookingBlockWidget extends StatelessWidget {
 
   /// Get formatted date range string (e.g., "31 Oct - 28 Nov")
   String _getDateRangeString(DateTime checkIn, DateTime checkOut) {
-    final dateFormat = DateFormat('d MMM');
+    final dateFormat = DateFormat('d MMM', 'hr_HR');
     return '${dateFormat.format(checkIn)} - ${dateFormat.format(checkOut)}';
   }
 
@@ -304,7 +311,7 @@ class BookingBlockWidget extends StatelessWidget {
       case 'booking_com':
       case 'booking.com':
         icon = Icons.business;
-        color = Colors.blue;
+        color = AppColors.authSecondary;
         break;
       case 'airbnb':
         icon = Icons.home;
@@ -331,38 +338,38 @@ class BookingBlockWidget extends StatelessWidget {
   Color _getStatusColor(BookingStatus status) {
     switch (status) {
       case BookingStatus.pending:
-        return Colors.orange.shade400;
+        return AppColors.statusPending;
       case BookingStatus.confirmed:
-        return Colors.green.shade400;
+        return AppColors.statusConfirmed;
+      case BookingStatus.checkedIn:
+        return AppColors.primary.withAlpha((0.8 * 255).toInt());
+      case BookingStatus.checkedOut:
+        return AppColors.authSecondary.withAlpha((0.5 * 255).toInt());
       case BookingStatus.inProgress:
-        return Colors.blue.shade400;
+        return AppColors.authSecondary.withAlpha((0.7 * 255).toInt());
       case BookingStatus.completed:
-        return Colors.grey.shade400;
+        return AppColors.statusCompleted;
       case BookingStatus.cancelled:
-        return Colors.red.shade400;
+        return AppColors.statusCancelled;
       case BookingStatus.blocked:
-        return Colors.grey.shade600;
+        return AppColors.statusCompleted.withAlpha((0.6 * 255).toInt());
     }
   }
 
   Color _getTextColor(BookingStatus status) {
-    // White text on most colors, dark text on light colors
-    switch (status) {
-      case BookingStatus.completed:
-        return Colors.white;
-      default:
-        return Colors.white;
-    }
+    // White text works well on all status colors for contrast
+    return const Color(0xFFFFFFFF);
   }
 
   /// FIXED: Build semantic label for screen readers
   String _buildSemanticLabel() {
-    final checkInStr = DateFormat('d. MMM').format(booking.checkIn);
-    final checkOutStr = DateFormat('d. MMM').format(booking.checkOut);
+    final checkInStr = DateFormat('d. MMM', 'hr_HR').format(booking.checkIn);
+    final checkOutStr = DateFormat('d. MMM', 'hr_HR').format(booking.checkOut);
     final statusStr = _getStatusName(booking.status);
-    final guestName = booking.guestName ?? 'Unknown guest';
+    final guestName = booking.guestName ?? 'Nepoznati gost';
+    final nights = booking.checkOut.difference(booking.checkIn).inDays;
 
-    return 'Booking for $guestName, from $checkInStr to $checkOutStr, ${booking.numberOfNights} nights, ${booking.guestCount} guests, status: $statusStr. Tap to view details.';
+    return 'Rezervacija za $guestName, od $checkInStr do $checkOutStr, $nights noći, ${booking.guestCount} gostiju, status: $statusStr. Tapni za detalje.';
   }
 
   String _getStatusName(BookingStatus status) {
@@ -371,6 +378,10 @@ class BookingBlockWidget extends StatelessWidget {
         return 'Pending';
       case BookingStatus.confirmed:
         return 'Confirmed';
+      case BookingStatus.checkedIn:
+        return 'Checked In';
+      case BookingStatus.checkedOut:
+        return 'Checked Out';
       case BookingStatus.inProgress:
         return 'In Progress';
       case BookingStatus.cancelled:

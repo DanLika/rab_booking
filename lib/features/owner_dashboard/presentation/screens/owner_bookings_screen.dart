@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -14,15 +15,16 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/bookings_table_view.dart';
-import '../../../../shared/widgets/buttons/buttons.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../../../../shared/widgets/common_gradient_app_bar.dart';
 
 /// Owner bookings screen with filters and booking management
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
   const OwnerBookingsScreen({super.key});
 
   @override
-  ConsumerState<OwnerBookingsScreen> createState() => _OwnerBookingsScreenState();
+  ConsumerState<OwnerBookingsScreen> createState() =>
+      _OwnerBookingsScreenState();
 }
 
 class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
@@ -37,202 +39,148 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final mediaQuery = MediaQuery.of(context);
     final screenSize = mediaQuery.size;
     final screenWidth = screenSize.width;
-    final screenHeight = screenSize.height;
     final isMobile = screenWidth < 600;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Rezervacije'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            tooltip: 'Menu',
-          ),
-        ),
-      ),
-      extendBodyBehindAppBar: true,
+      backgroundColor: theme.colorScheme.surface,
       drawer: const OwnerAppDrawer(currentRoute: 'bookings'),
-      body: Stack(
-        children: [
-          // Gradient Header
-          Container(
-            height: 200,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF6B4CE6), // Purple
-                  Color(0xFF4A90E2), // Blue
-                ],
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            // Refresh bookings data
+            ref.invalidate(ownerBookingsProvider);
+          },
+          color: const Color(0xFF6B4CE6),
+          child: CustomScrollView(
+            slivers: [
+              // Gradient Header
+              CommonGradientAppBar(
+                title: 'Rezervacije',
+                leadingIcon: Icons.menu,
+                onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
               ),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(isMobile ? 16 : 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 60), // Space for AppBar
-                    Row(
-                      children: [
-                        // Icon
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.book_online,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        // Title
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Rezervacije',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Upravljaj rezervacijama',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withAlpha((0.9 * 255).toInt()),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
 
-          // Content Column
-          Column(
-            children: [
-              const SizedBox(height: 180), // Offset for gradient header
-              // Filters section - with max height and scrollable
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: screenHeight * 0.30, // Max 30% of screen
-                ),
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.horizontalPadding,
-                  vertical: isMobile ? 8 : 16,
-                ),
-                child: _buildFiltersSection(filters, isMobile),
-              ),
-            ),
-          ),
-
-          SizedBox(height: isMobile ? AppDimensions.spaceS : AppDimensions.spaceM),
-
-          // Bookings list
-          Expanded(
-            child: bookingsAsync.when(
-              data: (bookings) => bookings.isEmpty
-                  ? _buildEmptyState()
-                  : viewMode == BookingsViewMode.card
-                      ? _buildBookingsList(bookings)
-                      : SingleChildScrollView(
-                          padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
-                          child: BookingsTableView(bookings: bookings),
-                        ),
-              loading: () => ListView.builder(
-                padding: EdgeInsets.all(context.horizontalPadding),
-                itemCount: 3,
-                itemBuilder: (context, index) => const Padding(
-                  padding: EdgeInsets.only(bottom: AppDimensions.spaceS),
-                  child: BookingCardSkeleton(),
-                ),
-              ),
-              error: (error, stack) {
-                // Check if error is about no results or actual error
-                final errorMsg = error.toString().toLowerCase();
-                final isEmptyResult = errorMsg.contains('no') ||
-                    errorMsg.contains('empty') ||
-                    errorMsg.contains('0');
-
-                if (isEmptyResult) {
-                  return _buildEmptyState();
-                }
-
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(context.horizontalPadding),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          size: AppDimensions.iconSizeXL,
-                          color: AppColors.error,
-                        ),
-                        const SizedBox(height: AppDimensions.spaceS),
-                        Text(
-                          'Greška pri učitavanju rezervacija',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: AppDimensions.spaceXS),
-                        Text(
-                          error.toString(),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: context.textColorSecondary,
-                              ),
-                          textAlign: TextAlign.center,
-                          maxLines: 5,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+              // Filters section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    context.horizontalPadding,
+                    isMobile ? 16 : 20,
+                    context.horizontalPadding,
+                    isMobile ? 8 : 12,
                   ),
-                );
-              },
-            ),
-          ),
+                  child: _buildFiltersSection(filters, isMobile),
+                ),
+              ),
+
+              // Bookings content
+              bookingsAsync.when(
+                data: (bookings) {
+                  if (bookings.isEmpty) {
+                    return SliverFillRemaining(child: _buildEmptyState());
+                  }
+
+                  if (viewMode == BookingsViewMode.card) {
+                    return _buildBookingsListSliver(bookings, isMobile);
+                  } else {
+                    return SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.horizontalPadding,
+                        ),
+                        child: BookingsTableView(bookings: bookings),
+                      ),
+                    );
+                  }
+                },
+                loading: () => SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        context.horizontalPadding,
+                        0,
+                        context.horizontalPadding,
+                        16,
+                      ),
+                      child: const BookingCardSkeleton(),
+                    ),
+                    childCount: 3,
+                  ),
+                ),
+                error: (error, stack) {
+                  // Check if error is about no results or actual error
+                  final errorMsg = error.toString().toLowerCase();
+                  final isEmptyResult =
+                      errorMsg.contains('no') ||
+                      errorMsg.contains('empty') ||
+                      errorMsg.contains('0');
+
+                  if (isEmptyResult) {
+                    return SliverFillRemaining(child: _buildEmptyState());
+                  }
+
+                  return SliverFillRemaining(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(context.horizontalPadding),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: AppDimensions.iconSizeXL,
+                              color: AppColors.error,
+                            ),
+                            const SizedBox(height: AppDimensions.spaceS),
+                            Text(
+                              'Greška pri učitavanju rezervacija',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: AppDimensions.spaceXS),
+                            Text(
+                              error.toString(),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: context.textColorSecondary),
+                              textAlign: TextAlign.center,
+                              maxLines: 5,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // Bottom spacing
+              const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildFiltersSection(BookingsFilters filters, bool isMobile) {
     final propertiesAsync = ref.watch(ownerPropertiesCalendarProvider);
-    final viewMode = ref.watch(ownerBookingsViewProvider);
 
     return Card(
       elevation: 2,
+      shadowColor: const Color(0xFF6B4CE6).withAlpha((0.08 * 255).toInt()),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+          color: Theme.of(
+            context,
+          ).colorScheme.outline.withAlpha((0.15 * 255).toInt()),
           width: 1,
         ),
       ),
       child: Padding(
         padding: EdgeInsets.all(isMobile ? 16 : 20),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -246,73 +194,26 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.filter_list, color: Colors.white, size: 18),
+                  child: const Icon(
+                    Icons.filter_list,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Filteri',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Spacer(),
-                // View mode toggle (desktop: segmented button, mobile: icon buttons)
-                if (!isMobile) ...[
-                  SegmentedButton<BookingsViewMode>(
-                    segments: const [
-                      ButtonSegment(
-                        value: BookingsViewMode.card,
-                        icon: Icon(Icons.view_agenda, size: 18),
-                        label: Text('Kartice'),
-                      ),
-                      ButtonSegment(
-                        value: BookingsViewMode.table,
-                        icon: Icon(Icons.table_rows, size: 18),
-                        label: Text('Tabela'),
-                      ),
-                    ],
-                    selected: {viewMode},
-                    onSelectionChanged: (Set<BookingsViewMode> newSelection) {
-                      ref.read(ownerBookingsViewProvider.notifier).setView(newSelection.first);
-                    },
-                    showSelectedIcon: false,
-                    style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                        (Set<WidgetState> states) {
-                          if (states.contains(WidgetState.selected)) {
-                            return const Color(0xFF6B4CE6); // Purple when selected
-                          }
-                          return Colors.transparent;
-                        },
-                      ),
-                      foregroundColor: WidgetStateProperty.resolveWith<Color>(
-                        (Set<WidgetState> states) {
-                          if (states.contains(WidgetState.selected)) {
-                            return Colors.white;
-                          }
-                          return Theme.of(context).colorScheme.onSurface;
-                        },
-                      ),
-                      side: WidgetStateProperty.all(
-                        BorderSide(color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt())),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                ] else ...[
-                  IconButton(
-                    icon: Icon(viewMode == BookingsViewMode.card ? Icons.view_agenda : Icons.table_rows),
-                    onPressed: () {
-                      ref.read(ownerBookingsViewProvider.notifier).toggle();
-                    },
-                    tooltip: viewMode == BookingsViewMode.card ? 'Prikaži kao tabelu' : 'Prikaži kao kartice',
-                  ),
-                  const SizedBox(width: 8),
-                ],
                 if (filters.hasActiveFilters)
                   TextButton.icon(
                     onPressed: () {
-                      ref.read(bookingsFiltersNotifierProvider.notifier).clearFilters();
+                      ref
+                          .read(bookingsFiltersNotifierProvider.notifier)
+                          .clearFilters();
                     },
                     icon: const Icon(Icons.clear, size: 18),
                     label: const Text('Očisti filtere'),
@@ -325,16 +226,18 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               ],
             ),
             SizedBox(height: isMobile ? 12 : 16),
-            // Responsive filter layout
+            // Responsive filter layout with Wrap for better overflow handling
             LayoutBuilder(
               builder: (context, constraints) {
                 final isSmallMobile = constraints.maxWidth < 768;
-                final isTablet = constraints.maxWidth >= 768 && constraints.maxWidth < 1024;
+                final isTablet =
+                    constraints.maxWidth >= 768 && constraints.maxWidth < 1024;
                 final spacing = isSmallMobile ? 8.0 : 12.0;
 
                 if (isSmallMobile) {
                   // Column layout for mobile - full width filters
                   return Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _buildStatusFilter(filters, isMobile),
@@ -347,12 +250,21 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 } else if (isTablet) {
                   // 2-column layout for tablets
                   return Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Row(
                         children: [
-                          Expanded(child: _buildStatusFilter(filters, isMobile)),
+                          Expanded(
+                            child: _buildStatusFilter(filters, isMobile),
+                          ),
                           SizedBox(width: spacing),
-                          Expanded(child: _buildPropertyFilter(filters, propertiesAsync, isMobile)),
+                          Expanded(
+                            child: _buildPropertyFilter(
+                              filters,
+                              propertiesAsync,
+                              isMobile,
+                            ),
+                          ),
                         ],
                       ),
                       SizedBox(height: spacing),
@@ -365,7 +277,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     children: [
                       Expanded(child: _buildStatusFilter(filters, isMobile)),
                       const SizedBox(width: 16),
-                      Expanded(child: _buildPropertyFilter(filters, propertiesAsync, isMobile)),
+                      Expanded(
+                        child: _buildPropertyFilter(
+                          filters,
+                          propertiesAsync,
+                          isMobile,
+                        ),
+                      ),
                       const SizedBox(width: 16),
                       Expanded(child: _buildDateRangeFilter(filters)),
                     ],
@@ -390,16 +308,14 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       ),
       initialValue: filters.status,
       items: [
-        const DropdownMenuItem(
-          value: null,
-          child: Text('Svi statusi'),
-        ),
-        ...BookingStatus.values
-            .where((s) => s != BookingStatus.blocked)
-            .map((status) {
+        const DropdownMenuItem(value: null, child: Text('Svi statusi')),
+        ...BookingStatus.values.where((s) => s != BookingStatus.blocked).map((
+          status,
+        ) {
           return DropdownMenuItem(
             value: status,
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   width: 12,
@@ -427,7 +343,11 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
-  Widget _buildPropertyFilter(BookingsFilters filters, AsyncValue propertiesAsync, bool isMobile) {
+  Widget _buildPropertyFilter(
+    BookingsFilters filters,
+    AsyncValue propertiesAsync,
+    bool isMobile,
+  ) {
     return propertiesAsync.when(
       data: (properties) {
         return DropdownButtonFormField<String?>(
@@ -440,22 +360,18 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           ),
           initialValue: filters.propertyId,
           items: [
-            const DropdownMenuItem(
-              value: null,
-              child: Text('Svi objekti'),
-            ),
+            const DropdownMenuItem<String?>(value: null, child: Text('Svi objekti')),
             ...properties.map((property) {
-              return DropdownMenuItem(
+              return DropdownMenuItem<String?>(
                 value: property.id,
-                child: Text(
-                  property.name,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                child: Text(property.name, overflow: TextOverflow.ellipsis),
               );
             }),
           ],
           onChanged: (value) {
-            ref.read(bookingsFiltersNotifierProvider.notifier).setProperty(value);
+            ref
+                .read(bookingsFiltersNotifierProvider.notifier)
+                .setProperty(value);
           },
         );
       },
@@ -498,94 +414,93 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
-  Widget _buildBookingsList(List<OwnerBooking> bookings) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Responsive layout: Desktop (>900px) = 2 cols, Mobile/Tablet = 1 col
-        final isDesktop = constraints.maxWidth >= 900;
+  Widget _buildBookingsListSliver(List<OwnerBooking> bookings, bool isMobile) {
+    // Calculate screen width for responsive layout
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 900;
 
-        if (isDesktop) {
-          // Desktop: 2-column layout using ListView with rows
-          // This allows cards to have natural heights without childAspectRatio constraints
-          final rows = <Widget>[];
-          for (var i = 0; i < bookings.length; i += 2) {
-            final leftBooking = bookings[i];
-            final rightBooking = i + 1 < bookings.length ? bookings[i + 1] : null;
+    if (isDesktop) {
+      // Desktop: 2-column layout using rows
+      final rows = <Widget>[];
+      for (var i = 0; i < bookings.length; i += 2) {
+        final leftBooking = bookings[i];
+        final rightBooking = i + 1 < bookings.length ? bookings[i + 1] : null;
 
-            rows.add(
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: _BookingCard(
-                          key: ValueKey(leftBooking.booking.id),
-                          ownerBooking: leftBooking,
-                        ),
-                      ),
-                      if (rightBooking != null) ...[
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _BookingCard(
-                            key: ValueKey(rightBooking.booking.id),
-                            ownerBooking: rightBooking,
-                          ),
-                        ),
-                      ] else
-                        const Spacer(),
-                    ],
+        rows.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _BookingCard(
+                      key: ValueKey(leftBooking.booking.id),
+                      ownerBooking: leftBooking,
+                    ),
                   ),
-                ),
+                  if (rightBooking != null) ...[
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _BookingCard(
+                        key: ValueKey(rightBooking.booking.id),
+                        ownerBooking: rightBooking,
+                      ),
+                    ),
+                  ] else
+                    const Spacer(),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      return SliverPadding(
+        padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+        sliver: SliverList(delegate: SliverChildListDelegate(rows)),
+      );
+    } else {
+      // Mobile/Tablet: Single column list
+      return SliverPadding(
+        padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final ownerBooking = bookings[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _BookingCard(
+                key: ValueKey(ownerBooking.booking.id),
+                ownerBooking: ownerBooking,
               ),
             );
-          }
-
-          return ListView(
-            padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
-            children: rows,
-          );
-        } else {
-          // Mobile/Tablet: Single column list with natural height
-          return ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
-            itemCount: bookings.length,
-            itemBuilder: (context, index) {
-              final ownerBooking = bookings[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: _BookingCard(
-                  key: ValueKey(ownerBooking.booking.id),
-                  ownerBooking: ownerBooking,
-                ),
-              );
-            },
-          );
-        }
-      },
-    );
+          }, childCount: bookings.length),
+        ),
+      );
+    }
   }
 
   Widget _buildEmptyState() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.spaceL),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.spaceL),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
             // Enhanced icon with background circle
             Container(
               width: 140,
               height: 140,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
               ),
               child: const Icon(
                 Icons.event_available_outlined,
                 size: 70,
-                color: AppColors.primary,
+                color: Color(0xFF6B4CE6),
               ),
             ),
             const SizedBox(height: AppDimensions.spaceL),
@@ -593,41 +508,30 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             // Main title
             Text(
               'Nemate rezervacija',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: AppDimensions.spaceS),
 
             // Description
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceL),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.spaceL,
+              ),
               child: Text(
                 'Ovdje će se prikazati sve rezervacije za vaše objekte. Kreirajte prvu rezervaciju ili pričekajte rezervacije gostiju.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(
+                    (0.7 * 255).toInt(),
+                  ),
+                ),
                 textAlign: TextAlign.center,
                 maxLines: 3,
               ),
             ),
-            const SizedBox(height: AppDimensions.spaceXL),
-
-            // Call to action - using reusable component
-            PrimaryButton(
-              onPressed: () {
-                // TODO: Navigate to calendar and open create booking dialog
-                ErrorDisplayUtils.showInfoSnackBar(
-                  context,
-                  'Idite na Kalendar -> Kliknite na datum za kreiranje rezervacije',
-                  duration: const Duration(seconds: 3),
-                );
-              },
-              label: 'Pogledaj Kalendar',
-              icon: Icons.calendar_month,
-              size: AppButtonSize.large,
-            ),
           ],
+        ),
         ),
       ),
     );
@@ -644,10 +548,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             ? DateTimeRange(start: filters.startDate!, end: filters.endDate!)
             : null,
         builder: (context, child) {
-          return Theme(
-            data: Theme.of(context),
-            child: child!,
-          );
+          return Theme(data: Theme.of(context), child: child!);
         },
       );
 
@@ -684,281 +585,347 @@ class _BookingCard extends ConsumerWidget {
     final isMobile = screenWidth < 600;
 
     return Card(
-      elevation: 3,
+      elevation: 2,
+      shadowColor: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
+          width: 1,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: isMobile ? 600 : double.infinity,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Colored Header Section
-              Container(
-                padding: EdgeInsets.all(isMobile ? 12 : 16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      booking.status.color.withAlpha((0.15 * 255).toInt()),
-                      booking.status.color.withAlpha((0.08 * 255).toInt()),
-                    ],
-                  ),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: booking.status.color.withAlpha((0.2 * 255).toInt()),
-                      width: 2,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // Status badge with icon
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: booking.status.color,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: booking.status.color.withAlpha((0.3 * 255).toInt()),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _getStatusIcon(booking.status),
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            booking.status.displayName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-                    // Booking ID with icon
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.tag,
-                            size: 14,
-                            color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '#${booking.id.substring(0, 8)}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Colored Header Section
+            Container(
+              padding: EdgeInsets.all(isMobile ? 12 : 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    booking.status.color.withAlpha((0.15 * 255).toInt()),
+                    booking.status.color.withAlpha((0.08 * 255).toInt()),
                   ],
                 ),
-              ),
-
-              // Card Body - Scrollable
-              Flexible(
-                child: SingleChildScrollView(
-                  physics: isMobile ? const BouncingScrollPhysics() : const NeverScrollableScrollPhysics(),
-                  child: Padding(
-                    padding: EdgeInsets.all(isMobile ? 12 : 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Guest info with premium avatar
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.person_outline,
-                    color: theme.colorScheme.primary,
-                    size: 22,
+                border: Border(
+                  bottom: BorderSide(
+                    color: booking.status.color.withAlpha((0.2 * 255).toInt()),
+                    width: 2,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        ownerBooking.guestName,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.email_outlined,
-                            size: 16,
-                            color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+              ),
+              child: Row(
+                children: [
+                  // Status badge with icon
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: booking.status.color,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: booking.status.color.withAlpha(
+                            (0.3 * 255).toInt(),
                           ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              ownerBooking.guestEmail,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _getStatusIcon(booking.status),
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          booking.status.displayName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  // Booking ID with icon
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: theme.colorScheme.outline.withAlpha(
+                          (0.3 * 255).toInt(),
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.tag,
+                          size: 14,
+                          color: theme.colorScheme.onSurface.withAlpha(
+                            (0.6 * 255).toInt(),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '#${booking.id.length > 8 ? booking.id.substring(0, 8) : booking.id}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withAlpha(
+                              (0.7 * 255).toInt(),
+                            ),
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Card Body
+            Padding(
+              padding: EdgeInsets.all(isMobile ? 12 : 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Guest info with premium avatar
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6B4CE6).withAlpha(
+                            (0.1 * 255).toInt(),
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.person_outline,
+                          color: Color(0xFF6B4CE6),
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              ownerBooking.guestName,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
-                      ),
-                      if (ownerBooking.guestPhone != null) ...[
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.phone_outlined,
-                              size: 16,
-                              color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                ownerBooking.guestPhone!,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.email_outlined,
+                                  size: 16,
+                                  color: theme.colorScheme.onSurface.withAlpha(
+                                    (0.5 * 255).toInt(),
+                                  ),
                                 ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    ownerBooking.guestEmail,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withAlpha((0.6 * 255).toInt()),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
+                            if (ownerBooking.guestPhone != null) ...[
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.phone_outlined,
+                                    size: 16,
+                                    color: theme.colorScheme.onSurface
+                                        .withAlpha((0.5 * 255).toInt()),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      ownerBooking.guestPhone!,
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.onSurface
+                                                .withAlpha((0.6 * 255).toInt()),
+                                          ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
-                      ],
+                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
 
-            Divider(height: isMobile ? 16 : 24),
+                  Divider(height: isMobile ? 16 : 24),
 
-            // Property and unit info with icon container
-            _InfoRow(
-              icon: Icons.home_outlined,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    property.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    unit.name,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: isMobile ? 8 : 12),
-
-            // Dates with icon container
-            _InfoRow(
-              icon: Icons.calendar_today_outlined,
-              child: Wrap(
-                spacing: 8,
-                children: [
-                  Text(
-                    '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}. - '
-                    '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    '(${booking.numberOfNights} ${booking.numberOfNights == 1 ? 'noć' : 'noći'})',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: isMobile ? 8 : 12),
-
-            // Guests with icon container
-            _InfoRow(
-              icon: Icons.people_outline,
-              child: Text(
-                '${booking.guestCount} ${booking.guestCount == 1 ? 'gost' : 'gostiju'}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-
-            Divider(height: isMobile ? 16 : 24),
-
-            // Payment info - responsive layout
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isNarrow = constraints.maxWidth < 400;
-
-                if (isNarrow) {
-                  // Vertical layout for very narrow screens
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _PaymentInfoColumn(
-                        label: 'Ukupno',
-                        value: booking.formattedTotalPrice,
-                        valueStyle: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
+                  // Property and unit info with icon container
+                  _InfoRow(
+                    icon: Icons.home_outlined,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          property.name,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
+                        Text(
+                          unit.name,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withAlpha(
+                              (0.6 * 255).toInt(),
+                            ),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: isMobile ? 8 : 12),
+
+                  // Dates with icon container
+                  _InfoRow(
+                    icon: Icons.calendar_today_outlined,
+                    child: Wrap(
+                      spacing: 8,
+                      children: [
+                        Text(
+                          '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}. - '
+                          '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          '(${booking.numberOfNights} ${booking.numberOfNights == 1 ? 'noć' : 'noći'})',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withAlpha(
+                              (0.6 * 255).toInt(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: isMobile ? 8 : 12),
+
+                  // Guests with icon container
+                  _InfoRow(
+                    icon: Icons.people_outline,
+                    child: Text(
+                      '${booking.guestCount} ${booking.guestCount == 1 ? 'gost' : 'gostiju'}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
                       ),
-                      const SizedBox(height: 12),
-                      Row(
+                    ),
+                  ),
+
+                  Divider(height: isMobile ? 16 : 24),
+
+                  // Payment info - responsive layout
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isNarrow = constraints.maxWidth < 400;
+
+                      if (isNarrow) {
+                        // Vertical layout for very narrow screens
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _PaymentInfoColumn(
+                              label: 'Ukupno',
+                              value: booking.formattedTotalPrice,
+                              valueStyle: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF6B4CE6),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _PaymentInfoColumn(
+                                    label: 'Plaćeno',
+                                    value: booking.formattedPaidAmount,
+                                    valueStyle: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _PaymentInfoColumn(
+                                    label: 'Preostalo',
+                                    value: booking.formattedRemainingBalance,
+                                    valueStyle: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: booking.isFullyPaid
+                                              ? AppColors.success
+                                              : AppColors.warning,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      }
+
+                      // Horizontal 3-column layout for wider screens
+                      return Row(
                         children: [
+                          Expanded(
+                            child: _PaymentInfoColumn(
+                              label: 'Ukupno',
+                              value: booking.formattedTotalPrice,
+                              valueStyle: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF6B4CE6),
+                              ),
+                            ),
+                          ),
                           Expanded(
                             child: _PaymentInfoColumn(
                               label: 'Plaćeno',
@@ -968,164 +935,106 @@ class _BookingCard extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
                           Expanded(
                             child: _PaymentInfoColumn(
                               label: 'Preostalo',
                               value: booking.formattedRemainingBalance,
                               valueStyle: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: booking.isFullyPaid ? AppColors.success : AppColors.warning,
+                                color: booking.isFullyPaid
+                                    ? AppColors.success
+                                    : AppColors.warning,
                               ),
                             ),
                           ),
                         ],
-                      ),
-                    ],
-                  );
-                }
+                      );
+                    },
+                  ),
 
-                // Horizontal 3-column layout for wider screens
-                return Row(
-                  children: [
-                    Expanded(
-                      child: _PaymentInfoColumn(
-                        label: 'Ukupno',
-                        value: booking.formattedTotalPrice,
-                        valueStyle: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
+                  // Payment status indicator
+                  SizedBox(height: isMobile ? 8 : 12),
+                  LinearProgressIndicator(
+                    value: booking.paymentPercentage / 100,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest
+                        .withAlpha((0.3 * 255).toInt()),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      booking.isFullyPaid
+                          ? AppColors.success
+                          : const Color(0xFF6B4CE6),
                     ),
-                    Expanded(
-                      child: _PaymentInfoColumn(
-                        label: 'Plaćeno',
-                        value: booking.formattedPaidAmount,
-                        valueStyle: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    booking.isFullyPaid
+                        ? 'Plaćeno u potpunosti'
+                        : '${booking.paymentPercentage.toStringAsFixed(0)}% plaćeno',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (0.6 * 255).toInt(),
                       ),
+                      fontWeight: FontWeight.w500,
                     ),
-                    Expanded(
-                      child: _PaymentInfoColumn(
-                        label: 'Preostalo',
-                        value: booking.formattedRemainingBalance,
-                        valueStyle: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: booking.isFullyPaid ? AppColors.success : AppColors.warning,
-                        ),
+                  ),
+
+                  // Special requests
+                  if (booking.notes != null && booking.notes!.isNotEmpty) ...[
+                    Divider(height: isMobile ? 16 : 24),
+                    _InfoRow(
+                      icon: Icons.note_outlined,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Napomene',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withAlpha(
+                                (0.6 * 255).toInt(),
+                              ),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            booking.notes!,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ],
-                );
-              },
-            ),
-
-            // Payment status indicator
-            SizedBox(height: isMobile ? 8 : 12),
-            LinearProgressIndicator(
-              value: booking.paymentPercentage / 100,
-              backgroundColor: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                booking.isFullyPaid ? AppColors.success : theme.colorScheme.primary,
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              booking.isFullyPaid
-                  ? 'Plaćeno u potpunosti'
-                  : '${booking.paymentPercentage.toStringAsFixed(0)}% plaćeno',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-
-            // Special requests
-            if (booking.notes != null && booking.notes!.isNotEmpty) ...[
-              Divider(height: isMobile ? 16 : 24),
-              _InfoRow(
-                icon: Icons.note_outlined,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Napomene',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      booking.notes!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
 
             SizedBox(height: isMobile ? 12 : 16),
 
             // Action buttons - responsive layout
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isActionMobile = constraints.maxWidth < 600;
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                isMobile ? 12 : 16,
+                0,
+                isMobile ? 12 : 16,
+                isMobile ? 12 : 16,
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isActionMobile = constraints.maxWidth < 600;
 
-                // Build list of action buttons
-                final actionButtons = <Widget>[
-                  // View Details button
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      _showBookingDetails(context, ref, ownerBooking);
-                    },
-                    icon: const Icon(Icons.visibility_outlined, size: 18),
-                    label: const Text('Detalji'),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isActionMobile ? 12 : 16,
-                        vertical: isActionMobile ? 10 : 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-
-                  // Approve button (only for pending)
-                  if (booking.status == BookingStatus.pending)
-                    FilledButton.icon(
-                      onPressed: () {
-                        _approveBooking(context, ref, booking.id);
-                      },
-                      icon: const Icon(Icons.check_circle, size: 18),
-                      label: const Text('Odobri'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.success,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isActionMobile ? 12 : 16,
-                          vertical: isActionMobile ? 10 : 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                  // Reject button (only for pending)
-                  if (booking.status == BookingStatus.pending)
+                  // Build list of action buttons
+                  final actionButtons = <Widget>[
+                    // View Details button
                     OutlinedButton.icon(
                       onPressed: () {
-                        _rejectBooking(context, ref, booking.id);
+                        _showBookingDetails(context, ref, ownerBooking);
                       },
-                      icon: const Icon(Icons.cancel, size: 18),
-                      label: const Text('Odbij'),
+                      icon: const Icon(Icons.visibility_outlined, size: 18),
+                      label: const Text('Detalji'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.error,
                         padding: EdgeInsets.symmetric(
                           horizontal: isActionMobile ? 12 : 16,
                           vertical: isActionMobile ? 10 : 12,
@@ -1136,88 +1045,136 @@ class _BookingCard extends ConsumerWidget {
                       ),
                     ),
 
-                  // Mark as Completed button (only for confirmed and past check-out)
-                  if (booking.status == BookingStatus.confirmed && booking.isPast)
-                    FilledButton.icon(
-                      onPressed: () {
-                        _completeBooking(context, ref, booking.id);
-                      },
-                      icon: const Icon(Icons.done_all, size: 18),
-                      label: const Text('Završi'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.textPrimaryDark,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isActionMobile ? 12 : 16,
-                          vertical: isActionMobile ? 10 : 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                  // Cancel button (only for pending/confirmed)
-                  if (booking.canBeCancelled)
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        _cancelBooking(context, ref, booking.id);
-                      },
-                      icon: const Icon(Icons.cancel_outlined, size: 18),
-                      label: const Text('Otkaži'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isActionMobile ? 12 : 16,
-                          vertical: isActionMobile ? 10 : 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    // Approve button (only for pending)
+                    if (booking.status == BookingStatus.pending)
+                      FilledButton.icon(
+                        onPressed: () {
+                          _approveBooking(context, ref, booking.id);
+                        },
+                        icon: const Icon(Icons.check_circle, size: 18),
+                        label: const Text('Odobri'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.success,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isActionMobile ? 12 : 16,
+                            vertical: isActionMobile ? 10 : 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
-                    ),
-                ];
 
-                if (isActionMobile) {
-                  // Column layout for mobile (full-width buttons) with compact spacing
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: actionButtons
-                        .asMap()
-                        .entries
-                        .map((entry) => Padding(
+                    // Reject button (only for pending)
+                    if (booking.status == BookingStatus.pending)
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          _rejectBooking(context, ref, booking.id);
+                        },
+                        icon: const Icon(Icons.cancel, size: 18),
+                        label: const Text('Odbij'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isActionMobile ? 12 : 16,
+                            vertical: isActionMobile ? 10 : 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+
+                    // Mark as Completed button (only for confirmed and past check-out)
+                    if (booking.status == BookingStatus.confirmed &&
+                        booking.isPast)
+                      FilledButton.icon(
+                        onPressed: () {
+                          _completeBooking(context, ref, booking.id);
+                        },
+                        icon: const Icon(Icons.done_all, size: 18),
+                        label: const Text('Završi'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.textPrimaryDark,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isActionMobile ? 12 : 16,
+                            vertical: isActionMobile ? 10 : 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+
+                    // Cancel button (only for pending/confirmed)
+                    if (booking.canBeCancelled)
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          _cancelBooking(context, ref, booking.id);
+                        },
+                        icon: const Icon(Icons.cancel_outlined, size: 18),
+                        label: const Text('Otkaži'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isActionMobile ? 12 : 16,
+                            vertical: isActionMobile ? 10 : 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                  ];
+
+                  if (isActionMobile) {
+                    // Column layout for mobile (full-width buttons) with compact spacing
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: actionButtons
+                          .asMap()
+                          .entries
+                          .map(
+                            (entry) => Padding(
                               padding: EdgeInsets.only(
-                                bottom: entry.key < actionButtons.length - 1 ? 6 : 0,
+                                bottom: entry.key < actionButtons.length - 1
+                                    ? 6
+                                    : 0,
                               ),
                               child: entry.value,
-                            ))
-                        .toList(),
-                  );
-                } else {
-                  // Wrap layout for desktop (handles multiple buttons gracefully)
-                  return Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: actionButtons
-                        .map((button) => SizedBox(
+                            ),
+                          )
+                          .toList(),
+                    );
+                  } else {
+                    // Wrap layout for desktop (handles multiple buttons gracefully)
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: actionButtons
+                          .map(
+                            (button) => SizedBox(
                               width: (constraints.maxWidth - 24) / 3,
                               child: button,
-                            ))
-                        .toList(),
-                  );
-                }
-              },
+                            ),
+                          )
+                          .toList(),
+                    );
+                  }
+                },
+              ),
             ),
-          ],
-        ),
-      ),
-    ),
           ],
         ),
       ),
     );
   }
 
-  void _showBookingDetails(BuildContext context, WidgetRef ref, OwnerBooking ownerBooking) {
+  void _showBookingDetails(
+    BuildContext context,
+    WidgetRef ref,
+    OwnerBooking ownerBooking,
+  ) {
     showDialog(
       context: context,
       builder: (context) => _BookingDetailsDialog(ownerBooking: ownerBooking),
@@ -1225,13 +1182,15 @@ class _BookingCard extends ConsumerWidget {
   }
 
   /// Approve pending booking (requires owner approval workflow)
-  void _approveBooking(BuildContext context, WidgetRef ref, String bookingId) async {
+  void _approveBooking(
+    BuildContext context,
+    WidgetRef ref,
+    String bookingId,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
           width: 400,
@@ -1349,15 +1308,17 @@ class _BookingCard extends ConsumerWidget {
   }
 
   /// Reject pending booking
-  void _rejectBooking(BuildContext context, WidgetRef ref, String bookingId) async {
+  void _rejectBooking(
+    BuildContext context,
+    WidgetRef ref,
+    String bookingId,
+  ) async {
     final reasonController = TextEditingController();
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
           width: 450,
@@ -1467,8 +1428,8 @@ class _BookingCard extends ConsumerWidget {
         await repository.rejectBooking(
           bookingId,
           reason: reasonController.text.trim().isEmpty
-            ? null
-            : reasonController.text.trim(),
+              ? null
+              : reasonController.text.trim(),
         );
 
         if (context.mounted) {
@@ -1492,13 +1453,15 @@ class _BookingCard extends ConsumerWidget {
     }
   }
 
-  void _completeBooking(BuildContext context, WidgetRef ref, String bookingId) async {
+  void _completeBooking(
+    BuildContext context,
+    WidgetRef ref,
+    String bookingId,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
           width: 400,
@@ -1613,16 +1576,18 @@ class _BookingCard extends ConsumerWidget {
     }
   }
 
-  void _cancelBooking(BuildContext context, WidgetRef ref, String bookingId) async {
+  void _cancelBooking(
+    BuildContext context,
+    WidgetRef ref,
+    String bookingId,
+  ) async {
     final reasonController = TextEditingController();
     final sendEmailNotifier = ValueNotifier<bool>(true);
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
           width: 450,
@@ -1745,7 +1710,9 @@ class _BookingCard extends ConsumerWidget {
         final repository = ref.read(ownerBookingsRepositoryProvider);
         await repository.cancelBooking(
           bookingId,
-          reasonController.text.isEmpty ? 'Otkazano od strane vlasnika' : reasonController.text,
+          reasonController.text.isEmpty
+              ? 'Otkazano od strane vlasnika'
+              : reasonController.text,
           sendEmail: sendEmailNotifier.value,
         );
 
@@ -1802,9 +1769,7 @@ class _BookingDetailsDialog extends StatelessWidget {
     final dialogWidth = screenWidth > 600 ? 500.0 : screenWidth * 0.9;
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
         width: dialogWidth,
@@ -1862,159 +1827,161 @@ class _BookingDetailsDialog extends StatelessWidget {
             Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Booking ID and Status
-              _DetailRow(
-                label: 'ID rezervacije',
-                value: booking.id,
-              ),
-              _DetailRow(
-                label: 'Status',
-                value: booking.status.displayName,
-                valueColor: booking.status.color,
-              ),
-
-              const Divider(height: 24),
-
-              // Guest Information
-              Text(
-                'Informacije o gostu',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Booking ID and Status
+                    _DetailRow(label: 'ID rezervacije', value: booking.id),
+                    _DetailRow(
+                      label: 'Status',
+                      value: booking.status.displayName,
+                      valueColor: booking.status.color,
                     ),
-              ),
-              const SizedBox(height: 12),
-              _DetailRow(label: 'Ime', value: ownerBooking.guestName),
-              _DetailRow(label: 'Email', value: ownerBooking.guestEmail),
-              if (ownerBooking.guestPhone != null)
-                _DetailRow(label: 'Telefon', value: ownerBooking.guestPhone!),
 
-              const Divider(height: 24),
+                    const Divider(height: 24),
 
-              // Property Information
-              Text(
-                'Informacije o objektu',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              _DetailRow(label: 'Objekt', value: property.name),
-              _DetailRow(label: 'Jedinica', value: unit.name),
-              _DetailRow(label: 'Lokacija', value: property.location),
-
-              const Divider(height: 24),
-
-              // Booking Details
-              Text(
-                'Detalji boravka',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              _DetailRow(
-                label: 'Prijava',
-                value: '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
-              ),
-              _DetailRow(
-                label: 'Odjava',
-                value: '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
-              ),
-              _DetailRow(
-                label: 'Broj noći',
-                value: '${booking.numberOfNights}',
-              ),
-              _DetailRow(
-                label: 'Broj gostiju',
-                value: '${booking.guestCount}',
-              ),
-
-              const Divider(height: 24),
-
-              // Payment Information
-              Text(
-                'Informacije o plaćanju',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              _DetailRow(
-                label: 'Ukupna cijena',
-                value: booking.formattedTotalPrice,
-                valueColor: Theme.of(context).primaryColor,
-              ),
-              _DetailRow(
-                label: 'Plaćeno',
-                value: booking.formattedPaidAmount,
-              ),
-              _DetailRow(
-                label: 'Preostalo',
-                value: booking.formattedRemainingBalance,
-                valueColor: booking.isFullyPaid ? AppColors.success : AppColors.warning,
-              ),
-              if (booking.paymentIntentId != null)
-                _DetailRow(
-                  label: 'Payment Intent ID',
-                  value: booking.paymentIntentId!,
-                ),
-
-              if (booking.notes != null && booking.notes!.isNotEmpty) ...[
-                const Divider(height: 24),
-                Text(
-                  'Napomene',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    // Guest Information
+                    Text(
+                      'Informacije o gostu',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
-                ),
-                const SizedBox(height: 12),
-                Text(booking.notes!),
-              ],
+                    ),
+                    const SizedBox(height: 12),
+                    _DetailRow(label: 'Ime', value: ownerBooking.guestName),
+                    _DetailRow(label: 'Email', value: ownerBooking.guestEmail),
+                    if (ownerBooking.guestPhone != null)
+                      _DetailRow(
+                        label: 'Telefon',
+                        value: ownerBooking.guestPhone!,
+                      ),
 
-              if (booking.status == BookingStatus.cancelled) ...[
-                const Divider(height: 24),
-                Text(
-                  'Informacije o otkazivanju',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    const Divider(height: 24),
+
+                    // Property Information
+                    Text(
+                      'Informacije o objektu',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    _DetailRow(label: 'Objekt', value: property.name),
+                    _DetailRow(label: 'Jedinica', value: unit.name),
+                    _DetailRow(label: 'Lokacija', value: property.location),
+
+                    const Divider(height: 24),
+
+                    // Booking Details
+                    Text(
+                      'Detalji boravka',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _DetailRow(
+                      label: 'Prijava',
+                      value:
+                          '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
+                    ),
+                    _DetailRow(
+                      label: 'Odjava',
+                      value:
+                          '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
+                    ),
+                    _DetailRow(
+                      label: 'Broj noći',
+                      value: '${booking.numberOfNights}',
+                    ),
+                    _DetailRow(
+                      label: 'Broj gostiju',
+                      value: '${booking.guestCount}',
+                    ),
+
+                    const Divider(height: 24),
+
+                    // Payment Information
+                    Text(
+                      'Informacije o plaćanju',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _DetailRow(
+                      label: 'Ukupna cijena',
+                      value: booking.formattedTotalPrice,
+                      valueColor: Theme.of(context).primaryColor,
+                    ),
+                    _DetailRow(
+                      label: 'Plaćeno',
+                      value: booking.formattedPaidAmount,
+                    ),
+                    _DetailRow(
+                      label: 'Preostalo',
+                      value: booking.formattedRemainingBalance,
+                      valueColor: booking.isFullyPaid
+                          ? AppColors.success
+                          : AppColors.warning,
+                    ),
+                    if (booking.paymentIntentId != null)
+                      _DetailRow(
+                        label: 'Payment Intent ID',
+                        value: booking.paymentIntentId!,
+                      ),
+
+                    if (booking.notes != null && booking.notes!.isNotEmpty) ...[
+                      const Divider(height: 24),
+                      Text(
+                        'Napomene',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(booking.notes!),
+                    ],
+
+                    if (booking.status == BookingStatus.cancelled) ...[
+                      const Divider(height: 24),
+                      Text(
+                        'Informacije o otkazivanju',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      if (booking.cancelledAt != null)
+                        _DetailRow(
+                          label: 'Otkazano',
+                          value:
+                              '${booking.cancelledAt!.day}.${booking.cancelledAt!.month}.${booking.cancelledAt!.year}.',
+                        ),
+                      if (booking.cancellationReason != null)
+                        _DetailRow(
+                          label: 'Razlog',
+                          value: booking.cancellationReason!,
+                        ),
+                    ],
+
+                    const Divider(height: 24),
+
+                    // Timestamps
+                    _DetailRow(
+                      label: 'Kreirano',
+                      value:
+                          '${booking.createdAt.day}.${booking.createdAt.month}.${booking.createdAt.year}. ${booking.createdAt.hour}:${booking.createdAt.minute.toString().padLeft(2, '0')}',
+                    ),
+                    if (booking.updatedAt != null)
+                      _DetailRow(
+                        label: 'Ažurirano',
+                        value:
+                            '${booking.updatedAt!.day}.${booking.updatedAt!.month}.${booking.updatedAt!.year}. ${booking.updatedAt!.hour}:${booking.updatedAt!.minute.toString().padLeft(2, '0')}',
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                if (booking.cancelledAt != null)
-                  _DetailRow(
-                    label: 'Otkazano',
-                    value:
-                        '${booking.cancelledAt!.day}.${booking.cancelledAt!.month}.${booking.cancelledAt!.year}.',
-                  ),
-                if (booking.cancellationReason != null)
-                  _DetailRow(
-                    label: 'Razlog',
-                    value: booking.cancellationReason!,
-                  ),
-              ],
-
-              const Divider(height: 24),
-
-              // Timestamps
-              _DetailRow(
-                label: 'Kreirano',
-                value:
-                    '${booking.createdAt.day}.${booking.createdAt.month}.${booking.createdAt.year}. ${booking.createdAt.hour}:${booking.createdAt.minute.toString().padLeft(2, '0')}',
               ),
-              if (booking.updatedAt != null)
-                _DetailRow(
-                  label: 'Ažurirano',
-                  value:
-                      '${booking.updatedAt!.day}.${booking.updatedAt!.month}.${booking.updatedAt!.year}. ${booking.updatedAt!.hour}:${booking.updatedAt!.minute.toString().padLeft(2, '0')}',
-                ),
-            ],
-          ),
-        ),
-      ),
+            ),
           ],
         ),
       ),
@@ -2024,11 +1991,7 @@ class _BookingDetailsDialog extends StatelessWidget {
 
 /// Detail row widget
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
+  const _DetailRow({required this.label, required this.value, this.valueColor});
 
   final String label;
   final String value;
@@ -2051,17 +2014,17 @@ class _DetailRow extends StatelessWidget {
                 child: Text(
                   label,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.textColorSecondary,
-                      ),
+                    color: context.textColorSecondary,
+                  ),
                 ),
               ),
               Expanded(
                 child: Text(
                   value,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: valueColor,
-                      ),
+                    fontWeight: FontWeight.w600,
+                    color: valueColor,
+                  ),
                 ),
               ),
             ],
@@ -2074,32 +2037,23 @@ class _DetailRow extends StatelessWidget {
 
 /// Info row widget with icon container (premium style)
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.child,
-  });
+  const _InfoRow({required this.icon, required this.child});
 
   final IconData icon;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+            color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: theme.colorScheme.primary,
-          ),
+          child: Icon(icon, size: 20, color: const Color(0xFF6B4CE6)),
         ),
         const SizedBox(width: 12),
         Expanded(child: child),
@@ -2135,10 +2089,7 @@ class _PaymentInfoColumn extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          value,
-          style: valueStyle,
-        ),
+        Text(value, style: valueStyle),
       ],
     );
   }

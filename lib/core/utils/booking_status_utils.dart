@@ -21,6 +21,10 @@ class BookingStatusUtils {
         return const Color(0xFFEF5350); // Red
       case BookingStatus.completed:
         return const Color(0xFF26A69A); // Teal
+      case BookingStatus.inProgress:
+        return const Color(0xFF9C27B0); // Purple
+      case BookingStatus.blocked:
+        return const Color(0xFF757575); // Grey
     }
   }
 
@@ -49,6 +53,10 @@ class BookingStatusUtils {
         return 'Otkazano';
       case BookingStatus.completed:
         return 'Završeno';
+      case BookingStatus.inProgress:
+        return 'U toku';
+      case BookingStatus.blocked:
+        return 'Blokirano';
     }
   }
 
@@ -67,6 +75,10 @@ class BookingStatusUtils {
         return 'Cancelled';
       case BookingStatus.completed:
         return 'Completed';
+      case BookingStatus.inProgress:
+        return 'In Progress';
+      case BookingStatus.blocked:
+        return 'Blocked';
     }
   }
 
@@ -85,6 +97,10 @@ class BookingStatusUtils {
         return Icons.cancel;
       case BookingStatus.completed:
         return Icons.done_all;
+      case BookingStatus.inProgress:
+        return Icons.pending;
+      case BookingStatus.blocked:
+        return Icons.block;
     }
   }
 
@@ -162,6 +178,13 @@ class BookingStatusUtils {
       case BookingStatus.cancelled:
       case BookingStatus.completed:
         return []; // Terminal states
+      case BookingStatus.inProgress:
+        return [
+          BookingStatus.completed,
+          BookingStatus.cancelled,
+        ];
+      case BookingStatus.blocked:
+        return []; // Terminal state
     }
   }
 }

@@ -151,7 +151,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
     return AlertDialog(
       title: const Row(
         children: [
-          Icon(Icons.email, color: AppColors.primary),
+          Icon(Icons.email, color: AppColors.authPrimary),
           SizedBox(width: 8),
           Text('Pošalji Email Gostu'),
         ],
@@ -169,12 +169,12 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.person, color: Colors.blue.shade700),
+                      const Icon(Icons.person, color: AppColors.authSecondary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(
@@ -223,9 +223,9 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           _loadTemplate(template);
                         }
                       },
-                      selectedColor: AppColors.primary.withAlpha((0.2 * 255).toInt()),
+                      selectedColor: AppColors.authPrimary.withAlpha((0.2 * 255).toInt()),
                       labelStyle: TextStyle(
-                        color: isSelected ? AppColors.primary : null,
+                        color: isSelected ? AppColors.authPrimary : null,
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                         fontSize: 12,
                       ),
@@ -278,23 +278,23 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade200),
+                    border: Border.all(color: AppColors.authSecondary.withAlpha((0.3 * 255).toInt())),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
                       Icon(Icons.info_outline,
                         size: 20,
-                        color: Colors.blue.shade700,
+                        color: AppColors.authSecondary,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Email će biti poslan sa vaše registrirane email adrese',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.blue.shade900,
+                            color: AppColors.authSecondary,
                           ),
                         ),
                       ),
@@ -325,7 +325,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
               : const Icon(Icons.send),
           label: Text(_isLoading ? 'Šaljem...' : 'Pošalji Email'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.authPrimary,
             foregroundColor: Colors.white,
           ),
         ),

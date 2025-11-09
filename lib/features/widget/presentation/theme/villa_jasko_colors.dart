@@ -6,24 +6,24 @@ class VillaJaskoColors {
   VillaJaskoColors._(); // Private constructor
 
   // ============================================================================
-  // PRIMARY BRAND COLORS - Azure Blue (DESIGN_SYSTEM.md 🌊)
+  // PRIMARY BRAND COLORS - Purple-Blue Theme (Modern Design System 💜)
   // ============================================================================
 
-  /// Azure Blue - Kristalno čisto Jadransko more
+  /// Purple Primary - Modern premium brand color
   /// Use for: Primary buttons, selected states, CTAs, active elements
-  static const Color primary = Color(0xFF0066FF); // Azure Blue
+  static const Color primary = Color(0xFF6B4CE6); // Purple
 
-  /// Primary Hover - Darker Azure for hover states
-  static const Color primaryHover = Color(0xFF0052CC); // Azure 700
+  /// Primary Hover - Darker Purple for hover states
+  static const Color primaryHover = Color(0xFF5B3DD6); // Purple 700
 
-  /// Primary Pressed - Darkest Azure for active/pressed states
-  static const Color primaryPressed = Color(0xFF003D99); // Azure 800
+  /// Primary Pressed - Darkest Purple for active/pressed states
+  static const Color primaryPressed = Color(0xFF4B2DC6); // Purple 800
 
-  /// Primary Light - Light Azure for backgrounds and subtle highlights
-  static const Color primaryLight = Color(0xFF99C2FF); // Azure 300
+  /// Primary Light - Light Purple for backgrounds and subtle highlights
+  static const Color primaryLight = Color(0xFF9B86F3); // Purple 300
 
-  /// Primary Surface - Very light Azure for surface backgrounds
-  static const Color primarySurface = Color(0xFFEBF5FF); // Azure 50
+  /// Primary Surface - Very light Purple for surface backgrounds
+  static const Color primarySurface = Color(0xFFF3F0FF); // Purple 50
 
   /// Coral Sunset - Mediteranski zalazak sunca 🌅
   static const Color accent = Color(0xFFFF6B6B); // Coral
@@ -296,23 +296,23 @@ class VillaJaskoDarkColors {
   VillaJaskoDarkColors._(); // Private constructor
 
   // ============================================================================
-  // PRIMARY BRAND COLORS - Adjusted for dark backgrounds
+  // PRIMARY BRAND COLORS - Purple-Blue Theme for Dark Mode
   // ============================================================================
 
-  /// Primary - Lighter Azure for dark mode (better contrast)
-  static const Color primary = Color(0xFF3B82F6); // Blue 500
+  /// Primary - Lighter Purple for dark mode (better contrast)
+  static const Color primary = Color(0xFF9B86F3); // Purple 300
 
   /// Primary Hover
-  static const Color primaryHover = Color(0xFF60A5FA); // Blue 400
+  static const Color primaryHover = Color(0xFFB5A5F5); // Purple 200
 
   /// Primary Pressed
-  static const Color primaryPressed = Color(0xFF2563EB); // Blue 600
+  static const Color primaryPressed = Color(0xFF8164F0); // Purple 400
 
   /// Primary Light - For dark surfaces
-  static const Color primaryLight = Color(0xFF1E40AF); // Blue 800
+  static const Color primaryLight = Color(0xFF6B4CE6); // Purple 500
 
-  /// Primary Surface - Very dark blue tint
-  static const Color primarySurface = Color(0xFF1E293B); // Slate 800
+  /// Primary Surface - Very dark purple tint
+  static const Color primarySurface = Color(0xFF2D1B4E); // Purple 950
 
   /// Accent - Slightly muted coral for dark mode
   static const Color accent = Color(0xFFFF8A80); // Coral lighter

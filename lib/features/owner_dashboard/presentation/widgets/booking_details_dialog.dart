@@ -31,11 +31,11 @@ class BookingDetailsDialog extends ConsumerWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
                 colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
             child: const Icon(Icons.receipt_long, color: Colors.white, size: 24),
           ),
@@ -64,7 +64,7 @@ class BookingDetailsDialog extends ConsumerWidget {
               const Divider(height: 24),
 
               // Guest Information
-              _SectionHeader(
+              const _SectionHeader(
                 icon: Icons.person_outline,
                 title: 'Informacije o gostu',
               ),
@@ -77,7 +77,7 @@ class BookingDetailsDialog extends ConsumerWidget {
               const Divider(height: 24),
 
               // Property Information
-              _SectionHeader(
+              const _SectionHeader(
                 icon: Icons.home_outlined,
                 title: 'Informacije o objektu',
               ),
@@ -89,7 +89,7 @@ class BookingDetailsDialog extends ConsumerWidget {
               const Divider(height: 24),
 
               // Booking Details
-              _SectionHeader(
+              const _SectionHeader(
                 icon: Icons.calendar_today_outlined,
                 title: 'Detalji boravka',
               ),
@@ -114,7 +114,7 @@ class BookingDetailsDialog extends ConsumerWidget {
               const Divider(height: 24),
 
               // Payment Information
-              _SectionHeader(
+              const _SectionHeader(
                 icon: Icons.payment_outlined,
                 title: 'Informacije o plaćanju',
               ),
@@ -141,7 +141,7 @@ class BookingDetailsDialog extends ConsumerWidget {
 
               if (booking.notes != null && booking.notes!.isNotEmpty) ...[
                 const Divider(height: 24),
-                _SectionHeader(
+                const _SectionHeader(
                   icon: Icons.note_outlined,
                   title: 'Napomene',
                 ),
@@ -151,7 +151,7 @@ class BookingDetailsDialog extends ConsumerWidget {
 
               if (booking.status == BookingStatus.cancelled) ...[
                 const Divider(height: 24),
-                _SectionHeader(
+                const _SectionHeader(
                   icon: Icons.cancel_outlined,
                   title: 'Informacije o otkazivanju',
                 ),
@@ -335,11 +335,11 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
               colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
           child: Icon(icon, color: Colors.white, size: 18),
         ),

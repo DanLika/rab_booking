@@ -147,16 +147,14 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AuthBackground(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height,
-            ),
-            child: Center(
-              child: Padding(
-                padding: EdgeInsets.all(
-                  MediaQuery.of(context).size.width < 400 ? 16 : 24
-                ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width < 400 ? 16 : 24,
+                vertical: 24,
+              ),
+              child: Center(
                 child: GlassCard(
                   maxWidth: 460,
                   child: Form(
@@ -205,7 +203,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       validator: ProfileValidators.validateEmail,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
                     // Password field
                     PremiumInputField(
@@ -329,7 +327,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: _SocialLoginButton(
-                            icon: Icons.apple,
+                            customIcon: const _AppleIcon(),
                             label: 'Apple',
                             onPressed: _handleAppleSignIn,
                           ),
@@ -566,6 +564,106 @@ class _GoogleLogoPainter extends CustomPainter {
       ),
       barPaint,
     );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Custom Apple icon widget
+class _AppleIcon extends StatelessWidget {
+  const _AppleIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 22,
+      height: 22,
+      child: CustomPaint(
+        painter: _AppleLogoPainter(),
+      ),
+    );
+  }
+}
+
+/// Paints Apple logo silhouette
+class _AppleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+
+    // Scale factor
+    final scale = size.width / 24;
+
+    // Apple body (simplified apple shape with bite)
+    final centerX = size.width / 2;
+    final centerY = size.height / 2 + 1 * scale;
+
+    // Main apple body
+    path.moveTo(centerX, centerY - 7 * scale);
+
+    // Right side curve
+    path.cubicTo(
+      centerX + 6 * scale, centerY - 7 * scale,
+      centerX + 8 * scale, centerY - 4 * scale,
+      centerX + 8 * scale, centerY + 2 * scale,
+    );
+
+    // Bottom right
+    path.cubicTo(
+      centerX + 8 * scale, centerY + 6 * scale,
+      centerX + 5 * scale, centerY + 8 * scale,
+      centerX, centerY + 8 * scale,
+    );
+
+    // Bottom left
+    path.cubicTo(
+      centerX - 5 * scale, centerY + 8 * scale,
+      centerX - 8 * scale, centerY + 6 * scale,
+      centerX - 8 * scale, centerY + 2 * scale,
+    );
+
+    // Left side curve
+    path.cubicTo(
+      centerX - 8 * scale, centerY - 4 * scale,
+      centerX - 6 * scale, centerY - 7 * scale,
+      centerX, centerY - 7 * scale,
+    );
+
+    path.close();
+
+    // Bite (small circle cutout on the right side)
+    final bitePath = Path();
+    bitePath.addOval(Rect.fromCircle(
+      center: Offset(centerX + 5 * scale, centerY - 3 * scale),
+      radius: 2.5 * scale,
+    ));
+
+    // Subtract bite from apple
+    final applePath = Path.combine(PathOperation.difference, path, bitePath);
+
+    canvas.drawPath(applePath, paint);
+
+    // Leaf on top
+    final leafPath = Path();
+    leafPath.moveTo(centerX + 1 * scale, centerY - 7 * scale);
+    leafPath.cubicTo(
+      centerX + 2 * scale, centerY - 9 * scale,
+      centerX + 4 * scale, centerY - 10 * scale,
+      centerX + 5 * scale, centerY - 10 * scale,
+    );
+    leafPath.cubicTo(
+      centerX + 4 * scale, centerY - 9.5 * scale,
+      centerX + 3 * scale, centerY - 8.5 * scale,
+      centerX + 1 * scale, centerY - 7 * scale,
+    );
+    leafPath.close();
+
+    canvas.drawPath(leafPath, paint);
   }
 
   @override

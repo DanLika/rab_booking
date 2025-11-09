@@ -6,6 +6,7 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../widgets/price_list_calendar_widget.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../shared/widgets/common_gradient_app_bar.dart';
 
 /// Screen for managing unit pricing (base price and bulk month pricing)
 class UnitPricingScreen extends ConsumerStatefulWidget {
@@ -38,48 +39,117 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Cijene - ${widget.unit.name}'),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Base price section (compact)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: _buildBasePriceSection(),
-          ),
-
-          const Divider(),
-
-          // BedBooking-style Price List Calendar
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: PriceListCalendarWidget(unit: widget.unit),
+      resizeToAvoidBottomInset: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            // Gradient header
+            CommonGradientAppBar(
+              title: 'Cjenovnik',
+              leadingIcon: Icons.arrow_back,
+              onLeadingIconTap: (context) => Navigator.of(context).pop(),
             ),
-          ),
-        ],
+
+            // Base price section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  isMobile ? 16 : 24,
+                  isMobile ? 16 : 20,
+                  isMobile ? 16 : 24,
+                  isMobile ? 8 : 12,
+                ),
+                child: _buildBasePriceSection(isMobile),
+              ),
+            ),
+
+            // Calendar section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  isMobile ? 16 : 24,
+                  isMobile ? 8 : 12,
+                  isMobile ? 16 : 24,
+                  isMobile ? 16 : 20,
+                ),
+                child: PriceListCalendarWidget(unit: widget.unit),
+              ),
+            ),
+
+            // Bottom spacing
+            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildBasePriceSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+  Widget _buildBasePriceSection(bool isMobile) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha((0.08 * 255).toInt()),
+            blurRadius: 40,
+            offset: const Offset(0, 20),
+          ),
+          BoxShadow(
+            color: Colors.black.withAlpha((0.04 * 255).toInt()),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withAlpha((0.95 * 255).toInt()),
+                Colors.white.withAlpha((0.90 * 255).toInt()),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withAlpha((0.4 * 255).toInt()),
+              width: 1.5,
+            ),
+          ),
+          padding: EdgeInsets.all(isMobile ? 20 : 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header with icon
             Row(
               children: [
-                Icon(Icons.euro, color: Theme.of(context).primaryColor),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.euro,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'Osnovna Cijena',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                   ),
@@ -91,24 +161,61 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
               'Ovo je default cijena po noćenju koja se koristi kada nema posebnih cijena.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.textColorSecondary,
+                    fontSize: 14,
                   ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
+            // Price input and save button
             LayoutBuilder(
               builder: (context, constraints) {
-                final isMobile = constraints.maxWidth < 400;
+                final isVerySmall = constraints.maxWidth < 400;
 
-                if (isMobile) {
+                if (isVerySmall) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       TextField(
                         controller: _basePriceController,
-                        decoration: const InputDecoration(
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
                           labelText: 'Cijena po noći (€)',
-                          border: OutlineInputBorder(),
+                          labelStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                           prefixText: '€ ',
+                          prefixIcon: const Icon(Icons.euro_outlined, size: 20),
+                          filled: true,
+                          fillColor: Colors.white.withAlpha((0.7 * 255).toInt()),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.grey.shade300,
+                              width: 1.5,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.grey.shade300,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(
+                              color: Color(0xFF6B4CE6),
+                              width: 2,
+                            ),
+                          ),
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [
@@ -129,6 +236,18 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                               )
                             : const Icon(Icons.save),
                         label: const Text('Sačuvaj Cijenu'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF6B4CE6),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
                       ),
                     ],
                   );
@@ -140,10 +259,45 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                       flex: 2,
                       child: TextField(
                         controller: _basePriceController,
-                        decoration: const InputDecoration(
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
                           labelText: 'Cijena po noći (€)',
-                          border: OutlineInputBorder(),
+                          labelStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                           prefixText: '€ ',
+                          prefixIcon: const Icon(Icons.euro_outlined, size: 20),
+                          filled: true,
+                          fillColor: Colors.white.withAlpha((0.7 * 255).toInt()),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.grey.shade300,
+                              width: 1.5,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.grey.shade300,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(
+                              color: Color(0xFF6B4CE6),
+                              width: 2,
+                            ),
+                          ),
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [
@@ -166,6 +320,18 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                               )
                             : const Icon(Icons.save),
                         label: const Text('Sačuvaj'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF6B4CE6),
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -174,6 +340,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

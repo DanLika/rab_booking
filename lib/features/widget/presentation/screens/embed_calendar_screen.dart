@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/year_grid_calendar_widget.dart';
 import '../providers/embed_booking_provider.dart';
+import '../components/adaptive_glass_card.dart';
 
 /// Embedded calendar screen - public view for guests
 /// URL: /embed/units/:unitId
@@ -27,13 +28,24 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
     // Watch booking state for future use
     ref.watch(embedBookingProvider(widget.unitId));
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Book Your Stay'),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: Colors.black87,
+      backgroundColor: colorScheme.surface,
+      appBar: AdaptiveBlurredAppBar(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.calendar_month_rounded,
+              size: 24,
+              color: colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            const Text('Book Your Stay'),
+          ],
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -73,6 +85,8 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
   Widget _buildSelectionSummary() {
     // Watch booking state for future use
     ref.watch(embedBookingProvider(widget.unitId));
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final nights = _selectedCheckOut!.difference(_selectedCheckIn!).inDays;
 
     // Calculate total price from provider
@@ -88,80 +102,146 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
       current = current.add(const Duration(days: 1));
     }
 
-    return Container(
+    return AdaptiveGlassCard(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Your Selection',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          Row(
+            children: [
+              Icon(
+                Icons.event_available_rounded,
+                size: 20,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Your Selection',
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'CHECK-IN',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_selectedCheckIn!.day}/${_selectedCheckIn!.month}/${_selectedCheckIn!.year}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ],
-              ),
-              Icon(Icons.arrow_forward, color: Colors.grey[600]),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'CHECK-OUT',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_selectedCheckOut!.day}/${_selectedCheckOut!.month}/${_selectedCheckOut!.year}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ],
               ),
             ],
           ),
-          const Divider(height: 24),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '$nights ${nights == 1 ? 'night' : 'nights'}',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              Text(
-                '€${totalPrice.toStringAsFixed(2)}',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue[700],
+              // Check-in
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.login_rounded,
+                          size: 16,
+                          color: colorScheme.primary.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'CHECK-IN',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${_selectedCheckIn!.day}/${_selectedCheckIn!.month}/${_selectedCheckIn!.year}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Arrow
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: colorScheme.onSurface.withValues(alpha: 0.4),
+                ),
+              ),
+              // Check-out
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          'CHECK-OUT',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.logout_rounded,
+                          size: 16,
+                          color: colorScheme.primary.withValues(alpha: 0.7),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${_selectedCheckOut!.day}/${_selectedCheckOut!.month}/${_selectedCheckOut!.year}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 28),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.nights_stay_rounded,
+                    size: 20,
+                    color: colorScheme.primary.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '$nights ${nights == 1 ? 'night' : 'nights'}',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.euro_rounded,
+                    size: 22,
+                    color: colorScheme.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    totalPrice.toStringAsFixed(2),
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -171,28 +251,46 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
   }
 
   Widget _buildReserveButton() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ElevatedButton(
-        onPressed: () {
-          // Navigate to enhanced booking flow (guest info is in EnhancedPaymentScreen)
-          // Full flow: EnhancedRoomSelectionScreen → EnhancedSummaryScreen → EnhancedPaymentScreen → EnhancedConfirmationScreen
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Redirecting to booking flow...'),
-              duration: Duration(seconds: 2),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isMobile ? double.infinity : 500,
+          ),
+          child: SizedBox(
+            width: isMobile ? double.infinity : null,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                // Navigate to enhanced booking flow (guest info is in EnhancedPaymentScreen)
+                // Full flow: EnhancedRoomSelectionScreen → EnhancedSummaryScreen → EnhancedPaymentScreen → EnhancedConfirmationScreen
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Redirecting to booking flow...'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+                // NOTE: Implement navigation to /booking route with selected dates
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+              label: const Text(
+                'Continue to Guest Information',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
-          );
-          // NOTE: Implement navigation to /booking route with selected dates
-        },
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          backgroundColor: Colors.blue[700],
-          foregroundColor: Colors.white,
-        ),
-        child: const Text(
-          'Continue to Guest Information',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

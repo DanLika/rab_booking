@@ -53,7 +53,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             children: [
               // Combined header for all screen sizes
               _buildCombinedHeader(context),
-              const SizedBox(height: SpacingTokens.m),
+              const SizedBox(height: SpacingTokens.xs),
 
               // Calendar with LayoutBuilder for proper sizing
               Expanded(
@@ -145,7 +145,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 980),
         child: Container(
-          padding: SpacingTokens.allM,
+          padding: SpacingTokens.allS,
           decoration: BoxDecoration(
             color: ColorTokens.light.backgroundSecondary,
             borderRadius: BorderTokens.circularRounded,
@@ -221,7 +221,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       builder: (context, constraints) {
         final screenWidth = MediaQuery.of(context).size.width;
         final screenHeight = MediaQuery.of(context).size.height;
-        final maxHeight = screenHeight * 0.75; // 75% of screen height
+        final maxHeight = screenHeight * 0.85; // 85% of screen height - booking bar is now floating overlay
 
         // Desktop: Show 1 month + booking sidebar (>= 1024px)
         final isDesktop = screenWidth >= 1024;
@@ -237,26 +237,20 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   }
 
   Widget _buildDesktopLayoutWithSidebar(Map<String, CalendarDateInfo> data, double maxHeight) {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 650,
-          maxHeight: maxHeight,
-        ),
+    return Center(
+      child: SizedBox(
+        width: 650,
+        height: maxHeight,
         child: _buildSingleMonthGrid(_currentMonth, data, maxHeight),
       ),
     );
   }
 
   Widget _buildMobileLayout(Map<String, CalendarDateInfo> data, double maxHeight) {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 600,
-          maxHeight: maxHeight,
-        ),
+    return Center(
+      child: SizedBox(
+        width: 600,
+        height: maxHeight,
         child: _buildSingleMonthGrid(_currentMonth, data, maxHeight),
       ),
     );
@@ -264,17 +258,18 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
   Widget _buildSingleMonthGrid(DateTime month, Map<String, CalendarDateInfo> data, double maxHeight) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
         // Month name header
         _buildMonthHeader(month),
-        const SizedBox(height: SpacingTokens.m),
+        const SizedBox(height: SpacingTokens.xs),
         // Week day headers
         _buildWeekDayHeaders(),
-        const SizedBox(height: SpacingTokens.s),
-        // Calendar grid
-        Flexible(
-          child: _buildMonthGridForMonth(month, data),
+        const SizedBox(height: SpacingTokens.xs),
+        // Calendar grid - takes remaining space
+        Expanded(
+          child: SingleChildScrollView(
+            child: _buildMonthGridForMonth(month, data),
+          ),
         ),
       ],
     );
@@ -284,8 +279,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final monthName = DateFormat.yMMMM().format(month);
     return Container(
       padding: const EdgeInsets.symmetric(
-        vertical: SpacingTokens.xs2 + SpacingTokens.xs,
-        horizontal: SpacingTokens.m,
+        vertical: SpacingTokens.xs,
+        horizontal: SpacingTokens.s,
       ),
       decoration: BoxDecoration(
         color: ColorTokens.light.backgroundSecondary,
@@ -358,6 +353,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final aspectRatio = isMobile ? 1.0 : 0.95;
 
     return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 7,
         mainAxisSpacing: cellGap,

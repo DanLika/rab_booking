@@ -305,6 +305,8 @@ enum PropertyType {
 enum BookingStatus {
   pending('pending'),
   confirmed('confirmed'),
+  checkedIn('checked_in'),
+  checkedOut('checked_out'),
   cancelled('cancelled'),
   completed('completed'),
   inProgress('in_progress'),
@@ -319,6 +321,10 @@ enum BookingStatus {
         return 'Pending';
       case BookingStatus.confirmed:
         return 'Confirmed';
+      case BookingStatus.checkedIn:
+        return 'Checked In';
+      case BookingStatus.checkedOut:
+        return 'Checked Out';
       case BookingStatus.cancelled:
         return 'Cancelled';
       case BookingStatus.completed:
@@ -337,6 +343,10 @@ enum BookingStatus {
         return const Color(0xFFFFA726); // Orange
       case BookingStatus.confirmed:
         return const Color(0xFF66BB6A); // Green
+      case BookingStatus.checkedIn:
+        return const Color(0xFF9C27B0); // Purple
+      case BookingStatus.checkedOut:
+        return const Color(0xFF42A5F5); // Blue
       case BookingStatus.cancelled:
         return const Color(0xFFEF5350); // Red
       case BookingStatus.completed:
@@ -355,12 +365,12 @@ enum BookingStatus {
 
   /// Check if booking is active (currently in use or confirmed)
   bool get isActive {
-    return this == BookingStatus.confirmed || this == BookingStatus.inProgress;
+    return this == BookingStatus.confirmed || this == BookingStatus.inProgress || this == BookingStatus.checkedIn;
   }
 
   /// Check if booking is in final state (cannot be modified)
   bool get isFinal {
-    return this == BookingStatus.completed || this == BookingStatus.cancelled;
+    return this == BookingStatus.completed || this == BookingStatus.cancelled || this == BookingStatus.checkedOut;
   }
 
   static BookingStatus fromString(String value) {

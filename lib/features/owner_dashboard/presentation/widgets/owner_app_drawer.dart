@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/config/router_owner.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/theme/app_color_extensions.dart';
 import '../../../auth/presentation/widgets/auth_logo_icon.dart';
 
 /// Premium Owner App Navigation Drawer
@@ -35,18 +36,19 @@ class OwnerAppDrawer extends ConsumerWidget {
                     theme.colorScheme.surface,
                   ],
                 )
-              : const LinearGradient(
+              : LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xFFFAF8F3), // Beige
-                    Color(0xFFFFFFFF), // White
+                    theme.colorScheme.beige,
+                    Colors.white,
                   ],
-                  stops: [0.0, 0.3],
+                  stops: const [0.0, 0.3],
                 ),
         ),
         child: ListView(
           padding: EdgeInsets.zero,
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
             // Premium Header with Logo
             _buildPremiumHeader(context, user, authState),
@@ -58,10 +60,7 @@ class OwnerAppDrawer extends ConsumerWidget {
               icon: Icons.dashboard_outlined,
               title: 'Pregled',
               isSelected: currentRoute == 'overview',
-              onTap: () {
-                Navigator.pop(context);
-                context.go(OwnerRoutes.overview);
-              },
+              onTap: () => context.go(OwnerRoutes.overview),
             ),
 
             const SizedBox(height: 4),
@@ -70,10 +69,7 @@ class OwnerAppDrawer extends ConsumerWidget {
               icon: Icons.calendar_view_month,
               title: 'Kalendar',
               isSelected: currentRoute.startsWith('calendar'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go(OwnerRoutes.calendarTimeline);
-              },
+              onTap: () => context.go(OwnerRoutes.calendarTimeline),
             ),
 
             const SizedBox(height: 4),
@@ -87,70 +83,60 @@ class OwnerAppDrawer extends ConsumerWidget {
                 _DrawerSubItem(
                   title: 'Sve rezervacije',
                   isSelected: currentRoute == 'bookings',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go(OwnerRoutes.bookings);
-                  },
+                  onTap: () => context.go(OwnerRoutes.bookings),
                 ),
               ],
             ),
 
             const SizedBox(height: 4),
 
-            // Konfiguracija Expansion
+            // Podešavanja Expansion (Widget, Integracije, Konfiguracija)
             _PremiumExpansionTile(
               icon: Icons.settings_outlined,
-              title: 'Konfiguracija',
+              title: 'Podešavanja',
               isExpanded: currentRoute.startsWith('properties') ||
                   currentRoute.startsWith('units') ||
-                  currentRoute == 'price-list',
+                  currentRoute == 'price-list' ||
+                  currentRoute == 'widget-settings' ||
+                  currentRoute.startsWith('integrations'),
               children: [
+                // Widget Settings (top item)
                 _DrawerSubItem(
-                  title: 'Smještajne jedinice',
-                  isSelected: currentRoute == 'properties',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go(OwnerRoutes.properties);
-                  },
+                  title: 'Widget Settings',
+                  subtitle: 'Embed kod i dizajn',
+                  icon: Icons.widgets,
+                  isSelected: currentRoute == 'widget-settings',
+                  onTap: () => context.go(OwnerRoutes.widgetSettings),
                 ),
-                _DrawerSubItem(
-                  title: 'Cjenovnik',
-                  isSelected: currentRoute == 'price-list',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go(OwnerRoutes.priceList);
-                  },
-                ),
-              ],
-            ),
 
-            const SizedBox(height: 4),
-
-            // Integracije Expansion
-            _PremiumExpansionTile(
-              icon: Icons.extension_outlined,
-              title: 'Integracije',
-              isExpanded: currentRoute.startsWith('integrations'),
-              children: [
+                // INTEGRACIJE Section
+                const _DrawerSectionDivider(label: 'INTEGRACIJE'),
                 _DrawerSubItem(
                   title: 'Stripe Plaćanja',
                   subtitle: 'Obrada kartica',
                   icon: Icons.payment,
                   isSelected: currentRoute == 'integrations/stripe',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go(OwnerRoutes.stripeIntegration);
-                  },
+                  onTap: () => context.go(OwnerRoutes.stripeIntegration),
                 ),
                 _DrawerSubItem(
                   title: 'iCal Sinhronizacija',
                   subtitle: 'Booking.com, Airbnb...',
                   icon: Icons.sync,
                   isSelected: currentRoute == 'integrations/ical',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go(OwnerRoutes.icalIntegration);
-                  },
+                  onTap: () => context.go(OwnerRoutes.icalIntegration),
+                ),
+
+                // KONFIGURACIJA Section
+                const _DrawerSectionDivider(label: 'KONFIGURACIJA'),
+                _DrawerSubItem(
+                  title: 'Smještajne jedinice',
+                  isSelected: currentRoute == 'properties',
+                  onTap: () => context.go(OwnerRoutes.properties),
+                ),
+                _DrawerSubItem(
+                  title: 'Cjenovnik',
+                  isSelected: currentRoute == 'price-list',
+                  onTap: () => context.go(OwnerRoutes.priceList),
                 ),
               ],
             ),
@@ -168,20 +154,14 @@ class OwnerAppDrawer extends ConsumerWidget {
                   subtitle: 'Dodavanje na sajt',
                   icon: Icons.code,
                   isSelected: currentRoute == 'guides/embed-widget',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go(OwnerRoutes.guideEmbedWidget);
-                  },
+                  onTap: () => context.go(OwnerRoutes.guideEmbedWidget),
                 ),
                 _DrawerSubItem(
                   title: 'Česta Pitanja',
                   subtitle: 'FAQ',
                   icon: Icons.question_answer,
                   isSelected: currentRoute == 'guides/faq',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go(OwnerRoutes.guideFaq);
-                  },
+                  onTap: () => context.go(OwnerRoutes.guideFaq),
                 ),
               ],
             ),
@@ -200,28 +180,19 @@ class OwnerAppDrawer extends ConsumerWidget {
                   title: 'Uslovi Korištenja',
                   icon: Icons.description,
                   isSelected: currentRoute == 'terms-conditions',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go(OwnerRoutes.termsConditions);
-                  },
+                  onTap: () => context.go(OwnerRoutes.termsConditions),
                 ),
                 _DrawerSubItem(
                   title: 'Politika Privatnosti',
                   icon: Icons.privacy_tip,
                   isSelected: currentRoute == 'privacy-policy',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go(OwnerRoutes.privacyPolicy);
-                  },
+                  onTap: () => context.go(OwnerRoutes.privacyPolicy),
                 ),
                 _DrawerSubItem(
                   title: 'Cookies Politika',
                   icon: Icons.cookie,
                   isSelected: currentRoute == 'cookies-policy',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go(OwnerRoutes.cookiesPolicy);
-                  },
+                  onTap: () => context.go(OwnerRoutes.cookiesPolicy),
                 ),
               ],
             ),
@@ -236,10 +207,7 @@ class OwnerAppDrawer extends ConsumerWidget {
               icon: Icons.notifications_outlined,
               title: 'Obavještenja',
               isSelected: currentRoute == 'notifications',
-              onTap: () {
-                Navigator.pop(context);
-                context.go(OwnerRoutes.notifications);
-              },
+              onTap: () => context.go(OwnerRoutes.notifications),
             ),
 
             const SizedBox(height: 4),
@@ -248,10 +216,7 @@ class OwnerAppDrawer extends ConsumerWidget {
               icon: Icons.person_outline,
               title: 'Profil',
               isSelected: currentRoute == 'profile',
-              onTap: () {
-                Navigator.pop(context);
-                context.go(OwnerRoutes.profile);
-              },
+              onTap: () => context.go(OwnerRoutes.profile),
             ),
 
             const Padding(
@@ -284,6 +249,7 @@ class OwnerAppDrawer extends ConsumerWidget {
     User? user,
     dynamic authState,
   ) {
+    final theme = Theme.of(context);
     final displayName = authState.userModel?.firstName != null &&
             authState.userModel?.lastName != null
         ? '${authState.userModel!.firstName} ${authState.userModel!.lastName}'
@@ -295,17 +261,17 @@ class OwnerAppDrawer extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF6B4CE6), // Purple
-            Color(0xFF4A90E2), // Blue
+            theme.colorScheme.brandPurple,
+            theme.colorScheme.brandBlue,
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
+            color: theme.colorScheme.brandPurple.withAlpha((0.3 * 255).toInt()),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -350,10 +316,10 @@ class OwnerAppDrawer extends ConsumerWidget {
                             return Center(
                               child: Text(
                                 initial,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF6B4CE6),
+                                  color: theme.colorScheme.brandPurple,
                                 ),
                               ),
                             );
@@ -363,10 +329,10 @@ class OwnerAppDrawer extends ConsumerWidget {
                     : Center(
                         child: Text(
                           initial,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF6B4CE6),
+                            color: theme.colorScheme.brandPurple,
                           ),
                         ),
                       ),
@@ -444,16 +410,16 @@ class _DrawerItemState extends State<_DrawerItem> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: widget.isSelected
-                ? const Color(0xFF6B4CE6).withAlpha((0.12 * 255).toInt())
+                ? theme.colorScheme.brandPurple.withAlpha((0.12 * 255).toInt())
                 : _isHovered
-                    ? const Color(0xFF6B4CE6).withAlpha((0.06 * 255).toInt())
+                    ? theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt())
                     : Colors.transparent,
           ),
           child: ListTile(
             leading: Icon(
               widget.icon,
               color: widget.isSelected
-                  ? const Color(0xFF6B4CE6)
+                  ? theme.colorScheme.brandPurple
                   : theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               size: 24,
             ),
@@ -463,7 +429,7 @@ class _DrawerItemState extends State<_DrawerItem> {
                 fontSize: 15,
                 fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: widget.isSelected
-                    ? const Color(0xFF6B4CE6)
+                    ? theme.colorScheme.brandPurple
                     : theme.colorScheme.onSurface,
               ),
             ),
@@ -515,9 +481,9 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             color: widget.isSelected
-                ? const Color(0xFF6B4CE6).withAlpha((0.12 * 255).toInt())
+                ? theme.colorScheme.brandPurple.withAlpha((0.12 * 255).toInt())
                 : _isHovered
-                    ? const Color(0xFF6B4CE6).withAlpha((0.06 * 255).toInt())
+                    ? theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt())
                     : Colors.transparent,
           ),
           child: ListTile(
@@ -527,7 +493,7 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     widget.icon,
                     size: 18,
                     color: widget.isSelected
-                        ? const Color(0xFF6B4CE6)
+                        ? theme.colorScheme.brandPurple
                         : theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
                   )
                 : const SizedBox(width: 18),
@@ -537,7 +503,7 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                 fontSize: 14,
                 fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: widget.isSelected
-                    ? const Color(0xFF6B4CE6)
+                    ? theme.colorScheme.brandPurple
                     : theme.colorScheme.onSurface.withAlpha((0.85 * 255).toInt()),
               ),
             ),
@@ -581,8 +547,8 @@ class _PremiumExpansionTile extends StatelessWidget {
       child: Theme(
         data: Theme.of(context).copyWith(
           dividerColor: Colors.transparent,
-          splashColor: const Color(0xFF6B4CE6).withAlpha((0.06 * 255).toInt()),
-          highlightColor: const Color(0xFF6B4CE6).withAlpha((0.06 * 255).toInt()),
+          splashColor: theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt()),
+          highlightColor: theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt()),
         ),
         child: ExpansionTile(
           leading: Icon(
@@ -639,27 +605,27 @@ class _LogoutButtonState extends State<_LogoutButton> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           color: _isHovered
-              ? const Color(0xFFEF4444).withAlpha((0.08 * 255).toInt())
+              ? theme.colorScheme.danger.withAlpha((0.08 * 255).toInt())
               : Colors.transparent,
           border: Border.all(
             color: _isHovered
-                ? const Color(0xFFEF4444).withAlpha((0.3 * 255).toInt())
+                ? theme.colorScheme.danger.withAlpha((0.3 * 255).toInt())
                 : theme.colorScheme.onSurface.withAlpha((0.2 * 255).toInt()),
             width: 1.5,
           ),
         ),
         child: ListTile(
-          leading: const Icon(
+          leading: Icon(
             Icons.logout_rounded,
-            color: Color(0xFFEF4444),
+            color: theme.colorScheme.danger,
             size: 22,
           ),
-          title: const Text(
+          title: Text(
             'Odjavi se',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Color(0xFFEF4444),
+              color: theme.colorScheme.danger,
             ),
           ),
           onTap: widget.onLogout,
@@ -667,6 +633,50 @@ class _LogoutButtonState extends State<_LogoutButton> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Section Divider with Label
+class _DrawerSectionDivider extends StatelessWidget {
+  final String label;
+
+  const _DrawerSectionDivider({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 24, right: 12, top: 12, bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 1,
+              color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: theme.colorScheme.onSurface.withAlpha((0.4 * 255).toInt()),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              height: 1,
+              color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+            ),
+          ),
+        ],
       ),
     );
   }

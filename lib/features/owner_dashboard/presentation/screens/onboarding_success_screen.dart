@@ -87,7 +87,7 @@ class OnboardingSuccessScreen extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.lightbulb, color: AppColors.primary, size: 20),
+                                const Icon(Icons.lightbulb, color: AppColors.authPrimary, size: 20),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Sljedeći koraci:',
@@ -128,7 +128,7 @@ class OnboardingSuccessScreen extends ConsumerWidget {
                         onPressed: () => context.go(OwnerRoutes.calendarWeek),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: AppColors.authPrimary,
                           foregroundColor: Colors.white,
                         ),
                         child: const Row(
@@ -162,7 +162,7 @@ class OnboardingSuccessScreen extends ConsumerWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: AppColors.primary, size: 20),
+        Icon(icon, color: AppColors.authPrimary, size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

@@ -62,7 +62,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
     return AlertDialog(
       title: const Row(
         children: [
-          Icon(Icons.edit, color: AppColors.primary),
+          Icon(Icons.edit, color: AppColors.authPrimary),
           SizedBox(width: 8),
           Text('Edit Booking'),
         ],
@@ -112,14 +112,14 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   '$nights ${nights == 1 ? 'night' : 'nights'}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade900,
+                    color: AppColors.authSecondary,
                   ),
                 ),
               ),
@@ -177,7 +177,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
         ElevatedButton(
           onPressed: _isLoading ? null : _saveChanges,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.authPrimary,
             foregroundColor: Colors.white,
           ),
           child: _isLoading

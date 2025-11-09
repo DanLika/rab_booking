@@ -15,6 +15,7 @@
 /// - Icon Size: Standardized icon sizing scale
 /// - Gradient: Reusable gradients for backgrounds and effects
 /// - Constraints: Layout constraints and sizing
+library;
 
 export 'responsive_breakpoints.dart';
 export 'color_tokens.dart';

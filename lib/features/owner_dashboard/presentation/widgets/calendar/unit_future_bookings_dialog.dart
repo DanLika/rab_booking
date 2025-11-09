@@ -42,7 +42,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(Icons.calendar_today, color: Colors.white, size: isMobile ? 20 : 24),
-                  SizedBox(width: AppDimensions.spaceS),
+                  const SizedBox(width: AppDimensions.spaceS),
                   Expanded(
                     child: AutoSizeText(
                       'Nadolazeće rezervacije - ${unit.name}',
@@ -81,7 +81,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
 
             // Footer
             Padding(
-              padding: EdgeInsets.all(AppDimensions.spaceM),
+              padding: const EdgeInsets.all(AppDimensions.spaceM),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -107,17 +107,17 @@ class UnitFutureBookingsDialog extends StatelessWidget {
   Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(AppDimensions.spaceXL),
+        padding: const EdgeInsets.all(AppDimensions.spaceXL),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.event_available, size: 64, color: Colors.grey[400]),
-            SizedBox(height: AppDimensions.spaceM),
+            const SizedBox(height: AppDimensions.spaceM),
             Text(
               'Nema nadolazećih rezervacija',
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
-            SizedBox(height: AppDimensions.spaceXS),
+            const SizedBox(height: AppDimensions.spaceXS),
             Text(
               'Sve buduce rezervacije za ${unit.name} ce se prikazati ovdje',
               style: TextStyle(fontSize: 14, color: Colors.grey[500]),
@@ -141,7 +141,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
         onBookingTap(booking);
       },
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: AppDimensions.spaceXS),
+        padding: const EdgeInsets.symmetric(vertical: AppDimensions.spaceXS),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -155,7 +155,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                 size: isMobile ? 20 : 24,
               ),
             ),
-            SizedBox(width: AppDimensions.spaceS),
+            const SizedBox(width: AppDimensions.spaceS),
 
             // Booking info
             Expanded(
@@ -171,13 +171,13 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                     maxLines: 1,
                     minFontSize: 12,
                   ),
-                  SizedBox(height: AppDimensions.spaceXXS / 2),
+                  const SizedBox(height: AppDimensions.spaceXXS / 2),
 
                   // Check-in
                   Row(
                     children: [
-                      Icon(Icons.login, size: 14, color: Colors.green),
-                      SizedBox(width: AppDimensions.spaceXXS),
+                      const Icon(Icons.login, size: 14, color: Colors.green),
+                      const SizedBox(width: AppDimensions.spaceXXS),
                       Expanded(
                         child: AutoSizeText(
                           'Check-in: ${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
@@ -188,13 +188,13 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: AppDimensions.spaceXXS / 4),
+                  const SizedBox(height: AppDimensions.spaceXXS / 4),
 
                   // Check-out
                   Row(
                     children: [
-                      Icon(Icons.logout, size: 14, color: Colors.red),
-                      SizedBox(width: AppDimensions.spaceXXS),
+                      const Icon(Icons.logout, size: 14, color: Colors.red),
+                      const SizedBox(width: AppDimensions.spaceXXS),
                       Expanded(
                         child: AutoSizeText(
                           'Check-out: ${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
@@ -205,7 +205,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: AppDimensions.spaceXXS / 2),
+                  const SizedBox(height: AppDimensions.spaceXXS / 2),
 
                   // Guest count and nights
                   AutoSizeText(
@@ -221,7 +221,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
               ),
             ),
 
-            SizedBox(width: AppDimensions.spaceS),
+            const SizedBox(width: AppDimensions.spaceS),
 
             // Status chip
             Chip(
@@ -232,7 +232,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                 style: const TextStyle(fontSize: 11),
               ),
               backgroundColor: booking.status.color.withValues(alpha: 0.2),
-              padding: EdgeInsets.symmetric(horizontal: AppDimensions.spaceXS),
+              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceXS),
               visualDensity: VisualDensity.compact,
             ),
           ],

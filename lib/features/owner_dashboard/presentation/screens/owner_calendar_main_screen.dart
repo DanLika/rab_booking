@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/calendar_view_mode.dart';
+import '../../domain/models/calendar_filter_options.dart';
 import '../providers/owner_calendar_view_provider.dart';
 import '../providers/owner_calendar_provider.dart';
+import '../providers/calendar_filters_provider.dart';
 import '../widgets/calendar/calendar_view_switcher.dart';
+import '../widgets/calendar/calendar_filter_panel.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/booking_create_dialog.dart';
 import '../../utils/calendar_grid_calculator.dart';
@@ -60,6 +62,7 @@ class _OwnerCalendarMainScreenState
     final currentView = ref.watch(ownerCalendarViewProvider);
     final isCompact = MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint;
     final location = GoRouterState.of(context).matchedLocation;
+    final filters = ref.watch(calendarFiltersProvider);
 
     // Extract current route for drawer
     String currentRoute = 'calendar/week'; // Default
@@ -72,6 +75,8 @@ class _OwnerCalendarMainScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kalendar'),
+        backgroundColor: const Color(0xFF6B4CE6),
+        foregroundColor: Colors.white,
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -80,6 +85,42 @@ class _OwnerCalendarMainScreenState
           ),
         ),
         actions: [
+          // Filter button
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () => showCalendarFilterPanel(context),
+                icon: const Icon(Icons.filter_list),
+                tooltip: 'Filteri',
+              ),
+              if (filters.hasActiveFilters)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '${filters.activeFilterCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
           // View switcher
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),

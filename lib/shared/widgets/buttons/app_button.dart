@@ -120,9 +120,9 @@ class PrimaryButton extends AppButton {
   @override
   ButtonStyle buildStyle(BuildContext context) {
     return ElevatedButton.styleFrom(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.authPrimary,
       foregroundColor: Colors.white,
-      disabledBackgroundColor: AppColors.primary.withAlpha((0.5 * 255).toInt()),
+      disabledBackgroundColor: AppColors.authPrimary.withAlpha((0.5 * 255).toInt()),
       disabledForegroundColor: Colors.white.withAlpha((0.7 * 255).toInt()),
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPadding,
@@ -153,14 +153,14 @@ class SecondaryButton extends AppButton {
   @override
   ButtonStyle buildStyle(BuildContext context) {
     return OutlinedButton.styleFrom(
-      foregroundColor: AppColors.primary,
+      foregroundColor: AppColors.authPrimary,
       disabledForegroundColor: AppColors.textDisabled,
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPadding,
         vertical: AppDimensions.spaceS,
       ),
       minimumSize: Size(0, height),
-      side: const BorderSide(color: AppColors.primary, width: 2),
+      side: const BorderSide(color: AppColors.authPrimary, width: 2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusS),
       ),
@@ -227,7 +227,7 @@ class AppTextButton extends StatelessWidget {
         height: 20,
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.authPrimary),
         ),
       );
     }
@@ -238,14 +238,14 @@ class AppTextButton extends StatelessWidget {
             icon: Icon(icon, size: 20),
             label: Text(label),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
+              foregroundColor: AppColors.authPrimary,
               textStyle: _getTextStyle(),
             ),
           )
         : TextButton(
             onPressed: onPressed,
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
+              foregroundColor: AppColors.authPrimary,
               textStyle: _getTextStyle(),
             ),
             child: Text(label),

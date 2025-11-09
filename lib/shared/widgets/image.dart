@@ -147,7 +147,7 @@ class PremiumImage extends StatelessWidget {
       ),
       child: const Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.authPrimary),
         ),
       ),
     );

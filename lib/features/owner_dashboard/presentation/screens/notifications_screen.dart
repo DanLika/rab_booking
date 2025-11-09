@@ -6,6 +6,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../providers/notifications_provider.dart';
 import '../../domain/models/notification_model.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Notifications screen for owner dashboard
 class NotificationsScreen extends ConsumerWidget {
@@ -19,75 +20,10 @@ class NotificationsScreen extends ConsumerWidget {
     final actions = ref.watch(notificationActionsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Obavještenja'),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            tooltip: 'Menu',
-          ),
-        ),
-        actions: [
-          // Mark all as read button
-          notificationsAsync.when(
-            data: (notifications) {
-              final hasUnread = notifications.any((n) => !n.isRead);
-              if (!hasUnread) return const SizedBox.shrink();
-
-              return TextButton.icon(
-                onPressed: () async {
-                  final ownerId = authState.firebaseUser?.uid;
-                  if (ownerId != null) {
-                    await actions.markAllAsRead(ownerId);
-                  }
-                },
-                icon: const Icon(Icons.done_all, size: 18),
-                label: const Text('Označi sve'),
-              );
-            },
-            loading: () => const SizedBox.shrink(),
-            error: (error, stackTrace) => const SizedBox.shrink(),
-          ),
-
-          // Clear all button
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) async {
-              if (value == 'clear_all') {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => _PremiumAlertDialog(
-                    title: 'Obriši sve obavještenja',
-                    content: 'Jeste li sigurni da želite obrisati sva obavještenja?',
-                    confirmText: 'Obriši sve',
-                    cancelText: 'Otkaži',
-                    isDestructive: true,
-                  ),
-                );
-
-                if (confirm == true) {
-                  final ownerId = authState.firebaseUser?.uid;
-                  if (ownerId != null) {
-                    await actions.deleteAllNotifications(ownerId);
-                  }
-                }
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'clear_all',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_sweep, color: Color(0xFFEF4444)),
-                    SizedBox(width: 12),
-                    Text('Obriši sve'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
+      appBar: CommonAppBar(
+        title: 'Obavještenja',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       body: notificationsAsync.when(
         data: (notifications) {
@@ -266,7 +202,7 @@ class NotificationsScreen extends ConsumerWidget {
       confirmDismiss: (direction) async {
         return await showDialog<bool>(
           context: context,
-          builder: (context) => _PremiumAlertDialog(
+          builder: (context) => const _PremiumAlertDialog(
             title: 'Obriši obavještenje',
             content: 'Jeste li sigurni da želite obrisati ovo obavještenje?',
             confirmText: 'Obriši',
@@ -386,7 +322,7 @@ class NotificationsScreen extends ConsumerWidget {
       case 'booking_cancelled':
         return AppColors.error;
       case 'payment_received':
-        return AppColors.primary;
+        return AppColors.authPrimary;
       case 'system':
         return Colors.grey;
       default:

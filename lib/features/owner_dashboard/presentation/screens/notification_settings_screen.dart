@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../shared/models/notification_preferences_model.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/models/notification_preferences_model.dart';
 import '../providers/user_profile_provider.dart';
 
 /// Notification Settings Screen
@@ -124,6 +124,13 @@ class _NotificationSettingsScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notification Settings'),
+        backgroundColor: const Color(0xFF6B4CE6),
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+          tooltip: 'Nazad',
+        ),
       ),
       body: preferencesAsync.when(
         data: (preferences) {
@@ -189,7 +196,7 @@ class _NotificationSettingsScreenState
                     'Master switch for all notification types',
                     style: TextStyle(
                       fontSize: 13,
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   secondary: Container(
@@ -296,7 +303,7 @@ class _NotificationSettingsScreenState
                 description:
                     'New bookings, cancellations, and booking updates',
                 icon: Icons.event_note,
-                iconColor: Colors.blue,
+                iconColor: AppColors.authSecondary,
                 channels: categories.bookings,
                 enabled: masterEnabled,
                 onChanged: (channels) =>
@@ -397,7 +404,7 @@ class _NotificationSettingsScreenState
                 Text(
                   error.toString(),
                   style: TextStyle(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
@@ -430,7 +437,7 @@ class _NotificationSettingsScreenState
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.3),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
           width: 1,
         ),
         boxShadow: [
@@ -481,7 +488,7 @@ class _NotificationSettingsScreenState
               description,
               style: TextStyle(
                 fontSize: 13,
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -491,11 +498,11 @@ class _NotificationSettingsScreenState
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               height: 1,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
-                    const Color(0xFFE2E8F0),
+                    Color(0xFFE2E8F0),
                     Colors.transparent,
                   ],
                 ),
@@ -572,7 +579,7 @@ class _NotificationSettingsScreenState
               fontSize: 14,
               color: enabled
                   ? theme.colorScheme.onSurface
-                  : theme.colorScheme.onSurface.withOpacity(0.4),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
           ),
           subtitle: Text(
@@ -580,8 +587,8 @@ class _NotificationSettingsScreenState
             style: TextStyle(
               fontSize: 12,
               color: enabled
-                  ? theme.colorScheme.onSurface.withOpacity(0.6)
-                  : theme.colorScheme.onSurface.withOpacity(0.3),
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ),
           secondary: Container(

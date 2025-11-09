@@ -109,7 +109,7 @@ class _AnimatedTextFieldState extends State<AnimatedTextField>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final focusColor = widget.focusColor ?? AppColors.primary;
+    final focusColor = widget.focusColor ?? AppColors.authPrimary;
     final borderColor = widget.borderColor ??
         (isDark ? AppColors.borderDark : AppColors.borderLight);
 
@@ -391,7 +391,7 @@ class _AnimatedTextAreaState extends State<AnimatedTextArea> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final focusColor = AppColors.primary;
+    final focusColor = AppColors.authPrimary;
     final borderColor =
         isDark ? AppColors.borderDark : AppColors.borderLight;
 

@@ -75,8 +75,8 @@ final bookingTotalProvider = Provider<double>((ref) {
   return total;
 });
 
-/// Calculate down payment amount (80% of total)
+/// Calculate down payment amount (20% deposit of total)
 final downPaymentAmountProvider = Provider<double>((ref) {
   final total = ref.watch(bookingTotalProvider);
-  return total * 0.8; // 80% down payment
+  return total * 0.2; // 20% deposit (avans)
 });

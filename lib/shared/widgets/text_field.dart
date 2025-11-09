@@ -259,7 +259,7 @@ class _PremiumTextFieldState extends State<PremiumTextField> {
           ? (isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight)
           : null;
     } else if (_isFocused) {
-      borderColor = AppColors.primary;
+      borderColor = AppColors.authPrimary;
       boxShadow = AppShadows.glowPrimary;
       backgroundColor = widget.variant == TextFieldVariant.filled
           ? (isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight)
@@ -318,21 +318,21 @@ class _PremiumTextFieldState extends State<PremiumTextField> {
   Color _getPrefixIconColor(bool isDark, bool hasError) {
     if (!widget.enabled) return AppColors.textDisabled;
     if (hasError) return AppColors.error;
-    if (_isFocused) return AppColors.primary;
+    if (_isFocused) return AppColors.authPrimary;
     return isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
   }
 
   Color _getSuffixIconColor(bool isDark, bool hasError) {
     if (!widget.enabled) return AppColors.textDisabled;
     if (hasError) return AppColors.error;
-    if (_isFocused) return AppColors.primary;
+    if (_isFocused) return AppColors.authPrimary;
     return isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
   }
 
   Color _getLabelColor(bool isDark, bool hasError) {
     if (!widget.enabled) return AppColors.textDisabled;
     if (hasError) return AppColors.error;
-    if (_isFocused) return AppColors.primary;
+    if (_isFocused) return AppColors.authPrimary;
     return isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
   }
 }

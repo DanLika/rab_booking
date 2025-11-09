@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../owner_dashboard/presentation/widgets/owner_app_drawer.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/router_owner.dart';
+import '../../../../core/theme/app_color_extensions.dart';
 
 /// Terms & Conditions Screen
 ///
@@ -73,15 +74,30 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Terms & Conditions'),
-        backgroundColor: const Color(0xFF6B4CE6),
+        backgroundColor: theme.colorScheme.brandPurple,
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(OwnerRoutes.overview);
+            }
+          },
+          tooltip: 'Nazad',
+        ),
       ),
-      body: Stack(
-        children: [
+      body: SafeArea(
+        child: Stack(
+          children: [
           SingleChildScrollView(
             controller: _scrollController,
             padding: const EdgeInsets.all(24),
@@ -182,18 +198,18 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
               right: 24,
               child: FloatingActionButton(
                 onPressed: _scrollToTop,
-                backgroundColor: const Color(0xFF6B4CE6),
-                child: const Icon(Icons.arrow_upward, color: Colors.white),
+                backgroundColor: theme.primaryColor,
+                child: Icon(Icons.arrow_upward, color: theme.colorScheme.onPrimary),
               ),
             ),
         ],
       ),
+        ),
     );
   }
 
   Widget _buildHeader() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,13 +219,13 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                gradient: LinearGradient(
+                  colors: [theme.primaryColor, theme.colorScheme.secondary],
                 ),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
+                    color: theme.primaryColor.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -237,7 +253,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                   Text(
                     'Last updated: ${DateTime.now().year}',
                     style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                   ),
                 ],
@@ -257,7 +273,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: theme.colorScheme.outline.withOpacity(0.3),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Padding(
@@ -267,14 +283,14 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.list_alt, color: Color(0xFF6B4CE6), size: 24),
+                Icon(Icons.list_alt, color: theme.primaryColor, size: 24),
                 const SizedBox(width: 8),
                 Text(
                   'Table of Contents',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF6B4CE6),
+                    color: theme.primaryColor,
                   ),
                 ),
               ],
@@ -305,14 +321,14 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           children: [
-            const Icon(Icons.arrow_right, color: Color(0xFF6B4CE6), size: 20),
+            Icon(Icons.arrow_right, color: theme.primaryColor, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 title,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontSize: 14,
-                  color: theme.colorScheme.onSurface.withOpacity(0.8),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                 ),
               ),
             ),
@@ -333,7 +349,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
         child: Padding(
@@ -345,7 +361,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                 title,
                 style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF6B4CE6),
+                      color: theme.primaryColor,
                     ),
               ),
               const SizedBox(height: 12),
@@ -372,11 +388,11 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark
-          ? Colors.orange.shade900.withOpacity(0.2)
+          ? Colors.orange.shade900.withValues(alpha: 0.2)
           : Colors.orange.shade50,
         border: Border.all(
           color: isDark
-            ? Colors.orange.shade700.withOpacity(0.5)
+            ? Colors.orange.shade700.withValues(alpha: 0.5)
             : Colors.orange.shade300,
           width: 2,
         ),

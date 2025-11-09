@@ -4,8 +4,10 @@ import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../providers/owner_calendar_provider.dart';
 import '../../../utils/calendar_grid_calculator.dart';
+import '../../../utils/booking_overlap_detector.dart';
 
 /// Inline booking edit dialog
 /// Quick edit for booking dates, guest count, status, and notes
@@ -402,6 +404,43 @@ class _BookingInlineEditDialogState
     setState(() => _isSaving = true);
 
     try {
+      // FIXED: Validate for overlaps before saving
+      final allBookingsMap = await ref.read(calendarBookingsProvider.future);
+
+      // Check if new dates would overlap with existing bookings
+      final conflicts = BookingOverlapDetector.getConflictingBookings(
+        unitId: widget.booking.unitId,
+        newCheckIn: _checkIn,
+        newCheckOut: _checkOut,
+        bookingIdToExclude: widget.booking.id,
+        allBookings: allBookingsMap,
+      );
+
+      if (conflicts.isNotEmpty) {
+        setState(() => _isSaving = false);
+
+        if (mounted) {
+          // Show detailed error with conflicting booking info
+          final conflict = conflicts.first;
+          final conflictGuestName = conflict.guestName ?? 'Unknown';
+          final conflictCheckIn = '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}';
+          final conflictCheckOut = '${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}';
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                conflicts.length == 1
+                    ? 'Overlap detected with booking for $conflictGuestName ($conflictCheckIn - $conflictCheckOut)'
+                    : 'Overlap detected with ${conflicts.length} existing bookings',
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
+
       final repository = ref.read(bookingRepositoryProvider);
 
       // Create updated booking
@@ -452,8 +491,12 @@ class _BookingInlineEditDialogState
         return Colors.orange.shade400;
       case BookingStatus.confirmed:
         return Colors.green.shade400;
+      case BookingStatus.checkedIn:
+        return Colors.purple.shade400;
+      case BookingStatus.checkedOut:
+        return AppColors.authSecondary.withAlpha((0.5 * 255).toInt());
       case BookingStatus.inProgress:
-        return Colors.blue.shade400;
+        return AppColors.authSecondary.withAlpha((0.7 * 255).toInt());
       case BookingStatus.completed:
         return Colors.grey.shade400;
       case BookingStatus.cancelled:

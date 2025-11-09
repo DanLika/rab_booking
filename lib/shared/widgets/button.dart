@@ -380,7 +380,7 @@ class _PremiumButtonState extends State<PremiumButton> {
 
     switch (widget.variant) {
       case ButtonVariant.primary:
-        gradient = widget.backgroundColor == null ? AppColors.primaryGradient : null;
+        gradient = widget.backgroundColor == null ? AppColors.authPrimaryGradient : null;
         backgroundColor = widget.backgroundColor;
         borderColor = null;
         textColor = widget.textColor ?? Colors.white;
@@ -396,15 +396,15 @@ class _PremiumButtonState extends State<PremiumButton> {
       case ButtonVariant.outline:
         gradient = null;
         backgroundColor = Colors.transparent;
-        borderColor = widget.backgroundColor ?? AppColors.primary;
-        textColor = widget.textColor ?? AppColors.primary;
+        borderColor = widget.backgroundColor ?? AppColors.authPrimary;
+        textColor = widget.textColor ?? AppColors.authPrimary;
         shadow = _isHovered ? AppShadows.elevation1 : null;
         break;
       case ButtonVariant.text:
         gradient = null;
         backgroundColor = Colors.transparent;
         borderColor = null;
-        textColor = widget.textColor ?? AppColors.primary;
+        textColor = widget.textColor ?? AppColors.authPrimary;
         shadow = null;
         break;
     }

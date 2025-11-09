@@ -475,8 +475,12 @@ class _EnhancedRoomSelectionScreenState
           return const Center(child: Text('No rooms available'));
         }
 
-        return Column(
-          children: units.map((unit) => _buildRoomCard(unit)).toList(),
+        // Use ListView.builder for better overflow handling with many rooms
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: units.length,
+          itemBuilder: (context, index) => _buildRoomCard(units[index]),
         );
       },
     );
@@ -607,6 +611,7 @@ class _EnhancedRoomSelectionScreenState
 
   Widget _buildContinueButton() {
     final nights = _checkOut!.difference(_checkIn!).inDays;
+    final isMobile = ResponsiveHelper.isMobile(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -624,17 +629,28 @@ class _EnhancedRoomSelectionScreenState
         ],
       ),
       child: SafeArea(
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () => _handleContinue(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: VillaJaskoColors.primary,
-              padding: const EdgeInsets.symmetric(vertical: 18),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isMobile ? double.infinity : 500,
             ),
-            child: Text(
-              'Continue - $nights ${nights == 1 ? 'night' : 'nights'}',
-              style: const TextStyle(fontSize: 18),
+            child: SizedBox(
+              width: isMobile ? double.infinity : null,
+              child: ElevatedButton.icon(
+                onPressed: () => _handleContinue(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: VillaJaskoColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 32),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+                label: Text(
+                  'Continue - $nights ${nights == 1 ? 'night' : 'nights'}',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+              ),
             ),
           ),
         ),

@@ -232,15 +232,23 @@ class _FAQScreenState extends State<FAQScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final filteredFAQs = _filteredFAQs;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: const Text('Česta Pitanja (FAQ)'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: theme.primaryColor,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           // Search Bar
           Padding(
@@ -294,11 +302,19 @@ class _FAQScreenState extends State<FAQScreen> {
                         _selectedCategory = category;
                       });
                     },
-                    backgroundColor: Colors.grey.shade200,
-                    selectedColor: AppColors.primary.withAlpha((0.2 * 255).toInt()),
-                    checkmarkColor: AppColors.primary,
+                    backgroundColor: isDark
+                        ? theme.colorScheme.surfaceContainerHighest
+                        : Colors.grey.shade200,
+                    selectedColor: isDark
+                        ? AppColors.authPrimary.withAlpha((0.4 * 255).toInt())
+                        : AppColors.authPrimary.withAlpha((0.2 * 255).toInt()),
+                    checkmarkColor: AppColors.authPrimary,
                     labelStyle: TextStyle(
-                      color: isSelected ? AppColors.primary : Colors.grey.shade700,
+                      color: isSelected
+                          ? (isDark ? Colors.white : AppColors.authPrimary)
+                          : (isDark
+                              ? theme.colorScheme.onSurfaceVariant
+                              : Colors.grey.shade700),
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
@@ -315,7 +331,14 @@ class _FAQScreenState extends State<FAQScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
                 'Pronađeno: ${filteredFAQs.length} rezultata',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                style: TextStyle(
+                  color: isDark
+                      ? theme.colorScheme.onSurfaceVariant
+                      : Colors.grey.shade600,
+                  fontSize: 12,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
 
@@ -334,20 +357,23 @@ class _FAQScreenState extends State<FAQScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 
   Widget _buildFAQCard(FAQItem faq) {
+    final theme = Theme.of(context);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         leading: CircleAvatar(
-          backgroundColor: AppColors.primary.withAlpha((0.1 * 255).toInt()),
+          backgroundColor: AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
           child: Icon(
             _getCategoryIcon(faq.category),
-            color: AppColors.primary,
+            color: AppColors.authPrimary,
             size: 20,
           ),
         ),
@@ -364,17 +390,26 @@ class _FAQScreenState extends State<FAQScreen> {
             faq.category,
             style: TextStyle(
               fontSize: 11,
-              color: Colors.grey.shade600,
+              color: theme.brightness == Brightness.dark
+                  ? theme.colorScheme.onSurfaceVariant
+                  : Colors.grey.shade600,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         children: [
-          Text(
-            faq.answer,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade800,
-              height: 1.5,
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              faq.answer,
+              style: TextStyle(
+                fontSize: 14,
+                color: theme.brightness == Brightness.dark
+                    ? theme.colorScheme.onSurface
+                    : Colors.grey.shade800,
+                height: 1.5,
+              ),
             ),
           ),
         ],
@@ -383,27 +418,46 @@ class _FAQScreenState extends State<FAQScreen> {
   }
 
   Widget _buildEmptyState() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: isDark
+                  ? theme.colorScheme.onSurfaceVariant
+                  : Colors.grey.shade400,
+            ),
             const SizedBox(height: 16),
             Text(
               'Nema rezultata',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey.shade600,
+                color: isDark
+                    ? theme.colorScheme.onSurface
+                    : Colors.grey.shade600,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 8),
             Text(
               'Pokušajte sa drugom pretragom ili kategorijom',
-              style: TextStyle(color: Colors.grey.shade500),
+              style: TextStyle(
+                color: isDark
+                    ? theme.colorScheme.onSurfaceVariant
+                    : Colors.grey.shade500,
+              ),
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

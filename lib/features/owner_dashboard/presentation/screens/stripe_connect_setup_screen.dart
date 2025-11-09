@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/config/router_owner.dart';
+import '../widgets/owner_app_drawer.dart';
 
 /// Stripe Connect setup screen for property owners
 /// Allows owners to connect their Stripe account to receive payments
@@ -133,9 +134,23 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Stripe Plaćanja'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            tooltip: 'Menu',
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.help_outline),
@@ -144,56 +159,31 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+      drawer: const OwnerAppDrawer(currentRoute: 'integrations/stripe'),
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: theme.brightness == Brightness.dark
+                ? [
+                    const Color(0xFF1A1A1A), // Dark gray
+                    const Color(0xFF2D2D2D), // Lighter dark gray
+                  ]
+                : [
+                    const Color(0xFF6B4CE6), // Purple
+                    const Color(0xFF4A90E2), // Blue
+                  ],
+          ),
+        ),
+        child: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header
-                  Row(
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: Colors.indigo[50],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.payment,
-                          size: 32,
-                          color: Colors.indigo,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Stripe Connect',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Prijem plaćanja karticama',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 32),
-
                   // Status card
                   _buildStatusCard(),
 
@@ -210,11 +200,12 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                       onPressed: _connectStripeAccount,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.indigo,
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF6B4CE6),
                       ),
                       child: const Text(
                         'Poveži Stripe Račun',
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     )
                   else if (_stripeAccountStatus != 'complete')
@@ -222,11 +213,12 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                       onPressed: _connectStripeAccount,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.orange,
+                        backgroundColor: AppColors.warning,
+                        foregroundColor: Colors.white,
                       ),
                       child: const Text(
                         'Završi Stripe Setup',
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
 
@@ -235,16 +227,21 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                   // Help link
                   TextButton.icon(
                     onPressed: () => context.go(OwnerRoutes.guideStripe),
-                    icon: const Icon(Icons.help_outline),
-                    label: const Text('Kako funkcionira Stripe Connect?'),
+                    icon: const Icon(Icons.help_outline, color: Colors.white),
+                    label: const Text(
+                      'Kako funkcionira Stripe Connect?',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),
             ),
+      ),
     );
   }
 
   Widget _buildStatusCard() {
+    final theme = Theme.of(context);
     Color statusColor;
     IconData statusIcon;
     String statusTitle;
@@ -300,7 +297,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                     statusDescription,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[700],
+                      color: theme.colorScheme.onSurface.withAlpha((0.8 * 255).toInt()),
                     ),
                   ),
                   if (_stripeAccountId != null) ...[
@@ -309,7 +306,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                       'ID: $_stripeAccountId',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                         fontFamily: 'monospace',
                       ),
                     ),
@@ -332,6 +329,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 12),
@@ -365,7 +363,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.primary, size: 24),
+          Icon(icon, color: Colors.white, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -376,6 +374,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -383,7 +382,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                   description,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[600],
+                    color: Colors.white.withAlpha((0.85 * 255).toInt()),
                   ),
                 ),
               ],

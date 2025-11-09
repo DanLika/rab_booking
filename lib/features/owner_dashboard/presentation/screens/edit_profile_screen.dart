@@ -8,7 +8,6 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../shared/models/user_profile_model.dart';
-import '../../../../shared/repositories/user_profile_repository.dart';
 import '../../../auth/presentation/widgets/auth_background.dart';
 import '../../../auth/presentation/widgets/glass_card.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
@@ -204,6 +203,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         body: AuthBackground(
           child: userDataAsync.when(
             data: (userData) {
@@ -222,16 +222,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               _currentAvatarUrl = authState.userModel?.avatarUrl;
 
               return SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height,
-                  ),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(
-                        MediaQuery.of(context).size.width < 400 ? 16 : 24
-                      ),
-                      child: GlassCard(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(
+                      MediaQuery.of(context).size.width < 400 ? 16 : 24
+                    ),
+                    child: GlassCard(
                         maxWidth: 600,
                         child: Form(
                           key: _formKey,
@@ -397,18 +393,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               // Cancel Button
                               TextButton(
                                 onPressed: () => context.pop(),
-                                child: Text(
+                                child: const Text(
                                   'Cancel',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: const Color(0xFF718096),
+                                    color: Color(0xFF718096),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
                       ),
                     ),
                   ),

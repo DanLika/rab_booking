@@ -62,6 +62,7 @@ class _OwnerMonthCalendarScreenState
               loading: () => 0,
               error: (error, stackTrace) => 0,
             ),
+            onNotificationsTap: _showNotifications,
             isCompact: MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint,
           ),
 
@@ -219,6 +220,15 @@ class _OwnerMonthCalendarScreenState
     await showDialog(
       context: context,
       builder: (context) => const CalendarFiltersPanel(),
+    );
+  }
+
+  /// Show notifications panel
+  void _showNotifications() {
+    // TODO: Implement notifications panel
+    ErrorDisplayUtils.showInfoSnackBar(
+      context,
+      'Notifications panel - coming soon',
     );
   }
 

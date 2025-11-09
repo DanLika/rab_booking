@@ -68,7 +68,7 @@ class StatCard extends StatefulWidget {
     required this.title,
     required this.value,
     required this.icon,
-    this.color = AppColors.primary,
+    this.color = AppColors.authPrimary,
     this.trend,
     this.onTap,
     super.key,

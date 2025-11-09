@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'app_colors.dart';
 import 'app_typography.dart';
@@ -46,18 +47,29 @@ class AppTheme {
         displayColor: AppColors.textPrimaryLight,
       ),
 
-      // AppBar theme - Height: 64px, transparent on home (scroll to solid)
+      // AppBar theme - Height: 64px, dark purple background with white text
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.surfaceLight,
-        foregroundColor: AppColors.textPrimaryLight,
+        backgroundColor: AppColors.primary, // Dark purple background
+        foregroundColor: Colors.white, // White text and icons
         elevation: 0,
         centerTitle: false,
         scrolledUnderElevation: 1,
-        shadowColor: AppColors.borderLight,
+        shadowColor: Colors.black26,
         toolbarHeight: 64, // 64px height as specified
+        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: AppColors.primary, // Match AppBar color
+          statusBarBrightness: Brightness.dark, // For iOS (light icons)
+          statusBarIconBrightness: Brightness.light, // For Android (light icons)
+        ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
-          color: AppColors.textPrimaryLight,
+          color: Colors.white, // White title text
           fontWeight: FontWeight.w600,
+        ),
+        iconTheme: const IconThemeData(
+          color: Colors.white, // White icons (including back button)
+        ),
+        actionsIconTheme: const IconThemeData(
+          color: Colors.white, // White action icons
         ),
       ),
 
@@ -269,6 +281,11 @@ class AppTheme {
         scrolledUnderElevation: 1,
         shadowColor: AppColors.borderDark,
         toolbarHeight: 64, // 64px height as specified
+        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: AppColors.surfaceDark, // Match AppBar color
+          statusBarBrightness: Brightness.dark, // For iOS (light icons)
+          statusBarIconBrightness: Brightness.light, // For Android (light icons)
+        ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
           color: AppColors.textPrimaryDark,
           fontWeight: FontWeight.w600,

@@ -16,6 +16,9 @@ import 'package:flutter/material.dart';
 /// - textColor: #RRGGBB hex color
 /// - months: 1-4 (number of months to display, default: auto based on screen size)
 /// - borderRadius: 0-20 (corner radius in pixels, default: 8)
+/// - shadowLevel: 0-5 (elevation intensity, 0=flat, 2=default, 5=max depth)
+/// - transparentMode: true/false (ultra-minimal blend with parent site)
+/// - preset: 'neutral'|'flat'|'material' (predefined theme presets)
 class WidgetConfig {
   // Required IDs
   final String? propertyId;
@@ -43,6 +46,11 @@ class WidgetConfig {
   final int? numberOfMonths;
   final double borderRadius;
 
+  // Universal theme options
+  final int shadowLevel; // 0-5
+  final bool transparentMode;
+  final String? preset; // 'neutral', 'flat', 'material'
+
   const WidgetConfig({
     this.propertyId,
     this.unitId,
@@ -58,6 +66,9 @@ class WidgetConfig {
     this.locale = 'en',
     this.numberOfMonths,
     this.borderRadius = 8.0,
+    this.shadowLevel = 2,
+    this.transparentMode = false,
+    this.preset,
   });
 
   factory WidgetConfig.fromUrlParameters(Uri uri) {
@@ -101,6 +112,24 @@ class WidgetConfig {
       }
     }
 
+    // Parse shadow level (0-5)
+    int shadowLvl = 2; // default
+    if (params['shadowLevel'] != null) {
+      final parsed = int.tryParse(params['shadowLevel']!);
+      if (parsed != null && parsed >= 0 && parsed <= 5) {
+        shadowLvl = parsed;
+      }
+    }
+
+    // Parse transparent mode
+    final bool isTransparent = params['transparentMode']?.toLowerCase() == 'true';
+
+    // Parse preset
+    final String? themePreset = params['preset'];
+    if (themePreset != null && !['neutral', 'flat', 'material'].contains(themePreset.toLowerCase())) {
+      // Invalid preset, ignore
+    }
+
     return WidgetConfig(
       propertyId: params['propertyId'] ?? params['property'],
       unitId: params['unitId'] ?? params['unit'],
@@ -116,6 +145,9 @@ class WidgetConfig {
       enablePayOnPlace: enablePayOnPlace,
       numberOfMonths: months,
       borderRadius: radius,
+      shadowLevel: shadowLvl,
+      transparentMode: isTransparent,
+      preset: themePreset?.toLowerCase(),
     );
   }
 

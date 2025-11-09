@@ -42,14 +42,14 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _isHovered
-                ? theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())
+                ? theme.colorScheme.primary.withAlpha((0.5 * 255).toInt())
                 : theme.dividerColor,
             width: _isHovered ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
               color: _isHovered
-                  ? theme.colorScheme.primary.withAlpha((0.12 * 255).toInt())
+                  ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt())
                   : theme.colorScheme.shadow.withAlpha((0.06 * 255).toInt()),
               blurRadius: _isHovered ? 20 : 8,
               offset: Offset(0, _isHovered ? 8 : 3),
@@ -98,7 +98,12 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
+                                        theme.colorScheme.secondary.withAlpha((0.15 * 255).toInt()),
+                                      ],
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -205,8 +210,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                                             ?.copyWith(
                                               fontWeight: FontWeight.w600,
                                               color: widget.property.isActive
-                                                  ? const Color(0xFF10B981)
-                                                  : const Color(0xFFF59E0B),
+                                                  ? theme.colorScheme.tertiary
+                                                  : theme.colorScheme.error.withAlpha((0.8 * 255).toInt()),
                                             ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -253,8 +258,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                                             ?.copyWith(
                                               fontWeight: FontWeight.w600,
                                               color: widget.property.isActive
-                                                  ? const Color(0xFF10B981)
-                                                  : const Color(0xFFF59E0B),
+                                                  ? theme.colorScheme.tertiary
+                                                  : theme.colorScheme.error.withAlpha((0.8 * 255).toInt()),
                                             ),
                                         overflow: TextOverflow.ellipsis,
                                       ),

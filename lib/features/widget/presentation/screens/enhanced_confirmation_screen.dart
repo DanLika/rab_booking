@@ -9,6 +9,8 @@ import '../theme/responsive_helper.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/powered_by_badge.dart';
 import '../widgets/progress_indicator_widget.dart';
+import '../components/adaptive_glass_card.dart';
+import '../components/glass_modal.dart';
 import '../../domain/models/widget_config.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -35,8 +37,11 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     // Generate booking reference if not provided
     final reference = bookingReference ?? _generateBookingReference();
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: VillaJaskoColors.backgroundSurface,
+      backgroundColor: colorScheme.surface,
       body: Column(
         children: [
           BookingProgressIndicator(
@@ -127,11 +132,11 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: VillaJaskoColors.success,
+                  color: const Color(0xFF4CAF50), // Success green
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: VillaJaskoColors.success.withValues(alpha: 0.3),
+                      color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -140,7 +145,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                 child: const Icon(
                   Icons.check_rounded,
                   size: 64,
-                  color: VillaJaskoColors.textOnPrimary,
+                  color: Colors.white,
                 ),
               ),
             );
@@ -273,20 +278,8 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
   ) {
     final nights = checkOut.difference(checkIn).inDays;
 
-    return Container(
+    return AdaptiveGlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: VillaJaskoColors.backgroundSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VillaJaskoColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: VillaJaskoColors.shadowLight,
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -615,6 +608,8 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
         const SizedBox(height: 16),
 
         // Powered by BedBooking badge
+        // NOTE: Currently respects URL parameter only (config.showPoweredByBadge)
+        // TODO: Add Firestore settings check using DynamicThemeService.shouldShowBranding()
         PoweredByBedBookingBadge(
           show: config?.showPoweredByBadge ?? true,
         ),
@@ -651,7 +646,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
   }
 
   void _showContactInfo(BuildContext context) {
-    showDialog(
+    showGlassDialog(
       context: context,
       builder: (context) => Consumer(
         builder: (context, ref, child) {

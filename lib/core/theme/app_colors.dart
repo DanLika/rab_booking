@@ -9,16 +9,16 @@ class AppColors {
   // PRIMARY & SECONDARY COLORS
   // ============================================================================
 
-  /// Primary brand color - Mediterranean Azure Blue
+  /// Primary brand color - Modern Purple
   /// Used for: primary actions, links, focus states, trust indicators
-  /// Inspired by the crystal-clear Adriatic Sea
-  static const Color primary = Color(0xFF0066FF); // Azure Blue
+  /// Updated to modern Purple-Blue theme (2025)
+  static const Color primary = Color(0xFF6B4CE6); // Purple
 
-  /// Primary variant - Deeper ocean blue
-  static const Color primaryDark = Color(0xFF0052CC); // Deep Azure
+  /// Primary variant - Deeper purple
+  static const Color primaryDark = Color(0xFF5B3DD6); // Deep Purple
 
-  /// Primary light - Sky blue
-  static const Color primaryLight = Color(0xFF3385FF); // Light Azure
+  /// Primary light - Light purple
+  static const Color primaryLight = Color(0xFF9B86F3); // Light Purple
 
   /// Secondary accent color - Coral Sunset
   /// Used for: CTAs, highlights, special offers, energy elements
@@ -179,12 +179,25 @@ class AppColors {
   static const Color statusCancelled = Color(0xFFEF4444); // Red 500
   static const Color statusCompleted = Color(0xFF6B7280); // Gray 500
 
+  /// Activity type colors
+  static const Color activityBooking = Color(0xFF7C3AED); // Purple 600
+  static const Color activityReview = Color(0xFFD97706); // Amber 600
+  static const Color activityMessage = Color(0xFF5B8DEE); // Blue 500
+  static const Color activityPayment = Color(0xFF0891B2); // Cyan 600
+  static const Color activityCancellation = Color(0xFFDC2626); // Red 600
+
   // ============================================================================
   // AUTH SCREEN COLORS (Premium Purple-Blue Theme)
   // ============================================================================
 
   /// Auth primary color - Modern Purple
   static const Color authPrimary = Color(0xFF6B4CE6); // Purple
+
+  /// Auth primary light - Lighter Purple
+  static const Color authPrimaryLight = Color(0xFF8B6CEF); // Light Purple
+
+  /// Auth primary dark - Darker Purple
+  static const Color authPrimaryDark = Color(0xFF5436C3); // Dark Purple
 
   /// Auth secondary color - Lighter Blue
   static const Color authSecondary = Color(0xFF4A90E2); // Blue
@@ -213,6 +226,18 @@ class AppColors {
     end: Alignment.centerRight,
   );
 
+  /// Auth primary gradient - Purple gradient
+  /// Use for: auth primary buttons
+  static const LinearGradient authPrimaryGradient = LinearGradient(
+    colors: [
+      Color(0xFF8B6CEF), // Light Purple
+      Color(0xFF6B4CE6), // Purple
+      Color(0xFF5436C3), // Dark Purple
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   /// Auth background gradient - Beige to White diagonal
   /// Use for: auth screen background
   static const LinearGradient authBackgroundGradient = LinearGradient(
@@ -224,13 +249,13 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
-  /// Primary gradient - Ocean Depths (Azure blue spectrum)
+  /// Primary gradient - Purple Depths (Modern purple spectrum)
   /// Use for: hero sections, featured cards, primary backgrounds
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [
-      Color(0xFF3385FF), // Light Azure
-      Color(0xFF0066FF), // Azure Blue
-      Color(0xFF0052CC), // Deep Azure
+      Color(0xFF9B86F3), // Light Purple
+      Color(0xFF6B4CE6), // Purple
+      Color(0xFF5B3DD6), // Deep Purple
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -266,17 +291,17 @@ class AppColors {
     colors: [
       Color(0xFFFFB84D), // Golden Sand
       Color(0xFFFF6B6B), // Coral Red
-      Color(0xFF0066FF), // Azure Blue
+      Color(0xFF6B4CE6), // Purple
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Ocean Breeze - Blue to turquoise
+  /// Ocean Breeze - Purple to turquoise
   /// Use for: water-themed sections, calm backgrounds
   static const LinearGradient oceanGradient = LinearGradient(
     colors: [
-      Color(0xFF0066FF), // Azure Blue
+      Color(0xFF6B4CE6), // Purple
       Color(0xFF00C9FF), // Turquoise
     ],
     begin: Alignment.topLeft,
@@ -310,7 +335,7 @@ class AppColors {
   /// Use for: property card images, hero section images
   static const LinearGradient premiumOverlayGradient = LinearGradient(
     colors: [
-      Color(0x000066FF), // Transparent Azure top
+      Color(0x006B4CE6), // Transparent Purple top
       Color(0x33000000), // Black 20% middle
       Color(0x80000000), // Black 50% bottom
     ],
@@ -322,9 +347,9 @@ class AppColors {
   /// Hero gradient - Bold primary gradient for hero sections
   static const LinearGradient heroGradient = LinearGradient(
     colors: [
-      Color(0xFF0066FF), // Azure Blue
-      Color(0xFF0052CC), // Deep Azure
-      Color(0xFF003D99), // Darker Azure
+      Color(0xFF6B4CE6), // Purple
+      Color(0xFF5B3DD6), // Deep Purple
+      Color(0xFF4B2DC6), // Darker Purple
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

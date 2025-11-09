@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 /// Responsive breakpoints helper
+/// UNIFIED with /lib/core/constants/breakpoints.dart
 class ResponsiveHelper {
-  /// Mobile breakpoint (phones)
-  static const double mobile = 640;
+  /// Mobile breakpoint (phones) - < 600px
+  static const double mobile = 600;
 
-  /// Tablet breakpoint
+  /// Tablet breakpoint - >= 1024px
   static const double tablet = 1024;
 
   /// Check if screen is mobile

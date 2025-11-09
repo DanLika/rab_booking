@@ -24,7 +24,6 @@ class ProfileImagePicker extends StatefulWidget {
 
 class _ProfileImagePickerState extends State<ProfileImagePicker> {
   Uint8List? _imageBytes;
-  String? _imageName;
   bool _isHovered = false;
 
   Future<void> _pickImage() async {
@@ -41,7 +40,6 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
         final bytes = await image.readAsBytes();
         setState(() {
           _imageBytes = bytes;
-          _imageName = image.name;
         });
         widget.onImageSelected(bytes, image.name);
       }
@@ -90,9 +88,9 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
     return Container(
       width: widget.size,
       height: widget.size,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [

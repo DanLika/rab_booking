@@ -19,7 +19,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppColors.primary.withValues(alpha: 0.1),
+              AppColors.authPrimary.withValues(alpha: 0.1),
               Colors.white,
             ],
           ),
@@ -37,7 +37,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                     const Icon(
                       Icons.hotel,
                       size: 100,
-                      color: AppColors.primary,
+                      color: AppColors.authPrimary,
                     ),
                     const SizedBox(height: 32),
 
@@ -46,7 +46,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                       'Dobrodošli u BedBooking!',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
+                            color: AppColors.authPrimary,
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -107,7 +107,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                         onPressed: () => context.go(OwnerRoutes.onboardingWizard),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: AppColors.authPrimary,
                           foregroundColor: Colors.white,
                         ),
                         child: const Row(
@@ -167,7 +167,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: AppColors.primary, size: 24),
+        Icon(icon, color: AppColors.authPrimary, size: 24),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -212,7 +212,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.warning,
             ),
             child: const Text('Preskoči'),
           ),

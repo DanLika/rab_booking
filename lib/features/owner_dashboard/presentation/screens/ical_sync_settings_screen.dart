@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../domain/models/ical_feed.dart';
@@ -24,10 +24,16 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   Widget build(BuildContext context) {
     final feedsAsync = ref.watch(icalFeedsStreamProvider);
     final statsAsync = ref.watch(icalStatisticsProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('iCal Sinhronizacija'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -43,114 +49,179 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           ),
         ],
       ),
-      drawer: const OwnerAppDrawer(currentRoute: 'ical-sync'),
-      body: Column(
-        children: [
-          // Statistics card
-          statsAsync.when(
-            data: (stats) => _buildStatisticsCard(stats),
-            loading: () => const SizedBox.shrink(),
-            error: (error, stackTrace) => const SizedBox.shrink(),
+      drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical'),
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: theme.brightness == Brightness.dark
+                ? [
+                    const Color(0xFF1A1A1A), // Dark gray
+                    const Color(0xFF2D2D2D), // Lighter dark gray
+                  ]
+                : [
+                    const Color(0xFF6B4CE6), // Purple
+                    const Color(0xFF4A90E2), // Blue
+                  ],
           ),
+        ),
+        child: statsAsync.when(
+          data: (stats) => _buildContent(context, feedsAsync, stats),
+          loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+          error: (error, stackTrace) => _buildContent(context, feedsAsync, null),
+        ),
+      ),
+    );
+  }
 
-          const Divider(),
+  Widget _buildContent(BuildContext context, AsyncValue<List<IcalFeed>> feedsAsync, Map<String, dynamic>? stats) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Status card
+          _buildStatusCard(stats),
 
-          // Feeds list
-          Expanded(
-            child: feedsAsync.when(
-              data: (feeds) {
-                if (feeds.isEmpty) {
-                  return _buildEmptyState();
-                }
+          const SizedBox(height: 24),
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: feeds.length,
-                  itemBuilder: (context, index) {
-                    return _buildFeedCard(feeds[index]);
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Text('Greška: $error'),
+          // Info section
+          _buildInfoSection(),
+
+          const SizedBox(height: 32),
+
+          // Feeds list section
+          feedsAsync.when(
+            data: (feeds) {
+              if (feeds.isEmpty) {
+                return _buildEmptyFeedsCard();
+              }
+              return _buildFeedsList(feeds);
+            },
+            loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+            error: (error, stack) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Greška: $error',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
           ),
+
+          const SizedBox(height: 24),
+
+          // Add feed button
+          ElevatedButton.icon(
+            onPressed: () => _showAddFeedDialog(context),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF6B4CE6),
+            ),
+            icon: const Icon(Icons.add),
+            label: const Text(
+              'Dodaj iCal Feed',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Help link
+          TextButton.icon(
+            onPressed: () => context.go(OwnerRoutes.guideIcal),
+            icon: const Icon(Icons.help_outline, color: Colors.white),
+            label: const Text(
+              'Kako funkcionira iCal sinhronizacija?',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddFeedDialog(context),
-        backgroundColor: const Color(0xFF6B4CE6),
-        tooltip: 'Dodaj iCal Feed',
-        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildStatisticsCard(Map<String, dynamic> stats) {
+  Widget _buildStatusCard(Map<String, dynamic>? stats) {
+    final activeFeeds = stats?['active_feeds'] as int? ?? 0;
+    final errorFeeds = stats?['error_feeds'] as int? ?? 0;
+    final totalFeeds = stats?['total_feeds'] as int? ?? 0;
+
+    // Determine status
+    Color statusColor;
+    IconData statusIcon;
+    String statusTitle;
+    String statusDescription;
+
+    if (totalFeeds == 0) {
+      statusColor = Colors.grey;
+      statusIcon = Icons.sync_disabled;
+      statusTitle = 'Nema feedova';
+      statusDescription = 'Dodajte prvi iCal feed da započnete sinhronizaciju';
+    } else if (errorFeeds > 0) {
+      statusColor = Colors.red;
+      statusIcon = Icons.error;
+      statusTitle = 'Greška u sinhronizaciji';
+      statusDescription = '$errorFeeds od $totalFeeds feedova ima grešku';
+    } else if (activeFeeds > 0) {
+      statusColor = Colors.green;
+      statusIcon = Icons.check_circle;
+      statusTitle = 'Sinhronizacija aktivna';
+      statusDescription = '$activeFeeds feedova aktivno sinhronizovano';
+    } else {
+      statusColor = Colors.orange;
+      statusIcon = Icons.pause_circle;
+      statusTitle = 'Svi feedovi pauzirani';
+      statusDescription = 'Nema aktivnih feedova';
+    }
+
     return Card(
-      margin: const EdgeInsets.all(16),
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: statusColor.withAlpha((0.3 * 255).toInt()),
+          width: 2,
+        ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(20),
+        child: Row(
           children: [
-            // Header with gradient icon
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.sync, color: Colors.white, size: 24),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Statistika Sinhronizacije',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: statusColor.withAlpha((0.2 * 255).toInt()),
+              child: Icon(statusIcon, color: statusColor, size: 32),
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem(
-                  'Ukupno',
-                  stats['total_feeds']?.toString() ?? '0',
-                  Icons.feed,
-                  const Color(0xFF6B4CE6), // Purple
-                ),
-                _buildStatItem(
-                  'Aktivno',
-                  stats['active_feeds']?.toString() ?? '0',
-                  Icons.check_circle,
-                  const Color(0xFF10B981), // Green
-                ),
-                _buildStatItem(
-                  'Greška',
-                  stats['error_feeds']?.toString() ?? '0',
-                  Icons.error,
-                  const Color(0xFFEF4444), // Red
-                ),
-                _buildStatItem(
-                  'Eventi',
-                  stats['total_events']?.toString() ?? '0',
-                  Icons.event,
-                  const Color(0xFF3B82F6), // Blue
-                ),
-              ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    statusTitle,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    statusDescription,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -158,59 +229,150 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withValues(alpha: 0.1),
-            color.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  Widget _buildInfoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Zašto iCal Sinhronizacija?',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1.5,
+        const SizedBox(height: 16),
+        _buildInfoItem(
+          Icons.sync_rounded,
+          'Automatska Sinhronizacija',
+          'Rezervacije se automatski uvozе sa booking platformi svakih 60 minuta',
         ),
-      ),
-      child: Column(
+        _buildInfoItem(
+          Icons.calendar_today_rounded,
+          'Sprečavanje Duplog Bukinga',
+          'Blokirajte termine na svim platformama automatski',
+        ),
+        _buildInfoItem(
+          Icons.check_circle_outline_rounded,
+          'Kompatibilnost',
+          'Podržava Booking.com, Airbnb, Expedia, VRBO i druge platforme',
+        ),
+        _buildInfoItem(
+          Icons.security_rounded,
+          'Sigurno i Pouzdano',
+          'Enkriptovani podaci i automatski backup svih rezervacija',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoItem(IconData icon, String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color.withValues(alpha: 0.8),
+          Icon(icon, color: Colors.white, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withAlpha((0.85 * 255).toInt()),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEmptyFeedsCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+        child: Column(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+              ),
+              child: const Icon(
+                Icons.sync_disabled,
+                size: 40,
+                color: Color(0xFF6B4CE6),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Nema iCal Feedova',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Dodajte iCal feed da sinhronizujete rezervacije sa booking platformama',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeedsList(List<IcalFeed> feeds) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Vaši Feedovi',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...feeds.map((feed) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildFeedCard(feed),
+            )),
+      ],
     );
   }
 
   Widget _buildFeedCard(IcalFeed feed) {
-    final statusColor = _getStatusColor(feed.status);
+    final theme = Theme.of(context);
+    final statusColor = _getStatusColor(feed.status, theme);
     final statusIcon = _getStatusIcon(feed.status);
 
     return Card(
@@ -241,6 +403,8 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
         title: Text(
           feed.platformDisplayName,
           style: const TextStyle(fontWeight: FontWeight.bold),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,157 +412,95 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             const SizedBox(height: 4),
             Text(
               'Zadnje sinhronizovano: ${feed.getTimeSinceLastSync()}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 12,
+                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
             if (feed.hasError && feed.lastError != null)
               Text(
                 'Greška: ${feed.lastError}',
-                style: const TextStyle(fontSize: 12, color: Colors.red),
+                style: TextStyle(fontSize: 12, color: theme.colorScheme.error),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               ),
             Text(
               '${feed.eventCount} rezervacija • ${feed.syncCount} sinhronizacija',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 12,
+                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ],
         ),
         trailing: PopupMenuButton<String>(
           onSelected: (value) => _handleFeedAction(value, feed),
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'sync',
-              child: Row(
-                children: [
-                  Icon(Icons.sync, size: 18),
-                  SizedBox(width: 8),
-                  Text('Sinhronizuj sada'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: feed.isActive ? 'pause' : 'resume',
-              child: Row(
-                children: [
-                  Icon(feed.isActive ? Icons.pause : Icons.play_arrow, size: 18),
-                  const SizedBox(width: 8),
-                  Text(feed.isActive ? 'Pauziraj' : 'Nastavi'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit, size: 18),
-                  SizedBox(width: 8),
-                  Text('Uredi'),
-                ],
-              ),
-            ),
-            const PopupMenuDivider(),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete, size: 18, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Obriši', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Modern icon with background
-            Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
-                    const Color(0xFF6B4CE6).withAlpha((0.05 * 255).toInt()),
+          itemBuilder: (popupContext) {
+            final errorColor = Theme.of(popupContext).colorScheme.error;
+            return [
+              const PopupMenuItem(
+                value: 'sync',
+                child: Row(
+                  children: [
+                    Icon(Icons.sync, size: 18),
+                    SizedBox(width: 8),
+                    Text('Sinhronizuj sada'),
                   ],
                 ),
-                border: Border.all(
-                  color: const Color(0xFF6B4CE6).withAlpha((0.2 * 255).toInt()),
-                  width: 2,
+              ),
+              PopupMenuItem(
+                value: feed.isActive ? 'pause' : 'resume',
+                child: Row(
+                  children: [
+                    Icon(feed.isActive ? Icons.pause : Icons.play_arrow, size: 18),
+                    const SizedBox(width: 8),
+                    Text(feed.isActive ? 'Pauziraj' : 'Nastavi'),
+                  ],
                 ),
               ),
-              child: const Icon(
-                Icons.sync_disabled,
-                size: 70,
-                color: Color(0xFF6B4CE6),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Title
-            Text(
-              'Nema iCal Feedova',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Description
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(
-                'Dodajte iCal feed da sinhronizujete rezervacije sa Booking.com, Airbnb i drugim platformama.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
+              const PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, size: 18),
+                    SizedBox(width: 8),
+                    Text('Uredi'),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-            // Modern button
-            ElevatedButton.icon(
-              onPressed: () => _showAddFeedDialog(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6B4CE6),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 2,
-              ),
-              icon: const Icon(Icons.add, size: 24),
-              label: const Text(
-                'Dodaj Prvi Feed',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, size: 18, color: errorColor),
+                    const SizedBox(width: 8),
+                    Text('Obriši', style: TextStyle(color: errorColor)),
+                  ],
                 ),
               ),
-            ),
-          ],
+            ];
+          },
         ),
       ),
     );
   }
 
-  Color _getStatusColor(String status) {
+
+  Color _getStatusColor(String status, ThemeData theme) {
     switch (status) {
       case 'active':
-        return AppColors.success; // Green for active
+        return theme.colorScheme.success; // Green for active
       case 'error':
-        return AppColors.error; // Red for errors
+        return theme.colorScheme.danger; // Red for errors
       case 'paused':
-        return AppColors.warning; // Orange for paused
+        return theme.colorScheme.warning; // Orange for paused
       default:
-        return Colors.grey;
+        return theme.colorScheme.outline; // Theme-aware neutral color
     }
   }
 
@@ -464,7 +566,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
         } else {
           ErrorDisplayUtils.showErrorSnackBar(
             context,
-            message ?? "Nepoznata greška",
+            message ?? 'Nepoznata greška',
             userMessage: 'Greška prilikom sinhronizacije',
           );
         }
@@ -519,9 +621,10 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   void _confirmDeleteFeed(BuildContext context, IcalFeed feed) {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Obriši Feed?'),
         content: Text(
           'Da li ste sigurni da želite obrisati ${feed.platformDisplayName} feed? '
@@ -529,31 +632,39 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Otkaži'),
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
+              final navigator = Navigator.of(dialogContext);
+              final messenger = ScaffoldMessenger.of(context);
+              navigator.pop();
               try {
                 final repository = ref.read(icalRepositoryProvider);
                 await repository.deleteIcalFeed(feed.id);
 
                 if (mounted) {
-                  ErrorDisplayUtils.showSuccessSnackBar(context, 'Feed obrisan');
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: const Text('Feed obrisan'),
+                      backgroundColor: theme.colorScheme.success,
+                    ),
+                  );
                 }
               } catch (e) {
                 if (mounted) {
-                  ErrorDisplayUtils.showErrorSnackBar(
-                    context,
-                    e,
-                    userMessage: 'Greška prilikom brisanja feeda',
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: const Text('Greška prilikom brisanja feeda'),
+                      backgroundColor: theme.colorScheme.danger,
+                    ),
                   );
                 }
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
             ),
             child: const Text('Obriši'),
           ),
@@ -617,7 +728,10 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final unitsAsync = ref.watch(ownerUnitsProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth > 500 ? 500.0 : screenWidth * 0.9;
 
     return AlertDialog(
       shape: RoundedRectangleBorder(
@@ -628,19 +742,24 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+              gradient: LinearGradient(
+                colors: [theme.colorScheme.brandPurple, theme.colorScheme.brandBlue],
               ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.sync, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 12),
-          Text(widget.existingFeed == null ? 'Dodaj iCal Feed' : 'Uredi iCal Feed'),
+          Expanded(
+            child: Text(
+              widget.existingFeed == null ? 'Dodaj iCal Feed' : 'Uredi iCal Feed',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
       content: SizedBox(
-        width: 500,
+        width: dialogWidth,
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -652,9 +771,9 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                 unitsAsync.when(
                   data: (units) {
                     if (units.isEmpty) {
-                      return const Text(
+                      return Text(
                         'Nemate kreiranih jedinica. Prvo kreirajte apartman.',
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(color: Theme.of(context).colorScheme.error),
                       );
                     }
 
@@ -751,13 +870,13 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        AppColors.primary.withValues(alpha: 0.1),
-                        AppColors.primary.withValues(alpha: 0.05),
+                        theme.colorScheme.brandPurple.withValues(alpha: 0.1),
+                        theme.colorScheme.brandPurple.withValues(alpha: 0.05),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.3),
+                      color: theme.colorScheme.brandPurple.withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                   ),
@@ -767,8 +886,8 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                          gradient: LinearGradient(
+                            colors: [theme.colorScheme.brandPurple, theme.colorScheme.brandBlue],
                           ),
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -784,7 +903,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.primary.withValues(alpha: 0.9),
+                                color: theme.colorScheme.brandPurple.withValues(alpha: 0.9),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -792,7 +911,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                               'Rezervacije će se automatski sinhronizovati svakih 60 minuta. Inicijalna sinhronizacija će se pokrenuti odmah nakon dodavanja.',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.primary.withValues(alpha: 0.8),
+                                color: theme.colorScheme.brandPurple.withValues(alpha: 0.8),
                               ),
                             ),
                           ],

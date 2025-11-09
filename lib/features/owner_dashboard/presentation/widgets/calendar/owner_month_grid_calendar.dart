@@ -62,7 +62,7 @@ class _OwnerMonthGridCalendarState
     final rowHeight = CalendarGridCalculator.getRowHeight(screenWidth);
     final dayCellWidth =
         CalendarGridCalculator.getDayCellWidth(screenWidth, daysInMonth);
-    final headerHeight = CalendarGridCalculator.headerHeight;
+    final headerHeight = CalendarGridCalculator.getHeaderHeight(screenWidth);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -276,13 +276,28 @@ class _OwnerMonthGridCalendarState
                 : null,
             child: DragTarget<BookingModel>(
               onWillAcceptWithDetails: (details) {
-                return widget.enableDragDrop;
+                if (!widget.enableDragDrop) return false;
+
+                // Validate drop target in real-time
+                ref.read(dragDropProvider.notifier).validateDrop(
+                  dropDate: date,
+                  targetUnitId: unit.id,
+                  allBookings: widget.bookings,
+                );
+
+                return true; // Always accept to show feedback, actual validation in executeDrop
               },
               onAcceptWithDetails: (details) {
-                _handleBookingDrop(details.data, date, unit);
+                // Only execute drop if validation passed
+                final dragState = ref.read(dragDropProvider);
+                if (dragState.isValidDrop) {
+                  _handleBookingDrop(details.data, date, unit);
+                }
               },
               builder: (context, candidateData, rejectedData) {
                 final isHighlighted = candidateData.isNotEmpty;
+                final dragState = ref.watch(dragDropProvider);
+                final isValid = dragState.isValidDrop;
 
                 return MouseRegion(
                   cursor: widget.onCellTap != null && !isPast
@@ -293,7 +308,9 @@ class _OwnerMonthGridCalendarState
                     height: rowHeight,
                     decoration: BoxDecoration(
                       color: isHighlighted
-                          ? theme.colorScheme.primary.withAlpha((0.1 * 255).toInt())
+                          ? (isValid
+                              ? Colors.green.withAlpha((0.2 * 255).toInt())
+                              : Colors.red.withAlpha((0.2 * 255).toInt()))
                           : (isPast
                               ? theme.disabledColor.withAlpha((0.05 * 255).toInt())
                               : (isToday
@@ -390,15 +407,18 @@ class _OwnerMonthGridCalendarState
     final left = startDayOffset * dayCellWidth;
     final width = duration * dayCellWidth;
 
+    // Reduced vertical margins for better space utilization
+    const verticalMargin = 6.0;
+
     return Positioned(
       left: left,
-      top: 4,
+      top: verticalMargin,
       child: BookingBlockWidget(
         booking: booking,
         width: width,
-        height: rowHeight - 8,
+        height: rowHeight - (verticalMargin * 2),
         onTap: () => widget.onBookingTap(booking),
-        onSecondaryTap: () => _showBookingContextMenu(booking),
+        onSecondaryTapDown: (details) => _showBookingContextMenu(booking, details),
         isDraggable: widget.enableDragDrop,
         showGuestName: width > 60,
         showCheckInOut: width > 30,
@@ -438,18 +458,15 @@ class _OwnerMonthGridCalendarState
   }
 
   /// Show context menu for booking (right-click)
-  void _showBookingContextMenu(BookingModel booking) {
+  void _showBookingContextMenu(BookingModel booking, TapDownDetails details) {
     final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
     if (overlay == null) return;
 
-    // Get cursor position (approximate center of screen as fallback)
-    final position = Offset(
-      MediaQuery.of(context).size.width / 2,
-      MediaQuery.of(context).size.height / 2,
-    );
+    // FIXED: Use actual tap position instead of screen center
+    final position = details.globalPosition;
 
     showBookingContextMenu(
       context: context,

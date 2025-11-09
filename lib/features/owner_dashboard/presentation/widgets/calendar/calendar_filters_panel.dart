@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/models/calendar_filter_options.dart';
 import '../../providers/calendar_filters_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
@@ -418,7 +419,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     const sources = [
       ('widget', 'Widget', Icons.web, Colors.green),
       ('admin', 'Manualno', Icons.person, Colors.grey),
-      ('ical', 'iCal', Icons.sync, Colors.blue),
+      ('ical', 'iCal', Icons.sync, AppColors.authSecondary),
       ('booking_com', 'Booking.com', Icons.public, Colors.orange),
       ('airbnb', 'Airbnb', Icons.home, Colors.red),
     ];

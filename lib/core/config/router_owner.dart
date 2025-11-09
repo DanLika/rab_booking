@@ -21,6 +21,7 @@ import '../../features/owner_dashboard/presentation/screens/unit_form_screen.dar
 import '../../features/owner_dashboard/presentation/screens/unit_pricing_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/units_management_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/widget_settings_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/widget_settings_list_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/notifications_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/profile_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/edit_profile_screen.dart';
@@ -103,6 +104,7 @@ class OwnerRoutes {
   static const String profileChangePassword = '/owner/profile/change-password';
   static const String profileNotifications = '/owner/profile/notifications';
   static const String priceList = '/owner/price-list';
+  static const String widgetSettings = '/owner/widget-settings';
   // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
   static const String icalIntegration = '/owner/integrations/ical';
@@ -161,8 +163,8 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
             LoggingService.log('  → Redirecting / to onboarding wizard (authenticated, needs onboarding)', tag: 'ROUTER');
             return OwnerRoutes.onboardingWizard;
           }
-          LoggingService.log('  → Redirecting / to calendar (authenticated)', tag: 'ROUTER');
-          return OwnerRoutes.calendarWeek;
+          LoggingService.log('  → Redirecting / to overview (authenticated)', tag: 'ROUTER');
+          return OwnerRoutes.overview;
         } else {
           LoggingService.log('  → Redirecting / to login (not authenticated)', tag: 'ROUTER');
           return OwnerRoutes.login;
@@ -183,10 +185,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return OwnerRoutes.login;
       }
 
-      // Redirect to calendar (timeline view) if authenticated, doesn't need onboarding, and trying to access login
+      // Redirect to overview if authenticated, doesn't need onboarding, and trying to access login
       if (isAuthenticated && !requiresOnboarding && isLoggingIn) {
-        LoggingService.log('  → Redirecting to calendar (authenticated, was on login)', tag: 'ROUTER');
-        return OwnerRoutes.calendarWeek; // Changed from overview to calendar
+        LoggingService.log('  → Redirecting to overview (authenticated, was on login)', tag: 'ROUTER');
+        return OwnerRoutes.overview;
       }
 
       LoggingService.log('  → No redirect needed', tag: 'ROUTER');
@@ -364,6 +366,12 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: OwnerRoutes.priceList,
         builder: (context, state) => const PriceListScreen(),
+      ),
+
+      // Widget Settings List route
+      GoRoute(
+        path: OwnerRoutes.widgetSettings,
+        builder: (context, state) => const WidgetSettingsListScreen(),
       ),
 
       // Integrations routes

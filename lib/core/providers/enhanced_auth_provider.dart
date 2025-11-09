@@ -7,6 +7,7 @@ import '../../core/services/security_events_service.dart';
 import '../../core/services/ip_geolocation_service.dart';
 import '../../core/services/logging_service.dart';
 import '../../core/services/storage_service.dart';
+import '../../core/utils/password_validator.dart';
 import '../../shared/models/user_model.dart';
 import '../../shared/providers/repository_providers.dart';
 import '../constants/enums.dart';
@@ -30,6 +31,7 @@ class EnhancedAuthState {
   });
 
   bool get isAuthenticated => firebaseUser != null && userModel != null;
+  bool get isAnonymous => firebaseUser?.isAnonymous ?? false;
   bool get isOwner => userModel?.isOwner ?? false;
   bool get isAdmin => userModel?.isAdmin ?? false;
   bool get isEmployee => userModel?.isEmployee ?? false;
@@ -226,12 +228,29 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     bool acceptedPrivacy = false,
     bool newsletterOptIn = false,
   }) async {
+    // Validate firstName and lastName
+    if (firstName.trim().isEmpty || lastName.trim().isEmpty) {
+      throw 'First name and last name are required';
+    }
+
+    // Validate password strength
+    final passwordValidation = PasswordValidator.validate(password);
+    if (passwordValidation.strength == PasswordStrength.weak) {
+      throw 'Password is too weak. ${passwordValidation.missingRequirements.join(', ')}';
+    }
+
     if (!acceptedTerms || !acceptedPrivacy) {
       throw 'You must accept the Terms & Conditions and Privacy Policy';
     }
 
     try {
       state = state.copyWith(isLoading: true, error: null);
+
+      // Check rate limit
+      final rateLimit = await _rateLimit.checkRateLimit(email);
+      if (rateLimit != null && rateLimit.isLocked) {
+        throw _rateLimit.getRateLimitMessage(rateLimit);
+      }
 
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -277,12 +296,24 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       // Update display name in Firebase Auth
       await credential.user!.updateDisplayName('$firstName $lastName');
 
+      // Reset rate limit on success
+      await _rateLimit.resetAttempts(email);
+
       // Send email verification
       await credential.user!.sendEmailVerification();
 
-      // Get geolocation
-      final geoResult = await _geolocation.getCurrentLocation();
-      final location = geoResult?.locationString;
+      // Get geolocation (with timeout to avoid blocking registration)
+      String? location;
+      try {
+        final geoResult = await _geolocation.getCurrentLocation().timeout(
+          const Duration(seconds: 3),
+          onTimeout: () => null,
+        );
+        location = geoResult?.locationString;
+      } catch (e) {
+        // Ignore geolocation errors, don't block registration
+        location = null;
+      }
 
       // Log registration with location
       await _security.logEvent(
@@ -310,7 +341,16 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         requiresOnboarding: true,
       );
     } on FirebaseAuthException catch (e) {
-      state = state.copyWith(isLoading: false, error: _getAuthErrorMessage(e));
+      // Record failed attempt
+      await _rateLimit.recordFailedAttempt(email);
+
+      // Get updated rate limit info
+      final updatedLimit = await _rateLimit.checkRateLimit(email);
+      final errorMessage = updatedLimit != null && updatedLimit.isLocked
+          ? _rateLimit.getRateLimitMessage(updatedLimit)
+          : _getAuthErrorMessage(e);
+
+      state = state.copyWith(isLoading: false, error: errorMessage);
       rethrow;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

@@ -8,13 +8,14 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/app_dimensions.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
+import '../../../../shared/widgets/gradient_button.dart';
 import '../widgets/embed_code_generator_dialog.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Unit form screen for add/edit
 class UnitFormScreen extends ConsumerStatefulWidget {
@@ -106,91 +107,23 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
     final isMobile = screenWidth < 600;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Uredi Jedinicu' : 'Dodaj Jedinicu'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      resizeToAvoidBottomInset: true,
+      backgroundColor: theme.colorScheme.surface,
+      appBar: CommonAppBar(
+        title: _isEditing ? 'Uredi Jedinicu' : 'Dodaj Jedinicu',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          // Gradient Header
-          Container(
-            height: 200,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF6B4CE6), // Purple
-                  Color(0xFF4A90E2), // Blue
-                ],
-              ),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(isMobile ? 16 : 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 60), // Space for AppBar
-                    Row(
-                      children: [
-                        // Icon
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            _isEditing ? Icons.edit_note : Icons.add_home_work,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        // Title
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _isEditing ? 'Uredi Jedinicu' : 'Nova Jedinica',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _isEditing ? 'Ažuriraj podatke jedinice' : 'Dodaj novu jedinicu objektu',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withAlpha((0.9 * 255).toInt()),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Form Content
           Form(
             key: _formKey,
             child: ListView(
-              padding: EdgeInsets.only(
-                left: isMobile ? 16 : 24,
-                right: isMobile ? 16 : 24,
-                top: 180, // Offset for gradient header
-                bottom: 16,
+              padding: EdgeInsets.fromLTRB(
+                isMobile ? 16 : 24,
+                isMobile ? 16 : 24,
+                isMobile ? 16 : 24,
+                24,
               ),
               children: [
                 // Basic Info Section
@@ -451,26 +384,14 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceM),
 
-                // Save Button
-                SizedBox(
+                // Modern Gradient Save Button
+                GradientButton(
+                  text: _isEditing ? 'Spremi Izmjene' : 'Dodaj Jedinicu',
+                  onPressed: _handleSave,
+                  isLoading: _isLoading,
+                  icon: _isEditing ? Icons.save : Icons.add,
+                  height: 56,
                   width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: _isLoading ? null : _handleSave,
-                    style: FilledButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        vertical: isMobile ? 16 : 20,
-                        horizontal: 24,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: Icon(_isEditing ? Icons.save : Icons.add),
-                    label: Text(
-                      _isEditing ? 'Spremi Izmjene' : 'Dodaj Jedinicu',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
                 ),
 
                 // Widget Settings & Embed Code section (only when editing)
@@ -526,28 +447,44 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                   ),
                 ],
 
-            const SizedBox(height: AppDimensions.spaceXL),
-          ],
-        ),
-      ),
+                const SizedBox(height: AppDimensions.spaceXL),
+              ],
+            ),
+          ),
 
           // Loading Overlay
           if (_isLoading)
             Container(
               color: Colors.black.withAlpha((0.5 * 255).toInt()),
-              child: const Center(
+              child: Center(
                 child: Card(
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
-                    padding: EdgeInsets.all(32),
+                    padding: const EdgeInsets.all(32),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text(
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
                           'Spremanje...',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -587,11 +524,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
                       colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
                     ),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(icon, color: Colors.white, size: 20),
                 ),

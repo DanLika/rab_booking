@@ -17,18 +17,29 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: const Text('iCal Sinhronizacija - Uputstvo'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: theme.primaryColor,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
-      body: ListView(
+      body: SafeArea(
+        child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Header
           Card(
-            color: Colors.purple.shade50,
+            color: isDark
+                ? const Color(0xFF1E1E1E)
+                : const Color(0xFFF3E5F5),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -36,7 +47,13 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.sync, size: 40, color: Colors.purple.shade700),
+                      Icon(
+                        Icons.sync,
+                        size: 40,
+                        color: isDark
+                            ? const Color(0xFF9575CD)
+                            : const Color(0xFF6B4CE6),
+                      ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -47,7 +64,9 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.purple.shade900,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF4A148C),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -55,7 +74,9 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                               'Automatski sync rezervacija sa Booking.com, Airbnb i drugih platformi',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.purple.shade700,
+                                color: isDark
+                                    ? Colors.grey.shade400
+                                    : const Color(0xFF7B1FA2),
                               ),
                             ),
                           ],
@@ -64,10 +85,14 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     '💡 iCal sinhronizacija sprečava overbooking tako što automatski uvozi rezervacije '
                     'sa drugih platformi i prikazuje ih kao zauzete dane u vašem kalendaru.',
-                    style: TextStyle(fontSize: 14, height: 1.5),
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: isDark ? Colors.grey.shade300 : null,
+                    ),
                   ),
                 ],
               ),
@@ -80,7 +105,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           _buildPlatformSection(
             platformName: 'Booking.com',
             icon: Icons.hotel,
-            color: Colors.blue.shade700,
+            color: AppColors.authSecondary,
             steps: [
               '1. Ulogujte se na Extranet (admin.booking.com)',
               '2. Idite na: Property → Calendar → Reservations export',
@@ -152,7 +177,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                   icon: const Icon(Icons.sync),
                   label: const Text('Idi na iCal Sinhronizaciju'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.authPrimary,
                     padding: const EdgeInsets.all(16),
                   ),
                 ),
@@ -236,14 +261,14 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
-                      const SizedBox(width: 8),
-                      const Expanded(
+                      Icon(Icons.info_outline, color: AppColors.authSecondary, size: 20),
+                      SizedBox(width: 8),
+                      Expanded(
                         child: Text(
                           'Vrijeme sinhronizacije: Svaki sat u 00 minuta (npr. 10:00, 11:00, 12:00...)',
                           style: TextStyle(fontSize: 12),
@@ -266,6 +291,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           // Troubleshooting Section
           _buildTroubleshootingSection(),
         ],
+      ),
       ),
     );
   }
@@ -324,13 +350,13 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           });
         },
         leading: CircleAvatar(
-          backgroundColor: isExpanded ? AppColors.primary : Colors.grey.shade300,
+          backgroundColor: isExpanded ? AppColors.authPrimary : Colors.grey.shade300,
           foregroundColor: isExpanded ? Colors.white : Colors.grey.shade700,
           child: Text('$stepNumber'),
         ),
         title: Row(
           children: [
-            Icon(icon, size: 20, color: AppColors.primary),
+            Icon(icon, size: 20, color: AppColors.authPrimary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -364,45 +390,228 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
   }
 
   Widget _buildPlaceholder(String text) {
+    final theme = Theme.of(context);
+
     return Container(
-      height: 180,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade400),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.image, size: 48, color: Colors.grey.shade500),
-            const SizedBox(height: 8),
-            Text(
-              text,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        gradient: LinearGradient(
+          colors: theme.brightness == Brightness.dark
+              ? [const Color(0xFF1E1E1E), const Color(0xFF2D2D2D)]
+              : [const Color(0xFFF3E5F5), const Color(0xFFE1BEE7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
+          width: 2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6B4CE6),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.image, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white
+                        : const Color(0xFF6B4CE6),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildVisualInstructions(text),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVisualInstructions(String context) {
+    if (context.contains('Booking.com')) {
+      return _buildDetailedSteps([
+        '1️⃣ Ulogujte se na admin.booking.com',
+        '2️⃣ Kliknite na vašu property',
+        '3️⃣ Idite na: Calendar → Reservations → Export',
+        '4️⃣ Kopirajte "iCal link" (URL koji počinje sa https://...)',
+        '📋 Paste URL u Owner aplikaciju',
+      ]);
+    } else if (context.contains('Airbnb')) {
+      return _buildDetailedSteps([
+        '1️⃣ Ulogujte se na airbnb.com/hosting',
+        '2️⃣ Odaberite listing',
+        '3️⃣ Idite na: Calendar → Availability',
+        '4️⃣ Scroll do "Sync calendars"',
+        '5️⃣ Kliknite "Export calendar" i kopirajte link',
+        '📋 Paste URL u Owner aplikaciju',
+      ]);
+    } else if (context.contains('VRBO')) {
+      return _buildDetailedSteps([
+        '1️⃣ Ulogujte se na owner.vrbo.com',
+        '2️⃣ Odaberite property iz liste',
+        '3️⃣ Calendar → Import/Export',
+        '4️⃣ Kliknite "Export" tab',
+        '5️⃣ Kopirajte iCal URL',
+        '📋 Paste URL u Owner aplikaciju',
+      ]);
+    } else {
+      // GIF placeholder za Owner app demo
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildAnimatedSteps(),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.touch_app, color: Color(0xFF6B4CE6), size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Kliknite na + dugme → Odaberite Unit → Odaberite Platform → Paste iCal URL → Kliknite "Dodaj"',
+                    style: TextStyle(fontSize: 12, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+  }
+
+  Widget _buildDetailedSteps(List<String> steps) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: steps.map((step) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  step,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    fontWeight: step.contains('📋')
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: step.contains('📋')
+                        ? const Color(0xFF6B4CE6)
+                        : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildAnimatedSteps() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        children: [
+          _buildMiniStep('1', 'Otvorite iCal Sinhronizaciju', Icons.sync),
+          const Icon(Icons.arrow_downward, size: 16, color: Color(0xFF6B4CE6)),
+          _buildMiniStep('2', 'Kliknite + dugme', Icons.add_circle),
+          const Icon(Icons.arrow_downward, size: 16, color: Color(0xFF6B4CE6)),
+          _buildMiniStep('3', 'Unesite detalje', Icons.edit),
+          const Icon(Icons.arrow_downward, size: 16, color: Color(0xFF6B4CE6)),
+          _buildMiniStep('4', 'Sačuvajte', Icons.check_circle, isLast: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniStep(String number, String text, IconData icon, {bool isLast = false}) {
+    return Container(
+      margin: EdgeInsets.only(bottom: isLast ? 0 : 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 12,
+            backgroundColor: const Color(0xFF6B4CE6),
+            child: Text(
+              number,
+              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(icon, size: 16, color: const Color(0xFF6B4CE6)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildFAQSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Card(
-      color: Colors.grey.shade50,
+      color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.question_answer, color: AppColors.primary),
-                SizedBox(width: 8),
-                Text(
-                  'Česta Pitanja',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                const Icon(Icons.question_answer, color: AppColors.authPrimary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Česta Pitanja',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : null,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -435,8 +644,11 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
   }
 
   Widget _buildTroubleshootingSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Card(
-      color: Colors.orange.shade50,
+      color: isDark ? const Color(0xFF2D2D2D) : Colors.orange.shade50,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -444,11 +656,21 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.build, color: Colors.orange.shade700),
+                Icon(
+                  Icons.build,
+                  color: isDark ? Colors.orange.shade300 : Colors.orange.shade700,
+                ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Rješavanje Problema',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Text(
+                    'Rješavanje Problema',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : null,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -477,6 +699,9 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
   }
 
   Widget _buildFAQItem(String question, String answer) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -484,12 +709,22 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
         children: [
           Text(
             '❓ $question',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: isDark ? Colors.white : null,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
           ),
           const SizedBox(height: 6),
           Text(
             answer,
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.5),
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -497,6 +732,9 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
   }
 
   Widget _buildTroubleshootItem(String problem, String solution) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -504,12 +742,22 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
         children: [
           Text(
             '⚠️ $problem',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: isDark ? Colors.orange.shade300 : Colors.orange.shade900,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
           ),
           const SizedBox(height: 6),
           Text(
             solution,
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade800, height: 1.5),
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark ? Colors.grey.shade300 : Colors.grey.shade800,
+              height: 1.5,
+            ),
           ),
         ],
       ),

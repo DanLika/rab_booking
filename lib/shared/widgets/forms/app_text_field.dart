@@ -132,7 +132,7 @@ class AppTextField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
           borderSide: BorderSide(
-            color: isDark ? AppColors.primaryLight : AppColors.primary,
+            color: isDark ? AppColors.authPrimaryLight : AppColors.authPrimary,
             width: AppDimensions.borderWidthFocus,
           ),
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/utils/slug_utils.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Dialog that generates and displays embed code for widget
 class EmbedCodeGeneratorDialog extends StatefulWidget {
@@ -253,28 +254,28 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
 
                   // Instructions
                   Card(
-                    color: Colors.blue.shade50,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
+                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
+                    child: const Padding(
+                      padding: EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.info_outline, color: Colors.blue.shade700),
-                              const SizedBox(width: 8),
+                              Icon(Icons.info_outline, color: AppColors.authSecondary),
+                              SizedBox(width: 8),
                               Text(
                                 'Uputstvo',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blue.shade700,
+                                  color: AppColors.authSecondary,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          const Text(
+                          SizedBox(height: 12),
+                          Text(
                             '1. Kopirajte embed kod (kliknite na "Kopiraj" dugme)\n'
                             '2. Otvorite stranicu vašeg web sajta u editoru\n'
                             '3. Zalijepite kod na željeno mjesto\n'

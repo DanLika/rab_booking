@@ -109,4 +109,5 @@ const _$PropertyAmenityEnumMap = {
   PropertyAmenity.sauna: 'sauna',
   PropertyAmenity.bicycleRental: 'bicycle_rental',
   PropertyAmenity.boatMooring: 'boat_mooring',
+  PropertyAmenity.restaurant: 'restaurant',
 };

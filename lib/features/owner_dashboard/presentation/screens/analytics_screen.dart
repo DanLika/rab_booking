@@ -6,6 +6,7 @@ import '../providers/analytics_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -18,17 +19,10 @@ class AnalyticsScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Analytics & Reports'),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              ref.invalidate(analyticsNotifierProvider);
-            },
-          ),
-        ],
+      appBar: CommonAppBar(
+        title: 'Analytics & Reports',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       body: Column(
         children: [
@@ -148,9 +142,9 @@ class _FilterChip extends StatelessWidget {
       label: Text(label),
       selected: selected,
       onSelected: (_) => onSelected(),
-      selectedColor: AppColors.primary,
+      selectedColor: AppColors.authPrimary,
       labelStyle: TextStyle(
-        color: selected ? Colors.white : AppColors.textPrimary,
+        color: selected ? const Color(0xFFFFFFFF) : AppColors.textPrimary,
       ),
     );
   }
@@ -406,7 +400,7 @@ class _RevenueChart extends StatelessWidget {
                   dotData: const FlDotData(show: true),
                   belowBarData: BarAreaData(
                     show: true,
-                    color: Colors.green.withValues(alpha: 0.2),
+                    color: AppColors.success.withValues(alpha: 0.2),
                   ),
                 ),
               ],
@@ -524,11 +518,11 @@ class _TopPropertiesList extends StatelessWidget {
           final property = properties[index];
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.authPrimary,
               child: Text(
                 '${index + 1}',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: Colors.white,
+                  color: const Color(0xFFFFFFFF),
                   fontWeight: FontWeight.bold,
                 ),
               ),

@@ -4,9 +4,10 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import 'unit_form_screen.dart';
 import 'unit_pricing_screen.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../shared/widgets/gradient_button.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Units management screen for a property
 class UnitsManagementScreen extends ConsumerStatefulWidget {
@@ -19,8 +20,7 @@ class UnitsManagementScreen extends ConsumerStatefulWidget {
       _UnitsManagementScreenState();
 }
 
-class _UnitsManagementScreenState
-    extends ConsumerState<UnitsManagementScreen> {
+class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
   List<UnitModel>? _units;
   bool _isLoading = true;
   String? _error;
@@ -39,7 +39,9 @@ class _UnitsManagementScreenState
 
     try {
       final repository = ref.read(ownerPropertiesRepositoryProvider);
-      final units = await repository.getPropertyUnits(widget.propertyId); // Changed from getUnits
+      final units = await repository.getPropertyUnits(
+        widget.propertyId,
+      ); // Changed from getUnits
       setState(() {
         _units = units;
         _isLoading = false;
@@ -54,35 +56,41 @@ class _UnitsManagementScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Upravljanje Jedinicama'),
+      resizeToAvoidBottomInset: true,
+      backgroundColor: theme.colorScheme.surface,
+      appBar: CommonAppBar(
+        title: 'Upravljanje Jedinicama',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      body: _buildBody(),
+      body: Stack(
+        children: [
+          // Content
+          _buildBody(),
+        ],
+      ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.shadow.withAlpha((0.1 * 255).toInt()),
-              blurRadius: 4,
+              color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+              blurRadius: 8,
               offset: const Offset(0, -2),
             ),
           ],
         ),
         child: SafeArea(
-          child: FilledButton.icon(
+          child: GradientButton(
+            text: 'Dodaj Novu Jedinicu',
             onPressed: _navigateToAddUnit,
-            icon: const Icon(Icons.add, size: 24),
-            label: const Text(
-              'Dodaj Novu Jedinicu',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              minimumSize: const Size(double.infinity, 56),
-            ),
+            icon: Icons.add,
+            height: 56,
+            width: double.infinity,
           ),
         ),
       ),
@@ -91,28 +99,71 @@ class _UnitsManagementScreenState
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Učitavanje...',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Theme.of(context).colorScheme.error,
+      return SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red.withAlpha((0.1 * 255).toInt()),
+                  ),
+                  child: const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Greška: $_error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                GradientButton(
+                  text: 'Pokušaj ponovo',
+                  onPressed: _loadUnits,
+                  icon: Icons.refresh,
+                  height: 48,
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text('Greška: $_error'),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: _loadUnits,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Pokušaj ponovo'),
-            ),
-          ],
+          ),
         ),
       );
     }
@@ -124,7 +175,12 @@ class _UnitsManagementScreenState
     return RefreshIndicator(
       onRefresh: _loadUnits,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(
+          top: 140 + 16,
+          left: 16,
+          right: 16,
+          bottom: 16,
+        ),
         itemCount: _units!.length,
         itemBuilder: (context, index) {
           final unit = _units![index];
@@ -142,46 +198,56 @@ class _UnitsManagementScreenState
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.apartment,
-              size: 120,
-              color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Nema dodanih jedinica',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+    return SafeArea(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 140,
+                height: 140,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+                      const Color(0xFF4A90E2).withAlpha((0.1 * 255).toInt()),
+                    ],
                   ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Dodajte prvu jedinicu (apartman, sobu, studio) za ovu nekretninu',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                    color: context.textColorSecondary,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            FilledButton.icon(
-              onPressed: _navigateToAddUnit,
-              icon: const Icon(Icons.add),
-              label: const Text('Dodaj Prvu Jedinicu'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
+                ),
+                child: const Icon(
+                  Icons.apartment,
+                  size: 70,
+                  color: Color(0xFF6B4CE6),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              Text(
+                'Nema dodanih jedinica',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Dodajte prvu jedinicu (apartman, sobu, studio) za ovu nekretninu',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: context.textColorSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              GradientButton(
+                text: 'Dodaj Prvu Jedinicu',
+                onPressed: _navigateToAddUnit,
+                icon: Icons.add,
+                height: 56,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -201,21 +267,17 @@ class _UnitsManagementScreenState
     Navigator.of(context)
         .push(
           MaterialPageRoute(
-            builder: (_) => UnitFormScreen(
-              propertyId: widget.propertyId,
-              unit: unit,
-            ),
+            builder: (_) =>
+                UnitFormScreen(propertyId: widget.propertyId, unit: unit),
           ),
         )
         .then((_) => _loadUnits());
   }
 
   void _navigateToManagePricing(UnitModel unit) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => UnitPricingScreen(unit: unit),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => UnitPricingScreen(unit: unit)));
   }
 
   Future<void> _confirmDeleteUnit(String unitId) async {
@@ -245,7 +307,9 @@ class _UnitsManagementScreenState
 
     if (confirmed == true && mounted) {
       try {
-        await ref.read(ownerPropertiesRepositoryProvider).deleteUnit(widget.propertyId, unitId);
+        await ref
+            .read(ownerPropertiesRepositoryProvider)
+            .deleteUnit(widget.propertyId, unitId);
         _loadUnits();
         if (mounted) {
           ErrorDisplayUtils.showSuccessSnackBar(
@@ -302,18 +366,38 @@ class _UnitCard extends StatelessWidget {
                       child: Text(
                         unit.name,
                         style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Price
-                    Text(
-                      '€${unit.pricePerNight.toStringAsFixed(0)}/noć',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
+                    // Price with gradient
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(
+                              0xFF6B4CE6,
+                            ).withAlpha((0.15 * 255).toInt()),
+                            const Color(
+                              0xFF4A90E2,
+                            ).withAlpha((0.15 * 255).toInt()),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '€${unit.pricePerNight.toStringAsFixed(0)}/noć',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF6B4CE6),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -332,11 +416,13 @@ class _UnitCard extends StatelessWidget {
                   child: Text(
                     unit.isAvailable ? 'Dostupno' : 'Nedostupno',
                     style: theme.textTheme.bodySmall?.copyWith(
-                          color: unit.isAvailable
-                              ? const Color(0xFF10B981)
-                              : theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                          fontWeight: FontWeight.w600,
-                        ),
+                      color: unit.isAvailable
+                          ? const Color(0xFF10B981)
+                          : theme.colorScheme.onSurface.withAlpha(
+                              (0.6 * 255).toInt(),
+                            ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -351,12 +437,14 @@ class _UnitCard extends StatelessWidget {
                 _buildDetail(
                   context,
                   icon: Icons.bed,
-                  label: '${unit.bedrooms} ${unit.bedrooms == 1 ? 'soba' : 'sobe'}',
+                  label:
+                      '${unit.bedrooms} ${unit.bedrooms == 1 ? 'soba' : 'sobe'}',
                 ),
                 _buildDetail(
                   context,
                   icon: Icons.bathroom,
-                  label: '${unit.bathrooms} ${unit.bathrooms == 1 ? 'kupaonica' : 'kupaonice'}',
+                  label:
+                      '${unit.bathrooms} ${unit.bathrooms == 1 ? 'kupaonica' : 'kupaonice'}',
                 ),
                 _buildDetail(
                   context,
@@ -377,8 +465,8 @@ class _UnitCard extends StatelessWidget {
               Text(
                 unit.description!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: context.textColorSecondary,
-                    ),
+                  color: context.textColorSecondary,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -481,13 +569,14 @@ class _UnitCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: context.textColorSecondary),
+        Icon(icon, size: 16, color: const Color(0xFF6B4CE6)),
         const SizedBox(width: 4),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: context.textColorSecondary,
-              ),
+            color: context.textColorSecondary,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );

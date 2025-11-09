@@ -5,6 +5,7 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/repositories/booking_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../utils/booking_overlap_detector.dart';
 import 'owner_calendar_provider.dart';
 
@@ -231,7 +232,7 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Booking restored to original position'),
-            backgroundColor: Colors.blue,
+            backgroundColor: AppColors.authSecondary,
           ),
         );
       }

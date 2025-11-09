@@ -185,7 +185,7 @@ class _GlowCardState extends State<GlowCard>
 
   @override
   Widget build(BuildContext context) {
-    final glowColor = widget.glowColor ?? AppColors.primary;
+    final glowColor = widget.glowColor ?? AppColors.authPrimary;
 
     return MouseRegion(
       onEnter: _handleHoverEnter,

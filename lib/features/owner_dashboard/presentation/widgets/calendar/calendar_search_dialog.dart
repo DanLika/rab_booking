@@ -38,11 +38,20 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
   /// Load units for displaying unit names in results
   Future<void> _loadUnits() async {
     final unitsAsync = ref.read(allOwnerUnitsProvider);
-    unitsAsync.whenData((units) {
-      setState(() {
-        _unitsMap = {for (var unit in units) unit.id: unit};
-      });
-    });
+    unitsAsync.when(
+      data: (units) {
+        if (mounted) {
+          setState(() {
+            _unitsMap = {for (var unit in units) unit.id: unit};
+          });
+        }
+      },
+      loading: () {},
+      error: (error, stackTrace) {
+        // Silently fail - unit names will just show as IDs
+        debugPrint('Failed to load units for search: $error');
+      },
+    );
   }
 
   /// Perform search across all bookings
@@ -106,14 +115,17 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
       child: Container(
         width: MediaQuery.of(context).size.width * 0.8,
         height: MediaQuery.of(context).size.height * 0.8,
-        constraints: const BoxConstraints(maxWidth: 800, maxHeight: 700),
+        constraints: BoxConstraints(
+          maxWidth: 800,
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+        ),
         child: Column(
           children: [
             // Header
             Container(
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
-                color: AppColors.primary,
+                color: AppColors.authPrimary,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(4),
                   topRight: Radius.circular(4),
@@ -276,7 +288,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
   /// Build result card
   Widget _buildResultCard(BookingModel booking, UnitModel? unit) {
-    final dateFormat = DateFormat('d.M.yyyy');
+    final dateFormat = DateFormat('d.M.yyyy', 'hr_HR');
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
 
     return Card(
@@ -353,14 +365,14 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                      color: AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '$nights noć${nights > 1 ? 'i' : ''}',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppColors.primary,
+                        color: AppColors.authPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

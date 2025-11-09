@@ -4,13 +4,13 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../widgets/recent_activity_widget.dart';
+import '../widgets/owner_app_drawer.dart';
+import '../../../../shared/widgets/common_gradient_app_bar.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_bookings_provider.dart';
+import '../providers/dashboard_stats_provider.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../shared/widgets/cards/cards.dart';
 
 /// Dashboard overview tab
 /// Shows basic overview information and recent activity
@@ -19,156 +19,130 @@ class DashboardOverviewTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final propertiesAsync = ref.watch(ownerPropertiesProvider);
-    final isMobile = MediaQuery.of(context).size.width < AppDimensions.mobile;
+    final statsAsync = ref.watch(dashboardStatsProvider);
+    final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        ref.invalidate(ownerPropertiesProvider);
-      },
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(
-          isMobile ? AppDimensions.spaceM : AppDimensions.spaceL,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Premium Welcome Header
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF6B4CE6),
-                    Color(0xFF4A90E2),
-                  ],
+    return Scaffold(
+        backgroundColor: theme.colorScheme.surface,
+        drawer: const OwnerAppDrawer(currentRoute: 'overview'),
+        body: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(ownerPropertiesProvider);
+            ref.invalidate(recentOwnerBookingsProvider);
+            ref.invalidate(dashboardStatsProvider);
+            // Wait for providers to reload
+            await Future.wait([
+              ref.read(ownerPropertiesProvider.future),
+              ref.read(recentOwnerBookingsProvider.future),
+              ref.read(dashboardStatsProvider.future),
+            ]);
+          },
+          color: const Color(0xFF6B4CE6),
+          child: CustomScrollView(
+            slivers: [
+              // Gradient Header
+              CommonGradientAppBar(
+                title: 'Pregled',
+                leadingIcon: Icons.menu,
+                onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+              ),
+
+              // Stats cards section
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(
+                  isMobile ? 16 : 24,
+                  isMobile ? 16 : 20,
+                  isMobile ? 16 : 24,
+                  isMobile ? 8 : 12,
                 ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+                sliver: statsAsync.when(
+                  data: (stats) => _buildStatsCardsSliver(
+                    context: context,
+                    stats: stats,
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.dashboard_rounded,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Pregled',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Dobrodošli u vaš Dashboard',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Colors.white.withAlpha((0.9 * 255).toInt()),
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: AppDimensions.spaceXL),
-
-            // Simple stats cards
-            propertiesAsync.when(
-              data: (properties) => _buildStatsCards(
-                context,
-                totalProperties: properties.length,
-                activeProperties: properties.where((p) => p.isActive).length,
-              ),
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(AppDimensions.spaceXL),
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6B4CE6)),
-                  ),
-                ),
-              ),
-              error: (e, s) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppDimensions.spaceXL),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              const Color(0xFFEF4444).withAlpha((0.1 * 255).toInt()),
-                              const Color(0xFFDC2626).withAlpha((0.05 * 255).toInt()),
-                            ],
+                  loading: () => const SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40),
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFF6B4CE6),
                           ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.error_outline_rounded,
-                          size: 40,
-                          color: Color(0xFFEF4444),
                         ),
                       ),
-                      const SizedBox(height: AppDimensions.spaceL),
-                      const Text(
-                        'Greška prilikom učitavanja podataka',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3748),
+                    ),
+                  ),
+                  error: (e, s) => SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
+                                    theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
+                                  ],
+                                ),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.error_outline_rounded,
+                                size: 40,
+                                color: theme.colorScheme.error,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Greška prilikom učitavanja podataka',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              e.toString(),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: AppDimensions.spaceS),
-                      Text(
-                        e.toString(),
-                        style: const TextStyle(
-                          color: Color(0xFF718096),
-                          fontSize: 14,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: AppDimensions.spaceXL),
+              // Recent activity section
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(
+                  isMobile ? 16 : 24,
+                  isMobile ? 16 : 20,
+                  isMobile ? 16 : 24,
+                  isMobile ? 16 : 20,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: _buildRecentActivity(context, ref),
+                ),
+              ),
 
-            // Recent activity
-            _buildRecentActivity(context, ref),
-          ],
+              // Bottom spacing
+              const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+            ],
+          ),
         ),
-      ),
     );
   }
 
@@ -222,6 +196,16 @@ class DashboardOverviewTab extends ConsumerWidget {
         title = 'Rezervacija potvrđena';
         subtitle = '${property.name} - ${unit.name}';
         break;
+      case BookingStatus.checkedIn:
+        type = ActivityType.booking;
+        title = 'Gost check-in';
+        subtitle = '${property.name} - ${unit.name}';
+        break;
+      case BookingStatus.checkedOut:
+        type = ActivityType.booking;
+        title = 'Gost check-out';
+        subtitle = '${property.name} - ${unit.name}';
+        break;
       case BookingStatus.cancelled:
         type = ActivityType.cancellation;
         title = 'Rezervacija otkazana';
@@ -252,57 +236,108 @@ class DashboardOverviewTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsCards(
-    BuildContext context, {
-    required int totalProperties,
-    required int activeProperties,
+  // Helper method to create theme-aware gradient
+  Gradient _createThemeGradient(BuildContext context, List<Color> lightColors) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (isDark) {
+      // In dark mode, use muted versions of the colors
+      return LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: lightColors.map((color) {
+          return Color.alphaBlend(
+            Colors.white.withAlpha((0.15 * 255).toInt()),
+            color.withAlpha((0.6 * 255).toInt()),
+          );
+        }).toList(),
+      );
+    } else {
+      // In light mode, use the original colors
+      return LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: lightColors,
+      );
+    }
+  }
+
+  Widget _buildStatsCardsSliver({
+    required BuildContext context,
+    required DashboardStats stats,
   }) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < AppDimensions.mobile;
-        final isTablet = constraints.maxWidth < AppDimensions.tablet;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 900;
 
-        // Mobile: 2 cards per row, Desktop: 3 cards per row
-        final cardsPerRow = isMobile ? 2 : 3;
-        final spacing = isMobile ? 12.0 : 16.0;
-        final cardWidth = isMobile
-            ? (constraints.maxWidth - spacing * (cardsPerRow + 1)) / cardsPerRow
-            : isTablet
-                ? (constraints.maxWidth - spacing * (cardsPerRow + 1)) / cardsPerRow
-                : 280.0;
-
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          alignment: WrapAlignment.center,
-          children: [
-            _buildStatCard(
-              context: context,
-              title: 'Ukupno Nekretnina',
-              value: '$totalProperties',
-              icon: Icons.villa,
-              color: const Color(0xFF6B4CE6),
-              width: cardWidth,
-            ),
-            _buildStatCard(
-              context: context,
-              title: 'Aktivne Nekretnine',
-              value: '$activeProperties',
-              icon: Icons.check_circle,
-              color: const Color(0xFF10B981),
-              width: cardWidth,
-            ),
-            _buildStatCard(
-              context: context,
-              title: 'Neaktivne',
-              value: '${totalProperties - activeProperties}',
-              icon: Icons.pause_circle,
-              color: const Color(0xFFF59E0B),
-              width: cardWidth,
-            ),
-          ],
-        );
-      },
+    return SliverToBoxAdapter(
+      child: Wrap(
+        spacing: isMobile ? 12.0 : 16.0,
+        runSpacing: isMobile ? 12.0 : 16.0,
+        alignment: WrapAlignment.center,
+        children: [
+          _buildStatCard(
+            context: context,
+            title: 'Zarada ovaj mjesec',
+            value: '€${stats.monthlyRevenue.toStringAsFixed(0)}',
+            icon: Icons.euro_rounded,
+            gradient: _createThemeGradient(context, [const Color(0xFF5B8DEE), const Color(0xFF0063F7)]),
+            isMobile: isMobile,
+            isTablet: isTablet,
+            animationDelay: 0,
+          ),
+          _buildStatCard(
+            context: context,
+            title: 'Zarada ove godine',
+            value: '€${stats.yearlyRevenue.toStringAsFixed(0)}',
+            icon: Icons.trending_up_rounded,
+            gradient: _createThemeGradient(context, [const Color(0xFF667EEA), const Color(0xFF4F5FD8)]),
+            isMobile: isMobile,
+            isTablet: isTablet,
+            animationDelay: 100,
+          ),
+          _buildStatCard(
+            context: context,
+            title: 'Rezervacije ovaj mjesec',
+            value: '${stats.monthlyBookings}',
+            icon: Icons.calendar_today_rounded,
+            gradient: _createThemeGradient(context, [const Color(0xFF7C3AED), const Color(0xFF5B21B6)]),
+            isMobile: isMobile,
+            isTablet: isTablet,
+            animationDelay: 200,
+          ),
+          _buildStatCard(
+            context: context,
+            title: 'Nadolazeći check-in',
+            value: '${stats.upcomingCheckIns}',
+            icon: Icons.schedule_rounded,
+            gradient: _createThemeGradient(context, [const Color(0xFF06B6D4), const Color(0xFF0891B2)]),
+            isMobile: isMobile,
+            isTablet: isTablet,
+            animationDelay: 300,
+          ),
+          _buildStatCard(
+            context: context,
+            title: 'Aktivne nekretnine',
+            value: '${stats.activeProperties}',
+            icon: Icons.villa_rounded,
+            gradient: _createThemeGradient(context, [const Color(0xFF8B9DC3), const Color(0xFF6B7FA3)]),
+            isMobile: isMobile,
+            isTablet: isTablet,
+            animationDelay: 400,
+          ),
+          _buildStatCard(
+            context: context,
+            title: 'Popunjenost',
+            value: '${stats.occupancyRate.toStringAsFixed(1)}%',
+            icon: Icons.analytics_rounded,
+            gradient: _createThemeGradient(context, [const Color(0xFF9CA3AF), const Color(0xFF6B7280)]),
+            isMobile: isMobile,
+            isTablet: isTablet,
+            animationDelay: 500,
+          ),
+        ],
+      ),
     );
   }
 
@@ -311,97 +346,132 @@ class DashboardOverviewTab extends ConsumerWidget {
     required String title,
     required String value,
     required IconData icon,
-    required Color color,
-    required double width,
+    required Gradient gradient,
+    required bool isMobile,
+    required bool isTablet,
+    int animationDelay = 0,
   }) {
-    final isMobile = MediaQuery.of(context).size.width < AppDimensions.mobile;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      width: width,
-      height: isMobile ? 160 : 200, // FIXED HEIGHT
-      padding: EdgeInsets.all(isMobile ? 12 : 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withAlpha((0.1 * 255).toInt()),
-            color.withAlpha((0.05 * 255).toInt()),
+    // Calculate responsive width
+    final screenWidth = MediaQuery.of(context).size.width;
+    final spacing = isMobile ? 12.0 : 16.0;
+
+    double cardWidth;
+    if (isMobile) {
+      // Mobile: 2 cards per row
+      cardWidth =
+          (screenWidth - (spacing * 3 + 32)) / 2; // 32 = left/right padding
+    } else if (isTablet) {
+      // Tablet: 3 cards per row
+      cardWidth = (screenWidth - (spacing * 4 + 48)) / 3;
+    } else {
+      // Desktop: fixed width
+      cardWidth = 280.0;
+    }
+
+    // Extract primary color from gradient for shadow
+    final primaryColor = (gradient.colors.isNotEmpty)
+        ? gradient.colors.first
+        : const Color(0xFF6B4CE6);
+
+    // Theme-aware text and icon colors
+    final textColor = isDark ? theme.colorScheme.onSurface : Colors.white;
+    final iconColor = isDark ? theme.colorScheme.onSurface : Colors.white;
+    final iconBgColor = isDark
+        ? theme.colorScheme.onSurface.withAlpha((0.15 * 255).toInt())
+        : Colors.white.withAlpha((0.2 * 255).toInt());
+
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 600 + animationDelay),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        width: cardWidth,
+        height: isMobile ? 160 : 180,
+        constraints: const BoxConstraints(
+          maxWidth: 320,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: primaryColor.withAlpha((0.12 * 255).toInt()),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withAlpha((0.2 * 255).toInt()),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withAlpha((0.15 * 255).toInt()),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Icon container
-          Container(
-            padding: EdgeInsets.all(isMobile ? 10 : 14),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  color.withAlpha((0.2 * 255).toInt()),
-                  color.withAlpha((0.1 * 255).toInt()),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withAlpha((0.3 * 255).toInt()),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            padding: EdgeInsets.all(isMobile ? 14 : 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Icon container
+                Container(
+                  padding: EdgeInsets.all(isMobile ? 10 : 12),
+                  decoration: BoxDecoration(
+                    color: iconBgColor,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: iconColor,
+                    size: isMobile ? 22 : 26,
+                  ),
+                ),
+                SizedBox(height: isMobile ? 8 : 12),
+
+                // Value
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    value,
+                    style: theme.textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                      height: 1.0,
+                      letterSpacing: -1,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(height: isMobile ? 6 : 8),
+
+                // Title
+                Text(
+                  title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: textColor.withAlpha((0.9 * 255).toInt()),
+                    fontWeight: FontWeight.w500,
+                    height: 1.3,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: isMobile ? 28 : 36,
-            ),
           ),
-          SizedBox(height: isMobile ? 8 : 12),
-
-          // Value
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: isMobile ? 28 : 40,
-                  color: color,
-                  height: 1.1,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: isMobile ? 4 : 6),
-
-          // Title
-          Text(
-            title,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF4A5568),
-                  fontWeight: FontWeight.w600,
-                  fontSize: isMobile ? 11 : 13,
-                  height: 1.2,
-                ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+        ),
       ),
     );
   }

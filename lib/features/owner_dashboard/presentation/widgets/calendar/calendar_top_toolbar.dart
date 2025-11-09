@@ -17,6 +17,7 @@ class CalendarTopToolbar extends StatelessWidget {
   final bool? showSummary;
   final ValueChanged<bool>? onSummaryToggle;
   final int? notificationCount;
+  final VoidCallback? onNotificationsTap;
   final bool isCompact;
 
   const CalendarTopToolbar({
@@ -34,6 +35,7 @@ class CalendarTopToolbar extends StatelessWidget {
     this.showSummary,
     this.onSummaryToggle,
     this.notificationCount,
+    this.onNotificationsTap,
     this.isCompact = false,
   });
 
@@ -59,7 +61,8 @@ class CalendarTopToolbar extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.filter_list),
               onPressed: onFilterTap,
-              tooltip: 'Filters',
+              tooltip: 'Filteri',
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             ),
             const SizedBox(width: 8),
           ],
@@ -73,7 +76,8 @@ class CalendarTopToolbar extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.chevron_left),
                   onPressed: onPreviousPeriod,
-                  tooltip: isWeekView ? 'Previous week' : 'Previous month',
+                  tooltip: isWeekView ? 'Prethodni tjedan' : 'Prethodni mjesec',
+                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 ),
 
                 // Date range display (tappable for date picker)
@@ -94,17 +98,14 @@ class CalendarTopToolbar extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Flexible(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(minWidth: 80),
-                              child: Text(
-                                dateRange.toDisplayString(isWeek: isWeekView),
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                            child: Text(
+                              dateRange.toDisplayString(isWeek: isWeekView),
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.primary,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -123,7 +124,8 @@ class CalendarTopToolbar extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
                   onPressed: onNextPeriod,
-                  tooltip: isWeekView ? 'Next week' : 'Next month',
+                  tooltip: isWeekView ? 'Sljedeći tjedan' : 'Sljedeći mjesec',
+                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 ),
               ],
             ),
@@ -138,7 +140,8 @@ class CalendarTopToolbar extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.search),
                   onPressed: onSearchTap,
-                  tooltip: 'Search bookings',
+                  tooltip: 'Pretraži rezervacije',
+                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 ),
 
               // Refresh button
@@ -146,8 +149,9 @@ class CalendarTopToolbar extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.refresh),
                   onPressed: onRefresh,
-                  tooltip: 'Refresh',
+                  tooltip: 'Osvježi',
                   color: Colors.green,
+                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 ),
 
               // Today button (calendar icon with day badge)
@@ -157,7 +161,8 @@ class CalendarTopToolbar extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.calendar_today_outlined),
                     onPressed: onToday,
-                    tooltip: 'Go to Today',
+                    tooltip: 'Idi na danas',
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                   ),
                   Positioned(
                     bottom: 10,
@@ -185,29 +190,45 @@ class CalendarTopToolbar extends StatelessWidget {
                 ],
               ),
 
-              // Add room button (quick action)
+              // Add booking button (quick action)
               if (onAddRoom != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ElevatedButton.icon(
-                    onPressed: onAddRoom,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: isCompact
-                        ? const SizedBox.shrink()
-                        : const Text('Add Room'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isCompact ? 12 : 16,
-                        vertical: 8,
-                      ),
-                      minimumSize: const Size(0, 36),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
+                  child: isCompact
+                      ? IconButton(
+                          onPressed: onAddRoom,
+                          icon: const Icon(Icons.add),
+                          tooltip: 'Nova rezervacija',
+                          style: IconButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
+                            minimumSize: const Size(44, 44),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 44,
+                            minHeight: 44,
+                          ),
+                        )
+                      : ElevatedButton.icon(
+                          onPressed: onAddRoom,
+                          icon: const Icon(Icons.add, size: 20),
+                          label: const Text('Nova rezervacija'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            minimumSize: const Size(44, 44),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
                 ),
 
               // Summary toggle switch
@@ -242,10 +263,9 @@ class CalendarTopToolbar extends StatelessWidget {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.notifications),
-                      onPressed: () {
-                        // Handle notifications
-                      },
-                      tooltip: 'Notifications',
+                      onPressed: onNotificationsTap,
+                      tooltip: 'Obavijesti',
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     ),
                     Positioned(
                       right: 8,

@@ -77,12 +77,12 @@ class PremiumTabBar extends StatelessWidget {
         letterSpacing: AppTypography.letterSpacingNormal,
       ),
       labelColor: labelColor ??
-          (isDark ? AppColors.textPrimaryDark : AppColors.primary),
+          (isDark ? AppColors.textPrimaryDark : AppColors.authPrimary),
       unselectedLabelColor: unselectedLabelColor ??
           (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
       indicator: UnderlineTabIndicator(
         borderSide: BorderSide(
-          color: indicatorColor ?? AppColors.primary,
+          color: indicatorColor ?? AppColors.authPrimary,
           width: 3,
         ),
         insets: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceS),
@@ -191,7 +191,7 @@ class _PillTab extends StatelessWidget {
                     ? AppTypography.weightSemibold
                     : AppTypography.weightMedium,
                 color: isSelected
-                    ? (isDark ? AppColors.textPrimaryDark : AppColors.primary)
+                    ? (isDark ? AppColors.textPrimaryDark : AppColors.authPrimary)
                     : (isDark
                         ? AppColors.textSecondaryDark
                         : AppColors.textSecondaryLight),
@@ -229,7 +229,7 @@ class _SegmentedTab extends StatelessWidget {
       curve: AppAnimations.smooth,
       decoration: BoxDecoration(
         color: isSelected
-            ? AppColors.primary
+            ? AppColors.authPrimary
             : Colors.transparent,
         borderRadius: BorderRadius.horizontal(
           left: isFirst ? const Radius.circular(AppDimensions.radiusM) : Radius.zero,

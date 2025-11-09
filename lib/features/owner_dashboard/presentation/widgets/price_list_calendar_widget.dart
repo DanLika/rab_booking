@@ -36,86 +36,191 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
         // Header with month selector and bulk edit toggle
-        _buildHeader(),
+        _buildHeader(isMobile),
 
         const SizedBox(height: 16),
 
         // Selected days counter (in bulk edit mode)
-        if (_bulkEditMode && _selectedDays.isNotEmpty)
+        if (_bulkEditMode && _selectedDays.isNotEmpty) ...[
           _buildSelectionCounter(),
+          const SizedBox(height: 16),
+        ],
 
-        const SizedBox(height: 16),
-
-        // Calendar grid
-        Expanded(
-          child: _buildCalendarGrid(),
-        ),
+        // Calendar grid - constrained height for GridView
+        _buildCalendarGrid(),
 
         const SizedBox(height: 16),
 
         // Action buttons
         if (_bulkEditMode && _selectedDays.isNotEmpty)
-          _buildBulkEditActions(),
+          _buildBulkEditActions(isMobile),
       ],
     );
   }
 
-  Widget _buildHeader() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // Month selector
-            Expanded(
-              child: DropdownButtonFormField<DateTime>(
-                initialValue: _selectedMonth,
-                decoration: const InputDecoration(
-                  labelText: 'Odaberi mjesec',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.calendar_month),
-                ),
-                items: _generateMonthList().map((month) {
-                  return DropdownMenuItem(
-                    value: month,
-                    child: Text(DateFormat('MMMM yyyy').format(month)),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedMonth = value;
-                      _selectedDays.clear();
-                    });
-                  }
-                },
-              ),
+  Widget _buildHeader(bool isMobile) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha((0.08 * 255).toInt()),
+            blurRadius: 40,
+            offset: const Offset(0, 20),
+          ),
+          BoxShadow(
+            color: Colors.black.withAlpha((0.04 * 255).toInt()),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withAlpha((0.95 * 255).toInt()),
+                Colors.white.withAlpha((0.90 * 255).toInt()),
+              ],
             ),
-
-            const SizedBox(width: 16),
-
-            // Bulk edit mode toggle
-            OutlinedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _bulkEditMode = !_bulkEditMode;
-                  _selectedDays.clear();
-                });
-              },
-              icon: Icon(
-                _bulkEditMode ? Icons.check_box : Icons.check_box_outline_blank,
-              ),
-              label: const Text('Bulk Edit'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _bulkEditMode ? AppColors.primary : null,
-                side: _bulkEditMode ? const BorderSide(color: AppColors.primary, width: 2) : null,
-              ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withAlpha((0.4 * 255).toInt()),
+              width: 1.5,
             ),
-          ],
+          ),
+          padding: EdgeInsets.all(isMobile ? 20 : 24),
+        child: isMobile
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Month selector
+                  DropdownButtonFormField<DateTime>(
+                    initialValue: _selectedMonth,
+                    decoration: InputDecoration(
+                      labelText: 'Odaberi mjesec',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      prefixIcon: const Icon(Icons.calendar_month),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                    items: _generateMonthList().map((month) {
+                      return DropdownMenuItem(
+                        value: month,
+                        child: Text(DateFormat('MMMM yyyy').format(month)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _selectedMonth = value;
+                          _selectedDays.clear();
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  // Bulk edit toggle - full width on mobile
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _bulkEditMode = !_bulkEditMode;
+                        _selectedDays.clear();
+                      });
+                    },
+                    icon: Icon(
+                      _bulkEditMode ? Icons.check_box : Icons.check_box_outline_blank,
+                    ),
+                    label: Text(_bulkEditMode ? 'Odustani' : 'Bulk Edit'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _bulkEditMode ? AppColors.authPrimary : null,
+                      side: _bulkEditMode
+                          ? const BorderSide(color: AppColors.authPrimary, width: 2)
+                          : null,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  // Month selector
+                  Expanded(
+                    child: DropdownButtonFormField<DateTime>(
+                      initialValue: _selectedMonth,
+                      decoration: InputDecoration(
+                        labelText: 'Odaberi mjesec',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: const Icon(Icons.calendar_month),
+                      ),
+                      items: _generateMonthList().map((month) {
+                        return DropdownMenuItem(
+                          value: month,
+                          child: Text(DateFormat('MMMM yyyy').format(month)),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedMonth = value;
+                            _selectedDays.clear();
+                          });
+                        }
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  // Bulk edit mode toggle
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _bulkEditMode = !_bulkEditMode;
+                        _selectedDays.clear();
+                      });
+                    },
+                    icon: Icon(
+                      _bulkEditMode ? Icons.check_box : Icons.check_box_outline_blank,
+                    ),
+                    label: Text(_bulkEditMode ? 'Odustani' : 'Bulk Edit'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _bulkEditMode ? AppColors.authPrimary : null,
+                      side: _bulkEditMode
+                          ? const BorderSide(color: AppColors.authPrimary, width: 2)
+                          : null,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
         ),
       ),
     );
@@ -123,31 +228,51 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
   Widget _buildSelectionCounter() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.primary),
+        color: AppColors.authPrimary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.authPrimary,
+          width: 2,
+        ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            '${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan' : 'dana'} odabrano',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.authPrimary,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.check_circle,
+              color: Colors.white,
+              size: 20,
+            ),
           ),
-          const Spacer(),
-          TextButton(
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              '${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan' : 'dana'} odabrano',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.authPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+            ),
+          ),
+          TextButton.icon(
             onPressed: () {
               setState(() {
                 _selectedDays.clear();
               });
             },
-            child: const Text('Očisti'),
+            icon: const Icon(Icons.close, size: 18),
+            label: const Text('Očisti'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.authPrimary,
+            ),
           ),
         ],
       ),
@@ -164,10 +289,60 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
       month: _selectedMonth,
     )));
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+    // Calculate grid height based on number of rows needed
+    final totalCells = firstDayOfWeek - 1 + daysInMonth;
+    final rows = (totalCells / 7).ceil();
+
+    // Use LayoutBuilder to get screen constraints for responsive sizing
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final isMobile = availableWidth < 600;
+        final isSmallMobile = availableWidth < 400;
+
+        // Calculate cell dimensions based on available width
+        final cellWidth = (availableWidth - 40 - (8 * 6)) / 7; // padding + spacing
+        final aspectRatio = isSmallMobile ? 0.85 : (isMobile ? 1.0 : 1.2);
+        final cellHeight = cellWidth / aspectRatio;
+        final gridHeight = (rows * cellHeight) + (rows * 8) + 50; // Add spacing between rows
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha((0.08 * 255).toInt()),
+            blurRadius: 40,
+            offset: const Offset(0, 20),
+          ),
+          BoxShadow(
+            color: Colors.black.withAlpha((0.04 * 255).toInt()),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withAlpha((0.95 * 255).toInt()),
+                Colors.white.withAlpha((0.90 * 255).toInt()),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withAlpha((0.4 * 255).toInt()),
+              width: 1.5,
+            ),
+          ),
+          padding: EdgeInsets.all(isSmallMobile ? 12 : (isMobile ? 16 : 20)),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Weekday headers
             _buildWeekdayHeaders(),
@@ -176,16 +351,18 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             const Divider(),
             const SizedBox(height: 8),
 
-            // Calendar grid
-            Expanded(
+            // Calendar grid with fixed height
+            SizedBox(
+              height: gridHeight,
               child: pricesAsync.when(
                 data: (priceMap) {
                   return GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 7,
                       mainAxisSpacing: 8,
                       crossAxisSpacing: 8,
-                      childAspectRatio: 1.2,
+                      childAspectRatio: aspectRatio, // Dynamic aspect ratio
                     ),
                     itemCount: firstDayOfWeek - 1 + daysInMonth,
                     itemBuilder: (context, index) {
@@ -197,20 +374,50 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                       final day = index - (firstDayOfWeek - 1) + 1;
                       final date = DateTime(_selectedMonth.year, _selectedMonth.month, day);
 
-                      return _buildDayCell(date, priceMap);
+                      return _buildDayCell(date, priceMap, isMobile, isSmallMobile);
                     },
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.authPrimary),
+                  ),
+                ),
                 error: (error, stack) => Center(
-                  child: Text('Error loading prices: $error'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.error_outline, size: 48, color: Colors.red[700]),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Greška pri učitavanju cijena',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red[700],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          error.toString(),
+                          style: const TextStyle(fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ],
         ),
       ),
+      ),
     );
+      },
+    ); // Close LayoutBuilder
   }
 
   Widget _buildWeekdayHeaders() {
@@ -233,7 +440,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
     );
   }
 
-  Widget _buildDayCell(DateTime date, Map<DateTime, DailyPriceModel> priceMap) {
+  Widget _buildDayCell(DateTime date, Map<DateTime, DailyPriceModel> priceMap, bool isMobile, bool isSmallMobile) {
     final isSelected = _selectedDays.contains(date);
     final isToday = DateTime.now().year == date.year &&
         DateTime.now().month == date.month &&
@@ -244,9 +451,14 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
     final dateKey = DateTime(date.year, date.month, date.day);
     final priceData = priceMap[dateKey];
     final hasPrice = priceData != null;
-    final price = priceData?.price ?? widget.unit.pricePerNight;
     final isAvailable = priceData?.available ?? true;
     final hasWeekendPrice = priceData?.weekendPrice != null;
+
+    // IMPORTANT: Use weekend price on weekends if it's set, otherwise use base price
+    final price = (hasWeekendPrice && isWeekend)
+        ? priceData!.weekendPrice!
+        : (priceData?.price ?? widget.unit.pricePerNight);
+
     final blockCheckIn = priceData?.blockCheckIn ?? false;
     final blockCheckOut = priceData?.blockCheckOut ?? false;
     final notes = priceData?.notes;
@@ -270,21 +482,21 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
       child: Container(
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.2)
+              ? AppColors.authPrimary.withValues(alpha: 0.2)
               : !isAvailable
                   ? Colors.grey[300] // Nedostupno - siva
                   : hasWeekendPrice && isWeekend
                       ? Colors.purple[50] // Vikend cijena - ljubičasta
                       : hasPrice
-                          ? Colors.blue[50] // Custom cijena - plava
+                          ? AppColors.authSecondary.withAlpha((0.1 * 255).toInt()) // Custom cijena - plava
                           : hasRestrictions
                               ? Colors.orange[50] // Restrikcije - narandžasta
                               : null, // Base price - bela
           border: Border.all(
             color: isSelected
-                ? AppColors.primary
+                ? AppColors.authPrimary
                 : isToday
-                    ? AppColors.primary.withValues(alpha: 0.5)
+                    ? AppColors.authPrimary.withValues(alpha: 0.5)
                     : hasRestrictions
                         ? Colors.orange[300]!
                         : Colors.grey[300]!,
@@ -292,7 +504,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           ),
           borderRadius: BorderRadius.circular(8),
         ),
-        padding: const EdgeInsets.all(4),
+        padding: EdgeInsets.all(isSmallMobile ? 2 : (isMobile ? 3 : 4)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -301,84 +513,146 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${date.day}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                        color: !isAvailable ? Colors.grey[600] : null,
-                      ),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '${date.day}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                            fontSize: isSmallMobile ? 9 : (isMobile ? 10 : null),
+                            color: !isAvailable ? Colors.grey[600] : null,
+                          ),
+                    ),
+                  ),
                 ),
                 if (_bulkEditMode && isSelected)
-                  const Icon(Icons.check_circle, size: 16, color: AppColors.primary),
+                  Icon(
+                    Icons.check_circle,
+                    size: isSmallMobile ? 12 : (isMobile ? 14 : 16),
+                    color: AppColors.authPrimary,
+                  ),
               ],
             ),
 
             // Price
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '€${price.toStringAsFixed(0)}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: !isAvailable
-                              ? Colors.grey[600]
-                              : hasWeekendPrice && isWeekend
-                                  ? Colors.purple[700]
-                                  : hasPrice
-                                      ? Colors.blue[700]
-                                      : Colors.grey[700],
-                        ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (!hasPrice && isAvailable)
-                  Text(
-                    'base',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 8,
-                          color: Colors.grey[600],
-                        ),
-                  ),
-              ],
-            ),
-
-            // Status indicators
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (blockCheckIn)
-                  Icon(Icons.login, size: 12, color: Colors.red[700]),
-                if (blockCheckIn && blockCheckOut)
-                  const SizedBox(width: 2),
-                if (blockCheckOut)
-                  Icon(Icons.logout, size: 12, color: Colors.red[700]),
-                if ((blockCheckIn || blockCheckOut) && notes != null && notes.isNotEmpty)
-                  const SizedBox(width: 2),
-                if (notes case final notesText?)
-                  GestureDetector(
-                    onTap: () => _showNotesDialog(context, date, notesText),
-                    child: Tooltip(
-                      message: notesText.length > 50
-                          ? '${notesText.substring(0, 47)}...'
-                          : notesText,
-                      preferBelow: false,
-                      child: Icon(Icons.notes, size: 12, color: Colors.orange[700]),
+            Flexible(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '€${price.toStringAsFixed(0)}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: isSmallMobile ? 11 : (isMobile ? 12 : null),
+                            color: !isAvailable
+                                ? Colors.grey[600]
+                                : hasWeekendPrice && isWeekend
+                                    ? Colors.purple[700]
+                                    : hasPrice
+                                        ? AppColors.authSecondary
+                                        : Colors.grey[700],
+                          ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-              ],
+                  // Hide "base" label on very small screens to save space
+                  if (!hasPrice && isAvailable && !isSmallMobile)
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'base',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: isMobile ? 7 : 8,
+                              color: Colors.grey[600],
+                            ),
+                      ),
+                    ),
+                ],
+              ),
             ),
+
+            // Status indicators - make more compact on mobile
+            if (blockCheckIn || blockCheckOut || notes != null)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (blockCheckIn)
+                    Icon(Icons.login, size: isSmallMobile ? 10 : (isMobile ? 11 : 12), color: Colors.red[700]),
+                  if (blockCheckIn && blockCheckOut)
+                    SizedBox(width: isSmallMobile ? 1 : 2),
+                  if (blockCheckOut)
+                    Icon(Icons.logout, size: isSmallMobile ? 10 : (isMobile ? 11 : 12), color: Colors.red[700]),
+                  if ((blockCheckIn || blockCheckOut) && notes != null && notes.isNotEmpty)
+                    SizedBox(width: isSmallMobile ? 1 : 2),
+                  if (notes case final notesText?)
+                    GestureDetector(
+                      onTap: () => _showNotesDialog(context, date, notesText),
+                      child: Tooltip(
+                        message: notesText.length > 50
+                            ? '${notesText.substring(0, 47)}...'
+                            : notesText,
+                        preferBelow: false,
+                        child: Icon(Icons.notes, size: isSmallMobile ? 10 : (isMobile ? 11 : 12), color: Colors.orange[700]),
+                      ),
+                    ),
+                ],
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBulkEditActions() {
+  Widget _buildBulkEditActions(bool isMobile) {
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ElevatedButton.icon(
+            onPressed: () => _showBulkPriceDialog(),
+            icon: const Icon(Icons.euro),
+            label: const Text('Postavi cijenu'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: AppColors.authPrimary,
+              foregroundColor: Colors.white,
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => _showBulkAvailabilityDialog(),
+            icon: const Icon(Icons.block),
+            label: const Text('Dostupnost'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
         Expanded(
@@ -388,8 +662,16 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             label: const Text('Postavi cijenu'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.authPrimary,
               foregroundColor: Colors.white,
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
         ),
@@ -401,6 +683,14 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             label: const Text('Dostupnost'),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
         ),
@@ -442,14 +732,30 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
     if (!mounted) return;
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = screenWidth < 600;
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Text('Uredi datum - ${DateFormat('d.M.yyyy').format(date)}'),
-            content: SizedBox(
-              width: double.maxFinite,
+            title: Text(
+              'Uredi datum - ${DateFormat('d.M.yyyy').format(date)}',
+              style: TextStyle(fontSize: isMobile ? 16 : null),
+            ),
+            contentPadding: EdgeInsets.fromLTRB(
+              isMobile ? 16 : 24,
+              isMobile ? 12 : 20,
+              isMobile ? 16 : 24,
+              isMobile ? 12 : 20,
+            ),
+            content: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: isMobile ? screenHeight * 0.65 : screenHeight * 0.7,
+                maxWidth: isMobile ? screenWidth * 0.9 : 600,
+              ),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -460,91 +766,113 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                       'Cijene',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            fontSize: isMobile ? 14 : null,
                           ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: isMobile ? 6 : 8),
                     TextField(
                       controller: priceController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Osnovna cijena po noći (€)',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.euro),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.euro),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 12 : 16,
+                          vertical: isMobile ? 12 : 16,
+                        ),
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: isMobile ? 8 : 12),
                     TextField(
                       controller: weekendPriceController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Vikend cijena (opciono)',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.weekend),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.weekend),
                         hintText: 'Npr. 120',
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 12 : 16,
+                          vertical: isMobile ? 12 : 16,
+                        ),
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: isMobile ? 16 : 24),
 
                     // Availability section
                     Text(
                       'Dostupnost',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            fontSize: isMobile ? 14 : null,
                           ),
                     ),
                     SwitchListTile(
-                      title: const Text('Dostupno'),
+                      title: Text('Dostupno', style: TextStyle(fontSize: isMobile ? 14 : null)),
                       value: available,
                       onChanged: (value) => setState(() => available = value),
+                      contentPadding: EdgeInsets.zero,
                     ),
                     SwitchListTile(
-                      title: const Text('Blokiraj prijavu (check-in)'),
-                      subtitle: const Text('Gosti ne mogu započeti rezervaciju'),
+                      title: Text('Blokiraj prijavu (check-in)', style: TextStyle(fontSize: isMobile ? 14 : null)),
+                      subtitle: Text('Gosti ne mogu započeti rezervaciju', style: TextStyle(fontSize: isMobile ? 12 : null)),
                       value: blockCheckIn,
                       onChanged: (value) => setState(() => blockCheckIn = value),
+                      contentPadding: EdgeInsets.zero,
                     ),
                     SwitchListTile(
-                      title: const Text('Blokiraj odjavu (check-out)'),
-                      subtitle: const Text('Gosti ne mogu završiti rezervaciju'),
+                      title: Text('Blokiraj odjavu (check-out)', style: TextStyle(fontSize: isMobile ? 14 : null)),
+                      subtitle: Text('Gosti ne mogu završiti rezervaciju', style: TextStyle(fontSize: isMobile ? 12 : null)),
                       value: blockCheckOut,
                       onChanged: (value) => setState(() => blockCheckOut = value),
+                      contentPadding: EdgeInsets.zero,
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: isMobile ? 16 : 24),
 
                     // Length of stay restrictions
                     Text(
                       'Ograničenja boravka',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            fontSize: isMobile ? 14 : null,
                           ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: isMobile ? 6 : 8),
                     Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: minNightsController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Min. noći',
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
                               hintText: 'npr. 2',
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: isMobile ? 12 : 16,
+                                vertical: isMobile ? 12 : 16,
+                              ),
                             ),
                             keyboardType: TextInputType.number,
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: isMobile ? 8 : 12),
                         Expanded(
                           child: TextField(
                             controller: maxNightsController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Max. noći',
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
                               hintText: 'npr. 14',
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: isMobile ? 12 : 16,
+                                vertical: isMobile ? 12 : 16,
+                              ),
                             ),
                             keyboardType: TextInputType.number,
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -553,35 +881,41 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                       ],
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: isMobile ? 16 : 24),
 
                     // Other options
                     SwitchListTile(
-                      title: const Text('Označi kao važno'),
-                      subtitle: const Text('Istakni ovaj datum u kalendaru'),
+                      title: Text('Označi kao važno', style: TextStyle(fontSize: isMobile ? 14 : null)),
+                      subtitle: Text('Istakni ovaj datum u kalendaru', style: TextStyle(fontSize: isMobile ? 12 : null)),
                       value: isImportant,
                       onChanged: (value) => setState(() => isImportant = value),
+                      contentPadding: EdgeInsets.zero,
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: isMobile ? 16 : 24),
 
                     // Notes section
                     Text(
                       'Napomene',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            fontSize: isMobile ? 14 : null,
                           ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: isMobile ? 6 : 8),
                     TextField(
                       controller: notesController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Napomene za ovaj dan',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.notes),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.notes),
                         hintText: 'Npr. Vjenčanje, poseban događaj...',
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 12 : 16,
+                          vertical: isMobile ? 12 : 16,
+                        ),
                       ),
-                      maxLines: 3,
+                      maxLines: isMobile ? 2 : 3,
                       textCapitalization: TextCapitalization.sentences,
                     ),
                   ],

@@ -25,6 +25,8 @@ class _PriceListScreenState extends ConsumerState<PriceListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cjenovnik'),
+        backgroundColor: const Color(0xFF6B4CE6),
+        foregroundColor: Colors.white,
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -51,12 +53,12 @@ class _PriceListScreenState extends ConsumerState<PriceListScreen> {
                         height: 140,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: AppColors.authPrimary.withValues(alpha: 0.1),
                         ),
                         child: const Icon(
                           Icons.meeting_room_outlined,
                           size: 70,
-                          color: AppColors.primary,
+                          color: AppColors.authPrimary,
                         ),
                       ),
                       const SizedBox(height: AppDimensions.spaceL),
@@ -150,7 +152,7 @@ class _PriceListScreenState extends ConsumerState<PriceListScreen> {
                         const SizedBox(height: 16),
                         // Dropdown
                         DropdownButtonFormField<UnitModel>(
-                          value: _selectedUnit,
+                          initialValue: _selectedUnit,
                           decoration: const InputDecoration(
                             labelText: 'Jedinica',
                             border: OutlineInputBorder(),

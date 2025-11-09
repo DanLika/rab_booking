@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/router.dart';
-import 'features/widget/presentation/theme/villa_jasko_theme.dart';
+import 'features/widget/presentation/theme/dynamic_theme_service.dart';
+import 'features/widget/presentation/providers/widget_config_provider.dart';
+import 'features/widget/presentation/providers/blur_config_provider.dart';
+import 'features/widget/domain/models/widget_config.dart';
+import 'features/widget/domain/models/widget_settings.dart';
+import 'shared/providers/repository_providers.dart';
 import 'firebase_options.dart';
 
 /// Widget-only entry point for embeddable booking widget
@@ -47,18 +52,102 @@ class BookingWidgetApp extends ConsumerWidget {
     // Use minimal widget router (NO auth, NO owner dashboard routes)
     final router = ref.watch(routerProvider);
 
-    return MaterialApp.router(
-      title: 'Villa Jasko Booking',
-      debugShowCheckedModeBanner: false,
+    // Get widget config from URL parameters
+    final widgetConfig = ref.watch(widgetConfigProvider);
 
-      // Use Villa Jasko custom theme (Azure blue + Mediterranean colors)
-      theme: VillaJaskoTheme.theme,
-      themeMode: ThemeMode.light,
+    // Try to load widget settings from Firestore (if unitId is available)
+    final widgetSettingsAsync = widgetConfig.unitId != null && widgetConfig.propertyId != null
+        ? ref.watch(_widgetSettingsProvider(widgetConfig))
+        : null;
 
-      routerConfig: router,
+    // Get actual settings value (null if loading/error)
+    final widgetSettings = widgetSettingsAsync?.valueOrNull;
 
-      // Multi-language support via URL parameter (?language=hr/en/de/it)
-      // Translations handled in components via WidgetTranslations
+    // Get blur configuration from settings (or use defaults)
+    final blurConfig = widgetSettings?.blurConfig ?? const BlurConfig(
+      enabled: true,
+      intensity: 'medium',
+      enableCardBlur: true,
+      enableAppBarBlur: true,
+      enableModalBlur: true,
+      enableOverlayBlur: true,
+    );
+
+    // Determine theme mode (priority: URL > Firestore > default 'system')
+    final String themeMode = widgetConfig.themeMode.isNotEmpty
+        ? widgetConfig.themeMode
+        : (widgetSettings?.themeOptions?.themeMode ?? 'system');
+
+    // Convert theme mode string to ThemeMode enum
+    final ThemeMode themeModeEnum = _getThemeMode(themeMode);
+
+    // Generate light and dark themes using DynamicThemeService
+    final lightTheme = DynamicThemeService.generateTheme(
+      config: widgetConfig,
+      settings: widgetSettings,
+      brightness: Brightness.light,
+    );
+
+    final darkTheme = DynamicThemeService.generateTheme(
+      config: widgetConfig,
+      settings: widgetSettings,
+      brightness: Brightness.dark,
+    );
+
+    // Override blur config provider with actual settings from Firestore
+    return ProviderScope(
+      overrides: [
+        blurConfigProvider.overrideWithValue(blurConfig),
+      ],
+      child: MaterialApp.router(
+        title: 'Rab Booking Widget',
+        debugShowCheckedModeBanner: false,
+
+        // Use Minimalist theme with dark mode support
+        theme: lightTheme,
+        darkTheme: darkTheme,
+        themeMode: themeModeEnum,
+
+        routerConfig: router,
+
+        // Multi-language support via URL parameter (?language=hr/en/de/it)
+        // Translations handled in components via WidgetTranslations
+      ),
     );
   }
+
+  /// Convert theme mode string to ThemeMode enum
+  ThemeMode _getThemeMode(String mode) {
+    switch (mode.toLowerCase()) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      case 'system':
+      default:
+        return ThemeMode.system;
+    }
+  }
 }
+
+/// Provider to watch widget settings from Firestore (REAL-TIME)
+///
+/// This provider uses StreamProvider to listen for real-time updates.
+/// When owner changes settings in Dashboard, the widget will automatically
+/// update without requiring a page refresh.
+final _widgetSettingsProvider = StreamProvider.family<WidgetSettings?, WidgetConfig>((ref, config) {
+  if (config.propertyId == null || config.unitId == null) {
+    return Stream.value(null);
+  }
+
+  try {
+    final repository = ref.read(widgetSettingsRepositoryProvider);
+    return repository.watchWidgetSettings(
+      propertyId: config.propertyId!,
+      unitId: config.unitId!,
+    );
+  } catch (e) {
+    // If settings don't exist or error loading, return null stream (use defaults)
+    return Stream.value(null);
+  }
+});

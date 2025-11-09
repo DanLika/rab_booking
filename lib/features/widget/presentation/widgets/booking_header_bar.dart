@@ -36,7 +36,7 @@ class BookingHeaderBar extends ConsumerWidget {
         gradient: LinearGradient(
           colors: [
             VillaJaskoColors.primary,
-            Color(0xFF0052CC), // Darker Azure Blue
+            VillaJaskoColors.primaryHover, // Darker Purple
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

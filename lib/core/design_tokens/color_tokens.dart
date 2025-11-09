@@ -46,16 +46,16 @@ class ColorTokens {
   static const Color grey800 = Color(0xFF1F2937);
   static const Color grey900 = Color(0xFF111827);
 
-  // Brand colors - Azure Blue
-  static const Color azure50 = Color(0xFFEBF5FF);
-  static const Color azure100 = Color(0xFFBFDBFE);
-  static const Color azure200 = Color(0xFF99C2FF);
-  static const Color azure400 = Color(0xFF60A5FA);
-  static const Color azure500 = Color(0xFF3B82F6);
-  static const Color azure600 = Color(0xFF0066FF);
-  static const Color azure700 = Color(0xFF0052CC);
-  static const Color azure800 = Color(0xFF003D99);
-  static const Color azure900 = Color(0xFF1E3A8A);
+  // Brand colors - Purple (Modern 2025 Theme)
+  static const Color azure50 = Color(0xFFF3F0FF);
+  static const Color azure100 = Color(0xFFE0D7FF);
+  static const Color azure200 = Color(0xFF9B86F3);
+  static const Color azure400 = Color(0xFF8164F0);
+  static const Color azure500 = Color(0xFF7B5DED);
+  static const Color azure600 = Color(0xFF6B4CE6);
+  static const Color azure700 = Color(0xFF5B3DD6);
+  static const Color azure800 = Color(0xFF4B2DC6);
+  static const Color azure900 = Color(0xFF3B1FB6);
 
   // Accent colors - Coral
   static const Color coral400 = Color(0xFFFF8A80);

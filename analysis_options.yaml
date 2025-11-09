@@ -23,3 +23,7 @@ linter:
     - use_key_in_widget_constructors
     - prefer_relative_imports
     - sort_child_properties_last
+
+    # Design System Enforcement
+    - use_full_hex_values_for_flutter_colors  # Warn about hardcoded colors
+    - avoid_web_libraries_in_flutter           # Prevent dart:html colors

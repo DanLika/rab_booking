@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
+import '../../../../../shared/providers/repository_providers.dart';
+import '../../../../../core/constants/enums.dart';
 import '../../../domain/models/date_range_selection.dart';
 import '../../../utils/calendar_grid_calculator.dart';
 import '../../../utils/date_range_utils.dart';
 import '../../providers/calendar_drag_drop_provider.dart';
 import 'booking_block_widget.dart';
+import 'booking_context_menu.dart';
 import 'room_row_header.dart';
+import '../send_email_dialog.dart';
 
 /// Owner week grid calendar widget
 /// Shows 7-day grid (Monday-Sunday) with all units and bookings
@@ -58,7 +62,7 @@ class _OwnerWeekGridCalendarState
         CalendarGridCalculator.getRowHeaderWidth(screenWidth);
     final rowHeight = CalendarGridCalculator.getRowHeight(screenWidth);
     final dayCellWidth = CalendarGridCalculator.getDayCellWidth(screenWidth, 7);
-    final headerHeight = CalendarGridCalculator.headerHeight;
+    final headerHeight = CalendarGridCalculator.getHeaderHeight(screenWidth);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -273,15 +277,28 @@ class _OwnerWeekGridCalendarState
                 : null,
             child: DragTarget<BookingModel>(
               onWillAcceptWithDetails: (details) {
-                // Check if booking can be dropped here
-                return widget.enableDragDrop;
+                if (!widget.enableDragDrop) return false;
+
+                // Validate drop target in real-time
+                ref.read(dragDropProvider.notifier).validateDrop(
+                  dropDate: date,
+                  targetUnitId: unit.id,
+                  allBookings: widget.bookings,
+                );
+
+                return true; // Always accept to show feedback, actual validation in executeDrop
               },
               onAcceptWithDetails: (details) {
-                // Handle booking drop
-                _handleBookingDrop(details.data, date, unit);
+                // Only execute drop if validation passed
+                final dragState = ref.read(dragDropProvider);
+                if (dragState.isValidDrop) {
+                  _handleBookingDrop(details.data, date, unit);
+                }
               },
               builder: (context, candidateData, rejectedData) {
                 final isHighlighted = candidateData.isNotEmpty;
+                final dragState = ref.watch(dragDropProvider);
+                final isValid = dragState.isValidDrop;
 
                 return MouseRegion(
                   cursor: widget.onCellTap != null && !isPast
@@ -292,7 +309,9 @@ class _OwnerWeekGridCalendarState
                     height: rowHeight,
                     decoration: BoxDecoration(
                       color: isHighlighted
-                          ? theme.colorScheme.primary.withAlpha((0.1 * 255).toInt())
+                          ? (isValid
+                              ? Colors.green.withAlpha((0.2 * 255).toInt())
+                              : Colors.red.withAlpha((0.2 * 255).toInt()))
                           : (isPast
                               ? theme.disabledColor.withAlpha((0.05 * 255).toInt())
                               : (isToday
@@ -388,7 +407,8 @@ class _OwnerWeekGridCalendarState
     final width = duration * dayCellWidth;
 
     // Center booking block vertically with equal margins
-    const verticalMargin = 8.0;
+    // Reduced from 8.0 to 6.0 for better space utilization on mobile
+    const verticalMargin = 6.0;
 
     return Positioned(
       left: left,
@@ -398,6 +418,7 @@ class _OwnerWeekGridCalendarState
         width: width,
         height: rowHeight - (verticalMargin * 2), // Equal margins top & bottom
         onTap: () => widget.onBookingTap(booking),
+        onSecondaryTapDown: (details) => _showBookingContextMenu(booking, details),
         isDraggable: widget.enableDragDrop,
         showGuestName: width > 80,
         showCheckInOut: width > 40,
@@ -435,5 +456,110 @@ class _OwnerWeekGridCalendarState
     // Use Croatian names for owner dashboard
     const weekdaysHr = ['PON', 'UTO', 'SRI', '\u010cET', 'PET', 'SUB', 'NED'];
     return weekdaysHr[weekday - 1];
+  }
+
+  /// Show context menu for booking (right-click or long-press)
+  void _showBookingContextMenu(BookingModel booking, TapDownDetails details) {
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    if (overlay == null) return;
+
+    // FIXED: Use actual tap position instead of screen center
+    final position = details.globalPosition;
+
+    showBookingContextMenu(
+      context: context,
+      booking: booking,
+      position: position,
+      onEdit: () => widget.onBookingTap(booking),
+      onDelete: () => _deleteBooking(booking),
+      onSendEmail: () => _sendEmailToGuest(booking),
+      onChangeStatus: (newStatus) => _changeBookingStatus(booking, newStatus),
+    );
+  }
+
+  /// Delete booking
+  Future<void> _deleteBooking(BookingModel booking) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Obriši rezervaciju'),
+        content: Text(
+          'Jeste li sigurni da želite obrisati rezervaciju za ${booking.guestName ?? 'N/A'}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Otkaži'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Obriši'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      try {
+        final repository = ref.read(bookingRepositoryProvider);
+        await repository.deleteBooking(booking.id);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Rezervacija obrisana'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Greška: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  /// Change booking status
+  Future<void> _changeBookingStatus(BookingModel booking, BookingStatus newStatus) async {
+    try {
+      final repository = ref.read(bookingRepositoryProvider);
+      final updatedBooking = booking.copyWith(status: newStatus);
+      await repository.updateBooking(updatedBooking);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Status promijenjen u ${newStatus.displayName}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Greška: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Send email to guest
+  void _sendEmailToGuest(BookingModel booking) {
+    showSendEmailDialog(context, ref, booking);
   }
 }

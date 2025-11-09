@@ -53,6 +53,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   final String _selectedPaymentOption = 'deposit'; // 'deposit' or 'full'
   bool _isProcessing = false;
 
+  // Draggable pill bar state
+  Offset? _pillBarPosition; // null = default bottom center position
+
   @override
   void initState() {
     super.initState();
@@ -259,31 +262,35 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           final screenWidth = constraints.maxWidth;
           final forceMonthView = screenWidth < 1024; // Year view only on desktop
 
-          return Column(
+          return Stack(
             children: [
-              // Calendar - fills all available space above booking summary
-              Expanded(
-                child: CalendarViewSwitcher(
-                  unitId: unitId,
-                  forceMonthView: forceMonthView,
-                  onRangeSelected: (start, end) {
-                    setState(() {
-                      _checkIn = start;
-                      _checkOut = end;
-                    });
-                  },
-                ),
+              // Calendar - full screen
+              CalendarViewSwitcher(
+                unitId: unitId,
+                forceMonthView: forceMonthView,
+                onRangeSelected: (start, end) {
+                  setState(() {
+                    _checkIn = start;
+                    _checkOut = end;
+                    _pillBarPosition = null; // Reset position when new dates selected
+                  });
+                },
               ),
 
-              // Contact info bar (calendar only mode - no booking)
+              // Contact info bar (calendar only mode - no booking) - positioned at bottom
               if (widgetMode == WidgetMode.calendarOnly)
-                _buildContactInfoBar(),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _buildContactInfoBar(),
+                ),
 
-              // Booking summary bar (booking modes - shown when dates selected)
+              // Floating draggable booking summary bar (booking modes - shown when dates selected)
               if (widgetMode != WidgetMode.calendarOnly &&
                   _checkIn != null &&
                   _checkOut != null)
-                _buildBookingSummaryBar(unitId),
+                _buildFloatingDraggablePillBar(unitId, constraints),
             ],
           );
         },
@@ -450,6 +457,516 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
   }
 
+  /// Build floating draggable pill bar that overlays the calendar
+  Widget _buildFloatingDraggablePillBar(String unitId, BoxConstraints constraints) {
+    // Watch price calculation
+    final priceCalc = ref.watch(bookingPriceProvider(
+      unitId: unitId,
+      checkIn: _checkIn,
+      checkOut: _checkOut,
+    ));
+
+    return priceCalc.when(
+      data: (calculation) {
+        if (calculation == null) {
+          return const SizedBox.shrink();
+        }
+
+        // Calculate responsive width based on screen size
+        final screenWidth = constraints.maxWidth;
+        double pillBarWidth;
+
+        // Different widths for step 1 (compact) vs step 2 (form)
+        if (_showGuestForm) {
+          // Step 2: Wider for form
+          if (screenWidth < 600) {
+            pillBarWidth = screenWidth * 0.9; // Mobile: 90%
+          } else if (screenWidth < 1024) {
+            pillBarWidth = screenWidth * 0.8; // Tablet: 80%
+          } else {
+            pillBarWidth = screenWidth * 0.7; // Desktop: 70%
+          }
+        } else {
+          // Step 1: Compact width
+          if (screenWidth < 600) {
+            pillBarWidth = 350.0; // Mobile: fixed 350px
+          } else {
+            pillBarWidth = 400.0; // Desktop/Tablet: fixed 400px
+          }
+        }
+
+        // Calculate default position (center of screen)
+        // Estimate pill bar height based on whether guest form is shown
+        final estimatedHeight = _showGuestForm ? 500.0 : 80.0;
+
+        final defaultPosition = Offset(
+          (constraints.maxWidth / 2) - (pillBarWidth / 2), // Center horizontally with dynamic width
+          (constraints.maxHeight / 2) - (estimatedHeight / 2), // Center vertically
+        );
+
+        final position = _pillBarPosition ?? defaultPosition;
+
+        return Positioned(
+          left: position.dx,
+          top: position.dy,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque, // Make entire area draggable
+            onPanUpdate: (details) {
+              setState(() {
+                _pillBarPosition = Offset(
+                  (position.dx + details.delta.dx).clamp(0.0, constraints.maxWidth - pillBarWidth),
+                  (position.dy + details.delta.dy).clamp(0.0, constraints.maxHeight - 80),
+                );
+              });
+            },
+            child: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(30),
+              child: Container(
+                width: pillBarWidth,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: MinimalistColors.borderLight,
+                    width: 1,
+                  ),
+                ),
+                child: _buildPillBarContent(calculation),
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (error, stack) => const SizedBox.shrink(),
+    );
+  }
+
+  /// Build the content of the pill bar (dates, price, buttons)
+  Widget _buildPillBarContent(BookingPriceCalculation calculation) {
+    // Check screen width for responsive layout
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth >= 768;
+
+    // If guest form is shown and screen is wide, show 2-column layout
+    if (_showGuestForm && isWideScreen) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Top bar with drag handle and close button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Spacer(),
+              // Drag handle indicator (centered)
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: MinimalistColors.borderLight,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Spacer(),
+              // Close button (right)
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _checkIn = null;
+                    _checkOut = null;
+                    _showGuestForm = false;
+                    _pillBarPosition = null;
+                  });
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: MinimalistColors.backgroundSecondary,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: MinimalistColors.borderLight,
+                      width: 1,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    size: 16,
+                    color: MinimalistColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // 2-column layout: Guest info (left) | Payment options (right)
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: SingleChildScrollView(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left column: Guest info (55%)
+                  Expanded(
+                    flex: 55,
+                    child: _buildGuestInfoForm(calculation, showButton: false),
+                  ),
+                  const SizedBox(width: SpacingTokens.m),
+                  // Right column: Payment options + button (45%)
+                  Expanded(
+                    flex: 45,
+                    child: _buildPaymentSection(calculation),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Default: show compact summary
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildCompactPillSummary(calculation),
+        // Show guest form if needed (mobile)
+        if (_showGuestForm && !isWideScreen) ...[
+          const SizedBox(height: 12),
+          // Close button for mobile
+          Align(
+            alignment: Alignment.centerRight,
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  _checkIn = null;
+                  _checkOut = null;
+                  _showGuestForm = false;
+                  _pillBarPosition = null;
+                });
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: MinimalistColors.backgroundSecondary,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: MinimalistColors.borderLight,
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.close,
+                  size: 16,
+                  color: MinimalistColors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildGuestInfoForm(calculation, showButton: false),
+                  const SizedBox(height: SpacingTokens.m),
+                  _buildPaymentSection(calculation),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Build compact pill summary (dates, price, buttons)
+  Widget _buildCompactPillSummary(BookingPriceCalculation calculation) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        // Close button
+        InkWell(
+          onTap: () {
+            setState(() {
+              _checkIn = null;
+              _checkOut = null;
+              _showGuestForm = false;
+              _pillBarPosition = null;
+            });
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: MinimalistColors.backgroundSecondary,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: MinimalistColors.borderLight,
+                width: 1,
+              ),
+            ),
+            child: const Icon(
+              Icons.close,
+              size: 16,
+              color: MinimalistColors.textSecondary,
+            ),
+          ),
+        ),
+
+        const SizedBox(width: double.infinity), // Force new line
+
+        // Date and price pill
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: MinimalistColors.backgroundSecondary,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: MinimalistColors.borderLight,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Calendar icon + dates
+              const Icon(Icons.calendar_today, size: 14, color: MinimalistColors.textSecondary),
+              const SizedBox(width: 5),
+              Text(
+                '${_checkIn!.day}/${_checkIn!.month} - ${_checkOut!.day}/${_checkOut!.month}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: MinimalistColors.textPrimary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Price with euro icon
+              const Icon(Icons.euro, size: 14, color: MinimalistColors.textSecondary),
+              const SizedBox(width: 2),
+              Text(
+                calculation.formattedTotal,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: MinimalistColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Reserve button (only show when guest form is NOT visible)
+        if (!_showGuestForm)
+          InkWell(
+            onTap: () {
+              setState(() {
+                _showGuestForm = true;
+              });
+            },
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: MinimalistColors.buttonPrimary,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'Reserve',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+
+        // Close button
+        InkWell(
+          onTap: () {
+            setState(() {
+              _checkIn = null;
+              _checkOut = null;
+              _showGuestForm = false;
+              _pillBarPosition = null;
+            });
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: MinimalistColors.backgroundSecondary,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: MinimalistColors.borderLight,
+                width: 1,
+              ),
+            ),
+            child: const Icon(
+              Icons.close,
+              size: 14,
+              color: MinimalistColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build payment section (payment options + confirm button)
+  Widget _buildPaymentSection(BookingPriceCalculation calculation) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Payment method section (only for bookingInstant mode)
+        if (_widgetSettings?.widgetMode == WidgetMode.bookingInstant) ...[
+          const Text(
+            'Payment Method',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: SpacingTokens.s),
+
+          // Stripe option (if enabled)
+          if (_widgetSettings?.stripeConfig?.enabled == true)
+            _buildPaymentOption(
+              icon: Icons.credit_card,
+              title: 'Credit/Debit Card',
+              subtitle: 'Instant confirmation via Stripe',
+              value: 'stripe',
+              depositAmount: calculation.formattedDeposit,
+            ),
+
+          // Bank Transfer option (if enabled)
+          if (_widgetSettings?.bankTransferConfig?.enabled == true)
+            Padding(
+              padding: EdgeInsets.only(
+                top: _widgetSettings?.stripeConfig?.enabled == true ? SpacingTokens.s : 0,
+              ),
+              child: _buildPaymentOption(
+                icon: Icons.account_balance,
+                title: 'Bank Transfer',
+                subtitle: 'Manual confirmation (3 business days)',
+                value: 'bankTransfer',
+                depositAmount: calculation.formattedDeposit,
+              ),
+            ),
+
+          // Pay on Arrival option (always available for bookingInstant mode)
+          Padding(
+            padding: EdgeInsets.only(
+              top: (_widgetSettings?.stripeConfig?.enabled == true ||
+                    _widgetSettings?.bankTransferConfig?.enabled == true)
+                  ? SpacingTokens.s
+                  : 0,
+            ),
+            child: _buildPaymentOption(
+              icon: Icons.home_outlined,
+              title: 'Pay on Arrival',
+              subtitle: 'Pay at the property',
+              value: 'payOnArrival',
+              depositAmount: null, // No deposit info for pay on arrival
+            ),
+          ),
+
+          const SizedBox(height: SpacingTokens.m),
+        ],
+
+        // Info message for bookingPending mode
+        if (_widgetSettings?.widgetMode == WidgetMode.bookingPending) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: SpacingTokens.s,
+              vertical: SpacingTokens.xs,
+            ),
+            decoration: BoxDecoration(
+              color: MinimalistColors.backgroundSecondary,
+              borderRadius: BorderTokens.circularMedium,
+              border: Border.all(
+                color: MinimalistColors.borderDefault,
+                width: BorderTokens.widthThin,
+              ),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 1),
+                  child: Icon(
+                    Icons.info_outline,
+                    color: MinimalistColors.textSecondary,
+                    size: 16,
+                  ),
+                ),
+                SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Your booking will be pending until confirmed by the property owner',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: MinimalistColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: SpacingTokens.m),
+        ],
+
+        // Confirm button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _isProcessing
+                ? null
+                : () => _handleConfirmBooking(calculation),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: MinimalistColors.buttonPrimary,
+              padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderTokens.circularRounded,
+              ),
+            ),
+            child: _isProcessing
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Text(
+                    _getConfirmButtonText(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildBookingSummaryBar(String unitId) {
     // Watch price calculation
     final priceCalc = ref.watch(bookingPriceProvider(
@@ -486,7 +1003,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1200),
               child: Padding(
-                padding: const EdgeInsets.all(SpacingTokens.m),
+                padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: SpacingTokens.xs),
                 child: priceCalc.when(
           data: (calculation) {
             if (calculation == null) {
@@ -521,231 +1038,153 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header (when guest form is shown)
-                if (_showGuestForm)
-                  const Text(
-                    'Complete Your Booking',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                if (_showGuestForm) const SizedBox(height: SpacingTokens.s),
-
-                // Price breakdown with close button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                // Pill-style summary bar (icon-based, wrapped for flow)
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${calculation.nights} ${calculation.nights == 1 ? 'night' : 'nights'}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
+                    // Date and price pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: MinimalistColors.backgroundSecondary,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: MinimalistColors.borderLight,
+                          width: 1,
                         ),
-                        Text(
-                          '${_checkIn!.day}/${_checkIn!.month} - ${_checkOut!.day}/${_checkOut!.month}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: MinimalistColors.textSecondary,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Calendar icon + dates
+                          const Icon(Icons.calendar_today, size: 14, color: MinimalistColors.textSecondary),
+                          const SizedBox(width: 5),
+                          Text(
+                            '${_checkIn!.day}/${_checkIn!.month} - ${_checkOut!.day}/${_checkOut!.month}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: MinimalistColors.textPrimary,
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          // Price with euro icon
+                          const Icon(Icons.euro, size: 14, color: MinimalistColors.textSecondary),
+                          const SizedBox(width: 2),
+                          Text(
+                            calculation.formattedTotal,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: MinimalistColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              calculation.formattedTotal,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: MinimalistColors.textPrimary,
-                              ),
-                            ),
-                            const Text(
-                              'Total',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: MinimalistColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: SpacingTokens.xs),
-                        // Close button (always visible when dates are selected)
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              _checkIn = null;
-                              _checkOut = null;
-                              _showGuestForm = false;
-                            });
-                          },
-                          borderRadius: BorderTokens.circularSubtle,
-                          child: Container(
-                            padding: const EdgeInsets.all(SpacingTokens.xs / 2),
-                            child: const Icon(
-                              Icons.close,
-                              size: 20,
-                              color: MinimalistColors.textSecondary,
+
+                    // Reserve button (only show when guest form is NOT visible)
+                    if (!_showGuestForm)
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _showGuestForm = true;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: MinimalistColors.buttonPrimary,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Reserve',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
                         ),
-                      ],
+                      ),
+
+                    // Close button
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _checkIn = null;
+                          _checkOut = null;
+                          _showGuestForm = false;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: MinimalistColors.backgroundSecondary,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: MinimalistColors.borderLight,
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          size: 14,
+                          color: MinimalistColors.textSecondary,
+                        ),
+                      ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: SpacingTokens.s),
-
-                // Deposit info (only for bookingInstant mode with payment)
-                if (_widgetSettings?.widgetMode == WidgetMode.bookingInstant) ...[
-                  Container(
-                    padding: const EdgeInsets.all(SpacingTokens.s),
-                    decoration: BoxDecoration(
-                      color: MinimalistColors.backgroundSecondary,
-                      borderRadius: BorderTokens.circularMedium,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '20% Deposit (Avans)',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Pay now',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: MinimalistColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          calculation.formattedDeposit,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: SpacingTokens.xs),
-
-                  // Remaining amount info
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Remaining (Pay on arrival)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: MinimalistColors.textSecondary,
-                        ),
-                      ),
-                      Text(
-                        calculation.formattedRemaining,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: MinimalistColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-
                 // Info message for bookingPending mode
-                if (_widgetSettings?.widgetMode == WidgetMode.bookingPending)
+                if (_widgetSettings?.widgetMode == WidgetMode.bookingPending) ...[
+                  const SizedBox(height: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: SpacingTokens.xs),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: MinimalistColors.backgroundSecondary,
-                      borderRadius: BorderTokens.circularMedium,
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: MinimalistColors.borderDefault,
-                        width: BorderTokens.widthThin,
+                        width: 1,
                       ),
                     ),
                     child: const Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Padding(
-                          padding: EdgeInsets.only(top: 1),
-                          child: Icon(
-                            Icons.info_outline,
-                            color: MinimalistColors.textSecondary,
-                            size: 16,
-                          ),
+                        Icon(
+                          Icons.info_outline,
+                          color: MinimalistColors.textSecondary,
+                          size: 14,
                         ),
-                        SizedBox(width: 8),
-                        Expanded(
+                        SizedBox(width: 6),
+                        Flexible(
                           child: Text(
-                            'Pending until confirmed. Payment details after confirmation.',
+                            'Pending until confirmed',
                             style: TextStyle(
                               fontSize: 11,
                               color: MinimalistColors.textSecondary,
-                              height: 1.3,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                const SizedBox(height: SpacingTokens.m),
-
-                // Reserve button (expands guest form)
-                if (!_showGuestForm)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _showGuestForm = true;
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: MinimalistColors.buttonPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderTokens.circularRounded,
-                        ),
-                      ),
-                      child: const Text(
-                        'Reserve',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
+                ],
 
                 // Guest info form (inline expansion with scrolling) - mobile only
                 if (_showGuestForm) ...[
-                  const SizedBox(height: SpacingTokens.xl),
+                  const SizedBox(height: SpacingTokens.s),
                   ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.5, // Max 50% of screen height
+                      maxHeight: MediaQuery.of(context).size.height * 0.6, // Max 60% of screen height
                     ),
                     child: SingleChildScrollView(
                       child: _buildGuestInfoForm(calculation),
@@ -926,6 +1365,60 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
+
+          // Payment method section (only for bookingInstant mode)
+          const Text(
+            'Payment Method',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: SpacingTokens.m),
+
+          // Stripe option (if enabled)
+          if (_widgetSettings?.stripeConfig?.enabled == true)
+            _buildPaymentOption(
+              icon: Icons.credit_card,
+              title: 'Credit/Debit Card',
+              subtitle: 'Instant confirmation via Stripe',
+              value: 'stripe',
+              depositAmount: calculation.formattedDeposit,
+            ),
+
+          // Bank Transfer option (if enabled)
+          if (_widgetSettings?.bankTransferConfig?.enabled == true)
+            Padding(
+              padding: EdgeInsets.only(
+                top: _widgetSettings?.stripeConfig?.enabled == true ? SpacingTokens.s : 0,
+              ),
+              child: _buildPaymentOption(
+                icon: Icons.account_balance,
+                title: 'Bank Transfer',
+                subtitle: 'Manual confirmation (3 business days)',
+                value: 'bankTransfer',
+                depositAmount: calculation.formattedDeposit,
+              ),
+            ),
+
+          // Pay on Arrival option (always available for bookingInstant mode)
+          Padding(
+            padding: EdgeInsets.only(
+              top: (_widgetSettings?.stripeConfig?.enabled == true ||
+                    _widgetSettings?.bankTransferConfig?.enabled == true)
+                  ? SpacingTokens.s
+                  : 0,
+            ),
+            child: _buildPaymentOption(
+              icon: Icons.home_outlined,
+              title: 'Pay on Arrival',
+              subtitle: 'Pay at the property',
+              value: 'payOnArrival',
+              depositAmount: null, // No deposit info for pay on arrival
+            ),
+          ),
+
+          const SizedBox(height: SpacingTokens.xl),
         ],
 
         // Info message for bookingPending mode
@@ -971,7 +1464,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           const SizedBox(height: SpacingTokens.m),
         ],
 
-        // Confirm booking button (desktop 2-column layout)
+        // Continue/Confirm booking button (desktop 2-column layout)
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
@@ -1093,45 +1586,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           _buildGuestCountPicker(),
           const SizedBox(height: SpacingTokens.xl),
 
-          // Payment method section (only for bookingInstant mode)
-          if (_widgetSettings?.widgetMode == WidgetMode.bookingInstant) ...[
-            const Text(
-              'Payment Method',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: SpacingTokens.m),
-
-            // Stripe option (if enabled)
-            if (_widgetSettings?.stripeConfig?.enabled == true)
-              _buildPaymentOption(
-                icon: Icons.credit_card,
-                title: 'Credit/Debit Card',
-                subtitle: 'Instant confirmation via Stripe',
-                value: 'stripe',
-                depositAmount: calculation.formattedDeposit,
-              ),
-
-            // Bank Transfer option (if enabled)
-            if (_widgetSettings?.bankTransferConfig?.enabled == true)
-              Padding(
-                padding: EdgeInsets.only(
-                  top: _widgetSettings?.stripeConfig?.enabled == true ? SpacingTokens.s : 0,
-                ),
-                child: _buildPaymentOption(
-                  icon: Icons.account_balance,
-                  title: 'Bank Transfer',
-                  subtitle: 'Manual confirmation (3 business days)',
-                  value: 'bankTransfer',
-                  depositAmount: calculation.formattedDeposit,
-                ),
-              ),
-
-            const SizedBox(height: SpacingTokens.xl),
-          ],
-
           // Confirm booking button (only show if showButton parameter is true)
           if (showButton)
             SizedBox(
@@ -1185,6 +1639,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return 'Pay with Stripe';
     } else if (_selectedPaymentMethod == 'bankTransfer') {
       return 'Continue to Bank Transfer';
+    } else if (_selectedPaymentMethod == 'payOnArrival') {
+      return 'Rezervisi'; // Reserve in Serbian
     }
 
     return 'Confirm Booking';
@@ -1195,7 +1651,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     required String title,
     required String subtitle,
     required String value,
-    required String depositAmount,
+    String? depositAmount, // Made nullable for "Pay on Arrival"
   }) {
     final isSelected = _selectedPaymentMethod == value;
 
@@ -1277,15 +1733,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               ),
             ),
 
-            // Deposit amount
-            Text(
-              depositAmount,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: MinimalistColors.textPrimary,
+            // Deposit amount (only show if not null)
+            if (depositAmount != null)
+              Text(
+                depositAmount,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: MinimalistColors.textPrimary,
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -1438,7 +1895,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (_selectedPaymentMethod == 'stripe') {
         // Stripe payment - redirect to checkout
         await _handleStripePayment(booking.id);
-      } else {
+      } else if (_selectedPaymentMethod == 'bankTransfer') {
         // Bank transfer - show instructions
         if (mounted) {
           Navigator.of(context).push(
@@ -1451,6 +1908,29 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               ),
             ),
           );
+        }
+      } else if (_selectedPaymentMethod == 'payOnArrival') {
+        // Pay on Arrival - show success message and reset form
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Booking confirmed! Pay on arrival at the property.'),
+              backgroundColor: MinimalistColors.success,
+              duration: Duration(seconds: 5),
+            ),
+          );
+
+          // Reset form
+          setState(() {
+            _checkIn = null;
+            _checkOut = null;
+            _showGuestForm = false;
+            _nameController.clear();
+            _emailController.clear();
+            _phoneController.clear();
+            _adults = 2;
+            _children = 0;
+          });
         }
       }
     } catch (e) {

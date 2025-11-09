@@ -45,6 +45,18 @@ service cloud.firestore {
       allow write: if isOwner(userId);
     }
 
+    // Collection group query for units (allows searching across all properties)
+    match /{path=**}/units/{unitId} {
+      allow read: if true; // Widget and owner app need to read units across properties
+      allow write: if isOwnerOrAdmin(); // Only owners can modify
+    }
+
+    // Collection group query for widget_settings
+    match /{path=**}/widget_settings/{unitId} {
+      allow read: if true; // Widget needs to read settings
+      allow write: if isOwnerOrAdmin(); // Only owners can modify
+    }
+
     // Properties - owners can CRUD, anyone can read (for widget)
     match /properties/{propertyId} {
       allow read: if true; // Public read for widget
@@ -53,6 +65,12 @@ service cloud.firestore {
       // Units subcollection - same permissions as properties
       match /units/{unitId} {
         allow read: if true; // Public read for widget
+        allow create, update, delete: if isOwnerOrAdmin();
+      }
+
+      // Widget settings subcollection - public read, owner write
+      match /widget_settings/{unitId} {
+        allow read: if true; // Widget needs to read settings
         allow create, update, delete: if isOwnerOrAdmin();
       }
     }

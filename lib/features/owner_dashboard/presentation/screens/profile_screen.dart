@@ -7,11 +7,12 @@ import '../../../../core/providers/language_provider.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/theme/app_color_extensions.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/language_selection_bottom_sheet.dart';
 import '../widgets/theme_selection_bottom_sheet.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../../../../shared/models/user_model.dart';
+import '../../../../shared/widgets/common_gradient_app_bar.dart';
 
 /// Profile screen for owner dashboard
 class ProfileScreen extends ConsumerWidget {
@@ -24,6 +25,8 @@ class ProfileScreen extends ConsumerWidget {
     final authState = ref.watch(enhancedAuthProvider);
     final currentLocale = ref.watch(currentLocaleProvider);
     final currentThemeMode = ref.watch(currentThemeModeProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     // Get language display name
     final languageName = currentLocale.languageCode == 'hr' ? 'Hrvatski' : 'English';
@@ -36,47 +39,54 @@ class ProfileScreen extends ConsumerWidget {
             : 'System default';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            tooltip: 'Menu',
-          ),
-        ),
-      ),
       drawer: const OwnerAppDrawer(currentRoute: 'profile'),
       body: user == null
           ? const Center(child: Text('Not authenticated'))
           : userProfileAsync.when(
               data: (profile) {
-                final displayName = profile?.displayName ?? user.displayName ?? 'Owner';
-                final email = user.email ?? '';
+                final isAnonymous = authState.isAnonymous;
+                final displayName = profile?.displayName ?? user.displayName ?? (isAnonymous ? 'Guest User' : 'Owner');
+                final email = user.email ?? (isAnonymous ? 'Anonymous Account' : 'No email');
+                final screenWidth = MediaQuery.of(context).size.width;
+                final isMobile = screenWidth < 600;
+                final headerPadding = isMobile ? 16.0 : 32.0;
 
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isMobile = constraints.maxWidth < 600;
-                    final headerPadding = isMobile ? 16.0 : 32.0;
+                return CustomScrollView(
+                  slivers: [
+                    // AppBar with gradient
+                    CommonGradientAppBar(
+                      title: 'Profil',
+                      leadingIcon: Icons.menu,
+                      onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+                    ),
 
-                    return ListView(
+                    // Content
+                    SliverPadding(
                       padding: const EdgeInsets.all(16.0),
-                      children: [
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate([
                         // Premium Profile header
                         Container(
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFF6B4CE6), // Purple
-                                Color(0xFF4A90E2), // Blue
-                              ],
+                              colors: isDark
+                                  ? [
+                                      theme.colorScheme.surfaceContainerHighest,
+                                      theme.colorScheme.surfaceContainerHigh,
+                                    ]
+                                  : [
+                                      theme.colorScheme.primary,
+                                      theme.colorScheme.secondary,
+                                    ],
                             ),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
+                                color: isDark
+                                    ? theme.colorScheme.onPrimary.withAlpha((0.05 * 255).toInt())
+                                    : theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
                               ),
@@ -90,12 +100,12 @@ class ProfileScreen extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white.withAlpha((0.3 * 255).toInt()),
+                                  color: theme.colorScheme.onPrimary.withAlpha((0.3 * 255).toInt()),
                                   width: 4,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withAlpha((0.2 * 255).toInt()),
+                                    color: theme.colorScheme.onSurface.withAlpha((0.2 * 255).toInt()),
                                     blurRadius: 20,
                                     offset: const Offset(0, 8),
                                   ),
@@ -112,13 +122,17 @@ class ProfileScreen extends ConsumerWidget {
                                         errorBuilder: (context, error, stackTrace) {
                                           return CircleAvatar(
                                             radius: 60,
-                                            backgroundColor: Colors.white,
+                                            backgroundColor: isDark
+                                                ? theme.colorScheme.primary
+                                                : theme.colorScheme.onPrimary,
                                             child: Text(
                                               displayName.substring(0, 1).toUpperCase(),
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 48,
                                                 fontWeight: FontWeight.bold,
-                                                color: Color(0xFF6B4CE6),
+                                                color: isDark
+                                                    ? theme.colorScheme.onPrimary
+                                                    : theme.colorScheme.primary,
                                               ),
                                             ),
                                           );
@@ -127,13 +141,17 @@ class ProfileScreen extends ConsumerWidget {
                                     )
                                   : CircleAvatar(
                                       radius: 60,
-                                      backgroundColor: Colors.white,
+                                      backgroundColor: isDark
+                                          ? theme.colorScheme.primary
+                                          : theme.colorScheme.onPrimary,
                                       child: Text(
                                         displayName.substring(0, 1).toUpperCase(),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 48,
                                           fontWeight: FontWeight.bold,
-                                          color: Color(0xFF6B4CE6),
+                                          color: isDark
+                                              ? theme.colorScheme.onPrimary
+                                              : theme.colorScheme.primary,
                                         ),
                                       ),
                                     ),
@@ -148,10 +166,10 @@ class ProfileScreen extends ConsumerWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: theme.colorScheme.onPrimary,
                                 ),
                               ),
                             ),
@@ -162,7 +180,7 @@ class ProfileScreen extends ConsumerWidget {
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                                color: theme.colorScheme.onPrimary.withAlpha((0.2 * 255).toInt()),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -172,7 +190,7 @@ class ProfileScreen extends ConsumerWidget {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 15,
-                                  color: Colors.white.withAlpha((0.95 * 255).toInt()),
+                                  color: theme.colorScheme.onPrimary.withAlpha((0.95 * 255).toInt()),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -194,7 +212,9 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withAlpha((0.04 * 255).toInt()),
+                            color: isDark
+                                ? theme.colorScheme.onPrimary.withAlpha((0.02 * 255).toInt())
+                                : theme.colorScheme.onSurface.withAlpha((0.04 * 255).toInt()),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -205,16 +225,22 @@ class ProfileScreen extends ConsumerWidget {
                           _PremiumListTile(
                             icon: Icons.person_outline,
                             title: 'Edit Profile',
-                            subtitle: 'Update your personal information',
-                            onTap: () => context.push(OwnerRoutes.profileEdit),
+                            subtitle: isAnonymous
+                                ? 'Sign up to edit your profile'
+                                : 'Update your personal information',
+                            onTap: isAnonymous
+                                ? null
+                                : () => context.push(OwnerRoutes.profileEdit),
                           ),
-                          const Divider(height: 1, indent: 72),
-                          _PremiumListTile(
-                            icon: Icons.lock_outline,
-                            title: 'Change Password',
-                            subtitle: 'Update your password',
-                            onTap: () => context.push(OwnerRoutes.profileChangePassword),
-                          ),
+                          if (!isAnonymous) ...[
+                            const Divider(height: 1, indent: 72),
+                            _PremiumListTile(
+                              icon: Icons.lock_outline,
+                              title: 'Change Password',
+                              subtitle: 'Update your password',
+                              onTap: () => context.push(OwnerRoutes.profileChangePassword),
+                            ),
+                          ],
                           const Divider(height: 1, indent: 72),
                           _PremiumListTile(
                             icon: Icons.notifications_outlined,
@@ -239,7 +265,9 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withAlpha((0.04 * 255).toInt()),
+                            color: isDark
+                                ? theme.colorScheme.onPrimary.withAlpha((0.02 * 255).toInt())
+                                : theme.colorScheme.onSurface.withAlpha((0.04 * 255).toInt()),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -277,7 +305,9 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withAlpha((0.04 * 255).toInt()),
+                            color: isDark
+                                ? theme.colorScheme.onPrimary.withAlpha((0.02 * 255).toInt())
+                                : theme.colorScheme.onSurface.withAlpha((0.04 * 255).toInt()),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -320,11 +350,12 @@ class ProfileScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 32),
-                      ],
-                    );
-                  },
-                );
+                const SizedBox(height: 32),
+              ]),
+            ),
+          ),
+        ],
+      );
               },
               loading: () {
                 final theme = Theme.of(context);
@@ -337,7 +368,7 @@ class ProfileScreen extends ConsumerWidget {
                       Text(
                         'Učitavanje profila...',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -369,7 +400,7 @@ class ProfileScreen extends ConsumerWidget {
                         Text(
                           '$error',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 3,
@@ -407,16 +438,14 @@ class _PremiumListTile extends StatefulWidget {
   final IconData icon;
   final String title;
   final dynamic subtitle;
-  final Widget? trailing;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final bool isLast;
 
   const _PremiumListTile({
     required this.icon,
     required this.title,
-    required this.onTap,
+    this.onTap,
     this.subtitle,
-    this.trailing,
     this.isLast = false,
   });
 
@@ -429,14 +458,19 @@ class _PremiumListTileState extends State<_PremiumListTile> {
 
   @override
   Widget build(BuildContext context) {
+    final isDisabled = widget.onTap == null;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) => !isDisabled ? setState(() => _isHovered = true) : null,
+      onExit: (_) => !isDisabled ? setState(() => _isHovered = false) : null,
+      cursor: isDisabled ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: _isHovered
-              ? const Color(0xFF6B4CE6).withAlpha((0.04 * 255).toInt())
+          color: _isHovered && !isDisabled
+              ? theme.colorScheme.primary.withAlpha((0.04 * 255).toInt())
               : Colors.transparent,
           borderRadius: widget.isLast
               ? const BorderRadius.only(
@@ -445,46 +479,48 @@ class _PremiumListTileState extends State<_PremiumListTile> {
                 )
               : BorderRadius.zero,
         ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 12,
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
-              borderRadius: BorderRadius.circular(10),
+        child: Opacity(
+          opacity: isDisabled ? 0.4 : 1.0,
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 12,
             ),
-            child: Icon(
-              widget.icon,
-              color: const Color(0xFF6B4CE6),
-              size: 22,
-            ),
-          ),
-          title: Text(
-            widget.title,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          subtitle: widget.subtitle is String
-              ? Text(
-                  widget.subtitle as String,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                  ),
-                )
-              : widget.subtitle as Widget?,
-          trailing: widget.trailing ??
-              Icon(
-                Icons.chevron_right_rounded,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
+                borderRadius: BorderRadius.circular(10),
               ),
-          onTap: widget.onTap,
+              child: Icon(
+                widget.icon,
+                color: theme.colorScheme.primary,
+                size: 22,
+              ),
+            ),
+            title: Text(
+              widget.title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            subtitle: widget.subtitle is String
+                ? Text(
+                    widget.subtitle as String,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                    ),
+                  )
+                : widget.subtitle as Widget?,
+            trailing: Icon(
+              Icons.chevron_right_rounded,
+              color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+            ),
+            onTap: widget.onTap,
+          ),
         ),
       ),
     );
@@ -506,6 +542,7 @@ class _LogoutTileState extends State<_LogoutTile> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -513,7 +550,7 @@ class _LogoutTileState extends State<_LogoutTile> {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: _isHovered
-              ? const Color(0xFFEF4444).withAlpha((0.06 * 255).toInt())
+              ? theme.colorScheme.error.withAlpha((0.06 * 255).toInt())
               : Colors.transparent,
           borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(16),
@@ -528,21 +565,21 @@ class _LogoutTileState extends State<_LogoutTile> {
           leading: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFEF4444).withAlpha((0.1 * 255).toInt()),
+              color: theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.logout_rounded,
-              color: Color(0xFFEF4444),
+              color: theme.colorScheme.error,
               size: 22,
             ),
           ),
-          title: const Text(
+          title: Text(
             'Logout',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Color(0xFFEF4444),
+              color: theme.colorScheme.error,
             ),
           ),
           subtitle: Text(
@@ -552,9 +589,9 @@ class _LogoutTileState extends State<_LogoutTile> {
               color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
             ),
           ),
-          trailing: const Icon(
+          trailing: Icon(
             Icons.chevron_right_rounded,
-            color: Color(0xFFEF4444),
+            color: theme.colorScheme.error,
           ),
           onTap: widget.onLogout,
         ),

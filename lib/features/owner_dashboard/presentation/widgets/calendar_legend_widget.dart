@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Reusable Calendar Legend Widget
 /// Shows color explanations and icon meanings for calendars
@@ -21,6 +22,9 @@ class CalendarLegendWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Card(
       margin: const EdgeInsets.all(0),
       child: Padding(
@@ -34,7 +38,7 @@ class CalendarLegendWidget extends StatelessWidget {
                 Icon(
                   Icons.info_outline,
                   size: isCompact ? 14 : 16,
-                  color: Colors.grey[700],
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -42,7 +46,7 @@ class CalendarLegendWidget extends StatelessWidget {
                   style: TextStyle(
                     fontSize: isCompact ? 12 : 13,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[700],
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                   ),
                 ),
               ],
@@ -55,7 +59,7 @@ class CalendarLegendWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isCompact ? 10 : 11,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
+                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
                 ),
               ),
               const SizedBox(height: 4),
@@ -101,7 +105,7 @@ class CalendarLegendWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isCompact ? 10 : 11,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
+                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
                 ),
               ),
               const SizedBox(height: 4),
@@ -110,33 +114,33 @@ class CalendarLegendWidget extends StatelessWidget {
                 runSpacing: 6,
                 children: [
                   _LegendItem(
-                    color: Colors.white,
+                    color: isDark ? AppColors.surfaceDark : const Color(0xFFFFFFFF),
                     label: 'Osnovna',
-                    borderColor: Colors.grey[300]!,
+                    borderColor: isDark ? AppColors.borderDark : AppColors.borderLight,
                     isCompact: isCompact,
                   ),
                   _LegendItem(
-                    color: Colors.blue[50]!,
+                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
                     label: 'Custom',
-                    borderColor: Colors.blue[300]!,
+                    borderColor: AppColors.authSecondary.withAlpha((0.5 * 255).toInt()),
                     isCompact: isCompact,
                   ),
                   _LegendItem(
-                    color: Colors.purple[50]!,
+                    color: AppColors.primaryLight.withAlpha((0.1 * 255).toInt()),
                     label: 'Vikend',
-                    borderColor: Colors.purple[300]!,
+                    borderColor: AppColors.primaryLight,
                     isCompact: isCompact,
                   ),
                   _LegendItem(
-                    color: Colors.orange[50]!,
+                    color: AppColors.warning.withAlpha((0.1 * 255).toInt()),
                     label: 'Restrikcije',
-                    borderColor: Colors.orange[300]!,
+                    borderColor: AppColors.warning,
                     isCompact: isCompact,
                   ),
                   _LegendItem(
-                    color: Colors.grey[300]!,
+                    color: isDark ? AppColors.surfaceVariantDark : AppColors.disabled,
                     label: 'Nedostupno',
-                    borderColor: Colors.grey[600]!,
+                    borderColor: isDark ? AppColors.borderDark : AppColors.textDisabled,
                     isCompact: isCompact,
                   ),
                 ],
@@ -152,7 +156,7 @@ class CalendarLegendWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isCompact ? 10 : 11,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
+                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
                 ),
               ),
               const SizedBox(height: 4),
@@ -163,31 +167,31 @@ class CalendarLegendWidget extends StatelessWidget {
                   _IconLegendItem(
                     icon: Icons.web,
                     label: 'Widget',
-                    color: Colors.green,
+                    color: AppColors.success,
                     isCompact: isCompact,
                   ),
                   _IconLegendItem(
                     icon: Icons.person,
                     label: 'Manualno',
-                    color: Colors.grey,
+                    color: AppColors.textSecondary,
                     isCompact: isCompact,
                   ),
                   _IconLegendItem(
                     icon: Icons.sync,
                     label: 'iCal sync',
-                    color: Colors.blue,
+                    color: AppColors.authSecondary,
                     isCompact: isCompact,
                   ),
                   _IconLegendItem(
                     icon: Icons.public,
                     label: 'Booking.com',
-                    color: Colors.orange,
+                    color: AppColors.warning,
                     isCompact: isCompact,
                   ),
                   _IconLegendItem(
                     icon: Icons.home,
                     label: 'Airbnb',
-                    color: Colors.red,
+                    color: AppColors.error,
                     isCompact: isCompact,
                   ),
                 ],
@@ -203,7 +207,7 @@ class CalendarLegendWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isCompact ? 10 : 11,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
+                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
                 ),
               ),
               const SizedBox(height: 4),
@@ -214,25 +218,25 @@ class CalendarLegendWidget extends StatelessWidget {
                   _IconLegendItem(
                     icon: Icons.sync,
                     label: 'iCal',
-                    color: Colors.blue[700]!,
+                    color: AppColors.authSecondary,
                     isCompact: isCompact,
                   ),
                   _IconLegendItem(
                     icon: Icons.login,
                     label: 'Blokiraj check-in',
-                    color: Colors.red[700]!,
+                    color: AppColors.errorDark,
                     isCompact: isCompact,
                   ),
                   _IconLegendItem(
                     icon: Icons.logout,
                     label: 'Blokiraj check-out',
-                    color: Colors.red[700]!,
+                    color: AppColors.errorDark,
                     isCompact: isCompact,
                   ),
                   _IconLegendItem(
                     icon: Icons.notes,
                     label: 'Napomene',
-                    color: Colors.orange[700]!,
+                    color: AppColors.warningDark,
                     isCompact: isCompact,
                   ),
                 ],
@@ -261,6 +265,9 @@ class _LegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -281,7 +288,7 @@ class _LegendItem extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: isCompact ? 10 : 11,
-            color: Colors.grey[700],
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
           ),
         ),
       ],
@@ -305,6 +312,9 @@ class _IconLegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -318,7 +328,7 @@ class _IconLegendItem extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: isCompact ? 10 : 11,
-            color: Colors.grey[700],
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
           ),
         ),
       ],

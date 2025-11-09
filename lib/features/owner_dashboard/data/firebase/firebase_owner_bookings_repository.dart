@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../widget/domain/models/payment_option.dart';
 
 /// Owner bookings model with extended property/unit info
 class OwnerBooking {
@@ -31,6 +31,30 @@ class FirebaseOwnerBookingsRepository {
   final FirebaseAuth _auth;
 
   FirebaseOwnerBookingsRepository(this._firestore, this._auth);
+
+  /// Helper method to safely extract String from dynamic value
+  /// Handles cases where Firestore returns Map objects instead of Strings
+  String? _safeExtractString(dynamic value, {String? fallback}) {
+    if (value == null) return fallback;
+    if (value is String) return value;
+    if (value is Map) {
+      // If it's a Map, try to get a meaningful string representation
+      // Common case: {'value': 'actual_string'}
+      if (value.containsKey('value')) {
+        final mapValue = value['value'];
+        if (mapValue is String) return mapValue;
+      }
+      // If no 'value' key, return the first string value found
+      for (final v in value.values) {
+        if (v is String) return v;
+      }
+      // Last resort: return toString()
+      debugPrint('⚠️ Unexpected Map structure for string field: $value');
+      return fallback;
+    }
+    // For any other type, convert to string
+    return value.toString();
+  }
 
   /// Get all bookings for owner's properties
   Future<List<OwnerBooking>> getOwnerBookings({
@@ -286,7 +310,7 @@ class FirebaseOwnerBookingsRepository {
         } catch (icalError) {
           // GRACEFUL FALLBACK: If iCal query fails, continue with regular bookings
           // This ensures calendar works even if owner has no iCal feeds or there's an error
-          print('⚠️ iCal events query failed (non-critical): $icalError');
+          debugPrint('⚠️ iCal events query failed (non-critical): $icalError');
         }
       }
 
@@ -335,8 +359,8 @@ class FirebaseOwnerBookingsRepository {
           }
 
           final unitId = data['unit_id'] as String;
-          final source = data['source'] as String? ?? 'ical';
-          final guestName = data['guest_name'] as String? ?? 'External Booking';
+          final source = _safeExtractString(data['source'], fallback: 'ical') ?? 'ical';
+          final guestName = _safeExtractString(data['guest_name'], fallback: 'External Booking') ?? 'External Booking';
 
           // Create pseudo-BookingModel for iCal event
           // Using special ID prefix 'ical_' to distinguish from regular bookings
@@ -366,7 +390,7 @@ class FirebaseOwnerBookingsRepository {
           bookingsByUnit[unitId]!.add(pseudoBooking);
         } catch (parseError) {
           // Skip malformed iCal events
-          print('⚠️ Failed to parse iCal event ${doc.id}: $parseError');
+          debugPrint('⚠️ Failed to parse iCal event ${doc.id}: $parseError');
         }
       }
     }

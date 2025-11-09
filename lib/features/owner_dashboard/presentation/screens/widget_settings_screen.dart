@@ -57,6 +57,15 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   // Theme Options
   bool _showBranding = true;
   Color _primaryColor = const Color(0xFF1976D2);
+  String _themeMode = 'system'; // 'light', 'dark', 'system'
+
+  // Blur/Glassmorphism Options
+  bool _blurEnabled = true;
+  String _blurIntensity = 'medium'; // 'subtle', 'light', 'medium', 'strong', 'extra_strong'
+  bool _enableCardBlur = true;
+  bool _enableAppBarBlur = true;
+  bool _enableModalBlur = true;
+  bool _enableOverlayBlur = true;
 
   bool _isLoading = true;
   bool _isSaving = false;
@@ -131,9 +140,18 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
       // Theme Options
       _showBranding = settings.themeOptions?.showBranding ?? true;
+      _themeMode = settings.themeOptions?.themeMode ?? 'system';
       if (settings.themeOptions?.primaryColor != null) {
         _primaryColor = _parseColor(settings.themeOptions!.primaryColor!);
       }
+
+      // Blur Options
+      _blurEnabled = settings.blurConfig?.enabled ?? true;
+      _blurIntensity = settings.blurConfig?.intensity ?? 'medium';
+      _enableCardBlur = settings.blurConfig?.enableCardBlur ?? true;
+      _enableAppBarBlur = settings.blurConfig?.enableAppBarBlur ?? true;
+      _enableModalBlur = settings.blurConfig?.enableModalBlur ?? true;
+      _enableOverlayBlur = settings.blurConfig?.enableOverlayBlur ?? true;
     });
   }
 
@@ -193,6 +211,15 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         themeOptions: ThemeOptions(
           primaryColor: _colorToHex(_primaryColor),
           showBranding: _showBranding,
+          themeMode: _themeMode,
+        ),
+        blurConfig: BlurConfig(
+          enabled: _blurEnabled,
+          intensity: _blurIntensity,
+          enableCardBlur: _enableCardBlur,
+          enableAppBarBlur: _enableAppBarBlur,
+          enableModalBlur: _enableModalBlur,
+          enableOverlayBlur: _enableOverlayBlur,
         ),
         createdAt: _existingSettings?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
@@ -238,6 +265,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Postavke Widgeta'),
+        backgroundColor: const Color(0xFF6B4CE6),
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+          tooltip: 'Nazad',
+        ),
         actions: [
           if (!_isLoading)
             IconButton(
@@ -289,7 +323,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     onPressed: _isSaving ? null : _saveSettings,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.all(16),
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppColors.authPrimary,
                     ),
                     child: _isSaving
                         ? const SizedBox(
@@ -310,7 +344,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(icon, size: 24, color: AppColors.primary),
+          Icon(icon, size: 24, color: AppColors.authPrimary),
           const SizedBox(width: 8),
           Text(
             title,
@@ -680,6 +714,206 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 12),
+
+            // Theme Mode Selector
+            const Text(
+              'Tema:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            ...['light', 'dark', 'system'].map((mode) => InkWell(
+              onTap: () => setState(() => _themeMode = mode),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      margin: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _themeMode == mode
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey,
+                          width: 2,
+                        ),
+                      ),
+                      child: _themeMode == mode
+                          ? Center(
+                              child: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            )
+                          : null,
+                    ),
+                    Icon(
+                      mode == 'light'
+                          ? Icons.light_mode
+                          : mode == 'dark'
+                              ? Icons.dark_mode
+                              : Icons.settings_brightness,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      mode == 'light'
+                          ? 'Svijetla Tema'
+                          : mode == 'dark'
+                              ? 'Tamna Tema (OLED Optimizovana)'
+                              : 'Sistem (Auto)',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            )),
+
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+
+            // Glassmorphism / Blur Effects Section
+            const Text(
+              'Glassmorphism Efekti:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Frosted glass efekti za moderan izgled',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+
+            // Enable/Disable Blur
+            SwitchListTile(
+              value: _blurEnabled,
+              onChanged: (value) => setState(() => _blurEnabled = value),
+              title: const Text('Omogući Blur Efekte'),
+              subtitle: const Text('Glassmorphism za kartice, modale i app bar'),
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            // Blur Intensity Selector
+            if (_blurEnabled) ...[
+              const SizedBox(height: 12),
+              const Text(
+                'Intenzitet Blur-a:',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              ...['subtle', 'light', 'medium', 'strong', 'extra_strong'].map((intensity) => InkWell(
+                onTap: () => setState(() => _blurIntensity = intensity),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        margin: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _blurIntensity == intensity
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey,
+                            width: 2,
+                          ),
+                        ),
+                        child: _blurIntensity == intensity
+                            ? Center(
+                                child: Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              )
+                            : null,
+                      ),
+                      const Icon(
+                        Icons.blur_on,
+                        size: 20,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        intensity == 'subtle'
+                            ? 'Suptilan (Barely visible)'
+                            : intensity == 'light'
+                                ? 'Lagan (Light frosted)'
+                                : intensity == 'medium'
+                                    ? 'Srednji (Standard glass)'
+                                    : intensity == 'strong'
+                                        ? 'Jak (Prominent glass)'
+                                        : 'Ekstra Jak (Maximum blur)',
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              )),
+
+              const SizedBox(height: 16),
+              const Text(
+                'Gdje primijeniti blur:',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+
+              // Card Blur
+              CheckboxListTile(
+                value: _enableCardBlur,
+                onChanged: (value) => setState(() => _enableCardBlur = value ?? true),
+                title: const Text('Kartice (Cards)'),
+                subtitle: const Text('Blur za informacijske kartice'),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+
+              // App Bar Blur
+              CheckboxListTile(
+                value: _enableAppBarBlur,
+                onChanged: (value) => setState(() => _enableAppBarBlur = value ?? true),
+                title: const Text('App Bar'),
+                subtitle: const Text('Blur za gornji navigation bar'),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+
+              // Modal Blur
+              CheckboxListTile(
+                value: _enableModalBlur,
+                onChanged: (value) => setState(() => _enableModalBlur = value ?? true),
+                title: const Text('Modale i Dijalozi'),
+                subtitle: const Text('Blur za pop-up prozore'),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+
+              // Overlay Blur
+              CheckboxListTile(
+                value: _enableOverlayBlur,
+                onChanged: (value) => setState(() => _enableOverlayBlur = value ?? true),
+                title: const Text('Overlay Pozadine'),
+                subtitle: const Text('Blur za pozadinske overlaye'),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+            ],
+
+            const SizedBox(height: 16),
+            const Divider(),
 
             ListTile(
               contentPadding: EdgeInsets.zero,

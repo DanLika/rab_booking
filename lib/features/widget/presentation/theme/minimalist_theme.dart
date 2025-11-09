@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'minimalist_colors.dart';
+import 'minimalist_colors_dark.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 
 /// Modern Minimalist Theme for the widget
 /// Clean black-white-grey design with subtle accents
+/// Supports universal embedding with shadow levels and transparent mode
 class MinimalistTheme {
   /// Light theme
   static ThemeData get light => _buildTheme(
@@ -15,14 +17,37 @@ class MinimalistTheme {
         borderColor: MinimalistColors.borderDefault,
       );
 
-  /// Dark theme
+  /// Dark theme (optimized for WCAG AAA and OLED displays)
   static ThemeData get dark => _buildTheme(
         brightness: Brightness.dark,
-        primaryColor: MinimalistColors.backgroundPrimary,
-        backgroundColor: MinimalistColors.buttonPrimary,
-        textColor: MinimalistColors.textOnDark,
-        borderColor: MinimalistColors.borderMedium,
+        primaryColor: MinimalistColorsDark.buttonPrimary,
+        backgroundColor: MinimalistColorsDark.backgroundDark,
+        textColor: MinimalistColorsDark.textPrimary,
+        borderColor: MinimalistColorsDark.borderDefault,
       );
+
+  /// Universal light theme with shadow level and transparent mode
+  ///
+  /// [shadowLevel]: 0-5 (0=flat, 2=default, 5=maximum depth)
+  /// [transparentMode]: Blend seamlessly with parent site
+  /// [accentColor]: Override default black with custom color
+  static ThemeData lightWithOptions({
+    int shadowLevel = 2,
+    bool transparentMode = false,
+    Color? accentColor,
+  }) {
+    return _buildTheme(
+      brightness: Brightness.light,
+      primaryColor: accentColor ?? MinimalistColors.buttonPrimary,
+      backgroundColor: transparentMode
+          ? Colors.transparent
+          : MinimalistColors.backgroundPrimary,
+      textColor: MinimalistColors.textPrimary,
+      borderColor: MinimalistColors.borderDefault,
+      shadowLevel: shadowLevel,
+      transparentMode: transparentMode,
+    );
+  }
 
   static ThemeData _buildTheme({
     required Brightness brightness,
@@ -30,50 +55,53 @@ class MinimalistTheme {
     required Color backgroundColor,
     required Color textColor,
     required Color borderColor,
+    int shadowLevel = 2,
+    bool transparentMode = false,
   }) {
     final bool isDark = brightness == Brightness.dark;
+    final double elevation = shadowLevel > 0 ? (shadowLevel * 0.5) : 0;
 
     final ColorScheme colorScheme = ColorScheme(
       brightness: brightness,
       // Primary colors
       primary: primaryColor,
-      onPrimary: isDark ? MinimalistColors.textPrimary : MinimalistColors.textOnDark,
-      primaryContainer: isDark ? MinimalistColors.buttonPrimaryHover : MinimalistColors.backgroundSecondary,
+      onPrimary: isDark ? MinimalistColorsDark.buttonPrimaryText : MinimalistColors.textOnDark,
+      primaryContainer: isDark ? MinimalistColorsDark.backgroundElevated2 : MinimalistColors.backgroundSecondary,
       onPrimaryContainer: textColor,
 
       // Secondary colors (grey tones)
-      secondary: isDark ? MinimalistColors.borderMedium : MinimalistColors.textSecondary,
-      onSecondary: isDark ? MinimalistColors.textPrimary : MinimalistColors.textOnDark,
-      secondaryContainer: isDark ? MinimalistColors.borderMedium : MinimalistColors.backgroundTertiary,
+      secondary: isDark ? MinimalistColorsDark.borderMedium : MinimalistColors.textSecondary,
+      onSecondary: isDark ? MinimalistColorsDark.textPrimary : MinimalistColors.textOnDark,
+      secondaryContainer: isDark ? MinimalistColorsDark.backgroundElevated1 : MinimalistColors.backgroundTertiary,
       onSecondaryContainer: textColor,
 
       // Tertiary (accent for calendar states)
-      tertiary: MinimalistColors.statusAvailableBorder,
-      onTertiary: MinimalistColors.statusAvailableText,
-      tertiaryContainer: MinimalistColors.statusAvailableBackground,
-      onTertiaryContainer: MinimalistColors.statusAvailableText,
+      tertiary: isDark ? MinimalistColorsDark.statusAvailableBorder : MinimalistColors.statusAvailableBorder,
+      onTertiary: isDark ? MinimalistColorsDark.statusAvailableText : MinimalistColors.statusAvailableText,
+      tertiaryContainer: isDark ? MinimalistColorsDark.statusAvailableBackground : MinimalistColors.statusAvailableBackground,
+      onTertiaryContainer: isDark ? MinimalistColorsDark.statusAvailableText : MinimalistColors.statusAvailableText,
 
       // Error colors
-      error: MinimalistColors.error,
-      onError: MinimalistColors.textOnDark,
-      errorContainer: MinimalistColors.statusBookedBackground,
-      onErrorContainer: MinimalistColors.statusBookedText,
+      error: isDark ? MinimalistColorsDark.error : MinimalistColors.error,
+      onError: isDark ? MinimalistColorsDark.textPrimary : MinimalistColors.textOnDark,
+      errorContainer: isDark ? MinimalistColorsDark.statusBookedBackground : MinimalistColors.statusBookedBackground,
+      onErrorContainer: isDark ? MinimalistColorsDark.statusBookedText : MinimalistColors.statusBookedText,
 
       // Surface colors
       surface: backgroundColor,
       onSurface: textColor,
-      surfaceContainerHighest: isDark ? MinimalistColors.buttonPrimaryHover : MinimalistColors.backgroundSecondary,
+      surfaceContainerHighest: isDark ? MinimalistColorsDark.backgroundElevated1 : MinimalistColors.backgroundSecondary,
 
       // Outline
       outline: borderColor,
-      outlineVariant: isDark ? MinimalistColors.borderMedium : MinimalistColors.borderLight,
+      outlineVariant: isDark ? MinimalistColorsDark.borderSubtle : MinimalistColors.borderLight,
 
       // Other
-      shadow: MinimalistColors.shadow03,
-      scrim: MinimalistColors.black(0.5),
-      inverseSurface: isDark ? MinimalistColors.backgroundPrimary : MinimalistColors.buttonPrimary,
-      onInverseSurface: isDark ? MinimalistColors.textPrimary : MinimalistColors.textOnDark,
-      inversePrimary: isDark ? MinimalistColors.buttonPrimary : MinimalistColors.backgroundPrimary,
+      shadow: isDark ? MinimalistColorsDark.shadow03 : MinimalistColors.shadow03,
+      scrim: isDark ? MinimalistColorsDark.black(0.5) : MinimalistColors.black(0.5),
+      inverseSurface: isDark ? MinimalistColorsDark.buttonPrimary : MinimalistColors.buttonPrimary,
+      onInverseSurface: isDark ? MinimalistColorsDark.buttonPrimaryText : MinimalistColors.textOnDark,
+      inversePrimary: isDark ? MinimalistColorsDark.backgroundDark : MinimalistColors.backgroundPrimary,
     );
 
     return ThemeData(
@@ -99,15 +127,17 @@ class MinimalistTheme {
 
       // Card theme using design tokens
       cardTheme: CardThemeData(
-        color: isDark ? MinimalistColors.buttonPrimaryHover : MinimalistColors.backgroundCard,
-        elevation: 0,
-        shadowColor: MinimalistColors.shadow02,
+        color: isDark ? MinimalistColorsDark.backgroundElevated1 : MinimalistColors.backgroundCard,
+        elevation: elevation,
+        shadowColor: isDark ? MinimalistColorsDark.shadow02 : MinimalistColors.shadow02,
         shape: RoundedRectangleBorder(
           borderRadius: BorderTokens.card,
-          side: BorderSide(
-            color: borderColor,
-            width: BorderTokens.widthThin,
-          ),
+          side: shadowLevel == 0
+              ? BorderSide(
+                  color: borderColor,
+                  width: BorderTokens.widthThin,
+                )
+              : BorderSide.none,
         ),
         margin: EdgeInsets.zero,
       ),
@@ -115,10 +145,10 @@ class MinimalistTheme {
       // Button themes using design tokens
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: MinimalistColors.buttonPrimary,
-          foregroundColor: MinimalistColors.buttonPrimaryText,
-          elevation: 0,
-          shadowColor: Colors.transparent,
+          backgroundColor: isDark ? MinimalistColorsDark.buttonPrimary : MinimalistColors.buttonPrimary,
+          foregroundColor: isDark ? MinimalistColorsDark.buttonPrimaryText : MinimalistColors.buttonPrimaryText,
+          elevation: elevation,
+          shadowColor: shadowLevel > 0 ? (isDark ? MinimalistColorsDark.shadow02 : MinimalistColors.shadow02) : Colors.transparent,
           padding: SpacingTokens.buttonPadding,
           shape: RoundedRectangleBorder(
             borderRadius: BorderTokens.button,
@@ -132,10 +162,10 @@ class MinimalistTheme {
           // Hover effect
           overlayColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.hovered)) {
-              return MinimalistColors.white(0.1);
+              return isDark ? MinimalistColorsDark.overlayHover : MinimalistColors.white(0.1);
             }
             if (states.contains(WidgetState.pressed)) {
-              return MinimalistColors.white(0.2);
+              return isDark ? MinimalistColorsDark.overlayPressed : MinimalistColors.white(0.2);
             }
             return null;
           }),
@@ -144,10 +174,10 @@ class MinimalistTheme {
 
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          backgroundColor: MinimalistColors.buttonSecondary,
-          foregroundColor: MinimalistColors.buttonSecondaryText,
-          side: const BorderSide(
-            color: MinimalistColors.buttonSecondaryBorder,
+          backgroundColor: isDark ? MinimalistColorsDark.buttonSecondary : MinimalistColors.buttonSecondary,
+          foregroundColor: isDark ? MinimalistColorsDark.buttonSecondaryText : MinimalistColors.buttonSecondaryText,
+          side: BorderSide(
+            color: isDark ? MinimalistColorsDark.buttonSecondaryBorder : MinimalistColors.buttonSecondaryBorder,
             width: BorderTokens.widthMedium,
           ),
           padding: SpacingTokens.buttonPadding,
@@ -176,7 +206,7 @@ class MinimalistTheme {
       // Input decoration theme using design tokens
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark ? MinimalistColors.buttonPrimaryHover : MinimalistColors.backgroundSecondary,
+        fillColor: isDark ? MinimalistColorsDark.backgroundElevated1 : MinimalistColors.backgroundSecondary,
         contentPadding: SpacingTokens.allM,
         border: OutlineInputBorder(
           borderRadius: BorderTokens.input,
@@ -195,31 +225,31 @@ class MinimalistTheme {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderTokens.input,
           borderSide: BorderSide(
-            color: primaryColor,
+            color: isDark ? MinimalistColorsDark.borderStrong : primaryColor,
             width: BorderTokens.widthMedium,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderTokens.input,
-          borderSide: const BorderSide(
-            color: MinimalistColors.error,
+          borderSide: BorderSide(
+            color: isDark ? MinimalistColorsDark.error : MinimalistColors.error,
             width: BorderTokens.widthThin,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderTokens.input,
-          borderSide: const BorderSide(
-            color: MinimalistColors.error,
+          borderSide: BorderSide(
+            color: isDark ? MinimalistColorsDark.error : MinimalistColors.error,
             width: BorderTokens.widthMedium,
           ),
         ),
         labelStyle: GoogleFonts.inter(
           fontSize: TypographyTokens.fontSizeM,
-          color: MinimalistColors.textSecondary,
+          color: isDark ? MinimalistColorsDark.textSecondary : MinimalistColors.textSecondary,
         ),
         hintStyle: GoogleFonts.inter(
           fontSize: TypographyTokens.fontSizeM,
-          color: MinimalistColors.textTertiary,
+          color: isDark ? MinimalistColorsDark.textTertiary : MinimalistColors.textTertiary,
         ),
       ),
 
@@ -347,43 +377,43 @@ class MinimalistTheme {
   static Color getCalendarDateBackground(String status, {required bool isDark}) {
     switch (status.toLowerCase()) {
       case 'available':
-        return MinimalistColors.statusAvailableBackground;
+        return isDark ? MinimalistColorsDark.statusAvailableBackground : MinimalistColors.statusAvailableBackground;
       case 'booked':
-        return MinimalistColors.statusBookedBackground;
+        return isDark ? MinimalistColorsDark.statusBookedBackground : MinimalistColors.statusBookedBackground;
       case 'pending':
-        return MinimalistColors.statusPendingBackground;
+        return isDark ? MinimalistColorsDark.statusPendingBackground : MinimalistColors.statusPendingBackground;
       default:
-        return isDark ? MinimalistColors.buttonPrimaryHover : MinimalistColors.backgroundPrimary;
+        return isDark ? MinimalistColorsDark.backgroundDark : MinimalistColors.backgroundPrimary;
     }
   }
 
   static Color getCalendarDateBorder(String status, {required bool isDark, bool isSelected = false}) {
     if (isSelected) {
-      return MinimalistColors.borderBlack;
+      return isDark ? MinimalistColorsDark.borderEmphasis : MinimalistColors.borderBlack;
     }
 
     switch (status.toLowerCase()) {
       case 'available':
-        return MinimalistColors.statusAvailableBorder;
+        return isDark ? MinimalistColorsDark.statusAvailableBorder : MinimalistColors.statusAvailableBorder;
       case 'booked':
-        return MinimalistColors.statusBookedBorder;
+        return isDark ? MinimalistColorsDark.statusBookedBorder : MinimalistColors.statusBookedBorder;
       case 'pending':
-        return MinimalistColors.statusPendingBorder;
+        return isDark ? MinimalistColorsDark.statusPendingBorder : MinimalistColors.statusPendingBorder;
       default:
-        return isDark ? MinimalistColors.borderMedium : MinimalistColors.borderDefault;
+        return isDark ? MinimalistColorsDark.borderDefault : MinimalistColors.borderDefault;
     }
   }
 
   static Color getCalendarDateText(String status, {required bool isDark}) {
     switch (status.toLowerCase()) {
       case 'available':
-        return MinimalistColors.statusAvailableText;
+        return isDark ? MinimalistColorsDark.statusAvailableText : MinimalistColors.statusAvailableText;
       case 'booked':
-        return MinimalistColors.statusBookedText;
+        return isDark ? MinimalistColorsDark.statusBookedText : MinimalistColors.statusBookedText;
       case 'pending':
-        return MinimalistColors.statusPendingText;
+        return isDark ? MinimalistColorsDark.statusPendingText : MinimalistColors.statusPendingText;
       default:
-        return isDark ? MinimalistColors.textOnDark : MinimalistColors.textPrimary;
+        return isDark ? MinimalistColorsDark.textPrimary : MinimalistColors.textPrimary;
     }
   }
 }

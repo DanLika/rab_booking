@@ -30,6 +30,7 @@ Future<BookingPriceCalculation?> bookingPrice(
   required String unitId,
   required DateTime? checkIn,
   required DateTime? checkOut,
+  int depositPercentage = 20, // Configurable deposit percentage (0-100)
 }) async {
   // Return null if dates not selected
   if (checkIn == null || checkOut == null) {
@@ -48,9 +49,14 @@ Future<BookingPriceCalculation?> bookingPrice(
   // Calculate nights
   final nights = checkOut.difference(checkIn).inDays;
 
-  // Calculate deposit (20% avans) and remaining amount
-  final depositAmount = totalPrice * 0.20;
-  final remainingAmount = totalPrice * 0.80;
+  // Calculate deposit and remaining amount based on configurable percentage
+  // If depositPercentage is 0 or 100, treat as full payment (no split)
+  final depositAmount = (depositPercentage == 0 || depositPercentage == 100)
+      ? totalPrice
+      : totalPrice * (depositPercentage / 100);
+  final remainingAmount = (depositPercentage == 0 || depositPercentage == 100)
+      ? 0.0
+      : totalPrice * ((100 - depositPercentage) / 100);
 
   return BookingPriceCalculation(
     totalPrice: totalPrice,

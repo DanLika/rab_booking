@@ -114,13 +114,13 @@ class _PremiumDatePickerState extends State<PremiumDatePicker> {
           data: Theme.of(context).copyWith(
             colorScheme: isDark
                 ? const ColorScheme.dark(
-                    primary: AppColors.primary,
+                    primary: AppColors.authPrimary,
                     onPrimary: Colors.white,
                     surface: AppColors.surfaceDark,
                     onSurface: AppColors.textPrimaryDark,
                   )
                 : const ColorScheme.light(
-                    primary: AppColors.primary,
+                    primary: AppColors.authPrimary,
                     onPrimary: Colors.white,
                     surface: AppColors.surfaceLight,
                     onSurface: AppColors.textPrimaryLight,
@@ -130,7 +130,7 @@ class _PremiumDatePickerState extends State<PremiumDatePicker> {
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
+                foregroundColor: AppColors.authPrimary,
                 textStyle: AppTypography.bodyMedium.copyWith(
                   fontWeight: AppTypography.weightSemibold,
                 ),
@@ -255,7 +255,7 @@ class _PremiumDatePickerState extends State<PremiumDatePicker> {
           ? (isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight)
           : null;
     } else if (_isFocused) {
-      borderColor = AppColors.primary;
+      borderColor = AppColors.authPrimary;
       boxShadow = AppShadows.glowPrimary;
       backgroundColor = widget.variant == TextFieldVariant.filled
           ? (isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight)
@@ -286,21 +286,21 @@ class _PremiumDatePickerState extends State<PremiumDatePicker> {
   Color _getPrefixIconColor(bool isDark, bool hasError) {
     if (!widget.enabled) return AppColors.textDisabled;
     if (hasError) return AppColors.error;
-    if (_isFocused) return AppColors.primary;
+    if (_isFocused) return AppColors.authPrimary;
     return isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
   }
 
   Color _getSuffixIconColor(bool isDark, bool hasError) {
     if (!widget.enabled) return AppColors.textDisabled;
     if (hasError) return AppColors.error;
-    if (_isFocused) return AppColors.primary;
+    if (_isFocused) return AppColors.authPrimary;
     return isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
   }
 
   Color _getLabelColor(bool isDark, bool hasError) {
     if (!widget.enabled) return AppColors.textDisabled;
     if (hasError) return AppColors.error;
-    if (_isFocused) return AppColors.primary;
+    if (_isFocused) return AppColors.authPrimary;
     return isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
   }
 }

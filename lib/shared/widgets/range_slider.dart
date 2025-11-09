@@ -158,13 +158,13 @@ class _PremiumRangeSliderState extends State<PremiumRangeSlider> {
             rangeThumbShape: const _PremiumRangeThumbShape(),
             rangeTrackShape: const _PremiumRangeTrackShape(),
             trackHeight: 4,
-            activeTrackColor: AppColors.primary,
+            activeTrackColor: AppColors.authPrimary,
             inactiveTrackColor: isDark
                 ? AppColors.surfaceVariantDark
                 : AppColors.surfaceVariantLight,
             thumbColor: Colors.white,
-            overlayColor: AppColors.primary.withValues(alpha: 0.1),
-            valueIndicatorColor: AppColors.primary,
+            overlayColor: AppColors.authPrimary.withValues(alpha: 0.1),
+            valueIndicatorColor: AppColors.authPrimary,
             valueIndicatorTextStyle: AppTypography.small.copyWith(
               color: Colors.white,
               fontWeight: AppTypography.weightSemibold,
@@ -302,7 +302,7 @@ class _PremiumRangeThumbShape extends RangeSliderThumbShape {
       center,
       12,
       Paint()
-        ..color = AppColors.primary.withValues(alpha: 0.3)
+        ..color = AppColors.authPrimary.withValues(alpha: 0.3)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
     );
 
@@ -311,7 +311,7 @@ class _PremiumRangeThumbShape extends RangeSliderThumbShape {
       center,
       11,
       Paint()
-        ..color = AppColors.primary
+        ..color = AppColors.authPrimary
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );
@@ -386,7 +386,7 @@ class _PremiumRangeTrackShape extends RangeSliderTrackShape {
 
     // Draw active track (middle) with gradient
     final activeGradient = const LinearGradient(
-      colors: [AppColors.primary, AppColors.secondary],
+      colors: [AppColors.authPrimary, AppColors.secondary],
     );
     final activePaint = Paint()
       ..shader = activeGradient.createShader(

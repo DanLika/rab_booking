@@ -177,7 +177,7 @@ class PremiumAvatar extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final effectiveRadius = radius ?? _getRadiusForSize(size);
     final effectiveBackgroundColor = backgroundColor ??
-        (isDark ? AppColors.surfaceVariantDark : AppColors.primary);
+        (isDark ? AppColors.surfaceVariantDark : AppColors.authPrimary);
     final effectiveForegroundColor = foregroundColor ??
         (backgroundColor != null
             ? Colors.white
@@ -255,7 +255,7 @@ class PremiumAvatar extends StatelessWidget {
               height: radius * 0.5,
               child: const CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.authPrimary),
               ),
             ),
           ),

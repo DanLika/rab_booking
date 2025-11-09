@@ -189,7 +189,7 @@ class PremiumSnackbar {
         );
       case SnackbarVariant.info:
         return const _SnackbarConfig(
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.authPrimary,
           textColor: Colors.white,
           icon: Icons.info_outline,
         );

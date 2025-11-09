@@ -17,27 +17,42 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(OwnerRoutes.overview);
+            }
+          },
+          tooltip: 'Nazad',
+        ),
         title: const Text('Stripe Integracija - Uputstvo'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: theme.primaryColor,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
-      body: ListView(
+      body: SafeArea(
+        child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Header
           Card(
-            color: Colors.blue.shade50,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
+            color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
+            child: const Padding(
+              padding: EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.payment, size: 40, color: Colors.blue.shade700),
-                      const SizedBox(width: 16),
+                      Icon(Icons.payment, size: 40, color: AppColors.authSecondary),
+                      SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,15 +62,15 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blue.shade900,
+                                color: AppColors.authSecondary,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             Text(
                               'Prihvatajte plaćanja karticama direktno na vaš Stripe račun',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.blue.shade700,
+                                color: AppColors.authSecondary,
                               ),
                             ),
                           ],
@@ -63,8 +78,8 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: 16),
+                  Text(
                     '💡 Stripe Connect omogućava da primajte plaćanja direktno na vaš Stripe račun. '
                     'Gosti plaćaju karticom, a sredstva odmah dolaze vama (minus Stripe naknada).',
                     style: TextStyle(fontSize: 14, height: 1.5),
@@ -100,11 +115,11 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
                     color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
-                      const SizedBox(width: 8),
-                      const Expanded(
+                      Icon(Icons.info_outline, color: AppColors.authSecondary, size: 20),
+                      SizedBox(width: 8),
+                      Expanded(
                         child: Text(
                           'Napomena: Stripe je besplatan za registraciju. Naplaćuje samo proviziju po transakciji (oko 1.4% + 0.25€).',
                           style: TextStyle(fontSize: 12),
@@ -190,7 +205,7 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
                   icon: const Icon(Icons.payment),
                   label: const Text('Idi na Stripe Integraciju'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.authPrimary,
                     padding: const EdgeInsets.all(16),
                   ),
                 ),
@@ -254,6 +269,7 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
           const SizedBox(height: 24),
         ],
       ),
+      ),
     );
   }
 
@@ -275,13 +291,13 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
           });
         },
         leading: CircleAvatar(
-          backgroundColor: isExpanded ? AppColors.primary : Colors.grey.shade300,
+          backgroundColor: isExpanded ? AppColors.authPrimary : Colors.grey.shade300,
           foregroundColor: isExpanded ? Colors.white : Colors.grey.shade700,
           child: Text('$stepNumber'),
         ),
         title: Row(
           children: [
-            Icon(icon, size: 20, color: AppColors.primary),
+            Icon(icon, size: 20, color: AppColors.authPrimary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -349,7 +365,7 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
           children: [
             const Row(
               children: [
-                Icon(Icons.question_answer, color: AppColors.primary),
+                Icon(Icons.question_answer, color: AppColors.authPrimary),
                 SizedBox(width: 8),
                 Text(
                   'Česta Pitanja',

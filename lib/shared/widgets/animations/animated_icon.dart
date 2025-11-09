@@ -362,7 +362,7 @@ class _PulseIconState extends State<PulseIcon>
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = widget.color ?? AppColors.primary;
+    final iconColor = widget.color ?? AppColors.authPrimary;
 
     return AnimatedBuilder(
       animation: _controller,

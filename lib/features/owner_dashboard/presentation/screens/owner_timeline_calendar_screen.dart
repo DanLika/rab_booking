@@ -10,6 +10,7 @@ import '../providers/owner_calendar_provider.dart';
 import '../widgets/timeline_calendar_widget.dart';
 import '../widgets/calendar/calendar_top_toolbar.dart';
 import '../widgets/calendar/calendar_filters_panel.dart';
+import '../widgets/calendar/calendar_search_dialog.dart';
 import '../widgets/calendar/booking_inline_edit_dialog.dart';
 import '../../utils/calendar_grid_calculator.dart';
 
@@ -35,7 +36,7 @@ class _OwnerTimelineCalendarScreenState
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final filters = ref.watch(calendarFiltersProvider);
     final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
 
@@ -57,6 +58,7 @@ class _OwnerTimelineCalendarScreenState
             loading: () => 0,
             error: (error, stackTrace) => 0,
           ),
+          onNotificationsTap: _showNotifications,
           isCompact: MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint,
         ),
 
@@ -102,8 +104,10 @@ class _OwnerTimelineCalendarScreenState
           ),
 
         // Timeline calendar widget (it fetches its own data via providers)
-        const Expanded(
-          child: TimelineCalendarWidget(),
+        Expanded(
+          child: TimelineCalendarWidget(
+            key: ValueKey(_currentRange.startDate), // Rebuild on date change
+          ),
         ),
       ],
     );
@@ -146,173 +150,16 @@ class _OwnerTimelineCalendarScreenState
     }
   }
 
-  /// Show search dialog
+  /// Show search dialog (unified with Week and Month views)
   void _showSearch() async {
-    final TextEditingController searchController = TextEditingController();
-
-    try {
-      await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Pretraži rezervacije'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: searchController,
-                  autofocus: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Pretraga',
-                    hintText: 'Ime gosta, email, ID rezervacije...',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
-                  ),
-                  onSubmitted: (value) {
-                    if (value.trim().isNotEmpty && mounted) {
-                      Navigator.of(context).pop();
-                      _performSearch(value.trim());
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Pretražuje se po:',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                ...['Ime gosta', 'Email', 'Telefon', 'ID rezervacije'].map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.check_circle, size: 16, color: Colors.green),
-                        const SizedBox(width: 8),
-                        Text(item, style: Theme.of(context).textTheme.bodySmall),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                if (mounted) Navigator.of(context).pop();
-              },
-              child: const Text('Otkaži'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (searchController.text.trim().isNotEmpty && mounted) {
-                  Navigator.of(context).pop();
-                  _performSearch(searchController.text.trim());
-                }
-              },
-              child: const Text('Pretraži'),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      searchController.dispose();
-    }
-  }
-
-  /// Perform search and show results
-  void _performSearch(String query) async {
-    showDialog(
+    final selectedBooking = await showDialog<BookingModel>(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
+      builder: (context) => const CalendarSearchDialog(),
     );
 
-    try {
-      final bookingsMap = await ref.read(calendarBookingsProvider.future);
-      final allBookings = bookingsMap.values.expand((list) => list).toList();
-
-      final queryLower = query.toLowerCase();
-      final results = allBookings.where((booking) {
-        return (booking.guestName?.toLowerCase().contains(queryLower) ?? false) ||
-            (booking.guestEmail?.toLowerCase().contains(queryLower) ?? false) ||
-            (booking.guestPhone?.toLowerCase().contains(queryLower) ?? false) ||
-            booking.id.toLowerCase().contains(queryLower);
-      }).toList();
-
-      if (mounted) {
-        Navigator.of(context).pop();
-
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Rezultati pretrage (${results.length})'),
-            content: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: 600,
-                maxHeight: MediaQuery.of(context).size.height * 0.6,
-              ),
-              child: results.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.search_off, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text('Nema rezultata za traženi pojam'),
-                        ],
-                      ),
-                    )
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: results.length,
-                      separatorBuilder: (context, index) => const Divider(),
-                      itemBuilder: (context, index) {
-                        final booking = results[index];
-                        final guestName = booking.guestName ?? 'Unknown';
-                        return ListTile(
-                          leading: CircleAvatar(
-                            child: Text(guestName.isNotEmpty ? guestName[0].toUpperCase() : '?'),
-                          ),
-                          title: Text(guestName),
-                          subtitle: Text(
-                            '${booking.guestEmail ?? "No email"}\n'
-                            'Check-in: ${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
-                          ),
-                          trailing: Chip(
-                            label: Text(booking.status.displayName),
-                            backgroundColor: booking.status.color.withValues(alpha: 0.2),
-                          ),
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            _showBookingDetails(booking);
-                          },
-                        );
-                      },
-                    ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Zatvori'),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.of(context).pop();
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška pri pretraživanju rezervacija',
-        );
-      }
+    // If user selected a booking from search results, show its details
+    if (selectedBooking != null && mounted) {
+      _showBookingDetails(selectedBooking);
     }
   }
 
@@ -356,6 +203,15 @@ class _OwnerTimelineCalendarScreenState
     await showDialog(
       context: context,
       builder: (context) => const CalendarFiltersPanel(),
+    );
+  }
+
+  /// Show notifications panel
+  void _showNotifications() {
+    // TODO: Implement notifications panel
+    ErrorDisplayUtils.showInfoSnackBar(
+      context,
+      'Notifications panel - coming soon',
     );
   }
 }

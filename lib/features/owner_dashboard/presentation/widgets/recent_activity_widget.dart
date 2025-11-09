@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/widgets/widgets.dart';
 
@@ -46,8 +45,18 @@ class ActivityItem {
   }
 
   Color get color {
-    // Use primary color for all activities for a clean, minimalist look
-    return AppColors.primary;
+    switch (type) {
+      case ActivityType.booking:
+        return AppColors.activityBooking;
+      case ActivityType.review:
+        return AppColors.activityReview;
+      case ActivityType.message:
+        return AppColors.activityMessage;
+      case ActivityType.payment:
+        return AppColors.activityPayment;
+      case ActivityType.cancellation:
+        return AppColors.activityCancellation;
+    }
   }
 }
 
@@ -110,24 +119,37 @@ class RecentActivityWidget extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Recent Activity',
-                        style: AppTypography.h3,
+                        'Nedavne Aktivnosti',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDark
+                              ? AppColors.textPrimaryDark
+                              : AppColors.textPrimaryLight,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (onViewAll != null) ...[
                       const SizedBox(width: AppDimensions.spaceS),
-                      TextButton(
+                      TextButton.icon(
                         onPressed: onViewAll,
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: AppDimensions.spaceS,
-                            vertical: AppDimensions.spaceXS,
+                            horizontal: 12,
+                            vertical: 8,
                           ),
+                          foregroundColor: AppColors.primary,
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text('View All'),
+                        icon: const Icon(Icons.arrow_forward, size: 16),
+                        label: const Text(
+                          'Sve',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ],
                   ],
@@ -145,25 +167,60 @@ class RecentActivityWidget extends StatelessWidget {
           // Activities list
           if (activities.isEmpty)
             Padding(
-              padding: const EdgeInsets.all(AppDimensions.spaceXL),
+              padding: const EdgeInsets.symmetric(
+                vertical: 56,
+                horizontal: AppDimensions.spaceL,
+              ),
               child: Center(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.notifications_none,
-                      size: 64,
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : context.textColorSecondary,
+                    // Enhanced icon with gradient background
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.authPrimary.withAlpha((0.15 * 255).toInt()),
+                            AppColors.authPrimary.withAlpha((0.05 * 255).toInt()),
+                          ],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.notifications_none_rounded,
+                        size: 48,
+                        color: AppColors.authPrimary.withAlpha((0.6 * 255).toInt()),
+                      ),
                     ),
-                    const SizedBox(height: AppDimensions.spaceM),
+                    const SizedBox(height: 24),
+                    // Title
                     Text(
-                      'No recent activity',
-                      style: AppTypography.bodyMedium.copyWith(
+                      'Nema nedavnih aktivnosti',
+                      style: AppTypography.h3.copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.textPrimaryLight,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    // Subtitle
+                    Text(
+                      'Vaše nedavne rezervacije i aktivnosti će se prikazati ovdje',
+                      style: AppTypography.bodySmall.copyWith(
                         color: isDark
                             ? AppColors.textSecondaryDark
-                            : context.textColorSecondary,
+                            : AppColors.textTertiaryLight,
+                        fontSize: 14,
                       ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
                     ),
                   ],
                 ),
@@ -201,51 +258,77 @@ class _ActivityTile extends StatelessWidget {
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.spaceL,
-        vertical: AppDimensions.spaceS,
+        horizontal: 20,
+        vertical: 12,
       ),
       leading: Container(
-        width: 40,
-        height: 40,
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
-          color: AppColors.withOpacity(activity.color, AppColors.opacity10),
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              activity.color.withAlpha((0.15 * 255).toInt()),
+              activity.color.withAlpha((0.08 * 255).toInt()),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: activity.color.withAlpha((0.2 * 255).toInt()),
+            width: 1,
+          ),
         ),
         child: Icon(
           activity.icon,
           color: activity.color,
-          size: AppDimensions.iconM,
+          size: 24,
         ),
       ),
       title: Text(
         activity.title,
-        style: AppTypography.bodyMedium.copyWith(
-          fontWeight: AppTypography.weightSemibold,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        activity.subtitle,
-        style: AppTypography.small.copyWith(
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
           color: isDark
-              ? AppColors.textSecondaryDark
-              : context.textColorSecondary,
+              ? AppColors.textPrimaryDark
+              : AppColors.textPrimaryLight,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: SizedBox(
-        width: 60, // Fixed width to prevent overflow
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
         child: Text(
-          _formatTimestamp(activity.timestamp),
-          style: AppTypography.small.copyWith(
+          activity.subtitle,
+          style: TextStyle(
+            fontSize: 13,
             color: isDark
                 ? AppColors.textSecondaryDark
-                : context.textColorSecondary,
+                : AppColors.textTertiaryLight,
           ),
-          textAlign: TextAlign.end,
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.surfaceVariantDark
+              : AppColors.surfaceVariantLight,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          _formatTimestamp(activity.timestamp),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark
+                ? AppColors.textSecondaryDark
+                : AppColors.textTertiaryLight,
+          ),
+          textAlign: TextAlign.center,
         ),
       ),
     );

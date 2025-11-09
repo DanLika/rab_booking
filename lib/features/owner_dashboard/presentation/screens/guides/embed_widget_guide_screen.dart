@@ -27,18 +27,29 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: const Text('Embed Widget - Uputstvo'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: theme.primaryColor,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
-      body: ListView(
+      body: SafeArea(
+        child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Header
           Card(
-            color: Colors.green.shade50,
+            color: isDark
+                ? theme.colorScheme.surfaceContainerHighest
+                : Colors.green.shade50,
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -46,7 +57,13 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.code, size: 40, color: Colors.green.shade700),
+                      Icon(
+                        Icons.code,
+                        size: 40,
+                        color: isDark
+                            ? Colors.green.shade300
+                            : Colors.green.shade700,
+                      ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -57,16 +74,24 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green.shade900,
+                                color: isDark
+                                    ? Colors.green.shade200
+                                    : Colors.green.shade900,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Dodajte kalendar i booking sistem na vaš web sajt',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.green.shade700,
+                                color: isDark
+                                    ? Colors.green.shade300
+                                    : Colors.green.shade700,
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
@@ -147,7 +172,9 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade900,
+                    color: isDark
+                        ? theme.colorScheme.surfaceContainerHighest
+                        : Colors.grey.shade900,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -238,13 +265,25 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    border: Border.all(color: Colors.green.shade200),
+                    color: isDark
+                        ? Colors.green.shade900.withOpacity(0.3)
+                        : Colors.green.shade50,
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.green.shade700
+                          : Colors.green.shade200,
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
+                      Icon(
+                        Icons.check_circle,
+                        color: isDark
+                            ? Colors.green.shade300
+                            : Colors.green.shade700,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
@@ -272,6 +311,7 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
           const SizedBox(height: 24),
         ],
       ),
+      ),
     );
   }
 
@@ -281,6 +321,7 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
     required IconData icon,
     required Widget content,
   }) {
+    final theme = Theme.of(context);
     final isExpanded = _expandedStep == stepNumber;
 
     return Card(
@@ -293,13 +334,21 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
           });
         },
         leading: CircleAvatar(
-          backgroundColor: isExpanded ? AppColors.primary : Colors.grey.shade300,
-          foregroundColor: isExpanded ? Colors.white : Colors.grey.shade700,
+          backgroundColor: isExpanded
+              ? AppColors.authPrimary
+              : (theme.brightness == Brightness.dark
+                  ? theme.colorScheme.surfaceContainerHighest
+                  : Colors.grey.shade300),
+          foregroundColor: isExpanded
+              ? Colors.white
+              : (theme.brightness == Brightness.dark
+                  ? theme.colorScheme.onSurfaceVariant
+                  : Colors.grey.shade700),
           child: Text('$stepNumber'),
         ),
         title: Row(
           children: [
-            Icon(icon, size: 20, color: AppColors.primary),
+            Icon(icon, size: 20, color: AppColors.authPrimary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -333,25 +382,47 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
   }
 
   Widget _buildPlaceholder(String text) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       height: 180,
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: isDark
+            ? theme.colorScheme.surfaceContainerHighest
+            : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade400),
+        border: Border.all(
+          color: isDark
+              ? theme.colorScheme.outline
+              : Colors.grey.shade400,
+        ),
       ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.image, size: 48, color: Colors.grey.shade500),
+            Icon(
+              Icons.image,
+              size: 48,
+              color: isDark
+                  ? theme.colorScheme.onSurfaceVariant
+                  : Colors.grey.shade500,
+            ),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 text,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                style: TextStyle(
+                  color: isDark
+                      ? theme.colorScheme.onSurfaceVariant
+                      : Colors.grey.shade600,
+                  fontSize: 12,
+                ),
                 textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -386,17 +457,17 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
 
   Widget _buildAdvancedOptionsSection() {
     return Card(
-      color: Colors.blue.shade50,
+      color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                Icon(Icons.tune, color: Colors.blue.shade700),
-                const SizedBox(width: 8),
-                const Text(
+                Icon(Icons.tune, color: AppColors.authSecondary),
+                SizedBox(width: 8),
+                Text(
                   'Napredne Opcije',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -426,22 +497,48 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
   }
 
   Widget _buildAdvancedOption(String title, String description) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('✨ $title', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          Text(
+            '✨ $title',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 4),
-          Text(description, style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+          Text(
+            description,
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark
+                  ? theme.colorScheme.onSurfaceVariant
+                  : Colors.grey.shade700,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
   }
 
   Widget _buildTroubleshootingSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Card(
-      color: Colors.orange.shade50,
+      color: isDark
+          ? theme.colorScheme.errorContainer.withOpacity(0.3)
+          : Colors.orange.shade50,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -449,7 +546,12 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.build, color: Colors.orange.shade700),
+                Icon(
+                  Icons.build,
+                  color: isDark
+                      ? Colors.orange.shade300
+                      : Colors.orange.shade700,
+                ),
                 const SizedBox(width: 8),
                 const Text(
                   'Rješavanje Problema',

@@ -7,12 +7,13 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/widgets/gradient_button.dart';
 import '../providers/owner_properties_provider.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Modern Property form screen for add/edit with enhanced UI
 class PropertyFormScreen extends ConsumerStatefulWidget {
@@ -87,91 +88,23 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
     final isMobile = screenWidth < 600;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Uredi Nekretninu' : 'Dodaj Nekretninu'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      resizeToAvoidBottomInset: true,
+      backgroundColor: theme.colorScheme.surface,
+      appBar: CommonAppBar(
+        title: _isEditing ? 'Uredi Nekretninu' : 'Dodaj Nekretninu',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          // Gradient Header
-          Container(
-            height: 200,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF6B4CE6), // Purple
-                  Color(0xFF4A90E2), // Blue
-                ],
-              ),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(isMobile ? 16 : 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 60), // Space for AppBar
-                    Row(
-                      children: [
-                        // Icon
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.apartment,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        // Title
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _isEditing ? 'Uredi Nekretninu' : 'Nova Nekretnina',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _isEditing ? 'Ažuriraj podatke o nekretnini' : 'Dodaj novu nekretninu u sistem',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withAlpha((0.9 * 255).toInt()),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Form Content
           Form(
             key: _formKey,
             child: ListView(
-              padding: EdgeInsets.only(
-                top: 180,
-                left: isMobile ? 16 : 24,
-                right: isMobile ? 16 : 24,
-                bottom: 24,
+              padding: EdgeInsets.fromLTRB(
+                isMobile ? 16 : 24,
+                isMobile ? 16 : 24,
+                isMobile ? 16 : 24,
+                24,
               ),
               children: [
                 // Basic Info Section
@@ -236,7 +169,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                     const SizedBox(height: AppDimensions.spaceM),
                     // Property Type
                     DropdownButtonFormField<PropertyType>(
-                      value: _selectedType,
+                      initialValue: _selectedType,
                       decoration: InputDecorationHelper.buildDecoration(
                         context,
                         labelText: 'Tip nekretnine *',
@@ -358,48 +291,56 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceL),
 
-                // Save Button
-                FilledButton(
-                  onPressed: _isLoading ? null : _handleSave,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    backgroundColor: const Color(0xFF6B4CE6),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          _isEditing ? 'Spremi Izmjene' : 'Dodaj Nekretninu',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
+                // Modern Gradient Save Button
+                GradientButton(
+                  text: _isEditing ? 'Spremi Izmjene' : 'Dodaj Nekretninu',
+                  onPressed: _handleSave,
+                  isLoading: _isLoading,
+                  icon: _isEditing ? Icons.save : Icons.add,
+                  height: 56,
+                  width: double.infinity,
                 ),
                 const SizedBox(height: AppDimensions.spaceXL),
-          ],
-        ),
-      ),
+              ],
+            ),
+          ),
+
           // Loading Overlay
           if (_isLoading)
             Container(
               color: Colors.black.withAlpha((0.5 * 255).toInt()),
-              child: const Center(
+              child: Center(
                 child: Card(
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
-                    padding: EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(32),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Čuvanje...', style: TextStyle(fontSize: 16)),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Čuvanje...',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -435,11 +376,11 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
                       colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
                     ),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Icon(icon, color: Colors.white, size: 20),
                 ),

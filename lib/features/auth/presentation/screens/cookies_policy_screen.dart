@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../owner_dashboard/presentation/widgets/owner_app_drawer.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/router_owner.dart';
+import 'privacy_policy_screen.dart';
 
 /// Cookies Policy Screen
 /// Short version that links to Privacy Policy for full details
@@ -68,14 +69,29 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Cookies Policy'),
-        backgroundColor: const Color(0xFF6B4CE6),
-        foregroundColor: Colors.white,
+        backgroundColor: theme.primaryColor,
+        foregroundColor: theme.colorScheme.onPrimary,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(OwnerRoutes.overview);
+            }
+          },
+          tooltip: 'Nazad',
+        ),
       ),
-      body: Stack(
+      body: SafeArea(
+        child: Stack(
         children: [
           SingleChildScrollView(
             controller: _scrollController,
@@ -168,11 +184,12 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
               right: 24,
               child: FloatingActionButton(
                 onPressed: _scrollToTop,
-                backgroundColor: const Color(0xFF6B4CE6),
-                child: const Icon(Icons.arrow_upward, color: Colors.white),
+                backgroundColor: theme.primaryColor,
+                child: Icon(Icons.arrow_upward, color: theme.colorScheme.onPrimary),
               ),
             ),
         ],
+      ),
       ),
     );
   }
@@ -188,13 +205,13 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                gradient: LinearGradient(
+                  colors: [theme.primaryColor, theme.colorScheme.secondary],
                 ),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
+                    color: theme.primaryColor.withAlpha((0.3 * 255).toInt()),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -222,7 +239,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
                   Text(
                     'Last updated: ${DateTime.now().toString().split(' ')[0]}',
                     style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                   ),
                 ],
@@ -242,7 +259,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: theme.colorScheme.outline.withOpacity(0.3),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Padding(
@@ -252,14 +269,14 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.list_alt, color: Color(0xFF6B4CE6), size: 24),
+                Icon(Icons.list_alt, color: theme.primaryColor, size: 24),
                 const SizedBox(width: 8),
                 Text(
                   'Table of Contents',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF6B4CE6),
+                    color: theme.primaryColor,
                   ),
                 ),
               ],
@@ -287,14 +304,14 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           children: [
-            const Icon(Icons.arrow_right, color: Color(0xFF6B4CE6), size: 20),
+            Icon(Icons.arrow_right, color: theme.primaryColor, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 title,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontSize: 14,
-                  color: theme.colorScheme.onSurface.withOpacity(0.8),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                 ),
               ),
             ),
@@ -315,7 +332,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
         child: Padding(
@@ -327,7 +344,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
                 title,
                 style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF6B4CE6),
+                      color: theme.primaryColor,
                     ),
               ),
               const SizedBox(height: 12),
@@ -354,11 +371,11 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark
-          ? Colors.blue.shade900.withOpacity(0.2)
+          ? Colors.blue.shade900.withValues(alpha: 0.2)
           : Colors.blue.shade50,
         border: Border.all(
           color: isDark
-            ? Colors.blue.shade700.withOpacity(0.5)
+            ? Colors.blue.shade700.withValues(alpha: 0.5)
             : Colors.blue.shade300,
           width: 2,
         ),
@@ -401,7 +418,11 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
-                Navigator.pushNamed(context, '/privacy-policy');
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const PrivacyPolicyScreen(),
+                  ),
+                );
               },
               icon: const Icon(Icons.arrow_forward),
               label: const Text('View Privacy Policy'),
@@ -428,11 +449,11 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark
-          ? Colors.orange.shade900.withOpacity(0.2)
+          ? Colors.orange.shade900.withValues(alpha: 0.2)
           : Colors.orange.shade50,
         border: Border.all(
           color: isDark
-            ? Colors.orange.shade700.withOpacity(0.5)
+            ? Colors.orange.shade700.withValues(alpha: 0.5)
             : Colors.orange.shade300,
           width: 2,
         ),

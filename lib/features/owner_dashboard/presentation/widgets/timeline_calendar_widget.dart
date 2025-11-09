@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../shared/models/booking_model.dart';
@@ -115,13 +114,15 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
 
       // Sync header scroll
       if (_headerScrollController.hasClients &&
-          (_headerScrollController.offset - mainOffset).abs() > 0.1) {
+          _headerScrollController.offset != mainOffset &&
+          (_headerScrollController.offset - mainOffset).abs() > 1.0) {
         _headerScrollController.jumpTo(mainOffset);
       }
 
       // Sync summary bar scroll
       if (_summaryScrollController.hasClients &&
-          (_summaryScrollController.offset - mainOffset).abs() > 0.1) {
+          _summaryScrollController.offset != mainOffset &&
+          (_summaryScrollController.offset - mainOffset).abs() > 1.0) {
         _summaryScrollController.jumpTo(mainOffset);
       }
     };
@@ -227,7 +228,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
         // Zoom info banner (showing current zoom level)
         if (_zoomScale != 1.0)
           Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: AppDimensions.spaceS,
               vertical: AppDimensions.spaceXXS,
             ),
@@ -240,16 +241,16 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                   size: AppDimensions.iconS,
                   color: AppColors.primary,
                 ),
-                SizedBox(width: AppDimensions.spaceXXS),
+                const SizedBox(width: AppDimensions.spaceXXS),
                 Text(
                   'Zoom: ${(_zoomScale * 100).toInt()}%',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: AppColors.primary,
                   ),
                 ),
-                SizedBox(width: AppDimensions.spaceXS),
+                const SizedBox(width: AppDimensions.spaceXS),
                 TextButton(
                   onPressed: () {
                     setState(() {
@@ -258,7 +259,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                     });
                   },
                   style: TextButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: AppDimensions.spaceXS),
+                    padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceXS),
                     minimumSize: const Size(0, 28),
                   ),
                   child: const Text('Reset', style: TextStyle(fontSize: 11)),
@@ -272,10 +273,10 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
           child: unitsAsync.when(
             data: (units) {
               if (units.isEmpty) {
-                return Center(
+                return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(AppDimensions.spaceM),
-                    child: const Text('Nema jedinica za prikaz'),
+                    child: Text('Nema jedinica za prikaz'),
                   ),
                 );
               }
@@ -284,20 +285,74 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                 data: (bookingsByUnit) {
                   return _buildTimelineView(units, bookingsByUnit);
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: AppDimensions.spaceM),
+                      Text('Učitavanje rezervacija...'),
+                    ],
+                  ),
+                ),
                 error: (error, stack) => Center(
                   child: Padding(
-                    padding: EdgeInsets.all(AppDimensions.spaceM),
-                    child: Text('Greška: $error'),
+                    padding: const EdgeInsets.all(AppDimensions.spaceM),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                        const SizedBox(height: AppDimensions.spaceM),
+                        const Text(
+                          'Greška pri učitavanju rezervacija',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: AppDimensions.spaceS),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            ref.invalidate(calendarBookingsProvider);
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Pokušaj ponovno'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: AppDimensions.spaceM),
+                  Text('Učitavanje jedinica...'),
+                ],
+              ),
+            ),
             error: (error, stack) => Center(
               child: Padding(
-                padding: EdgeInsets.all(AppDimensions.spaceM),
-                child: Text('Greška: $error'),
+                padding: const EdgeInsets.all(AppDimensions.spaceM),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                    const SizedBox(height: AppDimensions.spaceM),
+                    const Text(
+                      'Greška pri učitavanju jedinica',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: AppDimensions.spaceS),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        ref.invalidate(allOwnerUnitsProvider);
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Pokušaj ponovno'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -310,7 +365,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final theme = Theme.of(context);
 
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.spaceS,
         vertical: AppDimensions.spaceXS,
       ),
@@ -398,7 +453,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
               minScale: _minZoomScale,
               maxScale: _maxZoomScale,
               constrained: false,
-              boundaryMargin: EdgeInsets.all(AppDimensions.spaceXL),
+              boundaryMargin: const EdgeInsets.all(AppDimensions.spaceXL),
               panEnabled: true,
               scaleEnabled: true,
               child: Row(
@@ -408,8 +463,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                   _buildUnitNamesColumn(units),
 
                   // Scrollable timeline grid
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width - _getUnitColumnWidth(context),
+                  Expanded(
                     child: SingleChildScrollView(
                       controller: _horizontalScrollController,
                       scrollDirection: Axis.horizontal,
@@ -533,7 +587,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
       ),
       child: Center(
         child: Text(
-          DateFormat('MMMM yyyy').format(date),
+          DateFormat('MMMM yyyy', 'hr_HR').format(date),
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: theme.colorScheme.primary,
@@ -575,7 +629,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
         children: [
           // Day of week
           Text(
-            DateFormat('EEE').format(date).toUpperCase(),
+            DateFormat('EEE', 'hr_HR').format(date).toUpperCase(),
             style: theme.textTheme.bodySmall?.copyWith(
               color: isWeekend
                   ? theme.colorScheme.error
@@ -672,9 +726,9 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: AppDimensions.spaceXXS / 2),
+                const SizedBox(height: AppDimensions.spaceXXS / 2),
                 Text(
-                  '${unit.maxGuests ?? 0} gostiju',
+                  '${unit.maxGuests} gostiju',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.textTheme.bodySmall?.color?.withAlpha((0.7 * 255).toInt()),
                   ),
@@ -829,7 +883,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                 ),
               ],
             ),
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: AppDimensions.spaceXS,
               vertical: AppDimensions.spaceXXS,
             ),
@@ -989,7 +1043,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
           ),
         ),
       ),
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         vertical: AppDimensions.spaceXS,
         horizontal: AppDimensions.spaceXXS,
       ),

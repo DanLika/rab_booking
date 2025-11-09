@@ -125,17 +125,16 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: AuthBackground(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height,
-            ),
-            child: Center(
-              child: Padding(
-                padding: EdgeInsets.all(
-                  MediaQuery.of(context).size.width < 400 ? 16 : 24
-                ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width < 400 ? 16 : 24,
+                vertical: 24,
+              ),
+              child: Center(
                 child: GlassCard(
                   maxWidth: 500,
                   child: Form(
@@ -381,20 +380,20 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         // Cancel Button
                         TextButton(
                           onPressed: () => context.pop(),
-                          child: Text(
+                          child: const Text(
                             'Cancel',
                             style: TextStyle(
                               fontSize: 14,
-                              color: const Color(0xFF718096),
+                              color: Color(0xFF718096),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
                 ),
               ),
+            ),
             ),
           ),
         ),

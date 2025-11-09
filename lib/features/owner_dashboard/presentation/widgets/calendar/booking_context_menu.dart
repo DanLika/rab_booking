@@ -57,7 +57,7 @@ class BookingContextMenu extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                      color: AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(8),
                         topRight: Radius.circular(8),

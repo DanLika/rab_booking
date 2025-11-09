@@ -11,6 +11,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/price_list_provider.dart';
 import '../providers/owner_calendar_provider.dart';
+import '../../utils/booking_overlap_detector.dart';
 
 /// Dialog za kreiranje nove rezervacije
 class BookingCreateDialog extends ConsumerStatefulWidget {
@@ -87,7 +88,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     return AlertDialog(
       title: const Row(
         children: [
-          Icon(Icons.add_circle, color: AppColors.primary),
+          Icon(Icons.add_circle, color: AppColors.authPrimary),
           SizedBox(width: 8),
           Text('Nova rezervacija'),
         ],
@@ -186,21 +187,21 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue[200]!),
+                    border: Border.all(color: AppColors.authSecondary.withAlpha((0.3 * 255).toInt())),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.nights_stay, size: 18, color: Colors.blue[700]),
+                      const Icon(Icons.nights_stay, size: 18, color: AppColors.authSecondary),
                       const SizedBox(width: 8),
                       Text(
                         '${_checkOutDate.difference(_checkInDate).inDays} noć${_checkOutDate.difference(_checkInDate).inDays > 1 ? 'i' : ''}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Colors.blue[700],
+                          color: AppColors.authSecondary,
                         ),
                       ),
                     ],
@@ -325,8 +326,14 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                             return 'Unesite cijenu';
                           }
                           final price = double.tryParse(value.trim());
-                          if (price == null || price < 0) {
+                          if (price == null) {
                             return 'Unesite validnu cijenu';
+                          }
+                          if (price < 0) {
+                            return 'Cijena ne može biti negativna';
+                          }
+                          if (price == 0) {
+                            return 'Cijena mora biti veća od 0';
                           }
                           return null;
                         },
@@ -478,7 +485,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         ElevatedButton(
           onPressed: _isSaving ? null : _createBooking,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.authPrimary,
             foregroundColor: Colors.white,
           ),
           child: _isSaving
@@ -634,24 +641,32 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       final repository = ref.read(bookingRepositoryProvider);
       final authState = ref.read(enhancedAuthProvider);
 
-      // FIXED: Validate booking overlap before creating
+      // FIXED: Validate booking overlap before creating using BookingOverlapDetector
       final bookingsMap = await ref.read(calendarBookingsProvider.future);
-      final unitBookings = bookingsMap[_selectedUnitId!] ?? [];
 
-      // Check for overlapping bookings
-      bool hasOverlap = false;
-      for (final existingBooking in unitBookings) {
-        // Check if dates overlap
-        if (_checkInDate.isBefore(existingBooking.checkOut) &&
-            _checkOutDate.isAfter(existingBooking.checkIn)) {
-          hasOverlap = true;
-          break;
-        }
-      }
+      // Check if new dates would overlap with existing bookings
+      final conflicts = BookingOverlapDetector.getConflictingBookings(
+        unitId: _selectedUnitId!,
+        newCheckIn: _checkInDate,
+        newCheckOut: _checkOutDate,
+        bookingIdToExclude: null, // No booking to exclude for new bookings
+        allBookings: bookingsMap,
+      );
 
-      if (hasOverlap) {
+      if (conflicts.isNotEmpty) {
         setState(() => _isSaving = false);
-        _showError('Izabrani datumi se preklapaju s postojećom rezervacijom');
+
+        // Show detailed error with conflicting booking info
+        final conflict = conflicts.first;
+        final conflictGuestName = conflict.guestName ?? 'Unknown';
+        final conflictCheckIn = '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}';
+        final conflictCheckOut = '${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}';
+
+        _showError(
+          conflicts.length == 1
+              ? 'Overlap with booking for $conflictGuestName ($conflictCheckIn - $conflictCheckOut)'
+              : 'Overlap with ${conflicts.length} existing bookings',
+        );
         return;
       }
 

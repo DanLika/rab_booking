@@ -585,12 +585,16 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     xPosition = xPosition.clamp(20, screenWidth - tooltipWidth - 20);
     yPosition = yPosition.clamp(20, screenHeight - tooltipHeight - 20);
 
-    return CalendarHoverTooltip(
-      date: _hoveredDate!,
-      price: dateInfo.price,
-      status: dateInfo.status,
-      position: Offset(xPosition, yPosition),
-      colors: colors,
+    return Positioned(
+      left: xPosition,
+      top: yPosition,
+      child: CalendarHoverTooltip(
+        date: _hoveredDate!,
+        price: dateInfo.price,
+        status: dateInfo.status,
+        position: Offset(xPosition, yPosition),
+        colors: colors,
+      ),
     );
   }
 

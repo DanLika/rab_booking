@@ -36,10 +36,7 @@ class CalendarHoverTooltip extends StatelessWidget {
     final statusLabel = _getStatusLabel(status);
     final statusColor = _getStatusColor(status);
 
-    return Positioned(
-      left: position.dx,
-      top: position.dy - 100, // Position above the cell
-      child: Material(
+    return Material(
         elevation: 8,
         borderRadius: BorderTokens.circularSmall,
         color: Colors.transparent,
@@ -159,8 +156,7 @@ class CalendarHoverTooltip extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 
   String _getStatusLabel(DateStatus status) {

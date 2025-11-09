@@ -491,6 +491,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   }
 
   Widget _buildHeaderRowWithYearSelector(double cellSize, WidgetColorScheme colors) {
+    // Responsive font size for headers - proportional to cell size
+    final headerFontSize = (cellSize * 0.5).clamp(9.0, 13.0);
+    final dayNumberFontSize = (cellSize * 0.45).clamp(8.0, 12.0);
+
     return Row(
       children: [
         // Static "Month" label in top-left corner
@@ -499,9 +503,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           height: cellSize,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: colors.buttonPrimary,
+            color: colors.backgroundSecondary,
             border: Border.all(
-              color: colors.borderDefault,
+              color: colors.borderLight,
               width: BorderTokens.widthThin,
             ),
             borderRadius: const BorderRadius.only(
@@ -512,8 +516,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             'Month',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: TypographyTokens.fontSizeXS2,
-              color: colors.buttonPrimaryText,
+              fontSize: headerFontSize,
+              color: colors.textPrimary,
             ),
           ),
         ),
@@ -524,9 +528,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             height: cellSize,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: colors.backgroundTertiary,
+              color: colors.backgroundSecondary,
               border: Border.all(
-                color: colors.borderDefault,
+                color: colors.borderLight,
                 width: BorderTokens.widthThin,
               ),
               borderRadius: dayIndex == 30
@@ -535,9 +539,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             ),
             child: Text(
               (dayIndex + 1).toString(),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: TypographyTokens.fontSizeXS2,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: dayNumberFontSize,
+                color: colors.textSecondary,
               ),
             ),
           );
@@ -549,6 +554,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
   Widget _buildMonthRow(int month, Map<String, CalendarDateInfo> data, double cellSize, WidgetColorScheme colors) {
     final monthName = DateFormat.MMM().format(DateTime(_currentYear, month));
+    final monthFontSize = (cellSize * 0.5).clamp(9.0, 13.0);
 
     return Row(
       children: [
@@ -558,9 +564,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           height: cellSize,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: colors.backgroundTertiary,
+            color: colors.backgroundSecondary,
             border: Border.all(
-              color: colors.borderDefault,
+              color: colors.borderLight,
               width: BorderTokens.widthThin,
             ),
             borderRadius: month == 12
@@ -569,9 +575,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           ),
           child: Text(
             monthName,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: TypographyTokens.fontSizeXS2,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: monthFontSize,
+              color: colors.textSecondary,
             ),
           ),
         ),
@@ -668,14 +675,25 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                       ),
                     ),
                   ),
+                // Day number in center
+                Center(
+                  child: Text(
+                    day.toString(),
+                    style: TextStyle(
+                      fontSize: (cellSize * 0.45).clamp(8.0, 14.0),
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                ),
                 // Today indicator dot
                 if (isToday)
                   Positioned(
-                    top: 2,
-                    right: 2,
+                    top: 1,
+                    right: 1,
                     child: Container(
-                      width: 4,
-                      height: 4,
+                      width: cellSize < 30 ? 3 : 4,
+                      height: cellSize < 30 ? 3 : 4,
                       decoration: BoxDecoration(
                         color: colors.buttonPrimary,
                         shape: BoxShape.circle,

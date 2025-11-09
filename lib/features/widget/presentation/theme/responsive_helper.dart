@@ -49,11 +49,13 @@ class ResponsiveHelper {
 
   /// Get year cell size
   static double getYearCellSize(BuildContext context) {
-    return getResponsiveValue(
-      context: context,
-      mobile: 32.0,  // Povećano sa 24 na 32
-      tablet: 42.0,  // Povećano sa 28 na 42
-      desktop: 48.0, // Povećano sa 32 na 48 - mnogo veći!
-    );
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Calculate cell size dynamically based on available width
+    // Reserve space for month label (80px) and padding (32px)
+    final availableWidth = screenWidth - 112;
+    final calculatedCellSize = (availableWidth / 31).clamp(20.0, 40.0);
+
+    return calculatedCellSize;
   }
 }

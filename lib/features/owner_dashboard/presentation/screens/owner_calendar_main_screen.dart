@@ -15,6 +15,7 @@ import '../../utils/calendar_grid_calculator.dart';
 import 'owner_week_calendar_screen.dart';
 import 'owner_month_calendar_screen.dart';
 import 'owner_timeline_calendar_screen.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Owner Calendar Main Screen
 /// Container screen with view switcher for Week/Month/Timeline calendars
@@ -73,79 +74,10 @@ class _OwnerCalendarMainScreenState
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kalendar'),
-        backgroundColor: const Color(0xFF6B4CE6),
-        foregroundColor: Colors.white,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            tooltip: 'Menu',
-          ),
-        ),
-        actions: [
-          // Filter button
-          Stack(
-            children: [
-              IconButton(
-                onPressed: () => showCalendarFilterPanel(context),
-                icon: const Icon(Icons.filter_list),
-                tooltip: 'Filteri',
-              ),
-              if (filters.hasActiveFilters)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      '${filters.activeFilterCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-
-          // View switcher
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: CalendarViewSwitcher(
-              currentView: currentView,
-              onViewChanged: (newView) {
-                // Update provider
-                ref.read(ownerCalendarViewProvider.notifier).setView(newView);
-                // Navigate to corresponding route
-                switch (newView) {
-                  case CalendarViewMode.week:
-                    context.go(OwnerRoutes.calendarWeek);
-                    break;
-                  case CalendarViewMode.month:
-                    context.go(OwnerRoutes.calendarMonth);
-                    break;
-                  case CalendarViewMode.timeline:
-                    context.go(OwnerRoutes.calendarTimeline);
-                    break;
-                }
-              },
-              isCompact: isCompact,
-            ),
-          ),
-        ],
+      appBar: CommonAppBar(
+        title: 'Kalendar',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: OwnerAppDrawer(currentRoute: currentRoute),
       body: _buildCurrentView(currentView),

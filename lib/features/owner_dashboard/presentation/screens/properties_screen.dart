@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/property_card_owner.dart';
 import '../providers/owner_properties_provider.dart';
@@ -47,12 +48,23 @@ class PropertiesScreen extends ConsumerWidget {
                   builder: (context, constraints) {
                     // Responsive grid columns based on screen width
                     int crossAxisCount;
+                    double mainAxisExtent;
+
                     if (constraints.maxWidth >= 1200) {
                       crossAxisCount = 3; // Desktop: 3 columns
+                      mainAxisExtent = 420; // Slightly larger for better layout
+                    } else if (constraints.maxWidth >= 900) {
+                      crossAxisCount = 2; // Tablet landscape: 2 columns
+                      mainAxisExtent = 440;
                     } else if (constraints.maxWidth >= 600) {
-                      crossAxisCount = 2; // Tablet: 2 columns
+                      crossAxisCount = 2; // Tablet portrait: 2 columns
+                      mainAxisExtent = 460; // More space for 2 columns on tablet
+                    } else if (constraints.maxWidth >= 400) {
+                      crossAxisCount = 1; // Mobile landscape: 1 column
+                      mainAxisExtent = 480;
                     } else {
-                      crossAxisCount = 1; // Mobile: 1 column
+                      crossAxisCount = 1; // Small mobile: 1 column
+                      mainAxisExtent = 520; // More space for narrow screens
                     }
 
                     return GridView.builder(
@@ -66,9 +78,7 @@ class PropertiesScreen extends ConsumerWidget {
                         crossAxisCount: crossAxisCount,
                         crossAxisSpacing: AppDimensions.spaceM,
                         mainAxisSpacing: AppDimensions.spaceM,
-                        mainAxisExtent: constraints.maxWidth >= 600
-                            ? 400
-                            : 450,
+                        mainAxisExtent: mainAxisExtent,
                       ),
                       itemCount: properties.length + 1,
                       itemBuilder: (context, index) {
@@ -97,28 +107,28 @@ class PropertiesScreen extends ConsumerWidget {
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.all(16),
-                                    decoration: const BoxDecoration(
+                                    decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       gradient: LinearGradient(
                                         colors: [
-                                          Color(0xFF6B4CE6),
-                                          Color(0xFF4A90E2),
+                                          AppColors.primary,
+                                          AppColors.secondary,
                                         ],
                                       ),
                                     ),
                                     child: const Icon(
                                       Icons.add_business,
                                       size: 40,
-                                      color: Colors.white,
+                                      color: Color(0xFFFFFFFF),
                                     ),
                                   ),
                                   const SizedBox(height: 16),
-                                  const Text(
+                                  Text(
                                     'Dodaj Novi Objekt',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF6B4CE6),
+                                      color: AppColors.primary,
                                     ),
                                   ),
                                 ],
@@ -152,15 +162,15 @@ class PropertiesScreen extends ConsumerWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                          colors: [AppColors.primary, AppColors.secondary],
                         ),
                         shape: BoxShape.circle,
                       ),
                       child: const CircularProgressIndicator(
                         strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFFFF)),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -344,15 +354,15 @@ class _EmptyPropertiesState extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
-                      const Color(0xFF4A90E2).withAlpha((0.1 * 255).toInt()),
+                      AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                      AppColors.secondary.withAlpha((0.1 * 255).toInt()),
                     ],
                   ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.villa_outlined,
                   size: 80,
-                  color: Color(0xFF6B4CE6),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: AppDimensions.spaceL),
@@ -389,32 +399,30 @@ class _EmptyPropertiesState extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF6B4CE6).withAlpha((0.05 * 255).toInt()),
-                      const Color(0xFF4A90E2).withAlpha((0.05 * 255).toInt()),
+                      AppColors.primary.withAlpha((0.05 * 255).toInt()),
+                      AppColors.secondary.withAlpha((0.05 * 255).toInt()),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(AppDimensions.radiusS),
                   border: Border.all(
-                    color: const Color(
-                      0xFF6B4CE6,
-                    ).withAlpha((0.3 * 255).toInt()),
+                    color: AppColors.primary.withAlpha((0.3 * 255).toInt()),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.lightbulb_outline,
                       size: 20,
-                      color: Color(0xFF6B4CE6),
+                      color: AppColors.primary,
                     ),
-                    SizedBox(width: AppDimensions.spaceXS),
+                    const SizedBox(width: AppDimensions.spaceXS),
                     Flexible(
                       child: Text(
                         'Dodajte detalje nekretnine, jedinice i cijene',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF6B4CE6),
+                          color: AppColors.primary,
                         ),
                         textAlign: TextAlign.center,
                       ),

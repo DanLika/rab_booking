@@ -10,6 +10,7 @@ import '../../domain/models/ical_feed.dart';
 import '../providers/ical_feeds_provider.dart';
 import '../providers/owner_properties_provider.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Screen for managing iCal calendar sync feeds
 class IcalSyncSettingsScreen extends ConsumerStatefulWidget {
@@ -28,26 +29,10 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: const Text('iCal Sinhronizacija'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.white),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            tooltip: 'Menu',
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: () => context.go(OwnerRoutes.guideIcal),
-            tooltip: 'Pomoć',
-          ),
-        ],
+      appBar: CommonAppBar(
+        title: 'iCal Sinhronizacija',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical'),
       extendBodyBehindAppBar: true,

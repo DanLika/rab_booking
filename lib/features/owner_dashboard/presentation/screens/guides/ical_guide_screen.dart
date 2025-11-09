@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/config/router_owner.dart';
+import '../../../../../shared/widgets/common_app_bar.dart';
 
 /// iCal Sync Guide Screen
 /// Step-by-step instructions for syncing with Booking.com, Airbnb, etc.
@@ -22,14 +23,10 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text('iCal Sinhronizacija - Uputstvo'),
-        backgroundColor: theme.primaryColor,
-        foregroundColor: theme.colorScheme.onPrimary,
+      appBar: CommonAppBar(
+        title: 'iCal Sinhronizacija - Uputstvo',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
       body: SafeArea(
         child: ListView(
@@ -38,8 +35,8 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           // Header
           Card(
             color: isDark
-                ? const Color(0xFF1E1E1E)
-                : const Color(0xFFF3E5F5),
+                ? AppColors.backgroundDark
+                : AppColors.primary.withAlpha((0.1 * 255).toInt()),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -51,8 +48,8 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                         Icons.sync,
                         size: 40,
                         color: isDark
-                            ? const Color(0xFF9575CD)
-                            : const Color(0xFF6B4CE6),
+                            ? AppColors.primaryLight
+                            : AppColors.primary,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -65,8 +62,8 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF4A148C),
+                                    ? const Color(0xFFFFFFFF)
+                                    : AppColors.primaryDark,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -75,8 +72,8 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isDark
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFF7B1FA2),
+                                    ? AppColors.textSecondary
+                                    : AppColors.primaryDark,
                               ),
                             ),
                           ],
@@ -91,7 +88,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       height: 1.5,
-                      color: isDark ? Colors.grey.shade300 : null,
+                      color: isDark ? AppColors.borderLight : null,
                     ),
                   ),
                 ],
@@ -121,7 +118,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           _buildPlatformSection(
             platformName: 'Airbnb',
             icon: Icons.home,
-            color: Colors.pink.shade700,
+            color: AppColors.activityCancellation,
             steps: [
               '1. Ulogujte se na Airbnb host dashboard',
               '2. Odaberite property (listing)',
@@ -138,7 +135,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           _buildPlatformSection(
             platformName: 'VRBO / HomeAway',
             icon: Icons.cottage,
-            color: Colors.orange.shade700,
+            color: AppColors.warning,
             steps: [
               '1. Ulogujte se na VRBO owner dashboard',
               '2. Idite na: Listings → Select property',
@@ -220,13 +217,13 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    border: Border.all(color: Colors.green.shade200),
+                    color: AppColors.success.withAlpha((0.1 * 255).toInt()),
+                    border: Border.all(color: AppColors.success.withAlpha((0.3 * 255).toInt())),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
+                      Icon(Icons.check_circle, color: AppColors.success, size: 20),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
@@ -350,8 +347,8 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           });
         },
         leading: CircleAvatar(
-          backgroundColor: isExpanded ? AppColors.authPrimary : Colors.grey.shade300,
-          foregroundColor: isExpanded ? Colors.white : Colors.grey.shade700,
+          backgroundColor: isExpanded ? AppColors.authPrimary : AppColors.borderLight,
+          foregroundColor: isExpanded ? const Color(0xFFFFFFFF) : AppColors.textDisabled,
           child: Text('$stepNumber'),
         ),
         title: Row(
@@ -397,14 +394,14 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: theme.brightness == Brightness.dark
-              ? [const Color(0xFF1E1E1E), const Color(0xFF2D2D2D)]
-              : [const Color(0xFFF3E5F5), const Color(0xFFE1BEE7)],
+              ? [AppColors.backgroundDark, const Color(0xFF2D2D2D)]
+              : [AppColors.primary.withAlpha((0.1 * 255).toInt()), AppColors.primary.withAlpha((0.2 * 255).toInt())],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
+          color: AppColors.primary.withAlpha((0.3 * 255).toInt()),
           width: 2,
         ),
       ),
@@ -416,10 +413,10 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6B4CE6),
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.image, color: Colors.white, size: 24),
+                child: const Icon(Icons.image, color: const Color(0xFFFFFFFF), size: 24),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -429,8 +426,8 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                     color: theme.brightness == Brightness.dark
-                        ? Colors.white
-                        : const Color(0xFF6B4CE6),
+                        ? const Color(0xFFFFFFFF)
+                        : AppColors.primary,
                   ),
                 ),
               ),
@@ -480,12 +477,12 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+              color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Row(
               children: [
-                Icon(Icons.touch_app, color: Color(0xFF6B4CE6), size: 20),
+                Icon(Icons.touch_app, color: AppColors.primary, size: 20),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -521,7 +518,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                         ? FontWeight.bold
                         : FontWeight.normal,
                     color: step.contains('📋')
-                        ? const Color(0xFF6B4CE6)
+                        ? AppColors.primary
                         : null,
                   ),
                 ),
@@ -537,18 +534,18 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: AppColors.borderLight),
       ),
       child: Column(
         children: [
           _buildMiniStep('1', 'Otvorite iCal Sinhronizaciju', Icons.sync),
-          const Icon(Icons.arrow_downward, size: 16, color: Color(0xFF6B4CE6)),
+          const Icon(Icons.arrow_downward, size: 16, color: AppColors.primary),
           _buildMiniStep('2', 'Kliknite + dugme', Icons.add_circle),
-          const Icon(Icons.arrow_downward, size: 16, color: Color(0xFF6B4CE6)),
+          const Icon(Icons.arrow_downward, size: 16, color: AppColors.primary),
           _buildMiniStep('3', 'Unesite detalje', Icons.edit),
-          const Icon(Icons.arrow_downward, size: 16, color: Color(0xFF6B4CE6)),
+          const Icon(Icons.arrow_downward, size: 16, color: AppColors.primary),
           _buildMiniStep('4', 'Sačuvajte', Icons.check_circle, isLast: true),
         ],
       ),
@@ -560,21 +557,21 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
       margin: EdgeInsets.only(bottom: isLast ? 0 : 4),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+        color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 12,
-            backgroundColor: const Color(0xFF6B4CE6),
+            backgroundColor: AppColors.primary,
             child: Text(
               number,
-              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+              style: const TextStyle(color: const Color(0xFFFFFFFF), fontSize: 10, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(width: 8),
-          Icon(icon, size: 16, color: const Color(0xFF6B4CE6)),
+          Icon(icon, size: 16, color: AppColors.primary),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -592,7 +589,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Card(
-      color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
+      color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -608,7 +605,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : null,
+                      color: isDark ? const Color(0xFFFFFFFF) : null,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -648,7 +645,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Card(
-      color: isDark ? const Color(0xFF2D2D2D) : Colors.orange.shade50,
+      color: isDark ? const Color(0xFF2D2D2D) : AppColors.warning.withAlpha((0.1 * 255).toInt()),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -658,7 +655,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
               children: [
                 Icon(
                   Icons.build,
-                  color: isDark ? Colors.orange.shade300 : Colors.orange.shade700,
+                  color: isDark ? AppColors.warning : AppColors.warning,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -667,7 +664,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : null,
+                      color: isDark ? const Color(0xFFFFFFFF) : null,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -712,7 +709,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: isDark ? Colors.white : null,
+              color: isDark ? const Color(0xFFFFFFFF) : null,
             ),
             overflow: TextOverflow.ellipsis,
             maxLines: 2,
@@ -722,7 +719,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             answer,
             style: TextStyle(
               fontSize: 13,
-              color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+              color: isDark ? AppColors.textSecondary : AppColors.textDisabled,
               height: 1.5,
             ),
           ),
@@ -745,7 +742,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: isDark ? Colors.orange.shade300 : Colors.orange.shade900,
+              color: isDark ? AppColors.warning : AppColors.warning,
             ),
             overflow: TextOverflow.ellipsis,
             maxLines: 2,
@@ -755,7 +752,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             solution,
             style: TextStyle(
               fontSize: 13,
-              color: isDark ? Colors.grey.shade300 : Colors.grey.shade800,
+              color: isDark ? AppColors.borderLight : AppColors.textPrimary,
               height: 1.5,
             ),
           ),

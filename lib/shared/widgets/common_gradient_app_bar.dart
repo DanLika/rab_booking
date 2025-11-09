@@ -31,7 +31,7 @@ class CommonGradientAppBar extends StatelessWidget {
   final bool pinned;
 
   /// Expanded height of the app bar
-  /// Default: 100
+  /// Default: 80
   final double expandedHeight;
 
   const CommonGradientAppBar({
@@ -46,7 +46,7 @@ class CommonGradientAppBar extends StatelessWidget {
     this.titleColor = Colors.white,
     this.iconColor = Colors.white,
     this.pinned = true,
-    this.expandedHeight = 100,
+    this.expandedHeight = 80,
   });
 
   @override
@@ -77,40 +77,40 @@ class CommonGradientAppBar extends StatelessWidget {
               colors: gradientColors,
             ),
           ),
-          child: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 16 : 24,
-                vertical: 16,
-              ),
-              child: Row(
-                children: [
-                  Builder(
-                    builder: (context) => IconButton(
-                      icon: Icon(
-                        leadingIcon,
-                        color: iconColor,
-                        size: 28,
-                      ),
-                      onPressed: () => onLeadingIconTap(context),
-                      tooltip: 'Menu',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              isMobile ? 16 : 24,
+              MediaQuery.of(context).padding.top + 8,
+              isMobile ? 16 : 24,
+              8,
+            ),
+            child: Row(
+              children: [
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: Icon(
+                      leadingIcon,
+                      color: iconColor,
+                      size: 28,
+                    ),
+                    onPressed: () => onLeadingIconTap(context),
+                    tooltip: 'Menu',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: titleColor,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: titleColor,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

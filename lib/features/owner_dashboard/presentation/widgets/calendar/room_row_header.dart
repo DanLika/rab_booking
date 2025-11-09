@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/theme/app_colors.dart';
 
 /// Room row header widget
 /// Shows room/unit information in the left column of calendar grid
@@ -182,16 +183,16 @@ class RoomRowHeader extends StatelessWidget {
 
     // Priority: pending > confirmed > in_progress > blocked > completed > cancelled
     if (statusCounts[BookingStatus.pending] != null && statusCounts[BookingStatus.pending]! > 0) {
-      dotColors.add(const Color(0xFFF59E0B)); // Orange - waiting approval
+      dotColors.add(AppColors.warning); // Orange - waiting approval
     }
     if (statusCounts[BookingStatus.confirmed] != null && statusCounts[BookingStatus.confirmed]! > 0) {
-      dotColors.add(const Color(0xFFEF4444)); // Red - booked
+      dotColors.add(AppColors.error); // Red - booked
     }
     if (statusCounts[BookingStatus.inProgress] != null && statusCounts[BookingStatus.inProgress]! > 0) {
-      dotColors.add(const Color(0xFF3B82F6)); // Blue - in progress
+      dotColors.add(AppColors.info); // Blue - in progress
     }
     if (statusCounts[BookingStatus.blocked] != null && statusCounts[BookingStatus.blocked]! > 0) {
-      dotColors.add(const Color(0xFF6B7280)); // Gray - disabled/blocked
+      dotColors.add(AppColors.textSecondary); // Gray - disabled/blocked
     }
 
     // Limit to 3 dots
@@ -199,7 +200,7 @@ class RoomRowHeader extends StatelessWidget {
 
     if (displayDots.isEmpty) {
       // No active bookings, show green dot (available)
-      return const _StatusDot(color: Color(0xFF10B981)); // Green - free
+      return const _StatusDot(color: AppColors.success); // Green - free
     }
 
     return Row(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../widgets/recent_activity_widget.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_gradient_app_bar.dart';
@@ -39,7 +40,7 @@ class DashboardOverviewTab extends ConsumerWidget {
               ref.read(dashboardStatsProvider.future),
             ]);
           },
-          color: const Color(0xFF6B4CE6),
+          color: AppColors.primary,
           child: CustomScrollView(
             slivers: [
               // Gradient Header
@@ -62,13 +63,13 @@ class DashboardOverviewTab extends ConsumerWidget {
                     context: context,
                     stats: stats,
                   ),
-                  loading: () => const SliverToBoxAdapter(
+                  loading: () => SliverToBoxAdapter(
                     child: Center(
                       child: Padding(
-                        padding: EdgeInsets.all(40),
+                        padding: const EdgeInsets.all(40),
                         child: CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Color(0xFF6B4CE6),
+                            AppColors.primary,
                           ),
                         ),
                       ),
@@ -160,11 +161,11 @@ class DashboardOverviewTab extends ConsumerWidget {
           onViewAll: () => context.go(OwnerRoutes.bookings),
         );
       },
-      loading: () => const Center(
+      loading: () => Center(
         child: Padding(
-          padding: EdgeInsets.all(AppDimensions.spaceXL),
+          padding: const EdgeInsets.all(AppDimensions.spaceXL),
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6B4CE6)),
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
         ),
       ),
@@ -247,7 +248,7 @@ class DashboardOverviewTab extends ConsumerWidget {
         end: Alignment.bottomRight,
         colors: lightColors.map((color) {
           return Color.alphaBlend(
-            Colors.white.withAlpha((0.15 * 255).toInt()),
+            const Color(0xFFFFFFFF).withAlpha((0.15 * 255).toInt()),
             color.withAlpha((0.6 * 255).toInt()),
           );
         }).toList(),
@@ -281,7 +282,7 @@ class DashboardOverviewTab extends ConsumerWidget {
             title: 'Zarada ovaj mjesec',
             value: '€${stats.monthlyRevenue.toStringAsFixed(0)}',
             icon: Icons.euro_rounded,
-            gradient: _createThemeGradient(context, [const Color(0xFF5B8DEE), const Color(0xFF0063F7)]),
+            gradient: _createThemeGradient(context, [AppColors.info, AppColors.infoDark]),
             isMobile: isMobile,
             isTablet: isTablet,
             animationDelay: 0,
@@ -291,7 +292,7 @@ class DashboardOverviewTab extends ConsumerWidget {
             title: 'Zarada ove godine',
             value: '€${stats.yearlyRevenue.toStringAsFixed(0)}',
             icon: Icons.trending_up_rounded,
-            gradient: _createThemeGradient(context, [const Color(0xFF667EEA), const Color(0xFF4F5FD8)]),
+            gradient: _createThemeGradient(context, [AppColors.primary, AppColors.primaryDark]),
             isMobile: isMobile,
             isTablet: isTablet,
             animationDelay: 100,
@@ -301,7 +302,7 @@ class DashboardOverviewTab extends ConsumerWidget {
             title: 'Rezervacije ovaj mjesec',
             value: '${stats.monthlyBookings}',
             icon: Icons.calendar_today_rounded,
-            gradient: _createThemeGradient(context, [const Color(0xFF7C3AED), const Color(0xFF5B21B6)]),
+            gradient: _createThemeGradient(context, [AppColors.primaryLight, AppColors.primary]),
             isMobile: isMobile,
             isTablet: isTablet,
             animationDelay: 200,
@@ -311,7 +312,7 @@ class DashboardOverviewTab extends ConsumerWidget {
             title: 'Nadolazeći check-in',
             value: '${stats.upcomingCheckIns}',
             icon: Icons.schedule_rounded,
-            gradient: _createThemeGradient(context, [const Color(0xFF06B6D4), const Color(0xFF0891B2)]),
+            gradient: _createThemeGradient(context, [AppColors.activityPayment, AppColors.infoDark]),
             isMobile: isMobile,
             isTablet: isTablet,
             animationDelay: 300,
@@ -321,7 +322,7 @@ class DashboardOverviewTab extends ConsumerWidget {
             title: 'Aktivne nekretnine',
             value: '${stats.activeProperties}',
             icon: Icons.villa_rounded,
-            gradient: _createThemeGradient(context, [const Color(0xFF8B9DC3), const Color(0xFF6B7FA3)]),
+            gradient: _createThemeGradient(context, [AppColors.textSecondary, AppColors.textDisabled]),
             isMobile: isMobile,
             isTablet: isTablet,
             animationDelay: 400,
@@ -331,7 +332,7 @@ class DashboardOverviewTab extends ConsumerWidget {
             title: 'Popunjenost',
             value: '${stats.occupancyRate.toStringAsFixed(1)}%',
             icon: Icons.analytics_rounded,
-            gradient: _createThemeGradient(context, [const Color(0xFF9CA3AF), const Color(0xFF6B7280)]),
+            gradient: _createThemeGradient(context, [AppColors.textDisabled, AppColors.textSecondary]),
             isMobile: isMobile,
             isTablet: isTablet,
             animationDelay: 500,
@@ -374,14 +375,14 @@ class DashboardOverviewTab extends ConsumerWidget {
     // Extract primary color from gradient for shadow
     final primaryColor = (gradient.colors.isNotEmpty)
         ? gradient.colors.first
-        : const Color(0xFF6B4CE6);
+        : AppColors.primary;
 
     // Theme-aware text and icon colors
-    final textColor = isDark ? theme.colorScheme.onSurface : Colors.white;
-    final iconColor = isDark ? theme.colorScheme.onSurface : Colors.white;
+    final textColor = isDark ? theme.colorScheme.onSurface : const Color(0xFFFFFFFF);
+    final iconColor = isDark ? theme.colorScheme.onSurface : const Color(0xFFFFFFFF);
     final iconBgColor = isDark
         ? theme.colorScheme.onSurface.withAlpha((0.15 * 255).toInt())
-        : Colors.white.withAlpha((0.2 * 255).toInt());
+        : const Color(0xFFFFFFFF).withAlpha((0.2 * 255).toInt());
 
     return TweenAnimationBuilder<double>(
       duration: Duration(milliseconds: 600 + animationDelay),

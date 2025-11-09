@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import 'unit_form_screen.dart';
@@ -78,7 +79,7 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
           color: Theme.of(context).colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+              color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),
@@ -108,13 +109,13 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                    colors: [AppColors.primary, AppColors.secondary],
                   ),
                   shape: BoxShape.circle,
                 ),
                 child: const CircularProgressIndicator(
                   strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFFFF)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -140,12 +141,12 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.red.withAlpha((0.1 * 255).toInt()),
+                    color: AppColors.error.withAlpha((0.1 * 255).toInt()),
                   ),
                   child: const Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Colors.red,
+                    color: AppColors.error,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -212,15 +213,15 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
-                      const Color(0xFF4A90E2).withAlpha((0.1 * 255).toInt()),
+                      AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                      AppColors.secondary.withAlpha((0.1 * 255).toInt()),
                     ],
                   ),
                 ),
                 child: const Icon(
                   Icons.apartment,
                   size: 70,
-                  color: Color(0xFF6B4CE6),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 24),
@@ -395,7 +396,7 @@ class _UnitCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF6B4CE6),
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
@@ -409,7 +410,7 @@ class _UnitCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: unit.isAvailable
-                        ? const Color(0xFF10B981).withAlpha((0.1 * 255).toInt())
+                        ? AppColors.success.withAlpha((0.1 * 255).toInt())
                         : theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -417,7 +418,7 @@ class _UnitCard extends StatelessWidget {
                     unit.isAvailable ? 'Dostupno' : 'Nedostupno',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: unit.isAvailable
-                          ? const Color(0xFF10B981)
+                          ? AppColors.success
                           : theme.colorScheme.onSurface.withAlpha(
                               (0.6 * 255).toInt(),
                             ),
@@ -491,7 +492,7 @@ class _UnitCard extends StatelessWidget {
                         icon: const Icon(Icons.euro_symbol),
                         label: const Text('Upravljaj Cijenama'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF10B981),
+                          foregroundColor: AppColors.success,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -530,7 +531,7 @@ class _UnitCard extends StatelessWidget {
                       icon: const Icon(Icons.euro_symbol),
                       label: const Text('Cijene'),
                       style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF10B981),
+                        foregroundColor: AppColors.success,
                       ),
                     ),
                     Row(
@@ -569,7 +570,7 @@ class _UnitCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF6B4CE6)),
+        Icon(icon, size: 16, color: AppColors.primary),
         const SizedBox(width: 4),
         Text(
           label,

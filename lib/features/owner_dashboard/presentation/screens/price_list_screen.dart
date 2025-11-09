@@ -6,6 +6,7 @@ import '../../../../shared/models/unit_model.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/price_list_calendar_widget.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Price List Screen - displays year-grid calendar for price management
 class PriceListScreen extends ConsumerStatefulWidget {
@@ -23,17 +24,10 @@ class _PriceListScreenState extends ConsumerState<PriceListScreen> {
     final unitsAsync = ref.watch(allOwnerUnitsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cjenovnik'),
-        backgroundColor: const Color(0xFF6B4CE6),
-        foregroundColor: Colors.white,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            tooltip: 'Menu',
-          ),
-        ),
+      appBar: CommonAppBar(
+        title: 'Cjenovnik',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'price-list'),
       body: Padding(

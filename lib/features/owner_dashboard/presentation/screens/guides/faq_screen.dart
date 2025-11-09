@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../shared/widgets/common_app_bar.dart';
 
 class FAQItem {
   final String question;
@@ -238,14 +239,10 @@ class _FAQScreenState extends State<FAQScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text('Česta Pitanja (FAQ)'),
-        backgroundColor: theme.primaryColor,
-        foregroundColor: theme.colorScheme.onPrimary,
+      appBar: CommonAppBar(
+        title: 'Česta Pitanja (FAQ)',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
       body: SafeArea(
         child: Column(

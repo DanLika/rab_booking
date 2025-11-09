@@ -9,6 +9,7 @@ import '../../../../core/utils/slug_utils.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../providers/owner_properties_provider.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 // UI Constants
 const double _kUnitImageHeight = 160.0;
@@ -30,24 +31,10 @@ class WidgetSettingsListScreen extends ConsumerWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Widget Podešavanja'),
-        backgroundColor: theme.colorScheme.brandPurple,
-        foregroundColor: Colors.white,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            tooltip: 'Menu',
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: () => context.push(OwnerRoutes.guideEmbedWidget),
-            tooltip: 'Uputstvo za embedding',
-          ),
-        ],
+      appBar: CommonAppBar(
+        title: 'Widget Podešavanja',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'widget-settings'),
       body: Container(

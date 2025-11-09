@@ -6,6 +6,7 @@ import '../../../../../shared/models/unit_model.dart';
 import '../../../domain/models/calendar_filter_options.dart';
 import '../../providers/calendar_filters_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
+import '../../../../../core/theme/app_colors.dart';
 
 /// Calendar filter panel (bottom sheet)
 /// Allows users to filter bookings by status, source, property, unit, etc.
@@ -45,18 +46,18 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: const BoxDecoration(
-              color: Color(0xFF6B4CE6),
+              color: AppColors.primary,
               borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.filter_list, color: Colors.white),
+                const Icon(Icons.filter_list, color: const Color(0xFFFFFFFF)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'Filteri',
                     style: theme.textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
+                      color: const Color(0xFFFFFFFF),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -65,13 +66,13 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: const Color(0xFFFFFFFF),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${filters.activeFilterCount}',
                       style: const TextStyle(
-                        color: Color(0xFF6B4CE6),
+                        color: AppColors.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -80,7 +81,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                 const SizedBox(width: 12),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close, color: Colors.white),
+                  icon: const Icon(Icons.close, color: const Color(0xFFFFFFFF)),
                 ),
               ],
             ),
@@ -192,8 +193,8 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6B4CE6),
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: const Color(0xFFFFFFFF),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: const Text('Primijeni'),
@@ -248,13 +249,13 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                       margin: const EdgeInsets.only(right: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6B4CE6),
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         '$activeCount',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: const Color(0xFFFFFFFF),
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
@@ -308,7 +309,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
             status.displayName,
             style: const TextStyle(fontSize: 14),
           ),
-          activeColor: const Color(0xFF6B4CE6),
+          activeColor: AppColors.primary,
         );
       }).toList(),
     );
@@ -344,7 +345,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
             source['label']!,
             style: const TextStyle(fontSize: 14),
           ),
-          activeColor: const Color(0xFF6B4CE6),
+          activeColor: AppColors.primary,
         );
       }).toList(),
     );
@@ -372,7 +373,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
             property.name,
             style: const TextStyle(fontSize: 14),
           ),
-          activeColor: const Color(0xFF6B4CE6),
+          activeColor: AppColors.primary,
         );
       }).toList(),
     );
@@ -404,7 +405,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
             'Kapacitet: ${unit.maxGuests} osoba',
             style: const TextStyle(fontSize: 12),
           ),
-          activeColor: const Color(0xFF6B4CE6),
+          activeColor: AppColors.primary,
         );
       }).toList(),
     );
@@ -416,7 +417,7 @@ void showCalendarFilterPanel(BuildContext context) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.transparent,
+    backgroundColor: const Color(0x00000000),
     builder: (context) => const CalendarFilterPanel(),
   );
 }

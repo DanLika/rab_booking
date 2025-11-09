@@ -7,7 +7,7 @@ import '../../../../core/providers/language_provider.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../core/theme/app_color_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/language_selection_bottom_sheet.dart';
 import '../widgets/theme_selection_bottom_sheet.dart';
@@ -68,26 +68,23 @@ class ProfileScreen extends ConsumerWidget {
                         // Premium Profile header
                         Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: isDark
-                                  ? [
-                                      theme.colorScheme.surfaceContainerHighest,
-                                      theme.colorScheme.surfaceContainerHigh,
-                                    ]
-                                  : [
-                                      theme.colorScheme.primary,
-                                      theme.colorScheme.secondary,
+                            gradient: isDark
+                                ? LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      AppColors.elevation2Dark,
+                                      AppColors.elevation1Dark,
                                     ],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
+                                  )
+                                : AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
                             boxShadow: [
                               BoxShadow(
                                 color: isDark
-                                    ? theme.colorScheme.onPrimary.withAlpha((0.05 * 255).toInt())
-                                    : theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
-                                blurRadius: 20,
+                                    ? Colors.black.withValues(alpha: 0.3)
+                                    : AppColors.primary.withValues(alpha: 0.3),
+                                blurRadius: isMobile ? 15 : 20,
                                 offset: const Offset(0, 8),
                               ),
                             ],
@@ -100,12 +97,12 @@ class ProfileScreen extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: theme.colorScheme.onPrimary.withAlpha((0.3 * 255).toInt()),
-                                  width: 4,
+                                  color: Colors.white.withValues(alpha: isDark ? 0.2 : 0.3),
+                                  width: isMobile ? 3 : 4,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: theme.colorScheme.onSurface.withAlpha((0.2 * 255).toInt()),
+                                    color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.2),
                                     blurRadius: 20,
                                     offset: const Offset(0, 8),
                                   ),
@@ -116,23 +113,23 @@ class ProfileScreen extends ConsumerWidget {
                                   ? ClipOval(
                                       child: Image.network(
                                         authState.userModel!.avatarUrl!,
-                                        width: 120,
-                                        height: 120,
+                                        width: isMobile ? 100 : 120,
+                                        height: isMobile ? 100 : 120,
                                         fit: BoxFit.cover,
                                         errorBuilder: (context, error, stackTrace) {
                                           return CircleAvatar(
-                                            radius: 60,
+                                            radius: isMobile ? 50 : 60,
                                             backgroundColor: isDark
-                                                ? theme.colorScheme.primary
-                                                : theme.colorScheme.onPrimary,
+                                                ? AppColors.primary
+                                                : Colors.white,
                                             child: Text(
                                               displayName.substring(0, 1).toUpperCase(),
                                               style: TextStyle(
-                                                fontSize: 48,
+                                                fontSize: isMobile ? 40 : 48,
                                                 fontWeight: FontWeight.bold,
                                                 color: isDark
-                                                    ? theme.colorScheme.onPrimary
-                                                    : theme.colorScheme.primary,
+                                                    ? Colors.white
+                                                    : AppColors.primary,
                                               ),
                                             ),
                                           );
@@ -140,23 +137,23 @@ class ProfileScreen extends ConsumerWidget {
                                       ),
                                     )
                                   : CircleAvatar(
-                                      radius: 60,
+                                      radius: isMobile ? 50 : 60,
                                       backgroundColor: isDark
-                                          ? theme.colorScheme.primary
-                                          : theme.colorScheme.onPrimary,
+                                          ? AppColors.primary
+                                          : Colors.white,
                                       child: Text(
                                         displayName.substring(0, 1).toUpperCase(),
                                         style: TextStyle(
-                                          fontSize: 48,
+                                          fontSize: isMobile ? 40 : 48,
                                           fontWeight: FontWeight.bold,
                                           color: isDark
-                                              ? theme.colorScheme.onPrimary
-                                              : theme.colorScheme.primary,
+                                              ? Colors.white
+                                              : AppColors.primary,
                                         ),
                                       ),
                                     ),
                             ),
-                            const SizedBox(height: 20),
+                            SizedBox(height: isMobile ? 16 : 20),
                             ConstrainedBox(
                               constraints: BoxConstraints(
                                 maxWidth: isMobile ? double.infinity : 400,
@@ -167,20 +164,27 @@ class ProfileScreen extends ConsumerWidget {
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 28,
+                                  fontSize: isMobile ? 24 : 28,
                                   fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onPrimary,
+                                  color: Colors.white,
+                                  shadows: isDark ? null : [
+                                    Shadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      offset: const Offset(0, 2),
+                                      blurRadius: 4,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: isMobile ? 8 : 12),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isMobile ? 12 : 16,
+                                vertical: isMobile ? 6 : 8,
                               ),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.onPrimary.withAlpha((0.2 * 255).toInt()),
+                                color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.25),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -189,8 +193,8 @@ class ProfileScreen extends ConsumerWidget {
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 15,
-                                  color: theme.colorScheme.onPrimary.withAlpha((0.95 * 255).toInt()),
+                                  fontSize: isMobile ? 13 : 15,
+                                  color: Colors.white.withValues(alpha: 0.95),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -204,17 +208,19 @@ class ProfileScreen extends ConsumerWidget {
                     // Account settings - Premium
                     Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
+                        color: isDark ? AppColors.elevation1Dark : Colors.white,
+                        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.15 * 255).toInt()),
+                          color: isDark
+                              ? AppColors.borderDark.withValues(alpha: 0.5)
+                              : AppColors.borderLight,
                           width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: isDark
-                                ? theme.colorScheme.onPrimary.withAlpha((0.02 * 255).toInt())
-                                : theme.colorScheme.onSurface.withAlpha((0.04 * 255).toInt()),
+                                ? Colors.black.withValues(alpha: 0.2)
+                                : Colors.black.withValues(alpha: 0.04),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -257,17 +263,19 @@ class ProfileScreen extends ConsumerWidget {
                     // App settings - Premium
                     Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
+                        color: isDark ? AppColors.elevation1Dark : Colors.white,
+                        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.15 * 255).toInt()),
+                          color: isDark
+                              ? AppColors.borderDark.withValues(alpha: 0.5)
+                              : AppColors.borderLight,
                           width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: isDark
-                                ? theme.colorScheme.onPrimary.withAlpha((0.02 * 255).toInt())
-                                : theme.colorScheme.onSurface.withAlpha((0.04 * 255).toInt()),
+                                ? Colors.black.withValues(alpha: 0.2)
+                                : Colors.black.withValues(alpha: 0.04),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -297,17 +305,19 @@ class ProfileScreen extends ConsumerWidget {
                     // Account actions - Premium
                     Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
+                        color: isDark ? AppColors.elevation1Dark : Colors.white,
+                        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.15 * 255).toInt()),
+                          color: isDark
+                              ? AppColors.borderDark.withValues(alpha: 0.5)
+                              : AppColors.borderLight,
                           width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: isDark
-                                ? theme.colorScheme.onPrimary.withAlpha((0.02 * 255).toInt())
-                                : theme.colorScheme.onSurface.withAlpha((0.04 * 255).toInt()),
+                                ? Colors.black.withValues(alpha: 0.2)
+                                : Colors.black.withValues(alpha: 0.04),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -460,7 +470,8 @@ class _PremiumListTileState extends State<_PremiumListTile> {
   Widget build(BuildContext context) {
     final isDisabled = widget.onTap == null;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return MouseRegion(
       onEnter: (_) => !isDisabled ? setState(() => _isHovered = true) : null,
@@ -470,38 +481,38 @@ class _PremiumListTileState extends State<_PremiumListTile> {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: _isHovered && !isDisabled
-              ? theme.colorScheme.primary.withAlpha((0.04 * 255).toInt())
+              ? AppColors.primary.withValues(alpha: 0.04)
               : Colors.transparent,
           borderRadius: widget.isLast
-              ? const BorderRadius.only(
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
+              ? BorderRadius.only(
+                  bottomLeft: Radius.circular(isMobile ? 12 : 16),
+                  bottomRight: Radius.circular(isMobile ? 12 : 16),
                 )
               : BorderRadius.zero,
         ),
         child: Opacity(
           opacity: isDisabled ? 0.4 : 1.0,
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 12,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 16 : 20,
+              vertical: isMobile ? 10 : 12,
             ),
             leading: Container(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(isMobile ? 8 : 10),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
+                color: AppColors.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 widget.icon,
-                color: theme.colorScheme.primary,
-                size: 22,
+                color: AppColors.primary,
+                size: isMobile ? 20 : 22,
               ),
             ),
             title: Text(
               widget.title,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: isMobile ? 15 : 16,
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,
               ),
@@ -510,14 +521,15 @@ class _PremiumListTileState extends State<_PremiumListTile> {
                 ? Text(
                     widget.subtitle as String,
                     style: TextStyle(
-                      fontSize: 14,
-                      color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                      fontSize: isMobile ? 13 : 14,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   )
                 : widget.subtitle as Widget?,
             trailing: Icon(
               Icons.chevron_right_rounded,
-              color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              size: isMobile ? 20 : 24,
             ),
             onTap: widget.onTap,
           ),
@@ -543,6 +555,9 @@ class _LogoutTileState extends State<_LogoutTile> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -550,48 +565,49 @@ class _LogoutTileState extends State<_LogoutTile> {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: _isHovered
-              ? theme.colorScheme.error.withAlpha((0.06 * 255).toInt())
+              ? AppColors.error.withValues(alpha: 0.06)
               : Colors.transparent,
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(16),
-            bottomRight: Radius.circular(16),
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(isMobile ? 12 : 16),
+            bottomRight: Radius.circular(isMobile ? 12 : 16),
           ),
         ),
         child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 12,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16 : 20,
+            vertical: isMobile ? 10 : 12,
           ),
           leading: Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(isMobile ? 8 : 10),
             decoration: BoxDecoration(
-              color: theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
+              color: AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               Icons.logout_rounded,
-              color: theme.colorScheme.error,
-              size: 22,
+              color: AppColors.error,
+              size: isMobile ? 20 : 22,
             ),
           ),
           title: Text(
             'Logout',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: isMobile ? 15 : 16,
               fontWeight: FontWeight.w600,
-              color: theme.colorScheme.error,
+              color: AppColors.error,
             ),
           ),
           subtitle: Text(
             'Sign out of your account',
             style: TextStyle(
-              fontSize: 14,
-              color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              fontSize: isMobile ? 13 : 14,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           trailing: Icon(
             Icons.chevron_right_rounded,
-            color: theme.colorScheme.error,
+            color: AppColors.error,
+            size: isMobile ? 20 : 24,
           ),
           onTap: widget.onLogout,
         ),

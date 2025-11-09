@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/error_display_utils.dart';
+import '../../../../../shared/widgets/common_app_bar.dart';
 
 /// Embed Widget Guide Screen
 /// Complete guide for embedding the booking widget on a website
@@ -32,14 +33,10 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text('Embed Widget - Uputstvo'),
-        backgroundColor: theme.primaryColor,
-        foregroundColor: theme.colorScheme.onPrimary,
+      appBar: CommonAppBar(
+        title: 'Embed Widget - Uputstvo',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
       body: SafeArea(
         child: ListView(

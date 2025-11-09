@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../owner_dashboard/presentation/widgets/owner_app_drawer.dart';
 
 /// Privacy Policy Screen
 ///
@@ -82,22 +84,11 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: const Text('Privacy Policy'),
-        backgroundColor: theme.primaryColor,
-        foregroundColor: theme.colorScheme.onPrimary,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go(OwnerRoutes.overview);
-            }
-          },
-          tooltip: 'Nazad',
-        ),
+      drawer: const OwnerAppDrawer(currentRoute: 'privacy'),
+      appBar: CommonAppBar(
+        title: 'Privacy Policy',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       body: SafeArea(
         child: Stack(

@@ -497,7 +497,22 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         // Calculate default position (center of screen)
         // Estimate pill bar height based on whether guest form is shown
-        final estimatedHeight = _showGuestForm ? 500.0 : 80.0;
+        final screenHeight = constraints.maxHeight;
+        double estimatedHeight;
+
+        if (_showGuestForm) {
+          // Step 2: Responsive height based on screen size
+          if (screenWidth < 600) {
+            estimatedHeight = screenHeight * 0.85; // Mobile: 85% of screen height
+          } else if (screenWidth < 1024) {
+            estimatedHeight = screenHeight * 0.75; // Tablet: 75% of screen height
+          } else {
+            estimatedHeight = screenHeight * 0.65; // Desktop: 65% of screen height
+          }
+        } else {
+          // Step 1: Fixed small height for compact view
+          estimatedHeight = 80.0;
+        }
 
         final defaultPosition = Offset(
           (constraints.maxWidth / 2) - (pillBarWidth / 2), // Center horizontally with dynamic width
@@ -794,35 +809,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               ),
             ),
           ),
-
-        // Close button
-        InkWell(
-          onTap: () {
-            setState(() {
-              _checkIn = null;
-              _checkOut = null;
-              _showGuestForm = false;
-              _pillBarPosition = null;
-            });
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: MinimalistColors.backgroundSecondary,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: MinimalistColors.borderLight,
-                width: 1,
-              ),
-            ),
-            child: const Icon(
-              Icons.close,
-              size: 14,
-              color: MinimalistColors.textSecondary,
-            ),
-          ),
-        ),
       ],
     );
   }

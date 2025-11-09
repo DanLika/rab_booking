@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/config/router_owner.dart';
+import '../../../../../shared/widgets/common_app_bar.dart';
 
 /// Stripe Integration Guide Screen
 /// Interactive step-by-step guide for connecting Stripe payments
@@ -21,21 +22,16 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go(OwnerRoutes.overview);
-            }
-          },
-          tooltip: 'Nazad',
-        ),
-        title: const Text('Stripe Integracija - Uputstvo'),
-        backgroundColor: theme.primaryColor,
-        foregroundColor: theme.colorScheme.onPrimary,
+      appBar: CommonAppBar(
+        title: 'Stripe Integracija - Uputstvo',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(OwnerRoutes.overview);
+          }
+        },
       ),
       body: SafeArea(
         child: ListView(

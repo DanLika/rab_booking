@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
-import '../../../../core/theme/app_color_extensions.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../owner_dashboard/presentation/widgets/owner_app_drawer.dart';
 
 /// Terms & Conditions Screen
 ///
@@ -78,22 +79,11 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: const Text('Terms & Conditions'),
-        backgroundColor: theme.colorScheme.brandPurple,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go(OwnerRoutes.overview);
-            }
-          },
-          tooltip: 'Nazad',
-        ),
+      drawer: const OwnerAppDrawer(currentRoute: 'terms'),
+      appBar: CommonAppBar(
+        title: 'Terms & Conditions',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       body: SafeArea(
         child: Stack(

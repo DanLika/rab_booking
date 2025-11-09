@@ -5,6 +5,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/domain/models/widget_mode.dart';
 import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Widget Settings Screen - Configure embedded widget for each unit
 class WidgetSettingsScreen extends ConsumerStatefulWidget {
@@ -263,29 +264,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Postavke Widgeta'),
-        backgroundColor: const Color(0xFF6B4CE6),
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-          tooltip: 'Nazad',
-        ),
-        actions: [
-          if (!_isLoading)
-            IconButton(
-              icon: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : const Icon(Icons.save),
-              onPressed: _isSaving ? null : _saveSettings,
-              tooltip: 'Sačuvaj',
-            ),
-        ],
+      appBar: CommonAppBar(
+        title: 'Postavke Widgeta',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

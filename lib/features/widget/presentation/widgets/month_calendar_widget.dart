@@ -30,6 +30,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   DateTime _currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? _hoveredDate; // For hover tooltip (desktop)
   Offset _mousePosition = Offset.zero; // Track mouse position for tooltip
+  bool _isDarkMode = false; // Theme toggle state
 
   @override
   Widget build(BuildContext context) {
@@ -81,59 +82,73 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
   Widget _buildViewSwitcher(BuildContext context) {
     final currentView = ref.watch(calendarViewProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return Container(
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: ColorTokens.light.backgroundSecondary,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: ColorTokens.light.borderLight,
+          width: 1,
+        ),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Week view tab hidden but code kept for future use
-          // _buildViewTab('Week', Icons.view_week, CalendarViewType.week, currentView == CalendarViewType.week),
-          _buildViewTab('Month', Icons.calendar_month, CalendarViewType.month, currentView == CalendarViewType.month),
-          _buildViewTab('Year', Icons.calendar_today, CalendarViewType.year, currentView == CalendarViewType.year),
+          // _buildViewTab('Week', Icons.view_week, CalendarViewType.week, currentView == CalendarViewType.week, isMobile),
+          _buildViewTab('Month', Icons.calendar_month, CalendarViewType.month, currentView == CalendarViewType.month, isMobile),
+          const SizedBox(width: 4),
+          _buildViewTab('Year', Icons.calendar_today, CalendarViewType.year, currentView == CalendarViewType.year, isMobile),
         ],
       ),
     );
   }
 
-  Widget _buildViewTab(String label, IconData icon, CalendarViewType viewType, bool isSelected) {
-    return Expanded(
-      child: Semantics(
-        label: '$label view',
-        button: true,
-        selected: isSelected,
-        child: InkWell(
-          onTap: () {
-            ref.read(calendarViewProvider.notifier).state = viewType;
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
-            decoration: BoxDecoration(
-              color: isSelected ? ColorTokens.light.buttonPrimary : Colors.transparent,
-              borderRadius: BorderTokens.circularMedium,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  color: isSelected ? ColorTokens.light.buttonPrimaryText : ColorTokens.light.textSecondary,
-                  size: IconSizeTokens.small,
-                  semanticLabel: label,
-                ),
-                const SizedBox(height: SpacingTokens.xxs),
+  Widget _buildViewTab(String label, IconData icon, CalendarViewType viewType, bool isSelected, bool isMobile) {
+    return Semantics(
+      label: '$label view',
+      button: true,
+      selected: isSelected,
+      child: InkWell(
+        onTap: () {
+          ref.read(calendarViewProvider.notifier).state = viewType;
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 12 : 16,
+            vertical: 8,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected ? ColorTokens.light.buttonPrimary : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? ColorTokens.light.buttonPrimaryText : ColorTokens.light.textSecondary,
+                size: IconSizeTokens.small,
+                semanticLabel: label,
+              ),
+              if (!isMobile) ...[
+                const SizedBox(width: 6),
                 Text(
                   label,
                   style: TextStyle(
                     color: isSelected ? ColorTokens.light.buttonPrimaryText : ColorTokens.light.textSecondary,
                     fontSize: TypographyTokens.fontSizeS2,
-                    fontWeight: isSelected ? TypographyTokens.bold : TypographyTokens.regular,
+                    fontWeight: isSelected ? TypographyTokens.semiBold : TypographyTokens.regular,
                   ),
                 ),
               ],
-            ),
+            ],
           ),
         ),
       ),
@@ -141,6 +156,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   }
 
   Widget _buildCombinedHeader(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 980),
@@ -153,18 +171,52 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
           child: Row(
             children: [
-              // View Switcher - 70%
-              Expanded(
-                flex: 7,
-                child: _buildViewSwitcher(context),
-              ),
-              const SizedBox(width: SpacingTokens.s2),
+              // View Switcher
+              if (!isMobile) ...[
+                _buildViewSwitcher(context),
+                const SizedBox(width: SpacingTokens.s),
+              ],
 
-              // Compact Navigation - 30%
-              Expanded(
-                flex: 3,
-                child: _buildCompactMonthNavigation(),
+              if (isMobile) ...[
+                Expanded(
+                  child: _buildViewSwitcher(context),
+                ),
+                const SizedBox(width: SpacingTokens.xs),
+              ],
+
+              // Theme Toggle Button
+              IconButton(
+                icon: Icon(
+                  _isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                  size: IconSizeTokens.small,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isDarkMode = !_isDarkMode;
+                  });
+                  // TODO: Implement actual theme switching with provider
+                },
+                tooltip: _isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: ConstraintTokens.iconContainerSmall,
+                  minHeight: ConstraintTokens.iconContainerSmall,
+                ),
               ),
+
+              if (!isMobile) const SizedBox(width: SpacingTokens.xs),
+
+              // Compact Navigation
+              if (isMobile) ...[
+                const SizedBox(width: SpacingTokens.xs),
+                Expanded(
+                  child: _buildCompactMonthNavigation(),
+                ),
+              ] else ...[
+                Expanded(
+                  child: _buildCompactMonthNavigation(),
+                ),
+              ],
             ],
           ),
         ),

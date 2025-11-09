@@ -8,6 +8,7 @@ import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/config/router_owner.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Stripe Connect setup screen for property owners
 /// Allows owners to connect their Stripe account to receive payments
@@ -138,26 +139,10 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: const Text('Stripe Plaćanja'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.white),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            tooltip: 'Menu',
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: () => context.go(OwnerRoutes.guideStripe),
-            tooltip: 'Pomoć',
-          ),
-        ],
+      appBar: CommonAppBar(
+        title: 'Stripe Plaćanja',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/stripe'),
       extendBodyBehindAppBar: true,

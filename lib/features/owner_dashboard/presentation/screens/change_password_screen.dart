@@ -8,6 +8,7 @@ import '../../../auth/presentation/widgets/auth_background.dart';
 import '../../../auth/presentation/widgets/glass_card.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
 import '../../../auth/presentation/widgets/gradient_auth_button.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Change Password Screen with Auth Style
 class ChangePasswordScreen extends ConsumerStatefulWidget {
@@ -159,17 +160,17 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                Color(0xFF6B4CE6),
-                                Color(0xFF4A90E2),
+                                AppColors.primary,
+                                AppColors.secondary,
                               ],
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
+                                color: AppColors.primary.withAlpha((0.3 * 255).toInt()),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
                               ),
@@ -178,7 +179,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           child: const Icon(
                             Icons.lock_reset,
                             size: 40,
-                            color: Colors.white,
+                            color: Color(0xFFFFFFFF),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -189,7 +190,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 28,
-                                color: const Color(0xFF2D3748),
+                                color: AppColors.textPrimary,
                               ),
                           textAlign: TextAlign.center,
                         ),
@@ -199,7 +200,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         Text(
                           'Enter your current password and choose a new one',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: const Color(0xFF718096),
+                                color: AppColors.textSecondary,
                                 fontSize: 15,
                               ),
                           textAlign: TextAlign.center,
@@ -276,12 +277,12 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                                             : _passwordStrength == PasswordStrength.medium
                                                 ? 0.66
                                                 : 1.0,
-                                        backgroundColor: const Color(0xFFE2E8F0),
+                                        backgroundColor: AppColors.borderLight,
                                         color: _passwordStrength == PasswordStrength.weak
-                                            ? const Color(0xFFEF4444)
+                                            ? AppColors.error
                                             : _passwordStrength == PasswordStrength.medium
-                                                ? const Color(0xFFF59E0B)
-                                                : const Color(0xFF10B981),
+                                                ? AppColors.warning
+                                                : AppColors.success,
                                         minHeight: 6,
                                       ),
                                     ),
@@ -291,10 +292,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: (_passwordStrength == PasswordStrength.weak
-                                              ? const Color(0xFFEF4444)
+                                              ? AppColors.error
                                               : _passwordStrength == PasswordStrength.medium
-                                                  ? const Color(0xFFF59E0B)
-                                                  : const Color(0xFF10B981))
+                                                  ? AppColors.warning
+                                                  : AppColors.success)
                                           .withAlpha((0.1 * 255).toInt()),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
@@ -306,10 +307,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                                               : 'Strong',
                                       style: TextStyle(
                                         color: _passwordStrength == PasswordStrength.weak
-                                            ? const Color(0xFFEF4444)
+                                            ? AppColors.error
                                             : _passwordStrength == PasswordStrength.medium
-                                                ? const Color(0xFFF59E0B)
-                                                : const Color(0xFF10B981),
+                                                ? AppColors.warning
+                                                : AppColors.success,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 12,
                                       ),
@@ -324,13 +325,13 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                                       child: Row(
                                         children: [
                                           Icon(Icons.close,
-                                              size: 14, color: Colors.red.shade700),
+                                              size: 14, color: AppColors.error),
                                           const SizedBox(width: 6),
                                           Text(
                                             req,
                                             style: TextStyle(
                                               fontSize: 11,
-                                              color: Colors.red.shade700,
+                                              color: AppColors.error,
                                             ),
                                           ),
                                         ],
@@ -380,11 +381,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         // Cancel Button
                         TextButton(
                           onPressed: () => context.pop(),
-                          child: const Text(
+                          child: Text(
                             'Cancel',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Color(0xFF718096),
+                              color: AppColors.textSecondary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

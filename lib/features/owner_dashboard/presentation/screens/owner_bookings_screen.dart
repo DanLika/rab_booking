@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -50,7 +49,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             // Refresh bookings data
             ref.invalidate(ownerBookingsProvider);
           },
-          color: const Color(0xFF6B4CE6),
+          color: AppColors.primary,
           child: CustomScrollView(
             slivers: [
               // Gradient Header
@@ -167,7 +166,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
     return Card(
       elevation: 2,
-      shadowColor: const Color(0xFF6B4CE6).withAlpha((0.08 * 255).toInt()),
+      shadowColor: AppColors.primary.withAlpha((0.08 * 255).toInt()),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
@@ -190,13 +189,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                      colors: [AppColors.primary, AppColors.secondary],
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
                     Icons.filter_list,
-                    color: Colors.white,
+                    color: const Color(0xFFFFFFFF),
                     size: 18,
                   ),
                 ),
@@ -495,12 +494,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               height: 140,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+                color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
               ),
               child: const Icon(
                 Icons.event_available_outlined,
                 size: 70,
-                color: Color(0xFF6B4CE6),
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: AppDimensions.spaceL),
@@ -645,14 +644,14 @@ class _BookingCard extends ConsumerWidget {
                       children: [
                         Icon(
                           _getStatusIcon(booking.status),
-                          color: Colors.white,
+                          color: const Color(0xFFFFFFFF),
                           size: 20,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           booking.status.displayName,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: const Color(0xFFFFFFFF),
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
@@ -717,14 +716,14 @@ class _BookingCard extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6B4CE6).withAlpha(
+                          color: AppColors.primary.withAlpha(
                             (0.1 * 255).toInt(),
                           ),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.person_outline,
-                          color: Color(0xFF6B4CE6),
+                          color: AppColors.primary,
                           size: 22,
                         ),
                       ),
@@ -879,7 +878,7 @@ class _BookingCard extends ConsumerWidget {
                               value: booking.formattedTotalPrice,
                               valueStyle: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF6B4CE6),
+                                color: AppColors.primary,
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -922,7 +921,7 @@ class _BookingCard extends ConsumerWidget {
                               value: booking.formattedTotalPrice,
                               valueStyle: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF6B4CE6),
+                                color: AppColors.primary,
                               ),
                             ),
                           ),
@@ -961,7 +960,7 @@ class _BookingCard extends ConsumerWidget {
                     valueColor: AlwaysStoppedAnimation<Color>(
                       booking.isFullyPaid
                           ? AppColors.success
-                          : const Color(0xFF6B4CE6),
+                          : AppColors.primary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -1218,7 +1217,7 @@ class _BookingCard extends ConsumerWidget {
                       ),
                       child: const Icon(
                         Icons.check_circle,
-                        color: Colors.white,
+                        color: const Color(0xFFFFFFFF),
                         size: 24,
                       ),
                     ),
@@ -1229,7 +1228,7 @@ class _BookingCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: const Color(0xFFFFFFFF),
                         ),
                       ),
                     ),
@@ -1346,7 +1345,7 @@ class _BookingCard extends ConsumerWidget {
                       ),
                       child: const Icon(
                         Icons.cancel,
-                        color: Colors.white,
+                        color: const Color(0xFFFFFFFF),
                         size: 24,
                       ),
                     ),
@@ -1357,7 +1356,7 @@ class _BookingCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: const Color(0xFFFFFFFF),
                         ),
                       ),
                     ),
@@ -1489,7 +1488,7 @@ class _BookingCard extends ConsumerWidget {
                       ),
                       child: const Icon(
                         Icons.task_alt,
-                        color: Colors.white,
+                        color: const Color(0xFFFFFFFF),
                         size: 24,
                       ),
                     ),
@@ -1500,7 +1499,7 @@ class _BookingCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: const Color(0xFFFFFFFF),
                         ),
                       ),
                     ),
@@ -1615,7 +1614,7 @@ class _BookingCard extends ConsumerWidget {
                       ),
                       child: const Icon(
                         Icons.cancel_outlined,
-                        color: Colors.white,
+                        color: const Color(0xFFFFFFFF),
                         size: 24,
                       ),
                     ),
@@ -1626,7 +1625,7 @@ class _BookingCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: const Color(0xFFFFFFFF),
                         ),
                       ),
                     ),
@@ -1799,7 +1798,7 @@ class _BookingDetailsDialog extends StatelessWidget {
                     ),
                     child: const Icon(
                       Icons.receipt_long,
-                      color: Colors.white,
+                      color: const Color(0xFFFFFFFF),
                       size: 24,
                     ),
                   ),
@@ -1810,7 +1809,7 @@ class _BookingDetailsDialog extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: const Color(0xFFFFFFFF),
                       ),
                     ),
                   ),

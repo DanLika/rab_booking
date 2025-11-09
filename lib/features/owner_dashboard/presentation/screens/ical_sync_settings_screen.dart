@@ -40,22 +40,28 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
             colors: theme.brightness == Brightness.dark
                 ? [
-                    AppColors.backgroundDark,
-                    AppColors.surfaceVariantDark,
+                    theme.colorScheme.darkGray,
+                    theme.colorScheme.mediumDarkGray,
                   ]
                 : [
-                    AppColors.primary,
-                    AppColors.authSecondary,
+                    theme.colorScheme.brandPurple,
+                    theme.colorScheme.brandBlue,
                   ],
           ),
         ),
         child: statsAsync.when(
           data: (stats) => _buildContent(context, feedsAsync, stats),
-          loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+          loading: () => Center(
+              child: CircularProgressIndicator(
+                color: theme.brightness == Brightness.dark
+                    ? theme.colorScheme.brandPurple
+                    : Colors.white,
+              ),
+            ),
           error: (error, stackTrace) => _buildContent(context, feedsAsync, null),
         ),
       ),
@@ -86,14 +92,22 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               }
               return _buildFeedsList(feeds);
             },
-            loading: () => const Center(child: CircularProgressIndicator(color: Colors.white)),
+            loading: () => Center(
+                child: CircularProgressIndicator(
+                  color: theme.brightness == Brightness.dark
+                      ? theme.colorScheme.brandPurple
+                      : Colors.white,
+                ),
+              ),
             error: (error, stack) => Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
                   'Greška: $error',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.brightness == Brightness.dark
+                        ? theme.colorScheme.brandPurple
+                        : Colors.white,
                     fontSize: 16,
                   ),
                   textAlign: TextAlign.center,
@@ -105,17 +119,21 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           const SizedBox(height: 24),
 
           // Add feed button
-          ElevatedButton.icon(
+          FilledButton.icon(
             onPressed: () => _showAddFeedDialog(context),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.primary,
-            ),
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add, size: 20),
             label: const Text(
               'Dodaj iCal Feed',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              minimumSize: const Size(double.infinity, 48),
+              backgroundColor: Colors.white,
+              foregroundColor: theme.colorScheme.brandPurple,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
 
@@ -124,10 +142,19 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           // Help link
           TextButton.icon(
             onPressed: () => context.go(OwnerRoutes.guideIcal),
-            icon: const Icon(Icons.help_outline, color: Colors.white),
-            label: const Text(
+            icon: Icon(
+              Icons.help_outline,
+              color: theme.brightness == Brightness.dark
+                  ? theme.colorScheme.brandPurple
+                  : Colors.white,
+            ),
+            label: Text(
               'Kako funkcionira iCal sinhronizacija?',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(
+                color: theme.brightness == Brightness.dark
+                    ? theme.colorScheme.brandPurple
+                    : Colors.white,
+              ),
             ),
           ),
         ],
@@ -136,6 +163,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   Widget _buildStatusCard(Map<String, dynamic>? stats) {
+    final theme = Theme.of(context);
     final activeFeeds = stats?['active_feeds'] as int? ?? 0;
     final errorFeeds = stats?['error_feeds'] as int? ?? 0;
     final totalFeeds = stats?['total_feeds'] as int? ?? 0;
@@ -147,22 +175,22 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     String statusDescription;
 
     if (totalFeeds == 0) {
-      statusColor = Colors.grey;
+      statusColor = theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt());
       statusIcon = Icons.sync_disabled;
       statusTitle = 'Nema feedova';
       statusDescription = 'Dodajte prvi iCal feed da započnete sinhronizaciju';
     } else if (errorFeeds > 0) {
-      statusColor = Colors.red;
+      statusColor = theme.colorScheme.danger;
       statusIcon = Icons.error;
       statusTitle = 'Greška u sinhronizaciji';
       statusDescription = '$errorFeeds od $totalFeeds feedova ima grešku';
     } else if (activeFeeds > 0) {
-      statusColor = Colors.green;
+      statusColor = theme.colorScheme.success;
       statusIcon = Icons.check_circle;
       statusTitle = 'Sinhronizacija aktivna';
       statusDescription = '$activeFeeds feedova aktivno sinhronizovano';
     } else {
-      statusColor = Colors.orange;
+      statusColor = theme.colorScheme.warning;
       statusIcon = Icons.pause_circle;
       statusTitle = 'Svi feedovi pauzirani';
       statusDescription = 'Nema aktivnih feedova';
@@ -203,7 +231,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                     statusDescription,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey[600],
+                      color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                     ),
                   ),
                 ],
@@ -216,15 +244,20 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   Widget _buildInfoSection() {
+    final theme = Theme.of(context);
+    final textColor = theme.brightness == Brightness.dark
+        ? theme.colorScheme.brandPurple
+        : Colors.white;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Zašto iCal Sinhronizacija?',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: textColor,
           ),
         ),
         const SizedBox(height: 16),
@@ -253,12 +286,17 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   Widget _buildInfoItem(IconData icon, String title, String description) {
+    final theme = Theme.of(context);
+    final textColor = theme.brightness == Brightness.dark
+        ? theme.colorScheme.brandPurple
+        : Colors.white;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.white, size: 24),
+          Icon(icon, color: textColor, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -266,10 +304,10 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -277,7 +315,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                   description,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withAlpha((0.85 * 255).toInt()),
+                    color: textColor.withAlpha((0.85 * 255).toInt()),
                   ),
                 ),
               ],
@@ -289,6 +327,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   Widget _buildEmptyFeedsCard() {
+    final theme = Theme.of(context);
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -303,12 +342,12 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                color: theme.colorScheme.brandPurple.withAlpha((0.1 * 255).toInt()),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.sync_disabled,
                 size: 40,
-                color: AppColors.primary,
+                color: theme.colorScheme.brandPurple,
               ),
             ),
             const SizedBox(height: 16),
@@ -326,7 +365,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
           ],
@@ -336,15 +375,20 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   Widget _buildFeedsList(List<IcalFeed> feeds) {
+    final theme = Theme.of(context);
+    final textColor = theme.brightness == Brightness.dark
+        ? theme.colorScheme.brandPurple
+        : Colors.white;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Vaši Feedovi',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: textColor,
           ),
         ),
         const SizedBox(height: 12),

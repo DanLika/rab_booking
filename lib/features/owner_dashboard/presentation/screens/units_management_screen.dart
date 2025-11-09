@@ -76,10 +76,10 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: theme.colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
+              color: theme.colorScheme.shadow.withAlpha((0.08 * 255).toInt()),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),
@@ -99,29 +99,24 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
   }
 
   Widget _buildBody() {
+    final theme = Theme.of(context);
+
     if (_isLoading) {
       return SafeArea(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary],
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: const CircularProgressIndicator(
-                  strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFFFF)),
-                ),
+              CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
               ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Učitavanje...',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -211,17 +206,12 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primary.withAlpha((0.1 * 255).toInt()),
-                      AppColors.secondary.withAlpha((0.1 * 255).toInt()),
-                    ],
-                  ),
+                  color: theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.apartment,
                   size: 70,
-                  color: AppColors.primary,
+                  color: theme.colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 24),
@@ -348,11 +338,26 @@ class _UnitCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(
+        bottom: isMobile ? 12 : 16,
+        left: isMobile ? 0 : 4,
+        right: isMobile ? 0 : 4,
+      ),
+      elevation: 0.5,
+      shadowColor: theme.colorScheme.shadow.withAlpha((0.05 * 255).toInt()),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
+          width: 0.5,
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isMobile ? 14 : 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -372,59 +377,53 @@ class _UnitCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Price with gradient
+                    // Price - Minimalist
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(
-                              0xFF6B4CE6,
-                            ).withAlpha((0.15 * 255).toInt()),
-                            const Color(
-                              0xFF4A90E2,
-                            ).withAlpha((0.15 * 255).toInt()),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(8),
+                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         '€${unit.pricePerNight.toStringAsFixed(0)}/noć',
-                        style: const TextStyle(
-                          fontSize: 16,
+                        style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: unit.isAvailable
-                        ? AppColors.success.withAlpha((0.1 * 255).toInt())
-                        : theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    unit.isAvailable ? 'Dostupno' : 'Nedostupno',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: unit.isAvailable
-                          ? AppColors.success
-                          : theme.colorScheme.onSurface.withAlpha(
-                              (0.6 * 255).toInt(),
-                            ),
-                      fontWeight: FontWeight.w600,
+                // Status Badge - Minimalist
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: unit.isAvailable
+                            ? AppColors.success
+                            : theme.colorScheme.outline,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 6),
+                    Text(
+                      unit.isAvailable ? 'Dostupno' : 'Nedostupno',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: unit.isAvailable
+                            ? AppColors.success
+                            : theme.colorScheme.onSurface.withAlpha(
+                                (0.6 * 255).toInt(),
+                              ),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -567,14 +566,20 @@ class _UnitCard extends StatelessWidget {
     required IconData icon,
     required String label,
   }) {
+    final theme = Theme.of(context);
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: AppColors.primary),
+        Icon(
+          icon,
+          size: 16,
+          color: theme.colorScheme.primary.withAlpha((0.7 * 255).toInt()),
+        ),
         const SizedBox(width: 4),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          style: theme.textTheme.bodySmall?.copyWith(
             color: context.textColorSecondary,
             fontWeight: FontWeight.w500,
           ),

@@ -149,21 +149,27 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
             colors: theme.brightness == Brightness.dark
                 ? [
-                    AppColors.backgroundDark,
-                    AppColors.surfaceVariantDark,
+                    theme.colorScheme.darkGray,
+                    theme.colorScheme.mediumDarkGray,
                   ]
                 : [
-                    AppColors.primary,
-                    AppColors.authSecondary,
+                    theme.colorScheme.brandPurple,
+                    theme.colorScheme.brandBlue,
                   ],
           ),
         ),
         child: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          ? Center(
+              child: CircularProgressIndicator(
+                color: theme.brightness == Brightness.dark
+                    ? theme.colorScheme.brandPurple
+                    : Colors.white,
+              ),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
               child: Column(
@@ -181,29 +187,39 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
 
                   // Action button
                   if (_stripeAccountId == null)
-                    ElevatedButton(
+                    FilledButton.icon(
                       onPressed: _connectStripeAccount,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.primary,
-                      ),
-                      child: const Text(
+                      icon: const Icon(Icons.link, size: 20),
+                      label: const Text(
                         'Poveži Stripe Račun',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        minimumSize: const Size(double.infinity, 48),
+                        backgroundColor: Colors.white,
+                        foregroundColor: theme.colorScheme.brandPurple,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     )
                   else if (_stripeAccountStatus != 'complete')
-                    ElevatedButton(
+                    FilledButton.icon(
                       onPressed: _connectStripeAccount,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: AppColors.warning,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text(
+                      icon: const Icon(Icons.pending, size: 20),
+                      label: const Text(
                         'Završi Stripe Setup',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        minimumSize: const Size(double.infinity, 48),
+                        backgroundColor: theme.colorScheme.warning,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
 
@@ -212,10 +228,19 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                   // Help link
                   TextButton.icon(
                     onPressed: () => context.go(OwnerRoutes.guideStripe),
-                    icon: const Icon(Icons.help_outline, color: Colors.white),
-                    label: const Text(
+                    icon: Icon(
+                      Icons.help_outline,
+                      color: theme.brightness == Brightness.dark
+                          ? theme.colorScheme.brandPurple
+                          : Colors.white,
+                    ),
+                    label: Text(
                       'Kako funkcionira Stripe Connect?',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: theme.brightness == Brightness.dark
+                            ? theme.colorScheme.brandPurple
+                            : Colors.white,
+                      ),
                     ),
                   ),
                 ],
@@ -233,17 +258,17 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
     String statusDescription;
 
     if (_stripeAccountId == null) {
-      statusColor = Colors.grey;
+      statusColor = theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt());
       statusIcon = Icons.warning_amber_rounded;
       statusTitle = 'Nije povezano';
       statusDescription = 'Stripe račun nije povezan. Prijem plaćanja nije moguć.';
     } else if (_stripeAccountStatus != 'complete') {
-      statusColor = Colors.orange;
+      statusColor = theme.colorScheme.warning;
       statusIcon = Icons.pending;
       statusTitle = 'Setup u toku';
       statusDescription = 'Završite Stripe setup da biste mogli primati plaćanja.';
     } else {
-      statusColor = Colors.green;
+      statusColor = theme.colorScheme.success;
       statusIcon = Icons.check_circle;
       statusTitle = 'Aktivno';
       statusDescription = 'Stripe račun je povezan. Možete primati plaćanja!';
@@ -306,15 +331,20 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
   }
 
   Widget _buildInfoSection() {
+    final theme = Theme.of(context);
+    final textColor = theme.brightness == Brightness.dark
+        ? theme.colorScheme.brandPurple
+        : Colors.white;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Zašto Stripe Connect?',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: textColor,
           ),
         ),
         const SizedBox(height: 12),
@@ -343,12 +373,17 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
   }
 
   Widget _buildInfoItem(IconData icon, String title, String description) {
+    final theme = Theme.of(context);
+    final textColor = theme.brightness == Brightness.dark
+        ? theme.colorScheme.brandPurple
+        : Colors.white;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.white, size: 24),
+          Icon(icon, color: textColor, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -356,10 +391,10 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -367,7 +402,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                   description,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withAlpha((0.85 * 255).toInt()),
+                    color: textColor.withAlpha((0.85 * 255).toInt()),
                   ),
                 ),
               ],

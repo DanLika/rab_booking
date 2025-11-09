@@ -413,10 +413,10 @@ class _UnitWidgetCard extends ConsumerWidget {
                       return Container(
                         height: _kUnitImageHeight,
                         color: theme.colorScheme.brandPurple.withAlpha((0.1 * 255).toInt()),
-                        child: const Icon(
+                        child: Icon(
                           Icons.apartment,
                           size: 48,
-                          color: Colors.grey,
+                          color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                         ),
                       );
                     },
@@ -424,10 +424,10 @@ class _UnitWidgetCard extends ConsumerWidget {
                 : Container(
                     height: _kUnitImageHeight,
                     color: theme.colorScheme.brandPurple.withAlpha((0.1 * 255).toInt()),
-                    child: const Icon(
+                    child: Icon(
                       Icons.apartment,
                       size: 48,
-                      color: Colors.grey,
+                      color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                     ),
                   ),
           ),
@@ -522,8 +522,10 @@ class _UnitWidgetCard extends ConsumerWidget {
                 // Actions
                 Row(
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
+                    // Copy URL Button
+                    Tooltip(
+                      message: 'Kopiraj Widget URL',
+                      child: IconButton.outlined(
                         onPressed: () {
                           // Validate unit ID
                           if (unit.id.isEmpty) {
@@ -554,29 +556,35 @@ class _UnitWidgetCard extends ConsumerWidget {
                             'Widget URL kopiran u clipboard',
                           );
                         },
-                        icon: const Icon(Icons.link, size: 18),
-                        label: const Text('Kopiraj'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: theme.colorScheme.brandPurple,
-                          side: BorderSide(color: theme.colorScheme.brandPurple),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        icon: const Icon(Icons.link, size: 20),
+                        style: IconButton.styleFrom(
+                          foregroundColor: theme.colorScheme.primary,
+                          side: BorderSide(color: theme.colorScheme.primary),
+                          padding: const EdgeInsets.all(12),
+                          minimumSize: const Size(48, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Settings Button
                     Expanded(
-                      flex: 2,
                       child: FilledButton.icon(
                         onPressed: () {
                           context.push(
                             OwnerRoutes.unitWidgetSettings.replaceAll(':id', unit.id),
                           );
                         },
-                        icon: const Icon(Icons.tune, size: 18),
+                        icon: const Icon(Icons.tune, size: 20),
                         label: const Text('Podesi Widget'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.brandPurple,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          minimumSize: const Size(0, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),

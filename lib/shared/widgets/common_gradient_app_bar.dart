@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -61,59 +62,100 @@ class CommonGradientAppBar extends StatelessWidget {
       pinned: pinned,
       elevation: 0,
       automaticallyImplyLeading: false,
-      backgroundColor: gradientColors.first,
+      backgroundColor: Colors.transparent,
       systemOverlayStyle: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
       ),
-      flexibleSpace: FlexibleSpaceBar(
-        collapseMode: CollapseMode.parallax,
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: gradientColors,
-            ),
-          ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              isMobile ? 16 : 24,
-              MediaQuery.of(context).padding.top + 8,
-              isMobile ? 16 : 24,
-              8,
-            ),
-            child: Row(
-              children: [
-                Builder(
-                  builder: (context) => IconButton(
-                    icon: Icon(
-                      leadingIcon,
-                      color: iconColor,
-                      size: 28,
-                    ),
-                    onPressed: () => onLeadingIconTap(context),
-                    tooltip: 'Menu',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+      flexibleSpace: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate collapse ratio (0.0 = expanded, 1.0 = collapsed)
+          final statusBarHeight = MediaQuery.of(context).padding.top;
+          final minHeight = kToolbarHeight + statusBarHeight;
+          final maxHeight = expandedHeight + statusBarHeight;
+          final currentHeight = constraints.maxHeight;
+
+          final collapseRatio = ((maxHeight - currentHeight) / (maxHeight - minHeight))
+              .clamp(0.0, 1.0);
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // Gradient background
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: gradientColors,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: titleColor,
-                      letterSpacing: -0.5,
+              ),
+
+              // Blur overlay when collapsed
+              if (collapseRatio > 0.3)
+                BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: collapseRatio * 10,
+                    sigmaY: collapseRatio * 10,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: gradientColors.map((c) =>
+                          c.withOpacity(0.85 + (collapseRatio * 0.15))
+                        ).toList(),
+                      ),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
+
+              // Content
+              FlexibleSpaceBar(
+                collapseMode: CollapseMode.pin,
+                background: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    isMobile ? 16 : 24,
+                    statusBarHeight + 8,
+                    isMobile ? 16 : 24,
+                    8,
+                  ),
+                  child: Row(
+                    children: [
+                      Builder(
+                        builder: (context) => IconButton(
+                          icon: Icon(
+                            leadingIcon,
+                            color: iconColor,
+                            size: 28,
+                          ),
+                          onPressed: () => onLeadingIconTap(context),
+                          tooltip: 'Menu',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: titleColor,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

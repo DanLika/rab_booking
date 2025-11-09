@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import 'privacy_policy_screen.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Cookies Policy Screen
 /// Short version that links to Privacy Policy for full details
@@ -73,22 +74,16 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: const Text('Cookies Policy'),
-        backgroundColor: theme.primaryColor,
-        foregroundColor: theme.colorScheme.onPrimary,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go(OwnerRoutes.overview);
-            }
-          },
-          tooltip: 'Nazad',
-        ),
+      appBar: CommonAppBar(
+        title: 'Cookies Policy',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(OwnerRoutes.overview);
+          }
+        },
       ),
       body: SafeArea(
         child: Stack(

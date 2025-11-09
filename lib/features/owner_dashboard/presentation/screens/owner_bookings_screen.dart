@@ -12,10 +12,11 @@ import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/bookings_table_view.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../../../../shared/widgets/common_gradient_app_bar.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Owner bookings screen with filters and booking management
 class OwnerBookingsScreen extends ConsumerStatefulWidget {

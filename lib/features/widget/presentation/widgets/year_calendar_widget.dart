@@ -7,6 +7,7 @@ import '../providers/calendar_view_provider.dart';
 import '../theme/responsive_helper.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import 'calendar_view_switcher.dart';
+import 'calendar_hover_tooltip.dart';
 
 class YearCalendarWidget extends ConsumerStatefulWidget {
   final String unitId;
@@ -27,34 +28,38 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   DateTime? _rangeEnd;
   int _currentYear = DateTime.now().year;
   bool _isDarkMode = false; // Theme toggle state
-  String? _hoveredCellKey; // Track hovered cell for hover effects
+  DateTime? _hoveredDate; // For hover tooltip (desktop)
+  Offset _mousePosition = Offset.zero; // Track mouse position for tooltip
 
   @override
   Widget build(BuildContext context) {
     final calendarData = ref.watch(yearCalendarDataProvider((widget.unitId, _currentYear)));
 
-    return Column(
+    return Stack(
       children: [
-        // Combined header matching month/week view layout
-        _buildCombinedHeader(context),
-        const SizedBox(height: SpacingTokens.m),
-        // Range selection info
-        if (_rangeStart != null && _rangeEnd != null)
-          _buildRangeSelectionInfo(),
-        if (_rangeStart != null && _rangeEnd != null)
-          const SizedBox(height: SpacingTokens.s),
-        Expanded(
-          child: calendarData.when(
-            data: (data) => _buildYearGridWithIntegratedSelector(data),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => Center(
-              child: Text('Error: $error'),
+        Column(
+          children: [
+            // Combined header matching month/week view layout
+            _buildCombinedHeader(context),
+            const SizedBox(height: SpacingTokens.m),
+            Expanded(
+              child: calendarData.when(
+                data: (data) => _buildYearGridWithIntegratedSelector(data),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(
+                  child: Text('Error: $error'),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-        const SizedBox(height: SpacingTokens.m),
-        // Color legend
-        _buildColorLegend(context),
+        // Hover tooltip overlay (desktop)
+        if (_hoveredDate != null)
+          calendarData.when(
+            data: (data) => _buildHoverTooltip(data),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
       ],
     );
   }
@@ -340,6 +345,43 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
+  Widget _buildHoverTooltip(Map<String, CalendarDateInfo> data) {
+    if (_hoveredDate == null) return const SizedBox.shrink();
+
+    final key = _getDateKey(_hoveredDate!);
+    final dateInfo = data[key];
+
+    if (dateInfo == null) return const SizedBox.shrink();
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    const tooltipWidth = 200.0;
+    const tooltipHeight = 150.0;
+
+    // Position tooltip near mouse cursor
+    double xPosition = _mousePosition.dx + 10;
+    double yPosition = _mousePosition.dy - tooltipHeight - 10;
+
+    // Adjust if tooltip goes off screen
+    if (xPosition + tooltipWidth > screenWidth) {
+      xPosition = _mousePosition.dx - tooltipWidth - 10;
+    }
+    if (yPosition < 20) {
+      yPosition = _mousePosition.dy + 20;
+    }
+
+    xPosition = xPosition.clamp(20, screenWidth - tooltipWidth - 20);
+    yPosition = yPosition.clamp(20, screenHeight - tooltipHeight - 20);
+
+    return CalendarHoverTooltip(
+      date: _hoveredDate!,
+      price: dateInfo.price,
+      status: dateInfo.status,
+      position: Offset(xPosition, yPosition),
+    );
+  }
+
   Widget _buildCompactYearNavigation() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -391,37 +433,67 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
     return Padding(
       padding: EdgeInsets.all(isDesktop ? SpacingTokens.m : SpacingTokens.xs),
-      child: ShaderMask(
-        shaderCallback: (Rect bounds) {
-          return LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: const [
-              Colors.transparent,
-              Colors.white,
-              Colors.white,
-              Colors.transparent,
-            ],
-            stops: const [0.0, 0.03, 0.97, 1.0],
-          ).createShader(bounds);
-        },
-        blendMode: BlendMode.dstIn,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: SizedBox(
-              width: ConstraintTokens.monthLabelWidth + (31 * cellSize), // Month label width + 31 day columns
-              child: Column(
-                children: [
-                  _buildHeaderRowWithYearSelector(cellSize),
-                  const SizedBox(height: SpacingTokens.xs),
-                  ...List.generate(12, (monthIndex) => _buildMonthRow(monthIndex + 1, data, cellSize)),
-                ],
+      child: Stack(
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: SizedBox(
+                width: ConstraintTokens.monthLabelWidth + (31 * cellSize), // Month label width + 31 day columns
+                child: Column(
+                  children: [
+                    _buildHeaderRowWithYearSelector(cellSize),
+                    const SizedBox(height: SpacingTokens.xs),
+                    ...List.generate(12, (monthIndex) => _buildMonthRow(monthIndex + 1, data, cellSize)),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
+          // Left fade gradient indicator
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 30,
+            child: IgnorePointer(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      ColorTokens.light.backgroundPrimary,
+                      ColorTokens.light.backgroundPrimary.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Right fade gradient indicator
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: 30,
+            child: IgnorePointer(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      ColorTokens.light.backgroundPrimary.withValues(alpha: 0),
+                      ColorTokens.light.backgroundPrimary,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -535,7 +607,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       final isInRange = _isDateInRange(date);
       final isRangeStart = _rangeStart != null && _isSameDay(date, _rangeStart!);
       final isRangeEnd = _rangeEnd != null && _isSameDay(date, _rangeEnd!);
-      final isHovered = _hoveredCellKey == key;
+      final isHovered = _hoveredDate != null && _isSameDay(date, _hoveredDate!);
       final isToday = _isSameDay(date, DateTime.now());
 
       // Determine if this is a check-in or check-out day
@@ -552,13 +624,20 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         onEnter: (_) {
           if (isInteractive) {
             setState(() {
-              _hoveredCellKey = key;
+              _hoveredDate = date;
+            });
+          }
+        },
+        onHover: (event) {
+          if (isInteractive) {
+            setState(() {
+              _mousePosition = event.position;
             });
           }
         },
         onExit: (_) {
           setState(() {
-            _hoveredCellKey = null;
+            _hoveredDate = null;
           });
         },
         child: GestureDetector(

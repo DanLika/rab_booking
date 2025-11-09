@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 import '../widgets/calendar_view_switcher.dart';
 import '../providers/booking_price_provider.dart';
 import '../providers/widget_settings_provider.dart';
@@ -704,85 +705,96 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     );
   }
 
-  /// Build compact pill summary (dates, price, buttons)
+  /// Build compact pill summary (dates, price, buttons) - redesigned
   Widget _buildCompactPillSummary(BookingPriceCalculation calculation) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 8,
-      runSpacing: 8,
+    final nights = _checkOut!.difference(_checkIn!).inDays;
+    final dateFormat = DateFormat('MMM dd, yyyy');
+
+    return Column(
       children: [
-        // Close button
-        InkWell(
-          onTap: () {
-            setState(() {
-              _checkIn = null;
-              _checkOut = null;
-              _showGuestForm = false;
-              _pillBarPosition = null;
-            });
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: MinimalistColors.backgroundSecondary,
+        // Close button at top
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            InkWell(
+              onTap: () {
+                setState(() {
+                  _checkIn = null;
+                  _checkOut = null;
+                  _showGuestForm = false;
+                  _pillBarPosition = null;
+                });
+              },
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: MinimalistColors.borderLight,
-                width: 1,
+              child: Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: MinimalistColors.backgroundSecondary,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: MinimalistColors.borderLight,
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.close,
+                  size: 16,
+                  color: MinimalistColors.textSecondary,
+                ),
               ),
             ),
-            child: const Icon(
-              Icons.close,
-              size: 16,
-              color: MinimalistColors.textSecondary,
-            ),
-          ),
+          ],
         ),
+        const SizedBox(height: 8),
 
-        const SizedBox(width: double.infinity), // Force new line
-
-        // Date and price pill
+        // Range info with nights badge
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: MinimalistColors.backgroundSecondary,
-            borderRadius: BorderRadius.circular(20),
+            color: MinimalistColors.buttonPrimary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: MinimalistColors.borderLight,
+              color: MinimalistColors.buttonPrimary.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Calendar icon + dates
-              const Icon(Icons.calendar_today, size: 14, color: MinimalistColors.textSecondary),
-              const SizedBox(width: 5),
+              const Icon(
+                Icons.calendar_month,
+                size: 18,
+                color: MinimalistColors.buttonPrimary,
+              ),
+              const SizedBox(width: 8),
               Text(
-                '${_checkIn!.day}/${_checkIn!.month} - ${_checkOut!.day}/${_checkOut!.month}',
+                '${dateFormat.format(_checkIn!)} - ${dateFormat.format(_checkOut!)}',
                 style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                   color: MinimalistColors.textPrimary,
                 ),
               ),
-              const SizedBox(width: 8),
-              // Price with euro icon
-              const Icon(Icons.euro, size: 14, color: MinimalistColors.textSecondary),
-              const SizedBox(width: 2),
-              Text(
-                calculation.formattedTotal,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: MinimalistColors.textPrimary,
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: MinimalistColors.buttonPrimary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$nights ${nights == 1 ? 'night' : 'nights'}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
           ),
         ),
+        const SizedBox(height: 12),
 
         // Reserve button (only show when guest form is NOT visible)
         if (!_showGuestForm)
@@ -794,7 +806,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             },
             borderRadius: BorderRadius.circular(20),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               decoration: BoxDecoration(
                 color: MinimalistColors.buttonPrimary,
                 borderRadius: BorderRadius.circular(20),
@@ -802,7 +814,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               child: const Text(
                 'Reserve',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),

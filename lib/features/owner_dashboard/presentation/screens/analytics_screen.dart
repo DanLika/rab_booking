@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../widgets/owner_app_drawer.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -19,6 +20,7 @@ class AnalyticsScreen extends ConsumerWidget {
     );
 
     return Scaffold(
+      drawer: const OwnerAppDrawer(currentRoute: 'analytics'),
       appBar: CommonAppBar(
         title: 'Analytics & Reports',
         leadingIcon: Icons.menu,

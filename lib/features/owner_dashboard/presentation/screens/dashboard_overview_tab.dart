@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_color_extensions.dart';
 import '../widgets/recent_activity_widget.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../../../../shared/widgets/common_gradient_app_bar.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_bookings_provider.dart';
 import '../providers/dashboard_stats_provider.dart';
@@ -22,104 +23,110 @@ class DashboardOverviewTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
     return Scaffold(
-        backgroundColor: theme.colorScheme.surface,
+        appBar: CommonAppBar(
+          title: 'Pregled',
+          leadingIcon: Icons.menu,
+          onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+        ),
         drawer: const OwnerAppDrawer(currentRoute: 'overview'),
-        body: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(ownerPropertiesProvider);
-            ref.invalidate(recentOwnerBookingsProvider);
-            ref.invalidate(dashboardStatsProvider);
-            // Wait for providers to reload
-            await Future.wait([
-              ref.read(ownerPropertiesProvider.future),
-              ref.read(recentOwnerBookingsProvider.future),
-              ref.read(dashboardStatsProvider.future),
-            ]);
-          },
-          color: AppColors.primary,
-          child: CustomScrollView(
-            slivers: [
-              // Gradient Header
-              CommonGradientAppBar(
-                title: 'Pregled',
-                leadingIcon: Icons.menu,
-                onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-              ),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDark
+                  ? [theme.colorScheme.veryDarkGray, theme.colorScheme.mediumDarkGray]
+                  : [theme.colorScheme.veryLightGray, Colors.white],
+              stops: const [0.0, 0.3],
+            ),
+          ),
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(ownerPropertiesProvider);
+              ref.invalidate(recentOwnerBookingsProvider);
+              ref.invalidate(dashboardStatsProvider);
+              // Wait for providers to reload
+              await Future.wait([
+                ref.read(ownerPropertiesProvider.future),
+                ref.read(recentOwnerBookingsProvider.future),
+                ref.read(dashboardStatsProvider.future),
+              ]);
+            },
+            color: AppColors.primary,
+            child: ListView(
+              children: [
 
               // Stats cards section
-              SliverPadding(
+              Padding(
                 padding: EdgeInsets.fromLTRB(
                   isMobile ? 16 : 24,
                   isMobile ? 16 : 20,
                   isMobile ? 16 : 24,
                   isMobile ? 8 : 12,
                 ),
-                sliver: statsAsync.when(
-                  data: (stats) => _buildStatsCardsSliver(
+                child: statsAsync.when(
+                  data: (stats) => _buildStatsCards(
                     context: context,
                     stats: stats,
                   ),
-                  loading: () => SliverToBoxAdapter(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(40),
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.primary,
-                          ),
+                  loading: () => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.primary,
                         ),
                       ),
                     ),
                   ),
-                  error: (e, s) => SliverToBoxAdapter(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
-                                    theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
-                                  ],
-                                ),
-                                shape: BoxShape.circle,
+                  error: (e, s) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
+                                  theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
+                                ],
                               ),
-                              child: Icon(
-                                Icons.error_outline_rounded,
-                                size: 40,
-                                color: theme.colorScheme.error,
-                              ),
+                              shape: BoxShape.circle,
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Greška prilikom učitavanja podataka',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                            child: Icon(
+                              Icons.error_outline_rounded,
+                              size: 40,
+                              color: theme.colorScheme.error,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              e.toString(),
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Greška prilikom učitavanja podataka',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            e.toString(),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -127,23 +134,22 @@ class DashboardOverviewTab extends ConsumerWidget {
               ),
 
               // Recent activity section
-              SliverPadding(
+              Padding(
                 padding: EdgeInsets.fromLTRB(
                   isMobile ? 16 : 24,
                   isMobile ? 16 : 20,
                   isMobile ? 16 : 24,
                   isMobile ? 16 : 20,
                 ),
-                sliver: SliverToBoxAdapter(
-                  child: _buildRecentActivity(context, ref),
-                ),
+                child: _buildRecentActivity(context, ref),
               ),
 
               // Bottom spacing
-              const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+              const SizedBox(height: 24),
             ],
           ),
         ),
+      ),
     );
   }
 
@@ -242,15 +248,14 @@ class DashboardOverviewTab extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (isDark) {
-      // In dark mode, use muted versions of the colors
+      // In dark mode, use slightly darker versions but keep full opacity
       return LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: lightColors.map((color) {
-          return Color.alphaBlend(
-            const Color(0xFFFFFFFF).withAlpha((0.15 * 255).toInt()),
-            color.withAlpha((0.6 * 255).toInt()),
-          );
+          // Darken the color but keep full opacity
+          final hsl = HSLColor.fromColor(color);
+          return hsl.withLightness((hsl.lightness * 0.7).clamp(0.0, 1.0)).toColor();
         }).toList(),
       );
     } else {
@@ -263,7 +268,7 @@ class DashboardOverviewTab extends ConsumerWidget {
     }
   }
 
-  Widget _buildStatsCardsSliver({
+  Widget _buildStatsCards({
     required BuildContext context,
     required DashboardStats stats,
   }) {
@@ -271,8 +276,7 @@ class DashboardOverviewTab extends ConsumerWidget {
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 900;
 
-    return SliverToBoxAdapter(
-      child: Wrap(
+    return Wrap(
         spacing: isMobile ? 12.0 : 16.0,
         runSpacing: isMobile ? 12.0 : 16.0,
         alignment: WrapAlignment.center,
@@ -338,7 +342,6 @@ class DashboardOverviewTab extends ConsumerWidget {
             animationDelay: 500,
           ),
         ],
-      ),
     );
   }
 
@@ -353,7 +356,6 @@ class DashboardOverviewTab extends ConsumerWidget {
     int animationDelay = 0,
   }) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     // Calculate responsive width
     final screenWidth = MediaQuery.of(context).size.width;
@@ -377,12 +379,10 @@ class DashboardOverviewTab extends ConsumerWidget {
         ? gradient.colors.first
         : AppColors.primary;
 
-    // Theme-aware text and icon colors
-    final textColor = isDark ? theme.colorScheme.onSurface : const Color(0xFFFFFFFF);
-    final iconColor = isDark ? theme.colorScheme.onSurface : const Color(0xFFFFFFFF);
-    final iconBgColor = isDark
-        ? theme.colorScheme.onSurface.withAlpha((0.15 * 255).toInt())
-        : const Color(0xFFFFFFFF).withAlpha((0.2 * 255).toInt());
+    // Theme-aware text and icon colors - full opacity
+    final textColor = const Color(0xFFFFFFFF);
+    final iconColor = const Color(0xFFFFFFFF);
+    final iconBgColor = const Color(0xFFFFFFFF).withAlpha((0.2 * 255).toInt());
 
     return TweenAnimationBuilder<double>(
       duration: Duration(milliseconds: 600 + animationDelay),
@@ -461,7 +461,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                 Text(
                   title,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: textColor.withAlpha((0.9 * 255).toInt()),
+                    color: textColor,
                     fontWeight: FontWeight.w500,
                     height: 1.3,
                   ),

@@ -156,33 +156,22 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   }
 
   Widget _buildCombinedHeader(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 980),
         child: Container(
-          padding: SpacingTokens.allS,
+          padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: SpacingTokens.xs),
           decoration: BoxDecoration(
             color: ColorTokens.light.backgroundSecondary,
             borderRadius: BorderTokens.circularRounded,
             boxShadow: ShadowTokens.light,
           ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // View Switcher
-              if (!isMobile) ...[
-                _buildViewSwitcher(context),
-                const SizedBox(width: SpacingTokens.s),
-              ],
-
-              if (isMobile) ...[
-                Expanded(
-                  child: _buildViewSwitcher(context),
-                ),
-                const SizedBox(width: SpacingTokens.xs),
-              ],
+              _buildViewSwitcher(context),
+              const SizedBox(width: SpacingTokens.xs),
 
               // Theme Toggle Button
               IconButton(
@@ -204,19 +193,10 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 ),
               ),
 
-              if (!isMobile) const SizedBox(width: SpacingTokens.xs),
+              const SizedBox(width: SpacingTokens.xs),
 
               // Compact Navigation
-              if (isMobile) ...[
-                const SizedBox(width: SpacingTokens.xs),
-                Expanded(
-                  child: _buildCompactMonthNavigation(),
-                ),
-              ] else ...[
-                Expanded(
-                  child: _buildCompactMonthNavigation(),
-                ),
-              ],
+              _buildCompactMonthNavigation(),
             ],
           ),
         ),

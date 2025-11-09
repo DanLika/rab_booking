@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Email Verification Screen with resend functionality
 class EmailVerificationScreen extends ConsumerStatefulWidget {
@@ -236,8 +237,10 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
     final email = authState.firebaseUser?.email ?? 'your email';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Verify Email'),
+      appBar: CommonAppBar(
+        title: 'Verify Email',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
       body: Center(
         child: SingleChildScrollView(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/theme_extensions.dart';
@@ -91,58 +90,35 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   }
 
   Widget _buildBasePriceSection(bool isMobile) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha((0.08 * 255).toInt()),
-            blurRadius: 40,
-            offset: const Offset(0, 20),
-          ),
-          BoxShadow(
-            color: Colors.black.withAlpha((0.04 * 255).toInt()),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+    final theme = Theme.of(context);
+
+    return Card(
+      elevation: 0.5,
+      shadowColor: theme.colorScheme.shadow.withAlpha((0.05 * 255).toInt()),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
+          width: 0.5,
+        ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withAlpha((0.95 * 255).toInt()),
-                Colors.white.withAlpha((0.90 * 255).toInt()),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Colors.white.withAlpha((0.4 * 255).toInt()),
-              width: 1.5,
-            ),
-          ),
-          padding: EdgeInsets.all(isMobile ? 20 : 28),
+      child: Padding(
+        padding: EdgeInsets.all(isMobile ? 16 : 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with icon
+            // Header with icon - Minimalist
             Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primary, AppColors.authSecondary],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
+                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.euro,
-                    color: Colors.white,
+                  child: Icon(
+                    Icons.euro_outlined,
+                    color: theme.colorScheme.primary,
                     size: 18,
                   ),
                 ),
@@ -150,7 +126,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                 Expanded(
                   child: Text(
                     'Osnovna Cijena',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                   ),
@@ -160,17 +136,21 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             const SizedBox(height: 8),
             Text(
               'Ovo je default cijena po noćenju koja se koristi kada nema posebnih cijena.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: theme.textTheme.bodySmall?.copyWith(
                     color: context.textColorSecondary,
-                    fontSize: 14,
                   ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 20),
 
-            // Price input and save button
+            // Price input and save button - Responsive
             LayoutBuilder(
               builder: (context, constraints) {
-                final isVerySmall = constraints.maxWidth < 400;
+                // Use responsive breakpoint considering card padding and margins
+                // Mobile/Small tablets: < 500px → Column (vertical stacking)
+                // Desktop/Large tablets: >= 500px → Row (horizontal layout)
+                final isVerySmall = constraints.maxWidth < 500;
 
                 if (isVerySmall) {
                   return Column(
@@ -178,43 +158,41 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                     children: [
                       TextField(
                         controller: _basePriceController,
-                        style: const TextStyle(
-                          fontSize: 15,
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
                         decoration: InputDecoration(
                           labelText: 'Cijena po noći (€)',
-                          labelStyle: const TextStyle(
-                            fontSize: 14,
+                          labelStyle: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
                           prefixText: '€ ',
                           prefixIcon: const Icon(Icons.euro_outlined, size: 20),
                           filled: true,
-                          fillColor: Colors.white.withAlpha((0.7 * 255).toInt()),
+                          fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt()),
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
+                            horizontal: 14,
+                            vertical: 14,
                           ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
-                              color: Colors.grey.shade300,
-                              width: 1.5,
+                              color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                              width: 1,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
-                              color: Colors.grey.shade300,
-                              width: 1.5,
+                              color: theme.colorScheme.outline.withAlpha((0.25 * 255).toInt()),
+                              width: 1,
                             ),
                           ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
                             borderSide: BorderSide(
-                              color: AppColors.primary,
-                              width: 2,
+                              color: theme.colorScheme.primary,
+                              width: 1.5,
                             ),
                           ),
                         ),
@@ -235,19 +213,19 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Icon(Icons.save),
+                            : const Icon(Icons.save_outlined, size: 18),
                         label: const Text('Sačuvaj Cijenu'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          textStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                          elevation: 0,
                         ),
                       ),
                     ],
@@ -260,43 +238,41 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                       flex: 2,
                       child: TextField(
                         controller: _basePriceController,
-                        style: const TextStyle(
-                          fontSize: 15,
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
                         decoration: InputDecoration(
                           labelText: 'Cijena po noći (€)',
-                          labelStyle: const TextStyle(
-                            fontSize: 14,
+                          labelStyle: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
                           prefixText: '€ ',
                           prefixIcon: const Icon(Icons.euro_outlined, size: 20),
                           filled: true,
-                          fillColor: Colors.white.withAlpha((0.7 * 255).toInt()),
+                          fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt()),
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
+                            horizontal: 14,
+                            vertical: 14,
                           ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
-                              color: Colors.grey.shade300,
-                              width: 1.5,
+                              color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                              width: 1,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
-                              color: Colors.grey.shade300,
-                              width: 1.5,
+                              color: theme.colorScheme.outline.withAlpha((0.25 * 255).toInt()),
+                              width: 1,
                             ),
                           ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
                             borderSide: BorderSide(
-                              color: AppColors.primary,
-                              width: 2,
+                              color: theme.colorScheme.primary,
+                              width: 1.5,
                             ),
                           ),
                         ),
@@ -319,19 +295,19 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Icon(Icons.save),
+                            : const Icon(Icons.save_outlined, size: 18),
                         label: const Text('Sačuvaj'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          textStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                          elevation: 0,
                         ),
                       ),
                     ),
@@ -341,7 +317,6 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             ),
           ],
         ),
-      ),
       ),
     );
   }

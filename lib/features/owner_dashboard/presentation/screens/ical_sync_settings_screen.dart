@@ -44,31 +44,31 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             end: Alignment.centerRight,
             colors: theme.brightness == Brightness.dark
                 ? [
-                    theme.colorScheme.darkGray,
-                    theme.colorScheme.mediumDarkGray,
+                    AppColors.backgroundDark,
+                    AppColors.surfaceVariantDark,
                   ]
                 : [
-                    theme.colorScheme.brandPurple,
-                    theme.colorScheme.brandBlue,
+                    AppColors.primary,
+                    AppColors.authSecondary,
                   ],
           ),
         ),
         child: statsAsync.when(
-          data: (stats) => _buildContent(context, feedsAsync, stats),
+          data: (stats) => _buildContent(context, feedsAsync, stats, theme),
           loading: () => Center(
               child: CircularProgressIndicator(
                 color: theme.brightness == Brightness.dark
-                    ? theme.colorScheme.brandPurple
+                    ? AppColors.primary
                     : Colors.white,
               ),
             ),
-          error: (error, stackTrace) => _buildContent(context, feedsAsync, null),
+          error: (error, stackTrace) => _buildContent(context, feedsAsync, null, theme),
         ),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context, AsyncValue<List<IcalFeed>> feedsAsync, Map<String, dynamic>? stats) {
+  Widget _buildContent(BuildContext context, AsyncValue<List<IcalFeed>> feedsAsync, Map<String, dynamic>? stats, ThemeData theme) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
       child: Column(
@@ -95,7 +95,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             loading: () => Center(
                 child: CircularProgressIndicator(
                   color: theme.brightness == Brightness.dark
-                      ? theme.colorScheme.brandPurple
+                      ? AppColors.primary
                       : Colors.white,
                 ),
               ),
@@ -106,7 +106,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                   'Greška: $error',
                   style: TextStyle(
                     color: theme.brightness == Brightness.dark
-                        ? theme.colorScheme.brandPurple
+                        ? AppColors.primary
                         : Colors.white,
                     fontSize: 16,
                   ),
@@ -130,7 +130,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               minimumSize: const Size(double.infinity, 48),
               backgroundColor: Colors.white,
-              foregroundColor: theme.colorScheme.brandPurple,
+              foregroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -145,14 +145,14 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             icon: Icon(
               Icons.help_outline,
               color: theme.brightness == Brightness.dark
-                  ? theme.colorScheme.brandPurple
+                  ? AppColors.primary
                   : Colors.white,
             ),
             label: Text(
               'Kako funkcionira iCal sinhronizacija?',
               style: TextStyle(
                 color: theme.brightness == Brightness.dark
-                    ? theme.colorScheme.brandPurple
+                    ? AppColors.primary
                     : Colors.white,
               ),
             ),

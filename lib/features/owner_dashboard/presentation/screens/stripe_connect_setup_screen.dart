@@ -153,12 +153,12 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
             end: Alignment.centerRight,
             colors: theme.brightness == Brightness.dark
                 ? [
-                    theme.colorScheme.darkGray,
-                    theme.colorScheme.mediumDarkGray,
+                    AppColors.backgroundDark,
+                    AppColors.surfaceVariantDark,
                   ]
                 : [
-                    theme.colorScheme.brandPurple,
-                    theme.colorScheme.brandBlue,
+                    AppColors.primary,
+                    AppColors.authSecondary,
                   ],
           ),
         ),
@@ -166,7 +166,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
           ? Center(
               child: CircularProgressIndicator(
                 color: theme.brightness == Brightness.dark
-                    ? theme.colorScheme.brandPurple
+                    ? AppColors.primary
                     : Colors.white,
               ),
             )
@@ -198,7 +198,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                         minimumSize: const Size(double.infinity, 48),
                         backgroundColor: Colors.white,
-                        foregroundColor: theme.colorScheme.brandPurple,
+                        foregroundColor: AppColors.primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -215,7 +215,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                         minimumSize: const Size(double.infinity, 48),
-                        backgroundColor: theme.colorScheme.warning,
+                        backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -231,14 +231,14 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                     icon: Icon(
                       Icons.help_outline,
                       color: theme.brightness == Brightness.dark
-                          ? theme.colorScheme.brandPurple
+                          ? AppColors.primary
                           : Colors.white,
                     ),
                     label: Text(
                       'Kako funkcionira Stripe Connect?',
                       style: TextStyle(
                         color: theme.brightness == Brightness.dark
-                            ? theme.colorScheme.brandPurple
+                            ? AppColors.primary
                             : Colors.white,
                       ),
                     ),
@@ -263,12 +263,12 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
       statusTitle = 'Nije povezano';
       statusDescription = 'Stripe račun nije povezan. Prijem plaćanja nije moguć.';
     } else if (_stripeAccountStatus != 'complete') {
-      statusColor = theme.colorScheme.warning;
+      statusColor = Colors.orange;
       statusIcon = Icons.pending;
       statusTitle = 'Setup u toku';
       statusDescription = 'Završite Stripe setup da biste mogli primati plaćanja.';
     } else {
-      statusColor = theme.colorScheme.success;
+      statusColor = Colors.green;
       statusIcon = Icons.check_circle;
       statusTitle = 'Aktivno';
       statusDescription = 'Stripe račun je povezan. Možete primati plaćanja!';
@@ -333,7 +333,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
   Widget _buildInfoSection() {
     final theme = Theme.of(context);
     final textColor = theme.brightness == Brightness.dark
-        ? theme.colorScheme.brandPurple
+        ? AppColors.primary
         : Colors.white;
 
     return Column(
@@ -375,7 +375,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
   Widget _buildInfoItem(IconData icon, String title, String description) {
     final theme = Theme.of(context);
     final textColor = theme.brightness == Brightness.dark
-        ? theme.colorScheme.brandPurple
+        ? AppColors.primary
         : Colors.white;
 
     return Padding(

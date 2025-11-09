@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/profile_validators.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/auth_logo_icon.dart';
@@ -59,7 +60,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Welcome back, ${authState.userModel?.firstName ?? "User"}!'),
-            backgroundColor: const Color(0xFF10B981),
+            backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             duration: const Duration(seconds: 2),
@@ -71,7 +72,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: const Color(0xFFEF4444),
+            backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             duration: const Duration(seconds: 4),
@@ -96,7 +97,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
         messenger.showSnackBar(
           SnackBar(
             content: Text('Google Sign-In failed: ${e.toString()}'),
-            backgroundColor: const Color(0xFFEF4444),
+            backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -115,7 +116,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
         messenger.showSnackBar(
           SnackBar(
             content: Text('Apple Sign-In failed: ${e.toString()}'),
-            backgroundColor: const Color(0xFFEF4444),
+            backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -134,7 +135,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
         messenger.showSnackBar(
           SnackBar(
             content: Text('Anonymous Sign-In failed: ${e.toString()}'),
-            backgroundColor: const Color(0xFFEF4444),
+            backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -178,7 +179,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             fontSize: 28,
-                            color: const Color(0xFF2D3748),
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -188,7 +188,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                     Text(
                       'Manage your properties and bookings',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF718096),
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                             fontSize: 15,
                           ),
                       textAlign: TextAlign.center,
@@ -214,7 +214,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                          color: const Color(0xFF718096),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         onPressed: () {
                           setState(() => _obscurePassword = !_obscurePassword);
@@ -250,7 +250,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(4),
                                         ),
-                                        activeColor: const Color(0xFF6B4CE6),
+                                        activeColor: Theme.of(context).colorScheme.primary,
                                       ),
                                     ),
                                   ),
@@ -259,7 +259,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                                   'Remember me',
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         fontSize: 14,
-                                        color: const Color(0xFF4A5568),
                                       ),
                               ),
                             ],
@@ -277,7 +276,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                             'Forgot password?',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   fontSize: 14,
-                                  color: const Color(0xFF6B4CE6),
+                                  color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.w600,
                                 ),
                           ),
@@ -298,18 +297,18 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                     // Divider
                     Row(
                       children: [
-                        const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                        Expanded(child: Divider(color: Theme.of(context).colorScheme.outline)),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'or continue with',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: const Color(0xFF718096),
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   fontSize: 13,
                                 ),
                           ),
                         ),
-                        const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                        Expanded(child: Divider(color: Theme.of(context).colorScheme.outline)),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -355,14 +354,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                           text: TextSpan(
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   fontSize: 14,
-                                  color: const Color(0xFF4A5568),
                                 ),
-                            children: const [
-                              TextSpan(text: "Don't have an account? "),
+                            children: [
+                              const TextSpan(text: "Don't have an account? "),
                               TextSpan(
                                 text: 'Create Account',
                                 style: TextStyle(
-                                  color: Color(0xFF6B4CE6),
+                                  color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -406,6 +404,8 @@ class _SocialLoginButtonState extends State<_SocialLoginButton> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -414,12 +414,12 @@ class _SocialLoginButtonState extends State<_SocialLoginButton> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _isHovered ? const Color(0xFF6B4CE6) : const Color(0xFFE2E8F0),
+            color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.outline,
             width: 1.5,
           ),
           color: _isHovered
-              ? const Color(0xFF6B4CE6).withAlpha((0.05 * 255).toInt())
-              : Colors.white.withAlpha((0.5 * 255).toInt()),
+              ? theme.colorScheme.primary.withAlpha((0.08 * 255).toInt())
+              : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
         ),
         child: Material(
           color: Colors.transparent,
@@ -437,7 +437,7 @@ class _SocialLoginButtonState extends State<_SocialLoginButton> {
                     Icon(
                       widget.icon!,
                       size: 22,
-                      color: _isHovered ? const Color(0xFF6B4CE6) : const Color(0xFF4A5568),
+                      color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                     ),
                   const SizedBox(width: 8),
                   Text(
@@ -445,7 +445,7 @@ class _SocialLoginButtonState extends State<_SocialLoginButton> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _isHovered ? const Color(0xFF6B4CE6) : const Color(0xFF4A5568),
+                      color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -590,8 +590,10 @@ class _AppleIcon extends StatelessWidget {
 class _AppleLogoPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
+    // Adapt color to theme - keep black for light mode, white for dark mode
+    // For brand consistency, we can keep it as black regardless of theme
     final paint = Paint()
-      ..color = Colors.black
+      ..color = Colors.black87
       ..style = PaintingStyle.fill;
 
     final path = Path();

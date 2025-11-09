@@ -27,6 +27,12 @@ class EnhancedPaymentScreen extends ConsumerStatefulWidget {
 class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  // Getter for colors based on current theme
+  WidgetColorScheme get colors {
+    final isDarkMode = ref.watch(themeProvider);
+    return isDarkMode ? ColorTokens.dark : ColorTokens.light;
+  }
+
   // Guest details
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
@@ -426,7 +432,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                   color: colors.primarySurface,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.payment,
                   color: colors.primary,
                   size: 24,
@@ -852,7 +858,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
             const TextSpan(text: 'I agree to the '),
             TextSpan(
               text: 'Terms & Conditions',
-              style: const TextStyle(
+              style: TextStyle(
                 color: colors.primary,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
@@ -869,7 +875,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
             const TextSpan(text: ' and '),
             TextSpan(
               text: 'Privacy Policy',
-              style: const TextStyle(
+              style: TextStyle(
                 color: colors.primary,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
@@ -999,14 +1005,14 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                   color: colors.textPrimary,
                 ),
               ),
-              const Divider(height: 24, color: colors.borderDefault),
+              Divider(height: 24, color: colors.borderDefault),
 
               _buildSummaryRow(
                 '${calculation.nights} nights',
                 calculation.formattedTotal,
               ),
 
-              const Divider(height: 24, color: colors.borderDefault),
+              Divider(height: 24, color: colors.borderDefault),
 
               Container(
                 padding: const EdgeInsets.all(16),
@@ -1135,7 +1141,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                       },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colors.primary,
-                  side: const BorderSide(color: colors.primary),
+                  side: BorderSide(color: colors.primary),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -1171,7 +1177,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                       backgroundColor: colors.primary,
                       foregroundColor: colors.backgroundCard,
                       disabledBackgroundColor: colors.borderDefault,
-                      disabledForegroundColor: colors.borderDefaultText,
+                      disabledForegroundColor: colors.textSecondary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -1179,7 +1185,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                       elevation: 0,
                     ),
                     child: _isProcessing
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(

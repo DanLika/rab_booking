@@ -351,6 +351,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: CommonAppBar(
         title: 'Postavke Widgeta',
@@ -1125,6 +1126,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   }
 
   Widget _buildTaxLegalSection() {
+    final theme = Theme.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1184,10 +1186,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+                      color: Theme.of(context).colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
                     ),
                   ),
                   child: Column(
@@ -1198,7 +1200,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           Icon(
                             Icons.info_outline,
                             size: 20,
-                            color: theme.colorScheme.primary,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           const SizedBox(width: 8),
                           const Text(
@@ -1254,10 +1256,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer.withAlpha((0.3 * 255).toInt()),
+                  color: Theme.of(context).colorScheme.errorContainer.withAlpha((0.3 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: theme.colorScheme.error.withAlpha((0.2 * 255).toInt()),
+                    color: Theme.of(context).colorScheme.error.withAlpha((0.2 * 255).toInt()),
                   ),
                 ),
                 child: Row(
@@ -1265,7 +1267,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   children: [
                     Icon(
                       Icons.warning_amber,
-                      color: theme.colorScheme.error,
+                      color: Theme.of(context).colorScheme.error,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -1275,7 +1277,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         'Vi ste odgovorni za točnost i pravnu ispravnost teksta.',
                         style: TextStyle(
                           fontSize: 12,
-                          color: theme.colorScheme.onErrorContainer,
+                          color: Theme.of(context).colorScheme.onErrorContainer,
                           height: 1.4,
                         ),
                       ),
@@ -1302,7 +1304,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               'Prilagodite izgled widgeta:',
               style: TextStyle(
                 fontSize: 14,
-                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
             const SizedBox(height: 12),
@@ -1327,8 +1329,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: _themeMode == mode
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                           width: 2,
                         ),
                       ),
@@ -1339,7 +1341,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                                 height: 10,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: theme.colorScheme.primary,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                             )
@@ -1352,7 +1354,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                               ? Icons.dark_mode
                               : Icons.settings_brightness,
                       size: 20,
-                      color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                      color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -1382,7 +1384,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               'Frosted glass efekti za moderan izgled',
               style: TextStyle(
                 fontSize: 13,
-                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
             const SizedBox(height: 12),
@@ -1418,8 +1420,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: _blurIntensity == intensity
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                             width: 2,
                           ),
                         ),
@@ -1430,7 +1432,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                                   height: 10,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: theme.colorScheme.primary,
+                                    color: Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                               )
@@ -1439,7 +1441,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       Icon(
                         Icons.blur_on,
                         size: 20,
-                        color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                        color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -1522,7 +1524,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     color: _primaryColor,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                      color: Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                     ),
                   ),
                 ),
@@ -1578,8 +1580,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: _primaryColor == color
-                        ? theme.colorScheme.onSurface
-                        : theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                     width: _primaryColor == color ? 3 : 1,
                   ),
                 ),

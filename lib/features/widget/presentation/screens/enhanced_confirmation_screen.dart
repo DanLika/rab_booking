@@ -76,33 +76,33 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                       // Success animation/icon
-                      _buildSuccessHeader(),
+                      _buildSuccessHeader(colors),
 
                       const SizedBox(height: 32),
 
                       // Booking reference
-                      _buildBookingReference(context, reference),
+                      _buildBookingReference(context, reference, colors),
 
                       const SizedBox(height: 32),
 
                       // Confirmation message
-                      _buildConfirmationMessage(isStripePayment),
+                      _buildConfirmationMessage(isStripePayment, colors),
 
                       const SizedBox(height: 32),
 
                       // Booking details card
                       if (room != null && checkIn != null && checkOut != null)
-                        _buildBookingDetailsCard(room, checkIn, checkOut),
+                        _buildBookingDetailsCard(room, checkIn, checkOut, colors),
 
                       const SizedBox(height: 24),
 
                       // Next steps
-                      _buildNextSteps(isStripePayment),
+                      _buildNextSteps(isStripePayment, colors),
 
                       const SizedBox(height: 32),
 
                       // Action buttons
-                      _buildActionButtons(context, ref),
+                      _buildActionButtons(context, ref, colors),
 
                       const SizedBox(height: 32),
 
@@ -122,7 +122,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSuccessHeader() {
+  Widget _buildSuccessHeader(WidgetColorScheme colors) {
     return Column(
       children: [
         // Animated checkmark
@@ -137,11 +137,11 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: const colors.success, // Success green
+                  color: colors.success, // Success green
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const colors.success.withValues(alpha: 0.3),
+                      color: colors.success.withValues(alpha: 0.3),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -173,7 +173,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBookingReference(BuildContext context, String reference) {
+  Widget _buildBookingReference(BuildContext context, String reference, WidgetColorScheme colors) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -206,13 +206,13 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               IconButton(
-                icon: const Icon(Icons.copy, size: 20, color: colors.textSecondary),
+                icon: Icon(Icons.copy, size: 20, color: colors.textSecondary),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: reference));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Reference copied to clipboard'),
-                      duration: Duration(seconds: 2),
+                    SnackBar(
+                      content: const Text('Reference copied to clipboard'),
+                      duration: const Duration(seconds: 2),
                       backgroundColor: colors.success,
                     ),
                   );
@@ -226,7 +226,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildConfirmationMessage(bool isStripePayment) {
+  Widget _buildConfirmationMessage(bool isStripePayment, WidgetColorScheme colors) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -280,6 +280,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     dynamic room,
     DateTime checkIn,
     DateTime checkOut,
+    WidgetColorScheme colors,
   ) {
     final nights = checkOut.difference(checkIn).inDays;
 
@@ -296,13 +297,14 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
               color: colors.textPrimary,
             ),
           ),
-          const Divider(height: 24, color: colors.borderDefault),
+          Divider(height: 24, color: colors.borderDefault),
 
           // Room name
           _buildDetailRow(
             Icons.hotel,
             'Room',
             room.name,
+            colors,
           ),
 
           const SizedBox(height: 12),
@@ -312,6 +314,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
             Icons.login,
             'Check-in',
             DateFormat('EEEE, MMM d, yyyy').format(checkIn),
+            colors,
           ),
 
           const SizedBox(height: 12),
@@ -321,6 +324,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
             Icons.logout,
             'Check-out',
             DateFormat('EEEE, MMM d, yyyy').format(checkOut),
+            colors,
           ),
 
           const SizedBox(height: 12),
@@ -330,13 +334,14 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
             Icons.nightlight_round,
             'Duration',
             '$nights ${nights == 1 ? 'night' : 'nights'}',
+            colors,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) {
+  Widget _buildDetailRow(IconData icon, String label, String value, WidgetColorScheme colors) {
     return Row(
       children: [
         Container(
@@ -379,7 +384,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildNextSteps(bool isStripePayment) {
+  Widget _buildNextSteps(bool isStripePayment, WidgetColorScheme colors) {
     final steps = isStripePayment
         ? [
             {
@@ -507,7 +512,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
+  Widget _buildActionButtons(BuildContext context, WidgetRef ref, WidgetColorScheme colors) {
     return Column(
       children: [
         // PDF Download and Email buttons row
@@ -516,16 +521,16 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () {
-                  _downloadPDF(context);
+                  _downloadPDF(context, colors);
                 },
-                icon: const Icon(Icons.picture_as_pdf, color: colors.primary),
+                icon: Icon(Icons.picture_as_pdf, color: colors.primary),
                 label: Text('Download PDF', style: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
                   color: colors.primary,
                 )),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colors.primary,
-                  side: const BorderSide(color: colors.primary, width: 2),
+                  side: BorderSide(color: colors.primary, width: 2),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -537,16 +542,16 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () {
-                  _emailConfirmation(context);
+                  _emailConfirmation(context, colors);
                 },
-                icon: const Icon(Icons.email_outlined, color: colors.primary),
+                icon: Icon(Icons.email_outlined, color: colors.primary),
                 label: Text('Email Me', style: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
                   color: colors.primary,
                 )),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colors.primary,
-                  side: const BorderSide(color: colors.primary, width: 2),
+                  side: BorderSide(color: colors.primary, width: 2),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -564,7 +569,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
               _resetBookingFlow(ref);
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
-            icon: const Icon(Icons.home, color: colors.backgroundCard),
+            icon: Icon(Icons.home, color: colors.backgroundCard),
             label: Text('Back to Home', style: GoogleFonts.inter(
               fontWeight: FontWeight.w600,
               color: colors.backgroundCard,
@@ -585,16 +590,16 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: () {
-              _showContactInfo(context);
+              _showContactInfo(context, colors);
             },
-            icon: const Icon(Icons.help_outline, color: colors.primary),
+            icon: Icon(Icons.help_outline, color: colors.primary),
             label: Text('Need Help?', style: GoogleFonts.inter(
               fontWeight: FontWeight.w600,
               color: colors.primary,
             )),
             style: OutlinedButton.styleFrom(
               foregroundColor: colors.primary,
-              side: const BorderSide(color: colors.primary, width: 2),
+              side: BorderSide(color: colors.primary, width: 2),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -651,7 +656,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     ref.read(childrenCountProvider.notifier).state = 0;
   }
 
-  void _showContactInfo(BuildContext context) {
+  void _showContactInfo(BuildContext context, WidgetColorScheme colors) {
     showGlassDialog(
       context: context,
       builder: (context) => Consumer(
@@ -679,26 +684,26 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
                       if (contactOptions?.showEmail == true && contactOptions?.emailAddress != null)
                         ...[
-                          _buildContactRow(Icons.email, contactOptions!.emailAddress!),
+                          _buildContactRow(Icons.email, contactOptions!.emailAddress!, colors),
                           const SizedBox(height: 12),
                         ],
                       if (contactOptions?.showPhone == true && contactOptions?.phoneNumber != null)
                         ...[
-                          _buildContactRow(Icons.phone, contactOptions!.phoneNumber!),
+                          _buildContactRow(Icons.phone, contactOptions!.phoneNumber!, colors),
                           const SizedBox(height: 12),
                         ],
                       if (contactOptions?.showWhatsApp == true && contactOptions?.whatsAppNumber != null)
                         ...[
-                          _buildContactRow(Icons.message, 'WhatsApp: ${contactOptions!.whatsAppNumber}'),
+                          _buildContactRow(Icons.message, 'WhatsApp: ${contactOptions!.whatsAppNumber}', colors),
                           const SizedBox(height: 12),
                         ],
                       // Fallback to hardcoded jasko-rab info if no contact info available
                       if (contactOptions == null || !contactOptions.hasContactMethod)
                         ...[
-                          _buildContactRow(Icons.email, 'info@jasko-rab.com'),
+                          _buildContactRow(Icons.email, 'info@jasko-rab.com', colors),
                           const SizedBox(height: 12),
                         ],
-                      _buildContactRow(Icons.access_time, 'Mon-Sun: 8:00 - 20:00'),
+                      _buildContactRow(Icons.access_time, 'Mon-Sun: 8:00 - 20:00', colors),
                     ],
                   ),
                   actions: [
@@ -724,9 +729,9 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
                   style: TextStyle(fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 16),
-                _buildContactRow(Icons.email, 'info@jasko-rab.com'),
+                _buildContactRow(Icons.email, 'info@jasko-rab.com', colors),
                 const SizedBox(height: 12),
-                _buildContactRow(Icons.access_time, 'Mon-Sun: 8:00 - 20:00'),
+                _buildContactRow(Icons.access_time, 'Mon-Sun: 8:00 - 20:00', colors),
               ],
             ),
             actions: [
@@ -741,7 +746,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContactRow(IconData icon, String text) {
+  Widget _buildContactRow(IconData icon, String text, WidgetColorScheme colors) {
     return Row(
       children: [
         Icon(icon, size: 20, color: colors.success),
@@ -754,7 +759,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     );
   }
 
-  void _downloadPDF(BuildContext context) {
+  void _downloadPDF(BuildContext context, WidgetColorScheme colors) {
     // TODO: Implement PDF generation and download
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -771,7 +776,7 @@ class EnhancedConfirmationScreen extends ConsumerWidget {
     );
   }
 
-  void _emailConfirmation(BuildContext context) {
+  void _emailConfirmation(BuildContext context, WidgetColorScheme colors) {
     // TODO: Implement email confirmation
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

@@ -23,6 +23,12 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
   // Additional services selection
   final Map<String, bool> _selectedServices = {};
 
+  // Getter for colors based on current theme
+  WidgetColorScheme get colors {
+    final isDarkMode = ref.watch(themeProvider);
+    return isDarkMode ? ColorTokens.dark : ColorTokens.light;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
@@ -167,7 +173,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
 
                 // Booking details card
                 _buildBookingDetailsCard(
-                    room, checkIn, checkOut, adults, children),
+                    colors, room, checkIn, checkOut, adults, children),
                 const SizedBox(height: 32),
 
                 // Additional services
@@ -240,7 +246,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
           ),
           child: Center(
             child: isCompleted
-                ? const Icon(Icons.check, color: colors.backgroundCard, size: 20)
+                ? Icon(Icons.check, color: colors.backgroundCard, size: 20)
                 : Text(
                     step.toString(),
                     style: GoogleFonts.inter(
@@ -325,7 +331,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                         width: 120,
                         height: 90,
                         color: colors.borderDefault,
-                        child: const Icon(Icons.hotel, size: 40, color: colors.textSecondary),
+                        child: Icon(Icons.hotel, size: 40, color: colors.textSecondary),
                       );
                     },
                   ),
@@ -344,7 +350,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.people,
                           size: 16,
                           color: colors.textSecondary,
@@ -363,7 +369,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.king_bed,
                           size: 16,
                           color: colors.textSecondary,
@@ -412,7 +418,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.nightlight_round,
                   size: 20,
                   color: colors.primary,

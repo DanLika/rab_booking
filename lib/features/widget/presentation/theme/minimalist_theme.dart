@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'minimalist_colors.dart';
-import 'minimalist_colors_dark.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 
 /// Modern Minimalist Theme for the widget

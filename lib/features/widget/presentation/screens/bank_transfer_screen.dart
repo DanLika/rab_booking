@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../providers/booking_price_provider.dart';
+import '../providers/theme_provider.dart';
+import '../../../widget/domain/models/widget_settings.dart';
+import '../../../../shared/providers/repository_providers.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 
-/// Bank transfer instructions screen
-/// Shows payment details and booking reference
+/// Modern Bank Transfer Instructions Screen
+/// Displays owner's actual bank details with glass morphism design
 class BankTransferScreen extends ConsumerWidget {
+  final String propertyId;
   final String unitId;
   final DateTime checkIn;
   final DateTime checkOut;
@@ -13,6 +20,7 @@ class BankTransferScreen extends ConsumerWidget {
 
   const BankTransferScreen({
     super.key,
+    required this.propertyId,
     required this.unitId,
     required this.checkIn,
     required this.checkOut,
@@ -27,278 +35,268 @@ class BankTransferScreen extends ConsumerWidget {
       checkOut: checkOut,
     ));
 
+    final settingsAsync = ref.watch(widgetSettingsRepositoryProvider).getWidgetSettings(
+      propertyId: propertyId,
+      unitId: unitId,
+    );
+
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.backgroundPrimary,
       appBar: AppBar(
-        title: const Text('Bank Transfer Instructions'),
-        backgroundColor: const Color(0xFF6B8E23),
-        foregroundColor: Colors.white,
+        title: const Text('Uputstva za Uplatu'),
+        backgroundColor: colors.backgroundSecondary,
+        foregroundColor: colors.textPrimary,
+        elevation: 0,
       ),
-      body: priceCalc.when(
-        data: (calculation) {
-          if (calculation == null) {
-            return const Center(child: Text('Error loading price'));
+      body: FutureBuilder<WidgetSettings?>(
+        future: settingsAsync,
+        builder: (context, settingsSnapshot) {
+          if (!settingsSnapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
           }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Success icon
-                Center(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFC8E6C9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.check,
-                      size: 48,
-                      color: Color(0xFF6B8E23),
-                    ),
-                  ),
-                ),
+          final settings = settingsSnapshot.data;
+          final bankConfig = settings?.bankTransferConfig;
 
-                const SizedBox(height: 24),
-
-                // Booking confirmed
-                const Center(
+          return priceCalc.when(
+            data: (calculation) {
+              if (calculation == null) {
+                return Center(
                   child: Text(
-                    'Booking Confirmed!',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    'Greška pri učitavanju cijene',
+                    style: TextStyle(color: colors.error),
                   ),
-                ),
+                );
+              }
 
-                const SizedBox(height: 8),
+              // Calculate payment deadline
+              final deadlineDays = bankConfig?.paymentDeadlineDays ?? 3;
+              final paymentDeadline = DateTime.now().add(Duration(days: deadlineDays));
+              final formattedDeadline = DateFormat('d. MMMM yyyy.').format(paymentDeadline);
 
-                // Booking reference
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(SpacingTokens.m),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Success Icon with Glass Container
+                    _buildSuccessHeader(context, colors),
+
+                    const SizedBox(height: SpacingTokens.l),
+
+                    // Booking Reference Card
+                    _buildReferenceCard(context, colors),
+
+                    const SizedBox(height: SpacingTokens.l),
+
+                    // Payment Deadline Warning
+                    _buildPaymentWarning(
+                      context,
+                      colors,
+                      calculation.formattedDeposit,
+                      formattedDeadline,
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5F5F5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'Reference: ',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black54,
-                          ),
-                        ),
-                        Text(
-                          bookingReference,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.copy, size: 18),
-                          onPressed: () {
-                            Clipboard.setData(
-                              ClipboardData(text: bookingReference),
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Reference copied to clipboard'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
 
-                const SizedBox(height: 32),
+                    const SizedBox(height: SpacingTokens.l),
 
-                // Booking details
-                _buildSectionTitle('Booking Details'),
-                const SizedBox(height: 12),
-                _buildDetailRow('Check-in', _formatDate(checkIn)),
-                _buildDetailRow('Check-out', _formatDate(checkOut)),
-                _buildDetailRow('Nights', '${calculation.nights}'),
+                    // Booking Details
+                    _buildBookingDetails(context, colors, calculation),
 
-                const SizedBox(height: 32),
+                    const SizedBox(height: SpacingTokens.l),
 
-                // Price breakdown
-                _buildSectionTitle('Price Breakdown'),
-                const SizedBox(height: 12),
-                _buildPriceRow('Total Price', calculation.formattedTotal, false),
-                _buildPriceRow('Deposit (20%)', calculation.formattedDeposit, true),
-                _buildPriceRow('Remaining', calculation.formattedRemaining, false),
-
-                const SizedBox(height: 32),
-
-                // Payment instructions
-                _buildSectionTitle('Payment Instructions'),
-                const SizedBox(height: 12),
-
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF9C4),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: const Color(0xFFFBC02D),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.info_outline,
-                            color: Color(0xFFF57C00),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Payment Due: ${calculation.formattedDeposit}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Please transfer within 3 days to confirm your booking.',
-                        style: TextStyle(fontSize: 14),
-                      ),
+                    // Bank Details Section
+                    if (bankConfig != null && bankConfig.hasCompleteDetails) ...[
+                      _buildBankDetails(context, colors, bankConfig),
+                      const SizedBox(height: SpacingTokens.l),
                     ],
-                  ),
-                ),
 
-                const SizedBox(height: 24),
-
-                // Bank details
-                _buildBankDetailCard(
-                  'Account Holder',
-                  'Your Business Name',
-                  Icons.person,
-                ),
-                const SizedBox(height: 12),
-                _buildBankDetailCard(
-                  'Bank Name',
-                  'Your Bank',
-                  Icons.account_balance,
-                ),
-                const SizedBox(height: 12),
-                _buildBankDetailCard(
-                  'IBAN',
-                  'HR1234567890123456789',
-                  Icons.credit_card,
-                ),
-                const SizedBox(height: 12),
-                _buildBankDetailCard(
-                  'Reference',
-                  bookingReference,
-                  Icons.qr_code,
-                ),
-
-                const SizedBox(height: 32),
-
-                // Important notes
-                _buildSectionTitle('Important Notes'),
-                const SizedBox(height: 12),
-                _buildNoteItem(
-                  '✓ Include booking reference in transfer description',
-                ),
-                _buildNoteItem(
-                  '✓ You will receive confirmation email once payment is received',
-                ),
-                _buildNoteItem(
-                  '✓ Remaining amount (${calculation.formattedRemaining}) payable on arrival',
-                ),
-                _buildNoteItem(
-                  '✓ Cancellation policy: 7 days before check-in for full refund',
-                ),
-
-                const SizedBox(height: 32),
-
-                // Close button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6B8E23),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                    // QR Code Section (if enabled)
+                    if (bankConfig != null &&
+                        bankConfig.enableQrCode &&
+                        bankConfig.iban != null) ...[
+                      _buildQrCodeSection(
+                        context,
+                        colors,
+                        bankConfig,
+                        calculation.depositAmount,
                       ),
+                      const SizedBox(height: SpacingTokens.l),
+                    ],
+
+                    // Important Notes
+                    _buildImportantNotes(
+                      context,
+                      colors,
+                      bankConfig,
+                      calculation.formattedRemaining,
                     ),
-                    child: const Text(
-                      'Done',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+
+                    const SizedBox(height: SpacingTokens.xl),
+
+                    // Done Button
+                    _buildDoneButton(context, colors),
+
+                    const SizedBox(height: SpacingTokens.l),
+                  ],
                 ),
-              ],
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) => Center(
+              child: Text(
+                'Greška: $error',
+                style: TextStyle(color: colors.error),
+              ),
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Text('Error: $error'),
+      ),
+    );
+  }
+
+  Widget _buildSuccessHeader(BuildContext context, WidgetColorScheme colors) {
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.l),
+      decoration: BoxDecoration(
+        color: colors.backgroundCard,
+        borderRadius: BorderTokens.card,
+        boxShadow: colors.shadowMedium,
+        border: Border.all(
+          color: colors.borderLight,
+          width: BorderTokens.widthThin,
         ),
       ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: colors.successBackground,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: colors.success,
+                width: BorderTokens.widthMedium,
+              ),
+            ),
+            child: Icon(
+              Icons.check_circle_outline,
+              size: 48,
+              color: colors.success,
+            ),
+          ),
+          const SizedBox(height: SpacingTokens.m),
+          Text(
+            'Rezervacija Potvrđena!',
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeXXL,
+              fontWeight: TypographyTokens.bold,
+              color: colors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: SpacingTokens.xs),
+          Text(
+            'Molimo dovršite plaćanje kako biste osigurali rezervaciju',
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeM,
+              color: colors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildReferenceCard(BuildContext context, WidgetColorScheme colors) {
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: colors.backgroundCard,
+        borderRadius: BorderTokens.card,
+        boxShadow: colors.shadowLight,
+        border: Border.all(
+          color: colors.borderDefault,
+          width: BorderTokens.widthThin,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
+          Row(
+            children: [
+              Icon(
+                Icons.qr_code_2,
+                color: colors.primary,
+                size: IconSizeTokens.medium,
+              ),
+              const SizedBox(width: SpacingTokens.xs),
+              Text(
+                'Referentni Broj',
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeL,
+                  fontWeight: TypographyTokens.semiBold,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SpacingTokens.s),
+          Container(
+            padding: const EdgeInsets.all(SpacingTokens.s),
+            decoration: BoxDecoration(
+              color: colors.backgroundSecondary,
+              borderRadius: BorderTokens.button,
+              border: Border.all(
+                color: colors.borderMedium,
+                width: BorderTokens.widthThin,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    bookingReference,
+                    style: TextStyle(
+                      fontSize: TypographyTokens.fontSizeXL,
+                      fontWeight: TypographyTokens.bold,
+                      fontFamily: 'monospace',
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.content_copy,
+                    color: colors.primary,
+                  ),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: bookingReference));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Referentni broj kopiran'),
+                        backgroundColor: colors.success,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  tooltip: 'Kopiraj',
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: SpacingTokens.xs),
           Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+            '⚠️ Obavezno navedite ovaj broj u opisu uplate',
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeS,
+              color: colors.warning,
+              fontWeight: TypographyTokens.medium,
             ),
           ),
         ],
@@ -306,17 +304,144 @@ class BankTransferScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPriceRow(String label, String value, bool highlight) {
+  Widget _buildPaymentWarning(
+    BuildContext context,
+    WidgetColorScheme colors,
+    String depositAmount,
+    String deadline,
+  ) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: highlight ? 12 : 8,
-        horizontal: highlight ? 12 : 0,
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: colors.warningBackground,
+        borderRadius: BorderTokens.card,
+        border: Border.all(
+          color: colors.warning,
+          width: BorderTokens.widthMedium,
+        ),
+        boxShadow: colors.shadowLight,
       ),
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(
+            Icons.access_time,
+            color: colors.warning,
+            size: IconSizeTokens.large,
+          ),
+          const SizedBox(width: SpacingTokens.m),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Uplata: $depositAmount',
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeL,
+                    fontWeight: TypographyTokens.bold,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: SpacingTokens.xxs),
+                Text(
+                  'Rok: $deadline',
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeM,
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBookingDetails(
+    BuildContext context,
+    WidgetColorScheme colors,
+    dynamic calculation,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: colors.backgroundCard,
+        borderRadius: BorderTokens.card,
+        boxShadow: colors.shadowLight,
+        border: Border.all(
+          color: colors.borderDefault,
+          width: BorderTokens.widthThin,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Detalji Rezervacije',
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeL,
+              fontWeight: TypographyTokens.semiBold,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: SpacingTokens.m),
+          _buildDetailRow('Dolazak', _formatDate(checkIn), colors),
+          const SizedBox(height: SpacingTokens.s),
+          _buildDetailRow('Odlazak', _formatDate(checkOut), colors),
+          const SizedBox(height: SpacingTokens.s),
+          _buildDetailRow('Noći', '${calculation.nights}', colors),
+          const Divider(height: SpacingTokens.l),
+          _buildPriceRow('Ukupna Cijena', calculation.formattedTotal, colors, false),
+          const SizedBox(height: SpacingTokens.s),
+          _buildPriceRow('Depozit (${calculation.depositPercentage}%)', calculation.formattedDeposit, colors, true),
+          const SizedBox(height: SpacingTokens.s),
+          _buildPriceRow('Preostalo', calculation.formattedRemaining, colors, false),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, WidgetColorScheme colors) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: TypographyTokens.fontSizeM,
+            color: colors.textSecondary,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: TypographyTokens.fontSizeM,
+            fontWeight: TypographyTokens.semiBold,
+            color: colors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPriceRow(
+    String label,
+    String value,
+    WidgetColorScheme colors,
+    bool highlight,
+  ) {
+    return Container(
+      padding: highlight
+          ? const EdgeInsets.all(SpacingTokens.s)
+          : EdgeInsets.zero,
       decoration: highlight
           ? BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(6),
+              color: colors.primarySurface,
+              borderRadius: BorderTokens.button,
+              border: Border.all(
+                color: colors.primary,
+                width: BorderTokens.widthMedium,
+              ),
             )
           : null,
       child: Row(
@@ -325,16 +450,17 @@ class BankTransferScreen extends ConsumerWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: highlight ? 16 : 14,
-              fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+              fontSize: highlight ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeM,
+              fontWeight: highlight ? TypographyTokens.bold : TypographyTokens.medium,
+              color: colors.textPrimary,
             ),
           ),
           Text(
             value,
             style: TextStyle(
-              fontSize: highlight ? 18 : 14,
-              fontWeight: FontWeight.bold,
-              color: highlight ? const Color(0xFF6B8E23) : Colors.black,
+              fontSize: highlight ? TypographyTokens.fontSizeXL : TypographyTokens.fontSizeL,
+              fontWeight: TypographyTokens.bold,
+              color: highlight ? colors.primary : colors.textPrimary,
             ),
           ),
         ],
@@ -342,17 +468,127 @@ class BankTransferScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBankDetailCard(String label, String value, IconData icon) {
+  Widget _buildBankDetails(
+    BuildContext context,
+    WidgetColorScheme colors,
+    BankTransferConfig bankConfig,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(8),
+        color: colors.backgroundCard,
+        borderRadius: BorderTokens.card,
+        boxShadow: colors.shadowMedium,
+        border: Border.all(
+          color: colors.borderDefault,
+          width: BorderTokens.widthThin,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.account_balance,
+                color: colors.primary,
+                size: IconSizeTokens.medium,
+              ),
+              const SizedBox(width: SpacingTokens.xs),
+              Text(
+                'Podaci za Uplatu',
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeL,
+                  fontWeight: TypographyTokens.semiBold,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SpacingTokens.m),
+
+          if (bankConfig.accountHolder != null)
+            _buildBankField(
+              context,
+              colors,
+              'Vlasnik Računa',
+              bankConfig.accountHolder!,
+              Icons.person_outline,
+            ),
+
+          if (bankConfig.bankName != null) ...[
+            const SizedBox(height: SpacingTokens.s),
+            _buildBankField(
+              context,
+              colors,
+              'Naziv Banke',
+              bankConfig.bankName!,
+              Icons.account_balance_outlined,
+            ),
+          ],
+
+          if (bankConfig.iban != null) ...[
+            const SizedBox(height: SpacingTokens.s),
+            _buildBankField(
+              context,
+              colors,
+              'IBAN',
+              bankConfig.iban!,
+              Icons.credit_card,
+            ),
+          ],
+
+          if (bankConfig.swift != null) ...[
+            const SizedBox(height: SpacingTokens.s),
+            _buildBankField(
+              context,
+              colors,
+              'SWIFT/BIC',
+              bankConfig.swift!,
+              Icons.language,
+            ),
+          ],
+
+          if (bankConfig.accountNumber != null) ...[
+            const SizedBox(height: SpacingTokens.s),
+            _buildBankField(
+              context,
+              colors,
+              'Broj Računa',
+              bankConfig.accountNumber!,
+              Icons.numbers,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBankField(
+    BuildContext context,
+    WidgetColorScheme colors,
+    String label,
+    String value,
+    IconData icon,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.s),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderTokens.input,
+        border: Border.all(
+          color: colors.borderDefault,
+          width: BorderTokens.widthThin,
+        ),
       ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF6B8E23)),
-          const SizedBox(width: 12),
+          Icon(
+            icon,
+            color: colors.primary,
+            size: IconSizeTokens.small,
+          ),
+          const SizedBox(width: SpacingTokens.s),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,47 +596,335 @@ class BankTransferScreen extends ConsumerWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
+                    fontSize: TypographyTokens.fontSizeXS,
+                    color: colors.textTertiary,
+                    fontWeight: TypographyTokens.medium,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeM,
+                    fontWeight: TypographyTokens.semiBold,
+                    color: colors.textPrimary,
+                    fontFamily: label.contains('IBAN') || label.contains('Broj') ? 'monospace' : null,
                   ),
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.copy, size: 20),
+            icon: Icon(
+              Icons.content_copy,
+              size: IconSizeTokens.small,
+              color: colors.primary,
+            ),
             onPressed: () {
-              // Copy to clipboard
+              Clipboard.setData(ClipboardData(text: value));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$label kopiran'),
+                  backgroundColor: colors.success,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
             },
+            tooltip: 'Kopiraj',
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNoteItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 14),
+  /// Build QR Code Section for EPC bank transfer
+  Widget _buildQrCodeSection(
+    BuildContext context,
+    WidgetColorScheme colors,
+    BankTransferConfig bankConfig,
+    double amount,
+  ) {
+    final epcData = _generateEpcQrData(bankConfig, amount);
+
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.l),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderTokens.card,
+        border: Border.all(
+          color: colors.borderDefault,
+          width: BorderTokens.widthThin,
+        ),
+        boxShadow: colors.shadowLight,
+      ),
+      child: Column(
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(SpacingTokens.s),
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderTokens.circularSubtle,
+                ),
+                child: Icon(
+                  Icons.qr_code_2,
+                  color: colors.primary,
+                  size: IconSizeTokens.medium,
+                ),
+              ),
+              const SizedBox(width: SpacingTokens.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'QR Kod za Uplatu',
+                      style: TextStyle(
+                        fontSize: TypographyTokens.fontSizeL,
+                        fontWeight: TypographyTokens.bold,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: SpacingTokens.xxs),
+                    Text(
+                      'Skenirajte sa mobilnom bankom',
+                      style: TextStyle(
+                        fontSize: TypographyTokens.fontSizeS,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: SpacingTokens.l),
+
+          // QR Code
+          Container(
+            padding: const EdgeInsets.all(SpacingTokens.m),
+            decoration: BoxDecoration(
+              color: ColorTokens.pureWhite,
+              borderRadius: BorderTokens.card,
+              border: Border.all(
+                color: colors.borderDefault,
+                width: BorderTokens.widthMedium,
+              ),
+            ),
+            child: QrImageView(
+              data: epcData,
+              version: QrVersions.auto,
+              size: 200.0,
+              backgroundColor: ColorTokens.pureWhite,
+              errorCorrectionLevel: QrErrorCorrectLevel.M,
+            ),
+          ),
+
+          const SizedBox(height: SpacingTokens.m),
+
+          // Info text
+          Container(
+            padding: const EdgeInsets.all(SpacingTokens.s),
+            decoration: BoxDecoration(
+              color: colors.info.withValues(alpha: 0.1),
+              borderRadius: BorderTokens.circularSubtle,
+              border: Border.all(
+                color: colors.info.withValues(alpha: 0.3),
+                width: BorderTokens.widthThin,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: IconSizeTokens.small,
+                  color: colors.info,
+                ),
+                const SizedBox(width: SpacingTokens.s),
+                Expanded(
+                  child: Text(
+                    'QR kod sadrži sve podatke o upl ati (IBAN, iznos, referenca). Skenirajte ga sa aplikacijom vaše banke.',
+                    style: TextStyle(
+                      fontSize: TypographyTokens.fontSizeS,
+                      color: colors.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Generate EPC QR Code data string
+  /// Format: https://en.wikipedia.org/wiki/EPC_QR_code
+  String _generateEpcQrData(BankTransferConfig bankConfig, double amount) {
+    final String bic = bankConfig.swift ?? '';
+    final String beneficiaryName = bankConfig.accountHolder ?? 'N/A';
+    final String iban = bankConfig.iban!.replaceAll(' ', ''); // Remove spaces
+    final String amountStr = amount.toStringAsFixed(2);
+    final String reference = bookingReference;
+
+    // EPC QR Code format (SEPA Credit Transfer)
+    final epcData = [
+      'BCD',                    // Service Tag
+      '002',                    // Version
+      '1',                      // Character Set (UTF-8)
+      'SCT',                    // Identification (SEPA Credit Transfer)
+      bic,                      // BIC
+      beneficiaryName,          // Beneficiary Name
+      iban,                     // Beneficiary Account (IBAN)
+      'EUR$amountStr',          // Amount
+      '',                       // Purpose (empty)
+      reference,                // Structured Reference
+      'Booking deposit',        // Unstructured Remittance
+      '',                       // Beneficiary to Originator Information
+    ].join('\n');
+
+    return epcData;
+  }
+
+  Widget _buildImportantNotes(
+    BuildContext context,
+    WidgetColorScheme colors,
+    BankTransferConfig? bankConfig,
+    String remainingAmount,
+  ) {
+    // Determine which notes to show
+    final bool useCustom = bankConfig?.useCustomNotes ?? false;
+    final String? customNotes = bankConfig?.customNotes;
+
+    final List<String> notes = [];
+
+    if (useCustom && customNotes != null && customNotes.isNotEmpty) {
+      // Show custom notes from owner
+      notes.add(customNotes);
+    } else {
+      // Show default notes
+      notes.addAll([
+        'Obavezno navedite referentni broj u opisu uplate',
+        'Primit ćete email potvrdu nakon što uplata bude zaprimljena',
+        'Preostali iznos ($remainingAmount) plaća se po dolasku',
+        'Politika otkazivanja: 7 dana prije dolaska za potpuni povrat',
+      ]);
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: colors.backgroundCard,
+        borderRadius: BorderTokens.card,
+        boxShadow: colors.shadowLight,
+        border: Border.all(
+          color: colors.borderDefault,
+          width: BorderTokens.widthThin,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: colors.primary,
+                size: IconSizeTokens.medium,
+              ),
+              const SizedBox(width: SpacingTokens.xs),
+              Text(
+                'Važne Informacije',
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeL,
+                  fontWeight: TypographyTokens.semiBold,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SpacingTokens.m),
+
+          if (useCustom && customNotes != null && customNotes.isNotEmpty)
+            // Custom notes - show as single block
+            Text(
+              customNotes,
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeM,
+                color: colors.textPrimary,
+                height: 1.5,
+              ),
+            )
+          else
+            // Default notes - show as bullet list
+            ...notes.map((note) => Padding(
+              padding: const EdgeInsets.only(bottom: SpacingTokens.s),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    margin: const EdgeInsets.only(top: 8, right: SpacingTokens.s),
+                    decoration: BoxDecoration(
+                      color: colors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      note,
+                      style: TextStyle(
+                        fontSize: TypographyTokens.fontSizeM,
+                        color: colors.textPrimary,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDoneButton(BuildContext context, WidgetColorScheme colors) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: colors.buttonPrimary,
+        foregroundColor: colors.buttonPrimaryText,
+        padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderTokens.button,
+        ),
+        elevation: 2,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Zatvori',
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeL,
+              fontWeight: TypographyTokens.bold,
+            ),
+          ),
+          const SizedBox(width: SpacingTokens.xs),
+          const Icon(Icons.check_circle_outline),
+        ],
       ),
     );
   }
 
   String _formatDate(DateTime date) {
-    final months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    return '${date.day} ${months[date.month]} ${date.year}';
+    return DateFormat('d. MMMM yyyy.').format(date);
   }
 }

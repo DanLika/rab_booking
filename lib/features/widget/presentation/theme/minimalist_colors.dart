@@ -289,6 +289,61 @@ class MinimalistColorsDark {
 
   /// Secondary button text (white)
   static const Color buttonSecondaryText = Color(0xFFFFFFFF);
+
+  // ==================== ADDITIONAL BACKGROUNDS ====================
+
+  /// Dark background (same as primary for consistency)
+  static const Color backgroundDark = Color(0xFF000000);
+
+  /// Elevated background level 1
+  static const Color backgroundElevated1 = Color(0xFF1A1A1A);
+
+  /// Elevated background level 2
+  static const Color backgroundElevated2 = Color(0xFF2A2A2A);
+
+  // ==================== ADDITIONAL BORDERS ====================
+
+  /// Subtle border (very dark grey)
+  static const Color borderSubtle = Color(0xFF0F0F0F);
+
+  /// Emphasis border (white for dark theme)
+  static const Color borderEmphasis = Color(0xFFFFFFFF);
+
+  // ==================== OVERLAY COLORS ====================
+
+  /// Hover overlay
+  static const Color overlayHover = Color(0x1AFFFFFF); // 10% white
+
+  /// Pressed overlay
+  static const Color overlayPressed = Color(0x33FFFFFF); // 20% white
+
+  // ==================== DISABLED STATE ====================
+
+  /// Disabled background
+  static const Color statusDisabledBackground = Color(0xFF1A1A1A);
+
+  // ==================== HELPER METHODS ====================
+
+  /// Get shadow with custom opacity
+  static Color shadow(double opacity) {
+    return Color.fromRGBO(255, 255, 255, opacity);
+  }
+
+  /// Get grey shade by percentage (0.0 = black, 1.0 = white)
+  static Color grey(double brightness) {
+    final value = (brightness * 255).round().clamp(0, 255);
+    return Color.fromRGBO(value, value, value, 1.0);
+  }
+
+  /// Get white with custom opacity (for overlays)
+  static Color white(double opacity) {
+    return Color.fromRGBO(255, 255, 255, opacity);
+  }
+
+  /// Get black with custom opacity (for overlays)
+  static Color black(double opacity) {
+    return Color.fromRGBO(0, 0, 0, opacity);
+  }
 }
 
 /// Extension for BoxShadow presets

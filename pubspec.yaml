@@ -57,6 +57,9 @@ dependencies:
   printing: ^5.12.0
   path_provider: ^2.1.2
 
+  # QR Code Generation
+  qr_flutter: ^4.1.0
+
   # Loading States
   shimmer: ^3.0.0
 

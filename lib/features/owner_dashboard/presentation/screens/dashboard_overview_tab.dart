@@ -165,6 +165,10 @@ class DashboardOverviewTab extends ConsumerWidget {
         return RecentActivityWidget(
           activities: activities,
           onViewAll: () => context.go(OwnerRoutes.bookings),
+          onActivityTap: (bookingId) {
+            // Navigate to booking details
+            context.push('${OwnerRoutes.bookings}/$bookingId');
+          },
         );
       },
       loading: () => Center(
@@ -240,6 +244,7 @@ class DashboardOverviewTab extends ConsumerWidget {
       title: title,
       subtitle: subtitle,
       timestamp: booking.createdAt,
+      bookingId: booking.id,
     );
   }
 

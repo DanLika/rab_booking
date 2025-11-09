@@ -60,12 +60,12 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
           Column(
             children: [
               // Unified combined header for all screen sizes
-              _buildCombinedHeader(context),
+              _buildCombinedHeader(context, colors),
               const SizedBox(height: SpacingTokens.m),
               Expanded(
                 child: calendarData.when(
                   data: (data) => _buildWeekView(data, colors),
-                  loading: () => _buildWeekSkeleton(),
+                  loading: () => _buildWeekSkeleton(colors),
                   error: (error, stack) => Center(
                     child: Text('Error: $error'),
                   ),
@@ -76,7 +76,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
           // Hover tooltip overlay (desktop)
           if (_hoveredDate != null)
             calendarData.when(
-              data: (data) => _buildHoverTooltip(data),
+              data: (data) => _buildHoverTooltip(data, colors),
               loading: () => const SizedBox.shrink(),
               error: (_, _) => const SizedBox.shrink(),
             ),
@@ -85,25 +85,25 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     );
   }
 
-  Widget _buildViewSwitcher(BuildContext context) {
+  Widget _buildViewSwitcher(BuildContext context, WidgetColorScheme colors) {
     final currentView = ref.watch(calendarViewProvider);
 
     return Container(
       decoration: BoxDecoration(
-        color: ColorTokens.light.backgroundSecondary,
+        color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
       ),
       child: Row(
         children: [
-          _buildViewTab('Week', Icons.view_week, CalendarViewType.week, currentView == CalendarViewType.week),
-          _buildViewTab('Month', Icons.calendar_month, CalendarViewType.month, currentView == CalendarViewType.month),
-          _buildViewTab('Year', Icons.calendar_today, CalendarViewType.year, currentView == CalendarViewType.year),
+          _buildViewTab('Week', Icons.view_week, CalendarViewType.week, currentView == CalendarViewType.week, colors),
+          _buildViewTab('Month', Icons.calendar_month, CalendarViewType.month, currentView == CalendarViewType.month, colors),
+          _buildViewTab('Year', Icons.calendar_today, CalendarViewType.year, currentView == CalendarViewType.year, colors),
         ],
       ),
     );
   }
 
-  Widget _buildViewTab(String label, IconData icon, CalendarViewType viewType, bool isSelected) {
+  Widget _buildViewTab(String label, IconData icon, CalendarViewType viewType, bool isSelected, WidgetColorScheme colors) {
     return Expanded(
       child: Semantics(
         label: '$label view',
@@ -116,7 +116,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
             decoration: BoxDecoration(
-              color: isSelected ? ColorTokens.light.buttonPrimary : Colors.transparent,
+              color: isSelected ? colors.buttonPrimary : Colors.transparent,
               borderRadius: BorderTokens.circularMedium,
             ),
             child: Column(
@@ -124,7 +124,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
               children: [
                 Icon(
                   icon,
-                  color: isSelected ? ColorTokens.light.buttonPrimaryText : ColorTokens.light.textSecondary,
+                  color: isSelected ? colors.buttonPrimaryText : colors.textSecondary,
                   size: IconSizeTokens.small,
                   semanticLabel: label,
                 ),
@@ -132,7 +132,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
                 Text(
                   label,
                   style: TextStyle(
-                    color: isSelected ? ColorTokens.light.buttonPrimaryText : ColorTokens.light.textSecondary,
+                    color: isSelected ? colors.buttonPrimaryText : colors.textSecondary,
                     fontSize: TypographyTokens.fontSizeS2,
                     fontWeight: isSelected ? TypographyTokens.bold : TypographyTokens.regular,
                   ),
@@ -145,14 +145,14 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     );
   }
 
-  Widget _buildCombinedHeader(BuildContext context) {
+  Widget _buildCombinedHeader(BuildContext context, WidgetColorScheme colors) {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: ConstraintTokens.maxWideContentWidth * 0.82),
         child: Container(
           padding: SpacingTokens.allM,
           decoration: BoxDecoration(
-            color: ColorTokens.light.backgroundSecondary,
+            color: colors.backgroundSecondary,
             borderRadius: BorderTokens.circularRounded,
             boxShadow: ShadowTokens.light,
           ),
@@ -161,14 +161,14 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
               // View Switcher - 70%
               Expanded(
                 flex: 7,
-                child: _buildViewSwitcher(context),
+                child: _buildViewSwitcher(context, colors),
               ),
               const SizedBox(width: SpacingTokens.s2),
 
               // Compact Navigation - 30%
               Expanded(
                 flex: 3,
-                child: _buildCompactWeekNavigation(),
+                child: _buildCompactWeekNavigation(colors),
               ),
             ],
           ),
@@ -178,7 +178,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
   }
 
 
-  Widget _buildCompactWeekNavigation() {
+  Widget _buildCompactWeekNavigation(WidgetColorScheme colors) {
     final weekEndDate = _currentWeekStart.add(const Duration(days: 6));
     final isSameMonth = _currentWeekStart.month == weekEndDate.month;
 
@@ -211,7 +211,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeM,
                 fontWeight: TypographyTokens.bold,
-                color: ColorTokens.light.textPrimary,
+                color: colors.textPrimary,
               ),
             ),
             Text(
@@ -219,7 +219,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeXS2,
                 fontWeight: TypographyTokens.medium,
-                color: ColorTokens.light.textSecondary,
+                color: colors.textSecondary,
               ),
             ),
           ],
@@ -248,7 +248,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     return Container(
       padding: EdgeInsets.symmetric(vertical: legendPadding, horizontal: isMobile ? SpacingTokens.s : SpacingTokens.m),
       decoration: BoxDecoration(
-        color: ColorTokens.light.backgroundSecondary,
+        color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
       ),
       child: Wrap(
@@ -304,21 +304,21 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
           style: TextStyle(
             fontSize: fontSize,
             fontWeight: TypographyTokens.semiBold,
-            color: ColorTokens.light.textPrimary,
+            color: colors.textPrimary,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildWeekSkeleton() {
+  Widget _buildWeekSkeleton(WidgetColorScheme colors) {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: ConstraintTokens.maxWideContentWidth * 0.82),
         child: Column(
           children: [
-            _buildWeekHeader(),
+            _buildWeekHeader(colors),
             const SizedBox(height: SpacingTokens.s),
             Expanded(
               child: Row(
@@ -333,7 +333,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
                           margin: const EdgeInsets.all(BorderTokens.widthThin),
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: ColorTokens.light.borderDefault,
+                              color: colors.borderDefault,
                               width: BorderTokens.widthThin / 2,
                             ),
                           ),
@@ -345,7 +345,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
                       widgets.add(
                         Container(
                           width: BorderTokens.widthMedium,
-                          color: ColorTokens.light.borderStrong,
+                          color: colors.borderStrong,
                         ),
                       );
                     }
@@ -377,7 +377,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
           ),
           child: Column(
             children: [
-              _buildWeekHeader(),
+              _buildWeekHeader(colors),
               const SizedBox(height: SpacingTokens.s),
               _buildLegend(colors),
               const SizedBox(height: SpacingTokens.s),
@@ -391,7 +391,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     );
   }
 
-  Widget _buildWeekHeader() {
+  Widget _buildWeekHeader(WidgetColorScheme colors) {
     final weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return Row(
@@ -401,9 +401,9 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
             padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: ColorTokens.light.backgroundTertiary,
+              color: colors.backgroundTertiary,
               border: Border.all(
-                color: ColorTokens.light.borderStrong,
+                color: colors.borderStrong,
                 width: BorderTokens.widthMedium,
               ),
             ),
@@ -412,7 +412,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
               style: TextStyle(
                 fontWeight: TypographyTokens.bold,
                 fontSize: TypographyTokens.fontSizeM,
-                color: ColorTokens.light.textPrimary,
+                color: colors.textPrimary,
               ),
             ),
           ),
@@ -440,7 +440,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
         dayWidgets.add(
           Container(
             width: BorderTokens.widthMedium,
-            color: ColorTokens.light.borderStrong,
+            color: colors.borderStrong,
           ),
         );
       }
@@ -457,7 +457,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     final dateInfo = data[key];
 
     if (dateInfo == null) {
-      return _buildEmptyDay();
+      return _buildEmptyDay(colors);
     }
 
     final isInRange = _isDateInRange(date);
@@ -493,12 +493,12 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
           decoration: BoxDecoration(
             border: Border.all(
               color: isRangeStart || isRangeEnd
-                  ? ColorTokens.light.borderFocus // Black for selection
+                  ? colors.borderFocus // Black for selection
                   : isToday
-                      ? ColorTokens.light.borderStrong // Medium grey for today
+                      ? colors.borderStrong // Medium grey for today
                       : isHovered
-                          ? ColorTokens.light.borderStrong // Medium grey on hover
-                          : ColorTokens.light.borderDefault, // Light grey default
+                          ? colors.borderStrong // Medium grey on hover
+                          : colors.borderDefault, // Light grey default
               width: isRangeStart || isRangeEnd || isToday || isHovered ? BorderTokens.widthThick : BorderTokens.widthThin / 2,
             ),
           ),
@@ -513,7 +513,8 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
                         dateInfo.status != DateStatus.partialCheckOut
                     ? DateStatus.available
                     : dateInfo.status,
-                borderColor: dateInfo.status.getBorderColor(),
+                borderColor: dateInfo.status.getBorderColor(colors),
+                colors: colors,
                 priceText: priceText,
               ),
               child: const SizedBox.expand(),
@@ -526,12 +527,12 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
                   padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs2, vertical: SpacingTokens.xxs),
                   decoration: BoxDecoration(
                     color: isToday
-                        ? ColorTokens.withOpacity(ColorTokens.light.buttonPrimary, OpacityTokens.almostOpaque)
-                        : ColorTokens.withOpacity(ColorTokens.light.backgroundPrimary, OpacityTokens.mostlyVisible + 0.35),
+                        ? ColorTokens.withOpacity(colors.buttonPrimary, OpacityTokens.almostOpaque)
+                        : ColorTokens.withOpacity(colors.backgroundPrimary, OpacityTokens.mostlyVisible + 0.35),
                     borderRadius: BorderTokens.circularTiny,
                     border: isToday
                         ? Border.all(
-                            color: ColorTokens.light.buttonPrimary,
+                            color: colors.buttonPrimary,
                             width: BorderTokens.widthThick,
                           )
                         : null,
@@ -542,8 +543,8 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
                       fontSize: TypographyTokens.fontSizeM2 + 5,
                       fontWeight: isToday ? TypographyTokens.bold : TypographyTokens.semiBold,
                       color: isToday
-                          ? ColorTokens.light.textOnPrimary
-                          : ColorTokens.light.textPrimary,
+                          ? colors.textOnPrimary
+                          : colors.textPrimary,
                     ),
                   ),
                 ),
@@ -552,9 +553,9 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs, vertical: SpacingTokens.xxs),
                     decoration: BoxDecoration(
-                      color: ColorTokens.withOpacity(ColorTokens.light.backgroundPrimary, OpacityTokens.almostOpaque),
+                      color: ColorTokens.withOpacity(colors.backgroundPrimary, OpacityTokens.almostOpaque),
                       border: Border.all(
-                        color: ColorTokens.light.borderFocus,
+                        color: colors.borderFocus,
                         width: BorderTokens.widthMedium,
                       ),
                       borderRadius: BorderTokens.circularTiny,
@@ -564,7 +565,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
                       style: TextStyle(
                         fontSize: TypographyTokens.poweredBySize,
                         fontWeight: TypographyTokens.bold,
-                        color: ColorTokens.light.textPrimary,
+                        color: colors.textPrimary,
                       ),
                     ),
                   ),
@@ -572,9 +573,9 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs, vertical: SpacingTokens.xxs),
                     decoration: BoxDecoration(
-                      color: ColorTokens.withOpacity(ColorTokens.light.backgroundPrimary, OpacityTokens.almostOpaque),
+                      color: ColorTokens.withOpacity(colors.backgroundPrimary, OpacityTokens.almostOpaque),
                       border: Border.all(
-                        color: ColorTokens.light.borderFocus,
+                        color: colors.borderFocus,
                         width: BorderTokens.widthMedium,
                       ),
                       borderRadius: BorderTokens.circularTiny,
@@ -584,7 +585,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
                       style: TextStyle(
                         fontSize: TypographyTokens.poweredBySize,
                         fontWeight: TypographyTokens.bold,
-                        color: ColorTokens.light.textPrimary,
+                        color: colors.textPrimary,
                       ),
                     ),
                   ),
@@ -598,12 +599,12 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     );
   }
 
-  Widget _buildEmptyDay() {
+  Widget _buildEmptyDay(WidgetColorScheme colors) {
     return Container(
       decoration: BoxDecoration(
-        color: ColorTokens.light.backgroundSecondary,
+        color: colors.backgroundSecondary,
         border: Border.all(
-          color: ColorTokens.light.borderLight,
+          color: colors.borderLight,
           width: BorderTokens.widthThin / 2,
         ),
       ),
@@ -614,7 +615,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     );
   }
 
-  Widget _buildHoverTooltip(Map<String, CalendarDateInfo> data) {
+  Widget _buildHoverTooltip(Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     if (_hoveredDate == null) return const SizedBox.shrink();
 
     final key = _getDateKey(_hoveredDate!);
@@ -650,6 +651,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
       price: dateInfo.price,
       status: dateInfo.status,
       position: Offset(xPosition, yPosition),
+      colors: colors,
     );
   }
 
@@ -678,10 +680,12 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
           _rangeEnd = null;
 
           // Show error message
+          final isDarkMode = ref.read(themeProvider);
+          final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Cannot select dates. There are already booked dates in this range.'),
-              backgroundColor: ColorTokens.light.error,
+              backgroundColor: colors.error,
               duration: AnimationTokens.notification,
             ),
           );

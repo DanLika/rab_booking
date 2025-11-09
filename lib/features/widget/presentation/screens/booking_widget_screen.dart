@@ -12,6 +12,7 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/services/email_notification_service.dart';
 import 'bank_transfer_screen.dart';
 
 /// Main booking widget screen that shows responsive calendar
@@ -1846,6 +1847,39 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           requireOwnerApproval: true, // Always requires approval in bookingPending mode
         );
 
+        // Send email notifications (if configured)
+        if (_widgetSettings?.emailConfig != null) {
+          final emailService = EmailNotificationService();
+          final bookingReference = booking.id.substring(0, 8).toUpperCase();
+          final propertyName = _unit?.name ?? 'Vacation Rental';
+
+          // Send booking confirmation to guest
+          emailService.sendBookingConfirmationEmail(
+            booking: booking,
+            emailConfig: _widgetSettings!.emailConfig,
+            propertyName: propertyName,
+            bookingReference: bookingReference,
+          );
+
+          // Send owner notification (if owner email is available and configured)
+          if (_widgetSettings!.emailConfig.sendOwnerNotification) {
+            // Get owner email from property or use configured email
+            final ownerEmail = _widgetSettings!.emailConfig.fromEmail;
+            if (ownerEmail != null) {
+              emailService.sendOwnerNotificationEmail(
+                booking: booking,
+                emailConfig: _widgetSettings!.emailConfig,
+                propertyName: propertyName,
+                bookingReference: bookingReference,
+                ownerEmail: ownerEmail,
+                requiresApproval: true,
+              );
+            }
+          }
+
+          emailService.dispose();
+        }
+
         // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1890,6 +1924,43 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         requireOwnerApproval: _widgetSettings?.requireOwnerApproval ?? false,
       );
 
+      // Send booking confirmation email (pre-payment)
+      if (_widgetSettings?.emailConfig != null) {
+        final emailService = EmailNotificationService();
+        final bookingReference = booking.id.substring(0, 8).toUpperCase();
+        final propertyName = _unit?.name ?? 'Vacation Rental';
+
+        // Calculate payment deadline (default 3 days from now)
+        final paymentDeadlineDays = _widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
+        final paymentDeadline = DateTime.now().add(Duration(days: paymentDeadlineDays));
+        final dateFormat = DateFormat('dd.MM.yyyy');
+
+        emailService.sendBookingConfirmationEmail(
+          booking: booking,
+          emailConfig: _widgetSettings!.emailConfig,
+          propertyName: propertyName,
+          bookingReference: bookingReference,
+          paymentDeadline: dateFormat.format(paymentDeadline),
+        );
+
+        // Send owner notification
+        if (_widgetSettings!.emailConfig.sendOwnerNotification) {
+          final ownerEmail = _widgetSettings!.emailConfig.fromEmail;
+          if (ownerEmail != null) {
+            emailService.sendOwnerNotificationEmail(
+              booking: booking,
+              emailConfig: _widgetSettings!.emailConfig,
+              propertyName: propertyName,
+              bookingReference: bookingReference,
+              ownerEmail: ownerEmail,
+              requiresApproval: _widgetSettings?.requireOwnerApproval ?? false,
+            );
+          }
+        }
+
+        emailService.dispose();
+      }
+
       if (_selectedPaymentMethod == 'stripe') {
         // Stripe payment - redirect to checkout
         await _handleStripePayment(booking.id);
@@ -1899,6 +1970,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => BankTransferScreen(
+                propertyId: _propertyId!,
                 unitId: _unitId,
                 checkIn: _checkIn!,
                 checkOut: _checkOut!,

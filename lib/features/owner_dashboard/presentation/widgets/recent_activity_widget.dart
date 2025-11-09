@@ -20,6 +20,7 @@ class ActivityItem {
   final String subtitle;
   final DateTime timestamp;
   final String? imageUrl;
+  final String? bookingId;
 
   const ActivityItem({
     required this.type,
@@ -27,6 +28,7 @@ class ActivityItem {
     required this.subtitle,
     required this.timestamp,
     this.imageUrl,
+    this.bookingId,
   });
 
   IconData get icon {
@@ -64,11 +66,13 @@ class ActivityItem {
 class RecentActivityWidget extends StatelessWidget {
   final List<ActivityItem> activities;
   final VoidCallback? onViewAll;
+  final void Function(String bookingId)? onActivityTap;
 
   const RecentActivityWidget({
     super.key,
     required this.activities,
     this.onViewAll,
+    this.onActivityTap,
   });
 
   @override
@@ -237,7 +241,12 @@ class RecentActivityWidget extends StatelessWidget {
               ),
               itemBuilder: (context, index) {
                 final activity = activities[index];
-                return _ActivityTile(activity: activity);
+                return _ActivityTile(
+                  activity: activity,
+                  onTap: activity.bookingId != null && onActivityTap != null
+                      ? () => onActivityTap!(activity.bookingId!)
+                      : null,
+                );
               },
             ),
         ],
@@ -249,14 +258,19 @@ class RecentActivityWidget extends StatelessWidget {
 /// Activity tile
 class _ActivityTile extends StatelessWidget {
   final ActivityItem activity;
+  final VoidCallback? onTap;
 
-  const _ActivityTile({required this.activity});
+  const _ActivityTile({
+    required this.activity,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ListTile(
+      onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 20,
         vertical: 12,
@@ -305,7 +319,7 @@ class _ActivityTile extends StatelessWidget {
             fontSize: 13,
             color: isDark
                 ? AppColors.textSecondaryDark
-                : AppColors.textTertiaryLight,
+                : AppColors.textSecondaryLight,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -326,7 +340,7 @@ class _ActivityTile extends StatelessWidget {
             fontWeight: FontWeight.w500,
             color: isDark
                 ? AppColors.textSecondaryDark
-                : AppColors.textTertiaryLight,
+                : AppColors.textSecondaryLight,
           ),
           textAlign: TextAlign.center,
         ),

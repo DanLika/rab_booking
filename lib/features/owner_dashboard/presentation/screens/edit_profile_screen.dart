@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -267,7 +268,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 28,
-                                      color: const Color(0xFF2D3748),
+                                      color: AppColors.textPrimaryLight,
                                     ),
                                 textAlign: TextAlign.center,
                               ),
@@ -277,7 +278,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               Text(
                                 'Update your personal information',
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: const Color(0xFF718096),
+                                      color: AppColors.textTertiaryLight,
                                       fontSize: 15,
                                     ),
                                 textAlign: TextAlign.center,
@@ -321,7 +322,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     height: 20,
                                     decoration: const BoxDecoration(
                                       gradient: LinearGradient(
-                                        colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                                        colors: [AppColors.primary, AppColors.authSecondary],
                                       ),
                                       borderRadius: BorderRadius.all(Radius.circular(2)),
                                     ),
@@ -332,7 +333,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF2D3748),
+                                      color: AppColors.textPrimaryLight,
                                     ),
                                   ),
                                 ],
@@ -397,7 +398,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   'Cancel',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Color(0xFF718096),
+                                    color: AppColors.textTertiaryLight,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),

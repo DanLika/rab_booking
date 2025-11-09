@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/theme_extensions.dart';
@@ -135,7 +136,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                      colors: [AppColors.primary, AppColors.authSecondary],
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -212,7 +213,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                           focusedBorder: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(12)),
                             borderSide: BorderSide(
-                              color: Color(0xFF6B4CE6),
+                              color: AppColors.primary,
                               width: 2,
                             ),
                           ),
@@ -237,7 +238,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                             : const Icon(Icons.save),
                         label: const Text('Sačuvaj Cijenu'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF6B4CE6),
+                          backgroundColor: AppColors.primary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           textStyle: const TextStyle(
                             fontSize: 16,
@@ -294,7 +295,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                           focusedBorder: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(12)),
                             borderSide: BorderSide(
-                              color: Color(0xFF6B4CE6),
+                              color: AppColors.primary,
                               width: 2,
                             ),
                           ),
@@ -321,7 +322,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                             : const Icon(Icons.save),
                         label: const Text('Sačuvaj'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF6B4CE6),
+                          backgroundColor: AppColors.primary,
                           padding: const EdgeInsets.symmetric(vertical: 20),
                           textStyle: const TextStyle(
                             fontSize: 16,

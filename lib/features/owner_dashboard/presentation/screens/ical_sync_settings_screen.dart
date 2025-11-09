@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/config/router_owner.dart';
@@ -43,12 +44,12 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             end: Alignment.bottomRight,
             colors: theme.brightness == Brightness.dark
                 ? [
-                    const Color(0xFF1A1A1A), // Dark gray
-                    const Color(0xFF2D2D2D), // Lighter dark gray
+                    AppColors.backgroundDark,
+                    AppColors.surfaceVariantDark,
                   ]
                 : [
-                    const Color(0xFF6B4CE6), // Purple
-                    const Color(0xFF4A90E2), // Blue
+                    AppColors.primary,
+                    AppColors.authSecondary,
                   ],
           ),
         ),
@@ -109,7 +110,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF6B4CE6),
+              foregroundColor: AppColors.primary,
             ),
             icon: const Icon(Icons.add),
             label: const Text(
@@ -302,12 +303,12 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+                color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
               ),
               child: const Icon(
                 Icons.sync_disabled,
                 size: 40,
-                color: Color(0xFF6B4CE6),
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: 16),

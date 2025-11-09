@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/constants/enums.dart';
@@ -471,7 +472,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                              colors: [AppColors.primary, AppColors.authSecondary],
                             ),
                             shape: BoxShape.circle,
                           ),
@@ -526,7 +527,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                   padding: const EdgeInsets.all(8),
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+                      colors: [AppColors.primary, AppColors.authSecondary],
                     ),
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),

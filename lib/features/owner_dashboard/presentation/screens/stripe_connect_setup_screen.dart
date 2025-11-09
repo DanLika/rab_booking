@@ -153,12 +153,12 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
             end: Alignment.bottomRight,
             colors: theme.brightness == Brightness.dark
                 ? [
-                    const Color(0xFF1A1A1A), // Dark gray
-                    const Color(0xFF2D2D2D), // Lighter dark gray
+                    AppColors.backgroundDark,
+                    AppColors.surfaceVariantDark,
                   ]
                 : [
-                    const Color(0xFF6B4CE6), // Purple
-                    const Color(0xFF4A90E2), // Blue
+                    AppColors.primary,
+                    AppColors.authSecondary,
                   ],
           ),
         ),
@@ -186,7 +186,7 @@ class _StripeConnectSetupScreenState extends ConsumerState<StripeConnectSetupScr
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF6B4CE6),
+                        foregroundColor: AppColors.primary,
                       ),
                       child: const Text(
                         'Poveži Stripe Račun',

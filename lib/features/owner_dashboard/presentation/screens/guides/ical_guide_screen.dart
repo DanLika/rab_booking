@@ -394,7 +394,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: theme.brightness == Brightness.dark
-              ? [AppColors.backgroundDark, const Color(0xFF2D2D2D)]
+              ? [AppColors.backgroundDark, AppColors.surfaceVariantDark]
               : [AppColors.primary.withAlpha((0.1 * 255).toInt()), AppColors.primary.withAlpha((0.2 * 255).toInt())],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -645,7 +645,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Card(
-      color: isDark ? const Color(0xFF2D2D2D) : AppColors.warning.withAlpha((0.1 * 255).toInt()),
+      color: isDark ? AppColors.surfaceVariantDark : AppColors.warning.withAlpha((0.1 * 255).toInt()),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(

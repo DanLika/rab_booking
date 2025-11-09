@@ -270,7 +270,7 @@ class _NotificationSettingsScreenState
                       height: 24,
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [AppColors.primary, Color(0xFF4A90E2)],
+                          colors: [AppColors.primary, AppColors.authSecondary],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),

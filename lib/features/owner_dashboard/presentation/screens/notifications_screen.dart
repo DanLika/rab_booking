@@ -107,72 +107,77 @@ class NotificationsScreen extends ConsumerWidget {
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
         ),
-        error: (error, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.error.withAlpha((0.1 * 255).toInt()),
-                        AppColors.error.withAlpha((0.05 * 255).toInt()),
-                      ],
+        error: (error, stack) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.error.withAlpha((0.1 * 255).toInt()),
+                          AppColors.error.withAlpha((0.05 * 255).toInt()),
+                        ],
+                      ),
+                      shape: BoxShape.circle,
                     ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.error_outline_rounded,
-                    size: 50,
-                    color: AppColors.error,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Greška pri učitavanju obavještenja',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3748),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  error.toString(),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    ref.invalidate(notificationsStreamProvider);
-                  },
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Pokušaj ponovno'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: const Color(0xFFFFFFFF),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    child: const Icon(
+                      Icons.error_outline_rounded,
+                      size: 50,
+                      color: AppColors.error,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  Text(
+                    'Greška pri učitavanju obavještenja',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    error.toString(),
+                    style: TextStyle(
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ref.invalidate(notificationsStreamProvider);
+                    },
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Pokušaj ponovno'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'notifications'),
     );
@@ -357,6 +362,8 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isUnread = !widget.notification.isRead;
 
     return MouseRegion(
@@ -366,14 +373,16 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFFFF),
+          color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _isHovered
                 ? AppColors.primary.withAlpha((0.3 * 255).toInt())
                 : isUnread
                     ? AppColors.primary.withAlpha((0.15 * 255).toInt())
-                    : const Color(0xFFE2E8F0),
+                    : isDark
+                        ? AppColors.borderDark
+                        : AppColors.borderLight,
             width: _isHovered ? 2 : 1,
           ),
           boxShadow: [
@@ -441,7 +450,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
-                                  color: AppColors.textPrimary,
+                                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                                 ),
                               ),
                             ),
@@ -451,7 +460,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                                 height: 10,
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
-                                    colors: [AppColors.primary, Color(0xFF4A90E2)],
+                                    colors: [AppColors.primary, AppColors.authSecondary],
                                   ),
                                   shape: BoxShape.circle,
                                   boxShadow: [
@@ -470,9 +479,9 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                         // Message
                         Text(
                           widget.notification.message,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                             height: 1.5,
                           ),
                           maxLines: 2,
@@ -531,6 +540,9 @@ class _PremiumAlertDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
@@ -540,7 +552,7 @@ class _PremiumAlertDialog extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 400),
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFFFF),
+          color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isDestructive
@@ -584,10 +596,10 @@ class _PremiumAlertDialog extends StatelessWidget {
             // Title
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2D3748),
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
               ),
               textAlign: TextAlign.center,
             ),
@@ -597,9 +609,9 @@ class _PremiumAlertDialog extends StatelessWidget {
             // Content
             Text(
               content,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -615,16 +627,18 @@ class _PremiumAlertDialog extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(false),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
+                      side: BorderSide(
+                        color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: Text(
                       cancelText,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                       ),
                     ),
                   ),
@@ -635,7 +649,7 @@ class _PremiumAlertDialog extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isDestructive ? AppColors.error : AppColors.primary,
-                      foregroundColor: const Color(0xFFFFFFFF),
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 0,
                       shape: RoundedRectangleBorder(

@@ -58,6 +58,8 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -69,11 +71,17 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
             gradient: LinearGradient(
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
-              colors: [
-                Colors.grey[300]!,
-                Colors.grey[200]!,
-                Colors.grey[300]!,
-              ],
+              colors: isDark
+                  ? [
+                      Colors.grey[800]!,
+                      Colors.grey[700]!,
+                      Colors.grey[800]!,
+                    ]
+                  : [
+                      Colors.grey[300]!,
+                      Colors.grey[200]!,
+                      Colors.grey[300]!,
+                    ],
               stops: const [0.0, 0.5, 1.0],
               transform: _SlideGradientTransform(_animation.value),
             ),
@@ -102,11 +110,16 @@ class PropertyCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? theme.colorScheme.surface : Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(
+          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+        ),
       ),
       child: const ClipRect(
         child: Column(
@@ -218,17 +231,25 @@ class CircleSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: [
-            Colors.grey[300]!,
-            Colors.grey[200]!,
-            Colors.grey[300]!,
-          ],
+          colors: isDark
+              ? [
+                  Colors.grey[800]!,
+                  Colors.grey[700]!,
+                  Colors.grey[800]!,
+                ]
+              : [
+                  Colors.grey[300]!,
+                  Colors.grey[200]!,
+                  Colors.grey[300]!,
+                ],
         ),
       ),
     );
@@ -241,12 +262,17 @@ class PropertyCardSkeletonHorizontal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       height: 200,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? theme.colorScheme.surface : Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(
+          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+        ),
       ),
       child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,12 +358,17 @@ class ReviewCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? theme.colorScheme.surface : Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(
+          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+        ),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,12 +411,17 @@ class BookingCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(AppDimensions.spaceS),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? theme.colorScheme.surface : Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (matches real card)
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(
+          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+        ),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,6 +634,8 @@ class CalendarSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
         // Calendar header (toolbar) skeleton
@@ -652,7 +690,9 @@ class CalendarSkeleton extends StatelessWidget {
                         margin: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(AppDimensions.radiusXS),
-                          border: Border.all(color: Colors.grey[200]!),
+                          border: Border.all(
+                            color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+                          ),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,

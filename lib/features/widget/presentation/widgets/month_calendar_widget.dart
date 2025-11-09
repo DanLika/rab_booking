@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../providers/month_calendar_provider.dart';
 import '../providers/calendar_view_provider.dart';
+import '../providers/theme_provider.dart';
 import 'split_day_calendar_painter.dart';
 import 'calendar_hover_tooltip.dart';
 import 'calendar_view_switcher.dart';
@@ -30,11 +31,12 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   DateTime _currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? _hoveredDate; // For hover tooltip (desktop)
   Offset _mousePosition = Offset.zero; // Track mouse position for tooltip
-  bool _isDarkMode = false; // Theme toggle state
 
   @override
   Widget build(BuildContext context) {
     final calendarData = ref.watch(monthCalendarDataProvider((widget.unitId, _currentMonth)));
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -53,13 +55,13 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           Column(
             children: [
               // Combined header for all screen sizes
-              _buildCombinedHeader(context),
+              _buildCombinedHeader(context, colors, isDarkMode),
               const SizedBox(height: SpacingTokens.xs),
 
               // Calendar with LayoutBuilder for proper sizing
               Expanded(
                 child: calendarData.when(
-                  data: (data) => _buildMonthView(data),
+                  data: (data) => _buildMonthView(data, colors),
                   loading: () => const Center(child: CircularProgressIndicator()),
                   error: (error, stack) => Center(
                     child: Text('Error: $error'),
@@ -68,30 +70,35 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
               ),
             ],
           ),
-          // Hover tooltip overlay (desktop)
+          // Hover tooltip overlay (desktop) - highest z-index
           if (_hoveredDate != null)
-            calendarData.when(
-              data: (data) => _buildHoverTooltip(data),
-              loading: () => const SizedBox.shrink(),
-              error: (_, _) => const SizedBox.shrink(),
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: false,
+                child: calendarData.when(
+                  data: (data) => _buildHoverTooltip(data, colors),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+              ),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildViewSwitcher(BuildContext context) {
+  Widget _buildViewSwitcher(BuildContext context, WidgetColorScheme colors) {
     final currentView = ref.watch(calendarViewProvider);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final isSmallScreen = screenWidth < 400; // iPhone SE and similar
 
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: EdgeInsets.all(isSmallScreen ? 2 : 4),
       decoration: BoxDecoration(
-        color: ColorTokens.light.backgroundSecondary,
-        borderRadius: BorderRadius.circular(20),
+        color: colors.backgroundSecondary,
+        borderRadius: BorderRadius.circular(isSmallScreen ? 16 : 20),
         border: Border.all(
-          color: ColorTokens.light.borderLight,
+          color: colors.borderLight,
           width: 1,
         ),
       ),
@@ -99,16 +106,16 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Week view tab hidden but code kept for future use
-          // _buildViewTab('Week', Icons.view_week, CalendarViewType.week, currentView == CalendarViewType.week, isMobile),
-          _buildViewTab('Month', Icons.calendar_month, CalendarViewType.month, currentView == CalendarViewType.month, isMobile),
-          const SizedBox(width: 4),
-          _buildViewTab('Year', Icons.calendar_today, CalendarViewType.year, currentView == CalendarViewType.year, isMobile),
+          // _buildViewTab('Week', Icons.view_week, CalendarViewType.week, currentView == CalendarViewType.week, isSmallScreen, colors),
+          _buildViewTab('Month', Icons.calendar_month, CalendarViewType.month, currentView == CalendarViewType.month, isSmallScreen, colors),
+          SizedBox(width: isSmallScreen ? 2 : 4),
+          _buildViewTab('Year', Icons.calendar_today, CalendarViewType.year, currentView == CalendarViewType.year, isSmallScreen, colors),
         ],
       ),
     );
   }
 
-  Widget _buildViewTab(String label, IconData icon, CalendarViewType viewType, bool isSelected, bool isMobile) {
+  Widget _buildViewTab(String label, IconData icon, CalendarViewType viewType, bool isSelected, bool isSmallScreen, WidgetColorScheme colors) {
     return Semantics(
       label: '$label view',
       button: true,
@@ -117,32 +124,32 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         onTap: () {
           ref.read(calendarViewProvider.notifier).state = viewType;
         },
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 12 : 16,
-            vertical: 8,
+            horizontal: isSmallScreen ? 8 : 12,
+            vertical: isSmallScreen ? 6 : 8,
           ),
           decoration: BoxDecoration(
-            color: isSelected ? ColorTokens.light.buttonPrimary : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            color: isSelected ? colors.buttonPrimary : Colors.transparent,
+            borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 icon,
-                color: isSelected ? ColorTokens.light.buttonPrimaryText : ColorTokens.light.textSecondary,
-                size: IconSizeTokens.small,
+                color: isSelected ? colors.buttonPrimaryText : colors.textSecondary,
+                size: isSmallScreen ? 16 : IconSizeTokens.small,
                 semanticLabel: label,
               ),
-              if (!isMobile) ...[
+              if (!isSmallScreen) ...[
                 const SizedBox(width: 6),
                 Text(
                   label,
                   style: TextStyle(
-                    color: isSelected ? ColorTokens.light.buttonPrimaryText : ColorTokens.light.textSecondary,
+                    color: isSelected ? colors.buttonPrimaryText : colors.textSecondary,
                     fontSize: TypographyTokens.fontSizeS2,
                     fontWeight: isSelected ? TypographyTokens.semiBold : TypographyTokens.regular,
                   ),
@@ -155,56 +162,60 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildCombinedHeader(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 980),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s, vertical: SpacingTokens.xs),
-          decoration: BoxDecoration(
-            color: ColorTokens.light.backgroundSecondary,
-            borderRadius: BorderTokens.circularRounded,
-            boxShadow: ShadowTokens.light,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // View Switcher
-              _buildViewSwitcher(context),
-              const SizedBox(width: SpacingTokens.xs),
+  Widget _buildCombinedHeader(BuildContext context, WidgetColorScheme colors, bool isDarkMode) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 400; // iPhone SE and similar
 
-              // Theme Toggle Button
-              IconButton(
-                icon: Icon(
-                  _isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                  size: IconSizeTokens.small,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isDarkMode = !_isDarkMode;
-                  });
-                  // TODO: Implement actual theme switching with provider
-                },
-                tooltip: _isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: ConstraintTokens.iconContainerSmall,
-                  minHeight: ConstraintTokens.iconContainerSmall,
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
+          vertical: SpacingTokens.xxs,
+        ),
+        decoration: BoxDecoration(
+          color: colors.backgroundSecondary,
+          borderRadius: BorderTokens.circularRounded,
+          boxShadow: ShadowTokens.light,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // View Switcher
+            _buildViewSwitcher(context, colors),
+            SizedBox(width: isSmallScreen ? 4 : SpacingTokens.xxs),
+
+            // Theme Toggle Button
+            IconButton(
+              icon: Icon(
+                isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                size: isSmallScreen ? 16 : IconSizeTokens.small,
               ),
+              onPressed: () {
+                ref.read(themeProvider.notifier).state = !isDarkMode;
+              },
+              tooltip: isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+              padding: EdgeInsets.zero,
+              constraints: BoxConstraints(
+                minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
+                minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
+              ),
+            ),
 
-              const SizedBox(width: SpacingTokens.xs),
+            SizedBox(width: isSmallScreen ? 4 : SpacingTokens.xxs),
 
-              // Compact Navigation
-              _buildCompactMonthNavigation(),
-            ],
-          ),
+            // Compact Navigation
+            _buildCompactMonthNavigation(),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildCompactMonthNavigation() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 400; // iPhone SE and similar
     final monthYear = DateFormat.yMMM().format(_currentMonth);
 
     return Row(
@@ -212,11 +223,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: const Icon(Icons.chevron_left, size: IconSizeTokens.small),
+          icon: Icon(Icons.chevron_left, size: isSmallScreen ? 16 : IconSizeTokens.small),
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(
-            minWidth: ConstraintTokens.iconContainerSmall,
-            minHeight: ConstraintTokens.iconContainerSmall,
+          constraints: BoxConstraints(
+            minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
+            minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
           ),
           onPressed: () {
             setState(() {
@@ -226,17 +237,17 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         ),
         Text(
           monthYear,
-          style: const TextStyle(
-            fontSize: TypographyTokens.fontSizeM,
+          style: TextStyle(
+            fontSize: isSmallScreen ? TypographyTokens.fontSizeS : TypographyTokens.fontSizeM,
             fontWeight: TypographyTokens.bold,
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.chevron_right, size: IconSizeTokens.small),
+          icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small),
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(
-            minWidth: ConstraintTokens.iconContainerSmall,
-            minHeight: ConstraintTokens.iconContainerSmall,
+          constraints: BoxConstraints(
+            minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
+            minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
           ),
           onPressed: () {
             setState(() {
@@ -248,7 +259,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildMonthView(Map<String, CalendarDateInfo> data) {
+  Widget _buildMonthView(Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = MediaQuery.of(context).size.width;
@@ -259,55 +270,55 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         final isDesktop = screenWidth >= 1024;
 
         if (isDesktop) {
-          return _buildDesktopLayoutWithSidebar(data, maxHeight);
+          return _buildDesktopLayoutWithSidebar(data, maxHeight, colors);
         } else {
           // Tablet & Mobile: Show 1 month + booking flow below (if dates selected)
-          return _buildMobileLayout(data, maxHeight);
+          return _buildMobileLayout(data, maxHeight, colors);
         }
       },
     );
   }
 
-  Widget _buildDesktopLayoutWithSidebar(Map<String, CalendarDateInfo> data, double maxHeight) {
+  Widget _buildDesktopLayoutWithSidebar(Map<String, CalendarDateInfo> data, double maxHeight, WidgetColorScheme colors) {
     return Center(
       child: SizedBox(
         width: 650,
         height: maxHeight,
-        child: _buildSingleMonthGrid(_currentMonth, data, maxHeight),
+        child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
       ),
     );
   }
 
-  Widget _buildMobileLayout(Map<String, CalendarDateInfo> data, double maxHeight) {
+  Widget _buildMobileLayout(Map<String, CalendarDateInfo> data, double maxHeight, WidgetColorScheme colors) {
     return Center(
       child: SizedBox(
         width: 600,
         height: maxHeight,
-        child: _buildSingleMonthGrid(_currentMonth, data, maxHeight),
+        child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
       ),
     );
   }
 
-  Widget _buildSingleMonthGrid(DateTime month, Map<String, CalendarDateInfo> data, double maxHeight) {
+  Widget _buildSingleMonthGrid(DateTime month, Map<String, CalendarDateInfo> data, double maxHeight, WidgetColorScheme colors) {
     return Column(
       children: [
         // Month name header
-        _buildMonthHeader(month),
+        _buildMonthHeader(month, colors),
         const SizedBox(height: SpacingTokens.xs),
         // Week day headers
-        _buildWeekDayHeaders(),
+        _buildWeekDayHeaders(colors),
         const SizedBox(height: SpacingTokens.xs),
         // Calendar grid - takes remaining space
         Expanded(
           child: SingleChildScrollView(
-            child: _buildMonthGridForMonth(month, data),
+            child: _buildMonthGridForMonth(month, data, colors),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMonthHeader(DateTime month) {
+  Widget _buildMonthHeader(DateTime month, WidgetColorScheme colors) {
     final monthName = DateFormat.yMMMM().format(month);
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -315,7 +326,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         horizontal: SpacingTokens.s,
       ),
       decoration: BoxDecoration(
-        color: ColorTokens.light.backgroundSecondary,
+        color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
         boxShadow: ShadowTokens.subtle,
       ),
@@ -324,14 +335,14 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         style: TextStyle(
           fontSize: TypographyTokens.fontSizeL,
           fontWeight: TypographyTokens.bold,
-          color: ColorTokens.light.textPrimary,
+          color: colors.textPrimary,
         ),
         textAlign: TextAlign.center,
       ),
     );
   }
 
-  Widget _buildWeekDayHeaders() {
+  Widget _buildWeekDayHeaders(WidgetColorScheme colors) {
     final weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return Row(
@@ -341,9 +352,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: ColorTokens.light.backgroundTertiary,
+              color: colors.backgroundTertiary,
               border: Border.all(
-                color: ColorTokens.light.borderDefault,
+                color: colors.borderDefault,
                 width: BorderTokens.widthThin,
               ),
               borderRadius: BorderTokens.circularSubtle,
@@ -353,7 +364,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
               style: TextStyle(
                 fontWeight: TypographyTokens.bold,
                 fontSize: TypographyTokens.fontSizeXS2,
-                color: ColorTokens.light.textSecondary,
+                color: colors.textSecondary,
               ),
             ),
           ),
@@ -362,7 +373,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildMonthGridForMonth(DateTime month, Map<String, CalendarDateInfo> data) {
+  Widget _buildMonthGridForMonth(DateTime month, Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     // Get first day of month
     final firstDay = DateTime(month.year, month.month, 1);
 
@@ -399,21 +410,21 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
         if (dayOffset < 0 || dayOffset >= totalDays) {
           // Days from previous or next month
-          return _buildEmptyCell();
+          return _buildEmptyCell(colors);
         }
 
         final date = DateTime(month.year, month.month, dayOffset + 1);
-        return _buildDayCell(date, data);
+        return _buildDayCell(date, data, colors);
       },
     );
   }
 
-  Widget _buildDayCell(DateTime date, Map<String, CalendarDateInfo> data) {
+  Widget _buildDayCell(DateTime date, Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     final key = _getDateKey(date);
     final dateInfo = data[key];
 
     if (dateInfo == null) {
-      return _buildEmptyCell();
+      return _buildEmptyCell(colors);
     }
 
     final isInRange = _isDateInRange(date);
@@ -438,12 +449,12 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           decoration: BoxDecoration(
             border: Border.all(
               color: isRangeStart || isRangeEnd
-                  ? ColorTokens.light.buttonPrimary
+                  ? colors.buttonPrimary
                   : isToday
-                      ? ColorTokens.light.borderStrong
+                      ? colors.borderStrong
                       : isHovered
-                          ? ColorTokens.light.borderStrong
-                          : _getBorderColorForDate(dateInfo.status),
+                          ? colors.borderStrong
+                          : _getBorderColorForDate(dateInfo.status, colors),
               // Border width hierarchy: selected/today (thick) > hover/normal (medium)
               width: (isRangeStart || isRangeEnd || isToday)
                   ? BorderTokens.widthThick
@@ -467,8 +478,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                           dateInfo.status != DateStatus.partialCheckOut
                       ? DateStatus.available
                       : dateInfo.status,
-                  borderColor: dateInfo.status.getBorderColor(),
+                  borderColor: dateInfo.status.getBorderColor(colors),
                   priceText: priceText,
+                  colors: colors,
                 ),
                 child: const SizedBox.expand(),
               ),
@@ -494,7 +506,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeS,
                     fontWeight: TypographyTokens.semiBold,
-                    color: ColorTokens.light.textPrimary,
+                    color: colors.textPrimary,
                   ),
                 ),
               ),
@@ -507,13 +519,13 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 child: Container(
                   padding: const EdgeInsets.all(SpacingTokens.xxs),
                   decoration: BoxDecoration(
-                    color: ColorTokens.light.buttonPrimary,
+                    color: colors.buttonPrimary,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     isRangeStart ? Icons.login : Icons.logout,
                     size: IconSizeTokens.xs,
-                    color: ColorTokens.light.buttonPrimaryText,
+                    color: colors.buttonPrimaryText,
                   ),
                 ),
               ),
@@ -524,13 +536,13 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildEmptyCell() {
+  Widget _buildEmptyCell(WidgetColorScheme colors) {
     return Container(
       margin: const EdgeInsets.all(BorderTokens.widthThin),
       decoration: BoxDecoration(
-        color: ColorTokens.light.backgroundSecondary,
+        color: colors.backgroundSecondary,
         border: Border.all(
-          color: ColorTokens.light.borderLight,
+          color: colors.borderLight,
           width: BorderTokens.widthThin,
         ),
         borderRadius: BorderTokens.circularSubtle,
@@ -542,7 +554,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
-  Widget _buildHoverTooltip(Map<String, CalendarDateInfo> data) {
+  Widget _buildHoverTooltip(Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     if (_hoveredDate == null) return const SizedBox.shrink();
 
     final key = _getDateKey(_hoveredDate!);
@@ -579,6 +591,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       price: dateInfo.price,
       status: dateInfo.status,
       position: Offset(xPosition, yPosition),
+      colors: colors,
     );
   }
 
@@ -663,19 +676,19 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   }
 
   /// Get darker border color for calendar cell based on status
-  Color _getBorderColorForDate(DateStatus status) {
+  Color _getBorderColorForDate(DateStatus status, WidgetColorScheme colors) {
     switch (status) {
       case DateStatus.available:
       case DateStatus.partialCheckIn:
       case DateStatus.partialCheckOut:
-        return ColorTokens.light.statusAvailableBorder;
+        return colors.statusAvailableBorder;
       case DateStatus.booked:
-        return ColorTokens.light.statusBookedBorder;
+        return colors.statusBookedBorder;
       case DateStatus.pending:
-        return ColorTokens.light.statusPendingBorder;
+        return colors.statusPendingBorder;
       case DateStatus.blocked:
       case DateStatus.disabled:
-        return ColorTokens.light.borderDefault;
+        return colors.borderDefault;
     }
   }
 }

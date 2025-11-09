@@ -12,7 +12,7 @@ import '../providers/user_profile_provider.dart';
 import '../widgets/language_selection_bottom_sheet.dart';
 import '../widgets/theme_selection_bottom_sheet.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../../../../shared/widgets/common_gradient_app_bar.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Profile screen for owner dashboard
 class ProfileScreen extends ConsumerWidget {
@@ -40,6 +40,11 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       drawer: const OwnerAppDrawer(currentRoute: 'profile'),
+      appBar: CommonAppBar(
+        title: 'Profil',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+      ),
       body: user == null
           ? const Center(child: Text('Not authenticated'))
           : userProfileAsync.when(
@@ -51,20 +56,10 @@ class ProfileScreen extends ConsumerWidget {
                 final isMobile = screenWidth < 600;
                 final headerPadding = isMobile ? 16.0 : 32.0;
 
-                return CustomScrollView(
-                  slivers: [
-                    // AppBar with gradient
-                    CommonGradientAppBar(
-                      title: 'Profil',
-                      leadingIcon: Icons.menu,
-                      onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-                    ),
-
-                    // Content
-                    SliverPadding(
-                      padding: const EdgeInsets.all(16.0),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate([
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
                         // Premium Profile header
                         Container(
                           decoration: BoxDecoration(
@@ -361,11 +356,9 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ),
                 const SizedBox(height: 32),
-              ]),
+              ],
             ),
-          ),
-        ],
-      );
+          );
               },
               loading: () {
                 final theme = Theme.of(context);

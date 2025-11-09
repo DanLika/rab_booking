@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
+import '../providers/theme_provider.dart';
 import 'split_day_calendar_painter.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
@@ -52,6 +53,8 @@ class _YearGridCalendarWidgetState
     final calendarData = ref.watch(
       realtimeYearCalendarProvider(widget.unitId, _currentYear),
     );
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
     return Stack(
       children: [
@@ -63,7 +66,7 @@ class _YearGridCalendarWidgetState
             const SizedBox(height: SpacingTokens.m),
             Expanded(
               child: calendarData.when(
-                data: (data) => _buildYearGrid(data),
+                data: (data) => _buildYearGrid(data, colors),
                 loading: () => const Center(
                   child: CircularProgressIndicator(),
                 ),
@@ -79,11 +82,11 @@ class _YearGridCalendarWidgetState
         ),
 
         // Hover tooltip (desktop)
-        if (_hoverDate != null) _buildHoverTooltip(calendarData),
+        if (_hoverDate != null) _buildHoverTooltip(calendarData, colors),
 
         // Tap info panel (mobile)
         if (_tappedDate != null && _tapPosition != null)
-          _buildTapInfoPanel(calendarData),
+          _buildTapInfoPanel(calendarData, colors),
       ],
     );
   }
@@ -200,7 +203,7 @@ class _YearGridCalendarWidgetState
     );
   }
 
-  Widget _buildYearGrid(Map<DateTime, CalendarDateInfo> data) {
+  Widget _buildYearGrid(Map<DateTime, CalendarDateInfo> data, WidgetColorScheme colors) {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Responsive cell sizing based on screen size
@@ -230,6 +233,7 @@ class _YearGridCalendarWidgetState
                   data,
                   cellSize,
                   monthLabelWidth,
+                  colors,
                 );
               }),
             ],
@@ -269,6 +273,7 @@ class _YearGridCalendarWidgetState
     Map<DateTime, CalendarDateInfo> data,
     double cellSize,
     double monthLabelWidth,
+    WidgetColorScheme colors,
   ) {
     final monthName = DateFormat('MMM').format(DateTime(_currentYear, month, 1));
     final daysInMonth = DateTime(_currentYear, month + 1, 0).day;
@@ -382,8 +387,9 @@ class _YearGridCalendarWidgetState
                         : CustomPaint(
                             painter: SplitDayCalendarPainter(
                               status: status,
-                              borderColor: ColorTokens.light.borderDefault,
+                              borderColor: colors.borderDefault,
                               priceText: priceText,
+                              colors: colors,
                             ),
                             child: const SizedBox.expand(),
                           ),
@@ -584,7 +590,7 @@ class _YearGridCalendarWidgetState
   // TOOLTIP & INFO PANEL BUILDERS
   // ============================================================
 
-  Widget _buildHoverTooltip(AsyncValue<Map<DateTime, CalendarDateInfo>> calendarData) {
+  Widget _buildHoverTooltip(AsyncValue<Map<DateTime, CalendarDateInfo>> calendarData, WidgetColorScheme colors) {
     if (_hoverDate == null) return const SizedBox.shrink();
 
     return calendarData.when(
@@ -652,9 +658,9 @@ class _YearGridCalendarWidgetState
                         width: IconSizeTokens.xs,
                         height: IconSizeTokens.xs,
                         decoration: BoxDecoration(
-                          color: status.getColor(),
+                          color: status.getColor(colors),
                           shape: BoxShape.circle,
-                          border: Border.all(color: ColorTokens.light.borderDefault),
+                          border: Border.all(color: colors.borderDefault),
                         ),
                       ),
                       const SizedBox(width: SpacingTokens.s),
@@ -690,7 +696,7 @@ class _YearGridCalendarWidgetState
     );
   }
 
-  Widget _buildTapInfoPanel(AsyncValue<Map<DateTime, CalendarDateInfo>> calendarData) {
+  Widget _buildTapInfoPanel(AsyncValue<Map<DateTime, CalendarDateInfo>> calendarData, WidgetColorScheme colors) {
     if (_tappedDate == null || _tapPosition == null) return const SizedBox.shrink();
 
     return calendarData.when(
@@ -760,9 +766,9 @@ class _YearGridCalendarWidgetState
                           width: IconSizeTokens.small,
                           height: IconSizeTokens.small,
                           decoration: BoxDecoration(
-                            color: status.getColor(),
+                            color: status.getColor(colors),
                             shape: BoxShape.circle,
-                            border: Border.all(color: ColorTokens.light.borderDefault),
+                            border: Border.all(color: colors.borderDefault),
                           ),
                         ),
                         const SizedBox(width: SpacingTokens.s2),

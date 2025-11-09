@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../presentation/theme/minimalist_colors.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 
 /// Status of a date in the calendar
 enum DateStatus {
@@ -13,54 +13,54 @@ enum DateStatus {
 }
 
 /// Extension to get color for each status
-/// Colors based on Minimalist Design System (black/white/grey palette)
+/// Colors based on Design Tokens with theme support
 extension DateStatusExtension on DateStatus {
-  Color getColor() {
+  Color getColor(WidgetColorScheme colors) {
     switch (this) {
       case DateStatus.available:
-        return MinimalistColors.statusAvailableBackground; // Light green
+        return colors.statusAvailableBackground;
       case DateStatus.booked:
-        return MinimalistColors.statusBookedBackground; // Light red
+        return colors.statusBookedBackground;
       case DateStatus.pending:
-        return MinimalistColors.statusPendingBackground; // Light amber
+        return colors.statusPendingBackground;
       case DateStatus.blocked:
-        return MinimalistColors.backgroundTertiary; // Light grey
+        return colors.backgroundTertiary;
       case DateStatus.partialCheckIn:
-        return MinimalistColors.statusAvailableBackground; // Light green
+        return colors.statusAvailableBackground;
       case DateStatus.partialCheckOut:
-        return MinimalistColors.statusAvailableBackground; // Light green
+        return colors.statusAvailableBackground;
       case DateStatus.disabled:
-        return MinimalistColors.backgroundTertiary; // Light grey
+        return colors.statusDisabledBackground;
     }
   }
 
-  Color getBorderColor() {
+  Color getBorderColor(WidgetColorScheme colors) {
     switch (this) {
       case DateStatus.available:
-        return MinimalistColors.statusAvailableBorder; // Green border
+        return colors.statusAvailableBorder;
       case DateStatus.booked:
-        return MinimalistColors.statusBookedBorder; // Red border
+        return colors.statusBookedBorder;
       case DateStatus.pending:
-        return MinimalistColors.statusPendingBorder; // Amber border
+        return colors.statusPendingBorder;
       case DateStatus.blocked:
-        return MinimalistColors.borderDefault; // Light grey border
+        return colors.borderDefault;
       case DateStatus.partialCheckIn:
-        return MinimalistColors.statusAvailableBorder; // Green border
+        return colors.statusAvailableBorder;
       case DateStatus.partialCheckOut:
-        return MinimalistColors.statusAvailableBorder; // Green border
+        return colors.statusAvailableBorder;
       case DateStatus.disabled:
-        return MinimalistColors.borderDefault; // Light grey border
+        return colors.borderDefault;
     }
   }
 
-  Color getDiagonalColor() {
+  Color getDiagonalColor(WidgetColorScheme colors) {
     // Color for diagonal line on check-in/check-out days
     // When guest checks in/out, the other half is booked (red)
     switch (this) {
       case DateStatus.partialCheckIn:
-        return MinimalistColors.statusBookedBackground; // Light red for booked part
+        return colors.statusBookedBackground;
       case DateStatus.partialCheckOut:
-        return MinimalistColors.statusBookedBackground; // Light red for booked part
+        return colors.statusBookedBackground;
       default:
         return Colors.transparent;
     }

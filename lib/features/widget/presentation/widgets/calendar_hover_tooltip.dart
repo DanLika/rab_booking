@@ -11,6 +11,7 @@ class CalendarHoverTooltip extends StatelessWidget {
   final DateStatus status;
   final Offset position;
   final VoidCallback? onClose;
+  final WidgetColorScheme colors;
 
   const CalendarHoverTooltip({
     super.key,
@@ -18,6 +19,7 @@ class CalendarHoverTooltip extends StatelessWidget {
     required this.price,
     required this.status,
     required this.position,
+    required this.colors,
     this.onClose,
   });
 
@@ -44,13 +46,13 @@ class CalendarHoverTooltip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(SpacingTokens.s),
           decoration: BoxDecoration(
-            color: ColorTokens.light.backgroundPrimary,
+            color: colors.backgroundPrimary,
             borderRadius: BorderTokens.circularSmall,
             border: Border.all(
-              color: ColorTokens.light.borderStrong,
+              color: colors.borderStrong,
               width: BorderTokens.widthMedium,
             ),
-            boxShadow: ColorTokens.light.shadowMedium,
+            boxShadow: colors.shadowMedium,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -67,13 +69,13 @@ class CalendarHoverTooltip extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(SpacingTokens.xxs),
                         decoration: BoxDecoration(
-                          color: ColorTokens.light.backgroundSecondary,
+                          color: colors.backgroundSecondary,
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.close,
                           size: TypographyTokens.fontSizeS,
-                          color: ColorTokens.light.textPrimary,
+                          color: colors.textPrimary,
                         ),
                       ),
                     ),
@@ -86,7 +88,7 @@ class CalendarHoverTooltip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeS,
                   fontWeight: FontWeight.w600,
-                  color: ColorTokens.light.textPrimary,
+                  color: colors.textPrimary,
                   fontFamily: 'Manrope',
                 ),
               ),
@@ -98,7 +100,7 @@ class CalendarHoverTooltip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeXL,
                   fontWeight: FontWeight.bold,
-                  color: ColorTokens.light.textPrimary,
+                  color: colors.textPrimary,
                   fontFamily: 'Manrope',
                 ),
               ),
@@ -140,7 +142,7 @@ class CalendarHoverTooltip extends StatelessWidget {
                     vertical: SpacingTokens.xxs,
                   ),
                   decoration: BoxDecoration(
-                    color: ColorTokens.light.backgroundSecondary,
+                    color: colors.backgroundSecondary,
                     borderRadius: BorderTokens.circularTiny,
                   ),
                   child: Text(
@@ -148,7 +150,7 @@ class CalendarHoverTooltip extends StatelessWidget {
                     style: TextStyle(
                       fontSize: TypographyTokens.fontSizeXS,
                       fontWeight: FontWeight.w500,
-                      color: ColorTokens.light.textSecondary,
+                      color: colors.textSecondary,
                       fontFamily: 'Manrope',
                     ),
                   ),
@@ -183,18 +185,18 @@ class CalendarHoverTooltip extends StatelessWidget {
   Color _getStatusColor(DateStatus status) {
     switch (status) {
       case DateStatus.available:
-        return ColorTokens.light.statusAvailableBorder; // Green
+        return colors.statusAvailableBorder;
       case DateStatus.booked:
-        return ColorTokens.light.statusBookedBorder; // Red
+        return colors.statusBookedBorder;
       case DateStatus.pending:
-        return ColorTokens.light.statusPendingBorder; // Amber
+        return colors.statusPendingBorder;
       case DateStatus.blocked:
-        return ColorTokens.light.textSecondary;
+        return colors.textSecondary;
       case DateStatus.partialCheckIn:
       case DateStatus.partialCheckOut:
-        return ColorTokens.light.statusPendingBorder; // Amber
+        return colors.statusPendingBorder;
       case DateStatus.disabled:
-        return ColorTokens.light.textSecondary; // Grey
+        return colors.textSecondary;
     }
   }
 }

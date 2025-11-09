@@ -158,6 +158,139 @@ class MinimalistColors {
   }
 }
 
+/// Dark Theme Colors - Inverted from light theme
+class MinimalistColorsDark {
+  // ==================== BASE COLORS ====================
+
+  /// Pure black - primary background
+  static const Color backgroundPrimary = Color(0xFF000000);
+
+  /// Off-black - secondary background for subtle contrast
+  static const Color backgroundSecondary = Color(0xFF0A0A0A);
+
+  /// Dark grey - tertiary background for disabled/inactive areas
+  static const Color backgroundTertiary = Color(0xFF1A1A1A);
+
+  /// Black with shadow - elevated cards
+  static const Color backgroundCard = Color(0xFF000000);
+
+  // ==================== TEXT COLORS ====================
+
+  /// Pure white - primary text, headings, emphasis
+  static const Color textPrimary = Color(0xFFFFFFFF);
+
+  /// Light grey - secondary text, labels
+  static const Color textSecondary = Color(0xFF999999);
+
+  /// Medium grey - tertiary text, hints, placeholders
+  static const Color textTertiary = Color(0xFF666666);
+
+  /// Dark grey - disabled text
+  static const Color textDisabled = Color(0xFF333333);
+
+  /// Black text - for light backgrounds
+  static const Color textOnDark = Color(0xFF000000);
+
+  // ==================== BORDER COLORS ====================
+
+  /// Almost black - very subtle borders
+  static const Color borderLight = Color(0xFF0F0F0F);
+
+  /// Dark grey - default borders
+  static const Color borderDefault = Color(0xFF1F1F1F);
+
+  /// Medium grey - hover borders
+  static const Color borderMedium = Color(0xFF333333);
+
+  /// Light grey - active/strong borders
+  static const Color borderStrong = Color(0xFF999999);
+
+  /// Pure white - emphasis borders (selected, active)
+  static const Color borderBlack = Color(0xFFFFFFFF);
+
+  // ==================== CALENDAR STATUS COLORS ====================
+  // Darker versions of status colors
+
+  /// Available date - dark mint green background
+  static const Color statusAvailableBackground = Color(0xFF1A3D35);
+
+  /// Available date - mint green border
+  static const Color statusAvailableBorder = Color(0xFF5CD4B4);
+
+  /// Available date - teal text
+  static const Color statusAvailableText = Color(0xFF5CD4B4);
+
+  /// Booked date - dark pink background
+  static const Color statusBookedBackground = Color(0xFF3D1A28);
+
+  /// Booked date - pink border
+  static const Color statusBookedBorder = Color(0xFFFF8FB8);
+
+  /// Booked date - pink text
+  static const Color statusBookedText = Color(0xFFFF8FB8);
+
+  /// Pending date - dark amber background
+  static const Color statusPendingBackground = Color(0xFF3D3318);
+
+  /// Pending date - amber border
+  static const Color statusPendingBorder = Color(0xFFF59E0B);
+
+  /// Pending date - amber text
+  static const Color statusPendingText = Color(0xFFFDE68A);
+
+  // ==================== SHADOW COLORS ====================
+  // White-based shadows for dark theme
+
+  /// Lightest shadow - 4% opacity
+  static const Color shadow01 = Color(0x0AFFFFFF);
+
+  /// Light shadow - 8% opacity
+  static const Color shadow02 = Color(0x14FFFFFF);
+
+  /// Medium shadow - 12% opacity
+  static const Color shadow03 = Color(0x1FFFFFFF);
+
+  /// Strong shadow - 16% opacity
+  static const Color shadow04 = Color(0x29FFFFFF);
+
+  // ==================== SEMANTIC COLORS ====================
+
+  /// Success state
+  static const Color success = Color(0xFF14B8A6);
+
+  /// Error state
+  static const Color error = Color(0xFFEC4899);
+
+  /// Warning state
+  static const Color warning = Color(0xFFF59E0B);
+
+  /// Info state
+  static const Color info = Color(0xFF999999);
+
+  // ==================== BUTTON COLORS ====================
+
+  /// Primary button background (white)
+  static const Color buttonPrimary = Color(0xFFFFFFFF);
+
+  /// Primary button hover (light grey)
+  static const Color buttonPrimaryHover = Color(0xFFCCCCCC);
+
+  /// Primary button pressed (medium grey)
+  static const Color buttonPrimaryPressed = Color(0xFF999999);
+
+  /// Primary button text (black)
+  static const Color buttonPrimaryText = Color(0xFF000000);
+
+  /// Secondary button background (black)
+  static const Color buttonSecondary = Color(0xFF000000);
+
+  /// Secondary button border (white)
+  static const Color buttonSecondaryBorder = Color(0xFFFFFFFF);
+
+  /// Secondary button text (white)
+  static const Color buttonSecondaryText = Color(0xFFFFFFFF);
+}
+
 /// Extension for BoxShadow presets
 extension MinimalistShadows on MinimalistColors {
   /// Minimal shadow for subtle elevation (1-level)

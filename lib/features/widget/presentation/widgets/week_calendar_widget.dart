@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../providers/week_calendar_provider.dart';
 import '../providers/calendar_view_provider.dart';
+import '../providers/theme_provider.dart';
 import 'split_day_calendar_painter.dart';
 import '../theme/responsive_helper.dart';
 import 'calendar_hover_tooltip.dart';
@@ -39,6 +40,8 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
   @override
   Widget build(BuildContext context) {
     final calendarData = ref.watch(weekCalendarDataProvider((widget.unitId, _currentWeekStart)));
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -61,7 +64,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
               const SizedBox(height: SpacingTokens.m),
               Expanded(
                 child: calendarData.when(
-                  data: (data) => _buildWeekView(data),
+                  data: (data) => _buildWeekView(data, colors),
                   loading: () => _buildWeekSkeleton(),
                   error: (error, stack) => Center(
                     child: Text('Error: $error'),
@@ -237,7 +240,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
   }
 
 
-  Widget _buildLegend() {
+  Widget _buildLegend(WidgetColorScheme colors) {
     final isMobile = ResponsiveHelper.isMobile(context);
     final legendPadding = isMobile ? SpacingTokens.xs2 : SpacingTokens.s;
     final spacing = isMobile ? SpacingTokens.s2 : SpacingTokens.m2;
@@ -253,16 +256,16 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
         runSpacing: isMobile ? SpacingTokens.xs2 : SpacingTokens.s,
         alignment: WrapAlignment.center,
         children: [
-          _buildLegendItem('Available', DateStatus.available),
-          _buildLegendItem('Booked', DateStatus.booked),
-          _buildLegendItem('Check-in', DateStatus.partialCheckIn),
-          _buildLegendItem('Check-out', DateStatus.partialCheckOut),
+          _buildLegendItem('Available', DateStatus.available, colors),
+          _buildLegendItem('Booked', DateStatus.booked, colors),
+          _buildLegendItem('Check-in', DateStatus.partialCheckIn, colors),
+          _buildLegendItem('Check-out', DateStatus.partialCheckOut, colors),
         ],
       ),
     );
   }
 
-  Widget _buildLegendItem(String label, DateStatus status) {
+  Widget _buildLegendItem(String label, DateStatus status, WidgetColorScheme colors) {
     final isMobile = ResponsiveHelper.isMobile(context);
     final boxSize = isMobile ? IconSizeTokens.large : IconSizeTokens.xl;
     final fontSize = isMobile ? TypographyTokens.fontSizeXS2 : TypographyTokens.fontSizeS2;
@@ -275,9 +278,9 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
           width: boxSize,
           height: boxSize,
           decoration: BoxDecoration(
-            color: status.getColor(),
+            color: status.getColor(colors),
             border: Border.all(
-              color: status.getBorderColor(),
+              color: status.getBorderColor(colors),
               width: BorderTokens.widthMedium,
             ),
             borderRadius: BorderTokens.circularTiny,
@@ -288,7 +291,8 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
                   child: CustomPaint(
                     painter: SplitDayCalendarPainter(
                       status: status,
-                      borderColor: status.getBorderColor(),
+                      borderColor: status.getBorderColor(colors),
+                      colors: colors,
                     ),
                   ),
                 )
@@ -356,7 +360,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     );
   }
 
-  Widget _buildWeekView(Map<String, CalendarDateInfo> data) {
+  Widget _buildWeekView(Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     // Dynamic max height based on screen size (40% of screen height)
     final screenHeight = MediaQuery.of(context).size.height;
     final maxHeight = screenHeight * OpacityTokens.semiTransparent + (screenHeight * 0.1);
@@ -375,10 +379,10 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
             children: [
               _buildWeekHeader(),
               const SizedBox(height: SpacingTokens.s),
-              _buildLegend(),
+              _buildLegend(colors),
               const SizedBox(height: SpacingTokens.s),
               Expanded(
-                child: _buildWeekDays(data),
+                child: _buildWeekDays(data, colors),
               ),
             ],
           ),
@@ -417,7 +421,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     );
   }
 
-  Widget _buildWeekDays(Map<String, CalendarDateInfo> data) {
+  Widget _buildWeekDays(Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     // Build day columns with vertical separators between them
     final dayWidgets = <Widget>[];
 
@@ -427,7 +431,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
       // Add day column
       dayWidgets.add(
         Expanded(
-          child: _buildDayColumn(date, data),
+          child: _buildDayColumn(date, data, colors),
         ),
       );
 
@@ -448,7 +452,7 @@ class _WeekCalendarWidgetState extends ConsumerState<WeekCalendarWidget> {
     );
   }
 
-  Widget _buildDayColumn(DateTime date, Map<String, CalendarDateInfo> data) {
+  Widget _buildDayColumn(DateTime date, Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
     final key = _getDateKey(date);
     final dateInfo = data[key];
 

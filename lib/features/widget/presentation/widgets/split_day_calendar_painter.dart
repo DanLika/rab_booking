@@ -8,11 +8,13 @@ class SplitDayCalendarPainter extends CustomPainter {
   final DateStatus status;
   final Color borderColor;
   final String? priceText; // Price to display in cell (e.g., "€50")
+  final WidgetColorScheme colors;
 
   SplitDayCalendarPainter({
     required this.status,
     required this.borderColor,
     this.priceText,
+    required this.colors,
   });
 
   @override
@@ -22,7 +24,7 @@ class SplitDayCalendarPainter extends CustomPainter {
     switch (status) {
       case DateStatus.available:
         // Solid available color
-        paint.color = status.getColor();
+        paint.color = status.getColor(colors);
         canvas.drawRect(
           Rect.fromLTWH(0, 0, size.width, size.height),
           paint,
@@ -31,7 +33,7 @@ class SplitDayCalendarPainter extends CustomPainter {
 
       case DateStatus.booked:
         // Solid booked color
-        paint.color = status.getColor();
+        paint.color = status.getColor(colors);
         canvas.drawRect(
           Rect.fromLTWH(0, 0, size.width, size.height),
           paint,
@@ -40,7 +42,7 @@ class SplitDayCalendarPainter extends CustomPainter {
 
       case DateStatus.pending:
         // Solid pending color (orange)
-        paint.color = status.getColor();
+        paint.color = status.getColor(colors);
         canvas.drawRect(
           Rect.fromLTWH(0, 0, size.width, size.height),
           paint,
@@ -49,7 +51,7 @@ class SplitDayCalendarPainter extends CustomPainter {
 
       case DateStatus.blocked:
         // Solid blocked color
-        paint.color = status.getColor();
+        paint.color = status.getColor(colors);
         canvas.drawRect(
           Rect.fromLTWH(0, 0, size.width, size.height),
           paint,
@@ -58,7 +60,7 @@ class SplitDayCalendarPainter extends CustomPainter {
 
       case DateStatus.disabled:
         // Solid disabled color (past dates)
-        paint.color = status.getColor();
+        paint.color = status.getColor(colors);
         canvas.drawRect(
           Rect.fromLTWH(0, 0, size.width, size.height),
           paint,
@@ -70,7 +72,7 @@ class SplitDayCalendarPainter extends CustomPainter {
         // This means: previous guest checks out, new guest checks in
 
         // Draw bottom-right triangle (booked - pink)
-        paint.color = status.getDiagonalColor(); // Pink
+        paint.color = status.getDiagonalColor(colors); // Pink
         final Path bookedPath = Path()
           ..moveTo(0, size.height) // Bottom-left
           ..lineTo(size.width, size.height) // Bottom-right
@@ -79,7 +81,7 @@ class SplitDayCalendarPainter extends CustomPainter {
         canvas.drawPath(bookedPath, paint);
 
         // Draw top-left triangle (available - green)
-        paint.color = status.getColor(); // Green
+        paint.color = status.getColor(colors); // Green
         final Path availablePath = Path()
           ..moveTo(0, 0) // Top-left
           ..lineTo(size.width, 0) // Top-right
@@ -95,7 +97,7 @@ class SplitDayCalendarPainter extends CustomPainter {
         // This means: current guest checks out, becomes available
 
         // Draw top-left triangle (booked - pink)
-        paint.color = status.getDiagonalColor(); // Pink
+        paint.color = status.getDiagonalColor(colors); // Pink
         final Path bookedPath = Path()
           ..moveTo(0, 0) // Top-left
           ..lineTo(size.width, 0) // Top-right
@@ -104,7 +106,7 @@ class SplitDayCalendarPainter extends CustomPainter {
         canvas.drawPath(bookedPath, paint);
 
         // Draw bottom-right triangle (available - green)
-        paint.color = status.getColor(); // Green
+        paint.color = status.getColor(colors); // Green
         final Path availablePath = Path()
           ..moveTo(0, size.height) // Bottom-left
           ..lineTo(size.width, size.height) // Bottom-right
@@ -122,8 +124,8 @@ class SplitDayCalendarPainter extends CustomPainter {
         text: TextSpan(
           text: priceText,
           style: TextStyle(
-            // Always use black for maximum contrast and readability
-            color: ColorTokens.light.textPrimary,
+            // Use theme-aware text color for maximum contrast and readability
+            color: colors.textPrimary,
             // Responsive font sizes based on cell size - uses design token breakpoints
             fontSize: size.width > ConstraintTokens.calendarDayCellMinSize
                 ? TypographyTokens.fontSizeS2
@@ -152,7 +154,8 @@ class SplitDayCalendarPainter extends CustomPainter {
   bool shouldRepaint(covariant SplitDayCalendarPainter oldDelegate) {
     return oldDelegate.status != status ||
            oldDelegate.borderColor != borderColor ||
-           oldDelegate.priceText != priceText;
+           oldDelegate.priceText != priceText ||
+           oldDelegate.colors != colors;
   }
 }
 
@@ -162,6 +165,7 @@ class SplitDayCalendarCell extends StatelessWidget {
   final VoidCallback? onTap;
   final double size;
   final bool isSelected;
+  final WidgetColorScheme colors;
 
   const SplitDayCalendarCell({
     super.key,
@@ -169,6 +173,7 @@ class SplitDayCalendarCell extends StatelessWidget {
     this.onTap,
     this.size = IconSizeTokens.large,
     this.isSelected = false,
+    required this.colors,
   });
 
   @override
@@ -180,13 +185,14 @@ class SplitDayCalendarCell extends StatelessWidget {
         height: size,
         decoration: BoxDecoration(
           border: isSelected
-              ? Border.all(color: ColorTokens.light.borderFocus, width: BorderTokens.widthThick)
+              ? Border.all(color: colors.borderFocus, width: BorderTokens.widthThick)
               : null,
         ),
         child: CustomPaint(
           painter: SplitDayCalendarPainter(
             status: status,
-            borderColor: status.getBorderColor(),
+            borderColor: status.getBorderColor(colors),
+            colors: colors,
           ),
         ),
       ),

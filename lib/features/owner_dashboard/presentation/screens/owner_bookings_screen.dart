@@ -34,6 +34,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final filters = ref.watch(bookingsFiltersNotifierProvider);
     final viewMode = ref.watch(ownerBookingsViewProvider);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     // Cache MediaQuery values for performance
     final mediaQuery = MediaQuery.of(context);
@@ -42,60 +43,64 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final isMobile = screenWidth < 600;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      appBar: CommonAppBar(
+        title: 'Rezervacije',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+      ),
       drawer: const OwnerAppDrawer(currentRoute: 'bookings'),
-      body: SafeArea(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [theme.colorScheme.veryDarkGray, theme.colorScheme.mediumDarkGray]
+                : [theme.colorScheme.veryLightGray, Colors.white],
+            stops: const [0.0, 0.3],
+          ),
+        ),
         child: RefreshIndicator(
           onRefresh: () async {
             // Refresh bookings data
             ref.invalidate(ownerBookingsProvider);
           },
           color: AppColors.primary,
-          child: CustomScrollView(
-            slivers: [
-              // Gradient Header
-              CommonGradientAppBar(
-                title: 'Rezervacije',
-                leadingIcon: Icons.menu,
-                onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-              ),
-
+          child: ListView(
+            children: [
               // Filters section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    context.horizontalPadding,
-                    isMobile ? 16 : 20,
-                    context.horizontalPadding,
-                    isMobile ? 8 : 12,
-                  ),
-                  child: _buildFiltersSection(filters, isMobile),
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.horizontalPadding,
+                  isMobile ? 16 : 20,
+                  context.horizontalPadding,
+                  isMobile ? 8 : 12,
                 ),
+                child: _buildFiltersSection(filters, isMobile),
               ),
 
               // Bookings content
               bookingsAsync.when(
                 data: (bookings) {
                   if (bookings.isEmpty) {
-                    return SliverFillRemaining(child: _buildEmptyState());
+                    return _buildEmptyState();
                   }
 
                   if (viewMode == BookingsViewMode.card) {
-                    return _buildBookingsListSliver(bookings, isMobile);
+                    return _buildBookingsList(bookings, isMobile);
                   } else {
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: context.horizontalPadding,
-                        ),
-                        child: BookingsTableView(bookings: bookings),
+                    return Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.horizontalPadding,
                       ),
+                      child: BookingsTableView(bookings: bookings),
                     );
                   }
                 },
-                loading: () => SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => Padding(
+                loading: () => Column(
+                  children: List.generate(
+                    3,
+                    (index) => Padding(
                       padding: EdgeInsets.fromLTRB(
                         context.horizontalPadding,
                         0,
@@ -104,7 +109,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       ),
                       child: const BookingCardSkeleton(),
                     ),
-                    childCount: 3,
                   ),
                 ),
                 error: (error, stack) {
@@ -116,37 +120,35 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       errorMsg.contains('0');
 
                   if (isEmptyResult) {
-                    return SliverFillRemaining(child: _buildEmptyState());
+                    return _buildEmptyState();
                   }
 
-                  return SliverFillRemaining(
-                    child: Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(context.horizontalPadding),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              size: AppDimensions.iconSizeXL,
-                              color: AppColors.error,
-                            ),
-                            const SizedBox(height: AppDimensions.spaceS),
-                            Text(
-                              'Greška pri učitavanju rezervacija',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: AppDimensions.spaceXS),
-                            Text(
-                              error.toString(),
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: context.textColorSecondary),
-                              textAlign: TextAlign.center,
-                              maxLines: 5,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
+                  return Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(context.horizontalPadding),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: AppDimensions.iconSizeXL,
+                            color: AppColors.error,
+                          ),
+                          const SizedBox(height: AppDimensions.spaceS),
+                          Text(
+                            'Greška pri učitavanju rezervacija',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: AppDimensions.spaceXS),
+                          Text(
+                            error.toString(),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: context.textColorSecondary),
+                            textAlign: TextAlign.center,
+                            maxLines: 5,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -154,7 +156,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               ),
 
               // Bottom spacing
-              const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -414,7 +416,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
-  Widget _buildBookingsListSliver(List<OwnerBooking> bookings, bool isMobile) {
+  Widget _buildBookingsList(List<OwnerBooking> bookings, bool isMobile) {
     // Calculate screen width for responsive layout
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
@@ -456,17 +458,16 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         );
       }
 
-      return SliverPadding(
+      return Padding(
         padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
-        sliver: SliverList(delegate: SliverChildListDelegate(rows)),
+        child: Column(children: rows),
       );
     } else {
       // Mobile/Tablet: Single column list
-      return SliverPadding(
+      return Padding(
         padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
-        sliver: SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final ownerBooking = bookings[index];
+        child: Column(
+          children: bookings.map((ownerBooking) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: _BookingCard(
@@ -474,7 +475,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 ownerBooking: ownerBooking,
               ),
             );
-          }, childCount: bookings.length),
+          }).toList(),
         ),
       );
     }
@@ -586,7 +587,7 @@ class _BookingCard extends ConsumerWidget {
 
     return Card(
       elevation: 2,
-      shadowColor: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
+      shadowColor: AppColors.primary.withAlpha((0.1 * 255).toInt()),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
@@ -1474,8 +1475,8 @@ class _BookingCard extends ConsumerWidget {
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(0xFF6B4CE6), // Purple
-                      Color(0xFF4A90E2), // Blue
+                      AppColors.primary, // Purple
+                      AppColors.authSecondary, // Blue
                     ],
                   ),
                 ),

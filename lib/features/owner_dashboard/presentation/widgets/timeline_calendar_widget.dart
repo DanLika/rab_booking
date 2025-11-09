@@ -452,19 +452,19 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
               transformationController: _transformationController,
               minScale: _minZoomScale,
               maxScale: _maxZoomScale,
-              constrained: false,
+              constrained: true,
               boundaryMargin: const EdgeInsets.all(AppDimensions.spaceXL),
               panEnabled: true,
               scaleEnabled: true,
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Fixed unit names column
                   _buildUnitNamesColumn(units),
 
                   // Scrollable timeline grid
-                  SingleChildScrollView(
+                  Expanded(
+                    child: SingleChildScrollView(
                       controller: _horizontalScrollController,
                       scrollDirection: Axis.horizontal,
                       child: SingleChildScrollView(
@@ -480,6 +480,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                         ),
                       ),
                     ),
+                  ),
                 ],
               ),
             ),

@@ -29,39 +29,41 @@ class DashboardOverviewTab extends ConsumerWidget {
     final isMobile = screenWidth < 600;
 
     return Scaffold(
-        appBar: CommonAppBar(
-          title: 'Pregled',
-          leadingIcon: Icons.menu,
-          onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-        ),
-        drawer: const OwnerAppDrawer(currentRoute: 'overview'),
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isDark
-                  ? [theme.colorScheme.veryDarkGray, theme.colorScheme.mediumDarkGray]
-                  : [theme.colorScheme.veryLightGray, Colors.white],
-              stops: const [0.0, 0.3],
-            ),
+      appBar: CommonAppBar(
+        title: 'Pregled',
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+      ),
+      drawer: const OwnerAppDrawer(currentRoute: 'overview'),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [
+                    theme.colorScheme.veryDarkGray,
+                    theme.colorScheme.mediumDarkGray,
+                  ]
+                : [theme.colorScheme.veryLightGray, Colors.white],
+            stops: const [0.0, 0.3],
           ),
-          child: RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(ownerPropertiesProvider);
-              ref.invalidate(recentOwnerBookingsProvider);
-              ref.invalidate(dashboardStatsProvider);
-              // Wait for providers to reload
-              await Future.wait([
-                ref.read(ownerPropertiesProvider.future),
-                ref.read(recentOwnerBookingsProvider.future),
-                ref.read(dashboardStatsProvider.future),
-              ]);
-            },
-            color: AppColors.primary,
-            child: ListView(
-              children: [
-
+        ),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(ownerPropertiesProvider);
+            ref.invalidate(recentOwnerBookingsProvider);
+            ref.invalidate(dashboardStatsProvider);
+            // Wait for providers to reload
+            await Future.wait([
+              ref.read(ownerPropertiesProvider.future),
+              ref.read(recentOwnerBookingsProvider.future),
+              ref.read(dashboardStatsProvider.future),
+            ]);
+          },
+          color: AppColors.primary,
+          child: ListView(
+            children: [
               // Stats cards section
               Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -71,13 +73,11 @@ class DashboardOverviewTab extends ConsumerWidget {
                   isMobile ? 8 : 12,
                 ),
                 child: statsAsync.when(
-                  data: (stats) => _buildStatsCards(
-                    context: context,
-                    stats: stats,
-                  ),
-                  loading: () => Center(
+                  data: (stats) =>
+                      _buildStatsCards(context: context, stats: stats),
+                  loading: () => const Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(40),
+                      padding: EdgeInsets.all(40),
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
                           AppColors.primary,
@@ -98,8 +98,12 @@ class DashboardOverviewTab extends ConsumerWidget {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
-                                  theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
+                                  theme.colorScheme.error.withAlpha(
+                                    (0.1 * 255).toInt(),
+                                  ),
+                                  theme.colorScheme.error.withAlpha(
+                                    (0.05 * 255).toInt(),
+                                  ),
                                 ],
                               ),
                               shape: BoxShape.circle,
@@ -121,7 +125,9 @@ class DashboardOverviewTab extends ConsumerWidget {
                           Text(
                             e.toString(),
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                              color: theme.colorScheme.onSurface.withAlpha(
+                                (0.7 * 255).toInt(),
+                              ),
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 3,
@@ -173,14 +179,15 @@ class DashboardOverviewTab extends ConsumerWidget {
             );
             showDialog(
               context: context,
-              builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
+              builder: (context) =>
+                  BookingDetailsDialog(ownerBooking: ownerBooking),
             );
           },
         );
       },
-      loading: () => Center(
+      loading: () => const Center(
         child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.spaceXL),
+          padding: EdgeInsets.all(AppDimensions.spaceXL),
           child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
@@ -267,7 +274,9 @@ class DashboardOverviewTab extends ConsumerWidget {
         colors: lightColors.map((color) {
           // Darken the color but keep full opacity
           final hsl = HSLColor.fromColor(color);
-          return hsl.withLightness((hsl.lightness * 0.7).clamp(0.0, 1.0)).toColor();
+          return hsl
+              .withLightness((hsl.lightness * 0.7).clamp(0.0, 1.0))
+              .toColor();
         }).toList(),
       );
     } else {
@@ -289,71 +298,89 @@ class DashboardOverviewTab extends ConsumerWidget {
     final isTablet = screenWidth >= 600 && screenWidth < 900;
 
     return Wrap(
-        spacing: isMobile ? 12.0 : 16.0,
-        runSpacing: isMobile ? 12.0 : 16.0,
-        alignment: WrapAlignment.center,
-        children: [
-          _buildStatCard(
-            context: context,
-            title: 'Zarada ovaj mjesec',
-            value: '€${stats.monthlyRevenue.toStringAsFixed(0)}',
-            icon: Icons.euro_rounded,
-            gradient: _createThemeGradient(context, [AppColors.info, AppColors.infoDark]),
-            isMobile: isMobile,
-            isTablet: isTablet,
-            animationDelay: 0,
-          ),
-          _buildStatCard(
-            context: context,
-            title: 'Zarada ove godine',
-            value: '€${stats.yearlyRevenue.toStringAsFixed(0)}',
-            icon: Icons.trending_up_rounded,
-            gradient: _createThemeGradient(context, [AppColors.primary, AppColors.primaryDark]),
-            isMobile: isMobile,
-            isTablet: isTablet,
-            animationDelay: 100,
-          ),
-          _buildStatCard(
-            context: context,
-            title: 'Rezervacije ovaj mjesec',
-            value: '${stats.monthlyBookings}',
-            icon: Icons.calendar_today_rounded,
-            gradient: _createThemeGradient(context, [AppColors.primaryLight, AppColors.primary]),
-            isMobile: isMobile,
-            isTablet: isTablet,
-            animationDelay: 200,
-          ),
-          _buildStatCard(
-            context: context,
-            title: 'Nadolazeći check-in',
-            value: '${stats.upcomingCheckIns}',
-            icon: Icons.schedule_rounded,
-            gradient: _createThemeGradient(context, [AppColors.activityPayment, AppColors.infoDark]),
-            isMobile: isMobile,
-            isTablet: isTablet,
-            animationDelay: 300,
-          ),
-          _buildStatCard(
-            context: context,
-            title: 'Aktivne nekretnine',
-            value: '${stats.activeProperties}',
-            icon: Icons.villa_rounded,
-            gradient: _createThemeGradient(context, [AppColors.textSecondary, AppColors.textDisabled]),
-            isMobile: isMobile,
-            isTablet: isTablet,
-            animationDelay: 400,
-          ),
-          _buildStatCard(
-            context: context,
-            title: 'Popunjenost',
-            value: '${stats.occupancyRate.toStringAsFixed(1)}%',
-            icon: Icons.analytics_rounded,
-            gradient: _createThemeGradient(context, [AppColors.textDisabled, AppColors.textSecondary]),
-            isMobile: isMobile,
-            isTablet: isTablet,
-            animationDelay: 500,
-          ),
-        ],
+      spacing: isMobile ? 12.0 : 16.0,
+      runSpacing: isMobile ? 12.0 : 16.0,
+      alignment: WrapAlignment.center,
+      children: [
+        _buildStatCard(
+          context: context,
+          title: 'Zarada ovaj mjesec',
+          value: '€${stats.monthlyRevenue.toStringAsFixed(0)}',
+          icon: Icons.euro_rounded,
+          gradient: _createThemeGradient(context, [
+            AppColors.info,
+            AppColors.infoDark,
+          ]),
+          isMobile: isMobile,
+          isTablet: isTablet,
+          animationDelay: 0,
+        ),
+        _buildStatCard(
+          context: context,
+          title: 'Zarada ove godine',
+          value: '€${stats.yearlyRevenue.toStringAsFixed(0)}',
+          icon: Icons.trending_up_rounded,
+          gradient: _createThemeGradient(context, [
+            AppColors.primary,
+            AppColors.primaryDark,
+          ]),
+          isMobile: isMobile,
+          isTablet: isTablet,
+          animationDelay: 100,
+        ),
+        _buildStatCard(
+          context: context,
+          title: 'Rezervacije ovaj mjesec',
+          value: '${stats.monthlyBookings}',
+          icon: Icons.calendar_today_rounded,
+          gradient: _createThemeGradient(context, [
+            AppColors.primaryLight,
+            AppColors.primary,
+          ]),
+          isMobile: isMobile,
+          isTablet: isTablet,
+          animationDelay: 200,
+        ),
+        _buildStatCard(
+          context: context,
+          title: 'Nadolazeći check-in',
+          value: '${stats.upcomingCheckIns}',
+          icon: Icons.schedule_rounded,
+          gradient: _createThemeGradient(context, [
+            AppColors.activityPayment,
+            AppColors.infoDark,
+          ]),
+          isMobile: isMobile,
+          isTablet: isTablet,
+          animationDelay: 300,
+        ),
+        _buildStatCard(
+          context: context,
+          title: 'Aktivne nekretnine',
+          value: '${stats.activeProperties}',
+          icon: Icons.villa_rounded,
+          gradient: _createThemeGradient(context, [
+            AppColors.textSecondary,
+            AppColors.textDisabled,
+          ]),
+          isMobile: isMobile,
+          isTablet: isTablet,
+          animationDelay: 400,
+        ),
+        _buildStatCard(
+          context: context,
+          title: 'Popunjenost',
+          value: '${stats.occupancyRate.toStringAsFixed(1)}%',
+          icon: Icons.analytics_rounded,
+          gradient: _createThemeGradient(context, [
+            AppColors.textDisabled,
+            AppColors.textSecondary,
+          ]),
+          isMobile: isMobile,
+          isTablet: isTablet,
+          animationDelay: 500,
+        ),
+      ],
     );
   }
 
@@ -412,9 +439,7 @@ class DashboardOverviewTab extends ConsumerWidget {
       child: Container(
         width: cardWidth,
         height: isMobile ? 160 : 180,
-        constraints: const BoxConstraints(
-          maxWidth: 320,
-        ),
+        constraints: const BoxConstraints(maxWidth: 320),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
@@ -445,11 +470,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                     color: iconBgColor,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: isMobile ? 22 : 26,
-                  ),
+                  child: Icon(icon, color: iconColor, size: isMobile ? 22 : 26),
                 ),
                 SizedBox(height: isMobile ? 8 : 12),
 

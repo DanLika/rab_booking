@@ -15,7 +15,8 @@ class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
 
   @override
-  ConsumerState<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
+  ConsumerState<ChangePasswordScreen> createState() =>
+      _ChangePasswordScreenState();
 }
 
 class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
@@ -95,7 +96,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
           message = 'Nova lozinka je preslaba';
           break;
         case 'requires-recent-login':
-          message = 'Molimo odjavite se i ponovno se prijavite prije promjene lozinke';
+          message =
+              'Molimo odjavite se i ponovno se prijavite prije promjene lozinke';
           break;
         default:
           message = 'Greška pri promjeni lozinke: ${e.message}';
@@ -104,11 +106,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
 
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: message,
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: message);
       }
     } catch (e) {
       if (mounted) {
@@ -160,17 +158,16 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [
-                                AppColors.primary,
-                                AppColors.secondary,
-                              ],
+                              colors: [AppColors.primary, AppColors.secondary],
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withAlpha((0.3 * 255).toInt()),
+                                color: AppColors.primary.withAlpha(
+                                  (0.3 * 255).toInt(),
+                                ),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
                               ),
@@ -187,7 +184,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         // Title
                         Text(
                           'Change Password',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 28,
                                 color: AppColors.textPrimary,
@@ -199,7 +197,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         // Subtitle
                         Text(
                           'Enter your current password and choose a new one',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
                                 color: AppColors.textSecondary,
                                 fontSize: 15,
                               ),
@@ -221,7 +220,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                             ),
                             onPressed: () {
                               setState(() {
-                                _obscureCurrentPassword = !_obscureCurrentPassword;
+                                _obscureCurrentPassword =
+                                    !_obscureCurrentPassword;
                               });
                             },
                           ),
@@ -272,45 +272,61 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(4),
                                       child: LinearProgressIndicator(
-                                        value: _passwordStrength == PasswordStrength.weak
+                                        value:
+                                            _passwordStrength ==
+                                                PasswordStrength.weak
                                             ? 0.33
-                                            : _passwordStrength == PasswordStrength.medium
-                                                ? 0.66
-                                                : 1.0,
+                                            : _passwordStrength ==
+                                                  PasswordStrength.medium
+                                            ? 0.66
+                                            : 1.0,
                                         backgroundColor: AppColors.borderLight,
-                                        color: _passwordStrength == PasswordStrength.weak
+                                        color:
+                                            _passwordStrength ==
+                                                PasswordStrength.weak
                                             ? AppColors.error
-                                            : _passwordStrength == PasswordStrength.medium
-                                                ? AppColors.warning
-                                                : AppColors.success,
+                                            : _passwordStrength ==
+                                                  PasswordStrength.medium
+                                            ? AppColors.warning
+                                            : AppColors.success,
                                         minHeight: 6,
                                       ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: (_passwordStrength == PasswordStrength.weak
-                                              ? AppColors.error
-                                              : _passwordStrength == PasswordStrength.medium
+                                      color:
+                                          (_passwordStrength ==
+                                                      PasswordStrength.weak
+                                                  ? AppColors.error
+                                                  : _passwordStrength ==
+                                                        PasswordStrength.medium
                                                   ? AppColors.warning
                                                   : AppColors.success)
-                                          .withAlpha((0.1 * 255).toInt()),
+                                              .withAlpha((0.1 * 255).toInt()),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       _passwordStrength == PasswordStrength.weak
                                           ? 'Weak'
-                                          : _passwordStrength == PasswordStrength.medium
-                                              ? 'Medium'
-                                              : 'Strong',
+                                          : _passwordStrength ==
+                                                PasswordStrength.medium
+                                          ? 'Medium'
+                                          : 'Strong',
                                       style: TextStyle(
-                                        color: _passwordStrength == PasswordStrength.weak
+                                        color:
+                                            _passwordStrength ==
+                                                PasswordStrength.weak
                                             ? AppColors.error
-                                            : _passwordStrength == PasswordStrength.medium
-                                                ? AppColors.warning
-                                                : AppColors.success,
+                                            : _passwordStrength ==
+                                                  PasswordStrength.medium
+                                            ? AppColors.warning
+                                            : AppColors.success,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 12,
                                       ),
@@ -320,23 +336,28 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                               ),
                               if (_missingRequirements.isNotEmpty) ...[
                                 const SizedBox(height: 8),
-                                ...(_missingRequirements.map((req) => Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.close,
-                                              size: 14, color: AppColors.error),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            req,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: AppColors.error,
-                                            ),
+                                ...(_missingRequirements.map(
+                                  (req) => Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.close,
+                                          size: 14,
+                                          color: AppColors.error,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          req,
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: AppColors.error,
                                           ),
-                                        ],
-                                      ),
-                                    ))),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )),
                               ],
                             ],
                           ),
@@ -356,7 +377,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                             ),
                             onPressed: () {
                               setState(() {
-                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
                               });
                             },
                           ),
@@ -381,7 +403,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         // Cancel Button
                         TextButton(
                           onPressed: () => context.pop(),
-                          child: Text(
+                          child: const Text(
                             'Cancel',
                             style: TextStyle(
                               fontSize: 14,
@@ -392,9 +414,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         ),
                       ],
                     ),
+                  ),
                 ),
               ),
-            ),
             ),
           ),
         ),

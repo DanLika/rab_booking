@@ -51,7 +51,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.filter_list, color: const Color(0xFFFFFFFF)),
+                const Icon(Icons.filter_list, color: Color(0xFFFFFFFF)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -64,7 +64,10 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                 ),
                 if (filters.hasActiveFilters)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFFFFF),
                       borderRadius: BorderRadius.circular(12),
@@ -81,7 +84,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                 const SizedBox(width: 12),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close, color: const Color(0xFFFFFFFF)),
+                  icon: const Icon(Icons.close, color: Color(0xFFFFFFFF)),
                 ),
               ],
             ),
@@ -169,9 +172,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: theme.cardColor,
-              border: Border(
-                top: BorderSide(color: theme.dividerColor),
-              ),
+              border: Border(top: BorderSide(color: theme.dividerColor)),
             ),
             child: Row(
               children: [
@@ -179,7 +180,9 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                   child: OutlinedButton(
                     onPressed: filters.hasActiveFilters
                         ? () {
-                            ref.read(calendarFiltersProvider.notifier).clearFilters();
+                            ref
+                                .read(calendarFiltersProvider.notifier)
+                                .clearFilters();
                           }
                         : null,
                     style: OutlinedButton.styleFrom(
@@ -222,10 +225,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.dividerColor,
-          width: 1,
-        ),
+        border: Border.all(color: theme.dividerColor, width: 1),
       ),
       child: Column(
         children: [
@@ -247,7 +247,10 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                   if (activeCount > 0)
                     Container(
                       margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(12),
@@ -255,7 +258,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
                       child: Text(
                         '$activeCount',
                         style: const TextStyle(
-                          color: const Color(0xFFFFFFFF),
+                          color: Color(0xFFFFFFFF),
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
@@ -305,10 +308,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
             }
             ref.read(calendarFiltersProvider.notifier).setStatuses(newStatuses);
           },
-          title: Text(
-            status.displayName,
-            style: const TextStyle(fontSize: 14),
-          ),
+          title: Text(status.displayName, style: const TextStyle(fontSize: 14)),
           activeColor: AppColors.primary,
         );
       }).toList(),
@@ -341,10 +341,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
             }
             ref.read(calendarFiltersProvider.notifier).setSources(newSources);
           },
-          title: Text(
-            source['label']!,
-            style: const TextStyle(fontSize: 14),
-          ),
+          title: Text(source['label']!, style: const TextStyle(fontSize: 14)),
           activeColor: AppColors.primary,
         );
       }).toList(),
@@ -367,12 +364,11 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
             } else {
               newPropertyIds.remove(property.id);
             }
-            ref.read(calendarFiltersProvider.notifier).setPropertyIds(newPropertyIds);
+            ref
+                .read(calendarFiltersProvider.notifier)
+                .setPropertyIds(newPropertyIds);
           },
-          title: Text(
-            property.name,
-            style: const TextStyle(fontSize: 14),
-          ),
+          title: Text(property.name, style: const TextStyle(fontSize: 14)),
           activeColor: AppColors.primary,
         );
       }).toList(),
@@ -397,10 +393,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
             }
             ref.read(calendarFiltersProvider.notifier).setUnitIds(newUnitIds);
           },
-          title: Text(
-            unit.name,
-            style: const TextStyle(fontSize: 14),
-          ),
+          title: Text(unit.name, style: const TextStyle(fontSize: 14)),
           subtitle: Text(
             'Kapacitet: ${unit.maxGuests} osoba',
             style: const TextStyle(fontSize: 12),

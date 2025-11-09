@@ -29,14 +29,16 @@ class ProfileScreen extends ConsumerWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     // Get language display name
-    final languageName = currentLocale.languageCode == 'hr' ? 'Hrvatski' : 'English';
+    final languageName = currentLocale.languageCode == 'hr'
+        ? 'Hrvatski'
+        : 'English';
 
     // Get theme display name
     final themeName = currentThemeMode == ThemeMode.light
         ? 'Light'
         : currentThemeMode == ThemeMode.dark
-            ? 'Dark'
-            : 'System default';
+        ? 'Dark'
+        : 'System default';
 
     return Scaffold(
       drawer: const OwnerAppDrawer(currentRoute: 'profile'),
@@ -50,8 +52,13 @@ class ProfileScreen extends ConsumerWidget {
           : userProfileAsync.when(
               data: (profile) {
                 final isAnonymous = authState.isAnonymous;
-                final displayName = profile?.displayName ?? user.displayName ?? (isAnonymous ? 'Guest User' : 'Owner');
-                final email = user.email ?? (isAnonymous ? 'Anonymous Account' : 'No email');
+                final displayName =
+                    profile?.displayName ??
+                    user.displayName ??
+                    (isAnonymous ? 'Guest User' : 'Owner');
+                final email =
+                    user.email ??
+                    (isAnonymous ? 'Anonymous Account' : 'No email');
                 final screenWidth = MediaQuery.of(context).size.width;
                 final isMobile = screenWidth < 600;
                 final headerPadding = isMobile ? 16.0 : 32.0;
@@ -60,305 +67,351 @@ class ProfileScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                        // Premium Profile header
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: isDark
-                                ? LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      AppColors.elevation2Dark,
-                                      AppColors.elevation1Dark,
-                                    ],
-                                  )
-                                : AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: isDark
-                                    ? Colors.black.withValues(alpha: 0.3)
-                                    : AppColors.primary.withValues(alpha: 0.3),
-                                blurRadius: isMobile ? 15 : 20,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
+                      // Premium Profile header
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: isDark
+                              ? const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    AppColors.elevation2Dark,
+                                    AppColors.elevation1Dark,
+                                  ],
+                                )
+                              : AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(
+                            isMobile ? 16 : 20,
                           ),
-                          child: Padding(
-                            padding: EdgeInsets.all(headerPadding),
-                            child: Column(
-                              children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: isDark ? 0.2 : 0.3),
-                                  width: isMobile ? 3 : 4,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.2),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: authState.userModel?.avatarUrl != null &&
-                                      authState.userModel!.avatarUrl!.isNotEmpty
-                                  ? ClipOval(
-                                      child: Image.network(
-                                        authState.userModel!.avatarUrl!,
-                                        width: isMobile ? 100 : 120,
-                                        height: isMobile ? 100 : 120,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return CircleAvatar(
-                                            radius: isMobile ? 50 : 60,
-                                            backgroundColor: isDark
-                                                ? AppColors.primary
-                                                : Colors.white,
-                                            child: Text(
-                                              displayName.substring(0, 1).toUpperCase(),
-                                              style: TextStyle(
-                                                fontSize: isMobile ? 40 : 48,
-                                                fontWeight: FontWeight.bold,
-                                                color: isDark
-                                                    ? Colors.white
-                                                    : AppColors.primary,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    )
-                                  : CircleAvatar(
-                                      radius: isMobile ? 50 : 60,
-                                      backgroundColor: isDark
-                                          ? AppColors.primary
-                                          : Colors.white,
-                                      child: Text(
-                                        displayName.substring(0, 1).toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: isMobile ? 40 : 48,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark
-                                              ? Colors.white
-                                              : AppColors.primary,
-                                        ),
-                                      ),
-                                    ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.3)
+                                  : AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: isMobile ? 15 : 20,
+                              offset: const Offset(0, 8),
                             ),
-                            SizedBox(height: isMobile ? 16 : 20),
-                            ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxWidth: isMobile ? double.infinity : 400,
-                              ),
-                              child: Text(
-                                displayName,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: isMobile ? 24 : 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  shadows: isDark ? null : [
-                                    Shadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
-                                      offset: const Offset(0, 2),
-                                      blurRadius: 4,
+                          ],
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(headerPadding),
+                          child: Column(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withValues(
+                                      alpha: isDark ? 0.2 : 0.3,
+                                    ),
+                                    width: isMobile ? 3 : 4,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: isDark ? 0.4 : 0.2,
+                                      ),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
                                     ),
                                   ],
                                 ),
+                                child:
+                                    authState.userModel?.avatarUrl != null &&
+                                        authState
+                                            .userModel!
+                                            .avatarUrl!
+                                            .isNotEmpty
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          authState.userModel!.avatarUrl!,
+                                          width: isMobile ? 100 : 120,
+                                          height: isMobile ? 100 : 120,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                                return CircleAvatar(
+                                                  radius: isMobile ? 50 : 60,
+                                                  backgroundColor: isDark
+                                                      ? AppColors.primary
+                                                      : Colors.white,
+                                                  child: Text(
+                                                    displayName
+                                                        .substring(0, 1)
+                                                        .toUpperCase(),
+                                                    style: TextStyle(
+                                                      fontSize: isMobile
+                                                          ? 40
+                                                          : 48,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: isDark
+                                                          ? Colors.white
+                                                          : AppColors.primary,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                        ),
+                                      )
+                                    : CircleAvatar(
+                                        radius: isMobile ? 50 : 60,
+                                        backgroundColor: isDark
+                                            ? AppColors.primary
+                                            : Colors.white,
+                                        child: Text(
+                                          displayName
+                                              .substring(0, 1)
+                                              .toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: isMobile ? 40 : 48,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark
+                                                ? Colors.white
+                                                : AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
                               ),
-                            ),
-                            SizedBox(height: isMobile ? 8 : 12),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isMobile ? 12 : 16,
-                                vertical: isMobile ? 6 : 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.25),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                email,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: isMobile ? 13 : 15,
-                                  color: Colors.white.withValues(alpha: 0.95),
-                                  fontWeight: FontWeight.w500,
+                              SizedBox(height: isMobile ? 16 : 20),
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: isMobile ? double.infinity : 400,
+                                ),
+                                child: Text(
+                                  displayName,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 24 : 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    shadows: isDark
+                                        ? null
+                                        : [
+                                            Shadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              offset: const Offset(0, 2),
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                  ),
                                 ),
                               ),
+                              SizedBox(height: isMobile ? 8 : 12),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 12 : 16,
+                                  vertical: isMobile ? 6 : 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(
+                                    alpha: isDark ? 0.15 : 0.25,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  email,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 13 : 15,
+                                    color: Colors.white.withValues(alpha: 0.95),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Account settings - Premium
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.elevation1Dark
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(
+                            isMobile ? 12 : 16,
+                          ),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.borderDark.withValues(alpha: 0.5)
+                                : AppColors.borderLight,
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.2)
+                                  : Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                const SizedBox(height: 24),
-
-                    // Account settings - Premium
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.elevation1Dark : Colors.white,
-                        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.borderDark.withValues(alpha: 0.5)
-                              : AppColors.borderLight,
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDark
-                                ? Colors.black.withValues(alpha: 0.2)
-                                : Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _PremiumListTile(
-                            icon: Icons.person_outline,
-                            title: 'Edit Profile',
-                            subtitle: isAnonymous
-                                ? 'Sign up to edit your profile'
-                                : 'Update your personal information',
-                            onTap: isAnonymous
-                                ? null
-                                : () => context.push(OwnerRoutes.profileEdit),
-                          ),
-                          if (!isAnonymous) ...[
+                        child: Column(
+                          children: [
+                            _PremiumListTile(
+                              icon: Icons.person_outline,
+                              title: 'Edit Profile',
+                              subtitle: isAnonymous
+                                  ? 'Sign up to edit your profile'
+                                  : 'Update your personal information',
+                              onTap: isAnonymous
+                                  ? null
+                                  : () => context.push(OwnerRoutes.profileEdit),
+                            ),
+                            if (!isAnonymous) ...[
+                              const Divider(height: 1, indent: 72),
+                              _PremiumListTile(
+                                icon: Icons.lock_outline,
+                                title: 'Change Password',
+                                subtitle: 'Update your password',
+                                onTap: () => context.push(
+                                  OwnerRoutes.profileChangePassword,
+                                ),
+                              ),
+                            ],
                             const Divider(height: 1, indent: 72),
                             _PremiumListTile(
-                              icon: Icons.lock_outline,
-                              title: 'Change Password',
-                              subtitle: 'Update your password',
-                              onTap: () => context.push(OwnerRoutes.profileChangePassword),
+                              icon: Icons.notifications_outlined,
+                              title: 'Notification Settings',
+                              subtitle: 'Manage your notifications',
+                              onTap: () => context.push(
+                                OwnerRoutes.profileNotifications,
+                              ),
+                              isLast: true,
                             ),
                           ],
-                          const Divider(height: 1, indent: 72),
-                          _PremiumListTile(
-                            icon: Icons.notifications_outlined,
-                            title: 'Notification Settings',
-                            subtitle: 'Manage your notifications',
-                            onTap: () => context.push(OwnerRoutes.profileNotifications),
-                            isLast: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                const SizedBox(height: 20),
-
-                    // App settings - Premium
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.elevation1Dark : Colors.white,
-                        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.borderDark.withValues(alpha: 0.5)
-                              : AppColors.borderLight,
-                          width: 1,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDark
-                                ? Colors.black.withValues(alpha: 0.2)
-                                : Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
-                      child: Column(
-                        children: [
-                          _PremiumListTile(
-                            icon: Icons.language,
-                            title: 'Language',
-                            subtitle: languageName,
-                            onTap: () => showLanguageSelectionBottomSheet(context, ref),
-                          ),
-                          const Divider(height: 1, indent: 72),
-                          _PremiumListTile(
-                            icon: Icons.brightness_6_outlined,
-                            title: 'Theme',
-                            subtitle: themeName,
-                            onTap: () => showThemeSelectionBottomSheet(context, ref),
-                            isLast: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                    // Account actions - Premium
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.elevation1Dark : Colors.white,
-                        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
-                        border: Border.all(
+                      // App settings - Premium
+                      Container(
+                        decoration: BoxDecoration(
                           color: isDark
-                              ? AppColors.borderDark.withValues(alpha: 0.5)
-                              : AppColors.borderLight,
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
+                              ? AppColors.elevation1Dark
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(
+                            isMobile ? 12 : 16,
+                          ),
+                          border: Border.all(
                             color: isDark
-                                ? Colors.black.withValues(alpha: 0.2)
-                                : Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                                ? AppColors.borderDark.withValues(alpha: 0.5)
+                                : AppColors.borderLight,
+                            width: 1,
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _PremiumListTile(
-                            icon: Icons.help_outline,
-                            title: 'Help & Support',
-                            subtitle: 'Get help with the app',
-                            onTap: () {
-                              ErrorDisplayUtils.showInfoSnackBar(
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.2)
+                                  : Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            _PremiumListTile(
+                              icon: Icons.language,
+                              title: 'Language',
+                              subtitle: languageName,
+                              onTap: () => showLanguageSelectionBottomSheet(
                                 context,
-                                'Help & Support coming soon',
-                              );
-                            },
-                          ),
-                          const Divider(height: 1, indent: 72),
-                          _PremiumListTile(
-                            icon: Icons.info_outline,
-                            title: 'About',
-                            subtitle: 'App information',
-                            onTap: () {
-                              ErrorDisplayUtils.showInfoSnackBar(
-                                context,
-                                'About coming soon',
-                              );
-                            },
-                          ),
-                          const Divider(height: 1, indent: 72),
-                          _LogoutTile(
-                            onLogout: () async {
-                              await ref.read(enhancedAuthProvider.notifier).signOut();
-                              if (context.mounted) {
-                                context.go(OwnerRoutes.login);
-                              }
-                            },
-                          ),
-                        ],
+                                ref,
+                              ),
+                            ),
+                            const Divider(height: 1, indent: 72),
+                            _PremiumListTile(
+                              icon: Icons.brightness_6_outlined,
+                              title: 'Theme',
+                              subtitle: themeName,
+                              onTap: () =>
+                                  showThemeSelectionBottomSheet(context, ref),
+                              isLast: true,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                const SizedBox(height: 32),
-              ],
-            ),
-          );
+                      const SizedBox(height: 20),
+
+                      // Account actions - Premium
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.elevation1Dark
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(
+                            isMobile ? 12 : 16,
+                          ),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.borderDark.withValues(alpha: 0.5)
+                                : AppColors.borderLight,
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.2)
+                                  : Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            _PremiumListTile(
+                              icon: Icons.help_outline,
+                              title: 'Help & Support',
+                              subtitle: 'Get help with the app',
+                              onTap: () {
+                                ErrorDisplayUtils.showInfoSnackBar(
+                                  context,
+                                  'Help & Support coming soon',
+                                );
+                              },
+                            ),
+                            const Divider(height: 1, indent: 72),
+                            _PremiumListTile(
+                              icon: Icons.info_outline,
+                              title: 'About',
+                              subtitle: 'App information',
+                              onTap: () {
+                                ErrorDisplayUtils.showInfoSnackBar(
+                                  context,
+                                  'About coming soon',
+                                );
+                              },
+                            ),
+                            const Divider(height: 1, indent: 72),
+                            _LogoutTile(
+                              onLogout: () async {
+                                await ref
+                                    .read(enhancedAuthProvider.notifier)
+                                    .signOut();
+                                if (context.mounted) {
+                                  context.go(OwnerRoutes.login);
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                );
               },
               loading: () {
                 final theme = Theme.of(context);
@@ -371,7 +424,9 @@ class ProfileScreen extends ConsumerWidget {
                       Text(
                         'Učitavanje profila...',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                       ),
                     ],
@@ -403,7 +458,9 @@ class ProfileScreen extends ConsumerWidget {
                         Text(
                           '$error',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.7,
+                            ),
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 3,
@@ -420,7 +477,8 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                             const SizedBox(width: 12),
                             FilledButton.icon(
-                              onPressed: () => ref.invalidate(userProfileProvider),
+                              onPressed: () =>
+                                  ref.invalidate(userProfileProvider),
                               icon: const Icon(Icons.refresh),
                               label: const Text('Pokušaj ponovo'),
                             ),
@@ -469,7 +527,9 @@ class _PremiumListTileState extends State<_PremiumListTile> {
     return MouseRegion(
       onEnter: (_) => !isDisabled ? setState(() => _isHovered = true) : null,
       onExit: (_) => !isDisabled ? setState(() => _isHovered = false) : null,
-      cursor: isDisabled ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
+      cursor: isDisabled
+          ? SystemMouseCursors.forbidden
+          : SystemMouseCursors.click,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(

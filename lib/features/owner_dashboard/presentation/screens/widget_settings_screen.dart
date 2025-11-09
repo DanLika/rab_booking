@@ -19,7 +19,8 @@ class WidgetSettingsScreen extends ConsumerStatefulWidget {
   final String unitId;
 
   @override
-  ConsumerState<WidgetSettingsScreen> createState() => _WidgetSettingsScreenState();
+  ConsumerState<WidgetSettingsScreen> createState() =>
+      _WidgetSettingsScreenState();
 }
 
 class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
@@ -66,7 +67,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   // Blur/Glassmorphism Options
   bool _blurEnabled = true;
-  String _blurIntensity = 'medium'; // 'subtle', 'light', 'medium', 'strong', 'extra_strong'
+  String _blurIntensity =
+      'medium'; // 'subtle', 'light', 'medium', 'strong', 'extra_strong'
   bool _enableCardBlur = true;
   bool _enableAppBarBlur = true;
   bool _enableModalBlur = true;
@@ -145,15 +147,20 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
       // Payment Methods - Bank Transfer
       _bankTransferEnabled = settings.bankTransferConfig?.enabled ?? false;
-      _bankDepositPercentage = settings.bankTransferConfig?.depositPercentage ?? 20;
+      _bankDepositPercentage =
+          settings.bankTransferConfig?.depositPercentage ?? 20;
       _bankNameController.text = settings.bankTransferConfig?.bankName ?? '';
       _ibanController.text = settings.bankTransferConfig?.iban ?? '';
       _swiftController.text = settings.bankTransferConfig?.swift ?? '';
-      _accountHolderController.text = settings.bankTransferConfig?.accountHolder ?? '';
-      _bankPaymentDeadlineDays = settings.bankTransferConfig?.paymentDeadlineDays ?? 3;
+      _accountHolderController.text =
+          settings.bankTransferConfig?.accountHolder ?? '';
+      _bankPaymentDeadlineDays =
+          settings.bankTransferConfig?.paymentDeadlineDays ?? 3;
       _bankEnableQrCode = settings.bankTransferConfig?.enableQrCode ?? true;
-      _bankCustomNotesController.text = settings.bankTransferConfig?.customNotes ?? '';
-      _bankUseCustomNotes = settings.bankTransferConfig?.useCustomNotes ?? false;
+      _bankCustomNotesController.text =
+          settings.bankTransferConfig?.customNotes ?? '';
+      _bankUseCustomNotes =
+          settings.bankTransferConfig?.useCustomNotes ?? false;
 
       // Pay on Arrival
       _payOnArrivalEnabled = settings.allowPayOnArrival;
@@ -170,7 +177,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       _emailController.text = settings.contactOptions.emailAddress ?? '';
       _showWhatsApp = settings.contactOptions.showWhatsApp;
       _whatsAppController.text = settings.contactOptions.whatsAppNumber ?? '';
-      _customMessageController.text = settings.contactOptions.customMessage ?? '';
+      _customMessageController.text =
+          settings.contactOptions.customMessage ?? '';
 
       // Theme Options
       _showBranding = settings.themeOptions?.showBranding ?? true;
@@ -198,14 +206,21 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       _fromNameController.text = settings.emailConfig.fromName ?? '';
 
       // External Calendar Sync Options
-      _externalCalendarEnabled = settings.externalCalendarConfig?.enabled ?? false;
-      _syncBookingCom = settings.externalCalendarConfig?.syncBookingCom ?? false;
-      _bookingComAccountIdController.text = settings.externalCalendarConfig?.bookingComAccountId ?? '';
-      _bookingComAccessTokenController.text = settings.externalCalendarConfig?.bookingComAccessToken ?? '';
+      _externalCalendarEnabled =
+          settings.externalCalendarConfig?.enabled ?? false;
+      _syncBookingCom =
+          settings.externalCalendarConfig?.syncBookingCom ?? false;
+      _bookingComAccountIdController.text =
+          settings.externalCalendarConfig?.bookingComAccountId ?? '';
+      _bookingComAccessTokenController.text =
+          settings.externalCalendarConfig?.bookingComAccessToken ?? '';
       _syncAirbnb = settings.externalCalendarConfig?.syncAirbnb ?? false;
-      _airbnbAccountIdController.text = settings.externalCalendarConfig?.airbnbAccountId ?? '';
-      _airbnbAccessTokenController.text = settings.externalCalendarConfig?.airbnbAccessToken ?? '';
-      _syncIntervalMinutes = settings.externalCalendarConfig?.syncIntervalMinutes ?? 60;
+      _airbnbAccountIdController.text =
+          settings.externalCalendarConfig?.airbnbAccountId ?? '';
+      _airbnbAccessTokenController.text =
+          settings.externalCalendarConfig?.airbnbAccessToken ?? '';
+      _syncIntervalMinutes =
+          settings.externalCalendarConfig?.syncIntervalMinutes ?? 60;
 
       // Tax/Legal Disclaimer Options
       _taxLegalEnabled = settings.taxLegalConfig.enabled;
@@ -227,7 +242,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     final r = color.r.toInt();
     final g = color.g.toInt();
     final b = color.b.toInt();
-    return '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+    return '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'
+        .toUpperCase();
   }
 
   Future<void> _saveSettings() async {
@@ -242,34 +258,56 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         id: widget.unitId,
         propertyId: widget.propertyId,
         widgetMode: _selectedMode,
-        stripeConfig: _stripeEnabled ? StripePaymentConfig(
-          enabled: true,
-          depositPercentage: _stripeDepositPercentage,
-        ) : null,
-        bankTransferConfig: _bankTransferEnabled ? BankTransferConfig(
-          enabled: true,
-          depositPercentage: _bankDepositPercentage,
-          bankName: _bankNameController.text.isEmpty ? null : _bankNameController.text,
-          iban: _ibanController.text.isEmpty ? null : _ibanController.text,
-          swift: _swiftController.text.isEmpty ? null : _swiftController.text,
-          accountHolder: _accountHolderController.text.isEmpty ? null : _accountHolderController.text,
-          paymentDeadlineDays: _bankPaymentDeadlineDays,
-          enableQrCode: _bankEnableQrCode,
-          customNotes: _bankCustomNotesController.text.isEmpty ? null : _bankCustomNotesController.text,
-          useCustomNotes: _bankUseCustomNotes,
-        ) : null,
+        stripeConfig: _stripeEnabled
+            ? StripePaymentConfig(
+                enabled: true,
+                depositPercentage: _stripeDepositPercentage,
+              )
+            : null,
+        bankTransferConfig: _bankTransferEnabled
+            ? BankTransferConfig(
+                enabled: true,
+                depositPercentage: _bankDepositPercentage,
+                bankName: _bankNameController.text.isEmpty
+                    ? null
+                    : _bankNameController.text,
+                iban: _ibanController.text.isEmpty
+                    ? null
+                    : _ibanController.text,
+                swift: _swiftController.text.isEmpty
+                    ? null
+                    : _swiftController.text,
+                accountHolder: _accountHolderController.text.isEmpty
+                    ? null
+                    : _accountHolderController.text,
+                paymentDeadlineDays: _bankPaymentDeadlineDays,
+                enableQrCode: _bankEnableQrCode,
+                customNotes: _bankCustomNotesController.text.isEmpty
+                    ? null
+                    : _bankCustomNotesController.text,
+                useCustomNotes: _bankUseCustomNotes,
+              )
+            : null,
         allowPayOnArrival: _payOnArrivalEnabled,
         requireOwnerApproval: _requireApproval,
         allowGuestCancellation: _allowCancellation,
         cancellationDeadlineHours: _cancellationHours,
         contactOptions: ContactOptions(
           showPhone: _showPhone,
-          phoneNumber: _phoneController.text.isEmpty ? null : _phoneController.text,
+          phoneNumber: _phoneController.text.isEmpty
+              ? null
+              : _phoneController.text,
           showEmail: _showEmail,
-          emailAddress: _emailController.text.isEmpty ? null : _emailController.text,
+          emailAddress: _emailController.text.isEmpty
+              ? null
+              : _emailController.text,
           showWhatsApp: _showWhatsApp,
-          whatsAppNumber: _whatsAppController.text.isEmpty ? null : _whatsAppController.text,
-          customMessage: _customMessageController.text.isEmpty ? null : _customMessageController.text,
+          whatsAppNumber: _whatsAppController.text.isEmpty
+              ? null
+              : _whatsAppController.text,
+          customMessage: _customMessageController.text.isEmpty
+              ? null
+              : _customMessageController.text,
         ),
         emailConfig: EmailNotificationConfig(
           enabled: _emailEnabled,
@@ -277,24 +315,43 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           sendPaymentReceipt: _sendPaymentReceipt,
           sendOwnerNotification: _sendOwnerNotification,
           requireEmailVerification: _requireEmailVerification,
-          resendApiKey: _resendApiKeyController.text.isEmpty ? null : _resendApiKeyController.text,
-          fromEmail: _fromEmailController.text.isEmpty ? null : _fromEmailController.text,
-          fromName: _fromNameController.text.isEmpty ? null : _fromNameController.text,
+          resendApiKey: _resendApiKeyController.text.isEmpty
+              ? null
+              : _resendApiKeyController.text,
+          fromEmail: _fromEmailController.text.isEmpty
+              ? null
+              : _fromEmailController.text,
+          fromName: _fromNameController.text.isEmpty
+              ? null
+              : _fromNameController.text,
         ),
-        externalCalendarConfig: _externalCalendarEnabled ? ExternalCalendarConfig(
-          enabled: true,
-          syncBookingCom: _syncBookingCom,
-          bookingComAccountId: _bookingComAccountIdController.text.isEmpty ? null : _bookingComAccountIdController.text,
-          bookingComAccessToken: _bookingComAccessTokenController.text.isEmpty ? null : _bookingComAccessTokenController.text,
-          syncAirbnb: _syncAirbnb,
-          airbnbAccountId: _airbnbAccountIdController.text.isEmpty ? null : _airbnbAccountIdController.text,
-          airbnbAccessToken: _airbnbAccessTokenController.text.isEmpty ? null : _airbnbAccessTokenController.text,
-          syncIntervalMinutes: _syncIntervalMinutes,
-        ) : null,
+        externalCalendarConfig: _externalCalendarEnabled
+            ? ExternalCalendarConfig(
+                enabled: true,
+                syncBookingCom: _syncBookingCom,
+                bookingComAccountId: _bookingComAccountIdController.text.isEmpty
+                    ? null
+                    : _bookingComAccountIdController.text,
+                bookingComAccessToken:
+                    _bookingComAccessTokenController.text.isEmpty
+                    ? null
+                    : _bookingComAccessTokenController.text,
+                syncAirbnb: _syncAirbnb,
+                airbnbAccountId: _airbnbAccountIdController.text.isEmpty
+                    ? null
+                    : _airbnbAccountIdController.text,
+                airbnbAccessToken: _airbnbAccessTokenController.text.isEmpty
+                    ? null
+                    : _airbnbAccessTokenController.text,
+                syncIntervalMinutes: _syncIntervalMinutes,
+              )
+            : null,
         taxLegalConfig: TaxLegalConfig(
           enabled: _taxLegalEnabled,
           useDefaultText: _useDefaultTaxText,
-          customText: _customTaxTextController.text.isEmpty ? null : _customTaxTextController.text,
+          customText: _customTaxTextController.text.isEmpty
+              ? null
+              : _customTaxTextController.text,
         ),
         themeOptions: ThemeOptions(
           primaryColor: _colorToHex(_primaryColor),
@@ -380,7 +437,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     const SizedBox(height: 24),
                   ],
 
-                  _buildSectionTitle('Kontakt Informacije', Icons.contact_phone),
+                  _buildSectionTitle(
+                    'Kontakt Informacije',
+                    Icons.contact_phone,
+                  ),
                   _buildContactOptionsSection(),
 
                   const SizedBox(height: 24),
@@ -417,7 +477,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         : const Icon(Icons.save_outlined, size: 20),
                     label: Text(_isSaving ? 'Čuvanje...' : 'Sačuvaj Postavke'),
                     style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
                       minimumSize: const Size(double.infinity, 48),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -435,18 +498,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 24,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          Icon(icon, size: 24, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -464,64 +520,72 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               'Odaberite kako će widget funkcionirati:',
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
             const SizedBox(height: 12),
-            ...WidgetMode.values.map((mode) => InkWell(
-              onTap: () {
-                setState(() => _selectedMode = mode);
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    // Custom radio indicator to avoid deprecated API
-                    Container(
-                      width: 20,
-                      height: 20,
-                      margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: _selectedMode == mode
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
-                          width: 2,
+            ...WidgetMode.values.map(
+              (mode) => InkWell(
+                onTap: () {
+                  setState(() => _selectedMode = mode);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      // Custom radio indicator to avoid deprecated API
+                      Container(
+                        width: 20,
+                        height: 20,
+                        margin: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _selectedMode == mode
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface
+                                      .withAlpha((0.3 * 255).toInt()),
+                            width: 2,
+                          ),
+                        ),
+                        child: _selectedMode == mode
+                            ? Center(
+                                child: Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ),
+                              )
+                            : null,
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(mode.displayName),
+                            Text(
+                              mode.description,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurface
+                                    .withAlpha((0.6 * 255).toInt()),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: _selectedMode == mode
-                          ? Center(
-                              child: Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            )
-                          : null,
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(mode.displayName),
-                          Text(
-                            mode.description,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -558,7 +622,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       divisions: 20,
                       label: '$_stripeDepositPercentage%',
                       onChanged: (value) {
-                        setState(() => _stripeDepositPercentage = value.round());
+                        setState(
+                          () => _stripeDepositPercentage = value.round(),
+                        );
                       },
                     ),
                   ],
@@ -571,7 +637,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             // Bank Transfer
             SwitchListTile(
               value: _bankTransferEnabled,
-              onChanged: (value) => setState(() => _bankTransferEnabled = value),
+              onChanged: (value) =>
+                  setState(() => _bankTransferEnabled = value),
               title: const Text('Bankovna Uplata'),
               subtitle: const Text('Uplata na bankovni račun'),
               contentPadding: EdgeInsets.zero,
@@ -632,7 +699,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
-                      value: _bankPaymentDeadlineDays,
+                      initialValue: _bankPaymentDeadlineDays,
                       decoration: const InputDecoration(
                         labelText: 'Rok za uplatu (dana)',
                         border: OutlineInputBorder(),
@@ -654,7 +721,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     const SizedBox(height: 12),
                     SwitchListTile(
                       value: _bankEnableQrCode,
-                      onChanged: (value) => setState(() => _bankEnableQrCode = value),
+                      onChanged: (value) =>
+                          setState(() => _bankEnableQrCode = value),
                       title: const Text('Prikaži QR kod'),
                       subtitle: const Text('EPC QR kod za brzu uplatu'),
                       contentPadding: EdgeInsets.zero,
@@ -663,7 +731,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     const SizedBox(height: 12),
                     SwitchListTile(
                       value: _bankUseCustomNotes,
-                      onChanged: (value) => setState(() => _bankUseCustomNotes = value),
+                      onChanged: (value) =>
+                          setState(() => _bankUseCustomNotes = value),
                       title: const Text('Prilagođena napomena'),
                       subtitle: const Text('Dodajte vlastitu poruku za goste'),
                       contentPadding: EdgeInsets.zero,
@@ -677,7 +746,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           labelText: 'Napomena (max 500 znakova)',
                           border: OutlineInputBorder(),
                           isDense: true,
-                          helperText: 'Prilagođena poruka koja će se prikazati gostima',
+                          helperText:
+                              'Prilagođena poruka koja će se prikazati gostima',
                         ),
                         maxLines: 3,
                         maxLength: 500,
@@ -693,7 +763,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             // Pay on Arrival
             SwitchListTile(
               value: _payOnArrivalEnabled,
-              onChanged: (value) => setState(() => _payOnArrivalEnabled = value),
+              onChanged: (value) =>
+                  setState(() => _payOnArrivalEnabled = value),
               title: const Text('Plaćanje po Dolasku'),
               subtitle: const Text('Gost plaća prilikom prijave'),
               contentPadding: EdgeInsets.zero,
@@ -733,7 +804,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Otkazivanje do: $_cancellationHours sati prije prijave'),
+                    Text(
+                      'Otkazivanje do: $_cancellationHours sati prije prijave',
+                    ),
                     Slider(
                       value: _cancellationHours.toDouble(),
                       min: 0,
@@ -765,7 +838,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               'Kontakt opcije koje će biti prikazane u widgetu:',
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
             const SizedBox(height: 12),
@@ -870,7 +945,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               'Konfigurirajte email notifikacije za goste i vlasnike:',
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
             const SizedBox(height: 12),
@@ -890,9 +967,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               // Booking Confirmation
               SwitchListTile(
                 value: _sendBookingConfirmation,
-                onChanged: (value) => setState(() => _sendBookingConfirmation = value),
+                onChanged: (value) =>
+                    setState(() => _sendBookingConfirmation = value),
                 title: const Text('Potvrda Rezervacije'),
-                subtitle: const Text('Pošalji email gostu nakon kreiranja rezervacije'),
+                subtitle: const Text(
+                  'Pošalji email gostu nakon kreiranja rezervacije',
+                ),
                 contentPadding: EdgeInsets.zero,
               ),
               const SizedBox(height: 8),
@@ -900,9 +980,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               // Payment Receipt
               SwitchListTile(
                 value: _sendPaymentReceipt,
-                onChanged: (value) => setState(() => _sendPaymentReceipt = value),
+                onChanged: (value) =>
+                    setState(() => _sendPaymentReceipt = value),
                 title: const Text('Račun za Plaćanje'),
-                subtitle: const Text('Pošalji email gostu nakon uspješnog plaćanja'),
+                subtitle: const Text(
+                  'Pošalji email gostu nakon uspješnog plaćanja',
+                ),
                 contentPadding: EdgeInsets.zero,
               ),
               const SizedBox(height: 8),
@@ -910,9 +993,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               // Owner Notification
               SwitchListTile(
                 value: _sendOwnerNotification,
-                onChanged: (value) => setState(() => _sendOwnerNotification = value),
+                onChanged: (value) =>
+                    setState(() => _sendOwnerNotification = value),
                 title: const Text('Notifikacija Vlasniku'),
-                subtitle: const Text('Pošalji email vlasniku o novim rezervacijama'),
+                subtitle: const Text(
+                  'Pošalji email vlasniku o novim rezervacijama',
+                ),
                 contentPadding: EdgeInsets.zero,
               ),
               const SizedBox(height: 8),
@@ -920,9 +1006,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               // Email Verification
               SwitchListTile(
                 value: _requireEmailVerification,
-                onChanged: (value) => setState(() => _requireEmailVerification = value),
+                onChanged: (value) =>
+                    setState(() => _requireEmailVerification = value),
                 title: const Text('Zahtijevaj Email Verifikaciju'),
-                subtitle: const Text('Gost mora potvrditi email prije rezervacije'),
+                subtitle: const Text(
+                  'Gost mora potvrditi email prije rezervacije',
+                ),
                 contentPadding: EdgeInsets.zero,
               ),
 
@@ -993,7 +1082,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               'Sinhronizujte rezervacije sa eksternim platformama:',
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
             const SizedBox(height: 12),
@@ -1001,7 +1092,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             // Master Enable Toggle
             SwitchListTile(
               value: _externalCalendarEnabled,
-              onChanged: (value) => setState(() => _externalCalendarEnabled = value),
+              onChanged: (value) =>
+                  setState(() => _externalCalendarEnabled = value),
               title: const Text('Omogući Eksternu Sinhronizaciju'),
               subtitle: const Text('Uvezi rezervacije sa Booking.com i Airbnb'),
               contentPadding: EdgeInsets.zero,
@@ -1101,7 +1193,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<int>(
-                value: _syncIntervalMinutes,
+                initialValue: _syncIntervalMinutes,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   isDense: true,
@@ -1111,12 +1203,19 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 items: const [
                   DropdownMenuItem(value: 15, child: Text('Svakih 15 minuta')),
                   DropdownMenuItem(value: 30, child: Text('Svakih 30 minuta')),
-                  DropdownMenuItem(value: 60, child: Text('Svakih 60 minuta (1 sat)')),
-                  DropdownMenuItem(value: 120, child: Text('Svakih 120 minuta (2 sata)')),
+                  DropdownMenuItem(
+                    value: 60,
+                    child: Text('Svakih 60 minuta (1 sat)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 120,
+                    child: Text('Svakih 120 minuta (2 sata)'),
+                  ),
                   DropdownMenuItem(value: 360, child: Text('Svakih 6 sati')),
                   DropdownMenuItem(value: 1440, child: Text('Jednom dnevno')),
                 ],
-                onChanged: (value) => setState(() => _syncIntervalMinutes = value!),
+                onChanged: (value) =>
+                    setState(() => _syncIntervalMinutes = value!),
               ),
             ],
           ],
@@ -1137,7 +1236,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               'Poreska i pravna napomena za goste:',
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
             const SizedBox(height: 12),
@@ -1147,7 +1248,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               value: _taxLegalEnabled,
               onChanged: (value) => setState(() => _taxLegalEnabled = value),
               title: const Text('Prikaži Pravnu Napomenu'),
-              subtitle: const Text('Obavijesti goste o poreznim i pravnim obavezama'),
+              subtitle: const Text(
+                'Obavijesti goste o poreznim i pravnim obavezama',
+              ),
               contentPadding: EdgeInsets.zero,
             ),
 
@@ -1164,7 +1267,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               RadioListTile<bool>(
                 value: true,
                 groupValue: _useDefaultTaxText,
-                onChanged: (value) => setState(() => _useDefaultTaxText = value!),
+                onChanged: (value) =>
+                    setState(() => _useDefaultTaxText = value!),
                 title: const Text('Koristi Podrazumijevani Tekst'),
                 subtitle: const Text('Standardna hrvatska pravna napomena'),
                 contentPadding: EdgeInsets.zero,
@@ -1173,7 +1277,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               RadioListTile<bool>(
                 value: false,
                 groupValue: _useDefaultTaxText,
-                onChanged: (value) => setState(() => _useDefaultTaxText = value!),
+                onChanged: (value) =>
+                    setState(() => _useDefaultTaxText = value!),
                 title: const Text('Prilagođeni Tekst'),
                 subtitle: const Text('Napišite vlastiti tekst napomene'),
                 contentPadding: EdgeInsets.zero,
@@ -1186,10 +1291,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withAlpha((0.3 * 255).toInt()),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
                     ),
                   ),
                   child: Column(
@@ -1233,7 +1341,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   decoration: InputDecoration(
                     labelText: 'Prilagođeni Tekst Napomene',
                     border: const OutlineInputBorder(),
-                    helperText: 'Unesite vlastiti tekst pravne napomene (max 1500 znakova)',
+                    helperText:
+                        'Unesite vlastiti tekst pravne napomene (max 1500 znakova)',
                     helperMaxLines: 2,
                     prefixIcon: const Icon(Icons.edit_document),
                     counterText: '${_customTaxTextController.text.length}/1500',
@@ -1241,12 +1350,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   maxLines: 12,
                   maxLength: 1500,
                   validator: (value) {
-                    if (!_useDefaultTaxText && (value == null || value.trim().isEmpty)) {
+                    if (!_useDefaultTaxText &&
+                        (value == null || value.trim().isEmpty)) {
                       return 'Molimo unesite tekst napomene ili koristite podrazumijevani tekst';
                     }
                     return null;
                   },
-                  onChanged: (value) => setState(() {}), // Update character count
+                  onChanged: (value) =>
+                      setState(() {}), // Update character count
                 ),
               ],
 
@@ -1256,10 +1367,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.errorContainer.withAlpha((0.3 * 255).toInt()),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.errorContainer.withAlpha((0.3 * 255).toInt()),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.error.withAlpha((0.2 * 255).toInt()),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.error.withAlpha((0.2 * 255).toInt()),
                   ),
                 ),
                 child: Row(
@@ -1304,7 +1419,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               'Prilagodite izgled widgeta:',
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
             const SizedBox(height: 12),
@@ -1315,60 +1432,67 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
-            ...['light', 'dark', 'system'].map((mode) => InkWell(
-              onTap: () => setState(() => _themeMode = mode),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 20,
-                      height: 20,
-                      margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: _themeMode == mode
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
-                          width: 2,
+            ...['light', 'dark', 'system'].map(
+              (mode) => InkWell(
+                onTap: () => setState(() => _themeMode = mode),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        margin: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _themeMode == mode
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface
+                                      .withAlpha((0.3 * 255).toInt()),
+                            width: 2,
+                          ),
                         ),
-                      ),
-                      child: _themeMode == mode
-                          ? Center(
-                              child: Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Theme.of(context).colorScheme.primary,
+                        child: _themeMode == mode
+                            ? Center(
+                                child: Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
                                 ),
-                              ),
-                            )
-                          : null,
-                    ),
-                    Icon(
-                      mode == 'light'
-                          ? Icons.light_mode
-                          : mode == 'dark'
-                              ? Icons.dark_mode
-                              : Icons.settings_brightness,
-                      size: 20,
-                      color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      mode == 'light'
-                          ? 'Svijetla Tema'
-                          : mode == 'dark'
-                              ? 'Tamna Tema (OLED Optimizovana)'
-                              : 'Sistem (Auto)',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
+                              )
+                            : null,
+                      ),
+                      Icon(
+                        mode == 'light'
+                            ? Icons.light_mode
+                            : mode == 'dark'
+                            ? Icons.dark_mode
+                            : Icons.settings_brightness,
+                        size: 20,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        mode == 'light'
+                            ? 'Svijetla Tema'
+                            : mode == 'dark'
+                            ? 'Tamna Tema (OLED Optimizovana)'
+                            : 'Sistem (Auto)',
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            )),
+            ),
 
             const SizedBox(height: 24),
             const Divider(),
@@ -1384,7 +1508,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               'Frosted glass efekti za moderan izgled',
               style: TextStyle(
                 fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
             const SizedBox(height: 12),
@@ -1394,7 +1520,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               value: _blurEnabled,
               onChanged: (value) => setState(() => _blurEnabled = value),
               title: const Text('Omogući Blur Efekte'),
-              subtitle: const Text('Glassmorphism za kartice, modale i app bar'),
+              subtitle: const Text(
+                'Glassmorphism za kartice, modale i app bar',
+              ),
               contentPadding: EdgeInsets.zero,
             ),
 
@@ -1406,60 +1534,66 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
-              ...['subtle', 'light', 'medium', 'strong', 'extra_strong'].map((intensity) => InkWell(
-                onTap: () => setState(() => _blurIntensity = intensity),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 20,
-                        height: 20,
-                        margin: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _blurIntensity == intensity
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
-                            width: 2,
+              ...['subtle', 'light', 'medium', 'strong', 'extra_strong'].map(
+                (intensity) => InkWell(
+                  onTap: () => setState(() => _blurIntensity = intensity),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 20,
+                          margin: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _blurIntensity == intensity
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.onSurface
+                                        .withAlpha((0.3 * 255).toInt()),
+                              width: 2,
+                            ),
                           ),
-                        ),
-                        child: _blurIntensity == intensity
-                            ? Center(
-                                child: Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Theme.of(context).colorScheme.primary,
+                          child: _blurIntensity == intensity
+                              ? Center(
+                                  child: Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                                   ),
-                                ),
-                              )
-                            : null,
-                      ),
-                      Icon(
-                        Icons.blur_on,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        intensity == 'subtle'
-                            ? 'Suptilan (Barely visible)'
-                            : intensity == 'light'
-                                ? 'Lagan (Light frosted)'
-                                : intensity == 'medium'
-                                    ? 'Srednji (Standard glass)'
-                                    : intensity == 'strong'
-                                        ? 'Jak (Prominent glass)'
-                                        : 'Ekstra Jak (Maximum blur)',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ],
+                                )
+                              : null,
+                        ),
+                        Icon(
+                          Icons.blur_on,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.onSurface
+                              .withAlpha((0.6 * 255).toInt()),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          intensity == 'subtle'
+                              ? 'Suptilan (Barely visible)'
+                              : intensity == 'light'
+                              ? 'Lagan (Light frosted)'
+                              : intensity == 'medium'
+                              ? 'Srednji (Standard glass)'
+                              : intensity == 'strong'
+                              ? 'Jak (Prominent glass)'
+                              : 'Ekstra Jak (Maximum blur)',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              )),
+              ),
 
               const SizedBox(height: 16),
               const Text(
@@ -1471,7 +1605,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               // Card Blur
               CheckboxListTile(
                 value: _enableCardBlur,
-                onChanged: (value) => setState(() => _enableCardBlur = value ?? true),
+                onChanged: (value) =>
+                    setState(() => _enableCardBlur = value ?? true),
                 title: const Text('Kartice (Cards)'),
                 subtitle: const Text('Blur za informacijske kartice'),
                 contentPadding: EdgeInsets.zero,
@@ -1481,7 +1616,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               // App Bar Blur
               CheckboxListTile(
                 value: _enableAppBarBlur,
-                onChanged: (value) => setState(() => _enableAppBarBlur = value ?? true),
+                onChanged: (value) =>
+                    setState(() => _enableAppBarBlur = value ?? true),
                 title: const Text('App Bar'),
                 subtitle: const Text('Blur za gornji navigation bar'),
                 contentPadding: EdgeInsets.zero,
@@ -1491,7 +1627,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               // Modal Blur
               CheckboxListTile(
                 value: _enableModalBlur,
-                onChanged: (value) => setState(() => _enableModalBlur = value ?? true),
+                onChanged: (value) =>
+                    setState(() => _enableModalBlur = value ?? true),
                 title: const Text('Modale i Dijalozi'),
                 subtitle: const Text('Blur za pop-up prozore'),
                 contentPadding: EdgeInsets.zero,
@@ -1501,7 +1638,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               // Overlay Blur
               CheckboxListTile(
                 value: _enableOverlayBlur,
-                onChanged: (value) => setState(() => _enableOverlayBlur = value ?? true),
+                onChanged: (value) =>
+                    setState(() => _enableOverlayBlur = value ?? true),
                 title: const Text('Overlay Pozadine'),
                 subtitle: const Text('Blur za pozadinske overlaye'),
                 contentPadding: EdgeInsets.zero,
@@ -1524,7 +1662,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     color: _primaryColor,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                     ),
                   ),
                 ),
@@ -1556,37 +1696,43 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: [
-              Colors.blue,
-              Colors.red,
-              Colors.green,
-              Colors.orange,
-              Colors.purple,
-              Colors.teal,
-              Colors.indigo,
-              Colors.pink,
-              Colors.amber,
-              Colors.cyan,
-            ].map((color) => GestureDetector(
-              onTap: () {
-                setState(() => _primaryColor = color);
-                Navigator.pop(context);
-              },
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: _primaryColor == color
-                        ? Theme.of(context).colorScheme.onSurface
-                        : Theme.of(context).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
-                    width: _primaryColor == color ? 3 : 1,
-                  ),
-                ),
-              ),
-            )).toList(),
+            children:
+                [
+                      Colors.blue,
+                      Colors.red,
+                      Colors.green,
+                      Colors.orange,
+                      Colors.purple,
+                      Colors.teal,
+                      Colors.indigo,
+                      Colors.pink,
+                      Colors.amber,
+                      Colors.cyan,
+                    ]
+                    .map(
+                      (color) => GestureDetector(
+                        onTap: () {
+                          setState(() => _primaryColor = color);
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _primaryColor == color
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Theme.of(context).colorScheme.onSurface
+                                        .withAlpha((0.3 * 255).toInt()),
+                              width: _primaryColor == color ? 3 : 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
           ),
         ),
         actions: [

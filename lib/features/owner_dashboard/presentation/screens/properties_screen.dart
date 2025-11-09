@@ -58,7 +58,8 @@ class PropertiesScreen extends ConsumerWidget {
                       mainAxisExtent = 440;
                     } else if (constraints.maxWidth >= 600) {
                       crossAxisCount = 2; // Tablet portrait: 2 columns
-                      mainAxisExtent = 460; // More space for 2 columns on tablet
+                      mainAxisExtent =
+                          460; // More space for 2 columns on tablet
                     } else if (constraints.maxWidth >= 400) {
                       crossAxisCount = 1; // Mobile landscape: 1 column
                       mainAxisExtent = 480;
@@ -107,7 +108,7 @@ class PropertiesScreen extends ConsumerWidget {
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
+                                    decoration: const BoxDecoration(
                                       shape: BoxShape.circle,
                                       gradient: LinearGradient(
                                         colors: [
@@ -123,7 +124,7 @@ class PropertiesScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   const SizedBox(height: 16),
-                                  Text(
+                                  const Text(
                                     'Dodaj Novi Objekt',
                                     style: TextStyle(
                                       fontSize: 16,
@@ -162,7 +163,7 @@ class PropertiesScreen extends ConsumerWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           colors: [AppColors.primary, AppColors.secondary],
                         ),
@@ -170,7 +171,9 @@ class PropertiesScreen extends ConsumerWidget {
                       ),
                       child: const CircularProgressIndicator(
                         strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFFFF)),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFFFFFFFF),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -359,7 +362,7 @@ class _EmptyPropertiesState extends StatelessWidget {
                     ],
                   ),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.villa_outlined,
                   size: 80,
                   color: AppColors.primary,
@@ -408,7 +411,7 @@ class _EmptyPropertiesState extends StatelessWidget {
                     color: AppColors.primary.withAlpha((0.3 * 255).toInt()),
                   ),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
@@ -416,7 +419,7 @@ class _EmptyPropertiesState extends StatelessWidget {
                       size: 20,
                       color: AppColors.primary,
                     ),
-                    const SizedBox(width: AppDimensions.spaceXS),
+                    SizedBox(width: AppDimensions.spaceXS),
                     Flexible(
                       child: Text(
                         'Dodajte detalje nekretnine, jedinice i cijene',

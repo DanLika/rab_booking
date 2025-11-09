@@ -83,10 +83,23 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                 final isMobile = ResponsiveHelper.isMobile(context);
 
                 if (isMobile) {
-                  return _buildMobileLayout(colors, room, checkIn, checkOut, adults, children);
+                  return _buildMobileLayout(
+                    colors,
+                    room,
+                    checkIn,
+                    checkOut,
+                    adults,
+                    children,
+                  );
                 } else {
                   return _buildDesktopLayout(
-                      colors, room, checkIn, checkOut, adults, children);
+                    colors,
+                    room,
+                    checkIn,
+                    checkOut,
+                    adults,
+                    children,
+                  );
                 }
               },
             ),
@@ -121,7 +134,14 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                 const SizedBox(height: 32),
 
                 // Booking details card
-                _buildBookingDetailsCard(colors, room, checkIn, checkOut, adults, children),
+                _buildBookingDetailsCard(
+                  colors,
+                  room,
+                  checkIn,
+                  checkOut,
+                  adults,
+                  children,
+                ),
                 const SizedBox(height: 24),
 
                 // Additional services
@@ -159,51 +179,60 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-        // Main content (70%)
-        Expanded(
-          flex: 7,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Progress indicator
-                _buildProgressIndicator(colors, 1),
-                const SizedBox(height: 32),
+            // Main content (70%)
+            Expanded(
+              flex: 7,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Progress indicator
+                    _buildProgressIndicator(colors, 1),
+                    const SizedBox(height: 32),
 
-                // Booking details card
-                _buildBookingDetailsCard(
-                    colors, room, checkIn, checkOut, adults, children),
-                const SizedBox(height: 32),
+                    // Booking details card
+                    _buildBookingDetailsCard(
+                      colors,
+                      room,
+                      checkIn,
+                      checkOut,
+                      adults,
+                      children,
+                    ),
+                    const SizedBox(height: 32),
 
-                // Additional services
-                _buildAdditionalServicesSection(colors),
-              ],
-            ),
-          ),
-        ),
-
-        // Sidebar (30%)
-        Container(
-          width: 400,
-          decoration: BoxDecoration(
-            color: colors.backgroundPrimary,
-            border: Border(
-              left: BorderSide(color: colors.borderDefault),
-            ),
-          ),
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: _buildPriceSummaryCard(colors, room.id, checkIn, checkOut),
+                    // Additional services
+                    _buildAdditionalServicesSection(colors),
+                  ],
                 ),
               ),
-              _buildBottomButtons(colors),
-            ],
-          ),
-        ),
+            ),
+
+            // Sidebar (30%)
+            Container(
+              width: 400,
+              decoration: BoxDecoration(
+                color: colors.backgroundPrimary,
+                border: Border(left: BorderSide(color: colors.borderDefault)),
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: _buildPriceSummaryCard(
+                        colors,
+                        room.id,
+                        checkIn,
+                        checkOut,
+                      ),
+                    ),
+                  ),
+                  _buildBottomButtons(colors),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -219,20 +248,49 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _buildProgressDot(colors, 1, 'Room', isActive: currentStep == 1, isCompleted: currentStep > 1),
+          _buildProgressDot(
+            colors,
+            1,
+            'Room',
+            isActive: currentStep == 1,
+            isCompleted: currentStep > 1,
+          ),
           _buildProgressLine(colors, isCompleted: currentStep > 1),
-          _buildProgressDot(colors, 2, 'Details', isActive: currentStep == 2, isCompleted: currentStep > 2),
+          _buildProgressDot(
+            colors,
+            2,
+            'Details',
+            isActive: currentStep == 2,
+            isCompleted: currentStep > 2,
+          ),
           _buildProgressLine(colors, isCompleted: currentStep > 2),
-          _buildProgressDot(colors, 3, 'Payment', isActive: currentStep == 3, isCompleted: currentStep > 3),
+          _buildProgressDot(
+            colors,
+            3,
+            'Payment',
+            isActive: currentStep == 3,
+            isCompleted: currentStep > 3,
+          ),
           _buildProgressLine(colors, isCompleted: currentStep > 3),
-          _buildProgressDot(colors, 4, 'Done', isActive: currentStep == 4, isCompleted: currentStep > 4),
+          _buildProgressDot(
+            colors,
+            4,
+            'Done',
+            isActive: currentStep == 4,
+            isCompleted: currentStep > 4,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildProgressDot(WidgetColorScheme colors, int step, String label,
-      {required bool isActive, required bool isCompleted}) {
+  Widget _buildProgressDot(
+    WidgetColorScheme colors,
+    int step,
+    String label, {
+    required bool isActive,
+    required bool isCompleted,
+  }) {
     return Column(
       children: [
         Container(
@@ -250,7 +308,9 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                 : Text(
                     step.toString(),
                     style: GoogleFonts.inter(
-                      color: isActive ? colors.backgroundCard : colors.textSecondary,
+                      color: isActive
+                          ? colors.backgroundCard
+                          : colors.textSecondary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -261,9 +321,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
           label,
           style: GoogleFonts.inter(
             fontSize: 12,
-            color: isActive
-                ? colors.primary
-                : colors.textSecondary,
+            color: isActive ? colors.primary : colors.textSecondary,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -271,18 +329,20 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     );
   }
 
-  Widget _buildProgressLine(WidgetColorScheme colors, {required bool isCompleted}) {
+  Widget _buildProgressLine(
+    WidgetColorScheme colors, {
+    required bool isCompleted,
+  }) {
     return Container(
       width: 40,
       height: 2,
       margin: const EdgeInsets.only(bottom: 20, left: 4, right: 4),
-      color: isCompleted
-          ? colors.primary
-          : colors.borderDefault,
+      color: isCompleted ? colors.primary : colors.borderDefault,
     );
   }
 
-  _buildBookingDetailsCard(WidgetColorScheme colors,
+  Container _buildBookingDetailsCard(
+    WidgetColorScheme colors,
     dynamic room,
     DateTime checkIn,
     DateTime checkOut,
@@ -310,7 +370,11 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
         children: [
           Text(
             'Your Booking Details',
-            style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: colors.textPrimary),
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
           ),
           const Divider(height: 24),
 
@@ -331,7 +395,11 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                         width: 120,
                         height: 90,
                         color: colors.borderDefault,
-                        child: Icon(Icons.hotel, size: 40, color: colors.textSecondary),
+                        child: Icon(
+                          Icons.hotel,
+                          size: 40,
+                          color: colors.textSecondary,
+                        ),
                       );
                     },
                   ),
@@ -343,7 +411,11 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                   children: [
                     Text(
                       room.name,
-                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -359,7 +431,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                         Flexible(
                           child: Text(
                             '$adults adults${children > 0 ? ', $children children' : ''}',
-                            style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: colors.textSecondary,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -378,7 +453,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                         Flexible(
                           child: Text(
                             '${room.bedrooms} ${room.bedrooms == 1 ? 'bedroom' : 'bedrooms'}',
-                            style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: colors.textSecondary,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -396,13 +474,9 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
           // Dates
           Row(
             children: [
-              Expanded(
-                child: _buildDateInfoBox(colors, 'Check-in', checkIn),
-              ),
+              Expanded(child: _buildDateInfoBox(colors, 'Check-in', checkIn)),
               const SizedBox(width: 16),
-              Expanded(
-                child: _buildDateInfoBox(colors, 'Check-out', checkOut),
-              ),
+              Expanded(child: _buildDateInfoBox(colors, 'Check-out', checkOut)),
             ],
           ),
 
@@ -418,11 +492,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.nightlight_round,
-                  size: 20,
-                  color: colors.primary,
-                ),
+                Icon(Icons.nightlight_round, size: 20, color: colors.primary),
                 const SizedBox(width: 8),
                 Text(
                   '$nights ${nights == 1 ? 'Night' : 'Nights'}',
@@ -440,7 +510,11 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     );
   }
 
-  Widget _buildDateInfoBox(WidgetColorScheme colors, String label, DateTime date) {
+  Widget _buildDateInfoBox(
+    WidgetColorScheme colors,
+    String label,
+    DateTime date,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -457,14 +531,15 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
           const SizedBox(height: 4),
           Text(
             DateFormat('MMM d, yyyy').format(date),
-            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: colors.textPrimary,
+            ),
           ),
           Text(
             DateFormat('EEEE').format(date),
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: colors.textSecondary,
-            ),
+            style: GoogleFonts.inter(fontSize: 12, color: colors.textSecondary),
           ),
         ],
       ),
@@ -502,7 +577,11 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
       children: [
         Text(
           'Additional Services',
-          style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: colors.textPrimary),
+          style: GoogleFonts.inter(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: colors.textPrimary,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -524,9 +603,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: isSelected
-                      ? colors.primary
-                      : colors.borderDefault,
+                  color: isSelected ? colors.primary : colors.borderDefault,
                   width: isSelected ? 2 : 1,
                 ),
                 borderRadius: BorderRadius.circular(12),
@@ -562,13 +639,20 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                         children: [
                           Text(
                             service['name'] as String,
-                            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textPrimary,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             service['description'] as String,
-                            style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: colors.textSecondary,
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -598,13 +682,19 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     );
   }
 
-  _buildPriceSummaryCard(WidgetColorScheme colors,
-      String unitId, DateTime checkIn, DateTime checkOut) {
-    final priceCalc = ref.watch(bookingPriceProvider(
-      unitId: unitId,
-      checkIn: checkIn,
-      checkOut: checkOut,
-    ));
+  Widget _buildPriceSummaryCard(
+    WidgetColorScheme colors,
+    String unitId,
+    DateTime checkIn,
+    DateTime checkOut,
+  ) {
+    final priceCalc = ref.watch(
+      bookingPriceProvider(
+        unitId: unitId,
+        checkIn: checkIn,
+        checkOut: checkOut,
+      ),
+    );
 
     return priceCalc.when(
       data: (calculation) {
@@ -645,18 +735,24 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
             children: [
               Text(
                 'Price Summary',
-                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textPrimary,
+                ),
               ),
               const Divider(height: 24),
 
-              _buildPriceRow(colors,
+              _buildPriceRow(
+                colors,
                 '${calculation.nights} nights',
                 calculation.formattedTotal,
               ),
 
               if (servicesTotal > 0) ...[
                 const SizedBox(height: 8),
-                _buildPriceRow(colors,
+                _buildPriceRow(
+                  colors,
                   'Additional services',
                   '€${servicesTotal.toStringAsFixed(0)}',
                   isHighlighted: true,
@@ -665,7 +761,8 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
 
               const Divider(height: 24),
 
-              _buildPriceRow(colors,
+              _buildPriceRow(
+                colors,
                 'Total',
                 '€${grandTotal.toStringAsFixed(0)}',
                 isBold: true,
@@ -679,9 +776,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                 decoration: BoxDecoration(
                   color: colors.primarySurface,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: colors.primaryLight,
-                  ),
+                  border: Border.all(color: colors.primaryLight),
                 ),
                 child: Column(
                   children: [
@@ -749,8 +844,13 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
     );
   }
 
-  Widget _buildPriceRow(WidgetColorScheme colors, String label, String amount,
-      {bool isBold = false, bool isHighlighted = false}) {
+  Widget _buildPriceRow(
+    WidgetColorScheme colors,
+    String label,
+    String amount, {
+    bool isBold = false,
+    bool isHighlighted = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -761,9 +861,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
             style: GoogleFonts.inter(
               fontSize: isBold ? 16 : 14,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              color: isHighlighted
-                  ? colors.primary
-                  : colors.textPrimary,
+              color: isHighlighted ? colors.primary : colors.textPrimary,
             ),
           ),
           Text(
@@ -771,9 +869,7 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
             style: GoogleFonts.inter(
               fontSize: isBold ? 18 : 14,
               fontWeight: FontWeight.bold,
-              color: isHighlighted
-                  ? colors.primary
-                  : colors.textPrimary,
+              color: isHighlighted ? colors.primary : colors.textPrimary,
             ),
           ),
         ],
@@ -786,10 +882,8 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: colors.backgroundCard,
-        border: Border(
-          top: BorderSide(color: colors.borderDefault),
-        ),
-        boxShadow: [
+        border: Border(top: BorderSide(color: colors.borderDefault)),
+        boxShadow: const [
           BoxShadow(
             color: Color(0x0D000000),
             blurRadius: 10,
@@ -813,7 +907,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text('Back', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Back',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -832,7 +929,10 @@ class _EnhancedSummaryScreenState extends ConsumerState<EnhancedSummaryScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text('Continue to Payment', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Continue to Payment',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ],

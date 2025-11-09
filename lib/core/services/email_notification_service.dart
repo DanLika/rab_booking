@@ -15,9 +15,8 @@ import 'logging_service.dart';
 class EmailNotificationService {
   final http.Client _httpClient;
 
-  EmailNotificationService({
-    http.Client? httpClient,
-  }) : _httpClient = httpClient ?? http.Client();
+  EmailNotificationService({http.Client? httpClient})
+    : _httpClient = httpClient ?? http.Client();
 
   /// Send booking confirmation email to guest
   ///
@@ -32,18 +31,21 @@ class EmailNotificationService {
     try {
       if (!emailConfig.enabled || !emailConfig.sendBookingConfirmation) {
         LoggingService.logDebug(
-            '[EmailNotificationService] Booking confirmation email disabled in settings');
+          '[EmailNotificationService] Booking confirmation email disabled in settings',
+        );
         return;
       }
 
       if (!emailConfig.isConfigured) {
         LoggingService.logWarning(
-            '[EmailNotificationService] Email config incomplete - skipping booking confirmation');
+          '[EmailNotificationService] Email config incomplete - skipping booking confirmation',
+        );
         return;
       }
 
       LoggingService.logOperation(
-          '[EmailNotificationService] Sending booking confirmation email...');
+        '[EmailNotificationService] Sending booking confirmation email...',
+      );
 
       final subject = 'Potvrda rezervacije - $propertyName';
       final html = _generateBookingConfirmationHtml(
@@ -63,10 +65,13 @@ class EmailNotificationService {
       );
 
       LoggingService.logSuccess(
-          '[EmailNotificationService] Booking confirmation sent to ${booking.guestEmail}');
+        '[EmailNotificationService] Booking confirmation sent to ${booking.guestEmail}',
+      );
     } catch (e) {
       await LoggingService.logError(
-          '[EmailNotificationService] Failed to send booking confirmation', e);
+        '[EmailNotificationService] Failed to send booking confirmation',
+        e,
+      );
       // Don't throw - email failure shouldn't block booking
     }
   }
@@ -85,18 +90,21 @@ class EmailNotificationService {
     try {
       if (!emailConfig.enabled || !emailConfig.sendPaymentReceipt) {
         LoggingService.logDebug(
-            '[EmailNotificationService] Payment receipt email disabled in settings');
+          '[EmailNotificationService] Payment receipt email disabled in settings',
+        );
         return;
       }
 
       if (!emailConfig.isConfigured) {
         LoggingService.logWarning(
-            '[EmailNotificationService] Email config incomplete - skipping payment receipt');
+          '[EmailNotificationService] Email config incomplete - skipping payment receipt',
+        );
         return;
       }
 
       LoggingService.logOperation(
-          '[EmailNotificationService] Sending payment receipt email...');
+        '[EmailNotificationService] Sending payment receipt email...',
+      );
 
       final subject = 'Potvrda plaćanja - $propertyName';
       final html = _generatePaymentReceiptHtml(
@@ -117,10 +125,13 @@ class EmailNotificationService {
       );
 
       LoggingService.logSuccess(
-          '[EmailNotificationService] Payment receipt sent to ${booking.guestEmail}');
+        '[EmailNotificationService] Payment receipt sent to ${booking.guestEmail}',
+      );
     } catch (e) {
       await LoggingService.logError(
-          '[EmailNotificationService] Failed to send payment receipt', e);
+        '[EmailNotificationService] Failed to send payment receipt',
+        e,
+      );
       // Don't throw - email failure shouldn't block booking
     }
   }
@@ -139,18 +150,21 @@ class EmailNotificationService {
     try {
       if (!emailConfig.enabled || !emailConfig.sendOwnerNotification) {
         LoggingService.logDebug(
-            '[EmailNotificationService] Owner notification email disabled in settings');
+          '[EmailNotificationService] Owner notification email disabled in settings',
+        );
         return;
       }
 
       if (!emailConfig.isConfigured) {
         LoggingService.logWarning(
-            '[EmailNotificationService] Email config incomplete - skipping owner notification');
+          '[EmailNotificationService] Email config incomplete - skipping owner notification',
+        );
         return;
       }
 
       LoggingService.logOperation(
-          '[EmailNotificationService] Sending owner notification email...');
+        '[EmailNotificationService] Sending owner notification email...',
+      );
 
       final subject = requiresApproval
           ? 'Nova rezervacija zahteva potvrdu - $propertyName'
@@ -173,10 +187,13 @@ class EmailNotificationService {
       );
 
       LoggingService.logSuccess(
-          '[EmailNotificationService] Owner notification sent to $ownerEmail');
+        '[EmailNotificationService] Owner notification sent to $ownerEmail',
+      );
     } catch (e) {
       await LoggingService.logError(
-          '[EmailNotificationService] Failed to send owner notification', e);
+        '[EmailNotificationService] Failed to send owner notification',
+        e,
+      );
       // Don't throw - email failure shouldn't block booking
     }
   }
@@ -210,11 +227,13 @@ class EmailNotificationService {
 
     if (response.statusCode != 200) {
       throw Exception(
-          'Resend API error: ${response.statusCode} - ${response.body}');
+        'Resend API error: ${response.statusCode} - ${response.body}',
+      );
     }
 
     LoggingService.logDebug(
-        '[EmailNotificationService] Resend API response: ${response.body}');
+      '[EmailNotificationService] Resend API response: ${response.body}',
+    );
   }
 
   /// Generate booking confirmation email HTML
@@ -395,8 +414,8 @@ class EmailNotificationService {
     final paymentMethodLabel = paymentMethod == 'bank_transfer'
         ? 'Bankovni prijenos'
         : paymentMethod == 'stripe'
-            ? 'Kreditna kartica'
-            : paymentMethod;
+        ? 'Kreditna kartica'
+        : paymentMethod;
 
     return '''
 <!DOCTYPE html>
@@ -548,7 +567,7 @@ class EmailNotificationService {
 
         <div class="footer">
             <p><strong>Hvala Vam na ukazanom povjerenju!</strong></p>
-            <p>Očekujemo Vas ${checkInDate}. godine.</p>
+            <p>Očekujemo Vas $checkInDate. godine.</p>
             <p>Sačuvajte ovaj email kao dokaz o plaćanju.</p>
             <p>Ako imate pitanja, molimo odgovorite na ovaj email.</p>
         </div>
@@ -756,7 +775,8 @@ class EmailNotificationService {
     // - Send verification email
     // - Provide method to verify code
     LoggingService.logWarning(
-        '[EmailNotificationService] Email verification not yet implemented');
+      '[EmailNotificationService] Email verification not yet implemented',
+    );
     return false;
   }
 

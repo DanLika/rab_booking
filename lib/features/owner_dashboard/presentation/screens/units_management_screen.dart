@@ -170,21 +170,53 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadUnits,
-      child: ListView.builder(
-        padding: const EdgeInsets.only(
-          top: 140 + 16,
-          left: 16,
-          right: 16,
-          bottom: 16,
-        ),
-        itemCount: _units!.length,
-        itemBuilder: (context, index) {
-          final unit = _units![index];
-          return _UnitCard(
-            unit: unit,
-            onEdit: () => _navigateToEditUnit(unit),
-            onDelete: () => _confirmDeleteUnit(unit.id),
-            onManagePricing: () => _navigateToManagePricing(unit),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate number of columns based on screen width
+          int crossAxisCount;
+
+          if (constraints.maxWidth >= 1200) {
+            // Desktop: 3 columns
+            crossAxisCount = 3;
+          } else if (constraints.maxWidth >= 800) {
+            // Tablet landscape: 2 columns
+            crossAxisCount = 2;
+          } else if (constraints.maxWidth >= 600) {
+            // Tablet portrait: 2 columns
+            crossAxisCount = 2;
+          } else {
+            // Mobile: 1 column
+            crossAxisCount = 1;
+          }
+
+          return GridView.builder(
+            padding: const EdgeInsets.only(
+              top: 140 + 16,
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              // Adjust aspect ratio based on columns for better card proportions
+              childAspectRatio: crossAxisCount == 1
+                  ? 1.1  // Mobile: slightly taller cards
+                  : crossAxisCount == 2
+                      ? 1.0  // Tablet: square-ish cards
+                      : 0.95, // Desktop: slightly wider cards
+            ),
+            itemCount: _units!.length,
+            itemBuilder: (context, index) {
+              final unit = _units![index];
+              return _UnitCard(
+                unit: unit,
+                onEdit: () => _navigateToEditUnit(unit),
+                onDelete: () => _confirmDeleteUnit(unit.id),
+                onManagePricing: () => _navigateToManagePricing(unit),
+              );
+            },
           );
         },
       ),
@@ -338,15 +370,9 @@ class _UnitCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
 
     return Card(
-      margin: EdgeInsets.only(
-        bottom: isMobile ? 12 : 16,
-        left: isMobile ? 0 : 4,
-        right: isMobile ? 0 : 4,
-      ),
+      margin: EdgeInsets.zero, // Remove margin - GridView handles spacing
       elevation: 0.5,
       shadowColor: theme.colorScheme.shadow.withAlpha((0.05 * 255).toInt()),
       shape: RoundedRectangleBorder(
@@ -357,9 +383,10 @@ class _UnitCard extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.all(isMobile ? 14 : 16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min, // Important for GridView
           children: [
             // Unit name and status
             Column(
@@ -476,100 +503,21 @@ class _UnitCard extends StatelessWidget {
             const Divider(),
             const SizedBox(height: 8),
 
-            // Actions - Responsive layout
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isMobile = constraints.maxWidth < 400;
-
-                if (isMobile) {
-                  // Stack buttons vertically on small screens - Minimalist
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: onManagePricing,
-                        icon: const Icon(Icons.euro_symbol, size: 17),
-                        label: const Text('Upravljaj Cijenama'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.success,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 11,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          side: BorderSide(
-                            color: AppColors.success.withAlpha((0.4 * 255).toInt()),
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: onEdit,
-                              icon: const Icon(Icons.edit_outlined, size: 17),
-                              label: const Text('Uredi'),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 11,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                side: BorderSide(
-                                  color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-                                  width: 1,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: onDelete,
-                              icon: const Icon(Icons.delete_outline, size: 17),
-                              label: const Text('Obriši'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: theme.colorScheme.error,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 11,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                side: BorderSide(
-                                  color: theme.colorScheme.error.withAlpha((0.4 * 255).toInt()),
-                                  width: 1,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                }
-
-                // Horizontal layout for wider screens - Minimalist
-                return Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    OutlinedButton.icon(
+            // Actions - Compact grid-friendly layout
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Pricing button
+                Expanded(
+                  child: Tooltip(
+                    message: 'Upravljaj cijenama',
+                    child: OutlinedButton(
                       onPressed: onManagePricing,
-                      icon: const Icon(Icons.euro_symbol, size: 17),
-                      label: const Text('Cijene'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.success,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 11,
+                          horizontal: 8,
+                          vertical: 10,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -579,15 +527,21 @@ class _UnitCard extends StatelessWidget {
                           width: 1,
                         ),
                       ),
+                      child: const Icon(Icons.euro_symbol, size: 18),
                     ),
-                    OutlinedButton.icon(
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Edit button
+                Expanded(
+                  child: Tooltip(
+                    message: 'Uredi jedinicu',
+                    child: OutlinedButton(
                       onPressed: onEdit,
-                      icon: const Icon(Icons.edit_outlined, size: 17),
-                      label: const Text('Uredi'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 11,
+                          horizontal: 8,
+                          vertical: 10,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -597,16 +551,22 @@ class _UnitCard extends StatelessWidget {
                           width: 1,
                         ),
                       ),
+                      child: const Icon(Icons.edit_outlined, size: 18),
                     ),
-                    OutlinedButton.icon(
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Delete button
+                Expanded(
+                  child: Tooltip(
+                    message: 'Obriši jedinicu',
+                    child: OutlinedButton(
                       onPressed: onDelete,
-                      icon: const Icon(Icons.delete_outline, size: 17),
-                      label: const Text('Obriši'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: theme.colorScheme.error,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 11,
+                          horizontal: 8,
+                          vertical: 10,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -616,10 +576,11 @@ class _UnitCard extends StatelessWidget {
                           width: 1,
                         ),
                       ),
+                      child: const Icon(Icons.delete_outline, size: 18),
                     ),
-                  ],
-                );
-              },
+                  ),
+                ),
+              ],
             ),
           ],
         ),

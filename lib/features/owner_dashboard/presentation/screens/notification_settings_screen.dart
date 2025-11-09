@@ -69,27 +69,32 @@ class _NotificationSettingsScreenState
 
       switch (category) {
         case 'bookings':
-          updatedCategories =
-              _currentPreferences!.categories.copyWith(bookings: channels);
+          updatedCategories = _currentPreferences!.categories.copyWith(
+            bookings: channels,
+          );
           break;
         case 'payments':
-          updatedCategories =
-              _currentPreferences!.categories.copyWith(payments: channels);
+          updatedCategories = _currentPreferences!.categories.copyWith(
+            payments: channels,
+          );
           break;
         case 'calendar':
-          updatedCategories =
-              _currentPreferences!.categories.copyWith(calendar: channels);
+          updatedCategories = _currentPreferences!.categories.copyWith(
+            calendar: channels,
+          );
           break;
         case 'marketing':
-          updatedCategories =
-              _currentPreferences!.categories.copyWith(marketing: channels);
+          updatedCategories = _currentPreferences!.categories.copyWith(
+            marketing: channels,
+          );
           break;
         default:
           return;
       }
 
-      final updated =
-          _currentPreferences!.copyWith(categories: updatedCategories);
+      final updated = _currentPreferences!.copyWith(
+        categories: updatedCategories,
+      );
 
       await ref
           .read(userProfileNotifierProvider.notifier)
@@ -131,7 +136,8 @@ class _NotificationSettingsScreenState
       body: preferencesAsync.when(
         data: (preferences) {
           // Initialize with default preferences if none exist
-          _currentPreferences ??= preferences ??
+          _currentPreferences ??=
+              preferences ??
               NotificationPreferences(
                 userId: FirebaseAuth.instance.currentUser?.uid ?? '',
               );
@@ -156,8 +162,12 @@ class _NotificationSettingsScreenState
                             AppColors.secondary.withAlpha((0.05 * 255).toInt()),
                           ]
                         : [
-                            AppColors.textSecondary.withAlpha((0.08 * 255).toInt()),
-                            AppColors.textSecondary.withAlpha((0.03 * 255).toInt()),
+                            AppColors.textSecondary.withAlpha(
+                              (0.08 * 255).toInt(),
+                            ),
+                            AppColors.textSecondary.withAlpha(
+                              (0.03 * 255).toInt(),
+                            ),
                           ],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -171,7 +181,9 @@ class _NotificationSettingsScreenState
                     BoxShadow(
                       color: masterEnabled
                           ? AppColors.primary.withAlpha((0.1 * 255).toInt())
-                          : const Color(0xFF000000).withAlpha((0.04 * 255).toInt()),
+                          : const Color(
+                              0xFF000000,
+                            ).withAlpha((0.04 * 255).toInt()),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -201,12 +213,20 @@ class _NotificationSettingsScreenState
                       gradient: LinearGradient(
                         colors: masterEnabled
                             ? [
-                                AppColors.primary.withAlpha((0.15 * 255).toInt()),
-                                AppColors.secondary.withAlpha((0.08 * 255).toInt()),
+                                AppColors.primary.withAlpha(
+                                  (0.15 * 255).toInt(),
+                                ),
+                                AppColors.secondary.withAlpha(
+                                  (0.08 * 255).toInt(),
+                                ),
                               ]
                             : [
-                                AppColors.textSecondary.withAlpha((0.1 * 255).toInt()),
-                                AppColors.textSecondary.withAlpha((0.05 * 255).toInt()),
+                                AppColors.textSecondary.withAlpha(
+                                  (0.1 * 255).toInt(),
+                                ),
+                                AppColors.textSecondary.withAlpha(
+                                  (0.05 * 255).toInt(),
+                                ),
                               ],
                       ),
                       borderRadius: BorderRadius.circular(12),
@@ -215,11 +235,16 @@ class _NotificationSettingsScreenState
                       masterEnabled
                           ? Icons.notifications_active_rounded
                           : Icons.notifications_off_rounded,
-                      color: masterEnabled ? AppColors.primary : AppColors.textDisabled,
+                      color: masterEnabled
+                          ? AppColors.primary
+                          : AppColors.textDisabled,
                       size: 26,
                     ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                 ),
               ),
 
@@ -243,7 +268,11 @@ class _NotificationSettingsScreenState
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 24),
+                      Icon(
+                        Icons.info_outline_rounded,
+                        color: AppColors.warning,
+                        size: 24,
+                      ),
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -296,14 +325,12 @@ class _NotificationSettingsScreenState
                 theme: theme,
                 isDark: isDark,
                 title: 'Bookings',
-                description:
-                    'New bookings, cancellations, and booking updates',
+                description: 'New bookings, cancellations, and booking updates',
                 icon: Icons.event_note,
                 iconColor: AppColors.authSecondary,
                 channels: categories.bookings,
                 enabled: masterEnabled,
-                onChanged: (channels) =>
-                    _updateCategory('bookings', channels),
+                onChanged: (channels) => _updateCategory('bookings', channels),
               ),
 
               // Payments Category
@@ -317,8 +344,7 @@ class _NotificationSettingsScreenState
                 iconColor: AppColors.success,
                 channels: categories.payments,
                 enabled: masterEnabled,
-                onChanged: (channels) =>
-                    _updateCategory('payments', channels),
+                onChanged: (channels) => _updateCategory('payments', channels),
               ),
 
               // Calendar Category
@@ -333,8 +359,7 @@ class _NotificationSettingsScreenState
                 iconColor: AppColors.warning,
                 channels: categories.calendar,
                 enabled: masterEnabled,
-                onChanged: (channels) =>
-                    _updateCategory('calendar', channels),
+                onChanged: (channels) => _updateCategory('calendar', channels),
               ),
 
               // Marketing Category
@@ -348,8 +373,7 @@ class _NotificationSettingsScreenState
                 iconColor: AppColors.primary,
                 channels: categories.marketing,
                 enabled: masterEnabled,
-                onChanged: (channels) =>
-                    _updateCategory('marketing', channels),
+                onChanged: (channels) => _updateCategory('marketing', channels),
               ),
 
               const SizedBox(height: 24),
@@ -497,9 +521,9 @@ class _NotificationSettingsScreenState
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0x00000000),
+                    Color(0x00000000),
                     AppColors.borderLight,
-                    const Color(0x00000000),
+                    Color(0x00000000),
                   ],
                 ),
               ),
@@ -601,7 +625,10 @@ class _NotificationSettingsScreenState
               size: 22,
             ),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 4,
+          ),
         ),
         if (!isLast)
           Container(

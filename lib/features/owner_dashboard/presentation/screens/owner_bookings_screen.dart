@@ -55,7 +55,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: isDark
-                ? [theme.colorScheme.veryDarkGray, theme.colorScheme.mediumDarkGray]
+                ? [
+                    theme.colorScheme.veryDarkGray,
+                    theme.colorScheme.mediumDarkGray,
+                  ]
                 : [theme.colorScheme.veryLightGray, Colors.white],
             stops: const [0.0, 0.3],
           ),
@@ -196,7 +199,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.12 * 255).toInt(),
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -217,7 +222,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 // View mode toggle button
                 Container(
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt()),
+                    color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+                      (0.5 * 255).toInt(),
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -226,13 +233,17 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       _ViewModeButton(
                         icon: Icons.view_agenda_outlined,
                         isSelected: viewMode == BookingsViewMode.card,
-                        onTap: () => ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.card),
+                        onTap: () => ref
+                            .read(ownerBookingsViewProvider.notifier)
+                            .setView(BookingsViewMode.card),
                         tooltip: 'Card pogled',
                       ),
                       _ViewModeButton(
                         icon: Icons.table_rows_outlined,
                         isSelected: viewMode == BookingsViewMode.table,
-                        onTap: () => ref.read(ownerBookingsViewProvider.notifier).setView(BookingsViewMode.table),
+                        onTap: () => ref
+                            .read(ownerBookingsViewProvider.notifier)
+                            .setView(BookingsViewMode.table),
                         tooltip: 'Tabela pogled',
                       ),
                     ],
@@ -250,7 +261,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     icon: const Icon(Icons.close, size: 16),
                     label: const Text('Očisti'),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -394,7 +408,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           ),
           initialValue: filters.propertyId,
           items: [
-            const DropdownMenuItem<String?>(value: null, child: Text('Svi objekti')),
+            const DropdownMenuItem<String?>(
+              value: null,
+              child: Text('Svi objekti'),
+            ),
             ...properties.map((property) {
               return DropdownMenuItem<String?>(
                 value: property.id,
@@ -523,49 +540,49 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-            // Enhanced icon with background circle
-            Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
-              ),
-              child: const Icon(
-                Icons.event_available_outlined,
-                size: 70,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spaceL),
-
-            // Main title
-            Text(
-              'Nemate rezervacija',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppDimensions.spaceS),
-
-            // Description
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.spaceL,
-              ),
-              child: Text(
-                'Ovdje će se prikazati sve rezervacije za vaše objekte. Kreirajte prvu rezervaciju ili pričekajte rezervacije gostiju.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha(
-                    (0.7 * 255).toInt(),
-                  ),
+              // Enhanced icon with background circle
+              Container(
+                width: 140,
+                height: 140,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
+                child: const Icon(
+                  Icons.event_available_outlined,
+                  size: 70,
+                  color: AppColors.primary,
+                ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(height: AppDimensions.spaceL),
+
+              // Main title
+              Text(
+                'Nemate rezervacija',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spaceS),
+
+              // Description
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.spaceL,
+                ),
+                child: Text(
+                  'Ovdje će se prikazati sve rezervacije za vaše objekte. Kreirajte prvu rezervaciju ili pričekajte rezervacije gostiju.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1046,7 +1063,9 @@ class _BookingCard extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         side: BorderSide(
-                          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                          color: theme.colorScheme.outline.withAlpha(
+                            (0.3 * 255).toInt(),
+                          ),
                           width: 1,
                         ),
                       ),
@@ -1092,7 +1111,9 @@ class _BookingCard extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           side: BorderSide(
-                            color: AppColors.error.withAlpha((0.4 * 255).toInt()),
+                            color: AppColors.error.withAlpha(
+                              (0.4 * 255).toInt(),
+                            ),
                             width: 1,
                           ),
                         ),
@@ -1139,7 +1160,9 @@ class _BookingCard extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           side: BorderSide(
-                            color: AppColors.error.withAlpha((0.4 * 255).toInt()),
+                            color: AppColors.error.withAlpha(
+                              (0.4 * 255).toInt(),
+                            ),
                             width: 1,
                           ),
                         ),
@@ -1274,7 +1297,10 @@ class _BookingCard extends ConsumerWidget {
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -1287,7 +1313,10 @@ class _BookingCard extends ConsumerWidget {
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.success,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -1417,7 +1446,10 @@ class _BookingCard extends ConsumerWidget {
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -1430,7 +1462,10 @@ class _BookingCard extends ConsumerWidget {
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.error,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -1552,7 +1587,10 @@ class _BookingCard extends ConsumerWidget {
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -1563,7 +1601,10 @@ class _BookingCard extends ConsumerWidget {
                         FilledButton(
                           onPressed: () => Navigator.of(context).pop(true),
                           style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -1707,7 +1748,10 @@ class _BookingCard extends ConsumerWidget {
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -1720,7 +1764,10 @@ class _BookingCard extends ConsumerWidget {
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.error,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -1813,14 +1860,11 @@ class _BookingDetailsDialog extends StatelessWidget {
             // Gradient Header
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.primary,
-                    AppColors.authSecondary,
-                  ],
+                  colors: [AppColors.primary, AppColors.authSecondary],
                 ),
               ),
               child: Row(
@@ -2158,16 +2202,16 @@ class _ViewModeButton extends StatelessWidget {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: isSelected
-              ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
-              : Colors.transparent,
+                ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon,
             size: 20,
             color: isSelected
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurfaceVariant,
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ),

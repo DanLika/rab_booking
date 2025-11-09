@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/calendar_view_mode.dart';
-import '../../domain/models/calendar_filter_options.dart';
 import '../providers/owner_calendar_view_provider.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../providers/calendar_filters_provider.dart';
-import '../widgets/calendar/calendar_view_switcher.dart';
-import '../widgets/calendar/calendar_filter_panel.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/booking_create_dialog.dart';
 import '../../utils/calendar_grid_calculator.dart';
@@ -62,7 +58,9 @@ class _OwnerCalendarMainScreenState
   @override
   Widget build(BuildContext context) {
     final currentView = ref.watch(ownerCalendarViewProvider);
-    final isCompact = MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint;
+    final isCompact =
+        MediaQuery.of(context).size.width <
+        CalendarGridCalculator.mobileBreakpoint;
     final location = GoRouterState.of(context).matchedLocation;
     final filters = ref.watch(calendarFiltersProvider);
 
@@ -88,10 +86,7 @@ class _OwnerCalendarMainScreenState
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           'Nova rezervacija',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         elevation: 4,
       ),

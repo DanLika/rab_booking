@@ -29,16 +29,17 @@ class BankTransferScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final priceCalc = ref.watch(bookingPriceProvider(
-      unitId: unitId,
-      checkIn: checkIn,
-      checkOut: checkOut,
-    ));
-
-    final settingsAsync = ref.watch(widgetSettingsRepositoryProvider).getWidgetSettings(
-      propertyId: propertyId,
-      unitId: unitId,
+    final priceCalc = ref.watch(
+      bookingPriceProvider(
+        unitId: unitId,
+        checkIn: checkIn,
+        checkOut: checkOut,
+      ),
     );
+
+    final settingsAsync = ref
+        .watch(widgetSettingsRepositoryProvider)
+        .getWidgetSettings(propertyId: propertyId, unitId: unitId);
 
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
@@ -74,8 +75,12 @@ class BankTransferScreen extends ConsumerWidget {
 
               // Calculate payment deadline
               final deadlineDays = bankConfig?.paymentDeadlineDays ?? 3;
-              final paymentDeadline = DateTime.now().add(Duration(days: deadlineDays));
-              final formattedDeadline = DateFormat('d. MMMM yyyy.').format(paymentDeadline);
+              final paymentDeadline = DateTime.now().add(
+                Duration(days: deadlineDays),
+              );
+              final formattedDeadline = DateFormat(
+                'd. MMMM yyyy.',
+              ).format(paymentDeadline);
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(SpacingTokens.m),
@@ -108,7 +113,8 @@ class BankTransferScreen extends ConsumerWidget {
                     const SizedBox(height: SpacingTokens.l),
 
                     // Bank Details Section
-                    if (bankConfig != null && bankConfig.hasCompleteDetails) ...[
+                    if (bankConfig != null &&
+                        bankConfig.hasCompleteDetails) ...[
                       _buildBankDetails(context, colors, bankConfig),
                       const SizedBox(height: SpacingTokens.l),
                     ],
@@ -271,10 +277,7 @@ class BankTransferScreen extends ConsumerWidget {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(
-                    Icons.content_copy,
-                    color: colors.primary,
-                  ),
+                  icon: Icon(Icons.content_copy, color: colors.primary),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: bookingReference));
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -391,11 +394,26 @@ class BankTransferScreen extends ConsumerWidget {
           const SizedBox(height: SpacingTokens.s),
           _buildDetailRow('Noći', '${calculation.nights}', colors),
           const Divider(height: SpacingTokens.l),
-          _buildPriceRow('Ukupna Cijena', calculation.formattedTotal, colors, false),
+          _buildPriceRow(
+            'Ukupna Cijena',
+            calculation.formattedTotal,
+            colors,
+            false,
+          ),
           const SizedBox(height: SpacingTokens.s),
-          _buildPriceRow('Depozit (${(calculation.depositAmount / calculation.totalPrice * 100).round()}%)', calculation.formattedDeposit, colors, true),
+          _buildPriceRow(
+            'Depozit (${calculation.totalPrice > 0 ? (calculation.depositAmount / calculation.totalPrice * 100).round() : 0}%)',
+            calculation.formattedDeposit,
+            colors,
+            true,
+          ),
           const SizedBox(height: SpacingTokens.s),
-          _buildPriceRow('Preostalo', calculation.formattedRemaining, colors, false),
+          _buildPriceRow(
+            'Preostalo',
+            calculation.formattedRemaining,
+            colors,
+            false,
+          ),
         ],
       ),
     );
@@ -450,15 +468,21 @@ class BankTransferScreen extends ConsumerWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: highlight ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeM,
-              fontWeight: highlight ? TypographyTokens.bold : TypographyTokens.medium,
+              fontSize: highlight
+                  ? TypographyTokens.fontSizeL
+                  : TypographyTokens.fontSizeM,
+              fontWeight: highlight
+                  ? TypographyTokens.bold
+                  : TypographyTokens.medium,
               color: colors.textPrimary,
             ),
           ),
           Text(
             value,
             style: TextStyle(
-              fontSize: highlight ? TypographyTokens.fontSizeXL : TypographyTokens.fontSizeL,
+              fontSize: highlight
+                  ? TypographyTokens.fontSizeXL
+                  : TypographyTokens.fontSizeL,
               fontWeight: TypographyTokens.bold,
               color: highlight ? colors.primary : colors.textPrimary,
             ),
@@ -583,11 +607,7 @@ class BankTransferScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: colors.primary,
-            size: IconSizeTokens.small,
-          ),
+          Icon(icon, color: colors.primary, size: IconSizeTokens.small),
           const SizedBox(width: SpacingTokens.s),
           Expanded(
             child: Column(
@@ -608,7 +628,9 @@ class BankTransferScreen extends ConsumerWidget {
                     fontSize: TypographyTokens.fontSizeM,
                     fontWeight: TypographyTokens.semiBold,
                     color: colors.textPrimary,
-                    fontFamily: label.contains('IBAN') || label.contains('Broj') ? 'monospace' : null,
+                    fontFamily: label.contains('IBAN') || label.contains('Broj')
+                        ? 'monospace'
+                        : null,
                   ),
                 ),
               ],
@@ -773,18 +795,18 @@ class BankTransferScreen extends ConsumerWidget {
 
     // EPC QR Code format (SEPA Credit Transfer)
     final epcData = [
-      'BCD',                    // Service Tag
-      '002',                    // Version
-      '1',                      // Character Set (UTF-8)
-      'SCT',                    // Identification (SEPA Credit Transfer)
-      bic,                      // BIC
-      beneficiaryName,          // Beneficiary Name
-      iban,                     // Beneficiary Account (IBAN)
-      'EUR$amountStr',          // Amount
-      '',                       // Purpose (empty)
-      reference,                // Structured Reference
-      'Booking deposit',        // Unstructured Remittance
-      '',                       // Beneficiary to Originator Information
+      'BCD', // Service Tag
+      '002', // Version
+      '1', // Character Set (UTF-8)
+      'SCT', // Identification (SEPA Credit Transfer)
+      bic, // BIC
+      beneficiaryName, // Beneficiary Name
+      iban, // Beneficiary Account (IBAN)
+      'EUR$amountStr', // Amount
+      '', // Purpose (empty)
+      reference, // Structured Reference
+      'Booking deposit', // Unstructured Remittance
+      '', // Beneficiary to Originator Information
     ].join('\n');
 
     return epcData;
@@ -861,33 +883,38 @@ class BankTransferScreen extends ConsumerWidget {
             )
           else
             // Default notes - show as bullet list
-            ...notes.map((note) => Padding(
-              padding: const EdgeInsets.only(bottom: SpacingTokens.s),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    margin: const EdgeInsets.only(top: 8, right: SpacingTokens.s),
-                    decoration: BoxDecoration(
-                      color: colors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      note,
-                      style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeM,
-                        color: colors.textPrimary,
-                        height: 1.5,
+            ...notes.map(
+              (note) => Padding(
+                padding: const EdgeInsets.only(bottom: SpacingTokens.s),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      margin: const EdgeInsets.only(
+                        top: 8,
+                        right: SpacingTokens.s,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.primary,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: Text(
+                        note,
+                        style: TextStyle(
+                          fontSize: TypographyTokens.fontSizeM,
+                          color: colors.textPrimary,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            )).toList(),
+            ),
         ],
       ),
     );
@@ -902,12 +929,10 @@ class BankTransferScreen extends ConsumerWidget {
         backgroundColor: colors.buttonPrimary,
         foregroundColor: colors.buttonPrimaryText,
         padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderTokens.button,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderTokens.button),
         elevation: 2,
       ),
-      child: Row(
+      child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
@@ -917,8 +942,8 @@ class BankTransferScreen extends ConsumerWidget {
               fontWeight: TypographyTokens.bold,
             ),
           ),
-          const SizedBox(width: SpacingTokens.xs),
-          const Icon(Icons.check_circle_outline),
+          SizedBox(width: SpacingTokens.xs),
+          Icon(Icons.check_circle_outline),
         ],
       ),
     );

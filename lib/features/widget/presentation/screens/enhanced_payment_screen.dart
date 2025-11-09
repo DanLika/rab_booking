@@ -127,7 +127,10 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
   // ===================================================================
 
   Widget _buildMobileLayout(
-      String unitId, DateTime checkIn, DateTime checkOut) {
+    String unitId,
+    DateTime checkIn,
+    DateTime checkOut,
+  ) {
     return Column(
       children: [
         Expanded(
@@ -173,70 +176,72 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
   // ===================================================================
 
   Widget _buildDesktopLayout(
-      String unitId, DateTime checkIn, DateTime checkOut) {
+    String unitId,
+    DateTime checkIn,
+    DateTime checkOut,
+  ) {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-        // Main content (65%)
-        Expanded(
-          flex: 65,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Guest details section
-                  _buildGuestDetailsSection(),
-                  const SizedBox(height: 32),
+            // Main content (65%)
+            Expanded(
+              flex: 65,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(32),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Guest details section
+                      _buildGuestDetailsSection(),
+                      const SizedBox(height: 32),
 
-                  // Payment method section
-                  _buildPaymentMethodSection(),
-                  const SizedBox(height: 32),
+                      // Payment method section
+                      _buildPaymentMethodSection(),
+                      const SizedBox(height: 32),
 
-                  // Payment option section
-                  _buildPaymentOptionSection(unitId, checkIn, checkOut),
-                  const SizedBox(height: 32),
+                      // Payment option section
+                      _buildPaymentOptionSection(unitId, checkIn, checkOut),
+                      const SizedBox(height: 32),
 
-                  // Terms and conditions
-                  _buildTermsCheckbox(),
-                ],
-              ),
-            ),
-          ),
-        ),
-
-        // Sidebar (responsive width)
-        ConstrainedBox(
-          constraints: const BoxConstraints(
-            minWidth: 300,
-            maxWidth: 450,
-          ),
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.35,
-            decoration: BoxDecoration(
-              color: colors.backgroundPrimary,
-              border: Border(
-                left: BorderSide(color: colors.borderDefault),
-              ),
-            ),
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: _buildDetailedPriceSummary(unitId, checkIn, checkOut),
+                      // Terms and conditions
+                      _buildTermsCheckbox(),
+                    ],
                   ),
                 ),
-                _buildBottomButton(unitId, checkIn, checkOut),
-              ],
+              ),
             ),
-          ),
-        ),
+
+            // Sidebar (responsive width)
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 300, maxWidth: 450),
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.35,
+                decoration: BoxDecoration(
+                  color: colors.backgroundPrimary,
+                  border: Border(left: BorderSide(color: colors.borderDefault)),
+                ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: _buildDetailedPriceSummary(
+                          unitId,
+                          checkIn,
+                          checkOut,
+                        ),
+                      ),
+                    ),
+                    _buildBottomButton(unitId, checkIn, checkOut),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -264,11 +269,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                   color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Icons.person,
-                  color: colorScheme.primary,
-                  size: 24,
-                ),
+                child: Icon(Icons.person, color: colorScheme.primary, size: 24),
               ),
               const SizedBox(width: 12),
               Text(
@@ -355,7 +356,8 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                 return 'Phone number is required';
               }
               final phoneRegex = RegExp(r'^\+?[\d\s\-\(\)]+$');
-              if (!phoneRegex.hasMatch(value) || value.replaceAll(RegExp(r'[\s\-\(\)\+]'), '').length < 8) {
+              if (!phoneRegex.hasMatch(value) ||
+                  value.replaceAll(RegExp(r'[\s\-\(\)\+]'), '').length < 8) {
                 return 'Please enter a valid phone number';
               }
               return null;
@@ -396,19 +398,14 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: colorScheme.primary),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: theme.dividerColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: colorScheme.primary,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -432,11 +429,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                   color: colors.primarySurface,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Icons.payment,
-                  color: colors.primary,
-                  size: 24,
-                ),
+                child: Icon(Icons.payment, color: colors.primary, size: 24),
               ),
               const SizedBox(width: 12),
               Text(
@@ -493,14 +486,10 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? colors.primarySurface
-              : colors.backgroundCard,
+          color: isSelected ? colors.primarySurface : colors.backgroundCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? colors.primary
-                : colors.borderDefault,
+            color: isSelected ? colors.primary : colors.borderDefault,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -513,9 +502,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected
-                      ? colors.primary
-                      : colors.textSecondary,
+                  color: isSelected ? colors.primary : colors.textSecondary,
                   width: 2,
                 ),
               ),
@@ -546,9 +533,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               ),
               child: Icon(
                 icon,
-                color: isSelected
-                    ? colors.primary
-                    : colors.textSecondary,
+                color: isSelected ? colors.primary : colors.textSecondary,
                 size: 28,
               ),
             ),
@@ -565,7 +550,9 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? colors.textPrimary : colors.textSecondary,
+                      color: isSelected
+                          ? colors.textPrimary
+                          : colors.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -584,28 +571,30 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                   Wrap(
                     spacing: 6,
                     children: badges
-                        .map((badge) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
+                        .map(
+                          (badge) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? colors.primarySurface
+                                  : colors.backgroundPrimary,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              badge,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
                                 color: isSelected
-                                    ? colors.primarySurface
-                                    : colors.backgroundPrimary,
-                                borderRadius: BorderRadius.circular(4),
+                                    ? colors.primary
+                                    : colors.textSecondary,
                               ),
-                              child: Text(
-                                badge,
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: isSelected
-                                      ? colors.primary
-                                      : colors.textSecondary,
-                                ),
-                              ),
-                            ))
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
                 ],
@@ -618,12 +607,17 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
   }
 
   Widget _buildPaymentOptionSection(
-      String unitId, DateTime checkIn, DateTime checkOut) {
-    final priceCalc = ref.watch(bookingPriceProvider(
-      unitId: unitId,
-      checkIn: checkIn,
-      checkOut: checkOut,
-    ));
+    String unitId,
+    DateTime checkIn,
+    DateTime checkOut,
+  ) {
+    final priceCalc = ref.watch(
+      bookingPriceProvider(
+        unitId: unitId,
+        checkIn: checkIn,
+        checkOut: checkOut,
+      ),
+    );
 
     return priceCalc.when(
       data: (calculation) {
@@ -716,14 +710,10 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? colors.primarySurface
-              : colors.backgroundCard,
+          color: isSelected ? colors.primarySurface : colors.backgroundCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? colors.primary
-                : colors.borderDefault,
+            color: isSelected ? colors.primary : colors.borderDefault,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -736,9 +726,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected
-                      ? colors.primary
-                      : colors.textSecondary,
+                  color: isSelected ? colors.primary : colors.textSecondary,
                   width: 2,
                 ),
               ),
@@ -770,7 +758,9 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? colors.textPrimary : colors.textSecondary,
+                          color: isSelected
+                              ? colors.textPrimary
+                              : colors.textSecondary,
                         ),
                       ),
                       if (recommended) ...[
@@ -817,9 +807,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isSelected
-                        ? colors.primary
-                        : colors.textPrimary,
+                    color: isSelected ? colors.primary : colors.textPrimary,
                   ),
                 ),
                 if (remaining > 0) ...[
@@ -896,12 +884,17 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
   }
 
   Widget _buildCompactPriceSummary(
-      String unitId, DateTime checkIn, DateTime checkOut) {
-    final priceCalc = ref.watch(bookingPriceProvider(
-      unitId: unitId,
-      checkIn: checkIn,
-      checkOut: checkOut,
-    ));
+    String unitId,
+    DateTime checkIn,
+    DateTime checkOut,
+  ) {
+    final priceCalc = ref.watch(
+      bookingPriceProvider(
+        unitId: unitId,
+        checkIn: checkIn,
+        checkOut: checkOut,
+      ),
+    );
 
     return priceCalc.when(
       data: (calculation) {
@@ -916,9 +909,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
           decoration: BoxDecoration(
             color: colors.primarySurface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: colors.primaryLight,
-            ),
+            border: Border.all(color: colors.primaryLight),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -964,12 +955,17 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
   }
 
   Widget _buildDetailedPriceSummary(
-      String unitId, DateTime checkIn, DateTime checkOut) {
-    final priceCalc = ref.watch(bookingPriceProvider(
-      unitId: unitId,
-      checkIn: checkIn,
-      checkOut: checkOut,
-    ));
+    String unitId,
+    DateTime checkIn,
+    DateTime checkOut,
+  ) {
+    final priceCalc = ref.watch(
+      bookingPriceProvider(
+        unitId: unitId,
+        checkIn: checkIn,
+        checkOut: checkOut,
+      ),
+    );
 
     return priceCalc.when(
       data: (calculation) {
@@ -1088,10 +1084,7 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: colors.textSecondary,
-            ),
+            style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
           ),
           Text(
             value,
@@ -1107,21 +1100,24 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
   }
 
   Widget _buildBottomButton(
-      String unitId, DateTime checkIn, DateTime checkOut) {
-    final priceCalc = ref.watch(bookingPriceProvider(
-      unitId: unitId,
-      checkIn: checkIn,
-      checkOut: checkOut,
-    ));
+    String unitId,
+    DateTime checkIn,
+    DateTime checkOut,
+  ) {
+    final priceCalc = ref.watch(
+      bookingPriceProvider(
+        unitId: unitId,
+        checkIn: checkIn,
+        checkOut: checkOut,
+      ),
+    );
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: colors.backgroundCard,
-        border: Border(
-          top: BorderSide(color: colors.borderDefault),
-        ),
-        boxShadow: [
+        border: Border(top: BorderSide(color: colors.borderDefault)),
+        boxShadow: const [
           BoxShadow(
             color: Color(0x0D000000),
             blurRadius: 10,
@@ -1190,8 +1186,9 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(colors.backgroundCard),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                colors.backgroundCard,
+                              ),
                             ),
                           )
                         : Text(
@@ -1286,11 +1283,13 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       LoggingService.logSuccess('Owner ID: $ownerId');
 
       // Calculate total
-      final priceCalc = await ref.read(bookingPriceProvider(
-        unitId: room.id,
-        checkIn: checkIn,
-        checkOut: checkOut,
-      ).future);
+      final priceCalc = await ref.read(
+        bookingPriceProvider(
+          unitId: room.id,
+          checkIn: checkIn,
+          checkOut: checkOut,
+        ).future,
+      );
 
       if (priceCalc == null) throw Exception('Price calculation failed');
 
@@ -1312,7 +1311,9 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         totalPrice: totalPrice,
         paymentOption: _paymentOption,
         paymentMethod: 'stripe',
-        notes: _specialRequestsController.text.isNotEmpty ? _specialRequestsController.text : null,
+        notes: _specialRequestsController.text.isNotEmpty
+            ? _specialRequestsController.text
+            : null,
       );
 
       LoggingService.logSuccess('Booking created: ${booking.id}');
@@ -1374,11 +1375,13 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
       final ownerId = property.ownerId;
       LoggingService.logSuccess('Owner ID: $ownerId');
 
-      final priceCalc = await ref.read(bookingPriceProvider(
-        unitId: room.id,
-        checkIn: checkIn,
-        checkOut: checkOut,
-      ).future);
+      final priceCalc = await ref.read(
+        bookingPriceProvider(
+          unitId: room.id,
+          checkIn: checkIn,
+          checkOut: checkOut,
+        ).future,
+      );
 
       if (priceCalc == null) throw Exception('Price calculation failed');
 
@@ -1397,7 +1400,9 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
         totalPrice: priceCalc.totalPrice,
         paymentOption: _paymentOption,
         paymentMethod: 'bank_transfer',
-        notes: _specialRequestsController.text.isNotEmpty ? _specialRequestsController.text : null,
+        notes: _specialRequestsController.text.isNotEmpty
+            ? _specialRequestsController.text
+            : null,
       );
 
       LoggingService.logSuccess('Bank transfer booking created: ${booking.id}');

@@ -30,265 +30,288 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
       ),
       body: SafeArea(
         child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Header
-          Card(
-            color: isDark
-                ? AppColors.backgroundDark
-                : AppColors.primary.withAlpha((0.1 * 255).toInt()),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Header
+            Card(
+              color: isDark
+                  ? AppColors.backgroundDark
+                  : AppColors.primary.withAlpha((0.1 * 255).toInt()),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.sync,
+                          size: 40,
+                          color: isDark
+                              ? AppColors.primaryLight
+                              : AppColors.primary,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'iCal Sinhronizacija',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark
+                                      ? const Color(0xFFFFFFFF)
+                                      : AppColors.primaryDark,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Automatski sync rezervacija sa Booking.com, Airbnb i drugih platformi',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDark
+                                      ? AppColors.textSecondary
+                                      : AppColors.primaryDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '💡 iCal sinhronizacija sprečava overbooking tako što automatski uvozi rezervacije '
+                      'sa drugih platformi i prikazuje ih kao zauzete dane u vašem kalendaru.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: isDark ? AppColors.borderLight : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Booking.com Instructions
+            _buildPlatformSection(
+              platformName: 'Booking.com',
+              icon: Icons.hotel,
+              color: AppColors.authSecondary,
+              steps: [
+                '1. Ulogujte se na Extranet (admin.booking.com)',
+                '2. Idite na: Property → Calendar → Reservations export',
+                '3. Kopirajte "Calendar export link" (iCal URL)',
+                '4. Zalijepite u Owner aplikaciju',
+              ],
+              placeholder: 'Slika: Booking.com Extranet - Calendar export',
+            ),
+
+            const SizedBox(height: 16),
+
+            // Airbnb Instructions
+            _buildPlatformSection(
+              platformName: 'Airbnb',
+              icon: Icons.home,
+              color: AppColors.activityCancellation,
+              steps: [
+                '1. Ulogujte se na Airbnb host dashboard',
+                '2. Odaberite property (listing)',
+                '3. Idite na: Calendar → Availability settings → Export calendar',
+                '4. Kopirajte iCal link',
+                '5. Zalijepite u Owner aplikaciju',
+              ],
+              placeholder: 'Slika: Airbnb - Export calendar',
+            ),
+
+            const SizedBox(height: 16),
+
+            // VRBO/HomeAway Instructions
+            _buildPlatformSection(
+              platformName: 'VRBO / HomeAway',
+              icon: Icons.cottage,
+              color: AppColors.warning,
+              steps: [
+                '1. Ulogujte se na VRBO owner dashboard',
+                '2. Idite na: Listings → Select property',
+                '3. Kliknite: Calendar → Import/Export',
+                '4. Kopirajte export link',
+                '5. Zalijepite u Owner aplikaciju',
+              ],
+              placeholder: 'Slika: VRBO - Calendar export',
+            ),
+
+            const SizedBox(height: 24),
+
+            // Step-by-step in Owner App
+            const Text(
+              'Dodavanje iCal Feed-a u Owner Aplikaciju',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            _buildStep(
+              stepNumber: 1,
+              title: 'Otvorite iCal Sinhronizaciju',
+              icon: Icons.open_in_new,
+              content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.sync,
-                        size: 40,
-                        color: isDark
-                            ? AppColors.primaryLight
-                            : AppColors.primary,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'iCal Sinhronizacija',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? const Color(0xFFFFFFFF)
-                                    : AppColors.primaryDark,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Automatski sync rezervacija sa Booking.com, Airbnb i drugih platformi',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isDark
-                                    ? AppColors.textSecondary
-                                    : AppColors.primaryDark,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  const Text('U Owner aplikaciji:'),
+                  const SizedBox(height: 12),
+                  _buildBulletPoint('Otvorite drawer (hamburger meni)'),
+                  _buildBulletPoint(
+                    'Idite na: Integracije → iCal Sinhronizacija',
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    '💡 iCal sinhronizacija sprečava overbooking tako što automatski uvozi rezervacije '
-                    'sa drugih platformi i prikazuje ih kao zauzete dane u vašem kalendaru.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      height: 1.5,
-                      color: isDark ? AppColors.borderLight : null,
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.go(OwnerRoutes.icalIntegration);
+                    },
+                    icon: const Icon(Icons.sync),
+                    label: const Text('Idi na iCal Sinhronizaciju'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.authPrimary,
+                      padding: const EdgeInsets.all(16),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
 
-          const SizedBox(height: 24),
-
-          // Booking.com Instructions
-          _buildPlatformSection(
-            platformName: 'Booking.com',
-            icon: Icons.hotel,
-            color: AppColors.authSecondary,
-            steps: [
-              '1. Ulogujte se na Extranet (admin.booking.com)',
-              '2. Idite na: Property → Calendar → Reservations export',
-              '3. Kopirajte "Calendar export link" (iCal URL)',
-              '4. Zalijepite u Owner aplikaciju',
-            ],
-            placeholder: 'Slika: Booking.com Extranet - Calendar export',
-          ),
-
-          const SizedBox(height: 16),
-
-          // Airbnb Instructions
-          _buildPlatformSection(
-            platformName: 'Airbnb',
-            icon: Icons.home,
-            color: AppColors.activityCancellation,
-            steps: [
-              '1. Ulogujte se na Airbnb host dashboard',
-              '2. Odaberite property (listing)',
-              '3. Idite na: Calendar → Availability settings → Export calendar',
-              '4. Kopirajte iCal link',
-              '5. Zalijepite u Owner aplikaciju',
-            ],
-            placeholder: 'Slika: Airbnb - Export calendar',
-          ),
-
-          const SizedBox(height: 16),
-
-          // VRBO/HomeAway Instructions
-          _buildPlatformSection(
-            platformName: 'VRBO / HomeAway',
-            icon: Icons.cottage,
-            color: AppColors.warning,
-            steps: [
-              '1. Ulogujte se na VRBO owner dashboard',
-              '2. Idite na: Listings → Select property',
-              '3. Kliknite: Calendar → Import/Export',
-              '4. Kopirajte export link',
-              '5. Zalijepite u Owner aplikaciju',
-            ],
-            placeholder: 'Slika: VRBO - Calendar export',
-          ),
-
-          const SizedBox(height: 24),
-
-          // Step-by-step in Owner App
-          const Text(
-            'Dodavanje iCal Feed-a u Owner Aplikaciju',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-
-          _buildStep(
-            stepNumber: 1,
-            title: 'Otvorite iCal Sinhronizaciju',
-            icon: Icons.open_in_new,
-            content: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('U Owner aplikaciji:'),
-                const SizedBox(height: 12),
-                _buildBulletPoint('Otvorite drawer (hamburger meni)'),
-                _buildBulletPoint('Idite na: Integracije → iCal Sinhronizacija'),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    context.go(OwnerRoutes.icalIntegration);
-                  },
-                  icon: const Icon(Icons.sync),
-                  label: const Text('Idi na iCal Sinhronizaciju'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.authPrimary,
-                    padding: const EdgeInsets.all(16),
+            _buildStep(
+              stepNumber: 2,
+              title: 'Dodajte novi Feed',
+              icon: Icons.add_circle,
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Kliknite na "Dodaj iCal Feed" dugme:'),
+                  const SizedBox(height: 12),
+                  _buildBulletPoint(
+                    'Odaberite Unit (apartman) za koji želite sync',
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          _buildStep(
-            stepNumber: 2,
-            title: 'Dodajte novi Feed',
-            icon: Icons.add_circle,
-            content: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Kliknite na "Dodaj iCal Feed" dugme:'),
-                const SizedBox(height: 12),
-                _buildBulletPoint('Odaberite Unit (apartman) za koji želite sync'),
-                _buildBulletPoint('Odaberite platformu (Booking.com, Airbnb, itd.)'),
-                _buildBulletPoint('Zalijepite iCal URL koji ste kopirali'),
-                _buildBulletPoint('Kliknite "Dodaj"'),
-                const SizedBox(height: 16),
-                _buildPlaceholder('GIF: Dodavanje iCal feed-a'),
-              ],
-            ),
-          ),
-
-          _buildStep(
-            stepNumber: 3,
-            title: 'Pokrenite Sync',
-            icon: Icons.sync,
-            content: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Nakon dodavanja feed-a:'),
-                const SizedBox(height: 12),
-                _buildBulletPoint('Kliknite "Sync Now" dugme pored feed-a'),
-                _buildBulletPoint('Sačekajte par sekundi'),
-                _buildBulletPoint('Provjerite status (Active ✓)'),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withAlpha((0.1 * 255).toInt()),
-                    border: Border.all(color: AppColors.success.withAlpha((0.3 * 255).toInt())),
-                    borderRadius: BorderRadius.circular(8),
+                  _buildBulletPoint(
+                    'Odaberite platformu (Booking.com, Airbnb, itd.)',
                   ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_circle, color: AppColors.success, size: 20),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text(
-                          'Gotovo! Rezervacije sa drugih platformi će se automatski prikazivati kao zauzeti dani.',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                        ),
+                  _buildBulletPoint('Zalijepite iCal URL koji ste kopirali'),
+                  _buildBulletPoint('Kliknite "Dodaj"'),
+                  const SizedBox(height: 16),
+                  _buildPlaceholder('GIF: Dodavanje iCal feed-a'),
+                ],
+              ),
+            ),
+
+            _buildStep(
+              stepNumber: 3,
+              title: 'Pokrenite Sync',
+              icon: Icons.sync,
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Nakon dodavanja feed-a:'),
+                  const SizedBox(height: 12),
+                  _buildBulletPoint('Kliknite "Sync Now" dugme pored feed-a'),
+                  _buildBulletPoint('Sačekajte par sekundi'),
+                  _buildBulletPoint('Provjerite status (Active ✓)'),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withAlpha((0.1 * 255).toInt()),
+                      border: Border.all(
+                        color: AppColors.success.withAlpha((0.3 * 255).toInt()),
                       ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          _buildStep(
-            stepNumber: 4,
-            title: 'Automatska Sinhronizacija',
-            icon: Icons.schedule,
-            content: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Sistem automatski sinhronizuje rezervacije:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                _buildBulletPoint('Svaki sat se pokreće automatski sync'),
-                _buildBulletPoint('Nove rezervacije se pojavljuju u roku od 1h'),
-                _buildBulletPoint('Otkazane rezervacije se uklanjaju'),
-                _buildBulletPoint('Možete ručno pokrenuti sync bilo kada'),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline, color: AppColors.authSecondary, size: 20),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Vrijeme sinhronizacije: Svaki sat u 00 minuta (npr. 10:00, 11:00, 12:00...)',
-                          style: TextStyle(fontSize: 12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          color: AppColors.success,
+                          size: 20,
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Gotovo! Rezervacije sa drugih platformi će se automatski prikazivati kao zauzeti dani.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
-          const SizedBox(height: 24),
+            _buildStep(
+              stepNumber: 4,
+              title: 'Automatska Sinhronizacija',
+              icon: Icons.schedule,
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Sistem automatski sinhronizuje rezervacije:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildBulletPoint('Svaki sat se pokreće automatski sync'),
+                  _buildBulletPoint(
+                    'Nove rezervacije se pojavljuju u roku od 1h',
+                  ),
+                  _buildBulletPoint('Otkazane rezervacije se uklanjaju'),
+                  _buildBulletPoint('Možete ručno pokrenuti sync bilo kada'),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.authSecondary.withAlpha(
+                        (0.1 * 255).toInt(),
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColors.authSecondary,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Vrijeme sinhronizacije: Svaki sat u 00 minuta (npr. 10:00, 11:00, 12:00...)',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-          // FAQ Section
-          _buildFAQSection(),
+            const SizedBox(height: 24),
 
-          const SizedBox(height: 24),
+            // FAQ Section
+            _buildFAQSection(),
 
-          // Troubleshooting Section
-          _buildTroubleshootingSection(),
-        ],
-      ),
+            const SizedBox(height: 24),
+
+            // Troubleshooting Section
+            _buildTroubleshootingSection(),
+          ],
+        ),
       ),
     );
   }
@@ -347,8 +370,12 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           });
         },
         leading: CircleAvatar(
-          backgroundColor: isExpanded ? AppColors.authPrimary : AppColors.borderLight,
-          foregroundColor: isExpanded ? const Color(0xFFFFFFFF) : AppColors.textDisabled,
+          backgroundColor: isExpanded
+              ? AppColors.authPrimary
+              : AppColors.borderLight,
+          foregroundColor: isExpanded
+              ? const Color(0xFFFFFFFF)
+              : AppColors.textDisabled,
           child: Text('$stepNumber'),
         ),
         title: Row(
@@ -363,12 +390,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             ),
           ],
         ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: content,
-          ),
-        ],
+        children: [Padding(padding: const EdgeInsets.all(16), child: content)],
       ),
     );
   }
@@ -379,7 +401,10 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            '• ',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           Expanded(child: Text(text, style: const TextStyle(height: 1.5))),
         ],
       ),
@@ -395,7 +420,10 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
         gradient: LinearGradient(
           colors: theme.brightness == Brightness.dark
               ? [AppColors.backgroundDark, AppColors.surfaceVariantDark]
-              : [AppColors.primary.withAlpha((0.1 * 255).toInt()), AppColors.primary.withAlpha((0.2 * 255).toInt())],
+              : [
+                  AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                  AppColors.primary.withAlpha((0.2 * 255).toInt()),
+                ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -416,7 +444,11 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.image, color: const Color(0xFFFFFFFF), size: 24),
+                child: const Icon(
+                  Icons.image,
+                  color: Color(0xFFFFFFFF),
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -517,9 +549,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                     fontWeight: step.contains('📋')
                         ? FontWeight.bold
                         : FontWeight.normal,
-                    color: step.contains('📋')
-                        ? AppColors.primary
-                        : null,
+                    color: step.contains('📋') ? AppColors.primary : null,
                   ),
                 ),
               ),
@@ -552,7 +582,12 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
     );
   }
 
-  Widget _buildMiniStep(String number, String text, IconData icon, {bool isLast = false}) {
+  Widget _buildMiniStep(
+    String number,
+    String text,
+    IconData icon, {
+    bool isLast = false,
+  }) {
     return Container(
       margin: EdgeInsets.only(bottom: isLast ? 0 : 4),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -567,7 +602,11 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             backgroundColor: AppColors.primary,
             child: Text(
               number,
-              style: const TextStyle(color: const Color(0xFFFFFFFF), fontSize: 10, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Color(0xFFFFFFFF),
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -628,7 +667,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             _buildFAQItem(
               'Da li mogu vidjeti detalje gosta sa drugih platformi?',
               'Ne. iCal protokol samo prenosi datume rezervacije (check-in i check-out), ne i lične podatke gostiju. '
-              'Za detalje gosta, morate se ulogovat na odgovarajuću platformu.',
+                  'Za detalje gosta, morate se ulogovat na odgovarajuću platformu.',
             ),
             _buildFAQItem(
               'Šta ako URL prestane da radi?',
@@ -645,7 +684,9 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Card(
-      color: isDark ? AppColors.surfaceVariantDark : AppColors.warning.withAlpha((0.1 * 255).toInt()),
+      color: isDark
+          ? AppColors.surfaceVariantDark
+          : AppColors.warning.withAlpha((0.1 * 255).toInt()),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -675,19 +716,19 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             _buildTroubleshootItem(
               'Feed ima status "Error"',
               '• Provjerite da li je URL tačan\n'
-              '• Provjerite da li je URL još aktivan na platformi\n'
-              '• Obrišite feed i dodajte ponovo sa novim URL-om',
+                  '• Provjerite da li je URL još aktivan na platformi\n'
+                  '• Obrišite feed i dodajte ponovo sa novim URL-om',
             ),
             _buildTroubleshootItem(
               'Rezervacije se ne prikazuju',
               '• Kliknite "Sync Now" da ručno pokrenete sync\n'
-              '• Provjerite da li ste odabrali tačan unit\n'
-              '• Sačekajte par minuta i osvježite stranicu',
+                  '• Provjerite da li ste odabrali tačan unit\n'
+                  '• Sačekajte par minuta i osvježite stranicu',
             ),
             _buildTroubleshootItem(
               'Stare rezervacije još uvijek prikazane',
               '• iCal sync automatski uklanja prošle rezervacije\n'
-              '• Kliknite "Sync Now" da forsirate ažuriranje',
+                  '• Kliknite "Sync Now" da forsirate ažuriranje',
             ),
           ],
         ),

@@ -76,10 +76,17 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
 
                       // Content
                       Padding(
-                        padding: EdgeInsets.all(isSmallMobile ? 14 : (isMobile ? 16 : 20)),
+                        padding: EdgeInsets.all(
+                          isSmallMobile ? 14 : (isMobile ? 16 : 20),
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: _buildContent(context, theme, isMobile, isSmallMobile),
+                          children: _buildContent(
+                            context,
+                            theme,
+                            isMobile,
+                            isSmallMobile,
+                          ),
                         ),
                       ),
                     ],
@@ -93,7 +100,12 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
     );
   }
 
-  List<Widget> _buildContent(BuildContext context, ThemeData theme, bool isMobile, bool isSmallMobile) {
+  List<Widget> _buildContent(
+    BuildContext context,
+    ThemeData theme,
+    bool isMobile,
+    bool isSmallMobile,
+  ) {
     return [
       // Title and type
       Row(
@@ -121,8 +133,12 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
-                        theme.colorScheme.secondary.withAlpha((0.15 * 255).toInt()),
+                        theme.colorScheme.primary.withAlpha(
+                          (0.15 * 255).toInt(),
+                        ),
+                        theme.colorScheme.secondary.withAlpha(
+                          (0.15 * 255).toInt(),
+                        ),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -157,7 +173,9 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
               widget.property.location,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: isSmallMobile ? 13 : (isMobile ? 14 : null),
-                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (0.7 * 255).toInt(),
+                ),
                 fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
@@ -189,7 +207,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
             child: _buildStat(
               context,
               icon: Icons.apartment,
-              label: '${widget.property.unitsCount} ${widget.property.unitsCount == 1 ? 'jedinica' : 'jedinice'}',
+              label:
+                  '${widget.property.unitsCount} ${widget.property.unitsCount == 1 ? 'jedinica' : 'jedinice'}',
               isMobile: isMobile,
               isSmallMobile: isSmallMobile,
             ),
@@ -222,97 +241,96 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
       // Actions row
       LayoutBuilder(
         builder: (context, constraints) {
-          if (constraints.maxWidth < 400)
+          if (constraints.maxWidth < 400) {
             return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        widget.property.isActive ? 'Objavljeno' : 'Skriveno',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: widget.property.isActive
-                                                  ? theme.colorScheme.tertiary
-                                                  : theme.colorScheme.error.withAlpha((0.8 * 255).toInt()),
-                                            ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    Switch(
-                                      value: widget.property.isActive,
-                                      onChanged: widget.onTogglePublished,
-                                    ),
-                                  ],
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        widget.property.isActive ? 'Objavljeno' : 'Skriveno',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: widget.property.isActive
+                              ? theme.colorScheme.tertiary
+                              : theme.colorScheme.error.withAlpha(
+                                  (0.8 * 255).toInt(),
                                 ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    IconButton(
-                                      onPressed: widget.onEdit,
-                                      icon: const Icon(Icons.edit_outlined),
-                                      tooltip: 'Uredi',
-                                    ),
-                                    IconButton(
-                                      onPressed: widget.onDelete,
-                                      icon: const Icon(Icons.delete_outline),
-                                      color: context.errorColor,
-                                      tooltip: 'Obriši',
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            );
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Switch(
+                      value: widget.property.isActive,
+                      onChanged: widget.onTogglePublished,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      onPressed: widget.onEdit,
+                      icon: const Icon(Icons.edit_outlined),
+                      tooltip: 'Uredi',
+                    ),
+                    IconButton(
+                      onPressed: widget.onDelete,
+                      icon: const Icon(Icons.delete_outline),
+                      color: context.errorColor,
+                      tooltip: 'Obriši',
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }
           return Row(
-          children: [
-                              // Published toggle
-                              Flexible(
-                                child: Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        widget.property.isActive ? 'Objavljeno' : 'Skriveno',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: widget.property.isActive
-                                                  ? theme.colorScheme.tertiary
-                                                  : theme.colorScheme.error.withAlpha((0.8 * 255).toInt()),
-                                            ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Switch(
-                                      value: widget.property.isActive,
-                                      onChanged: widget.onTogglePublished,
-                                    ),
-                                  ],
+            children: [
+              // Published toggle
+              Flexible(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        widget.property.isActive ? 'Objavljeno' : 'Skriveno',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: widget.property.isActive
+                              ? theme.colorScheme.tertiary
+                              : theme.colorScheme.error.withAlpha(
+                                  (0.8 * 255).toInt(),
                                 ),
-                              ),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Switch(
+                      value: widget.property.isActive,
+                      onChanged: widget.onTogglePublished,
+                    ),
+                  ],
+                ),
+              ),
 
-                              // Edit button
-                              IconButton(
-                                onPressed: widget.onEdit,
-                                icon: const Icon(Icons.edit_outlined),
-                                tooltip: 'Uredi',
-                              ),
+              // Edit button
+              IconButton(
+                onPressed: widget.onEdit,
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Uredi',
+              ),
 
-                              // Delete button
-            IconButton(
-              onPressed: widget.onDelete,
-              icon: const Icon(Icons.delete_outline),
-              color: context.errorColor,
-              tooltip: 'Obriši',
-            ),
-          ],
+              // Delete button
+              IconButton(
+                onPressed: widget.onDelete,
+                icon: const Icon(Icons.delete_outline),
+                color: context.errorColor,
+                tooltip: 'Obriši',
+              ),
+            ],
           );
         },
       ),
@@ -367,7 +385,9 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
         vertical: isSmallMobile ? 4 : (isMobile ? 6 : 8),
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt()),
+        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+          (0.5 * 255).toInt(),
+        ),
         borderRadius: BorderRadius.circular(isSmallMobile ? 8 : 10),
         border: Border.all(
           color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
@@ -378,7 +398,11 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: isSmallMobile ? 14 : (isMobile ? 16 : 18), color: theme.colorScheme.primary),
+          Icon(
+            icon,
+            size: isSmallMobile ? 14 : (isMobile ? 16 : 18),
+            color: theme.colorScheme.primary,
+          ),
           SizedBox(width: isSmallMobile ? 3 : (isMobile ? 4 : 6)),
           Flexible(
             child: Text(
@@ -386,7 +410,9 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: isSmallMobile ? 10 : (isMobile ? 11 : null),
                 fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface.withAlpha((0.8 * 255).toInt()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (0.8 * 255).toInt(),
+                ),
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,

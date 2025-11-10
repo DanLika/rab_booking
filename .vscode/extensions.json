@@ -1,45 +1,46 @@
 {
+  // ============================================
+  // MINIMAL SETUP FOR CLAUDE CODE DEVELOPMENT
+  // ============================================
+  // This config is optimized for development with Claude Code AI.
+  // Only essential extensions that help Claude Code work better.
+
   "recommendations": [
-    // Flutter & Dart (MUST HAVE)
-    "dart-code.dart-code",
-    "dart-code.flutter",
+    // ========== MUST HAVE (Core) ==========
+    "dart-code.dart-code",           // Dart language support (REQUIRED)
+    "dart-code.flutter",             // Flutter framework support (REQUIRED)
+    "anthropic.claude-code",         // Claude Code AI Assistant (REQUIRED)
 
-    // Claude Code AI Assistant
-    "anthropic.claude-code",
+    // ========== HIGHLY RECOMMENDED (Claude Integration) ==========
+    "usernamehw.errorlens",          // Shows errors inline (Claude sees them immediately)
+    "eamodio.gitlens",               // Git history & blame (Claude uses for context)
+    "gruntfuggly.todo-tree",         // TODO/FIXME tracking (Claude finds action items)
 
-    // Git & Version Control
-    "eamodio.gitlens",
-    "github.vscode-pull-request-github",
-
-    // Code Quality
-    "usernamehw.errorlens",
-    "gruntfuggly.todo-tree",
-
-    // Flutter Helpers
-    "jeroen-meijer.pubspec-assist",
-    "robert-brunhage.flutter-riverpod-snippets",
-    "nash.awesome-flutter-snippets",
-    "marcelovelasquez.flutter-tree",
-    "circlecodesolution.ccs-flutter-color",
-
-    // Firebase & Database
-    "toba.vsfire",
-    "ckolkman.vscode-postgres",
-
-    // UI & Productivity
-    "pkief.material-icon-theme",
-    "ritwickdey.liveserver",
-
-    // Snippets & Code Generation
-    "alexisvt.flutter-snippets",
-    "gornivv.vscode-flutter-files"
+    // ========== OPTIONAL (Database/Firebase) ==========
+    "toba.vsfire",                   // Firestore explorer (if needed for manual inspection)
+    "ckolkman.vscode-postgres"       // PostgreSQL client (if needed for manual inspection)
   ],
-  "unwantedRecommendations": [
-    // Conflicts with Claude Code
-    "github.copilot",
-    "github.copilot-chat",
 
-    // Use Dart extension instead
-    "fwcd.dart"
+  "unwantedRecommendations": [
+    // ========== AI Conflicts ==========
+    "github.copilot",                // Conflicts with Claude Code
+    "github.copilot-chat",           // Conflicts with Claude Code
+    "tabnine.tabnine-vscode",        // Another AI assistant (conflicts)
+    "visualstudioexptteam.vscodeintellicode", // Another AI (conflicts)
+
+    // ========== Snippet Extensions (Not Needed for Claude Code) ==========
+    "nash.awesome-flutter-snippets",         // Claude writes full code, not snippets
+    "robert-brunhage.flutter-riverpod-snippets", // Claude writes full code
+    "alexisvt.flutter-snippets",             // Claude writes full code
+    "gornivv.vscode-flutter-files",          // File generator (Claude uses Write tool)
+
+    // ========== Manual Development Tools (Not Needed) ==========
+    "jeroen-meijer.pubspec-assist",          // Claude edits pubspec.yaml directly
+    "circlecodesolution.ccs-flutter-color",  // Color picker (Claude uses design tokens)
+    "marcelovelasquez.flutter-tree",         // Widget tree viewer (use DevTools instead)
+    "ritwickdey.liveserver",                 // Not needed for Flutter
+
+    // ========== Other ==========
+    "fwcd.dart"                      // Use dart-code.dart-code instead
   ]
 }

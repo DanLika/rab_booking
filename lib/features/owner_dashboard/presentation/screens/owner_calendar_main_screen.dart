@@ -11,6 +11,7 @@ import 'owner_week_calendar_screen.dart';
 import 'owner_month_calendar_screen.dart';
 import 'owner_timeline_calendar_screen.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../widgets/calendar/calendar_view_switcher.dart';
 
 /// Owner Calendar Main Screen
 /// Container screen with view switcher for Week/Month/Timeline calendars
@@ -73,7 +74,56 @@ class _OwnerCalendarMainScreenState
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: OwnerAppDrawer(currentRoute: currentRoute),
-      body: _buildCurrentView(currentView),
+      body: Column(
+        children: [
+          // View Switcher
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              border: Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: CalendarViewSwitcher(
+                    currentView: currentView,
+                    onViewChanged: (newView) {
+                      // Update provider
+                      ref.read(ownerCalendarViewProvider.notifier).setView(newView);
+
+                      // Navigate to appropriate route
+                      String route;
+                      switch (newView) {
+                        case CalendarViewMode.week:
+                          route = '/owner/calendar/week';
+                          break;
+                        case CalendarViewMode.month:
+                          route = '/owner/calendar/month';
+                          break;
+                        case CalendarViewMode.timeline:
+                          route = '/owner/calendar/timeline';
+                          break;
+                      }
+                      context.go(route);
+                    },
+                    isCompact: MediaQuery.of(context).size.width < 600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Calendar View
+          Expanded(
+            child: _buildCurrentView(currentView),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showCreateBookingDialog,
         backgroundColor: AppColors.primary,

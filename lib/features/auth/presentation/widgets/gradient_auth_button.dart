@@ -109,12 +109,12 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
                   // Button content
                   Center(
                     child: widget.isLoading
-                        ? SizedBox(
+                        ? const SizedBox(
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : Row(
@@ -123,15 +123,15 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
                               if (widget.icon != null) ...[
                                 Icon(
                                   widget.icon,
-                                  color: theme.colorScheme.onPrimary,
+                                  color: Colors.white,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
                               ],
                               Text(
                                 widget.text,
-                                style: TextStyle(
-                                  color: theme.colorScheme.onPrimary,
+                                style: const TextStyle(
+                                  color: Colors.white,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.5,

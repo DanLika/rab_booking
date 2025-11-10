@@ -716,6 +716,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   Widget _buildCompactPillSummary(BookingPriceCalculation calculation) {
     final nights = _checkOut!.difference(_checkIn!).inDays;
     final dateFormat = DateFormat('MMM dd, yyyy');
+    final isDarkMode = ref.watch(themeProvider);
+
+    // Helper function to get theme-aware colors
+    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
 
     return Column(
       children: [
@@ -736,17 +740,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               child: Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: MinimalistColors.backgroundSecondary,
+                  color: getColor(MinimalistColors.backgroundSecondary, ColorTokens.pureWhite),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: MinimalistColors.borderLight,
+                    color: getColor(MinimalistColors.borderLight, MinimalistColorsDark.borderLight),
                     width: 1,
                   ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.close,
                   size: 16,
-                  color: MinimalistColors.textSecondary,
+                  color: getColor(MinimalistColors.textSecondary, ColorTokens.pureBlack),
                 ),
               ),
             ),
@@ -758,43 +762,43 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: MinimalistColors.buttonPrimary.withValues(alpha: 0.1),
+            color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: MinimalistColors.buttonPrimary.withValues(alpha: 0.3),
+              color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary).withValues(alpha: 0.3),
               width: 1,
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.calendar_month,
                 size: 18,
-                color: MinimalistColors.buttonPrimary,
+                color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
               ),
               const SizedBox(width: 8),
               Text(
                 '${dateFormat.format(_checkIn!)} - ${dateFormat.format(_checkOut!)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: MinimalistColors.textPrimary,
+                  color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
                 ),
               ),
               const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: MinimalistColors.buttonPrimary,
+                  color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '$nights ${nights == 1 ? 'night' : 'nights'}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
                   ),
                 ),
               ),
@@ -815,15 +819,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               decoration: BoxDecoration(
-                color: MinimalistColors.buttonPrimary,
+                color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Text(
+              child: Text(
                 'Reserve',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
                 ),
               ),
             ),
@@ -834,16 +838,22 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
   /// Build payment section (payment options + confirm button)
   Widget _buildPaymentSection(BookingPriceCalculation calculation) {
+    final isDarkMode = ref.watch(themeProvider);
+
+    // Helper function to get theme-aware colors
+    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Payment method section (only for bookingInstant mode)
         if (_widgetSettings?.widgetMode == WidgetMode.bookingInstant) ...[
-          const Text(
+          Text(
             'Payment Method',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
             ),
           ),
           const SizedBox(height: SpacingTokens.s),
@@ -943,27 +953,30 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 ? null
                 : () => _handleConfirmBooking(calculation),
             style: ElevatedButton.styleFrom(
-              backgroundColor: MinimalistColors.buttonPrimary,
+              backgroundColor: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
+              foregroundColor: getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
               padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderTokens.circularRounded,
               ),
             ),
             child: _isProcessing
-                ? const SizedBox(
+                ? SizedBox(
                     height: 20,
                     width: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
+                      ),
                     ),
                   )
                 : Text(
                     _getConfirmButtonText(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
                     ),
                   ),
           ),
@@ -974,17 +987,23 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
 
   Widget _buildGuestInfoForm(BookingPriceCalculation calculation, {bool showButton = true}) {
+    final isDarkMode = ref.watch(themeProvider);
+
+    // Helper function to get theme-aware colors
+    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Section title
-          const Text(
+          Text(
             'Guest Information',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
+              color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
@@ -992,13 +1011,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           // Name field
           TextFormField(
             controller: _nameController,
+            style: TextStyle(
+              color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+            ),
             decoration: InputDecoration(
               labelText: 'Full Name *',
               hintText: 'John Doe',
+              labelStyle: TextStyle(
+                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+              ),
+              hintStyle: TextStyle(
+                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary).withValues(alpha: 0.5),
+              ),
+              filled: true,
+              fillColor: getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary),
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
               ),
-              prefixIcon: const Icon(Icons.person_outline),
+              prefixIcon: Icon(
+                Icons.person_outline,
+                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+              ),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -1013,13 +1046,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
+            style: TextStyle(
+              color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+            ),
             decoration: InputDecoration(
               labelText: 'Email *',
               hintText: 'john@example.com',
+              labelStyle: TextStyle(
+                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+              ),
+              hintStyle: TextStyle(
+                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary).withValues(alpha: 0.5),
+              ),
+              filled: true,
+              fillColor: getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary),
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
               ),
-              prefixIcon: const Icon(Icons.email_outlined),
+              prefixIcon: Icon(
+                Icons.email_outlined,
+                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+              ),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -1037,13 +1084,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           TextFormField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
+            style: TextStyle(
+              color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+            ),
             decoration: InputDecoration(
               labelText: 'Phone *',
               hintText: '+385 99 123 4567',
+              labelStyle: TextStyle(
+                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+              ),
+              hintStyle: TextStyle(
+                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary).withValues(alpha: 0.5),
+              ),
+              filled: true,
+              fillColor: getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary),
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
               ),
-              prefixIcon: const Icon(Icons.phone_outlined),
+              prefixIcon: Icon(
+                Icons.phone_outlined,
+                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+              ),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -1126,6 +1187,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     String? depositAmount, // Made nullable for "Pay on Arrival"
   }) {
     final isSelected = _selectedPaymentMethod == value;
+    final isDarkMode = ref.watch(themeProvider);
+
+    // Helper function to get theme-aware colors
+    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
 
     return InkWell(
       onTap: () {
@@ -1138,11 +1203,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         padding: const EdgeInsets.all(SpacingTokens.m),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? MinimalistColors.borderBlack : MinimalistColors.borderDefault,
+            color: isSelected
+                ? getColor(MinimalistColors.borderBlack, MinimalistColorsDark.textPrimary)
+                : getColor(MinimalistColors.borderDefault, MinimalistColorsDark.borderDefault),
             width: isSelected ? BorderTokens.widthMedium : BorderTokens.widthThin,
           ),
           borderRadius: BorderTokens.circularMedium,
-          color: isSelected ? MinimalistColors.backgroundSecondary : null,
+          color: isSelected
+              ? getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary)
+              : null,
         ),
         child: Row(
           children: [
@@ -1153,7 +1222,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? MinimalistColors.borderBlack : MinimalistColors.textSecondary,
+                  color: isSelected
+                      ? getColor(MinimalistColors.borderBlack, MinimalistColorsDark.textPrimary)
+                      : getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
                   width: 2,
                 ),
               ),
@@ -1162,9 +1233,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       child: Container(
                         width: 12,
                         height: 12,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: MinimalistColors.buttonPrimary,
+                          color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
                         ),
                       ),
                     )
@@ -1175,7 +1246,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             // Icon
             Icon(
               icon,
-              color: isSelected ? MinimalistColors.textPrimary : MinimalistColors.textSecondary,
+              color: isSelected
+                  ? getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary)
+                  : getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
               size: 28,
             ),
             const SizedBox(width: SpacingTokens.s),
@@ -1187,18 +1260,18 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: MinimalistColors.textPrimary,
+                      color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: MinimalistColors.textSecondary,
+                      color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
                     ),
                   ),
                 ],
@@ -1209,10 +1282,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             if (depositAmount != null)
               Text(
                 depositAmount,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: MinimalistColors.textPrimary,
+                  color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
                 ),
               ),
           ],
@@ -1498,14 +1571,18 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final maxGuests = _unit?.maxGuests ?? 10; // Default to 10 if unit not loaded
     final totalGuests = _adults + _children;
     final isAtCapacity = totalGuests >= maxGuests;
+    final isDarkMode = ref.watch(themeProvider);
+
+    // Helper function to get theme-aware colors
+    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: MinimalistColors.backgroundSecondary,
+        color: getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary),
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(
-          color: MinimalistColors.borderDefault,
+          color: getColor(MinimalistColors.borderDefault, MinimalistColorsDark.borderDefault),
         ),
       ),
       child: Column(
@@ -1514,20 +1591,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Number of Guests',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
+                  color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
                 ),
               ),
               if (_unit != null)
                 Text(
                   'Max: ${_unit!.maxGuests}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: MinimalistColors.textSecondary,
+                    color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
                   ),
                 ),
             ],
@@ -1538,17 +1616,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
                   Icon(
                     Icons.person,
-                    color: MinimalistColors.textPrimary,
+                    color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
                     size: 20,
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
                     'Adults',
-                    style: TextStyle(fontSize: 14),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                    ),
                   ),
                 ],
               ),
@@ -1562,17 +1643,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             });
                           }
                         : null,
-                    icon: const Icon(Icons.remove_circle_outline),
-                    color: MinimalistColors.textPrimary,
+                    icon: Icon(
+                      Icons.remove_circle_outline,
+                      color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                    ),
                   ),
                   Container(
                     width: 40,
                     alignment: Alignment.center,
                     child: Text(
                       '$_adults',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
                       ),
                     ),
                   ),
@@ -1584,8 +1668,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             });
                           }
                         : null,
-                    icon: const Icon(Icons.add_circle_outline),
-                    color: isAtCapacity ? Colors.grey : MinimalistColors.textPrimary,
+                    icon: Icon(
+                      Icons.add_circle_outline,
+                      color: isAtCapacity
+                          ? getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary).withValues(alpha: 0.5)
+                          : getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                    ),
                   ),
                 ],
               ),
@@ -1598,17 +1686,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
                   Icon(
                     Icons.child_care,
-                    color: MinimalistColors.textPrimary,
+                    color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
                     size: 20,
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
                     'Children',
-                    style: TextStyle(fontSize: 14),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                    ),
                   ),
                 ],
               ),
@@ -1622,17 +1713,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             });
                           }
                         : null,
-                    icon: const Icon(Icons.remove_circle_outline),
-                    color: MinimalistColors.textPrimary,
+                    icon: Icon(
+                      Icons.remove_circle_outline,
+                      color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                    ),
                   ),
                   Container(
                     width: 40,
                     alignment: Alignment.center,
                     child: Text(
                       '$_children',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
                       ),
                     ),
                   ),
@@ -1644,8 +1738,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             });
                           }
                         : null,
-                    icon: const Icon(Icons.add_circle_outline),
-                    color: isAtCapacity ? Colors.grey : MinimalistColors.textPrimary,
+                    icon: Icon(
+                      Icons.add_circle_outline,
+                      color: isAtCapacity
+                          ? getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary).withValues(alpha: 0.5)
+                          : getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                    ),
                   ),
                 ],
               ),
@@ -1658,11 +1756,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: isAtCapacity
-                ? MinimalistColors.error.withValues(alpha: 0.1)
-                : MinimalistColors.backgroundSecondary,
+                ? getColor(MinimalistColors.error, MinimalistColorsDark.error).withValues(alpha: 0.1)
+                : getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary),
               borderRadius: BorderRadius.circular(8),
               border: isAtCapacity
-                ? Border.all(color: MinimalistColors.error, width: 1)
+                ? Border.all(color: getColor(MinimalistColors.error, MinimalistColorsDark.error), width: 1)
                 : null,
             ),
             child: Row(
@@ -1670,7 +1768,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               children: [
                 Icon(
                   isAtCapacity ? Icons.warning : Icons.groups,
-                  color: isAtCapacity ? MinimalistColors.error : MinimalistColors.textPrimary,
+                  color: isAtCapacity
+                      ? getColor(MinimalistColors.error, MinimalistColorsDark.error)
+                      : getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
                   size: 14,
                 ),
                 const SizedBox(width: 6),
@@ -1681,7 +1781,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: isAtCapacity ? MinimalistColors.error : MinimalistColors.textPrimary,
+                    color: isAtCapacity
+                        ? getColor(MinimalistColors.error, MinimalistColorsDark.error)
+                        : getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
                   ),
                 ),
               ],

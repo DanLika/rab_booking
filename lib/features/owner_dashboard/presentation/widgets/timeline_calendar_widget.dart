@@ -614,9 +614,10 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
           ),
         ),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Day of week
           Text(

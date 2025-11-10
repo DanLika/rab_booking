@@ -576,11 +576,14 @@ class _AppleIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SizedBox(
       width: 22,
       height: 22,
       child: CustomPaint(
-        painter: _AppleLogoPainter(),
+        painter: _AppleLogoPainter(
+          color: theme.colorScheme.onSurface,
+        ),
       ),
     );
   }
@@ -588,12 +591,15 @@ class _AppleIcon extends StatelessWidget {
 
 /// Paints Apple logo silhouette
 class _AppleLogoPainter extends CustomPainter {
+  final Color color;
+
+  const _AppleLogoPainter({required this.color});
+
   @override
   void paint(Canvas canvas, Size size) {
-    // Adapt color to theme - keep black for light mode, white for dark mode
-    // For brand consistency, we can keep it as black regardless of theme
+    // Use theme-aware color for dark mode compatibility
     final paint = Paint()
-      ..color = Colors.black87
+      ..color = color
       ..style = PaintingStyle.fill;
 
     final path = Path();

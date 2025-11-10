@@ -1,0 +1,45 @@
+{
+  "recommendations": [
+    // Flutter & Dart (MUST HAVE)
+    "dart-code.dart-code",
+    "dart-code.flutter",
+
+    // Claude Code AI Assistant
+    "anthropic.claude-code",
+
+    // Git & Version Control
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+
+    // Code Quality
+    "usernamehw.errorlens",
+    "gruntfuggly.todo-tree",
+
+    // Flutter Helpers
+    "jeroen-meijer.pubspec-assist",
+    "robert-brunhage.flutter-riverpod-snippets",
+    "nash.awesome-flutter-snippets",
+    "marcelovelasquez.flutter-tree",
+    "circlecodesolution.ccs-flutter-color",
+
+    // Firebase & Database
+    "toba.vsfire",
+    "ckolkman.vscode-postgres",
+
+    // UI & Productivity
+    "pkief.material-icon-theme",
+    "ritwickdey.liveserver",
+
+    // Snippets & Code Generation
+    "alexisvt.flutter-snippets",
+    "gornivv.vscode-flutter-files"
+  ],
+  "unwantedRecommendations": [
+    // Conflicts with Claude Code
+    "github.copilot",
+    "github.copilot-chat",
+
+    // Use Dart extension instead
+    "fwcd.dart"
+  ]
+}

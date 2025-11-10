@@ -1,0 +1,190 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🧹 Flutter Clean",
+      "type": "shell",
+      "command": "flutter clean",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "📦 Flutter Pub Get",
+      "type": "shell",
+      "command": "flutter pub get",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "🔍 Flutter Analyze",
+      "type": "shell",
+      "command": "flutter analyze",
+      "problemMatcher": "$dart-analyze",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "🧪 Flutter Test (All)",
+      "type": "shell",
+      "command": "flutter test",
+      "problemMatcher": "$dart-test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "✨ Dart Format (All)",
+      "type": "shell",
+      "command": "dart format lib/",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "🔧 Dart Fix (Apply)",
+      "type": "shell",
+      "command": "dart fix --apply",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "🏗️ Build Web (Release)",
+      "type": "shell",
+      "command": "flutter build web --web-renderer canvaskit --release",
+      "problemMatcher": "$dart-analyze",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "📊 DevTools (Open)",
+      "type": "shell",
+      "command": "flutter pub global activate devtools && flutter pub global run devtools",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "none",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "🚀 Quick Start Widget (Port 8081)",
+      "type": "shell",
+      "command": "flutter run -d chrome --web-port=8081 --web-renderer=canvaskit --dart-define=FLUTTER_WEB_USE_SKIA=true",
+      "problemMatcher": "$dart-analyze",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "isBackground": true
+    },
+    {
+      "label": "🧼 Clean + Pub Get + Analyze",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "🧹 Flutter Clean",
+        "📦 Flutter Pub Get",
+        "🔍 Flutter Analyze"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    }
+  ]
+}

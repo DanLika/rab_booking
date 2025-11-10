@@ -1,0 +1,118 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🚀 Widget (Chrome - Port 8081)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer=canvaskit",
+        "--web-port=8081",
+        "--dart-define=FLUTTER_WEB_USE_SKIA=true"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "debug",
+      "cwd": "${workspaceFolder}",
+      "console": "debugConsole",
+      "toolArgs": [
+        "--no-track-widget-creation"
+      ]
+    },
+    {
+      "name": "🎨 Widget (Chrome - Port 8082)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer=canvaskit",
+        "--web-port=8082",
+        "--dart-define=FLUTTER_WEB_USE_SKIA=true"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "debug",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "⚡ Widget (Profile Mode - Performance)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer=canvaskit",
+        "--web-port=8081",
+        "--dart-define=FLUTTER_WEB_USE_SKIA=true"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "profile",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🏭 Widget (Release Mode)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer=canvaskit",
+        "--web-port=8081",
+        "--dart-define=FLUTTER_WEB_USE_SKIA=true"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "release",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🧪 Widget (HTML Renderer - Legacy)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer=html",
+        "--web-port=8083"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "debug",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🔧 Widget (DevTools Auto-Open)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer=canvaskit",
+        "--web-port=8081",
+        "--dart-define=FLUTTER_WEB_USE_SKIA=true"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "debug",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "FLUTTER_DEVTOOLS_AUTO_OPEN": "true"
+      }
+    },
+    {
+      "name": "📱 Widget (macOS Desktop)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "macos",
+      "flutterMode": "debug",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🔥 Multi-Port (8081 + 8082)",
+      "configurations": [
+        "🚀 Widget (Chrome - Port 8081)",
+        "🎨 Widget (Chrome - Port 8082)"
+      ],
+      "presentation": {
+        "hidden": false,
+        "group": "multi-instance",
+        "order": 1
+      }
+    }
+  ]
+}

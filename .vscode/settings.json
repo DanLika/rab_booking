@@ -67,26 +67,149 @@
   "[dart]": {
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
-    "editor.rulers": [80],
+    "editor.rulers": [80, 120],
     "editor.selectionHighlight": false,
     "editor.suggest.snippetsPreventQuickSuggestions": false,
     "editor.suggestSelection": "first",
     "editor.tabCompletion": "onlySnippets",
-    "editor.wordBasedSuggestions": "off"
+    "editor.wordBasedSuggestions": "off",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.acceptSuggestionOnCommitCharacter": true,
+    "editor.acceptSuggestionOnEnter": "on",
+    "editor.snippetSuggestions": "top"
   },
 
-  // Flutter hot reload on save
+  // ============================================
+  // FLUTTER HOT RELOAD & PERFORMANCE
+  // ============================================
+
+  // Hot reload on save (instant feedback)
   "dart.flutterHotReloadOnSave": "always",
 
-  // Enable Flutter DevTools
+  // Hot restart when hot reload fails
+  "dart.flutterHotRestartOnSave": "never",
+
+  // Run DevTools automatically when debugging
+  "dart.openDevTools": "flutter",
+
+  // DevTools theme (match VS Code theme)
+  "dart.devToolsTheme": "dark",
+
+  // Browser for DevTools (use Chrome for best performance)
+  "dart.devToolsBrowser": "chrome",
+
+  // Open DevTools in browser (faster than embedded)
+  "dart.embedDevTools": false,
+
+  // ============================================
+  // FLUTTER WEB OPTIMIZATION
+  // ============================================
+
+  // Use CanvasKit for better web rendering (Flutter Web)
+  "dart.flutterWebRenderer": "canvaskit",
+
+  // Additional Flutter run args for web
+  "dart.flutterAdditionalArgs": [
+    "--web-renderer=canvaskit",
+    "--dart-define=FLUTTER_WEB_USE_SKIA=true"
+  ],
+
+  // ============================================
+  // DART ANALYZER & LINTER
+  // ============================================
+
+  // Line length (matches Flutter style)
+  "dart.lineLength": 120,
+
+  // Show TODOs in problems panel
+  "dart.showTodos": true,
+
+  // Show ignored files in outline
+  "dart.showIgnoredFiles": false,
+
+  // Enable completion for SDK APIs
+  "dart.completeFunctionCalls": true,
+
+  // Insert argument placeholders in completions
+  "dart.insertArgumentPlaceholders": true,
+
+  // Enable snippets
+  "dart.enableSnippets": true,
+
+  // Enable SDK formatters
+  "dart.enableSdkFormatter": true,
+
+  // ============================================
+  // FLUTTER WIDGET INSPECTOR
+  // ============================================
+
+  // Show Flutter UI guides in editor
+  "dart.previewFlutterUiGuides": true,
+
+  // Track widget creation locations
+  "dart.previewFlutterUiGuidesCustomTracking": true,
+
+  // Show Flutter outline
+  "dart.flutterOutline": true,
+
+  // Show color decorators (for Color() widgets)
+  "dart.showDartDeveloperLogs": true,
+
+  // ============================================
+  // DEBUGGING & DEVTOOLS
+  // ============================================
+
+  // Debug external packages (node_modules, pub packages)
   "dart.debugExternalPackageLibraries": true,
+
+  // Don't debug SDK libraries (faster debugging)
   "dart.debugSdkLibraries": false,
 
-  // Dart analyzer settings
-  "dart.lineLength": 120,
-  "dart.showTodos": true,
-  "dart.previewFlutterUiGuides": true,
-  "dart.previewFlutterUiGuidesCustomTracking": true,
+  // Evaluate getters in debug views
+  "dart.evaluateGettersInDebugViews": true,
+
+  // Evaluate toString in debug views
+  "dart.evaluateToStringInDebugViews": true,
+
+  // VM service log file (for debugging DevTools issues)
+  "dart.vmAdditionalArgs": [
+    "--observe",
+    "--pause-isolates-on-start"
+  ],
+
+  // ============================================
+  // CODE COMPLETION & INTELLISENSE
+  // ============================================
+
+  // Show method signatures
+  "dart.showMethodSignature": true,
+
+  // Trigger signature help automatically
+  "dart.triggerSignatureHelpAutomatically": true,
+
+  // Use LSP (Language Server Protocol) - faster
+  "dart.useLsp": true,
+
+  // Analyze all open files (better error detection)
+  "dart.analyzeAngularTemplates": true,
+
+  // Maximum number of concurrent analysis operations
+  "dart.analysisMaxCpu": 4,
+
+  // ============================================
+  // FLUTTER TESTING
+  // ============================================
+
+  // Run tests in additional args
+  "dart.flutterTestAdditionalArgs": [
+    "--coverage",
+    "--reporter=expanded"
+  ],
 
   // ============================================
   // GITLENS CONFIGURATION

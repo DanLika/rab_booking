@@ -12,7 +12,9 @@ analyzer:
 
 linter:
   rules:
-    # Code Style
+    # ============================================
+    # CODE STYLE (Consistency)
+    # ============================================
     - prefer_single_quotes
     - prefer_const_constructors
     - prefer_const_literals_to_create_immutables
@@ -24,6 +26,45 @@ linter:
     - prefer_relative_imports
     - sort_child_properties_last
 
-    # Design System Enforcement
+    # ============================================
+    # DESIGN SYSTEM ENFORCEMENT (Prevents Hardcoded Values)
+    # ============================================
     - use_full_hex_values_for_flutter_colors  # Warn about hardcoded colors
     - avoid_web_libraries_in_flutter           # Prevent dart:html colors
+
+    # ============================================
+    # BUG PREVENTION (Helps Claude Catch Errors Early)
+    # ============================================
+    # Null Safety
+    - always_declare_return_types              # Force explicit return types
+    - avoid_returning_null_for_void            # Prevent null returns in void functions
+    - prefer_typing_uninitialized_variables    # Catch missing types
+    - unawaited_futures                        # Catch forgotten awaits (BIG BUG CATCHER!)
+
+    # State Management
+    - avoid_init_to_null                       # Redundant null init
+    - prefer_final_fields                      # Prevent accidental mutations
+    - unnecessary_late                         # Catch unnecessary late keyword
+
+    # Performance
+    - avoid_function_literals_in_foreach_calls # Use for loops instead
+    - avoid_renaming_method_parameters         # Keep API consistency
+    - prefer_foreach                           # Better iteration
+    - unnecessary_lambdas                      # Remove useless closures
+
+    # Widget Best Practices
+    - sized_box_for_whitespace                 # Use SizedBox instead of Container
+    - use_build_context_synchronously          # Prevent async context bugs (CRITICAL!)
+
+    # ============================================
+    # CODE QUALITY (Readability)
+    # ============================================
+    - annotate_overrides                       # Show when overriding
+    - avoid_redundant_argument_values          # Remove default args
+    - curly_braces_in_flow_control_structures  # Always use {}
+    - empty_catches                            # Warn about silent catch
+    - no_duplicate_case_values                 # Prevent switch bugs
+    - prefer_is_empty                          # Use .isEmpty instead of .length == 0
+    - prefer_is_not_empty                      # Use .isNotEmpty
+    - unnecessary_null_checks                  # Remove redundant null checks
+    - unnecessary_string_interpolations        # Remove useless "$variable"

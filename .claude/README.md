@@ -29,10 +29,76 @@ Ovaj direktorijum sadrži konfiguraciju za Claude Code AI asistenta koji pobolj�
   ./.claude/check-todos.sh
   ```
 
+### `analyze-errors.sh` ⭐ NOVO
+- **Šta radi**: Analizira sve greške i kategorizuje ih po tipu
+- **Rezultat**: Claude odmah vidi pattern grešaka (missing imports, type errors, null safety)
+- **Upotreba**:
+  ```bash
+  ./.claude/analyze-errors.sh
+  ```
+- **Claude koristi**: Za brzu dijagnozu problema
+
+### `profile-performance.sh` ⭐ NOVO
+- **Šta radi**: Pronalazi performance bottlenecks (non-const widgets, veliki build metodi)
+- **Rezultat**: Claude identifikuje performance probleme proaktivno
+- **Upotreba**:
+  ```bash
+  ./.claude/profile-performance.sh
+  ```
+- **Claude koristi**: Prije optimizacije ili kad app sporo radi
+
+### `bug-template.md` ⭐ NOVO
+- **Šta radi**: Template za strukturirano prijavljivanje bugova
+- **Rezultat**: Claude dobija sav potreban context odmah, brže rešavanje
+- **Kada koristiti**: Kad imaš bug koji Claude treba da ispravi
+
 ### `hooks/after-edit.sh`
 - **Šta radi**: Automatski pokreće `flutter analyze` nakon što Claude edituje .dart fajl
 - **Rezultat**: Greške se odmah hvataju, brže ispravljanje
 - **Automatsko**: Aktivira se svaki put kad Claude koristi Edit tool
+
+---
+
+## 🔬 Kako Error Lens i GitLens Pomažu Claude-u
+
+### **Error Lens: Inline Error Detection**
+
+**Bez Error Lens:**
+```dart
+// Claude čita fajl - vidi samo kod!
+color: colors.statusPastReservation,  // Bug, ali Claude NE ZNA
+```
+Claude: "Fajl izgleda OK."
+
+**Sa Error Lens:**
+```dart
+// Claude čita fajl - vidi greške INLINE!
+color: colors.statusPastReservation,  ⚠️ The getter 'statusPastReservation' isn't defined
+```
+Claude: "Vidim! Dodajem getter u color_tokens.dart..."
+
+**→ Claude hvata greške ODMAH, bez da ti moraš pokazati!**
+
+---
+
+### **GitLens: Git Context & History**
+
+**Bez GitLens:**
+```
+Ti: "Zašto je kalendar sporiji?"
+Claude: "Ne znam šta je promenjeno, reci mi..."
+```
+
+**Sa GitLens:**
+```bash
+# Claude automatski pokreće:
+git log --oneline -5 month_calendar_widget.dart
+git show 991033e  # Vidi tačno šta je dodato
+git blame path/to/file.dart  # Vidi ko je editovao
+```
+Claude: "Vidim! Commit 991033e je dodao Opacity widget bez const. Optimizujem..."
+
+**→ Claude pronalazi ROOT CAUSE sam!**
 
 ---
 

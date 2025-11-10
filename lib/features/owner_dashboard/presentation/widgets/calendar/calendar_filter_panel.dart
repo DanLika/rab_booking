@@ -225,7 +225,7 @@ class _CalendarFilterPanelState extends ConsumerState<CalendarFilterPanel> {
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor, width: 1),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         children: [

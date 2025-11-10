@@ -23,12 +23,13 @@ class NotificationService {
         title: title,
         message: message,
         timestamp: DateTime.now(),
-        isRead: false,
         bookingId: bookingId,
         metadata: metadata,
       );
 
-      await _firestore.collection(_collectionName).add(notification.toFirestore());
+      await _firestore
+          .collection(_collectionName)
+          .add(notification.toFirestore());
     } catch (e) {
       throw Exception('Failed to create notification: $e');
     }
@@ -43,10 +44,8 @@ class NotificationService {
         .limit(100) // Limit to last 100 notifications
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => NotificationModel.fromFirestore(doc))
-          .toList();
-    });
+          return snapshot.docs.map(NotificationModel.fromFirestore).toList();
+        });
   }
 
   /// Get unread notifications count (stream)
@@ -76,10 +75,9 @@ class NotificationService {
       final batch = _firestore.batch();
 
       for (final id in notificationIds) {
-        batch.update(
-          _firestore.collection(_collectionName).doc(id),
-          {'isRead': true},
-        );
+        batch.update(_firestore.collection(_collectionName).doc(id), {
+          'isRead': true,
+        });
       }
 
       await batch.commit();
@@ -178,12 +176,10 @@ class NotificationService {
       ownerId: ownerId,
       type: 'payment_received',
       title: 'Plaćanje primljeno',
-      message: 'Primljeno plaćanje od $guestName u iznosu od €${amount.toStringAsFixed(2)}.',
+      message:
+          'Primljeno plaćanje od $guestName u iznosu od €${amount.toStringAsFixed(2)}.',
       bookingId: bookingId,
-      metadata: {
-        'guestName': guestName,
-        'amount': amount,
-      },
+      metadata: {'guestName': guestName, 'amount': amount},
     );
   }
 }

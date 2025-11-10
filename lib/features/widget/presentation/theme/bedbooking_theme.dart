@@ -64,14 +64,9 @@ class BedBookingButtons {
     backgroundColor: BedBookingColors.primaryGreen,
     foregroundColor: Colors.white,
     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(4),
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
     elevation: 0,
-    textStyle: const TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
-    ),
+    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
   );
 
   /// Secondary outline button
@@ -79,13 +74,8 @@ class BedBookingButtons {
     foregroundColor: BedBookingColors.textDark,
     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
     side: const BorderSide(color: BedBookingColors.borderGrey),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(4),
-    ),
-    textStyle: const TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
   );
 
   /// Cancel/Back button (red outline)
@@ -93,13 +83,8 @@ class BedBookingButtons {
     foregroundColor: BedBookingColors.error,
     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
     side: const BorderSide(color: BedBookingColors.error),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(4),
-    ),
-    textStyle: const TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
   );
 }
 
@@ -122,20 +107,14 @@ class BedBookingCards {
   static BoxDecoration borderedCard = BoxDecoration(
     color: BedBookingColors.backgroundWhite,
     borderRadius: BorderRadius.circular(8),
-    border: Border.all(
-      color: BedBookingColors.borderGrey,
-      width: 1,
-    ),
+    border: Border.all(color: BedBookingColors.borderGrey),
   );
 
   /// Green highlighted card (selected state)
   static BoxDecoration selectedCard = BoxDecoration(
     color: BedBookingColors.backgroundWhite,
     borderRadius: BorderRadius.circular(8),
-    border: Border.all(
-      color: BedBookingColors.primaryGreen,
-      width: 2,
-    ),
+    border: Border.all(color: BedBookingColors.primaryGreen, width: 2),
   );
 }
 

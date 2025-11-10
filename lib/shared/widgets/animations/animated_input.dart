@@ -59,13 +59,15 @@ class _AnimatedTextFieldState extends State<AnimatedTextField>
       duration: const Duration(milliseconds: 200),
     );
 
-    _labelAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _labelAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
-    _borderAnimation = Tween<double>(begin: 1.0, end: 2.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _borderAnimation = Tween<double>(
+      begin: 1.0,
+      end: 2.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _focusNode.addListener(_onFocusChange);
     widget.controller?.addListener(_onTextChange);
@@ -110,7 +112,8 @@ class _AnimatedTextFieldState extends State<AnimatedTextField>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final focusColor = widget.focusColor ?? AppColors.authPrimary;
-    final borderColor = widget.borderColor ??
+    final borderColor =
+        widget.borderColor ??
         (isDark ? AppColors.borderDark : AppColors.borderLight);
 
     return AnimatedBuilder(
@@ -133,8 +136,8 @@ class _AnimatedTextFieldState extends State<AnimatedTextField>
                     color: _isFocused
                         ? focusColor
                         : (isDark
-                            ? AppColors.textSecondaryDark
-                            : AppColors.textSecondaryLight),
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondaryLight),
                     fontWeight: _isFocused ? FontWeight.w600 : FontWeight.w400,
                   ),
                   child: Text(widget.label!),
@@ -150,7 +153,6 @@ class _AnimatedTextFieldState extends State<AnimatedTextField>
                         BoxShadow(
                           color: focusColor.withValues(alpha: 0.2),
                           blurRadius: 8 * _borderAnimation.value,
-                          spreadRadius: 0,
                         ),
                       ]
                     : null,
@@ -245,9 +247,10 @@ class _AnimatedSearchFieldState extends State<AnimatedSearchField>
       duration: const Duration(milliseconds: 300),
     );
 
-    _iconRotation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _iconRotation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     widget.controller?.addListener(_onTextChange);
     _focusNode.addListener(_onFocusChange);
@@ -306,10 +309,7 @@ class _AnimatedSearchFieldState extends State<AnimatedSearchField>
           },
         ),
         suffixIcon: _hasText
-            ? IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: _handleClear,
-              )
+            ? IconButton(icon: const Icon(Icons.clear), onPressed: _handleClear)
             : null,
         filled: true,
         fillColor: isDark
@@ -392,8 +392,7 @@ class _AnimatedTextAreaState extends State<AnimatedTextArea> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final focusColor = AppColors.authPrimary;
-    final borderColor =
-        isDark ? AppColors.borderDark : AppColors.borderLight;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -412,8 +411,8 @@ class _AnimatedTextAreaState extends State<AnimatedTextArea> {
                 color: _isFocused
                     ? focusColor
                     : (isDark
-                        ? AppColors.textSecondaryDark
-                        : AppColors.textSecondaryLight),
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondaryLight),
                 fontWeight: _isFocused ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
@@ -428,7 +427,6 @@ class _AnimatedTextAreaState extends State<AnimatedTextArea> {
                     BoxShadow(
                       color: focusColor.withValues(alpha: 0.2),
                       blurRadius: 8,
-                      spreadRadius: 0,
                     ),
                   ]
                 : null,
@@ -441,10 +439,15 @@ class _AnimatedTextAreaState extends State<AnimatedTextArea> {
             maxLength: widget.maxLength,
             validator: widget.validator,
             onChanged: widget.onChanged,
-            buildCounter: (context,
-                {required currentLength, required isFocused, maxLength}) {
-              return null; // Hide default counter
-            },
+            buildCounter:
+                (
+                  context, {
+                  required currentLength,
+                  required isFocused,
+                  maxLength,
+                }) {
+                  return null; // Hide default counter
+                },
             decoration: InputDecoration(
               hintText: widget.hint,
               filled: true,
@@ -483,8 +486,8 @@ class _AnimatedTextAreaState extends State<AnimatedTextArea> {
                   color: _currentLength > widget.maxLength!
                       ? AppColors.error
                       : (isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight),
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight),
                 ),
               ),
             ),

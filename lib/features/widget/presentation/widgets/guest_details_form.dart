@@ -81,7 +81,9 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
           Text(
             'Your details (to reservation and payment)',
             style: GoogleFonts.inter(
-              fontSize: isMobile ? TypographyTokens.fontSizeXL : TypographyTokens.fontSizeXXL,
+              fontSize: isMobile
+                  ? TypographyTokens.fontSizeXL
+                  : TypographyTokens.fontSizeXXL,
               fontWeight: TypographyTokens.semiBold,
               color: ColorTokens.light.textPrimary,
             ),
@@ -150,7 +152,7 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
             label: 'Message (optional)',
             icon: Icons.message,
             hintText: 'Any special requests?',
-            validator: (value) => BookingValidators.validateMessage(value),
+            validator: BookingValidators.validateMessage,
             maxLines: 3,
             maxLength: 255,
           ),
@@ -166,11 +168,14 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
                 return const SizedBox.shrink();
               }
 
-              final widgetSettingsAsync = ref.watch(widgetSettingsProvider((propertyId, unitId)));
+              final widgetSettingsAsync = ref.watch(
+                widgetSettingsProvider((propertyId, unitId)),
+              );
 
               return widgetSettingsAsync.when(
                 data: (widgetSettings) {
-                  final disclaimerText = widgetSettings?.taxLegalConfig.disclaimerText ?? '';
+                  final disclaimerText =
+                      widgetSettings?.taxLegalConfig.disclaimerText ?? '';
 
                   if (disclaimerText.isEmpty) {
                     return const SizedBox.shrink();
@@ -184,10 +189,7 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
                         decoration: BoxDecoration(
                           color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.blue.shade200,
-                            width: 1,
-                          ),
+                          border: Border.all(color: Colors.blue.shade200),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,17 +276,11 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderTokens.circularMedium,
-              borderSide: BorderSide(
-                color: ColorTokens.light.borderDefault,
-                width: BorderTokens.widthThin,
-              ),
+              borderSide: BorderSide(color: ColorTokens.light.borderDefault),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderTokens.circularMedium,
-              borderSide: BorderSide(
-                color: ColorTokens.light.borderDefault,
-                width: BorderTokens.widthThin,
-              ),
+              borderSide: BorderSide(color: ColorTokens.light.borderDefault),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderTokens.circularMedium,
@@ -295,10 +291,7 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderTokens.circularMedium,
-              borderSide: BorderSide(
-                color: ColorTokens.light.error,
-                width: BorderTokens.widthThin,
-              ),
+              borderSide: BorderSide(color: ColorTokens.light.error),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderTokens.circularMedium,
@@ -315,7 +308,9 @@ class _GuestDetailsFormState extends ConsumerState<GuestDetailsForm> {
               fontSize: TypographyTokens.fontSizeM,
               color: ColorTokens.light.textSecondary,
             ),
-            counterText: maxLength != null ? '${controller.text.length}/$maxLength' : null,
+            counterText: maxLength != null
+                ? '${controller.text.length}/$maxLength'
+                : null,
             counterStyle: GoogleFonts.inter(
               fontSize: TypographyTokens.fontSizeS,
               color: ColorTokens.light.textSecondary,

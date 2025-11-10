@@ -15,10 +15,12 @@ class TimelineCalendarWidget extends ConsumerStatefulWidget {
   const TimelineCalendarWidget({super.key});
 
   @override
-  ConsumerState<TimelineCalendarWidget> createState() => _TimelineCalendarWidgetState();
+  ConsumerState<TimelineCalendarWidget> createState() =>
+      _TimelineCalendarWidgetState();
 }
 
-class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget> {
+class _TimelineCalendarWidgetState
+    extends ConsumerState<TimelineCalendarWidget> {
   late ScrollController _horizontalScrollController;
   late ScrollController _verticalScrollController;
   late ScrollController _headerScrollController;
@@ -259,7 +261,9 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                     });
                   },
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceXS),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.spaceXS,
+                    ),
                     minimumSize: const Size(0, 28),
                   ),
                   child: const Text('Reset', style: TextStyle(fontSize: 11)),
@@ -301,11 +305,18 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                        const Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: AppColors.error,
+                        ),
                         const SizedBox(height: AppDimensions.spaceM),
                         const Text(
                           'Greška pri učitavanju rezervacija',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: AppDimensions.spaceS),
                         ElevatedButton.icon(
@@ -337,11 +348,18 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: AppColors.error,
+                    ),
                     const SizedBox(height: AppDimensions.spaceM),
                     const Text(
                       'Greška pri učitavanju jedinica',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: AppDimensions.spaceS),
                     ElevatedButton.icon(
@@ -371,9 +389,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
       ),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        border: Border(
-          bottom: BorderSide(color: theme.dividerColor),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         children: [
@@ -435,7 +451,10 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     );
   }
 
-  Widget _buildTimelineView(List<UnitModel> units, Map<String, List<BookingModel>> bookingsByUnit) {
+  Widget _buildTimelineView(
+    List<UnitModel> units,
+    Map<String, List<BookingModel>> bookingsByUnit,
+  ) {
     final dates = _getDateRange();
 
     return Card(
@@ -492,35 +511,27 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
       child: Row(
         children: [
           // Empty space for unit names column
-          Container(
-            width: unitColumnWidth,
-            color: Theme.of(context).cardColor,
-          ),
+          Container(width: unitColumnWidth, color: Theme.of(context).cardColor),
 
           // Scrollable headers
           Expanded(
             child: SingleChildScrollView(
               controller: _headerScrollController,
               scrollDirection: Axis.horizontal,
-              physics: const NeverScrollableScrollPhysics(), // Disable manual scrolling, sync only
+              physics:
+                  const NeverScrollableScrollPhysics(), // Disable manual scrolling, sync only
               child: Column(
                 children: [
                   // Nad-zaglavlje: Month headers
                   SizedBox(
                     height: monthHeaderHeight,
-                    child: Row(
-                      children: _buildMonthHeaders(dates),
-                    ),
+                    child: Row(children: _buildMonthHeaders(dates)),
                   ),
 
                   // Pod-zaglavlje: Day headers
                   SizedBox(
                     height: dayHeaderHeight,
-                    child: Row(
-                      children: dates.map((date) {
-                        return _buildDayHeader(date);
-                      }).toList(),
-                    ),
+                    child: Row(children: dates.map(_buildDayHeader).toList()),
                   ),
                 ],
               ),
@@ -573,7 +584,9 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
         color: theme.cardColor,
         border: Border(
           bottom: BorderSide(color: theme.dividerColor, width: 1.5),
-          right: BorderSide(color: theme.dividerColor.withAlpha((0.6 * 255).toInt()), width: 1),
+          right: BorderSide(
+            color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
+          ),
         ),
       ),
       child: Center(
@@ -592,7 +605,8 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final dayWidth = _getDayWidth(context);
     final theme = Theme.of(context);
     final isToday = _isToday(date);
-    final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    final isWeekend =
+        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
     final isFirstDayOfMonth = date.day == 1;
 
     return Container(
@@ -608,10 +622,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                 : theme.dividerColor.withAlpha((0.5 * 255).toInt()),
             width: isFirstDayOfMonth ? 2 : 1,
           ),
-          bottom: BorderSide(
-            color: theme.dividerColor,
-            width: 1.5,
-          ),
+          bottom: BorderSide(color: theme.dividerColor, width: 1.5),
         ),
       ),
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -663,11 +674,7 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     return Container(
       width: unitColumnWidth,
       color: theme.cardColor.withAlpha((0.95 * 255).toInt()),
-      child: Column(
-        children: units.map((unit) {
-          return _buildUnitNameCell(unit);
-        }).toList(),
-      ),
+      child: Column(children: units.map(_buildUnitNameCell).toList()),
     );
   }
 
@@ -679,12 +686,13 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
 
     return Container(
       height: unitRowHeight,
-      padding: EdgeInsets.all(isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS),
+      padding: EdgeInsets.all(
+        isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS,
+      ),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
             color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-            width: 1.0,
           ),
         ),
       ),
@@ -703,7 +711,9 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
               color: theme.colorScheme.primary,
             ),
           ),
-          SizedBox(width: isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS),
+          SizedBox(
+            width: isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS,
+          ),
           // Unit info
           Expanded(
             child: Column(
@@ -722,7 +732,9 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
                 Text(
                   '${unit.maxGuests} gostiju',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withAlpha((0.7 * 255).toInt()),
+                    color: theme.textTheme.bodySmall?.color?.withAlpha(
+                      (0.7 * 255).toInt(),
+                    ),
                   ),
                 ),
               ],
@@ -746,7 +758,11 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     );
   }
 
-  Widget _buildUnitRow(UnitModel unit, List<BookingModel> bookings, List<DateTime> dates) {
+  Widget _buildUnitRow(
+    UnitModel unit,
+    List<BookingModel> bookings,
+    List<DateTime> dates,
+  ) {
     final unitRowHeight = _getUnitRowHeight(context);
     final theme = Theme.of(context);
 
@@ -756,18 +772,13 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
         border: Border(
           bottom: BorderSide(
             color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-            width: 1.0,
           ),
         ),
       ),
       child: Stack(
         children: [
           // Day cells (background)
-          Row(
-            children: dates.map((date) {
-              return _buildDayCell(date);
-            }).toList(),
-          ),
+          Row(children: dates.map(_buildDayCell).toList()),
 
           // Reservation blocks (foreground)
           ..._buildReservationBlocks(bookings, dates),
@@ -780,7 +791,8 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final dayWidth = _getDayWidth(context);
     final theme = Theme.of(context);
     final isToday = _isToday(date);
-    final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    final isWeekend =
+        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
     final isFirstDayOfMonth = date.day == 1;
 
     return Container(
@@ -789,8 +801,8 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
         color: isToday
             ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
             : isWeekend
-                ? theme.dividerColor.withAlpha((0.05 * 255).toInt())
-                : theme.scaffoldBackgroundColor,
+            ? theme.dividerColor.withAlpha((0.05 * 255).toInt())
+            : theme.scaffoldBackgroundColor,
         border: Border(
           left: BorderSide(
             color: isFirstDayOfMonth
@@ -815,7 +827,10 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     );
   }
 
-  List<Widget> _buildReservationBlocks(List<BookingModel> bookings, List<DateTime> dates) {
+  List<Widget> _buildReservationBlocks(
+    List<BookingModel> bookings,
+    List<DateTime> dates,
+  ) {
     final dayWidth = _getDayWidth(context);
     final List<Widget> blocks = [];
 
@@ -851,9 +866,10 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final unitRowHeight = _getUnitRowHeight(context);
     final blockHeight = unitRowHeight - 16;
     final nights = _calculateNights(booking.checkIn, booking.checkOut);
-    final isIcalBooking = booking.source == 'ical' ||
-                          booking.source == 'airbnb' ||
-                          booking.source == 'booking_com';
+    final isIcalBooking =
+        booking.source == 'ical' ||
+        booking.source == 'airbnb' ||
+        booking.source == 'booking_com';
 
     return GestureDetector(
       onTap: () => _showReservationDetails(booking),
@@ -881,7 +897,6 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Text(
                   booking.guestName ?? 'Gost',
@@ -960,17 +975,23 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     }
   }
 
-  Widget _buildSummaryBar(Map<String, List<BookingModel>> bookingsByUnit, List<DateTime> dates) {
+  Widget _buildSummaryBar(
+    Map<String, List<BookingModel>> bookingsByUnit,
+    List<DateTime> dates,
+  ) {
     final theme = Theme.of(context);
 
     return SingleChildScrollView(
       controller: _summaryScrollController,
       scrollDirection: Axis.horizontal,
-      physics: const NeverScrollableScrollPhysics(), // Sync only, no manual scroll
+      physics:
+          const NeverScrollableScrollPhysics(), // Sync only, no manual scroll
       child: Container(
         height: 120,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+          color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+            (0.3 * 255).toInt(),
+          ),
           border: Border(
             top: BorderSide(
               color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
@@ -987,7 +1008,10 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     );
   }
 
-  Widget _buildSummaryCell(DateTime date, Map<String, List<BookingModel>> bookingsByUnit) {
+  Widget _buildSummaryCell(
+    DateTime date,
+    Map<String, List<BookingModel>> bookingsByUnit,
+  ) {
     final theme = Theme.of(context);
     // Calculate statistics for this date
     int totalGuests = 0;
@@ -1019,7 +1043,8 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
 
     final dayWidth = _getDayWidth(context);
     final isToday = _isToday(date);
-    final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    final isWeekend =
+        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
 
     return Container(
       width: dayWidth,
@@ -1027,8 +1052,10 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
         color: isToday
             ? AppColors.primary.withValues(alpha: 0.1)
             : isWeekend
-                ? theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt())
-                : theme.cardColor,
+            ? theme.colorScheme.surfaceContainerHighest.withAlpha(
+                (0.5 * 255).toInt(),
+              )
+            : theme.cardColor,
         border: Border(
           left: BorderSide(
             color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
@@ -1075,17 +1102,18 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     );
   }
 
-  Widget _buildSummaryItem(IconData icon, String value, Color color, String tooltip) {
+  Widget _buildSummaryItem(
+    IconData icon,
+    String value,
+    Color color,
+    String tooltip,
+  ) {
     return Tooltip(
       message: tooltip,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 14,
-            color: color,
-          ),
+          Icon(icon, size: 14, color: color),
           const SizedBox(width: 4),
           Text(
             value,
@@ -1103,8 +1131,8 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
   bool _isToday(DateTime date) {
     final now = DateTime.now();
     return date.year == now.year &&
-           date.month == now.month &&
-           date.day == now.day;
+        date.month == now.month &&
+        date.day == now.day;
   }
 
   bool _isSameDay(DateTime a, DateTime b) {
@@ -1140,8 +1168,11 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final scrollPosition = daysSinceStart * dayWidth;
 
     final maxScroll = _horizontalScrollController.position.maxScrollExtent;
-    final targetScroll = (scrollPosition - (MediaQuery.of(context).size.width / 2))
-        .clamp(0.0, maxScroll);
+    final targetScroll =
+        (scrollPosition - (MediaQuery.of(context).size.width / 2)).clamp(
+          0.0,
+          maxScroll,
+        );
 
     _horizontalScrollController.animateTo(
       targetScroll,
@@ -1165,7 +1196,6 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
     final targetDate = DateTime(
       currentDate.year,
       currentDate.month + monthOffset,
-      1, // First day of the month
     );
 
     _scrollToDate(targetDate);
@@ -1174,8 +1204,16 @@ class _TimelineCalendarWidgetState extends ConsumerState<TimelineCalendarWidget>
   /// Calculate nights between two dates with proper normalization
   /// Normalizes dates to midnight to avoid time-of-day calculation errors
   int _calculateNights(DateTime checkIn, DateTime checkOut) {
-    final normalizedCheckIn = DateTime(checkIn.year, checkIn.month, checkIn.day);
-    final normalizedCheckOut = DateTime(checkOut.year, checkOut.month, checkOut.day);
+    final normalizedCheckIn = DateTime(
+      checkIn.year,
+      checkIn.month,
+      checkIn.day,
+    );
+    final normalizedCheckOut = DateTime(
+      checkOut.year,
+      checkOut.month,
+      checkOut.day,
+    );
     return normalizedCheckOut.difference(normalizedCheckIn).inDays;
   }
 }

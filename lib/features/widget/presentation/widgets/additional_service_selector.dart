@@ -8,10 +8,7 @@ import '../../../../core/design_tokens/design_tokens.dart';
 class AdditionalServiceSelector extends ConsumerWidget {
   final AdditionalServiceModel service;
 
-  const AdditionalServiceSelector({
-    super.key,
-    required this.service,
-  });
+  const AdditionalServiceSelector({super.key, required this.service});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,10 +21,7 @@ class AdditionalServiceSelector extends ConsumerWidget {
       decoration: BoxDecoration(
         color: ColorTokens.light.backgroundCard,
         borderRadius: BorderTokens.circularSmall,
-        border: Border.all(
-          color: ColorTokens.light.borderDefault,
-          width: BorderTokens.widthThin,
-        ),
+        border: Border.all(color: ColorTokens.light.borderDefault),
       ),
       child: Row(
         children: [
@@ -71,7 +65,8 @@ class AdditionalServiceSelector extends ConsumerWidget {
                         } else {
                           updated[service.id] = quantity - 1;
                         }
-                        ref.read(selectedServicesProvider.notifier).state = updated;
+                        ref.read(selectedServicesProvider.notifier).state =
+                            updated;
                       }
                     : null,
                 icon: Container(
@@ -146,6 +141,8 @@ class AdditionalServiceSelector extends ConsumerWidget {
 
   String _getPriceText() {
     // Use the model's formatted price
-    return service.formattedPrice.replaceAll('€', '\$').replaceAll('EUR', 'USD');
+    return service.formattedPrice
+        .replaceAll('€', '\$')
+        .replaceAll('EUR', 'USD');
   }
 }

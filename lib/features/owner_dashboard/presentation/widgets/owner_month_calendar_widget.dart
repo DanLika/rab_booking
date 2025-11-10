@@ -11,10 +11,12 @@ class OwnerMonthCalendarWidget extends ConsumerStatefulWidget {
   const OwnerMonthCalendarWidget({super.key});
 
   @override
-  ConsumerState<OwnerMonthCalendarWidget> createState() => _OwnerMonthCalendarWidgetState();
+  ConsumerState<OwnerMonthCalendarWidget> createState() =>
+      _OwnerMonthCalendarWidgetState();
 }
 
-class _OwnerMonthCalendarWidgetState extends ConsumerState<OwnerMonthCalendarWidget> {
+class _OwnerMonthCalendarWidgetState
+    extends ConsumerState<OwnerMonthCalendarWidget> {
   String? _selectedUnitId;
   DateTime _currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
   bool _hasAutoSelected = false; // Flag to prevent auto-select loop
@@ -28,7 +30,7 @@ class _OwnerMonthCalendarWidgetState extends ConsumerState<OwnerMonthCalendarWid
     super.initState();
     // Set reasonable boundaries: 2 years back, 5 years forward
     final now = DateTime.now();
-    _minDate = DateTime(now.year - 2, 1); // January of 2 years ago
+    _minDate = DateTime(now.year - 2); // January of 2 years ago
     _maxDate = DateTime(now.year + 5, 12); // December of 5 years from now
   }
 
@@ -64,9 +66,7 @@ class _OwnerMonthCalendarWidgetState extends ConsumerState<OwnerMonthCalendarWid
     return unitsAsync.when(
       data: (units) {
         if (units.isEmpty) {
-          return const Center(
-            child: Text('Nema jedinica za prikaz'),
-          );
+          return const Center(child: Text('Nema jedinica za prikaz'));
         }
 
         return Column(
@@ -77,25 +77,14 @@ class _OwnerMonthCalendarWidgetState extends ConsumerState<OwnerMonthCalendarWid
 
             // Month calendar for selected unit
             if (_selectedUnitId != null)
-              Expanded(
-                child: MonthCalendarWidget(
-                  unitId: _selectedUnitId!,
-                  onRangeSelected: null, // Owner dashboard doesn't need range selection
-                ),
-              )
+              Expanded(child: MonthCalendarWidget(unitId: _selectedUnitId!))
             else
-              const Expanded(
-                child: Center(
-                  child: Text('Odaberite jedinicu'),
-                ),
-              ),
+              const Expanded(child: Center(child: Text('Odaberite jedinicu'))),
           ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Greška: $error'),
-      ),
+      error: (error, stack) => Center(child: Text('Greška: $error')),
     );
   }
 

@@ -61,7 +61,6 @@ class AdaptiveGlassCard extends ConsumerWidget {
         height: height,
         borderRadius: borderRadius,
         onTap: onTap,
-        enabled: true,
         child: child,
       );
     }
@@ -131,7 +130,6 @@ class AdaptiveGlassCardHoverable extends ConsumerWidget {
         height: height,
         borderRadius: borderRadius,
         onTap: onTap,
-        enabled: true,
         child: child,
       );
     }
@@ -160,7 +158,8 @@ class AdaptiveGlassCardHoverable extends ConsumerWidget {
 }
 
 /// Adaptive Blurred App Bar - Automatically uses blur when enabled
-class AdaptiveBlurredAppBar extends ConsumerWidget implements PreferredSizeWidget {
+class AdaptiveBlurredAppBar extends ConsumerWidget
+    implements PreferredSizeWidget {
   final Widget? title;
   final Widget? leading;
   final List<Widget>? actions;

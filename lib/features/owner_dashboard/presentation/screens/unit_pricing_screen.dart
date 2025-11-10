@@ -15,10 +15,7 @@ import '../../../../core/constants/app_dimensions.dart';
 class UnitPricingScreen extends ConsumerStatefulWidget {
   final UnitModel? unit;
 
-  const UnitPricingScreen({
-    super.key,
-    this.unit,
-  });
+  const UnitPricingScreen({super.key, this.unit});
 
   @override
   ConsumerState<UnitPricingScreen> createState() => _UnitPricingScreenState();
@@ -90,7 +87,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                 showUnitSelector: true,
               );
             },
-            loading: () => _buildLoadingState(),
+            loading: _buildLoadingState,
             error: (error, stack) => _buildErrorState(error),
           ),
         ),
@@ -196,7 +193,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.1 * 255).toInt(),
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -219,7 +218,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             const SizedBox(height: 16),
             // Dropdown
             DropdownButtonFormField<UnitModel>(
-              value: _selectedUnit,
+              initialValue: _selectedUnit,
               decoration: InputDecoration(
                 labelText: 'Jedinica',
                 border: const OutlineInputBorder(),
@@ -229,13 +228,12 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                   vertical: 14,
                 ),
                 filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(
+                  (0.3 * 255).toInt(),
+                ),
               ),
               items: units.map((unit) {
-                return DropdownMenuItem(
-                  value: unit,
-                  child: Text(unit.name),
-                );
+                return DropdownMenuItem(value: unit, child: Text(unit.name));
               }).toList(),
               onChanged: (unit) {
                 if (unit != null) {
@@ -271,7 +269,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                     height: 140,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                      color: theme.colorScheme.primary.withAlpha(
+                        (0.1 * 255).toInt(),
+                      ),
                     ),
                     child: Icon(
                       Icons.meeting_room_outlined,
@@ -313,9 +313,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
           onLeadingIconTap: (context) => Navigator.of(context).pop(),
         ),
         const SliverFillRemaining(
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
+          child: Center(child: CircularProgressIndicator()),
         ),
       ],
     );
@@ -391,7 +389,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.12 * 255).toInt(),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -405,8 +405,8 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                   child: Text(
                     'Osnovna Cijena',
                     style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -415,8 +415,8 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             Text(
               'Ovo je default cijena po noćenju koja se koristi kada nema posebnih cijena.',
               style: theme.textTheme.bodySmall?.copyWith(
-                    color: context.textColorSecondary,
-                  ),
+                color: context.textColorSecondary,
+              ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -447,7 +447,8 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                           prefixText: '€ ',
                           prefixIcon: const Icon(Icons.euro_outlined, size: 20),
                           filled: true,
-                          fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt()),
+                          fillColor: theme.colorScheme.surfaceContainerHighest
+                              .withAlpha((0.5 * 255).toInt()),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 14,
                             vertical: 14,
@@ -455,19 +456,23 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
-                              color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-                              width: 1,
+                              color: theme.colorScheme.outline.withAlpha(
+                                (0.3 * 255).toInt(),
+                              ),
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
-                              color: theme.colorScheme.outline.withAlpha((0.25 * 255).toInt()),
-                              width: 1,
+                              color: theme.colorScheme.outline.withAlpha(
+                                (0.25 * 255).toInt(),
+                              ),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: const BorderRadius.all(Radius.circular(10)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(10),
+                            ),
                             borderSide: BorderSide(
                               color: theme.colorScheme.primary,
                               width: 1.5,
@@ -481,7 +486,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                       ),
                       const SizedBox(height: 12),
                       FilledButton.icon(
-                        onPressed: _isUpdatingBasePrice ? null : _updateBasePrice,
+                        onPressed: _isUpdatingBasePrice
+                            ? null
+                            : _updateBasePrice,
                         icon: _isUpdatingBasePrice
                             ? const SizedBox(
                                 width: 16,
@@ -527,7 +534,8 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                           prefixText: '€ ',
                           prefixIcon: const Icon(Icons.euro_outlined, size: 20),
                           filled: true,
-                          fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt()),
+                          fillColor: theme.colorScheme.surfaceContainerHighest
+                              .withAlpha((0.5 * 255).toInt()),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 14,
                             vertical: 14,
@@ -535,19 +543,23 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
-                              color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-                              width: 1,
+                              color: theme.colorScheme.outline.withAlpha(
+                                (0.3 * 255).toInt(),
+                              ),
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
-                              color: theme.colorScheme.outline.withAlpha((0.25 * 255).toInt()),
-                              width: 1,
+                              color: theme.colorScheme.outline.withAlpha(
+                                (0.25 * 255).toInt(),
+                              ),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: const BorderRadius.all(Radius.circular(10)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(10),
+                            ),
                             borderSide: BorderSide(
                               color: theme.colorScheme.primary,
                               width: 1.5,
@@ -563,7 +575,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: FilledButton.icon(
-                        onPressed: _isUpdatingBasePrice ? null : _updateBasePrice,
+                        onPressed: _isUpdatingBasePrice
+                            ? null
+                            : _updateBasePrice,
                         icon: _isUpdatingBasePrice
                             ? const SizedBox(
                                 width: 16,
@@ -610,7 +624,10 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
     final price = double.tryParse(priceText);
     if (price == null || price <= 0) {
-      ErrorDisplayUtils.showWarningSnackBar(context, 'Cijena mora biti veća od 0');
+      ErrorDisplayUtils.showWarningSnackBar(
+        context,
+        'Cijena mora biti veća od 0',
+      );
       return;
     }
 

@@ -34,7 +34,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final calendarData = ref.watch(yearCalendarDataProvider((widget.unitId, _currentYear)));
+    final calendarData = ref.watch(
+      yearCalendarDataProvider((widget.unitId, _currentYear)),
+    );
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
@@ -47,11 +49,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             const SizedBox(height: SpacingTokens.m),
             Expanded(
               child: calendarData.when(
-                data: (data) => _buildYearGridWithIntegratedSelector(data, colors),
+                data: (data) =>
+                    _buildYearGridWithIntegratedSelector(data, colors),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(
-                  child: Text('Error: $error'),
-                ),
+                error: (error, stack) => Center(child: Text('Error: $error')),
               ),
             ),
           ],
@@ -78,29 +79,54 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(isSmallScreen ? 16 : 20),
-        border: Border.all(
-          color: colors.borderLight,
-          width: 1,
-        ),
+        border: Border.all(color: colors.borderLight),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Week view hidden but code kept for future use
           // _buildViewTab('Week', TablerIcons.kviewWeek, CalendarViewType.week, currentView == CalendarViewType.week, isSmallScreen, colors, isDarkMode),
-          _buildViewTab('Month', TablerIcons.ktableFilled, CalendarViewType.month, currentView == CalendarViewType.month, isSmallScreen, colors, isDarkMode),
+          _buildViewTab(
+            'Month',
+            TablerIcons.ktableFilled,
+            CalendarViewType.month,
+            currentView == CalendarViewType.month,
+            isSmallScreen,
+            colors,
+            isDarkMode,
+          ),
           SizedBox(width: isSmallScreen ? 2 : 4),
-          _buildViewTab('Year', TablerIcons.ktableOptions, CalendarViewType.year, currentView == CalendarViewType.year, isSmallScreen, colors, isDarkMode),
+          _buildViewTab(
+            'Year',
+            TablerIcons.ktableOptions,
+            CalendarViewType.year,
+            currentView == CalendarViewType.year,
+            isSmallScreen,
+            colors,
+            isDarkMode,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildViewTab(String label, IconData icon, CalendarViewType viewType, bool isSelected, bool isSmallScreen, WidgetColorScheme colors, bool isDarkMode) {
+  Widget _buildViewTab(
+    String label,
+    IconData icon,
+    CalendarViewType viewType,
+    bool isSelected,
+    bool isSmallScreen,
+    WidgetColorScheme colors,
+    bool isDarkMode,
+  ) {
     // Dark theme: selected button has white background with black text
     // Light theme: selected button has black background with white text
-    final selectedBg = isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
-    final selectedText = isDarkMode ? ColorTokens.pureBlack : ColorTokens.pureWhite;
+    final selectedBg = isDarkMode
+        ? ColorTokens.pureWhite
+        : ColorTokens.pureBlack;
+    final selectedText = isDarkMode
+        ? ColorTokens.pureBlack
+        : ColorTokens.pureWhite;
 
     return Semantics(
       label: '$label view',
@@ -137,7 +163,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                   style: TextStyle(
                     color: isSelected ? selectedText : colors.textPrimary,
                     fontSize: TypographyTokens.fontSizeS2,
-                    fontWeight: isSelected ? TypographyTokens.semiBold : TypographyTokens.regular,
+                    fontWeight: isSelected
+                        ? TypographyTokens.semiBold
+                        : TypographyTokens.regular,
                   ),
                 ),
               ],
@@ -148,7 +176,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  Widget _buildCombinedHeader(BuildContext context, WidgetColorScheme colors, bool isDarkMode) {
+  Widget _buildCombinedHeader(
+    BuildContext context,
+    WidgetColorScheme colors,
+    bool isDarkMode,
+  ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 400; // iPhone SE and similar
 
@@ -182,11 +214,17 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
               onPressed: () {
                 ref.read(themeProvider.notifier).state = !isDarkMode;
               },
-              tooltip: isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+              tooltip: isDarkMode
+                  ? 'Switch to Light Mode'
+                  : 'Switch to Dark Mode',
               padding: EdgeInsets.zero,
               constraints: BoxConstraints(
-                minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
-                minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
+                minWidth: isSmallScreen
+                    ? 28
+                    : ConstraintTokens.iconContainerSmall,
+                minHeight: isSmallScreen
+                    ? 28
+                    : ConstraintTokens.iconContainerSmall,
               ),
             ),
 
@@ -200,7 +238,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  Widget _buildHoverTooltip(Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
+  Widget _buildHoverTooltip(
+    Map<String, CalendarDateInfo> data,
+    WidgetColorScheme colors,
+  ) {
     if (_hoveredDate == null) return const SizedBox.shrink();
 
     final key = _getDateKey(_hoveredDate!);
@@ -251,7 +292,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(Icons.chevron_left, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
+          icon: Icon(
+            Icons.chevron_left,
+            size: isSmallScreen ? 16 : IconSizeTokens.small,
+            color: colors.textPrimary,
+          ),
           padding: EdgeInsets.zero,
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -266,13 +311,19 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         Text(
           _currentYear.toString(),
           style: TextStyle(
-            fontSize: isSmallScreen ? TypographyTokens.fontSizeS : TypographyTokens.fontSizeM,
+            fontSize: isSmallScreen
+                ? TypographyTokens.fontSizeS
+                : TypographyTokens.fontSizeM,
             fontWeight: TypographyTokens.bold,
             color: colors.textPrimary,
           ),
         ),
         IconButton(
-          icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
+          icon: Icon(
+            Icons.chevron_right,
+            size: isSmallScreen ? 16 : IconSizeTokens.small,
+            color: colors.textPrimary,
+          ),
           padding: EdgeInsets.zero,
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -288,8 +339,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-
-  Widget _buildYearGridWithIntegratedSelector(Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
+  Widget _buildYearGridWithIntegratedSelector(
+    Map<String, CalendarDateInfo> data,
+    WidgetColorScheme colors,
+  ) {
     // Get responsive cell size
     final cellSize = ResponsiveHelper.getYearCellSize(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -302,14 +355,23 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: SingleChildScrollView(
-              scrollDirection: Axis.vertical,
               child: SizedBox(
-                width: ConstraintTokens.monthLabelWidth + (31 * cellSize), // Month label width + 31 day columns
+                width:
+                    ConstraintTokens.monthLabelWidth +
+                    (31 * cellSize), // Month label width + 31 day columns
                 child: Column(
                   children: [
                     _buildHeaderRowWithYearSelector(cellSize, colors),
                     const SizedBox(height: SpacingTokens.xs),
-                    ...List.generate(12, (monthIndex) => _buildMonthRow(monthIndex + 1, data, cellSize, colors)),
+                    ...List.generate(
+                      12,
+                      (monthIndex) => _buildMonthRow(
+                        monthIndex + 1,
+                        data,
+                        cellSize,
+                        colors,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -320,7 +382,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  Widget _buildHeaderRowWithYearSelector(double cellSize, WidgetColorScheme colors) {
+  Widget _buildHeaderRowWithYearSelector(
+    double cellSize,
+    WidgetColorScheme colors,
+  ) {
     // Responsive font size for headers - proportional to cell size
     final headerFontSize = (cellSize * 0.5).clamp(9.0, 13.0);
     final dayNumberFontSize = (cellSize * 0.45).clamp(8.0, 12.0);
@@ -334,10 +399,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: colors.backgroundSecondary,
-            border: Border.all(
-              color: colors.borderLight,
-              width: BorderTokens.widthThin,
-            ),
+            border: Border.all(color: colors.borderLight),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(BorderTokens.radiusSubtle),
             ),
@@ -359,12 +421,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: colors.backgroundSecondary,
-              border: Border.all(
-                color: colors.borderLight,
-                width: BorderTokens.widthThin,
-              ),
+              border: Border.all(color: colors.borderLight),
               borderRadius: dayIndex == 30
-                  ? const BorderRadius.only(topRight: Radius.circular(BorderTokens.radiusSubtle))
+                  ? const BorderRadius.only(
+                      topRight: Radius.circular(BorderTokens.radiusSubtle),
+                    )
                   : BorderRadius.zero,
             ),
             child: Text(
@@ -381,8 +442,12 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-
-  Widget _buildMonthRow(int month, Map<String, CalendarDateInfo> data, double cellSize, WidgetColorScheme colors) {
+  Widget _buildMonthRow(
+    int month,
+    Map<String, CalendarDateInfo> data,
+    double cellSize,
+    WidgetColorScheme colors,
+  ) {
     final monthName = DateFormat.MMM().format(DateTime(_currentYear, month));
     final monthFontSize = (cellSize * 0.5).clamp(9.0, 13.0);
 
@@ -395,12 +460,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: colors.backgroundSecondary,
-            border: Border.all(
-              color: colors.borderLight,
-              width: BorderTokens.widthThin,
-            ),
+            border: Border.all(color: colors.borderLight),
             borderRadius: month == 12
-                ? const BorderRadius.only(bottomLeft: Radius.circular(BorderTokens.radiusSubtle))
+                ? const BorderRadius.only(
+                    bottomLeft: Radius.circular(BorderTokens.radiusSubtle),
+                  )
                 : BorderRadius.zero,
           ),
           child: Text(
@@ -421,7 +485,13 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  Widget _buildDayCell(int month, int day, Map<String, CalendarDateInfo> data, double cellSize, WidgetColorScheme colors) {
+  Widget _buildDayCell(
+    int month,
+    int day,
+    Map<String, CalendarDateInfo> data,
+    double cellSize,
+    WidgetColorScheme colors,
+  ) {
     // Check if this day exists in this month
     try {
       final date = DateTime(_currentYear, month, day);
@@ -434,7 +504,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       }
 
       final isInRange = _isDateInRange(date);
-      final isRangeStart = _rangeStart != null && _isSameDay(date, _rangeStart!);
+      final isRangeStart =
+          _rangeStart != null && _isSameDay(date, _rangeStart!);
       final isRangeEnd = _rangeEnd != null && _isSameDay(date, _rangeEnd!);
       final isHovered = _hoveredDate != null && _isSameDay(date, _hoveredDate!);
       final today = DateTime.now();
@@ -454,7 +525,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       final showTooltip = dateInfo.status != DateStatus.disabled;
 
       return MouseRegion(
-        cursor: isInteractive ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        cursor: isInteractive
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
         onEnter: (_) {
           if (showTooltip) {
             setState(() {
@@ -481,14 +554,22 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             width: cellSize,
             height: cellSize,
             decoration: BoxDecoration(
-              color: _getCellColor(dateInfo, isInRange, isHovered, isInteractive, colors),
+              color: _getCellColor(
+                dateInfo,
+                isInRange,
+                isHovered,
+                isInteractive,
+                colors,
+              ),
               border: Border.all(
                 color: isRangeStart || isRangeEnd
                     ? colors.textPrimary
                     : isToday
-                        ? colors.textPrimary
-                        : dateInfo.status.getBorderColor(colors),
-                width: (isRangeStart || isRangeEnd || isToday) ? BorderTokens.widthMedium : BorderTokens.widthThin,
+                    ? colors.textPrimary
+                    : dateInfo.status.getBorderColor(colors),
+                width: (isRangeStart || isRangeEnd || isToday)
+                    ? BorderTokens.widthMedium
+                    : BorderTokens.widthThin,
               ),
               borderRadius: BorderTokens.circularTiny,
               boxShadow: isHovered && isInteractive
@@ -546,7 +627,13 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     }
   }
 
-  Color _getCellColor(CalendarDateInfo dateInfo, bool isInRange, bool isHovered, bool isInteractive, WidgetColorScheme colors) {
+  Color _getCellColor(
+    CalendarDateInfo dateInfo,
+    bool isInRange,
+    bool isHovered,
+    bool isInteractive,
+    WidgetColorScheme colors,
+  ) {
     if (isInRange) {
       // Use neutral background for selected range, matching month calendar
       return colors.backgroundTertiary;
@@ -555,10 +642,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     if (isHovered && isInteractive) {
       // Lighten the color slightly on hover
       final baseColor = dateInfo.status.getColor(colors);
-      return Color.alphaBlend(
-        Colors.white.withValues(alpha: 0.3),
-        baseColor,
-      );
+      return Color.alphaBlend(Colors.white.withValues(alpha: 0.3), baseColor);
     }
 
     return dateInfo.status.getColor(colors);
@@ -570,16 +654,18 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       height: cellSize,
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
-        border: Border.all(
-          color: colors.borderLight,
-          width: BorderTokens.widthThin,
-        ),
+        border: Border.all(color: colors.borderLight),
         borderRadius: BorderTokens.circularTiny,
       ),
     );
   }
 
-  void _onDateTapped(DateTime date, CalendarDateInfo dateInfo, Map<String, CalendarDateInfo> data, WidgetColorScheme colors) {
+  void _onDateTapped(
+    DateTime date,
+    CalendarDateInfo dateInfo,
+    Map<String, CalendarDateInfo> data,
+    WidgetColorScheme colors,
+  ) {
     // Only allow available dates to be selected
     // partialCheckIn, partialCheckOut, and pending are blocked from selection
     if (dateInfo.status != DateStatus.available) {
@@ -593,7 +679,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         _rangeEnd = null;
       } else if (_rangeStart != null && _rangeEnd == null) {
         // Complete range - validate no booked dates in between
-        final DateTime start = date.isBefore(_rangeStart!) ? date : _rangeStart!;
+        final DateTime start = date.isBefore(_rangeStart!)
+            ? date
+            : _rangeStart!;
         final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
 
         // Check if there are any booked/pending dates in the range
@@ -605,7 +693,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Cannot select dates. There are already booked dates in this range.'),
+              content: const Text(
+                'Cannot select dates. There are already booked dates in this range.',
+              ),
               backgroundColor: colors.error,
               duration: const Duration(seconds: 3),
             ),
@@ -628,7 +718,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
   /// Check if there are any booked, pending, or partial dates between start and end (inclusive)
   /// Partial dates (partialCheckIn/partialCheckOut) are allowed at endpoints but not in between
-  bool _hasBlockedDatesInRange(DateTime start, DateTime end, Map<String, CalendarDateInfo> data) {
+  bool _hasBlockedDatesInRange(
+    DateTime start,
+    DateTime end,
+    Map<String, CalendarDateInfo> data,
+  ) {
     DateTime current = start;
     while (current.isBefore(end) || _isSameDay(current, end)) {
       final key = _getDateKey(current);
@@ -636,7 +730,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
       if (dateInfo != null) {
         // Check if this date has a blocking status
-        final isBlocked = dateInfo.status == DateStatus.booked ||
+        final isBlocked =
+            dateInfo.status == DateStatus.booked ||
             dateInfo.status == DateStatus.pending ||
             dateInfo.status == DateStatus.partialCheckIn ||
             dateInfo.status == DateStatus.partialCheckOut ||
@@ -645,8 +740,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         if (isBlocked) {
           // Allow partial dates only at the exact start or end points
           // This enables: check-in on a check-out day, and check-out on a check-in day
-          final isEndpoint = _isSameDay(current, start) || _isSameDay(current, end);
-          final isPartialDate = dateInfo.status == DateStatus.partialCheckIn ||
+          final isEndpoint =
+              _isSameDay(current, start) || _isSameDay(current, end);
+          final isPartialDate =
+              dateInfo.status == DateStatus.partialCheckIn ||
               dateInfo.status == DateStatus.partialCheckOut;
 
           if (!isEndpoint || !isPartialDate) {
@@ -680,10 +777,7 @@ class _DiagonalLinePainter extends CustomPainter {
   final Color diagonalColor;
   final bool isCheckIn;
 
-  _DiagonalLinePainter({
-    required this.diagonalColor,
-    required this.isCheckIn,
-  });
+  _DiagonalLinePainter({required this.diagonalColor, required this.isCheckIn});
 
   @override
   void paint(Canvas canvas, Size size) {

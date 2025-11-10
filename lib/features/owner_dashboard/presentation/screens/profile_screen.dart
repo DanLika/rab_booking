@@ -244,7 +244,6 @@ class ProfileScreen extends ConsumerWidget {
                             color: isDark
                                 ? AppColors.borderDark.withValues(alpha: 0.5)
                                 : AppColors.borderLight,
-                            width: 1,
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -307,7 +306,6 @@ class ProfileScreen extends ConsumerWidget {
                             color: isDark
                                 ? AppColors.borderDark.withValues(alpha: 0.5)
                                 : AppColors.borderLight,
-                            width: 1,
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -357,7 +355,6 @@ class ProfileScreen extends ConsumerWidget {
                             color: isDark
                                 ? AppColors.borderDark.withValues(alpha: 0.5)
                                 : AppColors.borderLight,
-                            width: 1,
                           ),
                           boxShadow: [
                             BoxShadow(

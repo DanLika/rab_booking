@@ -222,8 +222,6 @@ class AppColors {
       Color(0xFF6B4CE6), // Purple
       Color(0xFF4A90E2), // Blue
     ],
-    begin: Alignment.centerLeft,
-    end: Alignment.centerRight,
   );
 
   /// Auth primary gradient - Purple gradient
@@ -373,8 +371,6 @@ class AppColors {
       Color(0xFFFF9500), // Deep Gold
       Color(0xFFFFB84D), // Golden Sand
     ],
-    begin: Alignment.centerLeft,
-    end: Alignment.centerRight,
   );
 
   /// Glass morphism gradient (for glass effect backgrounds)
@@ -402,38 +398,49 @@ class AppColors {
   // ============================================================================
 
   /// Opacity scale for consistent transparency values
-  static const double opacity0 = 0.0;    // Completely transparent
-  static const double opacity5 = 0.05;   // Barely visible
-  static const double opacity10 = 0.10;  // Very light
-  static const double opacity20 = 0.20;  // Light
-  static const double opacity30 = 0.30;  // Light-medium
-  static const double opacity40 = 0.40;  // Medium
-  static const double opacity50 = 0.50;  // Half transparent
-  static const double opacity60 = 0.60;  // Semi-transparent
-  static const double opacity70 = 0.70;  // Medium-opaque
-  static const double opacity80 = 0.80;  // Almost opaque
-  static const double opacity90 = 0.90;  // Very opaque
-  static const double opacity100 = 1.0;  // Completely solid
+  static const double opacity0 = 0.0; // Completely transparent
+  static const double opacity5 = 0.05; // Barely visible
+  static const double opacity10 = 0.10; // Very light
+  static const double opacity20 = 0.20; // Light
+  static const double opacity30 = 0.30; // Light-medium
+  static const double opacity40 = 0.40; // Medium
+  static const double opacity50 = 0.50; // Half transparent
+  static const double opacity60 = 0.60; // Semi-transparent
+  static const double opacity70 = 0.70; // Medium-opaque
+  static const double opacity80 = 0.80; // Almost opaque
+  static const double opacity90 = 0.90; // Very opaque
+  static const double opacity100 = 1.0; // Completely solid
 
   // ============================================================================
   // SURFACE ELEVATION COLORS (Material Design 3 inspired)
   // ============================================================================
 
   /// Surface elevation levels for light theme (subtle brightness variations)
-  static const Color elevation0Light = surfaceLight;        // Base surface (0dp)
-  static const Color elevation1Light = Color(0xFFFEFEFE);  // +1dp (cards)
-  static const Color elevation2Light = Color(0xFFFDFDFD);  // +2dp (floating buttons)
-  static const Color elevation3Light = Color(0xFFFCFCFC);  // +4dp (modals)
-  static const Color elevation4Light = Color(0xFFFBFBFB);  // +8dp (dialogs)
+  static const Color elevation0Light = surfaceLight; // Base surface (0dp)
+  static const Color elevation1Light = Color(0xFFFEFEFE); // +1dp (cards)
+  static const Color elevation2Light = Color(
+    0xFFFDFDFD,
+  ); // +2dp (floating buttons)
+  static const Color elevation3Light = Color(0xFFFCFCFC); // +4dp (modals)
+  static const Color elevation4Light = Color(0xFFFBFBFB); // +8dp (dialogs)
 
   /// Surface elevation levels for dark theme (brighter on elevation - Material Design 3)
   /// UPGRADED: All levels recalculated for true black base (0xFF000000)
   /// Uses white overlay technique: elevation = base + white opacity
-  static const Color elevation0Dark = surfaceDark;          // Base surface (0dp) = 0xFF121212
-  static const Color elevation1Dark = Color(0xFF1E1E1E);   // +1dp (cards) - 5% white overlay
-  static const Color elevation2Dark = Color(0xFF232323);   // +2dp (floating buttons) - 8% white overlay
-  static const Color elevation3Dark = Color(0xFF282828);   // +4dp (modals) - 11% white overlay
-  static const Color elevation4Dark = Color(0xFF2C2C2C);   // +8dp (dialogs) - 14% white overlay
+  static const Color elevation0Dark =
+      surfaceDark; // Base surface (0dp) = 0xFF121212
+  static const Color elevation1Dark = Color(
+    0xFF1E1E1E,
+  ); // +1dp (cards) - 5% white overlay
+  static const Color elevation2Dark = Color(
+    0xFF232323,
+  ); // +2dp (floating buttons) - 8% white overlay
+  static const Color elevation3Dark = Color(
+    0xFF282828,
+  ); // +4dp (modals) - 11% white overlay
+  static const Color elevation4Dark = Color(
+    0xFF2C2C2C,
+  ); // +8dp (dialogs) - 14% white overlay
 
   // ============================================================================
   // SCRIM & BACKDROP COLORS

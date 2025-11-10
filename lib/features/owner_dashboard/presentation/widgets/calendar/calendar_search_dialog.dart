@@ -73,14 +73,17 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
       final bookingsAsync = ref.read(calendarBookingsProvider);
       await bookingsAsync.when(
         data: (bookingsMap) async {
-          final allBookings = bookingsMap.values.expand((list) => list).toList();
+          final allBookings = bookingsMap.values
+              .expand((list) => list)
+              .toList();
 
           // Filter bookings based on search query
           final results = allBookings.where((booking) {
             final guestName = booking.guestName?.toLowerCase() ?? '';
             final guestEmail = booking.guestEmail?.toLowerCase() ?? '';
             final bookingId = booking.id.toLowerCase();
-            final unitName = _unitsMap[booking.unitId]?.name.toLowerCase() ?? '';
+            final unitName =
+                _unitsMap[booking.unitId]?.name.toLowerCase() ?? '';
 
             return guestName.contains(_searchQuery) ||
                 guestEmail.contains(_searchQuery) ||
@@ -159,7 +162,8 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                 controller: _searchController,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Pretražite po imenu gosta, email-u, ID-u ili jedinici...',
+                  hintText:
+                      'Pretražite po imenu gosta, email-u, ID-u ili jedinici...',
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
@@ -174,9 +178,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                onChanged: (value) {
-                  _performSearch(value);
-                },
+                onChanged: _performSearch,
               ),
             ),
 
@@ -189,8 +191,8 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                     Text(
                       'Pronađeno ${_searchResults.length} rezultata',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -199,9 +201,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
             const Divider(),
 
             // Results list
-            Expanded(
-              child: _buildResultsList(),
-            ),
+            Expanded(child: _buildResultsList()),
           ],
         ),
       ),
@@ -211,9 +211,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
   /// Build search results list
   Widget _buildResultsList() {
     if (_isSearching) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_searchQuery.isEmpty) {
@@ -230,15 +228,15 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
             Text(
               'Unesite termin za pretragu',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).disabledColor,
-                  ),
+                color: Theme.of(context).disabledColor,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Pretražite po imenu gosta, email-u, ID-u ili jedinici',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).disabledColor,
-                  ),
+                color: Theme.of(context).disabledColor,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -260,15 +258,15 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
             Text(
               'Nema rezultata',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).disabledColor,
-                  ),
+                color: Theme.of(context).disabledColor,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Pokušajte sa drugim terminom pretrage',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).disabledColor,
-                  ),
+                color: Theme.of(context).disabledColor,
+              ),
             ),
           ],
         ),
@@ -344,8 +342,8 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                     Text(
                       unit.name,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -363,9 +361,14 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
+                      color: AppColors.authPrimary.withAlpha(
+                        (0.1 * 255).toInt(),
+                      ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -406,9 +409,9 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                   Text(
                     '${booking.totalPrice.toStringAsFixed(2)} €',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.success,
-                        ),
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.success,
+                    ),
                   ),
                 ],
               ),
@@ -422,10 +425,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
   void _showError(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.error,
-        ),
+        SnackBar(content: Text(message), backgroundColor: AppColors.error),
       );
     }
   }

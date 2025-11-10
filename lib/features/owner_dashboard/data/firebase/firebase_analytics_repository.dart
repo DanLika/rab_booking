@@ -79,20 +79,23 @@ class FirebaseAnalyticsRepository {
       );
 
       // Calculate occupancy rate
-      final totalDaysInRange = dateRange.endDate.difference(dateRange.startDate).inDays;
-      final bookedDays = bookings.fold<int>(
-        0,
-        (total, b) {
-          final checkIn = (b['check_in'] as Timestamp).toDate();
-          final checkOut = (b['check_out'] as Timestamp).toDate();
-          return total + checkOut.difference(checkIn).inDays;
-        },
-      );
+      final totalDaysInRange = dateRange.endDate
+          .difference(dateRange.startDate)
+          .inDays;
+      final bookedDays = bookings.fold<int>(0, (total, b) {
+        final checkIn = (b['check_in'] as Timestamp).toDate();
+        final checkOut = (b['check_out'] as Timestamp).toDate();
+        return total + checkOut.difference(checkIn).inDays;
+      });
       final availableDays = totalDaysInRange * unitIds.length;
-      final occupancyRate = availableDays > 0 ? (bookedDays / availableDays) * 100 : 0.0;
+      final occupancyRate = availableDays > 0
+          ? (bookedDays / availableDays) * 100
+          : 0.0;
 
       // Calculate average nightly rate
-      final averageNightlyRate = bookedDays > 0 ? totalRevenue / bookedDays : 0.0;
+      final averageNightlyRate = bookedDays > 0
+          ? totalRevenue / bookedDays
+          : 0.0;
 
       // Get cancelled bookings for cancellation rate
       final List<Map<String, dynamic>> cancelledBookings = [];
@@ -106,7 +109,9 @@ class FirebaseAnalyticsRepository {
             .where('status', isEqualTo: 'cancelled')
             .get();
 
-        cancelledBookings.addAll(cancelledSnapshot.docs.map((doc) => doc.data()));
+        cancelledBookings.addAll(
+          cancelledSnapshot.docs.map((doc) => doc.data()),
+        );
       }
 
       final cancelledCount = cancelledBookings.length;
@@ -160,7 +165,8 @@ class FirebaseAnalyticsRepository {
 
     for (final booking in bookings) {
       final checkIn = (booking['check_in'] as Timestamp).toDate();
-      final monthKey = '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
+      final monthKey =
+          '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
       final revenue = (booking['total_price'] as num?)?.toDouble() ?? 0.0;
 
       monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] ?? 0.0) + revenue;
@@ -170,7 +176,7 @@ class FirebaseAnalyticsRepository {
       final parts = entry.key.split('-');
       final year = int.parse(parts[0]);
       final month = int.parse(parts[1]);
-      final date = DateTime(year, month, 1);
+      final date = DateTime(year, month);
 
       return RevenueDataPoint(
         date: date,
@@ -192,7 +198,8 @@ class FirebaseAnalyticsRepository {
 
     for (final booking in bookings) {
       final checkIn = (booking['check_in'] as Timestamp).toDate();
-      final monthKey = '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
+      final monthKey =
+          '${checkIn.year}-${checkIn.month.toString().padLeft(2, '0')}';
 
       monthlyBookings[monthKey] = (monthlyBookings[monthKey] ?? 0) + 1;
     }
@@ -201,7 +208,7 @@ class FirebaseAnalyticsRepository {
       final parts = entry.key.split('-');
       final year = int.parse(parts[0]);
       final month = int.parse(parts[1]);
-      final date = DateTime(year, month, 1);
+      final date = DateTime(year, month);
 
       return BookingDataPoint(
         date: date,
@@ -271,7 +278,10 @@ class FirebaseAnalyticsRepository {
       if (bookings.isEmpty) continue;
 
       // Get property details
-      final propertyDoc = await _firestore.collection('properties').doc(propertyId).get();
+      final propertyDoc = await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .get();
       if (!propertyDoc.exists) continue;
 
       final propertyData = propertyDoc.data()!;
@@ -281,29 +291,32 @@ class FirebaseAnalyticsRepository {
         (total, b) => total + ((b['total_price'] as num?)?.toDouble() ?? 0.0),
       );
 
-      final bookedDays = bookings.fold<int>(
-        0,
-        (total, b) {
-          final checkIn = (b['check_in'] as Timestamp).toDate();
-          final checkOut = (b['check_out'] as Timestamp).toDate();
-          return total + checkOut.difference(checkIn).inDays;
-        },
-      );
+      final bookedDays = bookings.fold<int>(0, (total, b) {
+        final checkIn = (b['check_in'] as Timestamp).toDate();
+        final checkOut = (b['check_out'] as Timestamp).toDate();
+        return total + checkOut.difference(checkIn).inDays;
+      });
 
-      final totalDays = dateRange.endDate.difference(dateRange.startDate).inDays;
-      final occupancyRate = totalDays > 0 ? (bookedDays / totalDays) * 100 : 0.0;
+      final totalDays = dateRange.endDate
+          .difference(dateRange.startDate)
+          .inDays;
+      final occupancyRate = totalDays > 0
+          ? (bookedDays / totalDays) * 100
+          : 0.0;
 
       // Get rating
       final avgRating = (propertyData['rating'] as num?)?.toDouble() ?? 0.0;
 
-      performances.add(PropertyPerformance(
-        propertyId: propertyId,
-        propertyName: propertyData['name'] as String,
-        revenue: revenue,
-        bookings: bookings.length,
-        occupancyRate: occupancyRate,
-        rating: avgRating,
-      ));
+      performances.add(
+        PropertyPerformance(
+          propertyId: propertyId,
+          propertyName: propertyData['name'] as String,
+          revenue: revenue,
+          bookings: bookings.length,
+          occupancyRate: occupancyRate,
+          rating: avgRating,
+        ),
+      );
     }
 
     // Sort by revenue (descending) and take top 5
@@ -313,8 +326,18 @@ class FirebaseAnalyticsRepository {
 
   String _getMonthLabel(int month) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return months[month - 1];
   }

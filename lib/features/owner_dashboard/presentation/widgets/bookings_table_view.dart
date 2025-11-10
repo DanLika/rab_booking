@@ -16,10 +16,7 @@ import 'send_email_dialog.dart';
 /// Desktop: Full data table with all columns
 /// Displays: Guest | Property/Unit | Check-in/Check-out | Nights | Guests | Status | Price | Source | Actions
 class BookingsTableView extends ConsumerStatefulWidget {
-  const BookingsTableView({
-    super.key,
-    required this.bookings,
-  });
+  const BookingsTableView({super.key, required this.bookings});
 
   final List<OwnerBooking> bookings;
 
@@ -54,15 +51,19 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                     const SizedBox(width: 16),
                     TextButton.icon(
                       onPressed: _deleteSelectedBookings,
-                      icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                      label: const Text('Obriši odabrane', style: TextStyle(color: AppColors.error)),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: AppColors.error,
+                      ),
+                      label: const Text(
+                        'Obriši odabrane',
+                        style: TextStyle(color: AppColors.error),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     TextButton(
                       onPressed: () {
-                        setState(() {
-                          _selectedBookingIds.clear();
-                        });
+                        setState(_selectedBookingIds.clear);
                       },
                       child: const Text('Poništi odabir'),
                     ),
@@ -82,7 +83,6 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                   minWidth: MediaQuery.of(context).size.width - 48,
                 ),
                 child: DataTable(
-                  showCheckboxColumn: true,
                   headingRowColor: WidgetStateProperty.all(
                     AppColors.surfaceVariantLight,
                   ),
@@ -98,9 +98,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                     DataColumn(label: Text('Izvor')),
                     DataColumn(label: Text('Akcije')),
                   ],
-                  rows: widget.bookings.map((ownerBooking) {
-                    return _buildTableRow(ownerBooking);
-                  }).toList(),
+                  rows: widget.bookings.map(_buildTableRow).toList(),
                 ),
               ),
             ),
@@ -176,28 +174,16 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         ),
 
         // Check-in
-        DataCell(
-          Text(
-            DateFormat('dd.MM.yyyy').format(booking.checkIn),
-          ),
-        ),
+        DataCell(Text(DateFormat('dd.MM.yyyy').format(booking.checkIn))),
 
         // Check-out
-        DataCell(
-          Text(
-            DateFormat('dd.MM.yyyy').format(booking.checkOut),
-          ),
-        ),
+        DataCell(Text(DateFormat('dd.MM.yyyy').format(booking.checkOut))),
 
         // Number of nights
-        DataCell(
-          Text('${booking.numberOfNights}'),
-        ),
+        DataCell(Text('${booking.numberOfNights}')),
 
         // Guest count
-        DataCell(
-          Text('${booking.guestCount}'),
-        ),
+        DataCell(Text('${booking.guestCount}')),
 
         // Status badge
         DataCell(
@@ -231,14 +217,10 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         ),
 
         // Source
-        DataCell(
-          _buildSourceBadge(booking.source),
-        ),
+        DataCell(_buildSourceBadge(booking.source)),
 
         // Actions menu
-        DataCell(
-          _buildActionsMenu(booking),
-        ),
+        DataCell(_buildActionsMenu(booking)),
       ],
     );
   }
@@ -437,7 +419,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Potvrdi rezervaciju'),
-        content: const Text('Jeste li sigurni da želite potvrditi ovu rezervaciju?'),
+        content: const Text(
+          'Jeste li sigurni da želite potvrditi ovu rezervaciju?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -483,7 +467,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Označi kao završeno'),
-        content: const Text('Jeste li sigurni da želite označiti ovu rezervaciju kao završenu?'),
+        content: const Text(
+          'Jeste li sigurni da želite označiti ovu rezervaciju kao završenu?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -570,9 +556,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Otkaži rezervaciju'),
           ),
         ],
@@ -584,7 +568,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         final repository = ref.read(ownerBookingsRepositoryProvider);
         await repository.cancelBooking(
           bookingId,
-          reasonController.text.isEmpty ? 'Otkazano od strane vlasnika' : reasonController.text,
+          reasonController.text.isEmpty
+              ? 'Otkazano od strane vlasnika'
+              : reasonController.text,
           sendEmail: sendEmailNotifier.value,
         );
 
@@ -636,9 +622,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Obriši'),
           ),
         ],
@@ -687,9 +671,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Obriši sve'),
           ),
         ],
@@ -708,14 +690,14 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervacija je obrisana' : 'rezervacija su obrisane'}'),
+              content: Text(
+                '${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervacija je obrisana' : 'rezervacija su obrisane'}',
+              ),
               backgroundColor: AppColors.error,
             ),
           );
 
-          setState(() {
-            _selectedBookingIds.clear();
-          });
+          setState(_selectedBookingIds.clear);
 
           ref.invalidate(ownerBookingsProvider);
         }

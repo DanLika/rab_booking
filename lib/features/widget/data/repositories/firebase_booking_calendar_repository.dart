@@ -18,7 +18,7 @@ class FirebaseBookingCalendarRepository {
     required String unitId,
     required int year,
   }) {
-    final startDate = DateTime(year, 1, 1);
+    final startDate = DateTime(year, 1);
     final endDate = DateTime(year, 12, 31, 23, 59, 59);
 
     // Stream bookings
@@ -45,68 +45,70 @@ class FirebaseBookingCalendarRepository {
         .snapshots();
 
     // Combine all three streams
-    return Rx.combineLatest3(
-      bookingsStream,
-      pricesStream,
-      icalEventsStream,
-      (bookingsSnapshot, pricesSnapshot, icalEventsSnapshot) {
-        // Parse bookings
-        final bookings = bookingsSnapshot.docs
-            .map((doc) {
-              try {
-                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
-              } catch (e) {
-                LoggingService.logError('Error parsing booking', e);
-                return null;
-              }
-            })
-            .where((booking) =>
-                booking != null && booking.checkOut.isAfter(startDate))
-            .cast<BookingModel>()
-            .toList();
+    return Rx.combineLatest3(bookingsStream, pricesStream, icalEventsStream, (
+      bookingsSnapshot,
+      pricesSnapshot,
+      icalEventsSnapshot,
+    ) {
+      // Parse bookings
+      final bookings = bookingsSnapshot.docs
+          .map((doc) {
+            try {
+              return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+            } catch (e) {
+              LoggingService.logError('Error parsing booking', e);
+              return null;
+            }
+          })
+          .where(
+            (booking) => booking != null && booking.checkOut.isAfter(startDate),
+          )
+          .cast<BookingModel>()
+          .toList();
 
-        // Parse iCal events as "blocked" dates
-        final icalEvents = icalEventsSnapshot.docs
-            .map((doc) {
-              try {
-                final data = doc.data();
-                return {
-                  'id': doc.id,
-                  'start_date': (data['start_date'] as Timestamp).toDate(),
-                  'end_date': (data['end_date'] as Timestamp).toDate(),
-                  'source': data['source'] ?? 'ical',
-                  'guest_name': data['guest_name'] ?? 'External Booking',
-                };
-              } catch (e) {
-                LoggingService.logError('Error parsing iCal event', e);
-                return null;
-              }
-            })
-            .where((event) =>
-                event != null && event['end_date'].isAfter(startDate))
-            .cast<Map<String, dynamic>>()
-            .toList();
+      // Parse iCal events as "blocked" dates
+      final icalEvents = icalEventsSnapshot.docs
+          .map((doc) {
+            try {
+              final data = doc.data();
+              return {
+                'id': doc.id,
+                'start_date': (data['start_date'] as Timestamp).toDate(),
+                'end_date': (data['end_date'] as Timestamp).toDate(),
+                'source': data['source'] ?? 'ical',
+                'guest_name': data['guest_name'] ?? 'External Booking',
+              };
+            } catch (e) {
+              LoggingService.logError('Error parsing iCal event', e);
+              return null;
+            }
+          })
+          .where(
+            (event) => event != null && event['end_date'].isAfter(startDate),
+          )
+          .cast<Map<String, dynamic>>()
+          .toList();
 
-        // Parse prices
-        final Map<String, double> priceMap = {};
-        for (final doc in pricesSnapshot.docs) {
-          final data = doc.data();
-          // Skip documents without valid date field
-          if (data['date'] == null) continue;
+      // Parse prices
+      final Map<String, double> priceMap = {};
+      for (final doc in pricesSnapshot.docs) {
+        final data = doc.data();
+        // Skip documents without valid date field
+        if (data['date'] == null) continue;
 
-          try {
-            final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-            final key = '${price.date.year}-${price.date.month}-${price.date.day}';
-            priceMap[key] = price.price;
-          } catch (e) {
-            LoggingService.logError('Error parsing daily price', e);
-          }
+        try {
+          final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
+          final key =
+              '${price.date.year}-${price.date.month}-${price.date.day}';
+          priceMap[key] = price.price;
+        } catch (e) {
+          LoggingService.logError('Error parsing daily price', e);
         }
+      }
 
-        // Build calendar with both bookings and iCal events
-        return _buildYearCalendarMap(bookings, priceMap, year, icalEvents);
-      },
-    );
+      // Build calendar with both bookings and iCal events
+      return _buildYearCalendarMap(bookings, priceMap, year, icalEvents);
+    });
   }
 
   /// Get month-view calendar data with realtime updates and prices
@@ -116,7 +118,7 @@ class FirebaseBookingCalendarRepository {
     required int year,
     required int month,
   }) {
-    final startDate = DateTime(year, month, 1);
+    final startDate = DateTime(year, month);
     final endDate = DateTime(year, month + 1, 0, 23, 59, 59);
 
     // Stream bookings
@@ -143,68 +145,70 @@ class FirebaseBookingCalendarRepository {
         .snapshots();
 
     // Combine all three streams
-    return Rx.combineLatest3(
-      bookingsStream,
-      pricesStream,
-      icalEventsStream,
-      (bookingsSnapshot, pricesSnapshot, icalEventsSnapshot) {
-        // Parse bookings
-        final bookings = bookingsSnapshot.docs
-            .map((doc) {
-              try {
-                return BookingModel.fromJson({...doc.data(), 'id': doc.id});
-              } catch (e) {
-                LoggingService.logError('Error parsing booking', e);
-                return null;
-              }
-            })
-            .where((booking) =>
-                booking != null && booking.checkOut.isAfter(startDate))
-            .cast<BookingModel>()
-            .toList();
+    return Rx.combineLatest3(bookingsStream, pricesStream, icalEventsStream, (
+      bookingsSnapshot,
+      pricesSnapshot,
+      icalEventsSnapshot,
+    ) {
+      // Parse bookings
+      final bookings = bookingsSnapshot.docs
+          .map((doc) {
+            try {
+              return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+            } catch (e) {
+              LoggingService.logError('Error parsing booking', e);
+              return null;
+            }
+          })
+          .where(
+            (booking) => booking != null && booking.checkOut.isAfter(startDate),
+          )
+          .cast<BookingModel>()
+          .toList();
 
-        // Parse iCal events as "blocked" dates
-        final icalEvents = icalEventsSnapshot.docs
-            .map((doc) {
-              try {
-                final data = doc.data();
-                return {
-                  'id': doc.id,
-                  'start_date': (data['start_date'] as Timestamp).toDate(),
-                  'end_date': (data['end_date'] as Timestamp).toDate(),
-                  'source': data['source'] ?? 'ical',
-                  'guest_name': data['guest_name'] ?? 'External Booking',
-                };
-              } catch (e) {
-                LoggingService.logError('Error parsing iCal event', e);
-                return null;
-              }
-            })
-            .where((event) =>
-                event != null && event['end_date'].isAfter(startDate))
-            .cast<Map<String, dynamic>>()
-            .toList();
+      // Parse iCal events as "blocked" dates
+      final icalEvents = icalEventsSnapshot.docs
+          .map((doc) {
+            try {
+              final data = doc.data();
+              return {
+                'id': doc.id,
+                'start_date': (data['start_date'] as Timestamp).toDate(),
+                'end_date': (data['end_date'] as Timestamp).toDate(),
+                'source': data['source'] ?? 'ical',
+                'guest_name': data['guest_name'] ?? 'External Booking',
+              };
+            } catch (e) {
+              LoggingService.logError('Error parsing iCal event', e);
+              return null;
+            }
+          })
+          .where(
+            (event) => event != null && event['end_date'].isAfter(startDate),
+          )
+          .cast<Map<String, dynamic>>()
+          .toList();
 
-        // Parse prices
-        final Map<String, double> priceMap = {};
-        for (final doc in pricesSnapshot.docs) {
-          final data = doc.data();
-          // Skip documents without valid date field
-          if (data['date'] == null) continue;
+      // Parse prices
+      final Map<String, double> priceMap = {};
+      for (final doc in pricesSnapshot.docs) {
+        final data = doc.data();
+        // Skip documents without valid date field
+        if (data['date'] == null) continue;
 
-          try {
-            final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-            final key = '${price.date.year}-${price.date.month}-${price.date.day}';
-            priceMap[key] = price.price;
-          } catch (e) {
-            LoggingService.logError('Error parsing daily price', e);
-          }
+        try {
+          final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
+          final key =
+              '${price.date.year}-${price.date.month}-${price.date.day}';
+          priceMap[key] = price.price;
+        } catch (e) {
+          LoggingService.logError('Error parsing daily price', e);
         }
+      }
 
-        // Build calendar with bookings AND iCal events
-        return _buildCalendarMap(bookings, priceMap, year, month, icalEvents);
-      },
-    );
+      // Build calendar with bookings AND iCal events
+      return _buildCalendarMap(bookings, priceMap, year, month, icalEvents);
+    });
   }
 
   /// Build calendar map for a specific month
@@ -213,9 +217,9 @@ class FirebaseBookingCalendarRepository {
     List<BookingModel> bookings,
     Map<String, double> priceMap,
     int year,
-    int month,
-    [List<Map<String, dynamic>>? icalEvents]
-  ) {
+    int month, [
+    List<Map<String, dynamic>>? icalEvents,
+  ]) {
     final Map<DateTime, CalendarDateInfo> calendar = {};
     final daysInMonth = DateTime(year, month + 1, 0).day;
 
@@ -246,8 +250,7 @@ class FirebaseBookingCalendarRepository {
       );
 
       DateTime current = checkIn;
-      while (current.isBefore(checkOut) ||
-          current.isAtSameMomentAs(checkOut)) {
+      while (current.isBefore(checkOut) || current.isAtSameMomentAs(checkOut)) {
         if (current.year == year && current.month == month) {
           final isCheckIn = current.isAtSameMomentAs(checkIn);
           final isCheckOut = current.isAtSameMomentAs(checkOut);
@@ -326,9 +329,9 @@ class FirebaseBookingCalendarRepository {
   Map<DateTime, CalendarDateInfo> _buildYearCalendarMap(
     List<BookingModel> bookings,
     Map<String, double> priceMap,
-    int year,
-    [List<Map<String, dynamic>>? icalEvents]
-  ) {
+    int year, [
+    List<Map<String, dynamic>>? icalEvents,
+  ]) {
     final Map<DateTime, CalendarDateInfo> calendar = {};
 
     // Initialize all days in year as available with prices
@@ -361,8 +364,7 @@ class FirebaseBookingCalendarRepository {
       );
 
       DateTime current = checkIn;
-      while (current.isBefore(checkOut) ||
-          current.isAtSameMomentAs(checkOut)) {
+      while (current.isBefore(checkOut) || current.isAtSameMomentAs(checkOut)) {
         if (current.year == year) {
           final isCheckIn = current.isAtSameMomentAs(checkIn);
           final isCheckOut = current.isAtSameMomentAs(checkOut);
@@ -464,7 +466,7 @@ class FirebaseBookingCalendarRepository {
             return false; // Conflict with regular booking
           }
         } catch (e) {
-          LoggingService.logError('Error checking booking availability', e);
+          unawaited(LoggingService.logError('Error checking booking availability', e));
         }
       }
 
@@ -490,7 +492,7 @@ class FirebaseBookingCalendarRepository {
             return false; // Conflict with iCal event
           }
         } catch (e) {
-          LoggingService.logError('Error checking iCal event availability', e);
+          unawaited(LoggingService.logError('Error checking iCal event availability', e));
         }
       }
 
@@ -501,7 +503,7 @@ class FirebaseBookingCalendarRepository {
 
       return true; // No conflicts with either bookings or iCal events
     } catch (e) {
-      LoggingService.logError('Error checking availability', e);
+      unawaited(LoggingService.logError('Error checking availability', e));
       return false;
     }
   }
@@ -530,13 +532,13 @@ class FirebaseBookingCalendarRepository {
           final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
           total += price.price;
         } catch (e) {
-          LoggingService.logError('Error parsing price', e);
+          unawaited(LoggingService.logError('Error parsing price', e));
         }
       }
 
       return total;
     } catch (e) {
-      LoggingService.logError('Error calculating booking price', e);
+      unawaited(LoggingService.logError('Error calculating booking price', e));
       return 0.0;
     }
   }

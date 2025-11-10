@@ -20,7 +20,8 @@ class SkeletonLoader extends StatefulWidget {
   static Widget propertyCard() => const PropertyCardSkeleton();
 
   /// Property card skeleton (horizontal)
-  static Widget propertyCardHorizontal() => const PropertyCardSkeletonHorizontal();
+  static Widget propertyCardHorizontal() =>
+      const PropertyCardSkeletonHorizontal();
 
   /// Stats cards skeleton (for profile page)
   static Widget statsCards() => const StatsCardsSkeleton();
@@ -45,9 +46,10 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
       duration: const Duration(milliseconds: 1500),
     )..repeat();
 
-    _animation = Tween<double>(begin: -2.0, end: 2.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: -2.0,
+      end: 2.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -69,19 +71,10 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius),
             gradient: LinearGradient(
-              begin: Alignment.centerLeft,
               end: Alignment.centerRight,
               colors: isDark
-                  ? [
-                      Colors.grey[800]!,
-                      Colors.grey[700]!,
-                      Colors.grey[800]!,
-                    ]
-                  : [
-                      Colors.grey[300]!,
-                      Colors.grey[200]!,
-                      Colors.grey[300]!,
-                    ],
+                  ? [Colors.grey[800]!, Colors.grey[700]!, Colors.grey[800]!]
+                  : [Colors.grey[300]!, Colors.grey[200]!, Colors.grey[300]!],
               stops: const [0.0, 0.5, 1.0],
               transform: _SlideGradientTransform(_animation.value),
             ),
@@ -116,7 +109,9 @@ class PropertyCardSkeleton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? theme.colorScheme.surface : Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
+        borderRadius: BorderRadius.circular(
+          AppDimensions.radiusS,
+        ), // 12px modern radius,
         border: Border.all(
           color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
         ),
@@ -126,50 +121,34 @@ class PropertyCardSkeleton extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-          // Image skeleton
-          SkeletonLoader(
-            height: 160,
-            borderRadius: 12,
-          ),
+            // Image skeleton
+            SkeletonLoader(height: 160, borderRadius: 12),
 
-          Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title skeleton
-                SkeletonLoader(
-                  width: double.infinity,
-                  height: 20,
-                ),
-                SizedBox(height: 8),
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title skeleton
+                  SkeletonLoader(width: double.infinity, height: 20),
+                  SizedBox(height: 8),
 
-                // Location skeleton
-                SkeletonLoader(
-                  width: 150,
-                  height: 16,
-                ),
-                SizedBox(height: 12),
+                  // Location skeleton
+                  SkeletonLoader(width: 150, height: 16),
+                  SizedBox(height: 12),
 
-                // Price skeleton
-                Row(
-                  children: [
-                    SkeletonLoader(
-                      width: 80,
-                      height: 24,
-                    ),
-                    Spacer(),
-                    SkeletonLoader(
-                      width: 60,
-                      height: 16,
-                      borderRadius: 4,
-                    ),
-                  ],
-                ),
-              ],
+                  // Price skeleton
+                  Row(
+                    children: [
+                      SkeletonLoader(width: 80, height: 24),
+                      Spacer(),
+                      SkeletonLoader(width: 60, height: 16, borderRadius: 4),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );
@@ -178,10 +157,7 @@ class PropertyCardSkeleton extends StatelessWidget {
 
 /// List skeleton loader - shows multiple property cards
 class PropertyListSkeleton extends StatelessWidget {
-  const PropertyListSkeleton({
-    this.itemCount = 3,
-    super.key,
-  });
+  const PropertyListSkeleton({this.itemCount = 3, super.key});
 
   final int itemCount;
 
@@ -201,31 +177,20 @@ class PropertyListSkeleton extends StatelessWidget {
 
 /// Text skeleton loader - for text lines
 class TextSkeleton extends StatelessWidget {
-  const TextSkeleton({
-    this.width,
-    this.height = 14,
-    super.key,
-  });
+  const TextSkeleton({this.width, this.height = 14, super.key});
 
   final double? width;
   final double height;
 
   @override
   Widget build(BuildContext context) {
-    return SkeletonLoader(
-      width: width,
-      height: height,
-      borderRadius: 4,
-    );
+    return SkeletonLoader(width: width, height: height, borderRadius: 4);
   }
 }
 
 /// Circle skeleton loader - for avatars
 class CircleSkeleton extends StatelessWidget {
-  const CircleSkeleton({
-    this.size = 40,
-    super.key,
-  });
+  const CircleSkeleton({this.size = 40, super.key});
 
   final double size;
 
@@ -240,16 +205,8 @@ class CircleSkeleton extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: LinearGradient(
           colors: isDark
-              ? [
-                  Colors.grey[800]!,
-                  Colors.grey[700]!,
-                  Colors.grey[800]!,
-                ]
-              : [
-                  Colors.grey[300]!,
-                  Colors.grey[200]!,
-                  Colors.grey[300]!,
-                ],
+              ? [Colors.grey[800]!, Colors.grey[700]!, Colors.grey[800]!]
+              : [Colors.grey[300]!, Colors.grey[200]!, Colors.grey[300]!],
         ),
       ),
     );
@@ -269,7 +226,9 @@ class PropertyCardSkeletonHorizontal extends StatelessWidget {
       height: 200,
       decoration: BoxDecoration(
         color: isDark ? theme.colorScheme.surface : Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
+        borderRadius: BorderRadius.circular(
+          AppDimensions.radiusS,
+        ), // 12px modern radius,
         border: Border.all(
           color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
         ),
@@ -278,11 +237,7 @@ class PropertyCardSkeletonHorizontal extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Image skeleton
-          SkeletonLoader(
-            width: 280,
-            height: 200,
-            borderRadius: 12,
-          ),
+          SkeletonLoader(width: 280, height: 200, borderRadius: 12),
 
           // Content skeleton
           Expanded(
@@ -292,36 +247,21 @@ class PropertyCardSkeletonHorizontal extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Title skeleton
-                  SkeletonLoader(
-                    width: double.infinity,
-                    height: 20,
-                  ),
+                  SkeletonLoader(width: double.infinity, height: 20),
                   SizedBox(height: 8),
 
                   // Location skeleton
-                  SkeletonLoader(
-                    width: 150,
-                    height: 16,
-                  ),
+                  SkeletonLoader(width: 150, height: 16),
                   SizedBox(height: 12),
 
                   // Stats skeleton
                   Row(
                     children: [
-                      SkeletonLoader(
-                        width: 60,
-                        height: 16,
-                      ),
+                      SkeletonLoader(width: 60, height: 16),
                       SizedBox(width: 16),
-                      SkeletonLoader(
-                        width: 60,
-                        height: 16,
-                      ),
+                      SkeletonLoader(width: 60, height: 16),
                       SizedBox(width: 16),
-                      SkeletonLoader(
-                        width: 60,
-                        height: 16,
-                      ),
+                      SkeletonLoader(width: 60, height: 16),
                     ],
                   ),
 
@@ -330,16 +270,9 @@ class PropertyCardSkeletonHorizontal extends StatelessWidget {
                   // Price skeleton
                   Row(
                     children: [
-                      SkeletonLoader(
-                        width: 80,
-                        height: 24,
-                      ),
+                      SkeletonLoader(width: 80, height: 24),
                       Spacer(),
-                      SkeletonLoader(
-                        width: 60,
-                        height: 16,
-                        borderRadius: 4,
-                      ),
+                      SkeletonLoader(width: 60, height: 16, borderRadius: 4),
                     ],
                   ),
                 ],
@@ -365,7 +298,9 @@ class ReviewCardSkeleton extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? theme.colorScheme.surface : Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius,
+        borderRadius: BorderRadius.circular(
+          AppDimensions.radiusS,
+        ), // 12px modern radius,
         border: Border.all(
           color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
         ),
@@ -418,7 +353,9 @@ class BookingCardSkeleton extends StatelessWidget {
       padding: const EdgeInsets.all(AppDimensions.spaceS),
       decoration: BoxDecoration(
         color: isDark ? theme.colorScheme.surface : Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (matches real card)
+        borderRadius: BorderRadius.circular(
+          AppDimensions.radiusM,
+        ), // 20px modern radius (matches real card)
         border: Border.all(
           color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
         ),
@@ -429,11 +366,7 @@ class BookingCardSkeleton extends StatelessWidget {
           // Property info
           Row(
             children: [
-              SkeletonLoader(
-                width: 100,
-                height: 100,
-                borderRadius: 12,
-              ),
+              SkeletonLoader(width: 100, height: 100, borderRadius: 12),
               SizedBox(width: AppDimensions.spaceS),
               Expanded(
                 child: Column(
@@ -458,11 +391,7 @@ class BookingCardSkeleton extends StatelessWidget {
           SizedBox(height: AppDimensions.spaceS),
 
           // Status badge
-          SkeletonLoader(
-            width: 100,
-            height: 32,
-            borderRadius: 16,
-          ),
+          SkeletonLoader(width: 100, height: 32, borderRadius: 16),
         ],
       ),
     );
@@ -471,11 +400,7 @@ class BookingCardSkeleton extends StatelessWidget {
 
 /// Grid skeleton loader
 class SkeletonGrid extends StatelessWidget {
-  const SkeletonGrid({
-    this.itemCount = 6,
-    this.crossAxisCount = 2,
-    super.key,
-  });
+  const SkeletonGrid({this.itemCount = 6, this.crossAxisCount = 2, super.key});
 
   final int itemCount;
   final int crossAxisCount;
@@ -528,11 +453,7 @@ class ListItemSkeleton extends StatelessWidget {
         ),
         if (hasTrailing) ...[
           const SizedBox(width: 12),
-          const SkeletonLoader(
-            width: 24,
-            height: 24,
-            borderRadius: 12,
-          ),
+          const SkeletonLoader(width: 24, height: 24, borderRadius: 12),
         ],
       ],
     );
@@ -594,8 +515,12 @@ class StatsCardsSkeleton extends StatelessWidget {
         children: [
           // Icon skeleton
           SkeletonLoader(
-            width: context.isMobile ? AppDimensions.iconL : AppDimensions.iconXL,
-            height: context.isMobile ? AppDimensions.iconL : AppDimensions.iconXL,
+            width: context.isMobile
+                ? AppDimensions.iconL
+                : AppDimensions.iconXL,
+            height: context.isMobile
+                ? AppDimensions.iconL
+                : AppDimensions.iconXL,
             borderRadius: AppDimensions.radiusS,
           ),
           const SizedBox(height: AppDimensions.spaceS),
@@ -609,19 +534,11 @@ class StatsCardsSkeleton extends StatelessWidget {
           const SizedBox(height: AppDimensions.spaceXXS),
 
           // Label skeleton
-          const SkeletonLoader(
-            width: 80,
-            height: 16,
-            borderRadius: 4,
-          ),
+          const SkeletonLoader(width: 80, height: 16, borderRadius: 4),
           const SizedBox(height: AppDimensions.spaceXS),
 
           // Arrow skeleton (optional)
-          const SkeletonLoader(
-            width: 16,
-            height: 16,
-            borderRadius: 8,
-          ),
+          const SkeletonLoader(width: 16, height: 16),
         ],
       ),
     );
@@ -650,7 +567,11 @@ class CalendarSkeleton extends StatelessWidget {
                   3,
                   (index) => const Padding(
                     padding: EdgeInsets.only(left: 8),
-                    child: SkeletonLoader(width: 40, height: 40, borderRadius: 20),
+                    child: SkeletonLoader(
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                    ),
                   ),
                 ),
               ),
@@ -689,13 +610,16 @@ class CalendarSkeleton extends StatelessWidget {
                       child: Container(
                         margin: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusXS),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusXS,
+                          ),
                           border: Border.all(
-                            color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+                            color: isDark
+                                ? Colors.grey[700]!
+                                : Colors.grey[200]!,
                           ),
                         ),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Day number

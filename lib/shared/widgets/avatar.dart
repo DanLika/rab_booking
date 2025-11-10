@@ -110,7 +110,6 @@ class PremiumAvatar extends StatelessWidget {
       imageUrl: imageUrl,
       initials: initials,
       icon: icon,
-      size: AvatarSize.medium,
       backgroundColor: backgroundColor,
       foregroundColor: foregroundColor,
       showBorder: showBorder,
@@ -176,9 +175,11 @@ class PremiumAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final effectiveRadius = radius ?? _getRadiusForSize(size);
-    final effectiveBackgroundColor = backgroundColor ??
+    final effectiveBackgroundColor =
+        backgroundColor ??
         (isDark ? AppColors.surfaceVariantDark : AppColors.authPrimary);
-    final effectiveForegroundColor = foregroundColor ??
+    final effectiveForegroundColor =
+        foregroundColor ??
         (backgroundColor != null
             ? Colors.white
             : (isDark ? AppColors.textPrimaryDark : Colors.white));
@@ -191,7 +192,8 @@ class PremiumAvatar extends StatelessWidget {
         color: effectiveBackgroundColor,
         border: showBorder
             ? Border.all(
-                color: borderColor ??
+                color:
+                    borderColor ??
                     (isDark ? AppColors.surfaceDark : Colors.white),
                 width: borderWidth,
               )
@@ -199,7 +201,11 @@ class PremiumAvatar extends StatelessWidget {
         boxShadow: enableShadow ? AppShadows.elevation2 : null,
       ),
       child: ClipOval(
-        child: _buildAvatarContent(isDark, effectiveRadius, effectiveForegroundColor),
+        child: _buildAvatarContent(
+          isDark,
+          effectiveRadius,
+          effectiveForegroundColor,
+        ),
       ),
     );
 
@@ -241,26 +247,35 @@ class PremiumAvatar extends StatelessWidget {
     return avatar;
   }
 
-  Widget _buildAvatarContent(bool isDark, double radius, Color foregroundColor) {
+  Widget _buildAvatarContent(
+    bool isDark,
+    double radius,
+    Color foregroundColor,
+  ) {
     // Image avatar
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       return CachedNetworkImage(
         imageUrl: imageUrl!,
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(
-          color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight,
+          color: isDark
+              ? AppColors.surfaceVariantDark
+              : AppColors.surfaceVariantLight,
           child: Center(
             child: SizedBox(
               width: radius * 0.5,
               height: radius * 0.5,
               child: const CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.authPrimary),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.authPrimary,
+                ),
               ),
             ),
           ),
         ),
-        errorWidget: (context, url, error) => _buildFallbackContent(radius, foregroundColor),
+        errorWidget: (context, url, error) =>
+            _buildFallbackContent(radius, foregroundColor),
       );
     }
 
@@ -272,7 +287,9 @@ class PremiumAvatar extends StatelessWidget {
     if (initials != null && initials!.isNotEmpty) {
       return Center(
         child: Text(
-          initials!.substring(0, initials!.length > 2 ? 2 : initials!.length).toUpperCase(),
+          initials!
+              .substring(0, initials!.length > 2 ? 2 : initials!.length)
+              .toUpperCase(),
           style: _getTextStyleForSize(size).copyWith(
             color: foregroundColor,
             fontWeight: AppTypography.weightSemibold,
@@ -378,15 +395,15 @@ class PremiumAvatarGroup extends StatelessWidget {
       child: Stack(
         children: [
           ...visibleAvatars.asMap().entries.map(
-                (entry) => Positioned(
-                  left: entry.key * (_getHeightForSize(size) - overlap),
-                  child: PremiumAvatar(
-                    imageUrl: entry.value,
-                    size: size,
-                    showBorder: true,
-                  ),
-                ),
+            (entry) => Positioned(
+              left: entry.key * (_getHeightForSize(size) - overlap),
+              child: PremiumAvatar(
+                imageUrl: entry.value,
+                size: size,
+                showBorder: true,
               ),
+            ),
+          ),
           if (remainingCount > 0)
             Positioned(
               left: visibleAvatars.length * (_getHeightForSize(size) - overlap),

@@ -12,7 +12,7 @@ class BookingService {
   final _uuid = const Uuid();
 
   BookingService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Create a new booking in Firestore
   ///
@@ -67,8 +67,8 @@ class BookingService {
       final depositAmount = paymentOption == 'none'
           ? 0.0
           : paymentOption == 'deposit'
-              ? totalPrice * 0.2
-              : totalPrice;
+          ? totalPrice * 0.2
+          : totalPrice;
 
       // Determine initial status based on widget mode and payment method
       BookingStatus status;
@@ -77,7 +77,8 @@ class BookingService {
       if (requireOwnerApproval || paymentMethod == 'none') {
         // bookingPending mode or no payment - requires owner approval
         status = BookingStatus.pending;
-        paymentStatusValue = 'not_required'; // Payment not required for pending bookings
+        paymentStatusValue =
+            'not_required'; // Payment not required for pending bookings
       } else if (paymentMethod == 'bank_transfer') {
         // Bank transfer - pending payment confirmation
         status = BookingStatus.pending;
@@ -100,7 +101,6 @@ class BookingService {
         checkOut: checkOut,
         status: status,
         totalPrice: totalPrice,
-        paidAmount: 0, // Not paid yet
         advanceAmount: depositAmount,
         paymentMethod: paymentMethod,
         paymentStatus: paymentStatusValue,
@@ -114,20 +114,29 @@ class BookingService {
       final docRef = _firestore.collection('bookings').doc(bookingId);
       final bookingData = {
         ...booking.toJson(),
-        'booking_reference': bookingReference, // Required by Stripe Cloud Function
+        'booking_reference':
+            bookingReference, // Required by Stripe Cloud Function
         'property_id': propertyId, // Required by Stripe Cloud Function
         'deposit_amount': depositAmount, // Required by Stripe Cloud Function
-        'require_owner_approval': requireOwnerApproval, // For pending approval workflow
+        'require_owner_approval':
+            requireOwnerApproval, // For pending approval workflow
       };
 
       await docRef.set(bookingData);
 
-      LoggingService.logSuccess('[BookingService] Booking created: $bookingReference (ID: $bookingId)');
-      LoggingService.logDebug('   Deposit amount: €${depositAmount.toStringAsFixed(2)}');
+      LoggingService.logSuccess(
+        '[BookingService] Booking created: $bookingReference (ID: $bookingId)',
+      );
+      LoggingService.logDebug(
+        '   Deposit amount: €${depositAmount.toStringAsFixed(2)}',
+      );
 
       return booking;
     } catch (e) {
-      await LoggingService.logError('[BookingService] Error creating booking', e);
+      await LoggingService.logError(
+        '[BookingService] Error creating booking',
+        e,
+      );
       throw BookingServiceException('Failed to create booking: $e');
     }
   }
@@ -141,12 +150,12 @@ class BookingService {
         return null;
       }
 
-      return BookingModel.fromJson({
-        'id': doc.id,
-        ...doc.data()!,
-      });
+      return BookingModel.fromJson({'id': doc.id, ...doc.data()!});
     } catch (e) {
-      await LoggingService.logError('[BookingService] Error fetching booking', e);
+      await LoggingService.logError(
+        '[BookingService] Error fetching booking',
+        e,
+      );
       throw BookingServiceException('Failed to fetch booking: $e');
     }
   }
@@ -169,7 +178,10 @@ class BookingService {
         ...query.docs.first.data(),
       });
     } catch (e) {
-      await LoggingService.logError('[BookingService] Error fetching booking by reference', e);
+      await LoggingService.logError(
+        '[BookingService] Error fetching booking by reference',
+        e,
+      );
       throw BookingServiceException('Failed to fetch booking: $e');
     }
   }
@@ -185,9 +197,14 @@ class BookingService {
         'updated_at': FieldValue.serverTimestamp(),
       });
 
-      LoggingService.logSuccess('[BookingService] Booking $bookingId status updated to $status');
+      LoggingService.logSuccess(
+        '[BookingService] Booking $bookingId status updated to $status',
+      );
     } catch (e) {
-      await LoggingService.logError('[BookingService] Error updating booking status', e);
+      await LoggingService.logError(
+        '[BookingService] Error updating booking status',
+        e,
+      );
       throw BookingServiceException('Failed to update booking status: $e');
     }
   }
@@ -207,9 +224,14 @@ class BookingService {
         'updated_at': FieldValue.serverTimestamp(),
       });
 
-      LoggingService.logSuccess('[BookingService] Booking $bookingId cancelled');
+      LoggingService.logSuccess(
+        '[BookingService] Booking $bookingId cancelled',
+      );
     } catch (e) {
-      await LoggingService.logError('[BookingService] Error cancelling booking', e);
+      await LoggingService.logError(
+        '[BookingService] Error cancelling booking',
+        e,
+      );
       throw BookingServiceException('Failed to cancel booking: $e');
     }
   }
@@ -220,7 +242,8 @@ class BookingService {
   /// Example: BK-20250127-3456
   String _generateBookingReference() {
     final now = DateTime.now();
-    final dateStr = '${now.year}'
+    final dateStr =
+        '${now.year}'
         '${now.month.toString().padLeft(2, '0')}'
         '${now.day.toString().padLeft(2, '0')}';
 

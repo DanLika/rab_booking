@@ -33,7 +33,8 @@ enum UserRole {
   bool get isAdmin => this == UserRole.admin;
 
   /// Check if user can manage properties
-  bool get canManageProperties => this == UserRole.owner || this == UserRole.admin;
+  bool get canManageProperties =>
+      this == UserRole.owner || this == UserRole.admin;
 
   /// Parse from string value
   static UserRole fromString(String value) {
@@ -228,7 +229,7 @@ enum PropertyAmenity {
 
   /// Parse list from string list
   static List<PropertyAmenity> fromStringList(List<String> values) {
-    return values.map((v) => fromString(v)).toList();
+    return values.map(fromString).toList();
   }
 
   /// Convert list to string list
@@ -365,12 +366,16 @@ enum BookingStatus {
 
   /// Check if booking is active (currently in use or confirmed)
   bool get isActive {
-    return this == BookingStatus.confirmed || this == BookingStatus.inProgress || this == BookingStatus.checkedIn;
+    return this == BookingStatus.confirmed ||
+        this == BookingStatus.inProgress ||
+        this == BookingStatus.checkedIn;
   }
 
   /// Check if booking is in final state (cannot be modified)
   bool get isFinal {
-    return this == BookingStatus.completed || this == BookingStatus.cancelled || this == BookingStatus.checkedOut;
+    return this == BookingStatus.completed ||
+        this == BookingStatus.cancelled ||
+        this == BookingStatus.checkedOut;
   }
 
   static BookingStatus fromString(String value) {

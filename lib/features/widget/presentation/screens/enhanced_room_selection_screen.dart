@@ -22,11 +22,7 @@ class EnhancedRoomSelectionScreen extends ConsumerStatefulWidget {
   final String? propertyId;
   final String? unitId;
 
-  const EnhancedRoomSelectionScreen({
-    super.key,
-    this.propertyId,
-    this.unitId,
-  });
+  const EnhancedRoomSelectionScreen({super.key, this.propertyId, this.unitId});
 
   @override
   ConsumerState<EnhancedRoomSelectionScreen> createState() =>
@@ -63,10 +59,7 @@ class _EnhancedRoomSelectionScreenState
         elevation: 0,
         title: const Text(
           'Book Your Stay',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -112,12 +105,19 @@ class _EnhancedRoomSelectionScreenState
                 children: [
                   Text(
                     'Select your dates',
-                    style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Click start date, then click end date to select your stay',
-                    style: GoogleFonts.inter(fontSize: 13, color: colors.textSecondary),
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: colors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -157,7 +157,11 @@ class _EnhancedRoomSelectionScreenState
               children: [
                 Text(
                   'Choose your room',
-                  style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildRoomsList(colors),
@@ -189,102 +193,109 @@ class _EnhancedRoomSelectionScreenState
             Expanded(
               flex: 3,
               child: Container(
-            decoration: BoxDecoration(
-              color: colors.backgroundPrimary,
-              border: Border(
-                right: BorderSide(color: colors.borderDefault),
+                decoration: BoxDecoration(
+                  color: colors.backgroundPrimary,
+                  border: Border(
+                    right: BorderSide(color: colors.borderDefault),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Choose your room',
+                        style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildRoomsList(colors),
+                    ],
+                  ),
+                ),
               ),
             ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Choose your room',
-                    style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600, color: colors.textPrimary),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildRoomsList(colors),
-                ],
+
+            // Right: Calendar (70%)
+            Expanded(
+              flex: 7,
+              child: Container(
+                color: colors.backgroundCard,
+                child: Column(
+                  children: [
+                    // Date selection header
+                    _buildDateSelectionHeader(colors),
+
+                    // Calendar
+                    if (_selectedUnitId != null)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Click start date, then click end date to select your stay',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Expanded(
+                                child: YearGridCalendarWidget(
+                                  unitId: _selectedUnitId!,
+                                  onRangeSelected: (start, end) {
+                                    setState(() {
+                                      _checkIn = start;
+                                      _checkOut = end;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.hotel_outlined,
+                                size: 80,
+                                color: colors.borderDefault,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Select a room to view availability',
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    // Continue button
+                    if (_checkIn != null &&
+                        _checkOut != null &&
+                        _selectedUnitId != null)
+                      _buildContinueButton(colors),
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
-
-        // Right: Calendar (70%)
-        Expanded(
-          flex: 7,
-          child: Container(
-            color: colors.backgroundCard,
-            child: Column(
-              children: [
-                // Date selection header
-                _buildDateSelectionHeader(colors),
-
-                // Calendar
-                if (_selectedUnitId != null)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Click start date, then click end date to select your stay',
-                            style: GoogleFonts.inter(fontSize: 13, color: colors.textSecondary),
-                          ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                            child: YearGridCalendarWidget(
-                              unitId: _selectedUnitId!,
-                              onRangeSelected: (start, end) {
-                                setState(() {
-                                  _checkIn = start;
-                                  _checkOut = end;
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.hotel_outlined,
-                            size: 80,
-                            color: colors.borderDefault,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Select a room to view availability',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                // Continue button
-                if (_checkIn != null &&
-                    _checkOut != null &&
-                    _selectedUnitId != null)
-                  _buildContinueButton(colors),
-
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-        ),
           ],
         ),
       ),
@@ -300,9 +311,7 @@ class _EnhancedRoomSelectionScreenState
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: colors.backgroundCard,
-        border: Border(
-          bottom: BorderSide(color: colors.borderDefault),
-        ),
+        border: Border(bottom: BorderSide(color: colors.borderDefault)),
       ),
       child: Column(
         children: [
@@ -352,10 +361,7 @@ class _EnhancedRoomSelectionScreenState
                   Expanded(
                     child: _buildDateDisplay(colors, 'Check-in', _checkIn!),
                   ),
-                  Icon(
-                    Icons.arrow_forward,
-                    color: colors.primary,
-                  ),
+                  Icon(Icons.arrow_forward, color: colors.primary),
                   Expanded(
                     child: _buildDateDisplay(colors, 'Check-out', _checkOut!),
                   ),
@@ -394,7 +400,10 @@ class _EnhancedRoomSelectionScreenState
         children: [
           Icon(icon, size: 20, color: colors.textSecondary),
           const SizedBox(width: 8),
-          Text(label, style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary)),
+          Text(
+            label,
+            style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
+          ),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.remove_circle_outline, size: 20),
@@ -406,7 +415,11 @@ class _EnhancedRoomSelectionScreenState
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               count.toString(),
-              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
             ),
           ),
           IconButton(
@@ -420,24 +433,21 @@ class _EnhancedRoomSelectionScreenState
     );
   }
 
-  Widget _buildDateDisplay(WidgetColorScheme colors, String label, DateTime date) {
+  Widget _buildDateDisplay(
+    WidgetColorScheme colors,
+    String label,
+    DateTime date,
+  ) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            color: colors.textSecondary,
-          ),
+          style: GoogleFonts.inter(fontSize: 12, color: colors.textSecondary),
         ),
         const SizedBox(height: 4),
         Text(
           DateFormat('MMM d, yyyy').format(date),
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -456,7 +466,9 @@ class _EnhancedRoomSelectionScreenState
 
     // Fetch units for the specific property from URL
     return FutureBuilder<List<UnitModel>>(
-      future: ref.watch(unitRepositoryProvider).fetchUnitsByProperty(widget.propertyId!),
+      future: ref
+          .watch(unitRepositoryProvider)
+          .fetchUnitsByProperty(widget.propertyId!),
       builder: (context, unitsSnapshot) {
         if (unitsSnapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -509,9 +521,7 @@ class _EnhancedRoomSelectionScreenState
           color: colors.backgroundCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? colors.primary
-                : colors.borderDefault,
+            color: isSelected ? colors.primary : colors.borderDefault,
             width: isSelected ? 3 : 1,
           ),
           boxShadow: isSelected
@@ -554,20 +564,23 @@ class _EnhancedRoomSelectionScreenState
                 children: [
                   Text(
                     unit.name,
-                    style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(
-                        Icons.people,
-                        size: 16,
-                        color: colors.textSecondary,
-                      ),
+                      Icon(Icons.people, size: 16, color: colors.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         '${unit.maxGuests} guests',
-                        style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: colors.textSecondary,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Icon(
@@ -578,15 +591,22 @@ class _EnhancedRoomSelectionScreenState
                       const SizedBox(width: 4),
                       Text(
                         '${unit.bedrooms} ${unit.bedrooms == 1 ? 'bedroom' : 'bedrooms'}',
-                        style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: colors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
-                  if (unit.description != null && unit.description!.isNotEmpty) ...[
+                  if (unit.description != null &&
+                      unit.description!.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
                       unit.description!,
-                      style: GoogleFonts.inter(fontSize: 14, color: colors.textSecondary),
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: colors.textSecondary,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -624,9 +644,7 @@ class _EnhancedRoomSelectionScreenState
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: colors.backgroundCard,
-        border: Border(
-          top: BorderSide(color: colors.borderDefault),
-        ),
+        border: Border(top: BorderSide(color: colors.borderDefault)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha((0.05 * 255).toInt()),
@@ -644,10 +662,13 @@ class _EnhancedRoomSelectionScreenState
             child: SizedBox(
               width: isMobile ? double.infinity : null,
               child: ElevatedButton.icon(
-                onPressed: () => _handleContinue(),
+                onPressed: _handleContinue,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 32),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 18,
+                    horizontal: 32,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -655,7 +676,10 @@ class _EnhancedRoomSelectionScreenState
                 icon: const Icon(Icons.arrow_forward_rounded, size: 20),
                 label: Text(
                   'Continue - $nights ${nights == 1 ? 'night' : 'nights'}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -702,7 +726,6 @@ class _EnhancedRoomSelectionScreenState
                 'Maximum ${unit.maxGuests} ${unit.maxGuests == 1 ? 'guest' : 'guests'} allowed for this unit. You selected $totalGuests guests.',
               ),
               backgroundColor: colors.error,
-              duration: const Duration(seconds: 4),
             ),
           );
         }
@@ -729,4 +752,3 @@ class _EnhancedRoomSelectionScreenState
     }
   }
 }
-

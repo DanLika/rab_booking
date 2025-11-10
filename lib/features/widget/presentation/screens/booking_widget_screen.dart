@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -22,7 +23,8 @@ class BookingWidgetScreen extends ConsumerStatefulWidget {
   const BookingWidgetScreen({super.key});
 
   @override
-  ConsumerState<BookingWidgetScreen> createState() => _BookingWidgetScreenState();
+  ConsumerState<BookingWidgetScreen> createState() =>
+      _BookingWidgetScreenState();
 }
 
 class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
@@ -84,7 +86,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Check if both property and unit IDs are provided
       if (_propertyId == null || _propertyId!.isEmpty) {
         setState(() {
-          _validationError = 'Missing property parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
+          _validationError =
+              'Missing property parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
           _isValidating = false;
         });
         return;
@@ -92,14 +95,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       if (_unitId.isEmpty) {
         setState(() {
-          _validationError = 'Missing unit parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
+          _validationError =
+              'Missing unit parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
           _isValidating = false;
         });
         return;
       }
 
       // Fetch property data first
-      final property = await ref.read(propertyByIdProvider(_propertyId!).future);
+      final property = await ref.read(
+        propertyByIdProvider(_propertyId!).future,
+      );
 
       if (property == null) {
         setState(() {
@@ -110,11 +116,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
 
       // Fetch unit data from the specific property
-      final unit = await ref.read(unitByIdProvider(_propertyId!, _unitId).future);
+      final unit = await ref.read(
+        unitByIdProvider(_propertyId!, _unitId).future,
+      );
 
       if (unit == null) {
         setState(() {
-          _validationError = 'Unit not found.\n\nUnit ID: $_unitId\nProperty ID: $_propertyId';
+          _validationError =
+              'Unit not found.\n\nUnit ID: $_unitId\nProperty ID: $_propertyId';
           _isValidating = false;
         });
         return;
@@ -182,20 +191,29 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Show loading screen during validation
     if (_isValidating) {
       return Scaffold(
-        backgroundColor: getColor(MinimalistColors.backgroundPrimary, MinimalistColorsDark.backgroundPrimary),
+        backgroundColor: getColor(
+          MinimalistColors.backgroundPrimary,
+          MinimalistColorsDark.backgroundPrimary,
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(
-                color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
+                color: getColor(
+                  MinimalistColors.buttonPrimary,
+                  MinimalistColorsDark.buttonPrimary,
+                ),
               ),
               const SizedBox(height: 24),
               Text(
                 'Loading booking widget...',
                 style: TextStyle(
                   fontSize: 16,
-                  color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                  color: getColor(
+                    MinimalistColors.textSecondary,
+                    MinimalistColorsDark.textSecondary,
+                  ),
                 ),
               ),
             ],
@@ -207,7 +225,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Show error screen if validation failed
     if (_validationError != null) {
       return Scaffold(
-        backgroundColor: getColor(MinimalistColors.backgroundPrimary, MinimalistColorsDark.backgroundPrimary),
+        backgroundColor: getColor(
+          MinimalistColors.backgroundPrimary,
+          MinimalistColorsDark.backgroundPrimary,
+        ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
@@ -217,7 +238,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 Icon(
                   Icons.error_outline,
                   size: 64,
-                  color: getColor(MinimalistColors.error, MinimalistColorsDark.error),
+                  color: getColor(
+                    MinimalistColors.error,
+                    MinimalistColorsDark.error,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Text(
@@ -225,7 +249,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                    color: getColor(
+                      MinimalistColors.textPrimary,
+                      MinimalistColorsDark.textPrimary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -234,19 +261,26 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
-                    color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                    color: getColor(
+                      MinimalistColors.textSecondary,
+                      MinimalistColorsDark.textSecondary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
-                  onPressed: () {
-                    _validateUnitAndProperty();
-                  },
+                  onPressed: _validateUnitAndProperty,
                   icon: const Icon(Icons.refresh),
                   label: const Text('Retry'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
-                    foregroundColor: getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
+                    backgroundColor: getColor(
+                      MinimalistColors.buttonPrimary,
+                      MinimalistColorsDark.buttonPrimary,
+                    ),
+                    foregroundColor: getColor(
+                      MinimalistColors.buttonPrimaryText,
+                      MinimalistColorsDark.buttonPrimaryText,
+                    ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 12,
@@ -264,11 +298,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
     return Scaffold(
-      backgroundColor: getColor(MinimalistColors.backgroundPrimary, MinimalistColorsDark.backgroundPrimary),
+      backgroundColor: getColor(
+        MinimalistColors.backgroundPrimary,
+        MinimalistColorsDark.backgroundPrimary,
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final screenWidth = constraints.maxWidth;
-          final forceMonthView = screenWidth < 1024; // Year view only on desktop
+          final forceMonthView =
+              screenWidth < 1024; // Year view only on desktop
 
           return Stack(
             children: [
@@ -280,7 +318,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   setState(() {
                     _checkIn = start;
                     _checkOut = end;
-                    _pillBarPosition = null; // Reset position when new dates selected
+                    _pillBarPosition =
+                        null; // Reset position when new dates selected
                   });
                 },
               ),
@@ -312,10 +351,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? MinimalistColorsDark.backgroundPrimary : MinimalistColors.backgroundPrimary,
+        color: isDarkMode
+            ? MinimalistColorsDark.backgroundPrimary
+            : MinimalistColors.backgroundPrimary,
         boxShadow: [
           BoxShadow(
-            color: isDarkMode ? MinimalistColorsDark.borderLight : MinimalistColors.borderLight,
+            color: isDarkMode
+                ? MinimalistColorsDark.borderLight
+                : MinimalistColors.borderLight,
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -330,70 +373,76 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-            // Custom message
-            if (contactOptions?.customMessage != null &&
-                contactOptions!.customMessage!.isNotEmpty) ...[
-              Text(
-                contactOptions.customMessage!,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: isDarkMode ? MinimalistColorsDark.textPrimary : MinimalistColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: SpacingTokens.m),
-            ],
+                  // Custom message
+                  if (contactOptions?.customMessage != null &&
+                      contactOptions!.customMessage!.isNotEmpty) ...[
+                    Text(
+                      contactOptions.customMessage!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDarkMode
+                            ? MinimalistColorsDark.textPrimary
+                            : MinimalistColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: SpacingTokens.m),
+                  ],
 
-            // Contact methods heading
-            const Text(
-              'Contact us for booking:',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: MinimalistColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: SpacingTokens.s),
+                  // Contact methods heading
+                  const Text(
+                    'Contact us for booking:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: MinimalistColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: SpacingTokens.s),
 
-            // Phone
-            if (contactOptions?.showPhone == true &&
-                contactOptions?.phoneNumber != null &&
-                contactOptions!.phoneNumber!.isNotEmpty)
-              _buildContactButton(
-                icon: Icons.phone,
-                label: 'Phone',
-                value: contactOptions.phoneNumber!,
-                onTap: () => _launchUrl('tel:${contactOptions.phoneNumber}'),
-              ),
+                  // Phone
+                  if (contactOptions?.showPhone == true &&
+                      contactOptions?.phoneNumber != null &&
+                      contactOptions!.phoneNumber!.isNotEmpty)
+                    _buildContactButton(
+                      icon: Icons.phone,
+                      label: 'Phone',
+                      value: contactOptions.phoneNumber!,
+                      onTap: () =>
+                          _launchUrl('tel:${contactOptions.phoneNumber}'),
+                    ),
 
-            // Email
-            if (contactOptions?.showEmail == true &&
-                contactOptions?.emailAddress != null &&
-                contactOptions!.emailAddress!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: SpacingTokens.xs),
-                child: _buildContactButton(
-                  icon: Icons.email,
-                  label: 'Email',
-                  value: contactOptions.emailAddress!,
-                  onTap: () => _launchUrl('mailto:${contactOptions.emailAddress}'),
-                ),
-              ),
+                  // Email
+                  if (contactOptions?.showEmail == true &&
+                      contactOptions?.emailAddress != null &&
+                      contactOptions!.emailAddress!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: SpacingTokens.xs),
+                      child: _buildContactButton(
+                        icon: Icons.email,
+                        label: 'Email',
+                        value: contactOptions.emailAddress!,
+                        onTap: () =>
+                            _launchUrl('mailto:${contactOptions.emailAddress}'),
+                      ),
+                    ),
 
-            // WhatsApp
-            if (contactOptions?.showWhatsApp == true &&
-                contactOptions?.whatsAppNumber != null &&
-                contactOptions!.whatsAppNumber!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: SpacingTokens.xs),
-                child: _buildContactButton(
-                  icon: Icons.chat,
-                  label: 'WhatsApp',
-                  value: contactOptions.whatsAppNumber!,
-                  onTap: () => _launchUrl('https://wa.me/${contactOptions.whatsAppNumber}'),
-                  color: const Color(0xFF25D366), // WhatsApp green
-                ),
-              ),
+                  // WhatsApp
+                  if (contactOptions?.showWhatsApp == true &&
+                      contactOptions?.whatsAppNumber != null &&
+                      contactOptions!.whatsAppNumber!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: SpacingTokens.xs),
+                      child: _buildContactButton(
+                        icon: Icons.chat,
+                        label: 'WhatsApp',
+                        value: contactOptions.whatsAppNumber!,
+                        onTap: () => _launchUrl(
+                          'https://wa.me/${contactOptions.whatsAppNumber}',
+                        ),
+                        color: const Color(0xFF25D366), // WhatsApp green
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -466,13 +515,19 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   }
 
   /// Build floating draggable pill bar that overlays the calendar
-  Widget _buildFloatingDraggablePillBar(String unitId, BoxConstraints constraints, bool isDarkMode) {
+  Widget _buildFloatingDraggablePillBar(
+    String unitId,
+    BoxConstraints constraints,
+    bool isDarkMode,
+  ) {
     // Watch price calculation
-    final priceCalc = ref.watch(bookingPriceProvider(
-      unitId: unitId,
-      checkIn: _checkIn,
-      checkOut: _checkOut,
-    ));
+    final priceCalc = ref.watch(
+      bookingPriceProvider(
+        unitId: unitId,
+        checkIn: _checkIn,
+        checkOut: _checkOut,
+      ),
+    );
 
     return priceCalc.when(
       data: (calculation) {
@@ -511,11 +566,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (_showGuestForm) {
           // Step 2: Responsive height based on screen size
           if (screenWidth < 600) {
-            estimatedHeight = screenHeight * 0.85; // Mobile: 85% of screen height
+            estimatedHeight =
+                screenHeight * 0.85; // Mobile: 85% of screen height
           } else if (screenWidth < 1024) {
-            estimatedHeight = screenHeight * 0.75; // Tablet: 75% of screen height
+            estimatedHeight =
+                screenHeight * 0.75; // Tablet: 75% of screen height
           } else {
-            estimatedHeight = screenHeight * 0.65; // Desktop: 65% of screen height
+            estimatedHeight =
+                screenHeight * 0.65; // Desktop: 65% of screen height
           }
         } else {
           // Step 1: Fixed small height for compact view
@@ -523,8 +581,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
 
         final defaultPosition = Offset(
-          (constraints.maxWidth / 2) - (pillBarWidth / 2), // Center horizontally with dynamic width
-          (constraints.maxHeight / 2) - (estimatedHeight / 2), // Center vertically
+          (constraints.maxWidth / 2) -
+              (pillBarWidth / 2), // Center horizontally with dynamic width
+          (constraints.maxHeight / 2) -
+              (estimatedHeight / 2), // Center vertically
         );
 
         final position = _pillBarPosition ?? defaultPosition;
@@ -537,8 +597,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             onPanUpdate: (details) {
               setState(() {
                 _pillBarPosition = Offset(
-                  (position.dx + details.delta.dx).clamp(0.0, constraints.maxWidth - pillBarWidth),
-                  (position.dy + details.delta.dy).clamp(0.0, constraints.maxHeight - 80),
+                  (position.dx + details.delta.dx).clamp(
+                    0.0,
+                    constraints.maxWidth - pillBarWidth,
+                  ),
+                  (position.dy + details.delta.dy).clamp(
+                    0.0,
+                    constraints.maxHeight - 80,
+                  ),
                 );
               });
             },
@@ -547,13 +613,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               borderRadius: BorderRadius.circular(30),
               child: Container(
                 width: pillBarWidth,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
-                  color: (isDarkMode ? MinimalistColorsDark.backgroundPrimary : MinimalistColors.backgroundPrimary).withValues(alpha: 0.95),
+                  color:
+                      (isDarkMode
+                              ? MinimalistColorsDark.backgroundPrimary
+                              : MinimalistColors.backgroundPrimary)
+                          .withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: isDarkMode ? MinimalistColorsDark.borderLight : MinimalistColors.borderLight,
-                    width: 1,
+                    color: isDarkMode
+                        ? MinimalistColorsDark.borderLight
+                        : MinimalistColors.borderLight,
                   ),
                 ),
                 child: _buildPillBarContent(calculation, isDarkMode),
@@ -568,7 +642,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   }
 
   /// Build the content of the pill bar (dates, price, buttons)
-  Widget _buildPillBarContent(BookingPriceCalculation calculation, bool isDarkMode) {
+  Widget _buildPillBarContent(
+    BookingPriceCalculation calculation,
+    bool isDarkMode,
+  ) {
     // Check screen width for responsive layout
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth >= 768;
@@ -609,10 +686,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   decoration: BoxDecoration(
                     color: MinimalistColors.backgroundSecondary,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: MinimalistColors.borderLight,
-                      width: 1,
-                    ),
+                    border: Border.all(color: MinimalistColors.borderLight),
                   ),
                   child: const Icon(
                     Icons.close,
@@ -641,10 +715,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   ),
                   const SizedBox(width: SpacingTokens.m),
                   // Right column: Payment options + button (45%)
-                  Expanded(
-                    flex: 45,
-                    child: _buildPaymentSection(calculation),
-                  ),
+                  Expanded(flex: 45, child: _buildPaymentSection(calculation)),
                 ],
               ),
             ),
@@ -679,10 +750,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 decoration: BoxDecoration(
                   color: MinimalistColors.backgroundSecondary,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: MinimalistColors.borderLight,
-                    width: 1,
-                  ),
+                  border: Border.all(color: MinimalistColors.borderLight),
                 ),
                 child: const Icon(
                   Icons.close,
@@ -740,17 +808,25 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               child: Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: getColor(MinimalistColors.backgroundSecondary, ColorTokens.pureWhite),
+                  color: getColor(
+                    MinimalistColors.backgroundSecondary,
+                    ColorTokens.pureWhite,
+                  ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: getColor(MinimalistColors.borderLight, MinimalistColorsDark.borderLight),
-                    width: 1,
+                    color: getColor(
+                      MinimalistColors.borderLight,
+                      MinimalistColorsDark.borderLight,
+                    ),
                   ),
                 ),
                 child: Icon(
                   Icons.close,
                   size: 16,
-                  color: getColor(MinimalistColors.textSecondary, ColorTokens.pureBlack),
+                  color: getColor(
+                    MinimalistColors.textSecondary,
+                    ColorTokens.pureBlack,
+                  ),
                 ),
               ),
             ),
@@ -762,11 +838,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary).withValues(alpha: 0.1),
+            color: getColor(
+              MinimalistColors.buttonPrimary,
+              MinimalistColorsDark.buttonPrimary,
+            ).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary).withValues(alpha: 0.3),
-              width: 1,
+              color: getColor(
+                MinimalistColors.buttonPrimary,
+                MinimalistColorsDark.buttonPrimary,
+              ).withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -775,7 +856,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               Icon(
                 Icons.calendar_month,
                 size: 18,
-                color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
+                color: getColor(
+                  MinimalistColors.buttonPrimary,
+                  MinimalistColorsDark.buttonPrimary,
+                ),
               ),
               const SizedBox(width: 8),
               Text(
@@ -783,14 +867,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                  color: getColor(
+                    MinimalistColors.textPrimary,
+                    MinimalistColorsDark.textPrimary,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
+                  color: getColor(
+                    MinimalistColors.buttonPrimary,
+                    MinimalistColorsDark.buttonPrimary,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -798,7 +888,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
+                    color: getColor(
+                      MinimalistColors.buttonPrimaryText,
+                      MinimalistColorsDark.buttonPrimaryText,
+                    ),
                   ),
                 ),
               ),
@@ -819,7 +912,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               decoration: BoxDecoration(
-                color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
+                color: getColor(
+                  MinimalistColors.buttonPrimary,
+                  MinimalistColorsDark.buttonPrimary,
+                ),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -827,7 +923,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
+                  color: getColor(
+                    MinimalistColors.buttonPrimaryText,
+                    MinimalistColorsDark.buttonPrimaryText,
+                  ),
                 ),
               ),
             ),
@@ -853,7 +952,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+              color: getColor(
+                MinimalistColors.textPrimary,
+                MinimalistColorsDark.textPrimary,
+              ),
             ),
           ),
           const SizedBox(height: SpacingTokens.s),
@@ -872,7 +974,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           if (_widgetSettings?.bankTransferConfig?.enabled == true)
             Padding(
               padding: EdgeInsets.only(
-                top: _widgetSettings?.stripeConfig?.enabled == true ? SpacingTokens.s : 0,
+                top: _widgetSettings?.stripeConfig?.enabled == true
+                    ? SpacingTokens.s
+                    : 0,
               ),
               child: _buildPaymentOption(
                 icon: Icons.account_balance,
@@ -886,8 +990,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           // Pay on Arrival option (always available for bookingInstant mode)
           Padding(
             padding: EdgeInsets.only(
-              top: (_widgetSettings?.stripeConfig?.enabled == true ||
-                    _widgetSettings?.bankTransferConfig?.enabled == true)
+              top:
+                  (_widgetSettings?.stripeConfig?.enabled == true ||
+                      _widgetSettings?.bankTransferConfig?.enabled == true)
                   ? SpacingTokens.s
                   : 0,
             ),
@@ -896,7 +1001,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               title: 'Pay on Arrival',
               subtitle: 'Pay at the property',
               value: 'payOnArrival',
-              depositAmount: null, // No deposit info for pay on arrival
             ),
           ),
 
@@ -913,10 +1017,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             decoration: BoxDecoration(
               color: MinimalistColors.backgroundSecondary,
               borderRadius: BorderTokens.circularMedium,
-              border: Border.all(
-                color: MinimalistColors.borderDefault,
-                width: BorderTokens.widthThin,
-              ),
+              border: Border.all(color: MinimalistColors.borderDefault),
             ),
             child: const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -953,8 +1054,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 ? null
                 : () => _handleConfirmBooking(calculation),
             style: ElevatedButton.styleFrom(
-              backgroundColor: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
-              foregroundColor: getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
+              backgroundColor: getColor(
+                MinimalistColors.buttonPrimary,
+                MinimalistColorsDark.buttonPrimary,
+              ),
+              foregroundColor: getColor(
+                MinimalistColors.buttonPrimaryText,
+                MinimalistColorsDark.buttonPrimaryText,
+              ),
               padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderTokens.circularRounded,
@@ -967,7 +1074,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
+                        getColor(
+                          MinimalistColors.buttonPrimaryText,
+                          MinimalistColorsDark.buttonPrimaryText,
+                        ),
                       ),
                     ),
                   )
@@ -976,7 +1086,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: getColor(MinimalistColors.buttonPrimaryText, MinimalistColorsDark.buttonPrimaryText),
+                      color: getColor(
+                        MinimalistColors.buttonPrimaryText,
+                        MinimalistColorsDark.buttonPrimaryText,
+                      ),
                     ),
                   ),
           ),
@@ -985,8 +1098,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     );
   }
 
-
-  Widget _buildGuestInfoForm(BookingPriceCalculation calculation, {bool showButton = true}) {
+  Widget _buildGuestInfoForm(
+    BookingPriceCalculation calculation, {
+    bool showButton = true,
+  }) {
     final isDarkMode = ref.watch(themeProvider);
 
     // Helper function to get theme-aware colors
@@ -1003,7 +1118,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+              color: getColor(
+                MinimalistColors.textPrimary,
+                MinimalistColorsDark.textPrimary,
+              ),
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
@@ -1012,25 +1130,40 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           TextFormField(
             controller: _nameController,
             style: TextStyle(
-              color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+              color: getColor(
+                MinimalistColors.textPrimary,
+                MinimalistColorsDark.textPrimary,
+              ),
             ),
             decoration: InputDecoration(
               labelText: 'Full Name *',
               hintText: 'John Doe',
               labelStyle: TextStyle(
-                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ),
               ),
               hintStyle: TextStyle(
-                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary).withValues(alpha: 0.5),
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ).withValues(alpha: 0.5),
               ),
               filled: true,
-              fillColor: getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary),
+              fillColor: getColor(
+                MinimalistColors.backgroundSecondary,
+                MinimalistColorsDark.backgroundSecondary,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
               ),
               prefixIcon: Icon(
                 Icons.person_outline,
-                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ),
               ),
             ),
             validator: (value) {
@@ -1047,25 +1180,40 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             style: TextStyle(
-              color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+              color: getColor(
+                MinimalistColors.textPrimary,
+                MinimalistColorsDark.textPrimary,
+              ),
             ),
             decoration: InputDecoration(
               labelText: 'Email *',
               hintText: 'john@example.com',
               labelStyle: TextStyle(
-                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ),
               ),
               hintStyle: TextStyle(
-                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary).withValues(alpha: 0.5),
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ).withValues(alpha: 0.5),
               ),
               filled: true,
-              fillColor: getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary),
+              fillColor: getColor(
+                MinimalistColors.backgroundSecondary,
+                MinimalistColorsDark.backgroundSecondary,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
               ),
               prefixIcon: Icon(
                 Icons.email_outlined,
-                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ),
               ),
             ),
             validator: (value) {
@@ -1085,25 +1233,40 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             controller: _phoneController,
             keyboardType: TextInputType.phone,
             style: TextStyle(
-              color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+              color: getColor(
+                MinimalistColors.textPrimary,
+                MinimalistColorsDark.textPrimary,
+              ),
             ),
             decoration: InputDecoration(
               labelText: 'Phone *',
               hintText: '+385 99 123 4567',
               labelStyle: TextStyle(
-                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ),
               ),
               hintStyle: TextStyle(
-                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary).withValues(alpha: 0.5),
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ).withValues(alpha: 0.5),
               ),
               filled: true,
-              fillColor: getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary),
+              fillColor: getColor(
+                MinimalistColors.backgroundSecondary,
+                MinimalistColorsDark.backgroundSecondary,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
               ),
               prefixIcon: Icon(
                 Icons.phone_outlined,
-                color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ),
               ),
             ),
             validator: (value) {
@@ -1129,7 +1292,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     : () => _handleConfirmBooking(calculation),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: MinimalistColors.buttonPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: SpacingTokens.m,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderTokens.circularRounded,
                   ),
@@ -1140,7 +1305,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : Text(
@@ -1204,13 +1371,24 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         decoration: BoxDecoration(
           border: Border.all(
             color: isSelected
-                ? getColor(MinimalistColors.borderBlack, MinimalistColorsDark.textPrimary)
-                : getColor(MinimalistColors.borderDefault, MinimalistColorsDark.borderDefault),
-            width: isSelected ? BorderTokens.widthMedium : BorderTokens.widthThin,
+                ? getColor(
+                    MinimalistColors.borderBlack,
+                    MinimalistColorsDark.textPrimary,
+                  )
+                : getColor(
+                    MinimalistColors.borderDefault,
+                    MinimalistColorsDark.borderDefault,
+                  ),
+            width: isSelected
+                ? BorderTokens.widthMedium
+                : BorderTokens.widthThin,
           ),
           borderRadius: BorderTokens.circularMedium,
           color: isSelected
-              ? getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary)
+              ? getColor(
+                  MinimalistColors.backgroundSecondary,
+                  MinimalistColorsDark.backgroundSecondary,
+                )
               : null,
         ),
         child: Row(
@@ -1223,8 +1401,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
-                      ? getColor(MinimalistColors.borderBlack, MinimalistColorsDark.textPrimary)
-                      : getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                      ? getColor(
+                          MinimalistColors.borderBlack,
+                          MinimalistColorsDark.textPrimary,
+                        )
+                      : getColor(
+                          MinimalistColors.textSecondary,
+                          MinimalistColorsDark.textSecondary,
+                        ),
                   width: 2,
                 ),
               ),
@@ -1235,7 +1419,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         height: 12,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: getColor(MinimalistColors.buttonPrimary, MinimalistColorsDark.buttonPrimary),
+                          color: getColor(
+                            MinimalistColors.buttonPrimary,
+                            MinimalistColorsDark.buttonPrimary,
+                          ),
                         ),
                       ),
                     )
@@ -1247,8 +1434,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             Icon(
               icon,
               color: isSelected
-                  ? getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary)
-                  : getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                  ? getColor(
+                      MinimalistColors.textPrimary,
+                      MinimalistColorsDark.textPrimary,
+                    )
+                  : getColor(
+                      MinimalistColors.textSecondary,
+                      MinimalistColorsDark.textSecondary,
+                    ),
               size: 28,
             ),
             const SizedBox(width: SpacingTokens.s),
@@ -1263,7 +1456,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                      color: getColor(
+                        MinimalistColors.textPrimary,
+                        MinimalistColorsDark.textPrimary,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -1271,7 +1467,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                      color: getColor(
+                        MinimalistColors.textSecondary,
+                        MinimalistColorsDark.textSecondary,
+                      ),
                     ),
                   ),
                 ],
@@ -1285,7 +1484,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                  color: getColor(
+                    MinimalistColors.textPrimary,
+                    MinimalistColorsDark.textPrimary,
+                  ),
                 ),
               ),
           ],
@@ -1294,7 +1496,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     );
   }
 
-  Future<void> _handleConfirmBooking(BookingPriceCalculation calculation) async {
+  Future<void> _handleConfirmBooking(
+    BookingPriceCalculation calculation,
+  ) async {
     // Validate form
     if (!_formKey.currentState!.validate()) {
       return;
@@ -1313,7 +1517,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return;
     }
 
-    if (_checkOut!.isBefore(_checkIn!) || _checkOut!.isAtSameMomentAs(_checkIn!)) {
+    if (_checkOut!.isBefore(_checkIn!) ||
+        _checkOut!.isAtSameMomentAs(_checkIn!)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -1330,7 +1535,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Property information not loaded. Please refresh the page.'),
+            content: Text(
+              'Property information not loaded. Please refresh the page.',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -1356,7 +1563,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Sorry, these dates are no longer available. Please select different dates.'),
+              content: Text(
+                'Sorry, these dates are no longer available. Please select different dates.',
+              ),
               backgroundColor: Colors.red,
               duration: Duration(seconds: 5),
             ),
@@ -1372,7 +1581,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         return;
       }
 
-      final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
+      final widgetMode =
+          _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
       final bookingService = ref.read(bookingServiceProvider);
 
       // For bookingPending mode - create booking without payment
@@ -1390,7 +1600,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           totalPrice: calculation.totalPrice,
           paymentOption: 'none', // No payment for pending bookings
           paymentMethod: 'none',
-          requireOwnerApproval: true, // Always requires approval in bookingPending mode
+          requireOwnerApproval:
+              true, // Always requires approval in bookingPending mode
         );
 
         // Send email notifications (if configured)
@@ -1400,26 +1611,26 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           final propertyName = _unit?.name ?? 'Vacation Rental';
 
           // Send booking confirmation to guest
-          emailService.sendBookingConfirmationEmail(
+          unawaited(emailService.sendBookingConfirmationEmail(
             booking: booking,
             emailConfig: _widgetSettings!.emailConfig,
             propertyName: propertyName,
             bookingReference: bookingReference,
-          );
+          ));
 
           // Send owner notification (if owner email is available and configured)
           if (_widgetSettings!.emailConfig.sendOwnerNotification) {
             // Get owner email from property or use configured email
             final ownerEmail = _widgetSettings!.emailConfig.fromEmail;
             if (ownerEmail != null) {
-              emailService.sendOwnerNotificationEmail(
+              unawaited(emailService.sendOwnerNotificationEmail(
                 booking: booking,
                 emailConfig: _widgetSettings!.emailConfig,
                 propertyName: propertyName,
                 bookingReference: bookingReference,
                 ownerEmail: ownerEmail,
                 requiresApproval: true,
-              );
+              ));
             }
           }
 
@@ -1477,30 +1688,33 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         final propertyName = _unit?.name ?? 'Vacation Rental';
 
         // Calculate payment deadline (default 3 days from now)
-        final paymentDeadlineDays = _widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
-        final paymentDeadline = DateTime.now().add(Duration(days: paymentDeadlineDays));
+        final paymentDeadlineDays =
+            _widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
+        final paymentDeadline = DateTime.now().add(
+          Duration(days: paymentDeadlineDays),
+        );
         final dateFormat = DateFormat('dd.MM.yyyy');
 
-        emailService.sendBookingConfirmationEmail(
+        unawaited(emailService.sendBookingConfirmationEmail(
           booking: booking,
           emailConfig: _widgetSettings!.emailConfig,
           propertyName: propertyName,
           bookingReference: bookingReference,
           paymentDeadline: dateFormat.format(paymentDeadline),
-        );
+        ));
 
         // Send owner notification
         if (_widgetSettings!.emailConfig.sendOwnerNotification) {
           final ownerEmail = _widgetSettings!.emailConfig.fromEmail;
           if (ownerEmail != null) {
-            emailService.sendOwnerNotificationEmail(
+            unawaited(emailService.sendOwnerNotificationEmail(
               booking: booking,
               emailConfig: _widgetSettings!.emailConfig,
               propertyName: propertyName,
               bookingReference: bookingReference,
               ownerEmail: ownerEmail,
               requiresApproval: _widgetSettings?.requireOwnerApproval ?? false,
-            );
+            ));
           }
         }
 
@@ -1513,7 +1727,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       } else if (_selectedPaymentMethod == 'bankTransfer') {
         // Bank transfer - show instructions
         if (mounted) {
-          Navigator.of(context).push(
+          unawaited(Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => BankTransferScreen(
                 propertyId: _propertyId!,
@@ -1523,14 +1737,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 bookingReference: booking.id,
               ),
             ),
-          );
+          ));
         }
       } else if (_selectedPaymentMethod == 'payOnArrival') {
         // Pay on Arrival - show success message and reset form
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Booking confirmed! Pay on arrival at the property.'),
+              content: Text(
+                'Booking confirmed! Pay on arrival at the property.',
+              ),
               backgroundColor: MinimalistColors.success,
               duration: Duration(seconds: 5),
             ),
@@ -1568,7 +1784,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   }
 
   Widget _buildGuestCountPicker() {
-    final maxGuests = _unit?.maxGuests ?? 10; // Default to 10 if unit not loaded
+    final maxGuests =
+        _unit?.maxGuests ?? 10; // Default to 10 if unit not loaded
     final totalGuests = _adults + _children;
     final isAtCapacity = totalGuests >= maxGuests;
     final isDarkMode = ref.watch(themeProvider);
@@ -1579,10 +1796,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary),
+        color: getColor(
+          MinimalistColors.backgroundSecondary,
+          MinimalistColorsDark.backgroundSecondary,
+        ),
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(
-          color: getColor(MinimalistColors.borderDefault, MinimalistColorsDark.borderDefault),
+          color: getColor(
+            MinimalistColors.borderDefault,
+            MinimalistColorsDark.borderDefault,
+          ),
         ),
       ),
       child: Column(
@@ -1596,7 +1819,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                  color: getColor(
+                    MinimalistColors.textPrimary,
+                    MinimalistColorsDark.textPrimary,
+                  ),
                 ),
               ),
               if (_unit != null)
@@ -1605,7 +1831,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary),
+                    color: getColor(
+                      MinimalistColors.textSecondary,
+                      MinimalistColorsDark.textSecondary,
+                    ),
                   ),
                 ),
             ],
@@ -1620,7 +1849,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 children: [
                   Icon(
                     Icons.person,
-                    color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                    color: getColor(
+                      MinimalistColors.textPrimary,
+                      MinimalistColorsDark.textPrimary,
+                    ),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -1628,7 +1860,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     'Adults',
                     style: TextStyle(
                       fontSize: 14,
-                      color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                      color: getColor(
+                        MinimalistColors.textPrimary,
+                        MinimalistColorsDark.textPrimary,
+                      ),
                     ),
                   ),
                 ],
@@ -1645,7 +1880,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         : null,
                     icon: Icon(
                       Icons.remove_circle_outline,
-                      color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                      color: getColor(
+                        MinimalistColors.textPrimary,
+                        MinimalistColorsDark.textPrimary,
+                      ),
                     ),
                   ),
                   Container(
@@ -1656,7 +1894,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                        color: getColor(
+                          MinimalistColors.textPrimary,
+                          MinimalistColorsDark.textPrimary,
+                        ),
                       ),
                     ),
                   ),
@@ -1671,8 +1912,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     icon: Icon(
                       Icons.add_circle_outline,
                       color: isAtCapacity
-                          ? getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary).withValues(alpha: 0.5)
-                          : getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                          ? getColor(
+                              MinimalistColors.textSecondary,
+                              MinimalistColorsDark.textSecondary,
+                            ).withValues(alpha: 0.5)
+                          : getColor(
+                              MinimalistColors.textPrimary,
+                              MinimalistColorsDark.textPrimary,
+                            ),
                     ),
                   ),
                 ],
@@ -1690,7 +1937,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 children: [
                   Icon(
                     Icons.child_care,
-                    color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                    color: getColor(
+                      MinimalistColors.textPrimary,
+                      MinimalistColorsDark.textPrimary,
+                    ),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -1698,7 +1948,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     'Children',
                     style: TextStyle(
                       fontSize: 14,
-                      color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                      color: getColor(
+                        MinimalistColors.textPrimary,
+                        MinimalistColorsDark.textPrimary,
+                      ),
                     ),
                   ),
                 ],
@@ -1715,7 +1968,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         : null,
                     icon: Icon(
                       Icons.remove_circle_outline,
-                      color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                      color: getColor(
+                        MinimalistColors.textPrimary,
+                        MinimalistColorsDark.textPrimary,
+                      ),
                     ),
                   ),
                   Container(
@@ -1726,7 +1982,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                        color: getColor(
+                          MinimalistColors.textPrimary,
+                          MinimalistColorsDark.textPrimary,
+                        ),
                       ),
                     ),
                   ),
@@ -1741,8 +2000,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     icon: Icon(
                       Icons.add_circle_outline,
                       color: isAtCapacity
-                          ? getColor(MinimalistColors.textSecondary, MinimalistColorsDark.textSecondary).withValues(alpha: 0.5)
-                          : getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                          ? getColor(
+                              MinimalistColors.textSecondary,
+                              MinimalistColorsDark.textSecondary,
+                            ).withValues(alpha: 0.5)
+                          : getColor(
+                              MinimalistColors.textPrimary,
+                              MinimalistColorsDark.textPrimary,
+                            ),
                     ),
                   ),
                 ],
@@ -1756,12 +2021,23 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: isAtCapacity
-                ? getColor(MinimalistColors.error, MinimalistColorsDark.error).withValues(alpha: 0.1)
-                : getColor(MinimalistColors.backgroundSecondary, MinimalistColorsDark.backgroundSecondary),
+                  ? getColor(
+                      MinimalistColors.error,
+                      MinimalistColorsDark.error,
+                    ).withValues(alpha: 0.1)
+                  : getColor(
+                      MinimalistColors.backgroundSecondary,
+                      MinimalistColorsDark.backgroundSecondary,
+                    ),
               borderRadius: BorderRadius.circular(8),
               border: isAtCapacity
-                ? Border.all(color: getColor(MinimalistColors.error, MinimalistColorsDark.error), width: 1)
-                : null,
+                  ? Border.all(
+                      color: getColor(
+                        MinimalistColors.error,
+                        MinimalistColorsDark.error,
+                      ),
+                    )
+                  : null,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1769,8 +2045,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 Icon(
                   isAtCapacity ? Icons.warning : Icons.groups,
                   color: isAtCapacity
-                      ? getColor(MinimalistColors.error, MinimalistColorsDark.error)
-                      : getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                      ? getColor(
+                          MinimalistColors.error,
+                          MinimalistColorsDark.error,
+                        )
+                      : getColor(
+                          MinimalistColors.textPrimary,
+                          MinimalistColorsDark.textPrimary,
+                        ),
                   size: 14,
                 ),
                 const SizedBox(width: 6),
@@ -1782,8 +2064,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: isAtCapacity
-                        ? getColor(MinimalistColors.error, MinimalistColorsDark.error)
-                        : getColor(MinimalistColors.textPrimary, MinimalistColorsDark.textPrimary),
+                        ? getColor(
+                            MinimalistColors.error,
+                            MinimalistColorsDark.error,
+                          )
+                        : getColor(
+                            MinimalistColors.textPrimary,
+                            MinimalistColorsDark.textPrimary,
+                          ),
                   ),
                 ),
               ],
@@ -1821,5 +2109,4 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
     }
   }
-
 }

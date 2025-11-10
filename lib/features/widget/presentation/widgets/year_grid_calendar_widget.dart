@@ -67,9 +67,7 @@ class _YearGridCalendarWidgetState
             Expanded(
               child: calendarData.when(
                 data: (data) => _buildYearGrid(data, colors),
-                loading: () => const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stack) => Center(
                   child: Text(
                     'Greška pri učitavanju kalendara: $error',
@@ -127,10 +125,7 @@ class _YearGridCalendarWidgetState
               vertical: SpacingTokens.s,
             ),
             decoration: BoxDecoration(
-              border: Border.all(
-                color: colors.borderDefault,
-                width: BorderTokens.widthThin,
-              ),
+              border: Border.all(color: colors.borderDefault),
               borderRadius: BorderTokens.circularSubtle,
             ),
             child: DropdownButtonHideUnderline(
@@ -192,10 +187,7 @@ class _YearGridCalendarWidgetState
           height: IconSizeTokens.medium,
           decoration: BoxDecoration(
             color: color,
-            border: Border.all(
-              color: colors.borderDefault,
-              width: BorderTokens.widthThin,
-            ),
+            border: Border.all(color: colors.borderDefault),
             borderRadius: BorderTokens.circularSubtle,
           ),
         ),
@@ -211,7 +203,10 @@ class _YearGridCalendarWidgetState
     );
   }
 
-  Widget _buildYearGrid(Map<DateTime, CalendarDateInfo> data, WidgetColorScheme colors) {
+  Widget _buildYearGrid(
+    Map<DateTime, CalendarDateInfo> data,
+    WidgetColorScheme colors,
+  ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Responsive cell sizing based on screen size
@@ -220,10 +215,13 @@ class _YearGridCalendarWidgetState
         // Calculate cell size based on available width
         // Reserve space for month labels
         final monthLabelWidth = ConstraintTokens.monthLabelWidth;
-        final availableWidth = constraints.maxWidth - monthLabelWidth - SpacingTokens.m2;
+        final availableWidth =
+            constraints.maxWidth - monthLabelWidth - SpacingTokens.m2;
         // Use responsive size but clamp based on available width
         final cellSize = (availableWidth / 31).clamp(
-          responsiveCellSize * OpacityTokens.badgeSubtle, // Minimum 80% of responsive size (0.8 * size)
+          responsiveCellSize *
+              OpacityTokens
+                  .badgeSubtle, // Minimum 80% of responsive size (0.8 * size)
           responsiveCellSize * 1.2, // Maximum 120% of responsive size
         );
 
@@ -286,7 +284,7 @@ class _YearGridCalendarWidgetState
     double monthLabelWidth,
     WidgetColorScheme colors,
   ) {
-    final monthName = DateFormat('MMM').format(DateTime(_currentYear, month, 1));
+    final monthName = DateFormat('MMM').format(DateTime(_currentYear, month));
     final daysInMonth = DateTime(_currentYear, month + 1, 0).day;
 
     return Padding(
@@ -318,11 +316,9 @@ class _YearGridCalendarWidgetState
                 child: Container(
                   decoration: BoxDecoration(
                     color: colors.backgroundTertiary,
-                    border: Border.all(
-                      color: colors.borderLight,
-                      width: BorderTokens.widthThin,
-                    ),
-                    borderRadius: BorderTokens.circularTiny, // Subtle radius for softer visual
+                    border: Border.all(color: colors.borderLight),
+                    borderRadius: BorderTokens
+                        .circularTiny, // Subtle radius for softer visual
                   ),
                 ),
               );
@@ -335,10 +331,15 @@ class _YearGridCalendarWidgetState
 
             // Check if date is in the past
             final today = DateTime.now();
-            final todayNormalized = DateTime(today.year, today.month, today.day);
+            final todayNormalized = DateTime(
+              today.year,
+              today.month,
+              today.day,
+            );
             final isPastDate = date.isBefore(todayNormalized);
 
-            final isInRange = _rangeStart != null &&
+            final isInRange =
+                _rangeStart != null &&
                 _rangeEnd != null &&
                 date.isAfter(_rangeStart!) &&
                 date.isBefore(_rangeEnd!);
@@ -354,61 +355,79 @@ class _YearGridCalendarWidgetState
               child: MouseRegion(
                 onEnter: isPastDate ? null : (_) => _handleDayHoverEnter(date),
                 onExit: isPastDate ? null : (_) => _handleDayHoverExit(),
-                onHover: isPastDate ? null : (event) => setState(() => _mousePosition = event.position),
+                onHover: isPastDate
+                    ? null
+                    : (event) =>
+                          setState(() => _mousePosition = event.position),
                 cursor: isPastDate
                     ? SystemMouseCursors.forbidden
-                    : (status == DateStatus.booked || status == DateStatus.blocked
-                        ? SystemMouseCursors.forbidden
-                        : SystemMouseCursors.click),
+                    : (status == DateStatus.booked ||
+                              status == DateStatus.blocked
+                          ? SystemMouseCursors.forbidden
+                          : SystemMouseCursors.click),
                 child: GestureDetector(
-                  onTapDown: isPastDate ? null : (details) => _handleDayTapDown(date, details, status),
-                  onTapUp: isPastDate ? null : (_) => _handleDayTapUp(date, status),
-                  onLongPressStart: isPastDate ? null : (details) => _handleDayLongPress(date, details),
-                  onPanStart: isPastDate ? null : (_) => _handleDragStart(date, status),
-                  onPanUpdate: isPastDate ? null : (_) => _handleDragUpdate(date),
+                  onTapDown: isPastDate
+                      ? null
+                      : (details) => _handleDayTapDown(date, details, status),
+                  onTapUp: isPastDate
+                      ? null
+                      : (_) => _handleDayTapUp(date, status),
+                  onLongPressStart: isPastDate
+                      ? null
+                      : (details) => _handleDayLongPress(date, details),
+                  onPanStart: isPastDate
+                      ? null
+                      : (_) => _handleDragStart(date, status),
+                  onPanUpdate: isPastDate
+                      ? null
+                      : (_) => _handleDragUpdate(date),
                   onPanEnd: isPastDate ? null : (_) => _handleDragEnd(),
                   child: SizedBox(
-                  width: cellSize,
-                  height: cellSize,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isPastDate ? colors.backgroundTertiary : null,
-                      border: Border.all(
-                        color: isSelected
-                            ? colors.borderFocus // Black for selection
-                            : (isInRange
-                                ? colors.borderMedium
-                                : colors.borderDefault),
-                        width: isSelected ? BorderTokens.widthThick : BorderTokens.widthMedium,
+                    width: cellSize,
+                    height: cellSize,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isPastDate ? colors.backgroundTertiary : null,
+                        border: Border.all(
+                          color: isSelected
+                              ? colors
+                                    .borderFocus // Black for selection
+                              : (isInRange
+                                    ? colors.borderMedium
+                                    : colors.borderDefault),
+                          width: isSelected
+                              ? BorderTokens.widthThick
+                              : BorderTokens.widthMedium,
+                        ),
+                        borderRadius: BorderTokens
+                            .circularTiny, // Subtle radius for softer visual
+                        // Hover effect - subtle shadow
+                        boxShadow: _hoverDate == date && !isPastDate
+                            ? ShadowTokens.calendarCellHover
+                            : ShadowTokens.subtle,
                       ),
-                      borderRadius: BorderTokens.circularTiny, // Subtle radius for softer visual
-                      // Hover effect - subtle shadow
-                      boxShadow: _hoverDate == date && !isPastDate
-                          ? ShadowTokens.calendarCellHover
-                          : ShadowTokens.subtle,
+                      child: isPastDate
+                          ? Center(
+                              child: Icon(
+                                Icons.block,
+                                size: cellSize * OpacityTokens.mostlyVisible,
+                                color: colors.textDisabled,
+                              ),
+                            )
+                          : CustomPaint(
+                              painter: SplitDayCalendarPainter(
+                                status: status,
+                                borderColor: colors.borderDefault,
+                                priceText: priceText,
+                                colors: colors,
+                              ),
+                              child: const SizedBox.expand(),
+                            ),
                     ),
-                    child: isPastDate
-                        ? Center(
-                            child: Icon(
-                              Icons.block,
-                              size: cellSize * OpacityTokens.mostlyVisible,
-                              color: colors.textDisabled,
-                            ),
-                          )
-                        : CustomPaint(
-                            painter: SplitDayCalendarPainter(
-                              status: status,
-                              borderColor: colors.borderDefault,
-                              priceText: priceText,
-                              colors: colors,
-                            ),
-                            child: const SizedBox.expand(),
-                          ),
                   ),
                 ),
               ),
-            ),
-          );
+            );
           }),
         ],
       ),
@@ -435,7 +454,11 @@ class _YearGridCalendarWidgetState
   // TAP HANDLERS (Mobile & Desktop)
   // ============================================================
 
-  void _handleDayTapDown(DateTime date, TapDownDetails details, DateStatus status) {
+  void _handleDayTapDown(
+    DateTime date,
+    TapDownDetails details,
+    DateStatus status,
+  ) {
     // Store tap position for mobile info panel
     if (Theme.of(context).platform == TargetPlatform.android ||
         Theme.of(context).platform == TargetPlatform.iOS) {
@@ -605,7 +628,10 @@ class _YearGridCalendarWidgetState
   // TOOLTIP & INFO PANEL BUILDERS
   // ============================================================
 
-  Widget _buildHoverTooltip(AsyncValue<Map<DateTime, CalendarDateInfo>> calendarData, WidgetColorScheme colors) {
+  Widget _buildHoverTooltip(
+    AsyncValue<Map<DateTime, CalendarDateInfo>> calendarData,
+    WidgetColorScheme colors,
+  ) {
     if (_hoverDate == null) return const SizedBox.shrink();
 
     return calendarData.when(
@@ -628,14 +654,24 @@ class _YearGridCalendarWidgetState
 
         // Keep tooltip within screen bounds
         if (xPosition + tooltipWidth > screenWidth) {
-          xPosition = _mousePosition.dx - tooltipWidth - SpacingTokens.s2; // Show on left instead
+          xPosition =
+              _mousePosition.dx -
+              tooltipWidth -
+              SpacingTokens.s2; // Show on left instead
         }
         if (yPosition < SpacingTokens.m2) {
-          yPosition = _mousePosition.dy + SpacingTokens.m2; // Show below cursor instead
+          yPosition =
+              _mousePosition.dy + SpacingTokens.m2; // Show below cursor instead
         }
 
-        xPosition = xPosition.clamp(SpacingTokens.m2, screenWidth - tooltipWidth - SpacingTokens.m2);
-        yPosition = yPosition.clamp(SpacingTokens.m2, screenHeight - tooltipHeight - SpacingTokens.m2);
+        xPosition = xPosition.clamp(
+          SpacingTokens.m2,
+          screenWidth - tooltipWidth - SpacingTokens.m2,
+        );
+        yPosition = yPosition.clamp(
+          SpacingTokens.m2,
+          screenHeight - tooltipHeight - SpacingTokens.m2,
+        );
 
         return Positioned(
           left: xPosition,
@@ -645,11 +681,14 @@ class _YearGridCalendarWidgetState
             borderRadius: BorderTokens.circularRounded,
             child: Container(
               width: tooltipWidth,
-              padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s2),
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpacingTokens.m,
+                vertical: SpacingTokens.s2,
+              ),
               decoration: BoxDecoration(
                 color: colors.backgroundPrimary,
                 borderRadius: BorderTokens.circularRounded,
-                border: Border.all(color: colors.borderDefault, width: BorderTokens.widthThin),
+                border: Border.all(color: colors.borderDefault),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -711,8 +750,12 @@ class _YearGridCalendarWidgetState
     );
   }
 
-  Widget _buildTapInfoPanel(AsyncValue<Map<DateTime, CalendarDateInfo>> calendarData, WidgetColorScheme colors) {
-    if (_tappedDate == null || _tapPosition == null) return const SizedBox.shrink();
+  Widget _buildTapInfoPanel(
+    AsyncValue<Map<DateTime, CalendarDateInfo>> calendarData,
+    WidgetColorScheme colors,
+  ) {
+    if (_tappedDate == null || _tapPosition == null)
+      return const SizedBox.shrink();
 
     return calendarData.when(
       data: (data) {
@@ -739,7 +782,7 @@ class _YearGridCalendarWidgetState
                 decoration: BoxDecoration(
                   color: colors.backgroundPrimary,
                   borderRadius: BorderTokens.circularRounded,
-                  border: Border.all(color: colors.borderDefault, width: BorderTokens.widthThin),
+                  border: Border.all(color: colors.borderDefault),
                   boxShadow: colors.shadowMedium,
                 ),
                 child: Column(
@@ -762,7 +805,11 @@ class _YearGridCalendarWidgetState
                           width: 48,
                           height: 48,
                           child: IconButton(
-                            icon: Icon(Icons.close, size: IconSizeTokens.medium, color: colors.textPrimary),
+                            icon: Icon(
+                              Icons.close,
+                              size: IconSizeTokens.medium,
+                              color: colors.textPrimary,
+                            ),
                             onPressed: () {
                               setState(() {
                                 _tappedDate = null;
@@ -773,7 +820,10 @@ class _YearGridCalendarWidgetState
                         ),
                       ],
                     ),
-                    Divider(height: SpacingTokens.m, color: colors.borderDefault),
+                    Divider(
+                      height: SpacingTokens.m,
+                      color: colors.borderDefault,
+                    ),
                     // Status
                     Row(
                       children: [
@@ -895,4 +945,3 @@ class _YearGridCalendarWidgetState
     return '$dateStr. $statusLabel.$priceLabel';
   }
 }
-

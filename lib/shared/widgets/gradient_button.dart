@@ -44,13 +44,9 @@ class _GradientButtonState extends State<GradientButton>
       vsync: this,
     )..repeat();
 
-    _shimmerAnimation = Tween<double>(
-      begin: -1,
-      end: 2,
-    ).animate(CurvedAnimation(
-      parent: _shimmerController,
-      curve: Curves.linear,
-    ));
+    _shimmerAnimation = Tween<double>(begin: -1, end: 2).animate(
+      CurvedAnimation(parent: _shimmerController, curve: Curves.linear),
+    );
   }
 
   @override
@@ -61,7 +57,8 @@ class _GradientButtonState extends State<GradientButton>
 
   @override
   Widget build(BuildContext context) {
-    final gradientColors = widget.gradientColors ??
+    final gradientColors =
+        widget.gradientColors ??
         [
           const Color(0xFF6B4CE6), // Purple
           const Color(0xFF4A90E2), // Blue
@@ -79,11 +76,7 @@ class _GradientButtonState extends State<GradientButton>
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: gradientColors,
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
+            gradient: LinearGradient(colors: gradientColors),
             borderRadius: borderRadius,
             boxShadow: [
               BoxShadow(
@@ -129,7 +122,8 @@ class _GradientButtonState extends State<GradientButton>
 
                   // Button content
                   Padding(
-                    padding: widget.padding ??
+                    padding:
+                        widget.padding ??
                         const EdgeInsets.symmetric(horizontal: 24),
                     child: Center(
                       child: widget.isLoading
@@ -138,8 +132,9 @@ class _GradientButtonState extends State<GradientButton>
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : Row(

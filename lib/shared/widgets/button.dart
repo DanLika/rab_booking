@@ -52,7 +52,10 @@ class PremiumButton extends StatefulWidget {
     this.isFullWidth = false,
     this.backgroundColor,
     this.textColor,
-  }) : assert(label != null || icon != null, 'Either label or icon must be provided');
+  }) : assert(
+         label != null || icon != null,
+         'Either label or icon must be provided',
+       );
 
   /// Primary button (gradient background)
   factory PremiumButton.primary({
@@ -71,7 +74,6 @@ class PremiumButton extends StatefulWidget {
       icon: icon,
       iconPosition: iconPosition,
       onPressed: onPressed,
-      variant: ButtonVariant.primary,
       size: size,
       isLoading: isLoading,
       isFullWidth: isFullWidth,
@@ -160,7 +162,6 @@ class PremiumButton extends StatefulWidget {
       variant: variant,
       size: size,
       isLoading: isLoading,
-      isFullWidth: false,
     );
   }
 
@@ -197,8 +198,8 @@ class _PremiumButtonState extends State<PremiumButton> {
             width: widget.isFullWidth
                 ? double.infinity
                 : isIconOnly
-                    ? buttonConfig.height
-                    : null,
+                ? buttonConfig.height
+                : null,
             decoration: _buildDecoration(buttonConfig),
             child: Material(
               color: Colors.transparent,
@@ -251,9 +252,9 @@ class _PremiumButtonState extends State<PremiumButton> {
       boxShadow: _isHovered && config.shadow != null
           ? config.shadow
           : widget.variant == ButtonVariant.primary ||
-                  widget.variant == ButtonVariant.secondary
-              ? AppShadows.elevation1
-              : null,
+                widget.variant == ButtonVariant.secondary
+          ? AppShadows.elevation1
+          : null,
     );
   }
 
@@ -274,9 +275,7 @@ class _PremiumButtonState extends State<PremiumButton> {
           height: config.iconSize,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              config.textColor,
-            ),
+            valueColor: AlwaysStoppedAnimation<Color>(config.textColor),
           ),
         ),
       );
@@ -380,14 +379,18 @@ class _PremiumButtonState extends State<PremiumButton> {
 
     switch (widget.variant) {
       case ButtonVariant.primary:
-        gradient = widget.backgroundColor == null ? AppColors.authPrimaryGradient : null;
+        gradient = widget.backgroundColor == null
+            ? AppColors.authPrimaryGradient
+            : null;
         backgroundColor = widget.backgroundColor;
         borderColor = null;
         textColor = widget.textColor ?? Colors.white;
         shadow = _isHovered ? AppShadows.glowPrimary : AppShadows.elevation2;
         break;
       case ButtonVariant.secondary:
-        gradient = widget.backgroundColor == null ? AppColors.ctaGradient : null;
+        gradient = widget.backgroundColor == null
+            ? AppColors.ctaGradient
+            : null;
         backgroundColor = widget.backgroundColor;
         borderColor = null;
         textColor = widget.textColor ?? AppColors.textPrimaryDark;
@@ -425,25 +428,13 @@ class _PremiumButtonState extends State<PremiumButton> {
 }
 
 /// Button variant enum
-enum ButtonVariant {
-  primary,
-  secondary,
-  outline,
-  text,
-}
+enum ButtonVariant { primary, secondary, outline, text }
 
 /// Button size enum
-enum ButtonSize {
-  small,
-  medium,
-  large,
-}
+enum ButtonSize { small, medium, large }
 
 /// Icon position enum
-enum IconPosition {
-  left,
-  right,
-}
+enum IconPosition { left, right }
 
 /// Internal button configuration class
 class _ButtonConfig {

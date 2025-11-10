@@ -168,16 +168,14 @@ class ResponsiveColumns extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final itemWidth = (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+        final itemWidth =
+            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
 
         return Wrap(
           spacing: spacing,
           runSpacing: runSpacing,
           children: children
-              .map((child) => SizedBox(
-                    width: itemWidth,
-                    child: child,
-                  ))
+              .map((child) => SizedBox(width: itemWidth, child: child))
               .toList(),
         );
       },
@@ -235,11 +233,7 @@ class ConditionalWidget extends StatelessWidget {
 ///
 /// Shorthand for ConditionalWidget that only shows on mobile
 class MobileOnly extends StatelessWidget {
-  const MobileOnly({
-    required this.child,
-    this.placeholder,
-    super.key,
-  });
+  const MobileOnly({required this.child, this.placeholder, super.key});
 
   final Widget child;
   final Widget? placeholder;
@@ -247,7 +241,6 @@ class MobileOnly extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConditionalWidget(
-      showOnMobile: true,
       showOnTablet: false,
       showOnDesktop: false,
       placeholder: placeholder,
@@ -260,11 +253,7 @@ class MobileOnly extends StatelessWidget {
 ///
 /// Shorthand for ConditionalWidget that only shows on desktop
 class DesktopOnly extends StatelessWidget {
-  const DesktopOnly({
-    required this.child,
-    this.placeholder,
-    super.key,
-  });
+  const DesktopOnly({required this.child, this.placeholder, super.key});
 
   final Widget child;
   final Widget? placeholder;
@@ -274,7 +263,6 @@ class DesktopOnly extends StatelessWidget {
     return ConditionalWidget(
       showOnMobile: false,
       showOnTablet: false,
-      showOnDesktop: true,
       placeholder: placeholder,
       child: child,
     );
@@ -321,10 +309,12 @@ class ResponsiveRowColumn extends StatelessWidget {
     for (int i = 0; i < children.length; i++) {
       spacedChildren.add(children[i]);
       if (i < children.length - 1 && spacing > 0) {
-        spacedChildren.add(SizedBox(
-          width: isColumn ? 0 : spacing,
-          height: isColumn ? spacing : 0,
-        ));
+        spacedChildren.add(
+          SizedBox(
+            width: isColumn ? 0 : spacing,
+            height: isColumn ? spacing : 0,
+          ),
+        );
       }
     }
 

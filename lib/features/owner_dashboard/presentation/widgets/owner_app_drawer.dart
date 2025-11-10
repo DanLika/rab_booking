@@ -11,10 +11,7 @@ import '../../../auth/presentation/widgets/auth_logo_icon.dart';
 class OwnerAppDrawer extends ConsumerWidget {
   final String currentRoute;
 
-  const OwnerAppDrawer({
-    super.key,
-    required this.currentRoute,
-  });
+  const OwnerAppDrawer({super.key, required this.currentRoute});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,10 +36,7 @@ class OwnerAppDrawer extends ConsumerWidget {
               : LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    theme.colorScheme.beige,
-                    Colors.white,
-                  ],
+                  colors: [theme.colorScheme.beige, Colors.white],
                   stops: const [0.0, 0.3],
                 ),
         ),
@@ -94,7 +88,8 @@ class OwnerAppDrawer extends ConsumerWidget {
             _PremiumExpansionTile(
               icon: Icons.settings_outlined,
               title: 'Podešavanja',
-              isExpanded: currentRoute.startsWith('properties') ||
+              isExpanded:
+                  currentRoute.startsWith('properties') ||
                   currentRoute.startsWith('units') ||
                   currentRoute == 'widget-settings' ||
                   currentRoute.startsWith('integrations'),
@@ -166,7 +161,8 @@ class OwnerAppDrawer extends ConsumerWidget {
             _PremiumExpansionTile(
               icon: Icons.gavel,
               title: 'Pravni Dokumenti',
-              isExpanded: currentRoute.startsWith('privacy') ||
+              isExpanded:
+                  currentRoute.startsWith('privacy') ||
                   currentRoute.startsWith('terms') ||
                   currentRoute.startsWith('cookies'),
               children: [
@@ -244,7 +240,8 @@ class OwnerAppDrawer extends ConsumerWidget {
     dynamic authState,
   ) {
     final theme = Theme.of(context);
-    final displayName = authState.userModel?.firstName != null &&
+    final displayName =
+        authState.userModel?.firstName != null &&
             authState.userModel?.lastName != null
         ? '${authState.userModel!.firstName} ${authState.userModel!.lastName}'
         : user?.displayName ?? 'Owner';
@@ -258,10 +255,7 @@ class OwnerAppDrawer extends ConsumerWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.brandPurple,
-            theme.colorScheme.brandBlue,
-          ],
+          colors: [theme.colorScheme.brandPurple, theme.colorScheme.brandBlue],
         ),
         boxShadow: [
           BoxShadow(
@@ -275,9 +269,7 @@ class OwnerAppDrawer extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Logo - White variant for dark background
-          const Center(
-            child: AuthLogoIcon(size: 70, isWhite: true),
-          ),
+          const Center(child: AuthLogoIcon(size: 70, isWhite: true)),
           const SizedBox(height: 20),
 
           // User Info
@@ -298,7 +290,8 @@ class OwnerAppDrawer extends ConsumerWidget {
                     ),
                   ],
                 ),
-                child: authState.userModel?.avatarUrl != null &&
+                child:
+                    authState.userModel?.avatarUrl != null &&
                         authState.userModel!.avatarUrl!.isNotEmpty
                     ? ClipOval(
                         child: Image.network(
@@ -406,8 +399,8 @@ class _DrawerItemState extends State<_DrawerItem> {
             color: widget.isSelected
                 ? theme.colorScheme.brandPurple.withAlpha((0.12 * 255).toInt())
                 : _isHovered
-                    ? theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt())
-                    : Colors.transparent,
+                ? theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt())
+                : Colors.transparent,
           ),
           child: ListTile(
             leading: Icon(
@@ -421,7 +414,9 @@ class _DrawerItemState extends State<_DrawerItem> {
               widget.title,
               style: TextStyle(
                 fontSize: 15,
-                fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: widget.isSelected
+                    ? FontWeight.w600
+                    : FontWeight.w500,
                 color: widget.isSelected
                     ? theme.colorScheme.brandPurple
                     : theme.colorScheme.onSurface,
@@ -477,8 +472,8 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
             color: widget.isSelected
                 ? theme.colorScheme.brandPurple.withAlpha((0.12 * 255).toInt())
                 : _isHovered
-                    ? theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt())
-                    : Colors.transparent,
+                ? theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt())
+                : Colors.transparent,
           ),
           child: ListTile(
             dense: true,
@@ -488,17 +483,23 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     size: 18,
                     color: widget.isSelected
                         ? theme.colorScheme.brandPurple
-                        : theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                        : theme.colorScheme.onSurface.withAlpha(
+                            (0.5 * 255).toInt(),
+                          ),
                   )
                 : const SizedBox(width: 18),
             title: Text(
               widget.title,
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: widget.isSelected
+                    ? FontWeight.w600
+                    : FontWeight.w500,
                 color: widget.isSelected
                     ? theme.colorScheme.brandPurple
-                    : theme.colorScheme.onSurface.withAlpha((0.85 * 255).toInt()),
+                    : theme.colorScheme.onSurface.withAlpha(
+                        (0.85 * 255).toInt(),
+                      ),
               ),
             ),
             subtitle: widget.subtitle != null
@@ -506,7 +507,9 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     widget.subtitle!,
                     style: TextStyle(
                       fontSize: 11,
-                      color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (0.5 * 255).toInt(),
+                      ),
                     ),
                   )
                 : null,
@@ -541,8 +544,12 @@ class _PremiumExpansionTile extends StatelessWidget {
       child: Theme(
         data: Theme.of(context).copyWith(
           dividerColor: Colors.transparent,
-          splashColor: theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt()),
-          highlightColor: theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt()),
+          splashColor: theme.colorScheme.brandPurple.withAlpha(
+            (0.06 * 255).toInt(),
+          ),
+          highlightColor: theme.colorScheme.brandPurple.withAlpha(
+            (0.06 * 255).toInt(),
+          ),
         ),
         child: ExpansionTile(
           leading: Icon(
@@ -565,7 +572,7 @@ class _PremiumExpansionTile extends StatelessWidget {
           collapsedShape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
           childrenPadding: const EdgeInsets.only(bottom: 8),
           children: children,
         ),
@@ -660,7 +667,9 @@ class _DrawerSectionDivider extends StatelessWidget {
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
-                color: theme.colorScheme.onSurface.withAlpha((0.4 * 255).toInt()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (0.4 * 255).toInt(),
+                ),
               ),
             ),
           ),

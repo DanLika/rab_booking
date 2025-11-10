@@ -75,17 +75,15 @@ class EmbedBookingNotifier extends StateNotifier<EmbedBookingState> {
   final String unitId;
   final FirebaseFirestore _firestore;
 
-  EmbedBookingNotifier({
-    required this.unitId,
-    FirebaseFirestore? firestore,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        super(const EmbedBookingState()) {
+  EmbedBookingNotifier({required this.unitId, FirebaseFirestore? firestore})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      super(const EmbedBookingState()) {
     _loadData();
   }
 
   /// Load prices and bookings from Firestore
   Future<void> _loadData() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       // Load prices and bookings for current year + next year
@@ -125,7 +123,10 @@ class EmbedBookingNotifier extends StateNotifier<EmbedBookingState> {
       final bookingsSnapshot = await _firestore
           .collection('bookings')
           .where('unitId', isEqualTo: unitId)
-          .where('status', whereIn: ['confirmed', 'deposit_paid', 'pending_payment'])
+          .where(
+            'status',
+            whereIn: ['confirmed', 'deposit_paid', 'pending_payment'],
+          )
           .get();
 
       for (final bookingDoc in bookingsSnapshot.docs) {
@@ -135,7 +136,11 @@ class EmbedBookingNotifier extends StateNotifier<EmbedBookingState> {
           // Mark all days between check-in and check-out as booked
           DateTime current = booking.checkIn;
           while (current.isBefore(booking.checkOut)) {
-            final dateKey = DateTime.utc(current.year, current.month, current.day);
+            final dateKey = DateTime.utc(
+              current.year,
+              current.month,
+              current.day,
+            );
             bookingsMap[dateKey] = booking;
             current = current.add(const Duration(days: 1));
           }
@@ -150,10 +155,7 @@ class EmbedBookingNotifier extends StateNotifier<EmbedBookingState> {
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -163,10 +165,7 @@ class EmbedBookingNotifier extends StateNotifier<EmbedBookingState> {
 
     // If selecting new check-in, clear check-out if it's before new check-in
     if (state.checkOutDate != null && normalized.isAfter(state.checkOutDate!)) {
-      state = state.copyWith(
-        checkInDate: normalized,
-        checkOutDate: null,
-      );
+      state = state.copyWith(checkInDate: normalized);
     } else {
       state = state.copyWith(checkInDate: normalized);
     }
@@ -184,10 +183,7 @@ class EmbedBookingNotifier extends StateNotifier<EmbedBookingState> {
 
   /// Clear selection
   void clearSelection() {
-    state = state.copyWith(
-      checkInDate: null,
-      checkOutDate: null,
-    );
+    state = state.copyWith(checkOutDate: null);
   }
 
   /// Check if date is available for booking
@@ -196,7 +192,7 @@ class EmbedBookingNotifier extends StateNotifier<EmbedBookingState> {
 
     // Has price and not booked
     return state.prices.containsKey(normalized) &&
-           !state.bookings.containsKey(normalized);
+        !state.bookings.containsKey(normalized);
   }
 
   /// Get price for specific date
@@ -214,6 +210,8 @@ class EmbedBookingNotifier extends StateNotifier<EmbedBookingState> {
 
 /// Provider for embed booking state
 final embedBookingProvider =
-    StateNotifierProvider.family<EmbedBookingNotifier, EmbedBookingState, String>(
-  (ref, unitId) => EmbedBookingNotifier(unitId: unitId),
-);
+    StateNotifierProvider.family<
+      EmbedBookingNotifier,
+      EmbedBookingState,
+      String
+    >((ref, unitId) => EmbedBookingNotifier(unitId: unitId));

@@ -30,12 +30,7 @@ class BookingProgressIndicator extends ConsumerWidget {
       ),
       decoration: BoxDecoration(
         color: colors.backgroundCard,
-        border: Border(
-          bottom: BorderSide(
-            color: colors.borderDefault,
-            width: 1,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: colors.borderDefault)),
       ),
       child: isMobile ? _buildMobileProgress() : _buildDesktopProgress(),
     );
@@ -161,21 +156,13 @@ class BookingProgressIndicator extends ConsumerWidget {
             shape: BoxShape.circle,
             gradient: isActive || isCompleted
                 ? LinearGradient(
-                    colors: [
-                      colors.primary,
-                      colors.primaryHover,
-                    ],
+                    colors: [colors.primary, colors.primaryHover],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                 : null,
-            color: isActive || isCompleted
-                ? null
-                : colors.backgroundPrimary,
-            border: Border.all(
-              color: color,
-              width: isActive ? 3 : 2,
-            ),
+            color: isActive || isCompleted ? null : colors.backgroundPrimary,
+            border: Border.all(color: color, width: isActive ? 3 : 2),
             boxShadow: isActive ? colors.shadowLight : null,
           ),
           child: Center(
@@ -186,19 +173,19 @@ class BookingProgressIndicator extends ConsumerWidget {
                     color: colors.textOnPrimary,
                   )
                 : isActive
-                    ? Icon(
-                        icon,
-                        size: isMobile ? 20 : 24,
-                        color: colors.textOnPrimary,
-                      )
-                    : Text(
-                        '$number',
-                        style: GoogleFonts.inter(
-                          fontSize: isMobile ? 16 : 18,
-                          fontWeight: FontWeight.w700,
-                          color: color,
-                        ),
-                      ),
+                ? Icon(
+                    icon,
+                    size: isMobile ? 20 : 24,
+                    color: colors.textOnPrimary,
+                  )
+                : Text(
+                    '$number',
+                    style: GoogleFonts.inter(
+                      fontSize: isMobile ? 16 : 18,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
           ),
         ),
         const SizedBox(height: 8),
@@ -250,9 +237,7 @@ class BookingProgressIndicator extends ConsumerWidget {
         height: 2,
         margin: const EdgeInsets.only(bottom: 40),
         decoration: BoxDecoration(
-          color: isCompleted
-              ? colors.primary
-              : colors.borderDefault,
+          color: isCompleted ? colors.primary : colors.borderDefault,
           borderRadius: BorderRadius.circular(1),
         ),
       ),

@@ -21,10 +21,12 @@ class EnhancedRegisterScreen extends ConsumerStatefulWidget {
   const EnhancedRegisterScreen({super.key});
 
   @override
-  ConsumerState<EnhancedRegisterScreen> createState() => _EnhancedRegisterScreenState();
+  ConsumerState<EnhancedRegisterScreen> createState() =>
+      _EnhancedRegisterScreenState();
 }
 
-class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen> {
+class _EnhancedRegisterScreenState
+    extends ConsumerState<EnhancedRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -76,10 +78,14 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     if (!_acceptedTerms || !_acceptedPrivacy) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('You must accept the Terms & Conditions and Privacy Policy'),
+          content: const Text(
+            'You must accept the Terms & Conditions and Privacy Policy',
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
@@ -92,9 +98,13 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       final fullName = _fullNameController.text.trim();
       final nameParts = fullName.split(' ');
       final firstName = nameParts.isNotEmpty ? nameParts.first : '';
-      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+      final lastName = nameParts.length > 1
+          ? nameParts.sublist(1).join(' ')
+          : '';
 
-      await ref.read(enhancedAuthProvider.notifier).registerWithEmail(
+      await ref
+          .read(enhancedAuthProvider.notifier)
+          .registerWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             firstName: firstName,
@@ -121,8 +131,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
             content: Text(e.toString()),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            duration: const Duration(seconds: 4),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -145,274 +156,295 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
               ),
               child: Center(
                 child: GlassCard(
-                  maxWidth: 460,
                   child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Profile Image Picker
-                    ProfileImagePicker(
-                      size: 100,
-                      initials: _fullNameController.text.trim().isNotEmpty
-                          ? _fullNameController.text.trim().substring(0, 1).toUpperCase()
-                          : null,
-                      onImageSelected: (bytes, name) {
-                        setState(() {
-                          _profileImageBytes = bytes;
-                          _profileImageName = name;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 24),
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Profile Image Picker
+                        ProfileImagePicker(
+                          size: 100,
+                          initials: _fullNameController.text.trim().isNotEmpty
+                              ? _fullNameController.text
+                                    .trim()
+                                    .substring(0, 1)
+                                    .toUpperCase()
+                              : null,
+                          onImageSelected: (bytes, name) {
+                            setState(() {
+                              _profileImageBytes = bytes;
+                              _profileImageName = name;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 24),
 
-                    // Title
-                    Text(
-                      'Create Account',
-                      style: theme.textTheme.headlineMedium?.copyWith(
+                        // Title
+                        Text(
+                          'Create Account',
+                          style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             fontSize: 28,
                             color: theme.colorScheme.onSurface,
                           ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
 
-                    // Subtitle
-                    Text(
-                      'Start managing your properties today',
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                        // Subtitle
+                        Text(
+                          'Start managing your properties today',
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontSize: 15,
                           ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Full Name field
-                    PremiumInputField(
-                      controller: _fullNameController,
-                      labelText: 'Full Name',
-                      prefixIcon: Icons.person_outline,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your full name';
-                        }
-                        if (value.trim().split(' ').length < 2) {
-                          return 'Please enter both first and last name';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Email
-                    PremiumInputField(
-                      controller: _emailController,
-                      labelText: 'Email Address',
-                      prefixIcon: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: ProfileValidators.validateEmail,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Phone
-                    PremiumInputField(
-                      controller: _phoneController,
-                      labelText: 'Phone (optional)',
-                      prefixIcon: Icons.phone_outlined,
-                      keyboardType: TextInputType.phone,
-                      validator: ProfileValidators.validatePhone,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Password
-                    PremiumInputField(
-                      controller: _passwordController,
-                      labelText: 'Password',
-                      prefixIcon: Icons.lock_outline,
-                      obscureText: _obscurePassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                          color: theme.colorScheme.onSurfaceVariant,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        onPressed: () {
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        },
-                      ),
-                      validator: PasswordValidator.validateSimple,
-                    ),
-                    const SizedBox(height: 12),
+                        const SizedBox(height: 32),
 
-                    // Password Strength Indicator
-                    if (_passwordController.text.isNotEmpty)
-                      _buildPasswordStrengthIndicator(),
-                    const SizedBox(height: 16),
-
-                    // Confirm Password
-                    PremiumInputField(
-                      controller: _confirmPasswordController,
-                      labelText: 'Confirm Password',
-                      prefixIcon: Icons.lock_outline,
-                      obscureText: _obscureConfirmPassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                          color: theme.colorScheme.onSurfaceVariant,
+                        // Full Name field
+                        PremiumInputField(
+                          controller: _fullNameController,
+                          labelText: 'Full Name',
+                          prefixIcon: Icons.person_outline,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter your full name';
+                            }
+                            if (value.trim().split(' ').length < 2) {
+                              return 'Please enter both first and last name';
+                            }
+                            return null;
+                          },
                         ),
-                        onPressed: () {
-                          setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
-                        },
-                      ),
-                      validator: (value) {
-                        return PasswordValidator.validateConfirmPassword(
-                          _passwordController.text,
-                          value,
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                    // Terms & Conditions Checkbox
-                    _buildCheckbox(
-                      value: _acceptedTerms,
-                      onChanged: (value) => setState(() => _acceptedTerms = value!),
-                      child: RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          children: [
-                            const TextSpan(text: 'I accept the '),
-                            TextSpan(
-                              text: 'Terms & Conditions',
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.underline,
-                              ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => const TermsConditionsScreen(),
-                                    ),
-                                  );
-                                },
+                        // Email
+                        PremiumInputField(
+                          controller: _emailController,
+                          labelText: 'Email Address',
+                          prefixIcon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: ProfileValidators.validateEmail,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Phone
+                        PremiumInputField(
+                          controller: _phoneController,
+                          labelText: 'Phone (optional)',
+                          prefixIcon: Icons.phone_outlined,
+                          keyboardType: TextInputType.phone,
+                          validator: ProfileValidators.validatePhone,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Password
+                        PremiumInputField(
+                          controller: _passwordController,
+                          labelText: 'Password',
+                          prefixIcon: Icons.lock_outline,
+                          obscureText: _obscurePassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
-                            const TextSpan(text: ' *'),
-                          ],
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Privacy Policy Checkbox
-                    _buildCheckbox(
-                      value: _acceptedPrivacy,
-                      onChanged: (value) => setState(() => _acceptedPrivacy = value!),
-                      child: RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: theme.colorScheme.onSurfaceVariant,
+                            onPressed: () {
+                              setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              );
+                            },
                           ),
-                          children: [
-                            const TextSpan(text: 'I accept the '),
-                            TextSpan(
-                              text: 'Privacy Policy',
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.underline,
-                              ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => const PrivacyPolicyScreen(),
-                                    ),
-                                  );
-                                },
+                          validator: PasswordValidator.validateSimple,
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Password Strength Indicator
+                        if (_passwordController.text.isNotEmpty)
+                          _buildPasswordStrengthIndicator(),
+                        const SizedBox(height: 16),
+
+                        // Confirm Password
+                        PremiumInputField(
+                          controller: _confirmPasswordController,
+                          labelText: 'Confirm Password',
+                          prefixIcon: Icons.lock_outline,
+                          obscureText: _obscureConfirmPassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
-                            const TextSpan(text: ' *'),
-                          ],
+                            onPressed: () {
+                              setState(
+                                () => _obscureConfirmPassword =
+                                    !_obscureConfirmPassword,
+                              );
+                            },
+                          ),
+                          validator: (value) {
+                            return PasswordValidator.validateConfirmPassword(
+                              _passwordController.text,
+                              value,
+                            );
+                          },
                         ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                        const SizedBox(height: 16),
 
-                    // Newsletter Checkbox
-                    _buildCheckbox(
-                      value: _newsletterOptIn,
-                      onChanged: (value) => setState(() => _newsletterOptIn = value!),
-                      child: Text(
-                        'Send me updates and promotional offers',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: theme.colorScheme.onSurfaceVariant,
+                        // Terms & Conditions Checkbox
+                        _buildCheckbox(
+                          value: _acceptedTerms,
+                          onChanged: (value) =>
+                              setState(() => _acceptedTerms = value!),
+                          child: RichText(
+                            text: TextSpan(
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              children: [
+                                const TextSpan(text: 'I accept the '),
+                                TextSpan(
+                                  text: 'Terms & Conditions',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const TermsConditionsScreen(),
+                                        ),
+                                      );
+                                    },
+                                ),
+                                const TextSpan(text: ' *'),
+                              ],
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+                        const SizedBox(height: 12),
 
-                    // Register Button
-                    GradientAuthButton(
-                      text: 'Create Account',
-                      onPressed: _handleRegister,
-                      isLoading: _isLoading,
-                      icon: Icons.person_add_rounded,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Login Link
-                    Center(
-                      child: TextButton(
-                        onPressed: () => context.go(OwnerRoutes.login),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        // Privacy Policy Checkbox
+                        _buildCheckbox(
+                          value: _acceptedPrivacy,
+                          onChanged: (value) =>
+                              setState(() => _acceptedPrivacy = value!),
+                          child: RichText(
+                            text: TextSpan(
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              children: [
+                                const TextSpan(text: 'I accept the '),
+                                TextSpan(
+                                  text: 'Privacy Policy',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const PrivacyPolicyScreen(),
+                                        ),
+                                      );
+                                    },
+                                ),
+                                const TextSpan(text: ' *'),
+                              ],
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        child: RichText(
-                          text: TextSpan(
-                            style: theme.textTheme.bodyMedium?.copyWith(
+                        const SizedBox(height: 12),
+
+                        // Newsletter Checkbox
+                        _buildCheckbox(
+                          value: _newsletterOptIn,
+                          onChanged: (value) =>
+                              setState(() => _newsletterOptIn = value!),
+                          child: Text(
+                            'Send me updates and promotional offers',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Register Button
+                        GradientAuthButton(
+                          text: 'Create Account',
+                          onPressed: _handleRegister,
+                          isLoading: _isLoading,
+                          icon: Icons.person_add_rounded,
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Login Link
+                        Center(
+                          child: TextButton(
+                            onPressed: () => context.go(OwnerRoutes.login),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 16,
+                              ),
+                            ),
+                            child: RichText(
+                              text: TextSpan(
+                                style: theme.textTheme.bodyMedium?.copyWith(
                                   fontSize: 14,
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
-                            children: [
-                              const TextSpan(text: 'Already have an account? '),
-                              TextSpan(
-                                text: 'Login',
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                children: [
+                                  const TextSpan(
+                                    text: 'Already have an account? ',
+                                  ),
+                                  TextSpan(
+                                    text: 'Login',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-      ),
       ),
     );
   }
@@ -423,18 +455,15 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     final color = _passwordStrength == PasswordStrength.weak
         ? AppColors.error
         : _passwordStrength == PasswordStrength.medium
-            ? theme.colorScheme.tertiary
-            : AppColors.success;
+        ? theme.colorScheme.tertiary
+        : AppColors.success;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withAlpha((0.08 * 255).toInt()),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: color.withAlpha((0.2 * 255).toInt()),
-          width: 1,
-        ),
+        border: Border.all(color: color.withAlpha((0.2 * 255).toInt())),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,8 +477,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                     value: _passwordStrength == PasswordStrength.weak
                         ? 0.33
                         : _passwordStrength == PasswordStrength.medium
-                            ? 0.66
-                            : 1.0,
+                        ? 0.66
+                        : 1.0,
                     backgroundColor: theme.colorScheme.surfaceContainerHighest,
                     color: color,
                     minHeight: 6,
@@ -461,8 +490,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                 _passwordStrength == PasswordStrength.weak
                     ? 'Weak'
                     : _passwordStrength == PasswordStrength.medium
-                        ? 'Medium'
-                        : 'Strong',
+                    ? 'Medium'
+                    : 'Strong',
                 style: TextStyle(
                   color: color,
                   fontWeight: FontWeight.bold,
@@ -473,24 +502,23 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           ),
           if (_missingRequirements.isNotEmpty) ...[
             const SizedBox(height: 8),
-            ...(_missingRequirements.map((req) => Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Row(
-                    children: [
-                      Icon(Icons.close, size: 13, color: color),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          req,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: color,
-                          ),
-                        ),
+            ...(_missingRequirements.map(
+              (req) => Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.close, size: 13, color: color),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        req,
+                        style: TextStyle(fontSize: 11, color: color),
                       ),
-                    ],
-                  ),
-                ))),
+                    ),
+                  ],
+                ),
+              ),
+            )),
           ],
         ],
       ),
@@ -521,10 +549,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           ),
         ),
         const SizedBox(width: 8),
-        Expanded(child: Padding(
-          padding: const EdgeInsets.only(top: 1),
-          child: child,
-        )),
+        Expanded(
+          child: Padding(padding: const EdgeInsets.only(top: 1), child: child),
+        ),
       ],
     );
   }

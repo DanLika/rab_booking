@@ -82,10 +82,7 @@ class _OwnerCalendarMainScreenState
             decoration: BoxDecoration(
               color: Theme.of(context).scaffoldBackgroundColor,
               border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                  width: 1,
-                ),
+                bottom: BorderSide(color: Theme.of(context).dividerColor),
               ),
             ),
             child: Row(
@@ -95,7 +92,9 @@ class _OwnerCalendarMainScreenState
                     currentView: currentView,
                     onViewChanged: (newView) {
                       // Update provider
-                      ref.read(ownerCalendarViewProvider.notifier).setView(newView);
+                      ref
+                          .read(ownerCalendarViewProvider.notifier)
+                          .setView(newView);
 
                       // Navigate to appropriate route
                       String route;
@@ -119,9 +118,7 @@ class _OwnerCalendarMainScreenState
             ),
           ),
           // Calendar View
-          Expanded(
-            child: _buildCurrentView(currentView),
-          ),
+          Expanded(child: _buildCurrentView(currentView)),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

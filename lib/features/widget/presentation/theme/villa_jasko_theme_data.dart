@@ -23,12 +23,9 @@ class VillaJaskoTheme {
       colorScheme: const ColorScheme.light(
         primary: VillaJaskoColors.primary, // Azure Blue #0066FF
         secondary: VillaJaskoColors.accent, // Coral Sunset #FF6B6B
-        surface: VillaJaskoColors.surfaceWhite,
         error: VillaJaskoColors.error,
-        onPrimary: VillaJaskoColors.surfaceWhite,
         onSecondary: VillaJaskoColors.surfaceWhite,
         onSurface: VillaJaskoColors.textPrimary,
-        onError: VillaJaskoColors.surfaceWhite,
       ),
 
       // App bar theme with Azure Blue
@@ -50,16 +47,17 @@ class VillaJaskoTheme {
         color: VillaJaskoColors.surfaceWhite,
         elevation: 0,
         shadowColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
       // Input decoration theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: VillaJaskoColors.surfaceWhite,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(
@@ -90,10 +88,7 @@ class VillaJaskoTheme {
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-            color: VillaJaskoColors.error,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: VillaJaskoColors.error, width: 2),
         ),
         labelStyle: GoogleFonts.inter(
           color: VillaJaskoColors.textSecondary,
@@ -206,10 +201,7 @@ class VillaJaskoTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: VillaJaskoColors.primary,
-          side: const BorderSide(
-            color: VillaJaskoColors.primary,
-            width: 1.5,
-          ),
+          side: const BorderSide(color: VillaJaskoColors.primary, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -227,9 +219,7 @@ class VillaJaskoTheme {
         style: TextButton.styleFrom(
           foregroundColor: VillaJaskoColors.primary,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -338,7 +328,10 @@ class VillaJaskoTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: VillaJaskoDarkColors.backgroundElevated,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: VillaJaskoDarkColors.border),
@@ -349,7 +342,10 @@ class VillaJaskoTheme {
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: VillaJaskoDarkColors.borderFocus, width: 2),
+          borderSide: BorderSide(
+            color: VillaJaskoDarkColors.borderFocus,
+            width: 2,
+          ),
         ),
         errorBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -371,9 +367,7 @@ class VillaJaskoTheme {
         space: 1,
       ),
 
-      iconTheme: const IconThemeData(
-        color: VillaJaskoDarkColors.textSecondary,
-      ),
+      iconTheme: const IconThemeData(color: VillaJaskoDarkColors.textSecondary),
 
       textTheme: TextTheme(
         displayLarge: GoogleFonts.inter(

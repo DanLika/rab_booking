@@ -165,9 +165,7 @@ class DashboardOverviewTab extends ConsumerWidget {
 
     return recentBookingsAsync.when(
       data: (bookings) {
-        final activities = bookings.map((ownerBooking) {
-          return _convertBookingToActivity(ownerBooking);
-        }).toList();
+        final activities = bookings.map(_convertBookingToActivity).toList();
 
         return RecentActivityWidget(
           activities: activities,
@@ -313,7 +311,6 @@ class DashboardOverviewTab extends ConsumerWidget {
           ]),
           isMobile: isMobile,
           isTablet: isTablet,
-          animationDelay: 0,
         ),
         _buildStatCard(
           context: context,
@@ -461,7 +458,6 @@ class DashboardOverviewTab extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Icon container
                 Container(

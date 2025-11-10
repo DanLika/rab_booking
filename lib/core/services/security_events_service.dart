@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -59,7 +60,7 @@ class SecurityEventsService {
       }
     } catch (e) {
       // Don't throw - security logging should not break the app
-      LoggingService.logError('Failed to log security event', e);
+      unawaited(LoggingService.logError('Failed to log security event', e));
     }
   }
 
@@ -89,7 +90,7 @@ class SecurityEventsService {
         'recentSecurityEvents': limitedEvents,
       });
     } catch (e) {
-      LoggingService.logError('Failed to update recent events', e);
+      unawaited(LoggingService.logError('Failed to update recent events', e));
     }
   }
 
@@ -155,7 +156,7 @@ class SecurityEventsService {
         );
       }
     } catch (e) {
-      LoggingService.logError('Failed to check suspicious activity', e);
+      unawaited(LoggingService.logError('Failed to check suspicious activity', e));
     }
   }
 
@@ -217,7 +218,7 @@ class SecurityEventsService {
           .map((doc) => SecurityEvent.fromFirestore(doc.data()))
           .toList();
     } catch (e) {
-      LoggingService.logError('Failed to get security events', e);
+      unawaited(LoggingService.logError('Failed to get security events', e));
       return [];
     }
   }
@@ -249,7 +250,7 @@ class SecurityEventsService {
         'lastSeenAt': Timestamp.fromDate(deviceInfo.lastSeenAt),
       }, SetOptions(merge: true));
     } catch (e) {
-      LoggingService.logError('Failed to track device', e);
+      unawaited(LoggingService.logError('Failed to track device', e));
     }
   }
 
@@ -263,7 +264,7 @@ class SecurityEventsService {
           .doc(deviceId)
           .delete();
     } catch (e) {
-      LoggingService.logError('Failed to remove device', e);
+      unawaited(LoggingService.logError('Failed to remove device', e));
     }
   }
 
@@ -280,7 +281,7 @@ class SecurityEventsService {
           .map((doc) => DeviceInfo.fromJson(doc.data()))
           .toList();
     } catch (e) {
-      LoggingService.logError('Failed to get devices', e);
+      unawaited(LoggingService.logError('Failed to get devices', e));
       return [];
     }
   }
@@ -325,7 +326,7 @@ class SecurityEventsService {
       LoggingService.log('Suspicious activity email sent to $userEmail', tag: 'SECURITY');
     } catch (e) {
       // Don't throw - email failure should not break security logging
-      LoggingService.logError('Failed to send suspicious activity email', e);
+      unawaited(LoggingService.logError('Failed to send suspicious activity email', e));
     }
   }
 }

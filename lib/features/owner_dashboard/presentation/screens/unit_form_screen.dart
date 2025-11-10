@@ -20,11 +20,7 @@ import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Unit form screen for add/edit
 class UnitFormScreen extends ConsumerStatefulWidget {
-  const UnitFormScreen({
-    required this.propertyId,
-    this.unit,
-    super.key,
-  });
+  const UnitFormScreen({required this.propertyId, this.unit, super.key});
 
   final String propertyId;
   final UnitModel? unit;
@@ -347,9 +343,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                   context,
                   title: 'Sadržaji',
                   icon: Icons.star_outline,
-                  children: [
-                    _buildAmenitiesGrid(),
-                  ],
+                  children: [_buildAmenitiesGrid()],
                 ),
                 const SizedBox(height: AppDimensions.spaceM),
 
@@ -358,9 +352,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                   context,
                   title: 'Fotografije',
                   icon: Icons.photo_library_outlined,
-                  children: [
-                    _buildImagesSection(),
-                  ],
+                  children: [_buildImagesSection()],
                 ),
                 const SizedBox(height: AppDimensions.spaceM),
 
@@ -378,7 +370,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                             : 'Jedinica neće biti prikazana',
                       ),
                       value: _isAvailable,
-                      onChanged: (value) => setState(() => _isAvailable = value),
+                      onChanged: (value) =>
+                          setState(() => _isAvailable = value),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ],
@@ -391,7 +384,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                   onPressed: _handleSave,
                   isLoading: _isLoading,
                   icon: _isEditing ? Icons.save : Icons.add,
-                  height: 56,
                   width: double.infinity,
                 ),
 
@@ -406,18 +398,28 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                       Text(
                         'Integrirajte booking widget na vašu web stranicu',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                          color: theme.colorScheme.onSurface.withAlpha(
+                            (0.7 * 255).toInt(),
+                          ),
                         ),
                       ),
                       const SizedBox(height: AppDimensions.spaceM),
                       OutlinedButton.icon(
                         onPressed: () {
-                          context.push(OwnerRoutes.unitWidgetSettings.replaceAll(':id', widget.unit!.id));
+                          context.push(
+                            OwnerRoutes.unitWidgetSettings.replaceAll(
+                              ':id',
+                              widget.unit!.id,
+                            ),
+                          );
                         },
                         icon: const Icon(Icons.settings),
                         label: const Text('Postavke Widgeta'),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 24,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -438,7 +440,10 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                         icon: const Icon(Icons.code),
                         label: const Text('Generiši Embed Kod'),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 24,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -472,13 +477,18 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [AppColors.primary, AppColors.authSecondary],
+                              colors: [
+                                AppColors.primary,
+                                AppColors.authSecondary,
+                              ],
                             ),
                             shape: BoxShape.circle,
                           ),
                           child: const CircularProgressIndicator(
                             strokeWidth: 3,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -512,8 +522,9 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
-          width: 1,
+          color: Theme.of(
+            context,
+          ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
         ),
       ),
       child: Padding(
@@ -537,8 +548,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -651,8 +662,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
             child: Text(
               'Ukupno: $totalImages fotografija',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.textColorSecondary,
-                  ),
+                color: context.textColorSecondary,
+              ),
             ),
           ),
       ],
@@ -683,7 +694,9 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                   color: theme.colorScheme.surfaceContainerHighest,
                   child: Icon(
                     Icons.broken_image,
-                    color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                    color: theme.colorScheme.onSurface.withAlpha(
+                      (0.3 * 255).toInt(),
+                    ),
                   ),
                 );
               },
@@ -733,7 +746,9 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                 return Icon(
                   Icons.broken_image,
                   size: 40,
-                  color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                  color: theme.colorScheme.onSurface.withAlpha(
+                    (0.3 * 255).toInt(),
+                  ),
                 );
               },
             ),

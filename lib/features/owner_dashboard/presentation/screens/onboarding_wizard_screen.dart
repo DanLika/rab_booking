@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -163,11 +164,11 @@ class OnboardingWizardScreen extends ConsumerWidget {
 
       // Show loading
       if (context.mounted) {
-        showDialog(
+        unawaited(showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => const Center(child: CircularProgressIndicator()),
-        );
+        ));
       }
 
       // Create property (Step 1)

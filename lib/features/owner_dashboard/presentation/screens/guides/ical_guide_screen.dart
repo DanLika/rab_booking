@@ -341,7 +341,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
-                ...steps.map((step) => _buildBulletPoint(step)),
+                ...steps.map(_buildBulletPoint),
                 const SizedBox(height: 16),
                 _buildPlaceholder(placeholder),
               ],
@@ -373,9 +373,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
           backgroundColor: isExpanded
               ? AppColors.authPrimary
               : AppColors.borderLight,
-          foregroundColor: isExpanded
-              ? Colors.white
-              : AppColors.textDisabled,
+          foregroundColor: isExpanded ? Colors.white : AppColors.textDisabled,
           child: Text('$stepNumber'),
         ),
         title: Row(
@@ -444,11 +442,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.image,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: const Icon(Icons.image, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 12),
               Expanded(

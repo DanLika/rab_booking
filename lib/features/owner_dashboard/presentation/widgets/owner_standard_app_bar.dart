@@ -36,7 +36,6 @@ class OwnerStandardAppBar extends StatelessWidget {
 
     return SliverAppBar(
       expandedHeight: expandedHeight,
-      floating: false,
       pinned: pinned,
       elevation: 0,
       automaticallyImplyLeading: false,
@@ -47,7 +46,6 @@ class OwnerStandardAppBar extends StatelessWidget {
         statusBarBrightness: Brightness.dark,
       ),
       flexibleSpace: FlexibleSpaceBar(
-        collapseMode: CollapseMode.parallax,
         background: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(

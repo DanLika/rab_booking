@@ -89,7 +89,6 @@ class PremiumCard extends StatefulWidget {
     double imageAspectRatio = 16 / 9,
   }) {
     return PremiumCard(
-      variant: CardVariant.elevated,
       elevation: elevation,
       borderRadius: borderRadius,
       padding: padding,
@@ -206,7 +205,8 @@ class _PremiumCardState extends State<PremiumCard> {
   @override
   Widget build(BuildContext context) {
     final effectiveRadius = widget.borderRadius ?? AppDimensions.radiusL;
-    final effectivePadding = widget.padding ?? const EdgeInsets.all(AppDimensions.spaceM);
+    final effectivePadding =
+        widget.padding ?? const EdgeInsets.all(AppDimensions.spaceM);
 
     final Widget cardContent = Column(
       mainAxisSize: MainAxisSize.min,
@@ -219,14 +219,11 @@ class _PremiumCardState extends State<PremiumCard> {
             ),
             child: AspectRatio(
               aspectRatio: widget.imageAspectRatio,
-              child: widget.imageHeader!,
+              child: widget.imageHeader,
             ),
           ),
         ],
-        Padding(
-          padding: effectivePadding,
-          child: widget.child,
-        ),
+        Padding(padding: effectivePadding, child: widget.child),
       ],
     );
 
@@ -286,8 +283,14 @@ class _PremiumCardState extends State<PremiumCard> {
         border = null;
         // Use theme-aware shadow color in elevation shadows
         boxShadow = _isHovered
-            ? AppShadows.getElevation(widget.elevation + 1, isDark: context.isDarkMode)
-            : AppShadows.getElevation(widget.elevation, isDark: context.isDarkMode);
+            ? AppShadows.getElevation(
+                widget.elevation + 1,
+                isDark: context.isDarkMode,
+              )
+            : AppShadows.getElevation(
+                widget.elevation,
+                isDark: context.isDarkMode,
+              );
         gradient = null;
         break;
 
@@ -319,7 +322,6 @@ class _PremiumCardState extends State<PremiumCard> {
             Colors.white,
             context.isDarkMode ? AppColors.opacity10 : AppColors.opacity20,
           ),
-          width: 1,
         );
         // Use theme-aware shadow color for glass effect
         boxShadow = _isHovered

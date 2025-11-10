@@ -103,7 +103,7 @@ Future<DashboardStats> dashboardStats(Ref ref) async {
           booking.status == BookingStatus.checkedIn ||
           booking.status == BookingStatus.completed) {
         // Check if booking overlaps with current month
-        final monthStart = DateTime(now.year, now.month, 1);
+        final monthStart = DateTime(now.year, now.month);
         final monthEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
         if (booking.checkOut.isAfter(monthStart) &&

@@ -50,7 +50,8 @@ class ScrollReveal extends StatefulWidget {
   State<ScrollReveal> createState() => _ScrollRevealState();
 }
 
-class _ScrollRevealState extends State<ScrollReveal> with SingleTickerProviderStateMixin {
+class _ScrollRevealState extends State<ScrollReveal>
+    with SingleTickerProviderStateMixin {
   bool _isVisible = false;
   bool _hasAnimated = false;
   late AnimationController _controller;
@@ -62,38 +63,26 @@ class _ScrollRevealState extends State<ScrollReveal> with SingleTickerProviderSt
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
 
     // Fade animation (0.0 to 1.0)
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: widget.curve,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
 
     // Slide animation (depends on animation type)
     final slideOffset = _getSlideOffset();
     _slideAnimation = Tween<Offset>(
       begin: slideOffset,
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: widget.curve,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
 
     // Scale animation (0.8 to 1.0)
     _scaleAnimation = Tween<double>(
       begin: 0.8,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: widget.curve,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
   }
 
   @override
@@ -162,10 +151,7 @@ class _ScrollRevealState extends State<ScrollReveal> with SingleTickerProviderSt
   Widget _buildAnimatedChild() {
     switch (widget.animation) {
       case ScrollRevealAnimation.fade:
-        return FadeTransition(
-          opacity: _fadeAnimation,
-          child: widget.child,
-        );
+        return FadeTransition(opacity: _fadeAnimation, child: widget.child);
 
       case ScrollRevealAnimation.fadeSlideUp:
       case ScrollRevealAnimation.fadeSlideDown:
@@ -182,10 +168,7 @@ class _ScrollRevealState extends State<ScrollReveal> with SingleTickerProviderSt
       case ScrollRevealAnimation.fadeScale:
         return FadeTransition(
           opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: widget.child,
-          ),
+          child: ScaleTransition(scale: _scaleAnimation, child: widget.child),
         );
     }
   }
@@ -286,9 +269,7 @@ class SectionReveal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScrollReveal(
-      animation: ScrollRevealAnimation.fadeSlideUp,
       duration: const Duration(milliseconds: 800),
-      curve: Curves.easeOutCubic,
       delay: delay,
       visibilityThreshold: 0.15, // Trigger earlier for sections
       child: child,

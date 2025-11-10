@@ -13,11 +13,7 @@ import '../../../core/constants/app_dimensions.dart';
 /// LoadingIndicator(message: 'Loading properties...')
 /// ```
 class LoadingIndicator extends StatelessWidget {
-  const LoadingIndicator({
-    this.message,
-    this.size = 40.0,
-    super.key,
-  });
+  const LoadingIndicator({this.message, this.size = 40.0, super.key});
 
   /// Optional loading message
   final String? message;
@@ -40,12 +36,16 @@ class LoadingIndicator extends StatelessWidget {
             child: const CircularProgressIndicator(),
           ),
           if (message != null) ...[
-            const SizedBox(height: AppDimensions.spaceS), // 16px from design system
+            const SizedBox(
+              height: AppDimensions.spaceS,
+            ), // 16px from design system
             Text(
               message!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                  ),
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -153,7 +153,6 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius),
             gradient: LinearGradient(
-              begin: Alignment.centerLeft,
               end: Alignment.centerRight,
               colors: isDark
                   ? [
@@ -166,11 +165,7 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
                       AppColors.shimmerHighlight,
                       AppColors.shimmerBase,
                     ],
-              stops: [
-                0.0,
-                _controller.value,
-                1.0,
-              ],
+              stops: [0.0, _controller.value, 1.0],
             ),
           ),
         );

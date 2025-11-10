@@ -53,7 +53,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             content: Text(e.toString()),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -73,7 +75,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ),
               child: Center(
                 child: GlassCard(
-                  maxWidth: 460,
                   child: _emailSent ? _buildSuccessView() : _buildFormView(),
                 ),
               ),
@@ -103,10 +104,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           Text(
             'Reset Your Password',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 28,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
+              fontWeight: FontWeight.bold,
+              fontSize: 28,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
@@ -115,9 +116,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           Text(
             'Enter your email address and we\'ll send you instructions to reset your password.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 15,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 15,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
@@ -146,7 +147,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             child: TextButton(
               onPressed: () => context.go('/login'),
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 16,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -209,10 +213,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         Text(
           'Email Sent!',
           style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 28,
-                color: theme.colorScheme.onSurface,
-              ),
+            fontWeight: FontWeight.bold,
+            fontSize: 28,
+            color: theme.colorScheme.onSurface,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 12),
@@ -221,9 +225,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         Text(
           'We\'ve sent password reset instructions to:',
           style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 15,
-              ),
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 15,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
@@ -232,10 +236,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         Text(
           _emailController.text,
           style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+            color: theme.colorScheme.primary,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 40),
@@ -244,7 +248,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         GradientAuthButton(
           text: 'Return to Login',
           onPressed: () => context.go('/login'),
-          isLoading: false,
           icon: Icons.arrow_forward,
         ),
         const SizedBox(height: 16),

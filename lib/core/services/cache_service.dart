@@ -5,10 +5,7 @@ class _CacheEntry<T> {
   final T value;
   final DateTime timestamp;
 
-  _CacheEntry({
-    required this.value,
-    required this.timestamp,
-  });
+  _CacheEntry({required this.value, required this.timestamp});
 
   bool isExpired(Duration ttl) {
     return DateTime.now().difference(timestamp) > ttl;
@@ -33,16 +30,11 @@ class CacheService<T> {
   final Map<String, _CacheEntry<T>> _cache = {};
   final Duration ttl;
 
-  CacheService({
-    this.ttl = const Duration(minutes: 5),
-  });
+  CacheService({this.ttl = const Duration(minutes: 5)});
 
   /// Set a value in cache with current timestamp
   void set(String key, T value) {
-    _cache[key] = _CacheEntry(
-      value: value,
-      timestamp: DateTime.now(),
-    );
+    _cache[key] = _CacheEntry(value: value, timestamp: DateTime.now());
 
     LoggingService.logCache('Set key "$key" with TTL ${ttl.inMinutes}m');
   }
@@ -96,7 +88,9 @@ class CacheService<T> {
       _cache.remove(key);
     }
 
-    LoggingService.logCache('Invalidated ${keysToRemove.length} keys matching "$pattern"');
+    LoggingService.logCache(
+      'Invalidated ${keysToRemove.length} keys matching "$pattern"',
+    );
   }
 
   /// Clear all cache entries
@@ -141,10 +135,7 @@ class CacheService<T> {
   }
 
   /// Get or set pattern: Get from cache, or fetch and cache if not available
-  Future<T> getOrSet(
-    String key,
-    Future<T> Function() fetcher,
-  ) async {
+  Future<T> getOrSet(String key, Future<T> Function() fetcher) async {
     // Try to get from cache first
     final cached = get(key);
     if (cached != null) {
@@ -183,14 +174,10 @@ class CacheStats {
 /// Global cache instances for common use cases
 class AppCache {
   // Cache for property data (5 minutes TTL)
-  static final properties = CacheService<dynamic>(
-    ttl: const Duration(minutes: 5),
-  );
+  static final properties = CacheService<dynamic>();
 
   // Cache for user data (10 minutes TTL)
-  static final users = CacheService<dynamic>(
-    ttl: const Duration(minutes: 10),
-  );
+  static final users = CacheService<dynamic>(ttl: const Duration(minutes: 10));
 
   // Cache for search results (2 minutes TTL - shorter as search is dynamic)
   static final searchResults = CacheService<dynamic>(

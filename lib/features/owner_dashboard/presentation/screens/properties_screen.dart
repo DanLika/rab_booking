@@ -95,7 +95,6 @@ class PropertiesScreen extends ConsumerWidget {
                                   0xFF6B4CE6,
                                 ).withAlpha((0.3 * 255).toInt()),
                                 width: 2,
-                                strokeAlign: BorderSide.strokeAlignInside,
                               ),
                             ),
                             child: InkWell(
@@ -171,9 +170,7 @@ class PropertiesScreen extends ConsumerWidget {
                       ),
                       child: const CircularProgressIndicator(
                         strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white,
-                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -440,7 +437,6 @@ class _EmptyPropertiesState extends StatelessWidget {
                 text: 'Dodaj Prvu Nekretninu',
                 onPressed: onAddProperty,
                 icon: Icons.add_business,
-                height: 56,
               ),
             ],
           ),

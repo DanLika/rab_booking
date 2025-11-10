@@ -14,10 +14,7 @@ import '../../../utils/booking_overlap_detector.dart';
 class BookingInlineEditDialog extends ConsumerStatefulWidget {
   final BookingModel booking;
 
-  const BookingInlineEditDialog({
-    super.key,
-    required this.booking,
-  });
+  const BookingInlineEditDialog({super.key, required this.booking});
 
   @override
   ConsumerState<BookingInlineEditDialog> createState() =>
@@ -52,7 +49,9 @@ class _BookingInlineEditDialogState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isMobile = MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint;
+    final isMobile =
+        MediaQuery.of(context).size.width <
+        CalendarGridCalculator.mobileBreakpoint;
 
     return Dialog(
       child: Container(
@@ -74,10 +73,7 @@ class _BookingInlineEditDialogState
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.edit,
-                    color: theme.colorScheme.onPrimary,
-                  ),
+                  Icon(Icons.edit, color: theme.colorScheme.onPrimary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: AutoSizeText(
@@ -91,10 +87,7 @@ class _BookingInlineEditDialogState
                     ),
                   ),
                   IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: theme.colorScheme.onPrimary,
-                    ),
+                    icon: Icon(Icons.close, color: theme.colorScheme.onPrimary),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -159,9 +152,7 @@ class _BookingInlineEditDialogState
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: theme.dividerColor),
-                ),
+                border: Border(top: BorderSide(color: theme.dividerColor)),
               ),
               child: isMobile
                   ? Column(
@@ -183,7 +174,6 @@ class _BookingInlineEditDialogState
                           label: AutoSizeText(
                             _isSaving ? 'Saving...' : 'Save Changes',
                             maxLines: 1,
-                            minFontSize: 12,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -232,7 +222,6 @@ class _BookingInlineEditDialogState
                             label: AutoSizeText(
                               _isSaving ? 'Saving...' : 'Save Changes',
                               maxLines: 1,
-                              minFontSize: 12,
                             ),
                           ),
                         ),
@@ -372,8 +361,10 @@ class _BookingInlineEditDialogState
     );
   }
 
-  Future<void> _selectDate(BuildContext context,
-      {required bool isCheckIn}) async {
+  Future<void> _selectDate(
+    BuildContext context, {
+    required bool isCheckIn,
+  }) async {
     final picked = await showDatePicker(
       context: context,
       initialDate: isCheckIn ? _checkIn : _checkOut,
@@ -423,8 +414,10 @@ class _BookingInlineEditDialogState
           // Show detailed error with conflicting booking info
           final conflict = conflicts.first;
           final conflictGuestName = conflict.guestName ?? 'Unknown';
-          final conflictCheckIn = '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}';
-          final conflictCheckOut = '${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}';
+          final conflictCheckIn =
+              '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}';
+          final conflictCheckOut =
+              '${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}';
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

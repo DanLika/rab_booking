@@ -32,15 +32,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(
-    const ProviderScope(
-      child: BookingWidgetApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: BookingWidgetApp()));
 }
 
 /// Booking Widget App - Minimalna aplikacija samo za widget
@@ -56,7 +50,8 @@ class BookingWidgetApp extends ConsumerWidget {
     final widgetConfig = ref.watch(widgetConfigProvider);
 
     // Try to load widget settings from Firestore (if unitId is available)
-    final widgetSettingsAsync = widgetConfig.unitId != null && widgetConfig.propertyId != null
+    final widgetSettingsAsync =
+        widgetConfig.unitId != null && widgetConfig.propertyId != null
         ? ref.watch(_widgetSettingsProvider(widgetConfig))
         : null;
 
@@ -64,14 +59,8 @@ class BookingWidgetApp extends ConsumerWidget {
     final widgetSettings = widgetSettingsAsync?.valueOrNull;
 
     // Get blur configuration from settings (or use defaults)
-    final blurConfig = widgetSettings?.blurConfig ?? const BlurConfig(
-      enabled: true,
-      intensity: 'medium',
-      enableCardBlur: true,
-      enableAppBarBlur: true,
-      enableModalBlur: true,
-      enableOverlayBlur: true,
-    );
+    final blurConfig =
+        widgetSettings?.blurConfig ?? const BlurConfig(intensity: 'medium');
 
     // Determine theme mode (priority: URL > Firestore > default 'system')
     final String themeMode = widgetConfig.themeMode.isNotEmpty
@@ -96,9 +85,7 @@ class BookingWidgetApp extends ConsumerWidget {
 
     // Override blur config provider with actual settings from Firestore
     return ProviderScope(
-      overrides: [
-        blurConfigProvider.overrideWithValue(blurConfig),
-      ],
+      overrides: [blurConfigProvider.overrideWithValue(blurConfig)],
       child: MaterialApp.router(
         title: 'Rab Booking Widget',
         debugShowCheckedModeBanner: false,
@@ -135,19 +122,20 @@ class BookingWidgetApp extends ConsumerWidget {
 /// This provider uses StreamProvider to listen for real-time updates.
 /// When owner changes settings in Dashboard, the widget will automatically
 /// update without requiring a page refresh.
-final _widgetSettingsProvider = StreamProvider.family<WidgetSettings?, WidgetConfig>((ref, config) {
-  if (config.propertyId == null || config.unitId == null) {
-    return Stream.value(null);
-  }
+final _widgetSettingsProvider =
+    StreamProvider.family<WidgetSettings?, WidgetConfig>((ref, config) {
+      if (config.propertyId == null || config.unitId == null) {
+        return Stream.value(null);
+      }
 
-  try {
-    final repository = ref.read(widgetSettingsRepositoryProvider);
-    return repository.watchWidgetSettings(
-      propertyId: config.propertyId!,
-      unitId: config.unitId!,
-    );
-  } catch (e) {
-    // If settings don't exist or error loading, return null stream (use defaults)
-    return Stream.value(null);
-  }
-});
+      try {
+        final repository = ref.read(widgetSettingsRepositoryProvider);
+        return repository.watchWidgetSettings(
+          propertyId: config.propertyId!,
+          unitId: config.unitId!,
+        );
+      } catch (e) {
+        // If settings don't exist or error loading, return null stream (use defaults)
+        return Stream.value(null);
+      }
+    });

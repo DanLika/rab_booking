@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../shared/models/daily_price_model.dart';
 import '../../../../shared/repositories/daily_price_repository.dart';
@@ -28,7 +29,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
       final priceData = snapshot.docs.first.data();
       return (priceData['price'] as num?)?.toDouble();
     } catch (e) {
-      LoggingService.logError('Error getting price for date', e);
+      unawaited(LoggingService.logError('Error getting price for date', e));
       return null;
     }
   }
@@ -67,7 +68,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
           .whereType<DailyPriceModel>()
           .toList();
     } catch (e) {
-      LoggingService.logError('Error getting prices for date range', e);
+      unawaited(LoggingService.logError('Error getting prices for date range', e));
       return [];
     }
   }
@@ -116,7 +117,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
 
       return total;
     } catch (e) {
-      LoggingService.logError('Error calculating booking price', e);
+      unawaited(LoggingService.logError('Error calculating booking price', e));
       return 0.0;
     }
   }
@@ -340,7 +341,7 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
           .whereType<DailyPriceModel>()
           .toList();
     } catch (e) {
-      LoggingService.logError('Error fetching all prices for unit', e);
+      unawaited(LoggingService.logError('Error fetching all prices for unit', e));
       return [];
     }
   }

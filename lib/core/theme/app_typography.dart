@@ -238,77 +238,75 @@ class AppTypography {
   /// Hero title style (for landing page) - ENHANCED for dramatic impact
   /// Desktop: 96px, Tablet: 72px, Mobile: 56px (responsive handled in components)
   static TextStyle get heroTitle => GoogleFonts.playfairDisplay(
-        fontSize: 96, // Increased from 56px for desktop drama
-        fontWeight: FontWeight.w700,
-        letterSpacing: -1.5, // Tighter tracking for large text
-        height: 1.0, // Tighter leading for impact
-      );
+    fontSize: 96, // Increased from 56px for desktop drama
+    fontWeight: FontWeight.w700,
+    letterSpacing: -1.5, // Tighter tracking for large text
+    height: 1.0, // Tighter leading for impact
+  );
 
   /// Hero subtitle style - Enhanced for better readability
   static TextStyle get heroSubtitle => GoogleFonts.inter(
-        fontSize: 24, // Increased from 20px for better hierarchy
-        fontWeight: FontWeight.w300, // Lighter weight for elegance
-        letterSpacing: 0.25,
-        height: 1.5,
-      );
+    fontSize: 24, // Increased from 20px for better hierarchy
+    fontWeight: FontWeight.w300, // Lighter weight for elegance
+    letterSpacing: 0.25,
+    height: 1.5,
+  );
 
   /// Property card title
   static TextStyle get propertyCardTitle => GoogleFonts.inter(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0,
-        height: 1.4,
-      );
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0,
+    height: 1.4,
+  );
 
   /// Property card subtitle (location)
   static TextStyle get propertyCardSubtitle => GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.25,
-        height: 1.43,
-      );
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.25,
+    height: 1.43,
+  );
 
   /// Price text style
   static TextStyle get priceText => GoogleFonts.inter(
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0,
-        height: 1.33,
-      );
+    fontSize: 24,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0,
+    height: 1.33,
+  );
 
   /// Price label style (per night, total, etc.)
   static TextStyle get priceLabel => GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.25,
-        height: 1.43,
-      );
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.25,
+    height: 1.43,
+  );
 
   /// Button text style - 16px (semi-bold)
   static TextStyle get buttonText => GoogleFonts.inter(
-        fontSize: 16,
-        fontWeight: FontWeight.w600, // Semi-bold
-        letterSpacing: 0.5,
-        height: 1.25,
-      );
+    fontSize: 16,
+    fontWeight: FontWeight.w600, // Semi-bold
+    letterSpacing: 0.5,
+    height: 1.25,
+  );
 
   /// Caption text (image captions, footnotes)
   static TextStyle get caption => GoogleFonts.inter(
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.4,
-        height: 1.33,
-      );
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.4,
+    height: 1.33,
+  );
 
   /// Overline text (labels, categories)
   static TextStyle get overline => GoogleFonts.inter(
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 1.5,
-        height: 1.6,
-      ).copyWith(
-        textBaseline: TextBaseline.alphabetic,
-      );
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 1.5,
+    height: 1.6,
+  ).copyWith(textBaseline: TextBaseline.alphabetic);
 
   // ============================================================================
   // PREMIUM TEXT STYLES (additional custom styles)
@@ -316,120 +314,120 @@ class AppTypography {
 
   /// Large display text (for marketing headlines)
   static TextStyle get displayXL => GoogleFonts.playfairDisplay(
-        fontSize: 64,
-        fontWeight: weightExtrabold,
-        letterSpacing: letterSpacingTight,
-        height: lineHeightTight,
-      );
+    fontSize: 64,
+    fontWeight: weightExtrabold,
+    letterSpacing: letterSpacingTight,
+    height: lineHeightTight,
+  );
 
   /// Subheading style (section intros, card descriptions)
   static TextStyle get subheading => GoogleFonts.inter(
-        fontSize: 18,
-        fontWeight: weightRegular,
-        letterSpacing: letterSpacingRelaxed,
-        height: lineHeightRelaxed,
-      );
+    fontSize: 18,
+    fontWeight: weightRegular,
+    letterSpacing: letterSpacingRelaxed,
+    height: lineHeightRelaxed,
+  );
 
   /// Lead paragraph style (intro paragraphs, important text)
   static TextStyle get lead => GoogleFonts.inter(
-        fontSize: 18,
-        fontWeight: weightRegular,
-        letterSpacing: letterSpacingNormal,
-        height: lineHeightRelaxed,
-      );
+    fontSize: 18,
+    fontWeight: weightRegular,
+    letterSpacing: letterSpacingNormal,
+    height: lineHeightRelaxed,
+  );
 
   /// Small text (disclaimers, fine print)
   static TextStyle get small => GoogleFonts.inter(
-        fontSize: 12,
-        fontWeight: weightRegular,
-        letterSpacing: letterSpacingNormal,
-        height: lineHeightNormal,
-      );
+    fontSize: 12,
+    fontWeight: weightRegular,
+    letterSpacing: letterSpacingNormal,
+    height: lineHeightNormal,
+  );
 
   /// Tiny text (timestamps, metadata)
   static TextStyle get tiny => GoogleFonts.inter(
-        fontSize: 10,
-        fontWeight: weightRegular,
-        letterSpacing: letterSpacingNormal,
-        height: lineHeightNormal,
-      );
+    fontSize: 10,
+    fontWeight: weightRegular,
+    letterSpacing: letterSpacingNormal,
+    height: lineHeightNormal,
+  );
 
   /// Badge text style (notification badges, status badges)
   static TextStyle get badge => GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: weightSemibold,
-        letterSpacing: letterSpacingWide,
-        height: 1.0,
-      );
+    fontSize: 11,
+    fontWeight: weightSemibold,
+    letterSpacing: letterSpacingWide,
+    height: 1.0,
+  );
 
   /// Link text style (clickable links)
   static TextStyle get link => GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: weightMedium,
-        letterSpacing: letterSpacingNormal,
-        height: lineHeightNormal,
-        decoration: TextDecoration.underline,
-      );
+    fontSize: 14,
+    fontWeight: weightMedium,
+    letterSpacing: letterSpacingNormal,
+    height: lineHeightNormal,
+    decoration: TextDecoration.underline,
+  );
 
   /// Error text style (validation messages)
   static TextStyle get errorText => GoogleFonts.inter(
-        fontSize: 12,
-        fontWeight: weightRegular,
-        letterSpacing: letterSpacingNormal,
-        height: lineHeightNormal,
-      );
+    fontSize: 12,
+    fontWeight: weightRegular,
+    letterSpacing: letterSpacingNormal,
+    height: lineHeightNormal,
+  );
 
   /// Helper text style (input hints, help text)
   static TextStyle get helperText => GoogleFonts.inter(
-        fontSize: 12,
-        fontWeight: weightRegular,
-        letterSpacing: letterSpacingRelaxed,
-        height: lineHeightNormal,
-      );
+    fontSize: 12,
+    fontWeight: weightRegular,
+    letterSpacing: letterSpacingRelaxed,
+    height: lineHeightNormal,
+  );
 
   /// Label text style (form labels, small headings)
   static TextStyle get label => GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: weightMedium,
-        letterSpacing: letterSpacingWide,
-        height: lineHeightNormal,
-      );
+    fontSize: 13,
+    fontWeight: weightMedium,
+    letterSpacing: letterSpacingWide,
+    height: lineHeightNormal,
+  );
 
   /// Quote text style (testimonials, blockquotes) - ENHANCED with italic elegance
   static TextStyle get quote => GoogleFonts.playfairDisplay(
-        fontSize: 24, // Increased from 20px for more impact
-        fontWeight: weightLight, // Lighter for elegance
-        letterSpacing: letterSpacingNormal,
-        height: lineHeightRelaxed,
-        fontStyle: FontStyle.italic,
-      );
+    fontSize: 24, // Increased from 20px for more impact
+    fontWeight: weightLight, // Lighter for elegance
+    letterSpacing: letterSpacingNormal,
+    height: lineHeightRelaxed,
+    fontStyle: FontStyle.italic,
+  );
 
   /// Testimonial text style - Italic Playfair for emotional impact
   static TextStyle get testimonial => GoogleFonts.playfairDisplay(
-        fontSize: 20,
-        fontWeight: weightLight,
-        letterSpacing: 0.15,
-        height: 1.7,
-        fontStyle: FontStyle.italic,
-      );
+    fontSize: 20,
+    fontWeight: weightLight,
+    letterSpacing: 0.15,
+    height: 1.7,
+    fontStyle: FontStyle.italic,
+  );
 
   /// Pull quote style - Large italic for featured quotes
   static TextStyle get pullQuote => GoogleFonts.playfairDisplay(
-        fontSize: 32,
-        fontWeight: weightExtraLight, // Ultra-light for drama
-        letterSpacing: -0.5,
-        height: 1.3,
-        fontStyle: FontStyle.italic,
-      );
+    fontSize: 32,
+    fontWeight: weightExtraLight, // Ultra-light for drama
+    letterSpacing: -0.5,
+    height: 1.3,
+    fontStyle: FontStyle.italic,
+  );
 
   /// Quote attribution style - Who said the quote
   static TextStyle get quoteAttribution => GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: weightMedium,
-        letterSpacing: 0.5,
-        height: 1.5,
-        fontStyle: FontStyle.italic,
-      );
+    fontSize: 14,
+    fontWeight: weightMedium,
+    letterSpacing: 0.5,
+    height: 1.5,
+    fontStyle: FontStyle.italic,
+  );
 
   // ============================================================================
   // RESPONSIVE SCALING
@@ -441,22 +439,16 @@ class AppTypography {
 
     // Mobile (< 600)
     if (width < 600) {
-      return textTheme.apply(
-        fontSizeFactor: 0.9,
-      );
+      return textTheme.apply(fontSizeFactor: 0.9);
     }
 
     // Tablet (600-1024)
     if (width < 1024) {
-      return textTheme.apply(
-        fontSizeFactor: 1.0,
-      );
+      return textTheme.apply();
     }
 
     // Desktop (>= 1024)
-    return textTheme.apply(
-      fontSizeFactor: 1.1,
-    );
+    return textTheme.apply(fontSizeFactor: 1.1);
   }
 
   /// Get responsive hero title size (H1)
@@ -505,9 +497,7 @@ class AppTypography {
 
   /// Get text style with opacity
   static TextStyle withOpacity(TextStyle style, double opacity) {
-    return style.copyWith(
-      color: style.color?.withValues(alpha: opacity),
-    );
+    return style.copyWith(color: style.color?.withValues(alpha: opacity));
   }
 
   /// Get bold variant of text style

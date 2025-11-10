@@ -45,9 +45,10 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
           boxShadow: _isFocused
               ? [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.3 * 255).toInt(),
+                    ),
                     blurRadius: 20,
-                    spreadRadius: 0,
                   ),
                 ]
               : [],
@@ -66,20 +67,26 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
           decoration: InputDecoration(
             labelText: widget.labelText,
             labelStyle: TextStyle(
-              color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+              color: _isFocused
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
             prefixIcon: widget.prefixIcon != null
                 ? Icon(
                     widget.prefixIcon,
-                    color: _isFocused ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                    color: _isFocused
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
                     size: 20,
                   )
                 : null,
             suffixIcon: widget.suffixIcon,
             filled: true,
-            fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha((0.5 * 255).toInt()),
+            fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(
+              (0.5 * 255).toInt(),
+            ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
@@ -114,10 +121,7 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: theme.colorScheme.error,
-                width: 2,
-              ),
+              borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
             ),
           ),
         ),

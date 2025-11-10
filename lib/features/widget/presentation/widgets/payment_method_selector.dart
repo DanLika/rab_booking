@@ -11,10 +11,7 @@ class PaymentMethodSelector extends ConsumerWidget {
   /// Whether to show Stripe payment option
   final bool enableStripe;
 
-  const PaymentMethodSelector({
-    super.key,
-    this.enableStripe = false,
-  });
+  const PaymentMethodSelector({super.key, this.enableStripe = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,7 +24,9 @@ class PaymentMethodSelector extends ConsumerWidget {
         Text(
           'Payment method',
           style: GoogleFonts.inter(
-            fontSize: isMobile ? TypographyTokens.fontSizeXL : TypographyTokens.fontSizeXXL,
+            fontSize: isMobile
+                ? TypographyTokens.fontSizeXL
+                : TypographyTokens.fontSizeXXL,
             fontWeight: TypographyTokens.semiBold,
             color: ColorTokens.light.textPrimary,
           ),
@@ -47,7 +46,6 @@ class PaymentMethodSelector extends ConsumerWidget {
                     title: 'Bank transfer',
                     description:
                         'Waiting time for a bank transfer: 3 working days. If you do not make the transfer, the reservation will be cancelled.',
-                    badge: null,
                   ),
                   const SizedBox(height: SpacingTokens.m),
                   if (enableStripe)
@@ -72,7 +70,6 @@ class PaymentMethodSelector extends ConsumerWidget {
                     title: 'Pay on Arrival',
                     description:
                         'Pay the full amount when you arrive at the property.',
-                    badge: null,
                   ),
                 ],
               )
@@ -88,7 +85,6 @@ class PaymentMethodSelector extends ConsumerWidget {
                       title: 'Bank transfer',
                       description:
                           'Waiting time for a bank transfer: 3 working days. If you do not make the transfer, the reservation will be cancelled.',
-                      badge: null,
                     ),
                   ),
                   const SizedBox(width: SpacingTokens.m),
@@ -117,7 +113,6 @@ class PaymentMethodSelector extends ConsumerWidget {
                       title: 'Pay on Arrival',
                       description:
                           'Pay the full amount when you arrive at the property.',
-                      badge: null,
                     ),
                   ),
                 ],
@@ -150,7 +145,10 @@ class PaymentMethodSelector extends ConsumerWidget {
                 ? LinearGradient(
                     colors: [
                       ColorTokens.azure50, // Very light azure
-                      ColorTokens.withOpacity(ColorTokens.azure100, OpacityTokens.almostOpaque),
+                      ColorTokens.withOpacity(
+                        ColorTokens.azure100,
+                        OpacityTokens.almostOpaque,
+                      ),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -162,7 +160,9 @@ class PaymentMethodSelector extends ConsumerWidget {
               color: isSelected
                   ? ColorTokens.light.primary
                   : ColorTokens.light.borderDefault,
-              width: isSelected ? BorderTokens.widthThick : BorderTokens.widthThin,
+              width: isSelected
+                  ? BorderTokens.widthThick
+                  : BorderTokens.widthThin,
             ),
             boxShadow: isSelected
                 ? ColorTokens.light.shadowMedium
@@ -199,7 +199,9 @@ class PaymentMethodSelector extends ConsumerWidget {
                     const SizedBox(width: SpacingTokens.xs2),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: SpacingTokens.xs2, vertical: SpacingTokens.xxs),
+                        horizontal: SpacingTokens.xs2,
+                        vertical: SpacingTokens.xxs,
+                      ),
                       decoration: BoxDecoration(
                         color: ColorTokens.light.statusAvailableBackground,
                         borderRadius: BorderTokens.circularSubtle,

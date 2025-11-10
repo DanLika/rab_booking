@@ -61,8 +61,6 @@ Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
   // No property/unit filtering - timeline widget shows ALL units
   return repository.getCalendarBookings(
     ownerId: userId,
-    propertyId: null,  // No property filter
-    unitId: null,      // No unit filter
     startDate: startDate,
     endDate: endDate,
   );
@@ -130,7 +128,9 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
       // BATCHED LISTENING: Split unit IDs into chunks of 10 (Firestore whereIn limit)
       final batches = <List<String>>[];
       for (int i = 0; i < unitIdsToWatch.length; i += 10) {
-        final end = (i + 10 < unitIdsToWatch.length) ? i + 10 : unitIdsToWatch.length;
+        final end = (i + 10 < unitIdsToWatch.length)
+            ? i + 10
+            : unitIdsToWatch.length;
         batches.add(unitIdsToWatch.sublist(i, end));
       }
 
@@ -150,18 +150,21 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
             .where('unit_id', whereIn: batch)
             .snapshots()
             .listen(
-          (snapshot) {
-            LoggingService.log(
-              'Batch $i received ${snapshot.docs.length} booking updates',
-              tag: 'CALENDAR_REALTIME',
+              (snapshot) {
+                LoggingService.log(
+                  'Batch $i received ${snapshot.docs.length} booking updates',
+                  tag: 'CALENDAR_REALTIME',
+                );
+                // When bookings change in any batch, invalidate the calendar
+                ref.invalidate(calendarBookingsProvider);
+              },
+              onError: (error) {
+                LoggingService.logError(
+                  'Error in batch $i realtime subscription',
+                  error,
+                );
+              },
             );
-            // When bookings change in any batch, invalidate the calendar
-            ref.invalidate(calendarBookingsProvider);
-          },
-          onError: (error) {
-            LoggingService.logError('Error in batch $i realtime subscription', error);
-          },
-        );
         _allSubscriptions.add(bookingsSubscription);
 
         // Listener 2: OPTIONAL - iCal events (Booking.com, Airbnb, etc.)
@@ -172,23 +175,23 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
               .where('unit_id', whereIn: batch)
               .snapshots()
               .listen(
-            (snapshot) {
-              LoggingService.log(
-                'Batch $i received ${snapshot.docs.length} iCal event updates',
-                tag: 'CALENDAR_REALTIME_ICAL',
+                (snapshot) {
+                  LoggingService.log(
+                    'Batch $i received ${snapshot.docs.length} iCal event updates',
+                    tag: 'CALENDAR_REALTIME_ICAL',
+                  );
+                  // When iCal events change, also invalidate the calendar
+                  ref.invalidate(calendarBookingsProvider);
+                },
+                onError: (error) {
+                  // GRACEFUL: If iCal events collection doesn't exist or query fails,
+                  // just log it and continue - calendar will still work with regular bookings
+                  LoggingService.log(
+                    'iCal events listener error (non-critical): $error',
+                    tag: 'CALENDAR_REALTIME_ICAL',
+                  );
+                },
               );
-              // When iCal events change, also invalidate the calendar
-              ref.invalidate(calendarBookingsProvider);
-            },
-            onError: (error) {
-              // GRACEFUL: If iCal events collection doesn't exist or query fails,
-              // just log it and continue - calendar will still work with regular bookings
-              LoggingService.log(
-                'iCal events listener error (non-critical): $error',
-                tag: 'CALENDAR_REALTIME_ICAL',
-              );
-            },
-          );
           _allSubscriptions.add(icalSubscription);
         } catch (e) {
           // GRACEFUL: If iCal listener fails to setup, continue without it
@@ -199,7 +202,7 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
         }
       }
     } catch (e) {
-      LoggingService.logError('Failed to setup realtime subscription', e);
+      unawaited(LoggingService.logError('Failed to setup realtime subscription', e));
     }
   }
 

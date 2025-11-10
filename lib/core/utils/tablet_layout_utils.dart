@@ -133,10 +133,7 @@ class TabletSplitView extends StatelessWidget {
 
         // Detail pane
         Expanded(
-          child: Container(
-            color: detailBackgroundColor,
-            child: detail,
-          ),
+          child: Container(color: detailBackgroundColor, child: detail),
         ),
       ],
     );
@@ -147,7 +144,7 @@ class TabletSplitView extends StatelessWidget {
 class MasterDetailScaffold extends StatefulWidget {
   /// Master view builder
   final Widget Function(BuildContext context, void Function(Widget) showDetail)
-      masterBuilder;
+  masterBuilder;
 
   /// Initial detail view (shown on tablets)
   final Widget? initialDetail;
@@ -193,10 +190,8 @@ class _MasterDetailScaffoldState extends State<MasterDetailScaffold> {
       // On mobile, push new route
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => Scaffold(
-            appBar: widget.detailAppBar,
-            body: detail,
-          ),
+          builder: (context) =>
+              Scaffold(appBar: widget.detailAppBar, body: detail),
         ),
       );
     }
@@ -208,10 +203,7 @@ class _MasterDetailScaffoldState extends State<MasterDetailScaffold> {
 
     if (!TabletLayoutUtils.shouldUseSplitView(context)) {
       // Mobile: show only master
-      return Scaffold(
-        appBar: widget.masterAppBar,
-        body: masterView,
-      );
+      return Scaffold(appBar: widget.masterAppBar, body: masterView);
     }
 
     // Tablet: show split view
@@ -220,14 +212,12 @@ class _MasterDetailScaffoldState extends State<MasterDetailScaffold> {
         master: Column(
           children: [
             if (widget.masterAppBar != null)
-              SizedBox(
-                height: kToolbarHeight,
-                child: widget.masterAppBar!,
-              ),
+              SizedBox(height: kToolbarHeight, child: widget.masterAppBar),
             Expanded(child: masterView),
           ],
         ),
-        detail: _currentDetail ??
+        detail:
+            _currentDetail ??
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -241,8 +231,8 @@ class _MasterDetailScaffoldState extends State<MasterDetailScaffold> {
                   Text(
                     'Select an item to view details',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Theme.of(context).disabledColor,
-                        ),
+                      color: Theme.of(context).disabledColor,
+                    ),
                   ),
                 ],
               ),
@@ -286,7 +276,8 @@ class AdaptiveGrid extends StatelessWidget {
   int _calculateColumnCount(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final availableWidth = screenWidth - (spacing * 2);
-    final columns = (availableWidth / (minItemWidth + crossAxisSpacing)).floor();
+    final columns = (availableWidth / (minItemWidth + crossAxisSpacing))
+        .floor();
     return columns.clamp(1, 6);
   }
 
@@ -345,10 +336,12 @@ class ResponsiveColumns extends StatelessWidget {
     if (columnCount == 1) {
       return Column(
         children: children
-            .map((child) => Padding(
-                  padding: EdgeInsets.only(bottom: spacing),
-                  child: child,
-                ))
+            .map(
+              (child) => Padding(
+                padding: EdgeInsets.only(bottom: spacing),
+                child: child,
+              ),
+            )
             .toList(),
       );
     }
@@ -407,5 +400,6 @@ extension TabletContextExtension on BuildContext {
   EdgeInsets get tabletPadding => TabletLayoutUtils.getPadding(this);
 
   /// Get tablet-optimized touch target size
-  double get tabletTouchTargetSize => TabletLayoutUtils.getTouchTargetSize(this);
+  double get tabletTouchTargetSize =>
+      TabletLayoutUtils.getTouchTargetSize(this);
 }

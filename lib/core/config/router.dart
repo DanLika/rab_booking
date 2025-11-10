@@ -15,7 +15,8 @@ import '../utils/unit_resolver.dart';
 class Routes {
   static const String widget = '/';
   static const String booking = '/booking'; // New slug-based route
-  static const String calendar = '/calendar'; // Direct calendar view for single unit
+  static const String calendar =
+      '/calendar'; // Direct calendar view for single unit
   static const String roomSelection = '/rooms';
   static const String summary = '/summary';
   static const String payment = '/payment';
@@ -35,7 +36,6 @@ class Routes {
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: Routes.widget,
-    debugLogDiagnostics: false,
     routes: [
       // NEW: Slug-based route (SEO-friendly)
       // Example: /booking/apartman-6-gMIOos
@@ -53,21 +53,19 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(
-                  body: Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  body: Center(child: CircularProgressIndicator()),
                 );
               }
 
-              if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+              if (snapshot.hasError ||
+                  !snapshot.hasData ||
+                  snapshot.data == null) {
                 return const NotFoundScreen();
               }
 
               // Pass resolved unit ID to widget initializer
               // We'll redirect to legacy format internally
-              return WidgetInitializerScreen(
-                preResolvedUnitId: snapshot.data,
-              );
+              return WidgetInitializerScreen(preResolvedUnitId: snapshot.data);
             },
           );
         },

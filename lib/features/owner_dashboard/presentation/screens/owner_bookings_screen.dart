@@ -184,7 +184,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           color: Theme.of(
             context,
           ).colorScheme.outline.withAlpha((0.15 * 255).toInt()),
-          width: 1,
         ),
       ),
       child: Padding(
@@ -356,7 +355,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       ),
       initialValue: filters.status,
       items: [
-        const DropdownMenuItem(value: null, child: Text('Svi statusi')),
+        const DropdownMenuItem(child: Text('Svi statusi')),
         ...BookingStatus.values.where((s) => s != BookingStatus.blocked).map((
           status,
         ) {
@@ -408,10 +407,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           ),
           initialValue: filters.propertyId,
           items: [
-            const DropdownMenuItem<String?>(
-              value: null,
-              child: Text('Svi objekti'),
-            ),
+            const DropdownMenuItem<String?>(child: Text('Svi objekti')),
             ...properties.map((property) {
               return DropdownMenuItem<String?>(
                 value: property.id,
@@ -438,7 +434,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         final theme = Theme.of(context);
 
         return OutlinedButton.icon(
-          onPressed: () => _showDateRangePicker(),
+          onPressed: _showDateRangePicker,
           icon: const Icon(Icons.date_range),
           label: Text(
             filters.startDate != null && filters.endDate != null
@@ -458,7 +454,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             ),
             side: BorderSide(
               color: theme.colorScheme.outline.withAlpha((0.25 * 255).toInt()),
-              width: 1,
             ),
           ),
         );
@@ -1066,7 +1061,6 @@ class _BookingCard extends ConsumerWidget {
                           color: theme.colorScheme.outline.withAlpha(
                             (0.3 * 255).toInt(),
                           ),
-                          width: 1,
                         ),
                       ),
                     ),
@@ -1114,7 +1108,6 @@ class _BookingCard extends ConsumerWidget {
                             color: AppColors.error.withAlpha(
                               (0.4 * 255).toInt(),
                             ),
-                            width: 1,
                           ),
                         ),
                       ),
@@ -1163,7 +1156,6 @@ class _BookingCard extends ConsumerWidget {
                             color: AppColors.error.withAlpha(
                               (0.4 * 255).toInt(),
                             ),
-                            width: 1,
                           ),
                         ),
                       ),

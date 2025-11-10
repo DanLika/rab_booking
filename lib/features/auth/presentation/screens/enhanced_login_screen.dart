@@ -16,7 +16,8 @@ class EnhancedLoginScreen extends ConsumerStatefulWidget {
   const EnhancedLoginScreen({super.key});
 
   @override
-  ConsumerState<EnhancedLoginScreen> createState() => _EnhancedLoginScreenState();
+  ConsumerState<EnhancedLoginScreen> createState() =>
+      _EnhancedLoginScreenState();
 }
 
 class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
@@ -40,7 +41,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(enhancedAuthProvider.notifier).signInWithEmail(
+      await ref
+          .read(enhancedAuthProvider.notifier)
+          .signInWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             rememberMe: _rememberMe,
@@ -59,10 +62,14 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
         // Success - show welcome message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Welcome back, ${authState.userModel?.firstName ?? "User"}!'),
+            content: Text(
+              'Welcome back, ${authState.userModel?.firstName ?? "User"}!',
+            ),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -74,8 +81,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
             content: Text(e.toString()),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            duration: const Duration(seconds: 4),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -99,7 +107,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
             content: Text('Google Sign-In failed: ${e.toString()}'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -118,7 +128,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
             content: Text('Apple Sign-In failed: ${e.toString()}'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -137,7 +149,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
             content: Text('Anonymous Sign-In failed: ${e.toString()}'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -157,226 +171,266 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
               ),
               child: Center(
                 child: GlassCard(
-                  maxWidth: 460,
                   child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Animated Logo - adapts to dark mode
-                    Center(
-                      child: AuthLogoIcon(
-                        size: 100,
-                        isWhite: Theme.of(context).brightness == Brightness.dark,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Title
-                    Text(
-                      'Owner Login',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 28,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Subtitle
-                    Text(
-                      'Manage your properties and bookings',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: 15,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 40),
-
-                    // Email field
-                    PremiumInputField(
-                      controller: _emailController,
-                      labelText: 'Email Address',
-                      prefixIcon: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: ProfileValidators.validateEmail,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Password field
-                    PremiumInputField(
-                      controller: _passwordController,
-                      labelText: 'Password',
-                      prefixIcon: Icons.lock_outline,
-                      obscureText: _obscurePassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        onPressed: () {
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        },
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Remember me & Forgot password
-                    Row(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => setState(() => _rememberMe = !_rememberMe),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  height: 48,
-                                  width: 48,
-                                  child: Center(
-                                    child: SizedBox(
-                                      height: 24,
-                                      width: 24,
-                                      child: Checkbox(
-                                        value: _rememberMe,
-                                        onChanged: (value) => setState(() => _rememberMe = value!),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(4),
+                        // Animated Logo - adapts to dark mode
+                        Center(
+                          child: AuthLogoIcon(
+                            isWhite:
+                                Theme.of(context).brightness == Brightness.dark,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Title
+                        Text(
+                          'Owner Login',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 28,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Subtitle
+                        Text(
+                          'Manage your properties and bookings',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                                fontSize: 15,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 40),
+
+                        // Email field
+                        PremiumInputField(
+                          controller: _emailController,
+                          labelText: 'Email Address',
+                          prefixIcon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: ProfileValidators.validateEmail,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Password field
+                        PremiumInputField(
+                          controller: _passwordController,
+                          labelText: 'Password',
+                          prefixIcon: Icons.lock_outline,
+                          obscureText: _obscurePassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            onPressed: () {
+                              setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              );
+                            },
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your password';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Remember me & Forgot password
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () =>
+                                    setState(() => _rememberMe = !_rememberMe),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      height: 48,
+                                      width: 48,
+                                      child: Center(
+                                        child: SizedBox(
+                                          height: 24,
+                                          width: 24,
+                                          child: Checkbox(
+                                            value: _rememberMe,
+                                            onChanged: (value) => setState(
+                                              () => _rememberMe = value!,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                            activeColor: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                          ),
                                         ),
-                                        activeColor: Theme.of(context).colorScheme.primary,
                                       ),
                                     ),
+                                    Text(
+                                      'Remember me',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(fontSize: 14),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () =>
+                                  context.push(OwnerRoutes.forgotPassword),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Forgot password?',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      fontSize: 14,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Login Button
+                        GradientAuthButton(
+                          text: 'Log In',
+                          onPressed: _handleLogin,
+                          isLoading: _isLoading,
+                          icon: Icons.login_rounded,
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Divider
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Divider(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Text(
+                                'or continue with',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                      fontSize: 13,
+                                    ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Divider(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Social Login Buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _SocialLoginButton(
+                                customIcon: const _GoogleIcon(),
+                                label: 'Google',
+                                onPressed: _handleGoogleSignIn,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _SocialLoginButton(
+                                customIcon: const _AppleIcon(),
+                                label: 'Apple',
+                                onPressed: _handleAppleSignIn,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Anonymous Login Button (Demo)
+                        _SocialLoginButton(
+                          icon: Icons.preview,
+                          label: 'Preview Demo (Anonymous)',
+                          onPressed: _handleAnonymousSignIn,
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Register Link
+                        Center(
+                          child: TextButton(
+                            onPressed: () => context.go(OwnerRoutes.register),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 16,
+                              ),
+                            ),
+                            child: RichText(
+                              text: TextSpan(
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.copyWith(fontSize: 14),
+                                children: [
+                                  const TextSpan(
+                                    text: "Don't have an account? ",
                                   ),
-                                ),
-                                Text(
-                                  'Remember me',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        fontSize: 14,
-                                      ),
+                                  TextSpan(
+                                    text: 'Create Account',
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                        ),
-                        TextButton(
-                          onPressed: () => context.push(OwnerRoutes.forgotPassword),
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Text(
-                            'Forgot password?',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: 14,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
-
-                    // Login Button
-                    GradientAuthButton(
-                      text: 'Log In',
-                      onPressed: _handleLogin,
-                      isLoading: _isLoading,
-                      icon: Icons.login_rounded,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Divider
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: Theme.of(context).colorScheme.outline)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'or continue with',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  fontSize: 13,
-                                ),
-                          ),
-                        ),
-                        Expanded(child: Divider(color: Theme.of(context).colorScheme.outline)),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Social Login Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _SocialLoginButton(
-                            customIcon: const _GoogleIcon(),
-                            label: 'Google',
-                            onPressed: _handleGoogleSignIn,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _SocialLoginButton(
-                            customIcon: const _AppleIcon(),
-                            label: 'Apple',
-                            onPressed: _handleAppleSignIn,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Anonymous Login Button (Demo)
-                    _SocialLoginButton(
-                      icon: Icons.preview,
-                      label: 'Preview Demo (Anonymous)',
-                      onPressed: _handleAnonymousSignIn,
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Register Link
-                    Center(
-                      child: TextButton(
-                        onPressed: () => context.go(OwnerRoutes.register),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                        ),
-                        child: RichText(
-                          text: TextSpan(
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontSize: 14,
-                                ),
-                            children: [
-                              const TextSpan(text: "Don't have an account? "),
-                              TextSpan(
-                                text: 'Create Account',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-      ),
       ),
     );
   }
@@ -393,7 +447,10 @@ class _SocialLoginButton extends StatefulWidget {
     this.customIcon,
     required this.label,
     required this.onPressed,
-  }) : assert(icon != null || customIcon != null, 'Either icon or customIcon must be provided');
+  }) : assert(
+         icon != null || customIcon != null,
+         'Either icon or customIcon must be provided',
+       );
 
   @override
   State<_SocialLoginButton> createState() => _SocialLoginButtonState();
@@ -414,12 +471,16 @@ class _SocialLoginButtonState extends State<_SocialLoginButton> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.outline,
+            color: _isHovered
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline,
             width: 1.5,
           ),
           color: _isHovered
               ? theme.colorScheme.primary.withAlpha((0.08 * 255).toInt())
-              : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+              : theme.colorScheme.surfaceContainerHighest.withAlpha(
+                  (0.3 * 255).toInt(),
+                ),
         ),
         child: Material(
           color: Colors.transparent,
@@ -435,9 +496,11 @@ class _SocialLoginButtonState extends State<_SocialLoginButton> {
                     widget.customIcon!
                   else
                     Icon(
-                      widget.icon!,
+                      widget.icon,
                       size: 22,
-                      color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                      color: _isHovered
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface,
                     ),
                   const SizedBox(width: 8),
                   Text(
@@ -445,7 +508,9 @@ class _SocialLoginButtonState extends State<_SocialLoginButton> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _isHovered ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                      color: _isHovered
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -467,9 +532,7 @@ class _GoogleIcon extends StatelessWidget {
     return SizedBox(
       width: 22,
       height: 22,
-      child: CustomPaint(
-        painter: _GoogleLogoPainter(),
-      ),
+      child: CustomPaint(painter: _GoogleLogoPainter()),
     );
   }
 }
@@ -581,9 +644,7 @@ class _AppleIcon extends StatelessWidget {
       width: 22,
       height: 22,
       child: CustomPaint(
-        painter: _AppleLogoPainter(
-          color: theme.colorScheme.onSurface,
-        ),
+        painter: _AppleLogoPainter(color: theme.colorScheme.onSurface),
       ),
     );
   }
@@ -616,40 +677,54 @@ class _AppleLogoPainter extends CustomPainter {
 
     // Right side curve
     path.cubicTo(
-      centerX + 6 * scale, centerY - 7 * scale,
-      centerX + 8 * scale, centerY - 4 * scale,
-      centerX + 8 * scale, centerY + 2 * scale,
+      centerX + 6 * scale,
+      centerY - 7 * scale,
+      centerX + 8 * scale,
+      centerY - 4 * scale,
+      centerX + 8 * scale,
+      centerY + 2 * scale,
     );
 
     // Bottom right
     path.cubicTo(
-      centerX + 8 * scale, centerY + 6 * scale,
-      centerX + 5 * scale, centerY + 8 * scale,
-      centerX, centerY + 8 * scale,
+      centerX + 8 * scale,
+      centerY + 6 * scale,
+      centerX + 5 * scale,
+      centerY + 8 * scale,
+      centerX,
+      centerY + 8 * scale,
     );
 
     // Bottom left
     path.cubicTo(
-      centerX - 5 * scale, centerY + 8 * scale,
-      centerX - 8 * scale, centerY + 6 * scale,
-      centerX - 8 * scale, centerY + 2 * scale,
+      centerX - 5 * scale,
+      centerY + 8 * scale,
+      centerX - 8 * scale,
+      centerY + 6 * scale,
+      centerX - 8 * scale,
+      centerY + 2 * scale,
     );
 
     // Left side curve
     path.cubicTo(
-      centerX - 8 * scale, centerY - 4 * scale,
-      centerX - 6 * scale, centerY - 7 * scale,
-      centerX, centerY - 7 * scale,
+      centerX - 8 * scale,
+      centerY - 4 * scale,
+      centerX - 6 * scale,
+      centerY - 7 * scale,
+      centerX,
+      centerY - 7 * scale,
     );
 
     path.close();
 
     // Bite (small circle cutout on the right side)
     final bitePath = Path();
-    bitePath.addOval(Rect.fromCircle(
-      center: Offset(centerX + 5 * scale, centerY - 3 * scale),
-      radius: 2.5 * scale,
-    ));
+    bitePath.addOval(
+      Rect.fromCircle(
+        center: Offset(centerX + 5 * scale, centerY - 3 * scale),
+        radius: 2.5 * scale,
+      ),
+    );
 
     // Subtract bite from apple
     final applePath = Path.combine(PathOperation.difference, path, bitePath);
@@ -660,14 +735,20 @@ class _AppleLogoPainter extends CustomPainter {
     final leafPath = Path();
     leafPath.moveTo(centerX + 1 * scale, centerY - 7 * scale);
     leafPath.cubicTo(
-      centerX + 2 * scale, centerY - 9 * scale,
-      centerX + 4 * scale, centerY - 10 * scale,
-      centerX + 5 * scale, centerY - 10 * scale,
+      centerX + 2 * scale,
+      centerY - 9 * scale,
+      centerX + 4 * scale,
+      centerY - 10 * scale,
+      centerX + 5 * scale,
+      centerY - 10 * scale,
     );
     leafPath.cubicTo(
-      centerX + 4 * scale, centerY - 9.5 * scale,
-      centerX + 3 * scale, centerY - 8.5 * scale,
-      centerX + 1 * scale, centerY - 7 * scale,
+      centerX + 4 * scale,
+      centerY - 9.5 * scale,
+      centerX + 3 * scale,
+      centerY - 8.5 * scale,
+      centerX + 1 * scale,
+      centerY - 7 * scale,
     );
     leafPath.close();
 

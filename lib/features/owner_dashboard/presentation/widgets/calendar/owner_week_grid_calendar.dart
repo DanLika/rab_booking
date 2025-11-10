@@ -40,8 +40,7 @@ class OwnerWeekGridCalendar extends ConsumerStatefulWidget {
       _OwnerWeekGridCalendarState();
 }
 
-class _OwnerWeekGridCalendarState
-    extends ConsumerState<OwnerWeekGridCalendar> {
+class _OwnerWeekGridCalendarState extends ConsumerState<OwnerWeekGridCalendar> {
   final ScrollController _horizontalScrollController = ScrollController();
   final ScrollController _verticalScrollController = ScrollController();
 
@@ -58,8 +57,9 @@ class _OwnerWeekGridCalendarState
     final dates = widget.dateRange.dates;
 
     // Calculate dimensions
-    final rowHeaderWidth =
-        CalendarGridCalculator.getRowHeaderWidth(screenWidth);
+    final rowHeaderWidth = CalendarGridCalculator.getRowHeaderWidth(
+      screenWidth,
+    );
     final rowHeight = CalendarGridCalculator.getRowHeight(screenWidth);
     final dayCellWidth = CalendarGridCalculator.getDayCellWidth(screenWidth, 7);
     final headerHeight = CalendarGridCalculator.getHeaderHeight(screenWidth);
@@ -115,11 +115,15 @@ class _OwnerWeekGridCalendarState
                             unit: unit,
                             width: rowHeaderWidth,
                             height: rowHeight,
-                            isCompact: screenWidth <
+                            isCompact:
+                                screenWidth <
                                 CalendarGridCalculator.mobileBreakpoint,
                             bookings: unitBookings,
                             onTap: widget.onRoomHeaderTap != null
-                                ? () => widget.onRoomHeaderTap!(unit, unitBookings)
+                                ? () => widget.onRoomHeaderTap!(
+                                    unit,
+                                    unitBookings,
+                                  )
                                 : null,
                           );
                         }).toList(),
@@ -198,12 +202,8 @@ class _OwnerWeekGridCalendarState
         border: Border(
           right: BorderSide(
             color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
-            width: 1.0,
           ),
-          bottom: BorderSide(
-            color: theme.dividerColor,
-            width: 1.5,
-          ),
+          bottom: BorderSide(color: theme.dividerColor, width: 1.5),
         ),
       ),
       child: Column(
@@ -263,12 +263,20 @@ class _OwnerWeekGridCalendarState
 
           // Check if there's a booking on this date
           final hasBookingOnDate = unitBookings.any((booking) {
-            final checkIn = DateTime(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-            final checkOut = DateTime(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
+            final checkIn = DateTime(
+              booking.checkIn.year,
+              booking.checkIn.month,
+              booking.checkIn.day,
+            );
+            final checkOut = DateTime(
+              booking.checkOut.year,
+              booking.checkOut.month,
+              booking.checkOut.day,
+            );
             final cellDate = DateTime(date.year, date.month, date.day);
             return cellDate.isAtSameMomentAs(checkIn) ||
-                   cellDate.isAtSameMomentAs(checkOut) ||
-                   (cellDate.isAfter(checkIn) && cellDate.isBefore(checkOut));
+                cellDate.isAtSameMomentAs(checkOut) ||
+                (cellDate.isAfter(checkIn) && cellDate.isBefore(checkOut));
           });
 
           return GestureDetector(
@@ -280,11 +288,13 @@ class _OwnerWeekGridCalendarState
                 if (!widget.enableDragDrop) return false;
 
                 // Validate drop target in real-time
-                ref.read(dragDropProvider.notifier).validateDrop(
-                  dropDate: date,
-                  targetUnitId: unit.id,
-                  allBookings: widget.bookings,
-                );
+                ref
+                    .read(dragDropProvider.notifier)
+                    .validateDrop(
+                      dropDate: date,
+                      targetUnitId: unit.id,
+                      allBookings: widget.bookings,
+                    );
 
                 return true; // Always accept to show feedback, actual validation in executeDrop
               },
@@ -310,21 +320,27 @@ class _OwnerWeekGridCalendarState
                     decoration: BoxDecoration(
                       color: isHighlighted
                           ? (isValid
-                              ? Colors.green.withAlpha((0.2 * 255).toInt())
-                              : Colors.red.withAlpha((0.2 * 255).toInt()))
+                                ? Colors.green.withAlpha((0.2 * 255).toInt())
+                                : Colors.red.withAlpha((0.2 * 255).toInt()))
                           : (isPast
-                              ? theme.disabledColor.withAlpha((0.05 * 255).toInt())
-                              : (isToday
-                                  ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
-                                  : theme.scaffoldBackgroundColor)),
+                                ? theme.disabledColor.withAlpha(
+                                    (0.05 * 255).toInt(),
+                                  )
+                                : (isToday
+                                      ? theme.colorScheme.primary.withAlpha(
+                                          (0.05 * 255).toInt(),
+                                        )
+                                      : theme.scaffoldBackgroundColor)),
                       border: Border(
                         right: BorderSide(
-                          color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-                          width: 1.0,
+                          color: theme.dividerColor.withAlpha(
+                            (0.6 * 255).toInt(),
+                          ),
                         ),
                         bottom: BorderSide(
-                          color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-                          width: 1.0,
+                          color: theme.dividerColor.withAlpha(
+                            (0.6 * 255).toInt(),
+                          ),
                         ),
                       ),
                     ),
@@ -334,7 +350,9 @@ class _OwnerWeekGridCalendarState
                             child: Icon(
                               Icons.add,
                               size: 24,
-                              color: theme.colorScheme.primary.withAlpha((0.4 * 255).toInt()),
+                              color: theme.colorScheme.primary.withAlpha(
+                                (0.4 * 255).toInt(),
+                              ),
                             ),
                           )
                         : null,
@@ -397,8 +415,9 @@ class _OwnerWeekGridCalendarState
     final bookingStart = booking.checkIn.isBefore(startDate)
         ? startDate
         : booking.checkIn;
-    final bookingEnd =
-        booking.checkOut.isAfter(endDate) ? endDate : booking.checkOut;
+    final bookingEnd = booking.checkOut.isAfter(endDate)
+        ? endDate
+        : booking.checkOut;
 
     final startDayOffset = bookingStart.difference(startDate).inDays.toDouble();
     final duration = bookingEnd.difference(bookingStart).inDays.toDouble();
@@ -418,7 +437,8 @@ class _OwnerWeekGridCalendarState
         width: width,
         height: rowHeight - (verticalMargin * 2), // Equal margins top & bottom
         onTap: () => widget.onBookingTap(booking),
-        onSecondaryTapDown: (details) => _showBookingContextMenu(booking, details),
+        onSecondaryTapDown: (details) =>
+            _showBookingContextMenu(booking, details),
         isDraggable: widget.enableDragDrop,
         showGuestName: width > 80,
         showCheckInOut: width > 40,
@@ -443,7 +463,9 @@ class _OwnerWeekGridCalendarState
     UnitModel targetUnit,
   ) {
     // Execute drag-drop operation via provider
-    ref.read(dragDropProvider.notifier).executeDrop(
+    ref
+        .read(dragDropProvider.notifier)
+        .executeDrop(
           dropDate: dropDate,
           targetUnit: targetUnit,
           allBookings: widget.bookings,
@@ -463,7 +485,8 @@ class _OwnerWeekGridCalendarState
     final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
     if (overlay == null) return;
 
     // FIXED: Use actual tap position instead of screen center
@@ -496,9 +519,7 @@ class _OwnerWeekGridCalendarState
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Obriši'),
           ),
         ],
@@ -521,10 +542,7 @@ class _OwnerWeekGridCalendarState
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Greška: $e'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
           );
         }
       }
@@ -532,7 +550,10 @@ class _OwnerWeekGridCalendarState
   }
 
   /// Change booking status
-  Future<void> _changeBookingStatus(BookingModel booking, BookingStatus newStatus) async {
+  Future<void> _changeBookingStatus(
+    BookingModel booking,
+    BookingStatus newStatus,
+  ) async {
     try {
       final repository = ref.read(bookingRepositoryProvider);
       final updatedBooking = booking.copyWith(status: newStatus);
@@ -549,10 +570,7 @@ class _OwnerWeekGridCalendarState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Greška: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
         );
       }
     }

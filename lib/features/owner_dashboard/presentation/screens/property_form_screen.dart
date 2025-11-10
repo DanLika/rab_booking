@@ -255,9 +255,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                   context,
                   title: 'Sadržaji',
                   icon: Icons.local_offer,
-                  children: [
-                    _buildAmenitiesGrid(),
-                  ],
+                  children: [_buildAmenitiesGrid()],
                 ),
                 const SizedBox(height: AppDimensions.spaceL),
 
@@ -266,9 +264,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                   context,
                   title: 'Fotografije ${_isEditing ? '' : '(min 3)'}',
                   icon: Icons.photo_library,
-                  children: [
-                    _buildImagesSection(),
-                  ],
+                  children: [_buildImagesSection()],
                 ),
                 const SizedBox(height: AppDimensions.spaceL),
 
@@ -286,7 +282,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                             : 'Nekretnina će biti skrivena',
                       ),
                       value: _isPublished,
-                      onChanged: (value) => setState(() => _isPublished = value),
+                      onChanged: (value) =>
+                          setState(() => _isPublished = value),
                     ),
                   ],
                 ),
@@ -298,7 +295,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                   onPressed: _handleSave,
                   isLoading: _isLoading,
                   icon: _isEditing ? Icons.save : Icons.add,
-                  height: 56,
                   width: double.infinity,
                 ),
                 const SizedBox(height: AppDimensions.spaceXL),
@@ -325,13 +321,18 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [AppColors.primary, AppColors.authSecondary],
+                              colors: [
+                                AppColors.primary,
+                                AppColors.authSecondary,
+                              ],
                             ),
                             shape: BoxShape.circle,
                           ),
                           child: const CircularProgressIndicator(
                             strokeWidth: 3,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -364,9 +365,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
 
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -481,7 +480,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           onPressed: _pickImages,
           icon: const Icon(Icons.add_photo_alternate),
           label: Text(
-            totalImages == 0 ? 'Dodaj fotografije (min 3)' : 'Dodaj još fotografija',
+            totalImages == 0
+                ? 'Dodaj fotografije (min 3)'
+                : 'Dodaj još fotografija',
           ),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
@@ -497,8 +498,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             child: Text(
               'Ukupno: $totalImages fotografija',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.textColorSecondary,
-                  ),
+                color: context.textColorSecondary,
+              ),
             ),
           ),
       ],
@@ -529,7 +530,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                   color: theme.colorScheme.surfaceContainerHighest,
                   child: Icon(
                     Icons.broken_image,
-                    color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                    color: theme.colorScheme.onSurface.withAlpha(
+                      (0.3 * 255).toInt(),
+                    ),
                   ),
                 );
               },
@@ -579,7 +582,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                 return Icon(
                   Icons.broken_image,
                   size: 40,
-                  color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                  color: theme.colorScheme.onSurface.withAlpha(
+                    (0.3 * 255).toInt(),
+                  ),
                 );
               },
             ),

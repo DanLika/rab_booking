@@ -13,9 +13,7 @@ import '../theme/villa_jasko_theme_data.dart';
 /// ```
 final widgetConfigProvider = StateProvider<WidgetConfig>((ref) {
   // Default configuration
-  return const WidgetConfig(
-    locale: 'en',
-  );
+  return const WidgetConfig();
 });
 
 /// Provider for theme mode based on widget configuration
@@ -44,24 +42,18 @@ final widgetLightThemeProvider = Provider<ThemeData>((ref) {
   if (config.primaryColor != null) {
     theme = theme.copyWith(
       primaryColor: config.primaryColor,
-      colorScheme: theme.colorScheme.copyWith(
-        primary: config.primaryColor,
-      ),
+      colorScheme: theme.colorScheme.copyWith(primary: config.primaryColor),
     );
   }
 
   if (config.accentColor != null) {
     theme = theme.copyWith(
-      colorScheme: theme.colorScheme.copyWith(
-        secondary: config.accentColor,
-      ),
+      colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor),
     );
   }
 
   if (config.backgroundColor != null) {
-    theme = theme.copyWith(
-      scaffoldBackgroundColor: config.backgroundColor,
-    );
+    theme = theme.copyWith(scaffoldBackgroundColor: config.backgroundColor);
   }
 
   if (config.textColor != null) {
@@ -87,24 +79,18 @@ final widgetDarkThemeProvider = Provider<ThemeData>((ref) {
   if (config.primaryColor != null) {
     theme = theme.copyWith(
       primaryColor: config.primaryColor,
-      colorScheme: theme.colorScheme.copyWith(
-        primary: config.primaryColor,
-      ),
+      colorScheme: theme.colorScheme.copyWith(primary: config.primaryColor),
     );
   }
 
   if (config.accentColor != null) {
     theme = theme.copyWith(
-      colorScheme: theme.colorScheme.copyWith(
-        secondary: config.accentColor,
-      ),
+      colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor),
     );
   }
 
   if (config.backgroundColor != null) {
-    theme = theme.copyWith(
-      scaffoldBackgroundColor: config.backgroundColor,
-    );
+    theme = theme.copyWith(scaffoldBackgroundColor: config.backgroundColor);
   }
 
   if (config.textColor != null) {

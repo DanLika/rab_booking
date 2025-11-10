@@ -163,7 +163,6 @@ class HeroCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(
           borderRadius ?? AppDimensions.radiusM,
         ),
-        elevation: 0,
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(

@@ -31,11 +31,12 @@ class FirebaseIcalRepository {
           .where('property_id', whereIn: propertyIds)
           .get();
 
-      return feedsSnapshot.docs
-          .map((doc) => IcalFeed.fromFirestore(doc))
-          .toList();
+      return feedsSnapshot.docs.map(IcalFeed.fromFirestore).toList();
     } catch (e) {
-      LoggingService.log('Error getting owner feeds: $e', tag: 'IcalRepository');
+      LoggingService.log(
+        'Error getting owner feeds: $e',
+        tag: 'IcalRepository',
+      );
       return [];
     }
   }
@@ -48,9 +49,7 @@ class FirebaseIcalRepository {
           .where('unit_id', isEqualTo: unitId)
           .get();
 
-      return snapshot.docs
-          .map((doc) => IcalFeed.fromFirestore(doc))
-          .toList();
+      return snapshot.docs.map(IcalFeed.fromFirestore).toList();
     } catch (e) {
       LoggingService.log('Error getting unit feeds: $e', tag: 'IcalRepository');
       return [];
@@ -64,30 +63,31 @@ class FirebaseIcalRepository {
         .where('owner_id', isEqualTo: ownerId)
         .snapshots()
         .asyncMap((propertiesSnapshot) async {
-      final propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
+          final propertyIds = propertiesSnapshot.docs
+              .map((doc) => doc.id)
+              .toList();
 
-      if (propertyIds.isEmpty) return <IcalFeed>[];
+          if (propertyIds.isEmpty) return <IcalFeed>[];
 
-      final feedsSnapshot = await _firestore
-          .collection('ical_feeds')
-          .where('property_id', whereIn: propertyIds)
-          .get();
+          final feedsSnapshot = await _firestore
+              .collection('ical_feeds')
+              .where('property_id', whereIn: propertyIds)
+              .get();
 
-      return feedsSnapshot.docs
-          .map((doc) => IcalFeed.fromFirestore(doc))
-          .toList();
-    });
+          return feedsSnapshot.docs.map(IcalFeed.fromFirestore).toList();
+        });
   }
 
   /// Create new iCal feed
   Future<String> createIcalFeed(IcalFeed feed) async {
     try {
-      final docRef = await _firestore.collection('ical_feeds').add(
-        feed.copyWith(
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ).toFirestore(),
-      );
+      final docRef = await _firestore
+          .collection('ical_feeds')
+          .add(
+            feed
+                .copyWith(createdAt: DateTime.now(), updatedAt: DateTime.now())
+                .toFirestore(),
+          );
 
       LoggingService.log('Feed created: ${docRef.id}', tag: 'IcalRepository');
       return docRef.id;
@@ -103,9 +103,7 @@ class FirebaseIcalRepository {
       await _firestore
           .collection('ical_feeds')
           .doc(feed.id)
-          .update(
-            feed.copyWith(updatedAt: DateTime.now()).toFirestore(),
-          );
+          .update(feed.copyWith(updatedAt: DateTime.now()).toFirestore());
 
       LoggingService.log('Feed updated: ${feed.id}', tag: 'IcalRepository');
     } catch (e) {
@@ -138,7 +136,11 @@ class FirebaseIcalRepository {
   }
 
   /// Update feed status (active/error/paused)
-  Future<void> updateFeedStatus(String feedId, String status, {String? errorMessage}) async {
+  Future<void> updateFeedStatus(
+    String feedId,
+    String status, {
+    String? errorMessage,
+  }) async {
     try {
       await _firestore.collection('ical_feeds').doc(feedId).update({
         'status': status,
@@ -146,9 +148,15 @@ class FirebaseIcalRepository {
         'updated_at': Timestamp.now(),
       });
 
-      LoggingService.log('Feed status updated: $feedId -> $status', tag: 'IcalRepository');
+      LoggingService.log(
+        'Feed status updated: $feedId -> $status',
+        tag: 'IcalRepository',
+      );
     } catch (e) {
-      LoggingService.log('Error updating feed status: $e', tag: 'IcalRepository');
+      LoggingService.log(
+        'Error updating feed status: $e',
+        tag: 'IcalRepository',
+      );
       rethrow;
     }
   }
@@ -156,7 +164,10 @@ class FirebaseIcalRepository {
   /// Update last sync timestamp
   Future<void> updateLastSync(String feedId, int eventCount) async {
     try {
-      final feedDoc = await _firestore.collection('ical_feeds').doc(feedId).get();
+      final feedDoc = await _firestore
+          .collection('ical_feeds')
+          .doc(feedId)
+          .get();
       final currentSyncCount = (feedDoc.data()?['sync_count'] ?? 0) as int;
 
       await _firestore.collection('ical_feeds').doc(feedId).update({
@@ -168,7 +179,10 @@ class FirebaseIcalRepository {
         'updated_at': Timestamp.now(),
       });
 
-      LoggingService.log('Last sync updated for feed: $feedId', tag: 'IcalRepository');
+      LoggingService.log(
+        'Last sync updated for feed: $feedId',
+        tag: 'IcalRepository',
+      );
     } catch (e) {
       LoggingService.log('Error updating last sync: $e', tag: 'IcalRepository');
       rethrow;
@@ -188,11 +202,12 @@ class FirebaseIcalRepository {
           .orderBy('start_date', descending: false)
           .get();
 
-      return snapshot.docs
-          .map((doc) => IcalEvent.fromFirestore(doc))
-          .toList();
+      return snapshot.docs.map(IcalEvent.fromFirestore).toList();
     } catch (e) {
-      LoggingService.log('Error getting unit events: $e', tag: 'IcalRepository');
+      LoggingService.log(
+        'Error getting unit events: $e',
+        tag: 'IcalRepository',
+      );
       return [];
     }
   }
@@ -211,11 +226,12 @@ class FirebaseIcalRepository {
           .where('start_date', isLessThan: endDate)
           .get();
 
-      return snapshot.docs
-          .map((doc) => IcalEvent.fromFirestore(doc))
-          .toList();
+      return snapshot.docs.map(IcalEvent.fromFirestore).toList();
     } catch (e) {
-      LoggingService.log('Error getting events in range: $e', tag: 'IcalRepository');
+      LoggingService.log(
+        'Error getting events in range: $e',
+        tag: 'IcalRepository',
+      );
       return [];
     }
   }
@@ -228,21 +244,20 @@ class FirebaseIcalRepository {
         .orderBy('start_date', descending: false)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => IcalEvent.fromFirestore(doc))
-          .toList();
-    });
+          return snapshot.docs.map(IcalEvent.fromFirestore).toList();
+        });
   }
 
   /// Create iCal event
   Future<String> createIcalEvent(IcalEvent event) async {
     try {
-      final docRef = await _firestore.collection('ical_events').add(
-        event.copyWith(
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ).toFirestore(),
-      );
+      final docRef = await _firestore
+          .collection('ical_events')
+          .add(
+            event
+                .copyWith(createdAt: DateTime.now(), updatedAt: DateTime.now())
+                .toFirestore(),
+          );
 
       LoggingService.log('Event created: ${docRef.id}', tag: 'IcalRepository');
       return docRef.id;
@@ -263,9 +278,15 @@ class FirebaseIcalRepository {
       }
 
       await batch.commit();
-      LoggingService.log('Batch created ${events.length} events', tag: 'IcalRepository');
+      LoggingService.log(
+        'Batch created ${events.length} events',
+        tag: 'IcalRepository',
+      );
     } catch (e) {
-      LoggingService.log('Error batch creating events: $e', tag: 'IcalRepository');
+      LoggingService.log(
+        'Error batch creating events: $e',
+        tag: 'IcalRepository',
+      );
       rethrow;
     }
   }
@@ -285,9 +306,15 @@ class FirebaseIcalRepository {
       }
 
       await batch.commit();
-      LoggingService.log('Deleted ${snapshot.docs.length} events for feed: $feedId', tag: 'IcalRepository');
+      LoggingService.log(
+        'Deleted ${snapshot.docs.length} events for feed: $feedId',
+        tag: 'IcalRepository',
+      );
     } catch (e) {
-      LoggingService.log('Error deleting events for feed: $e', tag: 'IcalRepository');
+      LoggingService.log(
+        'Error deleting events for feed: $e',
+        tag: 'IcalRepository',
+      );
       rethrow;
     }
   }
@@ -307,13 +334,16 @@ class FirebaseIcalRepository {
 
       // Filter events that actually overlap
       final conflictingEvents = snapshot.docs
-          .map((doc) => IcalEvent.fromFirestore(doc))
+          .map(IcalEvent.fromFirestore)
           .where((event) => event.overlaps(checkIn, checkOut))
           .toList();
 
       return conflictingEvents.isNotEmpty;
     } catch (e) {
-      LoggingService.log('Error checking iCal conflict: $e', tag: 'IcalRepository');
+      LoggingService.log(
+        'Error checking iCal conflict: $e',
+        tag: 'IcalRepository',
+      );
       return false;
     }
   }

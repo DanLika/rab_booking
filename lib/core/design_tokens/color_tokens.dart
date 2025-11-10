@@ -340,9 +340,11 @@ class LightColorScheme implements WidgetColorScheme {
   @override
   Color get statusDisabledText => ColorTokens.grey300;
   @override
-  Color get statusPastReservationBackground => ColorTokens.coral500.withValues(alpha: 0.5); // Red with 50% opacity
+  Color get statusPastReservationBackground =>
+      ColorTokens.coral500.withValues(alpha: 0.5); // Red with 50% opacity
   @override
-  Color get statusPastReservationBorder => ColorTokens.coral600.withValues(alpha: 0.5); // Darker red border with 50% opacity
+  Color get statusPastReservationBorder =>
+      ColorTokens.coral600.withValues(alpha: 0.5); // Darker red border with 50% opacity
 
   // Buttons - Black primary
   @override
@@ -383,65 +385,50 @@ class LightColorScheme implements WidgetColorScheme {
   // Shadow presets
   @override
   List<BoxShadow> get shadowMinimal => [
-        BoxShadow(
-          color: shadow01,
-          offset: const Offset(0, 1),
-          blurRadius: 2,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow01, offset: const Offset(0, 1), blurRadius: 2),
+  ];
 
   @override
   List<BoxShadow> get shadowLight => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 2),
-          blurRadius: 4,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow02, offset: const Offset(0, 2), blurRadius: 4),
+  ];
 
   @override
   List<BoxShadow> get shadowMedium => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 2),
-          blurRadius: 4,
-          spreadRadius: -1,
-        ),
-        BoxShadow(
-          color: shadow03,
-          offset: const Offset(0, 4),
-          blurRadius: 8,
-          spreadRadius: -2,
-        ),
-      ];
+    BoxShadow(
+      color: shadow02,
+      offset: const Offset(0, 2),
+      blurRadius: 4,
+      spreadRadius: -1,
+    ),
+    BoxShadow(
+      color: shadow03,
+      offset: const Offset(0, 4),
+      blurRadius: 8,
+      spreadRadius: -2,
+    ),
+  ];
 
   @override
   List<BoxShadow> get shadowStrong => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 4),
-          blurRadius: 6,
-          spreadRadius: -2,
-        ),
-        BoxShadow(
-          color: shadow04,
-          offset: const Offset(0, 8),
-          blurRadius: 16,
-          spreadRadius: -4,
-        ),
-      ];
+    BoxShadow(
+      color: shadow02,
+      offset: const Offset(0, 4),
+      blurRadius: 6,
+      spreadRadius: -2,
+    ),
+    BoxShadow(
+      color: shadow04,
+      offset: const Offset(0, 8),
+      blurRadius: 16,
+      spreadRadius: -4,
+    ),
+  ];
 
   @override
   List<BoxShadow> get shadowHover => [
-        BoxShadow(
-          color: shadow03,
-          offset: const Offset(0, 4),
-          blurRadius: 12,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow03, offset: const Offset(0, 4), blurRadius: 12),
+  ];
 }
 
 // ============================================================================
@@ -557,9 +544,11 @@ class DarkColorScheme implements WidgetColorScheme {
   @override
   Color get statusDisabledText => ColorTokens.grey600;
   @override
-  Color get statusPastReservationBackground => ColorTokens.coral500.withValues(alpha: 0.5); // Red with 50% opacity
+  Color get statusPastReservationBackground =>
+      ColorTokens.coral500.withValues(alpha: 0.5); // Red with 50% opacity
   @override
-  Color get statusPastReservationBorder => ColorTokens.coral600.withValues(alpha: 0.5); // Darker red border with 50% opacity
+  Color get statusPastReservationBorder =>
+      ColorTokens.coral600.withValues(alpha: 0.5); // Darker red border with 50% opacity
 
   // Buttons
   @override
@@ -600,63 +589,48 @@ class DarkColorScheme implements WidgetColorScheme {
   // Shadow presets
   @override
   List<BoxShadow> get shadowMinimal => [
-        BoxShadow(
-          color: shadow01,
-          offset: const Offset(0, 1),
-          blurRadius: 3,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow01, offset: const Offset(0, 1), blurRadius: 3),
+  ];
 
   @override
   List<BoxShadow> get shadowLight => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 2),
-          blurRadius: 6,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow02, offset: const Offset(0, 2), blurRadius: 6),
+  ];
 
   @override
   List<BoxShadow> get shadowMedium => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 3),
-          blurRadius: 6,
-          spreadRadius: -1,
-        ),
-        BoxShadow(
-          color: shadow03,
-          offset: const Offset(0, 6),
-          blurRadius: 12,
-          spreadRadius: -2,
-        ),
-      ];
+    BoxShadow(
+      color: shadow02,
+      offset: const Offset(0, 3),
+      blurRadius: 6,
+      spreadRadius: -1,
+    ),
+    BoxShadow(
+      color: shadow03,
+      offset: const Offset(0, 6),
+      blurRadius: 12,
+      spreadRadius: -2,
+    ),
+  ];
 
   @override
   List<BoxShadow> get shadowStrong => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 6),
-          blurRadius: 10,
-          spreadRadius: -2,
-        ),
-        BoxShadow(
-          color: shadow04,
-          offset: const Offset(0, 12),
-          blurRadius: 24,
-          spreadRadius: -4,
-        ),
-      ];
+    BoxShadow(
+      color: shadow02,
+      offset: const Offset(0, 6),
+      blurRadius: 10,
+      spreadRadius: -2,
+    ),
+    BoxShadow(
+      color: shadow04,
+      offset: const Offset(0, 12),
+      blurRadius: 24,
+      spreadRadius: -4,
+    ),
+  ];
 
   @override
   List<BoxShadow> get shadowHover => [
-        BoxShadow(
-          color: shadow03,
-          offset: const Offset(0, 6),
-          blurRadius: 16,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow03, offset: const Offset(0, 6), blurRadius: 16),
+  ];
 }

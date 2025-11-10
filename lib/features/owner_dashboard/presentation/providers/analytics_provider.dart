@@ -8,9 +8,7 @@ part 'analytics_provider.g.dart';
 @riverpod
 class AnalyticsNotifier extends _$AnalyticsNotifier {
   @override
-  Future<AnalyticsSummary> build({
-    required DateRangeFilter dateRange,
-  }) async {
+  Future<AnalyticsSummary> build({required DateRangeFilter dateRange}) async {
     final auth = FirebaseAuth.instance;
     final userId = auth.currentUser?.uid;
 
@@ -75,10 +73,6 @@ class DateRangeNotifier extends _$DateRangeNotifier {
   }
 
   void setCustomRange(DateTime start, DateTime end) {
-    state = DateRangeFilter(
-      startDate: start,
-      endDate: end,
-      preset: 'custom',
-    );
+    state = DateRangeFilter(startDate: start, endDate: end);
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'logging_service.dart';
@@ -72,7 +73,7 @@ class IpGeolocationService {
         if (result != null) return result;
       } catch (e) {
         // Continue to next provider
-        LoggingService.logError('Geolocation provider failed', e);
+        unawaited(LoggingService.logError('Geolocation provider failed', e));
       }
     }
 

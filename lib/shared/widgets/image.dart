@@ -58,7 +58,10 @@ class PremiumImage extends StatelessWidget {
     this.enableShimmer = true,
     this.enableOverlay = false,
     this.overlayGradient,
-  }) : assert(imageUrl != null || assetPath != null, 'Either imageUrl or assetPath must be provided');
+  }) : assert(
+         imageUrl != null || assetPath != null,
+         'Either imageUrl or assetPath must be provided',
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +87,8 @@ class PremiumImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        placeholder: (context, url) => loadingWidget ??
+        placeholder: (context, url) =>
+            loadingWidget ??
             (enableShimmer
                 ? _buildShimmerLoading(isDark, effectiveBorderRadius)
                 : _buildLoadingWidget(isDark, effectiveBorderRadius)),
@@ -95,10 +99,7 @@ class PremiumImage extends StatelessWidget {
 
     // Wrap with aspect ratio if specified
     if (aspectRatio != null) {
-      imageWidget = AspectRatio(
-        aspectRatio: aspectRatio!,
-        child: imageWidget,
-      );
+      imageWidget = AspectRatio(aspectRatio: aspectRatio!, child: imageWidget);
     }
 
     // Add overlay if enabled
@@ -119,11 +120,7 @@ class PremiumImage extends StatelessWidget {
     // Wrap with border radius
     return ClipRRect(
       borderRadius: BorderRadius.circular(effectiveBorderRadius),
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: imageWidget,
-      ),
+      child: SizedBox(width: width, height: height, child: imageWidget),
     );
   }
 
@@ -142,7 +139,9 @@ class PremiumImage extends StatelessWidget {
   Widget _buildLoadingWidget(bool isDark, double borderRadius) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight,
+        color: isDark
+            ? AppColors.surfaceVariantDark
+            : AppColors.surfaceVariantLight,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: const Center(
@@ -156,14 +155,18 @@ class PremiumImage extends StatelessWidget {
   Widget _buildErrorWidget(bool isDark, double borderRadius) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight,
+        color: isDark
+            ? AppColors.surfaceVariantDark
+            : AppColors.surfaceVariantLight,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: Center(
         child: Icon(
           Icons.broken_image_outlined,
           size: AppDimensions.iconL,
-          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+          color: isDark
+              ? AppColors.textSecondaryDark
+              : AppColors.textSecondaryLight,
         ),
       ),
     );
@@ -250,7 +253,6 @@ class _PremiumImageGalleryState extends State<PremiumImageGallery> {
             itemBuilder: (context, index) {
               return PremiumImage(
                 imageUrl: widget.imageUrls[index],
-                fit: BoxFit.cover,
                 borderRadius: widget.borderRadius,
               );
             },

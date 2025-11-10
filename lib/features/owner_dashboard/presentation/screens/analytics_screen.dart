@@ -68,7 +68,9 @@ class _DateRangeSelector extends ConsumerWidget {
                     label: 'Last Week',
                     selected: dateRange.preset == 'week',
                     onSelected: () {
-                      ref.read(dateRangeNotifierProvider.notifier).setPreset('week');
+                      ref
+                          .read(dateRangeNotifierProvider.notifier)
+                          .setPreset('week');
                     },
                   ),
                   const SizedBox(width: 8),
@@ -76,7 +78,9 @@ class _DateRangeSelector extends ConsumerWidget {
                     label: 'Last Month',
                     selected: dateRange.preset == 'month',
                     onSelected: () {
-                      ref.read(dateRangeNotifierProvider.notifier).setPreset('month');
+                      ref
+                          .read(dateRangeNotifierProvider.notifier)
+                          .setPreset('month');
                     },
                   ),
                   const SizedBox(width: 8),
@@ -84,7 +88,9 @@ class _DateRangeSelector extends ConsumerWidget {
                     label: 'Last Quarter',
                     selected: dateRange.preset == 'quarter',
                     onSelected: () {
-                      ref.read(dateRangeNotifierProvider.notifier).setPreset('quarter');
+                      ref
+                          .read(dateRangeNotifierProvider.notifier)
+                          .setPreset('quarter');
                     },
                   ),
                   const SizedBox(width: 8),
@@ -92,7 +98,9 @@ class _DateRangeSelector extends ConsumerWidget {
                     label: 'Last Year',
                     selected: dateRange.preset == 'year',
                     onSelected: () {
-                      ref.read(dateRangeNotifierProvider.notifier).setPreset('year');
+                      ref
+                          .read(dateRangeNotifierProvider.notifier)
+                          .setPreset('year');
                     },
                   ),
                   const SizedBox(width: 8),
@@ -108,10 +116,9 @@ class _DateRangeSelector extends ConsumerWidget {
                         ),
                       );
                       if (picked != null) {
-                        ref.read(dateRangeNotifierProvider.notifier).setCustomRange(
-                          picked.start,
-                          picked.end,
-                        );
+                        ref
+                            .read(dateRangeNotifierProvider.notifier)
+                            .setCustomRange(picked.start, picked.end);
                       }
                     },
                     icon: const Icon(Icons.calendar_today, size: 16),
@@ -216,15 +223,15 @@ class _MetricCardsGrid extends StatelessWidget {
         final crossAxisCount = constraints.maxWidth > 900
             ? 4
             : constraints.maxWidth > 600
-                ? 2
-                : 1;
+            ? 2
+            : 1;
 
         // Responsive aspect ratio based on screen width
         final aspectRatio = constraints.maxWidth > 900
-            ? 1.8  // Desktop - wider cards
+            ? 1.8 // Desktop - wider cards
             : constraints.maxWidth > 600
-                ? 1.6  // Tablet - medium cards
-                : 1.3; // Mobile - taller cards for more content
+            ? 1.6 // Tablet - medium cards
+            : 1.3; // Mobile - taller cards for more content
 
         return GridView.count(
           shrinkWrap: true,
@@ -237,7 +244,8 @@ class _MetricCardsGrid extends StatelessWidget {
             _MetricCard(
               title: 'Total Revenue',
               value: '\$${analytics.totalRevenue.toStringAsFixed(2)}',
-              subtitle: 'Monthly: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
+              subtitle:
+                  'Monthly: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
               icon: Icons.attach_money,
               color: AppColors.success,
             ),
@@ -251,14 +259,16 @@ class _MetricCardsGrid extends StatelessWidget {
             _MetricCard(
               title: 'Occupancy Rate',
               value: '${analytics.occupancyRate.toStringAsFixed(1)}%',
-              subtitle: '${analytics.activeProperties}/${analytics.totalProperties} properties active',
+              subtitle:
+                  '${analytics.activeProperties}/${analytics.totalProperties} properties active',
               icon: Icons.home,
               color: AppColors.warning,
             ),
             _MetricCard(
               title: 'Avg. Nightly Rate',
               value: '\$${analytics.averageNightlyRate.toStringAsFixed(2)}',
-              subtitle: 'Cancellation: ${analytics.cancellationRate.toStringAsFixed(1)}%',
+              subtitle:
+                  'Cancellation: ${analytics.cancellationRate.toStringAsFixed(1)}%',
               icon: Icons.night_shelter,
               color: AppColors.secondary,
             ),
@@ -351,7 +361,6 @@ class _RevenueChart extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: LineChart(
             LineChartData(
-              gridData: const FlGridData(show: true),
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
@@ -380,26 +389,18 @@ class _RevenueChart extends StatelessWidget {
                     },
                   ),
                 ),
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
+                rightTitles: const AxisTitles(),
+                topTitles: const AxisTitles(),
               ),
               borderData: FlBorderData(show: true),
               lineBarsData: [
                 LineChartBarData(
                   spots: data.asMap().entries.map((entry) {
-                    return FlSpot(
-                      entry.key.toDouble(),
-                      entry.value.amount,
-                    );
+                    return FlSpot(entry.key.toDouble(), entry.value.amount);
                   }).toList(),
                   isCurved: true,
                   color: AppColors.success,
                   barWidth: 3,
-                  dotData: const FlDotData(show: true),
                   belowBarData: BarAreaData(
                     show: true,
                     color: AppColors.success.withValues(alpha: 0.2),
@@ -436,7 +437,7 @@ class _BookingsChart extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: BarChart(
             BarChartData(
-              gridData: const FlGridData(show: true),
+              gridData: const FlGridData(),
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
@@ -465,12 +466,8 @@ class _BookingsChart extends StatelessWidget {
                     },
                   ),
                 ),
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
+                rightTitles: const AxisTitles(),
+                topTitles: const AxisTitles(),
               ),
               borderData: FlBorderData(show: true),
               barGroups: data.asMap().entries.map((entry) {

@@ -29,7 +29,10 @@ class FirebaseWidgetSettingsRepository {
 
       return WidgetSettings.fromFirestore(doc);
     } catch (e) {
-      LoggingService.log('Error getting settings: $e', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Error getting settings: $e',
+        tag: 'WidgetSettingsRepository',
+      );
       return null;
     }
   }
@@ -46,9 +49,9 @@ class FirebaseWidgetSettingsRepository {
         .doc(unitId)
         .snapshots()
         .map((doc) {
-      if (!doc.exists) return null;
-      return WidgetSettings.fromFirestore(doc);
-    });
+          if (!doc.exists) return null;
+          return WidgetSettings.fromFirestore(doc);
+        });
   }
 
   /// Create default widget settings for a new unit
@@ -62,19 +65,18 @@ class FirebaseWidgetSettingsRepository {
       final settings = WidgetSettings(
         id: unitId,
         propertyId: propertyId,
-        widgetMode: WidgetMode.calendarOnly, // Default to calendar only (show availability + contact)
+        widgetMode: WidgetMode
+            .calendarOnly, // Default to calendar only (show availability + contact)
         contactOptions: ContactOptions(
-          showEmail: true,
           emailAddress: ownerEmail,
-          showPhone: true,
           phoneNumber: ownerPhone,
-          showWhatsApp: false,
           customMessage: 'Kontaktirajte nas za rezervaciju!',
         ),
-        emailConfig: const EmailNotificationConfig(), // Default disabled email config
-        taxLegalConfig: const TaxLegalConfig(), // Default enabled tax/legal config
+        emailConfig:
+            const EmailNotificationConfig(), // Default disabled email config
+        taxLegalConfig:
+            const TaxLegalConfig(), // Default enabled tax/legal config
         requireOwnerApproval: true, // Owner approval required for bookings
-        allowGuestCancellation: true,
         cancellationDeadlineHours: 48,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -87,9 +89,15 @@ class FirebaseWidgetSettingsRepository {
           .doc(unitId)
           .set(settings.toFirestore());
 
-      LoggingService.log('Default settings created for unit: $unitId', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Default settings created for unit: $unitId',
+        tag: 'WidgetSettingsRepository',
+      );
     } catch (e) {
-      LoggingService.log('Error creating default settings: $e', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Error creating default settings: $e',
+        tag: 'WidgetSettingsRepository',
+      );
       rethrow;
     }
   }
@@ -97,9 +105,7 @@ class FirebaseWidgetSettingsRepository {
   /// Update widget settings
   Future<void> updateWidgetSettings(WidgetSettings settings) async {
     try {
-      final updatedSettings = settings.copyWith(
-        updatedAt: DateTime.now(),
-      );
+      final updatedSettings = settings.copyWith(updatedAt: DateTime.now());
 
       await _firestore
           .collection('properties')
@@ -108,9 +114,15 @@ class FirebaseWidgetSettingsRepository {
           .doc(settings.id)
           .set(updatedSettings.toFirestore(), SetOptions(merge: true));
 
-      LoggingService.log('Settings updated for unit: ${settings.id}', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Settings updated for unit: ${settings.id}',
+        tag: 'WidgetSettingsRepository',
+      );
     } catch (e) {
-      LoggingService.log('Error updating settings: $e', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Error updating settings: $e',
+        tag: 'WidgetSettingsRepository',
+      );
       rethrow;
     }
   }
@@ -128,13 +140,19 @@ class FirebaseWidgetSettingsRepository {
           .collection('widget_settings')
           .doc(unitId)
           .update({
-        'widget_mode': widgetMode.toStringValue(),
-        'updated_at': Timestamp.now(),
-      });
+            'widget_mode': widgetMode.toStringValue(),
+            'updated_at': Timestamp.now(),
+          });
 
-      LoggingService.log('Widget mode updated to: ${widgetMode.toStringValue()}', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Widget mode updated to: ${widgetMode.toStringValue()}',
+        tag: 'WidgetSettingsRepository',
+      );
     } catch (e) {
-      LoggingService.log('Error updating widget mode: $e', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Error updating widget mode: $e',
+        tag: 'WidgetSettingsRepository',
+      );
       rethrow;
     }
   }
@@ -152,13 +170,19 @@ class FirebaseWidgetSettingsRepository {
           .collection('widget_settings')
           .doc(unitId)
           .update({
-        'stripe_config': config.toMap(),
-        'updated_at': Timestamp.now(),
-      });
+            'stripe_config': config.toMap(),
+            'updated_at': Timestamp.now(),
+          });
 
-      LoggingService.log('Stripe config updated', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Stripe config updated',
+        tag: 'WidgetSettingsRepository',
+      );
     } catch (e) {
-      LoggingService.log('Error updating Stripe config: $e', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Error updating Stripe config: $e',
+        tag: 'WidgetSettingsRepository',
+      );
       rethrow;
     }
   }
@@ -176,13 +200,19 @@ class FirebaseWidgetSettingsRepository {
           .collection('widget_settings')
           .doc(unitId)
           .update({
-        'bank_transfer_config': config.toMap(),
-        'updated_at': Timestamp.now(),
-      });
+            'bank_transfer_config': config.toMap(),
+            'updated_at': Timestamp.now(),
+          });
 
-      LoggingService.log('Bank transfer config updated', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Bank transfer config updated',
+        tag: 'WidgetSettingsRepository',
+      );
     } catch (e) {
-      LoggingService.log('Error updating bank transfer config: $e', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Error updating bank transfer config: $e',
+        tag: 'WidgetSettingsRepository',
+      );
       rethrow;
     }
   }
@@ -200,13 +230,19 @@ class FirebaseWidgetSettingsRepository {
           .collection('widget_settings')
           .doc(unitId)
           .update({
-        'contact_options': contactOptions.toMap(),
-        'updated_at': Timestamp.now(),
-      });
+            'contact_options': contactOptions.toMap(),
+            'updated_at': Timestamp.now(),
+          });
 
-      LoggingService.log('Contact options updated', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Contact options updated',
+        tag: 'WidgetSettingsRepository',
+      );
     } catch (e) {
-      LoggingService.log('Error updating contact options: $e', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Error updating contact options: $e',
+        tag: 'WidgetSettingsRepository',
+      );
       rethrow;
     }
   }
@@ -224,9 +260,15 @@ class FirebaseWidgetSettingsRepository {
           .doc(unitId)
           .delete();
 
-      LoggingService.log('Settings deleted for unit: $unitId', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Settings deleted for unit: $unitId',
+        tag: 'WidgetSettingsRepository',
+      );
     } catch (e) {
-      LoggingService.log('Error deleting settings: $e', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Error deleting settings: $e',
+        tag: 'WidgetSettingsRepository',
+      );
       rethrow;
     }
   }
@@ -240,11 +282,12 @@ class FirebaseWidgetSettingsRepository {
           .collection('widget_settings')
           .get();
 
-      return snapshot.docs
-          .map((doc) => WidgetSettings.fromFirestore(doc))
-          .toList();
+      return snapshot.docs.map(WidgetSettings.fromFirestore).toList();
     } catch (e) {
-      LoggingService.log('Error getting all property settings: $e', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Error getting all property settings: $e',
+        tag: 'WidgetSettingsRepository',
+      );
       return [];
     }
   }
@@ -264,7 +307,10 @@ class FirebaseWidgetSettingsRepository {
 
       return doc.exists;
     } catch (e) {
-      LoggingService.log('Error checking if settings exist: $e', tag: 'WidgetSettingsRepository');
+      LoggingService.log(
+        'Error checking if settings exist: $e',
+        tag: 'WidgetSettingsRepository',
+      );
       return false;
     }
   }

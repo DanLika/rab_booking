@@ -16,15 +16,12 @@ class VillaJaskoTheme {
       // Color scheme using VillaJaskoColors
       colorScheme: const ColorScheme.light(
         primary: VillaJaskoColors.primary,
-        onPrimary: VillaJaskoColors.textOnPrimary,
         primaryContainer: VillaJaskoColors.primaryLight,
         secondary: VillaJaskoColors.accent,
         onSecondary: VillaJaskoColors.textOnAccent,
         secondaryContainer: VillaJaskoColors.accentHover,
         tertiary: VillaJaskoColors.accent,
         error: VillaJaskoColors.error,
-        onError: Colors.white,
-        surface: VillaJaskoColors.backgroundSurface,
         onSurface: VillaJaskoColors.textPrimary,
         surfaceContainerHighest: VillaJaskoColors.backgroundMain,
         outline: VillaJaskoColors.border,
@@ -149,41 +146,47 @@ class VillaJaskoTheme {
 
       // Elevated button theme - Azure blue primary button
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: VillaJaskoColors.buttonPrimary,
-          foregroundColor: VillaJaskoColors.buttonPrimaryText,
-          minimumSize: const Size(0, AppDimensions.buttonHeight), // 48px height
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.spaceM, // 24px
-            vertical: AppDimensions.spaceS, // 16px
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px
-          ),
-          elevation: 0,
-          textStyle: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-          ),
-        ).copyWith(
-          // Hover state
-          backgroundColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.hovered)) {
-              return VillaJaskoColors.buttonPrimaryHover;
-            }
-            if (states.contains(WidgetState.disabled)) {
-              return VillaJaskoColors.buttonDisabled;
-            }
-            return VillaJaskoColors.buttonPrimary;
-          }),
-          foregroundColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.disabled)) {
-              return VillaJaskoColors.buttonDisabledText;
-            }
-            return VillaJaskoColors.buttonPrimaryText;
-          }),
-        ),
+        style:
+            ElevatedButton.styleFrom(
+              backgroundColor: VillaJaskoColors.buttonPrimary,
+              foregroundColor: VillaJaskoColors.buttonPrimaryText,
+              minimumSize: const Size(
+                0,
+                AppDimensions.buttonHeight,
+              ), // 48px height
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.spaceM, // 24px
+                vertical: AppDimensions.spaceS, // 16px
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  AppDimensions.radiusS,
+                ), // 12px
+              ),
+              elevation: 0,
+              textStyle: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ).copyWith(
+              // Hover state
+              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.hovered)) {
+                  return VillaJaskoColors.buttonPrimaryHover;
+                }
+                if (states.contains(WidgetState.disabled)) {
+                  return VillaJaskoColors.buttonDisabled;
+                }
+                return VillaJaskoColors.buttonPrimary;
+              }),
+              foregroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.disabled)) {
+                  return VillaJaskoColors.buttonDisabledText;
+                }
+                return VillaJaskoColors.buttonPrimaryText;
+              }),
+            ),
       ),
 
       // Outlined button theme
@@ -237,7 +240,9 @@ class VillaJaskoTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: VillaJaskoColors.backgroundSurface,
-        constraints: const BoxConstraints(minHeight: AppDimensions.inputHeight), // 48px
+        constraints: const BoxConstraints(
+          minHeight: AppDimensions.inputHeight,
+        ), // 48px
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppDimensions.spaceS,
           vertical: 14,
@@ -263,10 +268,7 @@ class VillaJaskoTheme {
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusXS),
-          borderSide: const BorderSide(
-            color: VillaJaskoColors.error,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: VillaJaskoColors.error, width: 2),
         ),
         labelStyle: GoogleFonts.inter(
           fontSize: 14,
@@ -302,10 +304,7 @@ class VillaJaskoTheme {
       // Snackbar theme
       snackBarTheme: SnackBarThemeData(
         backgroundColor: VillaJaskoColors.textPrimary,
-        contentTextStyle: GoogleFonts.inter(
-          fontSize: 14,
-          color: Colors.white,
-        ),
+        contentTextStyle: GoogleFonts.inter(fontSize: 14, color: Colors.white),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
         ),

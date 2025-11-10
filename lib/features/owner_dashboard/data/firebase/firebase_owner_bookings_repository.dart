@@ -98,7 +98,10 @@ class FirebaseOwnerBookingsRepository {
               .doc(unitId)
               .get();
           if (unitDoc.exists) {
-            final unit = UnitModel.fromJson({...unitDoc.data()!, 'id': unitDoc.id});
+            final unit = UnitModel.fromJson({
+              ...unitDoc.data()!,
+              'id': unitDoc.id,
+            });
             unitIds = [unitId];
             unitsMap[unitId] = unit;
             unitToPropertyMap[unitId] = propertyId;
@@ -158,9 +161,15 @@ class FirebaseOwnerBookingsRepository {
       for (int i = 0; i < uniquePropertyIds.length; i += 10) {
         final batch = uniquePropertyIds.skip(i).take(10).toList();
         for (final propId in batch) {
-          final propDoc = await _firestore.collection('properties').doc(propId).get();
+          final propDoc = await _firestore
+              .collection('properties')
+              .doc(propId)
+              .get();
           if (propDoc.exists) {
-            propertiesMap[propId] = PropertyModel.fromJson({...propDoc.data()!, 'id': propDoc.id});
+            propertiesMap[propId] = PropertyModel.fromJson({
+              ...propDoc.data()!,
+              'id': propDoc.id,
+            });
           }
         }
       }
@@ -193,28 +202,36 @@ class FirebaseOwnerBookingsRepository {
         if (property == null) continue;
 
         // For widget bookings, use guest details from booking; for authenticated bookings, use user data
-        final userData = booking.userId != null ? usersMap[booking.userId] : null;
-        final guestName = booking.guestName ??
+        final userData = booking.userId != null
+            ? usersMap[booking.userId]
+            : null;
+        final guestName =
+            booking.guestName ??
             (userData != null
-                ? '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'.trim()
+                ? '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'
+                      .trim()
                 : 'Unknown Guest');
-        final guestEmail = booking.guestEmail ??
-            (userData?['email'] as String?) ??
-            '';
-        final guestPhone = booking.guestPhone ?? (userData?['phone'] as String?);
+        final guestEmail =
+            booking.guestEmail ?? (userData?['email'] as String?) ?? '';
+        final guestPhone =
+            booking.guestPhone ?? (userData?['phone'] as String?);
 
-        ownerBookings.add(OwnerBooking(
-          booking: booking,
-          property: property,
-          unit: unit,
-          guestName: guestName.isEmpty ? 'Unknown Guest' : guestName,
-          guestEmail: guestEmail,
-          guestPhone: guestPhone,
-        ));
+        ownerBookings.add(
+          OwnerBooking(
+            booking: booking,
+            property: property,
+            unit: unit,
+            guestName: guestName.isEmpty ? 'Unknown Guest' : guestName,
+            guestEmail: guestEmail,
+            guestPhone: guestPhone,
+          ),
+        );
       }
 
       // Sort by check-in date descending
-      ownerBookings.sort((a, b) => b.booking.checkIn.compareTo(a.booking.checkIn));
+      ownerBookings.sort(
+        (a, b) => b.booking.checkIn.compareTo(a.booking.checkIn),
+      );
 
       return ownerBookings;
     } catch (e) {
@@ -359,25 +376,27 @@ class FirebaseOwnerBookingsRepository {
           }
 
           final unitId = data['unit_id'] as String;
-          final source = _safeExtractString(data['source'], fallback: 'ical') ?? 'ical';
-          final guestName = _safeExtractString(data['guest_name'], fallback: 'External Booking') ?? 'External Booking';
+          final source =
+              _safeExtractString(data['source'], fallback: 'ical') ?? 'ical';
+          final guestName =
+              _safeExtractString(
+                data['guest_name'],
+                fallback: 'External Booking',
+              ) ??
+              'External Booking';
 
           // Create pseudo-BookingModel for iCal event
           // Using special ID prefix 'ical_' to distinguish from regular bookings
           final pseudoBooking = BookingModel(
             id: 'ical_${doc.id}', // Special prefix to identify iCal bookings
             unitId: unitId,
-            userId: null, // External bookings have no user
             checkIn: eventStartDate,
             checkOut: eventEndDate,
-            guestCount: 1,
-            totalPrice: 0.0, // External bookings don't have price in our system
-            paidAmount: 0.0,
             status: BookingStatus.confirmed, // Always show as confirmed
-            paymentMethod: 'on_place', // External bookings payment tracked elsewhere
-            guestName: '$guestName ($source)', // e.g., "Booking.com Guest (booking_com)"
-            guestEmail: null, // External bookings don't have email
-            guestPhone: null,
+            paymentMethod:
+                'on_place', // External bookings payment tracked elsewhere
+            guestName:
+                '$guestName ($source)', // e.g., "Booking.com Guest (booking_com)"
             notes: 'Imported from $source via iCal sync',
             createdAt: eventStartDate,
             updatedAt: eventStartDate,
@@ -439,7 +458,11 @@ class FirebaseOwnerBookingsRepository {
 
   /// Cancel booking with reason
   /// Note: Cancellation email is automatically sent by onBookingStatusChange Cloud Function trigger
-  Future<void> cancelBooking(String bookingId, String reason, {bool sendEmail = true}) async {
+  Future<void> cancelBooking(
+    String bookingId,
+    String reason, {
+    bool sendEmail = true,
+  }) async {
     try {
       await _firestore.collection('bookings').doc(bookingId).update({
         'status': BookingStatus.cancelled.value,

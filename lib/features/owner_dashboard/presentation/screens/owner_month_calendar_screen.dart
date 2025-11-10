@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/date_range_selection.dart';
@@ -41,69 +42,70 @@ class _OwnerMonthCalendarScreenState
     final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
 
     return Column(
-        children: [
-          // Top toolbar
-          CalendarTopToolbar(
-            dateRange: _currentMonth,
-            isWeekView: false, // Month view
-            onPreviousPeriod: _goToPreviousMonth,
-            onNextPeriod: _goToNextMonth,
-            onToday: _goToToday,
-            onDatePickerTap: _showDatePicker,
-            onSearchTap: showSearchDialog,
-            onRefresh: refreshCalendarData,
-            onFilterTap: showFiltersPanel,
-            notificationCount: unreadCountAsync.when(
-              data: (count) => count,
-              loading: () => 0,
-              error: (error, stackTrace) => 0,
-            ),
-            onNotificationsTap: showNotificationsPanel,
-            isCompact: MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint,
+      children: [
+        // Top toolbar
+        CalendarTopToolbar(
+          dateRange: _currentMonth,
+          isWeekView: false, // Month view
+          onPreviousPeriod: _goToPreviousMonth,
+          onNextPeriod: _goToNextMonth,
+          onToday: _goToToday,
+          onDatePickerTap: _showDatePicker,
+          onSearchTap: showSearchDialog,
+          onRefresh: refreshCalendarData,
+          onFilterTap: showFiltersPanel,
+          notificationCount: unreadCountAsync.when(
+            data: (count) => count,
+            loading: () => 0,
+            error: (error, stackTrace) => 0,
           ),
+          onNotificationsTap: showNotificationsPanel,
+          isCompact:
+              MediaQuery.of(context).size.width <
+              CalendarGridCalculator.mobileBreakpoint,
+        ),
 
-          // Filter chips (from shared widget)
-          const CalendarFilterChips(),
+        // Filter chips (from shared widget)
+        const CalendarFilterChips(),
 
-          // Calendar grid
-          Expanded(
-            child: unitsAsync.when(
-              data: (units) {
-                if (units.isEmpty) {
-                  return CalendarStateBuilders.buildEmptyState(context);
-                }
+        // Calendar grid
+        Expanded(
+          child: unitsAsync.when(
+            data: (units) {
+              if (units.isEmpty) {
+                return CalendarStateBuilders.buildEmptyState(context);
+              }
 
-                return bookingsAsync.when(
-                  data: (bookingsMap) {
-                    return OwnerMonthGridCalendar(
-                      dateRange: _currentMonth,
-                      units: units,
-                      bookings: bookingsMap,
-                      onBookingTap: showBookingDetailsDialog,
-                      onCellTap: (date, unit) {
-                        _showCreateBookingDialog(date, unit.id);
-                      },
-                      enableDragDrop: true,
-                    );
-                  },
-                  loading: () => CalendarStateBuilders.buildLoadingState(),
-                  error: (error, stack) => CalendarStateBuilders.buildErrorState(
-                    context,
-                    error,
-                    refreshCalendarData,
-                  ),
-                );
-              },
-              loading: () => CalendarStateBuilders.buildLoadingState(),
-              error: (error, stack) => CalendarStateBuilders.buildErrorState(
-                context,
-                error,
-                refreshCalendarData,
-              ),
+              return bookingsAsync.when(
+                data: (bookingsMap) {
+                  return OwnerMonthGridCalendar(
+                    dateRange: _currentMonth,
+                    units: units,
+                    bookings: bookingsMap,
+                    onBookingTap: showBookingDetailsDialog,
+                    onCellTap: (date, unit) {
+                      _showCreateBookingDialog(date, unit.id);
+                    },
+                  );
+                },
+                loading: CalendarStateBuilders.buildLoadingState,
+                error: (error, stack) => CalendarStateBuilders.buildErrorState(
+                  context,
+                  error,
+                  refreshCalendarData,
+                ),
+              );
+            },
+            loading: CalendarStateBuilders.buildLoadingState,
+            error: (error, stack) => CalendarStateBuilders.buildErrorState(
+              context,
+              error,
+              refreshCalendarData,
             ),
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
   /// Go to previous month
@@ -147,15 +149,13 @@ class _OwnerMonthCalendarScreenState
   void _showCreateBookingDialog([DateTime? initialDate, String? unitId]) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => BookingCreateDialog(
-        unitId: unitId,
-        initialCheckIn: initialDate,
-      ),
+      builder: (context) =>
+          BookingCreateDialog(unitId: unitId, initialCheckIn: initialDate),
     );
 
     // If booking was created successfully, refresh calendar
     if (result == true && mounted) {
-      refreshCalendarData();
+      unawaited(refreshCalendarData());
     }
   }
 }

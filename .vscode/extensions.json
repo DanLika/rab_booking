@@ -41,6 +41,17 @@
     "ritwickdey.liveserver",                 // Not needed for Flutter
 
     // ========== Other ==========
-    "fwcd.dart"                      // Use dart-code.dart-code instead
+    "fwcd.dart",                     // Use dart-code.dart-code instead
+
+    // ========== Autocomplete/Productivity Tools (Not Needed) ==========
+    "christian-kohler.npm-intellisense", // Claude writes full imports, doesn't need autocomplete
+    "christian-kohler.path-intellisense", // Claude writes full paths
+
+    // ========== Container/Infrastructure Tools (Not Used) ==========
+    "ms-azuretools.vscode-docker",   // Project doesn't use Docker
+    "ms-vscode-remote.remote-containers", // No container development
+
+    // ========== Editor Enhancements (Not Needed) ==========
+    "vscodevim.vim"                  // Vim keybindings (Claude doesn't use keyboard shortcuts)
   ]
 }

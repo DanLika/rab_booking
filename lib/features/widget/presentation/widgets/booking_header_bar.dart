@@ -37,10 +37,7 @@ class BookingHeaderBar extends ConsumerWidget {
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            colors.primary,
-            colors.primary,
-          ],
+          colors: [colors.primary, colors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -66,7 +63,11 @@ class BookingHeaderBar extends ConsumerWidget {
     );
   }
 
-  Widget _buildDateSelector(DateTime? checkIn, DateTime? checkOut, bool isMobile) {
+  Widget _buildDateSelector(
+    DateTime? checkIn,
+    DateTime? checkOut,
+    bool isMobile,
+  ) {
     return InkWell(
       onTap: onDateTap,
       borderRadius: BorderRadius.circular(8),
@@ -80,13 +81,14 @@ class BookingHeaderBar extends ConsumerWidget {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: colors.borderDefault.withValues(alpha: 0.2),
-            width: 1,
           ),
           boxShadow: colors.shadowLight,
         ),
         child: Row(
           mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
-          mainAxisAlignment: isMobile ? MainAxisAlignment.center : MainAxisAlignment.start,
+          mainAxisAlignment: isMobile
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.start,
           children: [
             Icon(
               Icons.calendar_today,
@@ -152,19 +154,16 @@ class BookingHeaderBar extends ConsumerWidget {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: colors.borderDefault.withValues(alpha: 0.2),
-            width: 1,
           ),
           boxShadow: colors.shadowLight,
         ),
         child: Row(
           mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
-          mainAxisAlignment: isMobile ? MainAxisAlignment.center : MainAxisAlignment.start,
+          mainAxisAlignment: isMobile
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.start,
           children: [
-            Icon(
-              Icons.people,
-              size: isMobile ? 18 : 20,
-              color: colors.primary,
-            ),
+            Icon(Icons.people, size: isMobile ? 18 : 20, color: colors.primary),
             const SizedBox(width: 12),
             Text(
               '$adults ${adults == 1 ? 'adult' : 'adults'}',
@@ -192,11 +191,7 @@ class BookingHeaderBar extends ConsumerWidget {
               ),
             ],
             const SizedBox(width: 8),
-            Icon(
-              Icons.arrow_drop_down,
-              size: 22,
-              color: colors.primary,
-            ),
+            Icon(Icons.arrow_drop_down, size: 22, color: colors.primary),
           ],
         ),
       ),

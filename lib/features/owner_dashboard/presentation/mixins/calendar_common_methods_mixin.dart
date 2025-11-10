@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -22,7 +23,7 @@ mixin CalendarCommonMethodsMixin<T extends ConsumerStatefulWidget>
 
     // If user selected a booking from search results, show its details
     if (selectedBooking != null && mounted) {
-      showBookingDetailsDialog(selectedBooking);
+      unawaited(showBookingDetailsDialog(selectedBooking));
     }
   }
 

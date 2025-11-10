@@ -30,7 +30,7 @@ class DateRangeSelection with _$DateRangeSelection {
 
   /// Create a month range from a given date
   factory DateRangeSelection.month(DateTime date) {
-    final firstDay = DateTime(date.year, date.month, 1);
+    final firstDay = DateTime(date.year, date.month);
     // Using day 0 of next month to get last day of current month (Dart idiom)
     // DateTime normalizes: month+1 with day 0 = last day of current month
     final lastDay = DateTime(date.year, date.month + 1, 0);
@@ -68,7 +68,8 @@ class DateRangeSelection with _$DateRangeSelection {
     final dateOnly = DateTime(date.year, date.month, date.day);
     final startOnly = DateTime(startDate.year, startDate.month, startDate.day);
     final endOnly = DateTime(endDate.year, endDate.month, endDate.day);
-    return (dateOnly.isAfter(startOnly) || dateOnly.isAtSameMomentAs(startOnly)) &&
+    return (dateOnly.isAfter(startOnly) ||
+            dateOnly.isAtSameMomentAs(startOnly)) &&
         (dateOnly.isBefore(endOnly) || dateOnly.isAtSameMomentAs(endOnly));
   }
 
@@ -84,14 +85,16 @@ class DateRangeSelection with _$DateRangeSelection {
         nextMonth = 1;
         nextYear++;
       }
-      return DateRangeSelection.month(DateTime(nextYear, nextMonth, 1));
+      return DateRangeSelection.month(DateTime(nextYear, nextMonth));
     }
   }
 
   /// Move to previous week/month
   DateRangeSelection previous({required bool isWeek}) {
     if (isWeek) {
-      return DateRangeSelection.week(startDate.subtract(const Duration(days: 7)));
+      return DateRangeSelection.week(
+        startDate.subtract(const Duration(days: 7)),
+      );
     } else {
       // Handle month underflow explicitly
       int prevMonth = startDate.month - 1;
@@ -100,7 +103,7 @@ class DateRangeSelection with _$DateRangeSelection {
         prevMonth = 12;
         prevYear--;
       }
-      return DateRangeSelection.month(DateTime(prevYear, prevMonth, 1));
+      return DateRangeSelection.month(DateTime(prevYear, prevMonth));
     }
   }
 
@@ -126,8 +129,18 @@ class DateRangeSelection with _$DateRangeSelection {
 
   static String _getMonthName(int month) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return months[month - 1];
   }

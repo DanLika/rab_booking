@@ -201,7 +201,9 @@ class BankTransferScreen extends ConsumerWidget {
                 _buildBankDetails(context, isDarkMode, getColor, bankConfig),
                 SizedBox(height: spacing),
               ],
-              if (bankConfig != null && bankConfig.enableQrCode && bankConfig.iban != null) ...[
+              if (bankConfig != null &&
+                  bankConfig.enableQrCode &&
+                  bankConfig.iban != null) ...[
                 _buildQrCodeSection(
                   context,
                   isDarkMode,
@@ -258,7 +260,9 @@ class BankTransferScreen extends ConsumerWidget {
           _buildBankDetails(context, isDarkMode, getColor, bankConfig),
           SizedBox(height: spacing),
         ],
-        if (bankConfig != null && bankConfig.enableQrCode && bankConfig.iban != null) ...[
+        if (bankConfig != null &&
+            bankConfig.enableQrCode &&
+            bankConfig.iban != null) ...[
           _buildQrCodeSection(
             context,
             isDarkMode,
@@ -300,7 +304,6 @@ class BankTransferScreen extends ConsumerWidget {
             MinimalistColors.borderLight,
             MinimalistColorsDark.borderLight,
           ),
-          width: BorderTokens.widthThin,
         ),
       ),
       child: Column(
@@ -379,7 +382,6 @@ class BankTransferScreen extends ConsumerWidget {
             MinimalistColors.borderDefault,
             MinimalistColorsDark.borderDefault,
           ),
-          width: BorderTokens.widthThin,
         ),
       ),
       child: Column(
@@ -423,7 +425,6 @@ class BankTransferScreen extends ConsumerWidget {
                   MinimalistColors.borderMedium,
                   MinimalistColorsDark.borderMedium,
                 ),
-                width: BorderTokens.widthThin,
               ),
             ),
             child: Row(
@@ -573,7 +574,6 @@ class BankTransferScreen extends ConsumerWidget {
             MinimalistColors.borderDefault,
             MinimalistColorsDark.borderDefault,
           ),
-          width: BorderTokens.widthThin,
         ),
       ),
       child: Column(
@@ -591,11 +591,26 @@ class BankTransferScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
-          _buildDetailRow('Dolazak', _formatDate(checkIn), isDarkMode, getColor),
+          _buildDetailRow(
+            'Dolazak',
+            _formatDate(checkIn),
+            isDarkMode,
+            getColor,
+          ),
           const SizedBox(height: SpacingTokens.s),
-          _buildDetailRow('Odlazak', _formatDate(checkOut), isDarkMode, getColor),
+          _buildDetailRow(
+            'Odlazak',
+            _formatDate(checkOut),
+            isDarkMode,
+            getColor,
+          ),
           const SizedBox(height: SpacingTokens.s),
-          _buildDetailRow('Noći', '${calculation.nights}', isDarkMode, getColor),
+          _buildDetailRow(
+            'Noći',
+            '${calculation.nights}',
+            isDarkMode,
+            getColor,
+          ),
           Divider(
             height: SpacingTokens.l,
             color: getColor(
@@ -673,7 +688,9 @@ class BankTransferScreen extends ConsumerWidget {
     bool highlight,
   ) {
     return Container(
-      padding: highlight ? const EdgeInsets.all(SpacingTokens.s) : EdgeInsets.zero,
+      padding: highlight
+          ? const EdgeInsets.all(SpacingTokens.s)
+          : EdgeInsets.zero,
       decoration: highlight
           ? BoxDecoration(
               color: getColor(
@@ -696,8 +713,12 @@ class BankTransferScreen extends ConsumerWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: highlight ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeM,
-              fontWeight: highlight ? TypographyTokens.bold : TypographyTokens.medium,
+              fontSize: highlight
+                  ? TypographyTokens.fontSizeL
+                  : TypographyTokens.fontSizeM,
+              fontWeight: highlight
+                  ? TypographyTokens.bold
+                  : TypographyTokens.medium,
               color: getColor(
                 MinimalistColors.textPrimary,
                 MinimalistColorsDark.textPrimary,
@@ -707,7 +728,9 @@ class BankTransferScreen extends ConsumerWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: highlight ? TypographyTokens.fontSizeXL : TypographyTokens.fontSizeL,
+              fontSize: highlight
+                  ? TypographyTokens.fontSizeXL
+                  : TypographyTokens.fontSizeL,
               fontWeight: TypographyTokens.bold,
               color: highlight
                   ? getColor(
@@ -744,7 +767,6 @@ class BankTransferScreen extends ConsumerWidget {
             MinimalistColors.borderDefault,
             MinimalistColorsDark.borderDefault,
           ),
-          width: BorderTokens.widthThin,
         ),
       ),
       child: Column(
@@ -854,7 +876,6 @@ class BankTransferScreen extends ConsumerWidget {
             MinimalistColors.borderDefault,
             MinimalistColorsDark.borderDefault,
           ),
-          width: BorderTokens.widthThin,
         ),
       ),
       child: Row(
@@ -893,7 +914,9 @@ class BankTransferScreen extends ConsumerWidget {
                       MinimalistColors.textPrimary,
                       MinimalistColorsDark.textPrimary,
                     ),
-                    fontFamily: label.contains('IBAN') || label.contains('Broj') ? 'monospace' : null,
+                    fontFamily: label.contains('IBAN') || label.contains('Broj')
+                        ? 'monospace'
+                        : null,
                   ),
                 ),
               ],
@@ -950,7 +973,6 @@ class BankTransferScreen extends ConsumerWidget {
             MinimalistColors.borderDefault,
             MinimalistColorsDark.borderDefault,
           ),
-          width: BorderTokens.widthThin,
         ),
       ),
       child: Column(
@@ -964,7 +986,9 @@ class BankTransferScreen extends ConsumerWidget {
                     MinimalistColors.buttonPrimary,
                     MinimalistColorsDark.buttonPrimary,
                   ).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
+                  borderRadius: BorderRadius.circular(
+                    BorderTokens.radiusSubtle,
+                  ),
                 ),
                 child: Icon(
                   Icons.qr_code_2,
@@ -1023,7 +1047,6 @@ class BankTransferScreen extends ConsumerWidget {
             ),
             child: QrImageView(
               data: epcData,
-              version: QrVersions.auto,
               size: 200.0,
               backgroundColor: ColorTokens.pureWhite,
               errorCorrectionLevel: QrErrorCorrectLevel.M,
@@ -1043,7 +1066,6 @@ class BankTransferScreen extends ConsumerWidget {
                   MinimalistColors.buttonPrimary,
                   MinimalistColorsDark.buttonPrimary,
                 ).withValues(alpha: 0.3),
-                width: BorderTokens.widthThin,
               ),
             ),
             child: Row(
@@ -1139,7 +1161,6 @@ class BankTransferScreen extends ConsumerWidget {
             MinimalistColors.borderDefault,
             MinimalistColorsDark.borderDefault,
           ),
-          width: BorderTokens.widthThin,
         ),
       ),
       child: Column(

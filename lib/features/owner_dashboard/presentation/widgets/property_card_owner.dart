@@ -294,14 +294,15 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       Flexible(
                         child: Text(
                           widget.property.isActive ? 'Objavljeno' : 'Skriveno',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: widget.property.isActive
-                                ? theme.colorScheme.tertiary
-                                : theme.colorScheme.error.withAlpha(
-                                    (0.8 * 255).toInt(),
-                                  ),
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: widget.property.isActive
+                                    ? theme.colorScheme.tertiary
+                                    : theme.colorScheme.error.withAlpha(
+                                        (0.8 * 255).toInt(),
+                                      ),
+                              ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -340,14 +341,15 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       Flexible(
                         child: Text(
                           widget.property.isActive ? 'Objavljeno' : 'Skriveno',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: widget.property.isActive
-                                ? theme.colorScheme.tertiary
-                                : theme.colorScheme.error.withAlpha(
-                                    (0.8 * 255).toInt(),
-                                  ),
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: widget.property.isActive
+                                    ? theme.colorScheme.tertiary
+                                    : theme.colorScheme.error.withAlpha(
+                                        (0.8 * 255).toInt(),
+                                      ),
+                              ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -436,7 +438,6 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
         borderRadius: BorderRadius.circular(isSmallMobile ? 8 : 10),
         border: Border.all(
           color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
-          width: 1,
         ),
       ),
       child: Row(

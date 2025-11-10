@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -90,7 +91,6 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
             text: 'Dodaj Novu Jedinicu',
             onPressed: _navigateToAddUnit,
             icon: Icons.add,
-            height: 56,
             width: double.infinity,
           ),
         ),
@@ -109,7 +109,9 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
             children: [
               CircularProgressIndicator(
                 strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  theme.colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 20),
               Text(
@@ -202,10 +204,10 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
               mainAxisSpacing: 16,
               // Adjust aspect ratio based on columns for better card proportions
               childAspectRatio: crossAxisCount == 1
-                  ? 1.1  // Mobile: slightly taller cards
+                  ? 1.1 // Mobile: slightly taller cards
                   : crossAxisCount == 2
-                      ? 1.0  // Tablet: square-ish cards
-                      : 0.95, // Desktop: slightly wider cards
+                  ? 1.0 // Tablet: square-ish cards
+                  : 0.95, // Desktop: slightly wider cards
             ),
             itemCount: _units!.length,
             itemBuilder: (context, index) {
@@ -238,7 +240,9 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha(
+                    (0.08 * 255).toInt(),
+                  ),
                 ),
                 child: Icon(
                   Icons.apartment,
@@ -267,7 +271,6 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
                 text: 'Dodaj Prvu Jedinicu',
                 onPressed: _navigateToAddUnit,
                 icon: Icons.add,
-                height: 56,
               ),
             ],
           ),
@@ -333,7 +336,7 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
         await ref
             .read(ownerPropertiesRepositoryProvider)
             .deleteUnit(widget.propertyId, unitId);
-        _loadUnits();
+        unawaited(_loadUnits());
         if (mounted) {
           ErrorDisplayUtils.showSuccessSnackBar(
             context,
@@ -411,7 +414,9 @@ class _UnitCard extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                        color: theme.colorScheme.primary.withAlpha(
+                          (0.1 * 255).toInt(),
+                        ),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -523,8 +528,9 @@ class _UnitCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         side: BorderSide(
-                          color: AppColors.success.withAlpha((0.4 * 255).toInt()),
-                          width: 1,
+                          color: AppColors.success.withAlpha(
+                            (0.4 * 255).toInt(),
+                          ),
                         ),
                       ),
                       child: const Icon(Icons.euro_symbol, size: 18),
@@ -547,8 +553,9 @@ class _UnitCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         side: BorderSide(
-                          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-                          width: 1,
+                          color: theme.colorScheme.outline.withAlpha(
+                            (0.3 * 255).toInt(),
+                          ),
                         ),
                       ),
                       child: const Icon(Icons.edit_outlined, size: 18),
@@ -572,8 +579,9 @@ class _UnitCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         side: BorderSide(
-                          color: theme.colorScheme.error.withAlpha((0.4 * 255).toInt()),
-                          width: 1,
+                          color: theme.colorScheme.error.withAlpha(
+                            (0.4 * 255).toInt(),
+                          ),
                         ),
                       ),
                       child: const Icon(Icons.delete_outline, size: 18),

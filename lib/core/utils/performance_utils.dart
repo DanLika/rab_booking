@@ -178,15 +178,11 @@ class OptimizedListView extends StatelessWidget {
       padding: padding,
       physics: physics,
       shrinkWrap: shrinkWrap,
-      // Use addAutomaticKeepAlives for better performance
-      addAutomaticKeepAlives: true,
       // Cache extent to pre-render items slightly off-screen
       cacheExtent: 100,
       itemBuilder: (context, index) {
         // Wrap in RepaintBoundary to prevent unnecessary repaints
-        return RepaintBoundary(
-          child: itemBuilder(context, index),
-        );
+        return RepaintBoundary(child: itemBuilder(context, index));
       },
     );
   }

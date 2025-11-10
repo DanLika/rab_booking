@@ -92,7 +92,6 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
           'Guest Details & Payment',
           style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        centerTitle: true,
       ),
       body: Column(
         children: [
@@ -372,7 +371,6 @@ class _EnhancedPaymentScreenState extends ConsumerState<EnhancedPaymentScreen> {
             label: 'Special Requests (Optional)',
             icon: Icons.notes,
             maxLines: 3,
-            validator: null,
           ),
         ],
       ),

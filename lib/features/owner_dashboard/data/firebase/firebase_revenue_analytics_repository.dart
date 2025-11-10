@@ -9,7 +9,9 @@ class FirebaseRevenueAnalyticsRepository {
   FirebaseRevenueAnalyticsRepository(this._firestore);
 
   /// Helper method to get all unit IDs for given properties from subcollections
-  Future<List<String>> _getUnitIdsForProperties(List<String> propertyIds) async {
+  Future<List<String>> _getUnitIdsForProperties(
+    List<String> propertyIds,
+  ) async {
     final List<String> unitIds = [];
     for (final propertyId in propertyIds) {
       final unitsSnapshot = await _firestore
@@ -79,11 +81,13 @@ class FirebaseRevenueAnalyticsRepository {
         final dateStr = date.toIso8601String().split('T')[0];
         final label = _formatDateLabel(date, i, days);
 
-        dataPoints.add(RevenueDataPoint(
-          label: label,
-          value: revenueByDate[dateStr] ?? 0.0,
-          date: date,
-        ));
+        dataPoints.add(
+          RevenueDataPoint(
+            label: label,
+            value: revenueByDate[dateStr] ?? 0.0,
+            date: date,
+          ),
+        );
       }
 
       return dataPoints;
@@ -93,17 +97,16 @@ class FirebaseRevenueAnalyticsRepository {
   }
 
   /// Generate empty data points when there's no data
-  List<RevenueDataPoint> _generateEmptyDataPoints(DateTime startDate, int days) {
+  List<RevenueDataPoint> _generateEmptyDataPoints(
+    DateTime startDate,
+    int days,
+  ) {
     final List<RevenueDataPoint> dataPoints = [];
     for (int i = 0; i < days; i++) {
       final date = startDate.add(Duration(days: i));
       final label = _formatDateLabel(date, i, days);
 
-      dataPoints.add(RevenueDataPoint(
-        label: label,
-        value: 0.0,
-        date: date,
-      ));
+      dataPoints.add(RevenueDataPoint(label: label, value: 0.0, date: date));
     }
     return dataPoints;
   }
@@ -131,7 +134,7 @@ class FirebaseRevenueAnalyticsRepository {
         'Sep',
         'Oct',
         'Nov',
-        'Dec'
+        'Dec',
       ];
       return months[date.month - 1];
     }
@@ -189,7 +192,7 @@ class FirebaseRevenueAnalyticsRepository {
   Future<double> getRevenueThisMonth(String ownerId) async {
     try {
       final now = DateTime.now();
-      final startOfMonth = DateTime(now.year, now.month, 1);
+      final startOfMonth = DateTime(now.year, now.month);
       final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
       return await _getRevenueInRange(ownerId, startOfMonth, endOfMonth);
@@ -202,10 +205,14 @@ class FirebaseRevenueAnalyticsRepository {
   Future<double> getRevenueLastMonth(String ownerId) async {
     try {
       final now = DateTime.now();
-      final startOfLastMonth = DateTime(now.year, now.month - 1, 1);
+      final startOfLastMonth = DateTime(now.year, now.month - 1);
       final endOfLastMonth = DateTime(now.year, now.month, 0, 23, 59, 59);
 
-      return await _getRevenueInRange(ownerId, startOfLastMonth, endOfLastMonth);
+      return await _getRevenueInRange(
+        ownerId,
+        startOfLastMonth,
+        endOfLastMonth,
+      );
     } catch (e) {
       throw Exception('Failed to get revenue last month: $e');
     }

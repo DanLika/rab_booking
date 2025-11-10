@@ -40,7 +40,6 @@ class ErrorHandler {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
-        duration: const Duration(seconds: 4),
         action: SnackBarAction(
           label: 'OK',
           textColor: Colors.white,
@@ -53,7 +52,11 @@ class ErrorHandler {
   /// Log error to console in debug mode and to error tracking service in production
   static Future<void> logError(dynamic error, StackTrace? stackTrace) async {
     // Log using LoggingService
-    await LoggingService.logError('ErrorHandler caught error', error, stackTrace);
+    await LoggingService.logError(
+      'ErrorHandler caught error',
+      error,
+      stackTrace,
+    );
 
     // In production, send to error tracking service
     if (kReleaseMode) {

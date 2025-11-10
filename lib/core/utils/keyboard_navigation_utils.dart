@@ -88,7 +88,8 @@ class KeyboardShortcut extends StatelessWidget {
     return Focus(
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent && event.logicalKey == shortcutKey) {
-          final controlPressed = HardwareKeyboard.instance.isControlPressed ||
+          final controlPressed =
+              HardwareKeyboard.instance.isControlPressed ||
               HardwareKeyboard.instance.isMetaPressed;
           final shiftPressed = HardwareKeyboard.instance.isShiftPressed;
           final altPressed = HardwareKeyboard.instance.isAltPressed;
@@ -192,16 +193,10 @@ class _KeyboardFocusableButtonState extends State<KeyboardFocusableButton> {
   @override
   Widget build(BuildContext context) {
     if (!KeyboardNavigationUtils.isEnabled) {
-      return GestureDetector(
-        onTap: widget.onTap,
-        child: widget.child,
-      );
+      return GestureDetector(onTap: widget.onTap, child: widget.child);
     }
 
-    Widget child = GestureDetector(
-      onTap: widget.onTap,
-      child: widget.child,
-    );
+    Widget child = GestureDetector(onTap: widget.onTap, child: widget.child);
 
     if (widget.showFocusIndicator && _isFocused) {
       child = Container(
@@ -327,18 +322,11 @@ class AccessibleButton extends StatelessWidget {
     );
 
     if (semanticLabel != null) {
-      button = Semantics(
-        button: true,
-        label: semanticLabel,
-        child: button,
-      );
+      button = Semantics(button: true, label: semanticLabel, child: button);
     }
 
     if (tooltip != null) {
-      button = Tooltip(
-        message: tooltip!,
-        child: button,
-      );
+      button = Tooltip(message: tooltip, child: button);
     }
 
     return button;
@@ -378,10 +366,7 @@ class _KeyboardNavigableGridState extends State<KeyboardNavigableGrid> {
   @override
   void initState() {
     super.initState();
-    _focusNodes = List.generate(
-      widget.children.length,
-      (index) => FocusNode(),
-    );
+    _focusNodes = List.generate(widget.children.length, (index) => FocusNode());
   }
 
   @override
@@ -394,7 +379,10 @@ class _KeyboardNavigableGridState extends State<KeyboardNavigableGrid> {
 
   void _moveFocus(int delta) {
     setState(() {
-      _focusedIndex = (_focusedIndex + delta).clamp(0, widget.children.length - 1);
+      _focusedIndex = (_focusedIndex + delta).clamp(
+        0,
+        widget.children.length - 1,
+      );
       _focusNodes[_focusedIndex].requestFocus();
     });
   }

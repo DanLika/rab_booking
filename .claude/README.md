@@ -192,12 +192,28 @@ Pritisni **Cmd+Shift+B** za brze taskove:
 - 🧼 Clean + Pub Get + Analyze (kombinovano)
 
 ### `../.vscode/extensions.json` (Preporučene Ekstenzije)
-Lista MUST-HAVE ekstenzija za tim:
-- Dart & Flutter (obvezno)
+**MINIMALNA SETUP - Samo 6-8 ekstenzija:**
+
+**MUST HAVE (3):**
+- Dart & Flutter language support
 - Claude Code AI
-- GitLens, Error Lens, TODO Tree
-- Flutter helpers (Riverpod snippets, Flutter color)
-- Firebase & Database tools
+
+**HIGHLY RECOMMENDED (3):**
+- Error Lens - Claude vidi greške inline
+- GitLens - Claude koristi git history/blame
+- TODO Tree - Claude pronalazi action items
+
+**OPTIONAL (2):**
+- VSFire (Firestore explorer)
+- PostgreSQL client
+
+**UNWANTED (15+):**
+- Snippet ekstenzije (Claude piše full kod)
+- GUI tools (Claude koristi bash)
+- Copilot (AI konflikt)
+- NPM IntelliSense (Claude ne treba autocomplete)
+- Docker Tools (projekt ne koristi Docker)
+- Vim (Claude ne koristi keyboard shortcuts)
 
 ### `../.vscode/flutter-shortcuts.md` (Shortcuts Guide)
 Kompletan guide sa:

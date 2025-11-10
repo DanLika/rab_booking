@@ -114,10 +114,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         await FirebaseAuth.instance.currentUser?.updatePhotoURL(avatarUrl);
 
         // Update avatarUrl in Firestore users collection
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .update({'avatar_url': avatarUrl});
+        await FirebaseFirestore.instance.collection('users').doc(userId).update(
+          {'avatar_url': avatarUrl},
+        );
       }
 
       // Create updated profile
@@ -184,7 +183,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Discard changes?'),
-              content: const Text('You have unsaved changes. Do you want to discard them?'),
+              content: const Text(
+                'You have unsaved changes. Do you want to discard them?',
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
@@ -209,7 +210,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           child: userDataAsync.when(
             data: (userData) {
               // Create default userData if null
-              final effectiveUserData = userData ??
+              final effectiveUserData =
+                  userData ??
                   UserData(
                     profile: UserProfile(
                       userId: FirebaseAuth.instance.currentUser!.uid,
@@ -226,185 +228,206 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 child: Center(
                   child: Padding(
                     padding: EdgeInsets.all(
-                      MediaQuery.of(context).size.width < 400 ? 16 : 24
+                      MediaQuery.of(context).size.width < 400 ? 16 : 24,
                     ),
                     child: GlassCard(
-                        maxWidth: 600,
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Back Button
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: IconButton(
-                                  onPressed: () => context.pop(),
-                                  icon: const Icon(Icons.arrow_back),
-                                  tooltip: 'Back',
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-
-                              // Profile Image Picker
-                              ProfileImagePicker(
-                                size: 120,
-                                imageUrl: _currentAvatarUrl,
-                                initials: authState.userModel?.initials,
-                                onImageSelected: (bytes, name) {
-                                  setState(() {
-                                    _profileImageBytes = bytes;
-                                    _profileImageName = name;
-                                    _markDirty();
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 32),
-
-                              // Title
-                              Text(
-                                'Edit Profile',
-                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 28,
-                                      color: AppColors.textPrimaryLight,
-                                    ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-
-                              // Subtitle
-                              Text(
-                                'Update your personal information',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: AppColors.textTertiaryLight,
-                                      fontSize: 15,
-                                    ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 32),
-
-                              // Display Name
-                              PremiumInputField(
-                                controller: _displayNameController,
-                                labelText: 'Display Name',
-                                prefixIcon: Icons.person_outline,
-                                validator: ProfileValidators.validateName,
-                              ),
-                              const SizedBox(height: 20),
-
-                              // Email
-                              PremiumInputField(
-                                controller: _emailContactController,
-                                labelText: 'Contact Email',
-                                prefixIcon: Icons.email_outlined,
-                                keyboardType: TextInputType.emailAddress,
-                                validator: ProfileValidators.validateEmail,
-                              ),
-                              const SizedBox(height: 20),
-
-                              // Phone
-                              PremiumInputField(
-                                controller: _phoneController,
-                                labelText: 'Phone',
-                                prefixIcon: Icons.phone_outlined,
-                                keyboardType: TextInputType.phone,
-                                validator: ProfileValidators.validatePhone,
-                              ),
-                              const SizedBox(height: 28),
-
-                              // Address Section Header
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 4,
-                                    height: 20,
-                                    decoration: const BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [AppColors.primary, AppColors.authSecondary],
-                                      ),
-                                      borderRadius: BorderRadius.all(Radius.circular(2)),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'Address',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimaryLight,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-
-                              // Country
-                              PremiumInputField(
-                                controller: _countryController,
-                                labelText: 'Country',
-                                prefixIcon: Icons.public,
-                                validator: (v) => ProfileValidators.validateAddressField(v, 'Country'),
-                              ),
-                              const SizedBox(height: 20),
-
-                              // Street
-                              PremiumInputField(
-                                controller: _streetController,
-                                labelText: 'Street',
-                                prefixIcon: Icons.location_on_outlined,
-                                validator: (v) => ProfileValidators.validateAddressField(v, 'Street'),
-                              ),
-                              const SizedBox(height: 20),
-
-                              // City & Postal Code Row
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: PremiumInputField(
-                                      controller: _cityController,
-                                      labelText: 'City',
-                                      prefixIcon: Icons.location_city,
-                                      validator: (v) => ProfileValidators.validateAddressField(v, 'City'),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: PremiumInputField(
-                                      controller: _postalCodeController,
-                                      labelText: 'Postal Code',
-                                      prefixIcon: Icons.markunread_mailbox,
-                                      validator: ProfileValidators.validatePostalCode,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 32),
-
-                              // Save Button
-                              GradientAuthButton(
-                                text: 'Save Changes',
-                                onPressed: (_isDirty && !_isSaving) ? _saveProfile : null,
-                                isLoading: _isSaving,
-                                icon: Icons.save_rounded,
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Cancel Button
-                              TextButton(
+                      maxWidth: 600,
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Back Button
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: IconButton(
                                 onPressed: () => context.pop(),
-                                child: const Text(
-                                  'Cancel',
-                                  style: TextStyle(
-                                    fontSize: 14,
+                                icon: const Icon(Icons.arrow_back),
+                                tooltip: 'Back',
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Profile Image Picker
+                            ProfileImagePicker(
+                              imageUrl: _currentAvatarUrl,
+                              initials: authState.userModel?.initials,
+                              onImageSelected: (bytes, name) {
+                                setState(() {
+                                  _profileImageBytes = bytes;
+                                  _profileImageName = name;
+                                  _markDirty();
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 32),
+
+                            // Title
+                            Text(
+                              'Edit Profile',
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 28,
+                                    color: AppColors.textPrimaryLight,
+                                  ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Subtitle
+                            Text(
+                              'Update your personal information',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
                                     color: AppColors.textTertiaryLight,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 32),
+
+                            // Display Name
+                            PremiumInputField(
+                              controller: _displayNameController,
+                              labelText: 'Display Name',
+                              prefixIcon: Icons.person_outline,
+                              validator: ProfileValidators.validateName,
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Email
+                            PremiumInputField(
+                              controller: _emailContactController,
+                              labelText: 'Contact Email',
+                              prefixIcon: Icons.email_outlined,
+                              keyboardType: TextInputType.emailAddress,
+                              validator: ProfileValidators.validateEmail,
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Phone
+                            PremiumInputField(
+                              controller: _phoneController,
+                              labelText: 'Phone',
+                              prefixIcon: Icons.phone_outlined,
+                              keyboardType: TextInputType.phone,
+                              validator: ProfileValidators.validatePhone,
+                            ),
+                            const SizedBox(height: 28),
+
+                            // Address Section Header
+                            Row(
+                              children: [
+                                Container(
+                                  width: 4,
+                                  height: 20,
+                                  decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        AppColors.primary,
+                                        AppColors.authSecondary,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(2),
+                                    ),
                                   ),
                                 ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Address',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimaryLight,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Country
+                            PremiumInputField(
+                              controller: _countryController,
+                              labelText: 'Country',
+                              prefixIcon: Icons.public,
+                              validator: (v) =>
+                                  ProfileValidators.validateAddressField(
+                                    v,
+                                    'Country',
+                                  ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Street
+                            PremiumInputField(
+                              controller: _streetController,
+                              labelText: 'Street',
+                              prefixIcon: Icons.location_on_outlined,
+                              validator: (v) =>
+                                  ProfileValidators.validateAddressField(
+                                    v,
+                                    'Street',
+                                  ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // City & Postal Code Row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: PremiumInputField(
+                                    controller: _cityController,
+                                    labelText: 'City',
+                                    prefixIcon: Icons.location_city,
+                                    validator: (v) =>
+                                        ProfileValidators.validateAddressField(
+                                          v,
+                                          'City',
+                                        ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: PremiumInputField(
+                                    controller: _postalCodeController,
+                                    labelText: 'Postal Code',
+                                    prefixIcon: Icons.markunread_mailbox,
+                                    validator:
+                                        ProfileValidators.validatePostalCode,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 32),
+
+                            // Save Button
+                            GradientAuthButton(
+                              text: 'Save Changes',
+                              onPressed: (_isDirty && !_isSaving)
+                                  ? _saveProfile
+                                  : null,
+                              isLoading: _isSaving,
+                              icon: Icons.save_rounded,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Cancel Button
+                            TextButton(
+                              onPressed: () => context.pop(),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.textTertiaryLight,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

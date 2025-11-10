@@ -76,9 +76,11 @@ class PremiumTabBar extends StatelessWidget {
         fontWeight: AppTypography.weightRegular,
         letterSpacing: AppTypography.letterSpacingNormal,
       ),
-      labelColor: labelColor ??
+      labelColor:
+          labelColor ??
           (isDark ? AppColors.textPrimaryDark : AppColors.authPrimary),
-      unselectedLabelColor: unselectedLabelColor ??
+      unselectedLabelColor:
+          unselectedLabelColor ??
           (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
       indicator: UnderlineTabIndicator(
         borderSide: BorderSide(
@@ -100,11 +102,12 @@ class PremiumTabBar extends StatelessWidget {
       height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight,
+        color: isDark
+            ? AppColors.surfaceVariantDark
+            : AppColors.surfaceVariantLight,
         borderRadius: BorderRadius.circular(AppDimensions.radiusL),
         border: Border.all(
           color: isDark ? AppColors.borderDark : AppColors.borderLight,
-          width: 1,
         ),
       ),
       child: Row(
@@ -129,7 +132,6 @@ class PremiumTabBar extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border.all(
           color: isDark ? AppColors.borderDark : AppColors.borderLight,
-          width: 1,
         ),
         borderRadius: BorderRadius.circular(AppDimensions.radiusL),
       ),
@@ -191,10 +193,12 @@ class _PillTab extends StatelessWidget {
                     ? AppTypography.weightSemibold
                     : AppTypography.weightMedium,
                 color: isSelected
-                    ? (isDark ? AppColors.textPrimaryDark : AppColors.authPrimary)
+                    ? (isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.authPrimary)
                     : (isDark
-                        ? AppColors.textSecondaryDark
-                        : AppColors.textSecondaryLight),
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondaryLight),
               ),
             ),
           ),
@@ -228,18 +232,19 @@ class _SegmentedTab extends StatelessWidget {
       duration: AppAnimations.fast,
       curve: AppAnimations.smooth,
       decoration: BoxDecoration(
-        color: isSelected
-            ? AppColors.authPrimary
-            : Colors.transparent,
+        color: isSelected ? AppColors.authPrimary : Colors.transparent,
         borderRadius: BorderRadius.horizontal(
-          left: isFirst ? const Radius.circular(AppDimensions.radiusM) : Radius.zero,
-          right: isLast ? const Radius.circular(AppDimensions.radiusM) : Radius.zero,
+          left: isFirst
+              ? const Radius.circular(AppDimensions.radiusM)
+              : Radius.zero,
+          right: isLast
+              ? const Radius.circular(AppDimensions.radiusM)
+              : Radius.zero,
         ),
         border: !isLast
             ? Border(
                 right: BorderSide(
                   color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                  width: 1,
                 ),
               )
             : null,
@@ -249,8 +254,12 @@ class _SegmentedTab extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.horizontal(
-            left: isFirst ? const Radius.circular(AppDimensions.radiusM) : Radius.zero,
-            right: isLast ? const Radius.circular(AppDimensions.radiusM) : Radius.zero,
+            left: isFirst
+                ? const Radius.circular(AppDimensions.radiusM)
+                : Radius.zero,
+            right: isLast
+                ? const Radius.circular(AppDimensions.radiusM)
+                : Radius.zero,
           ),
           child: Container(
             padding: const EdgeInsets.symmetric(
@@ -267,8 +276,8 @@ class _SegmentedTab extends StatelessWidget {
                   color: isSelected
                       ? Colors.white
                       : (isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight),
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight),
                 ),
               ),
             ),

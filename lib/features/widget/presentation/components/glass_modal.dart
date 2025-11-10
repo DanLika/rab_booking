@@ -134,14 +134,17 @@ Future<T?> showGlassModalBottomSheet<T>({
             ),
             child: Container(
               decoration: BoxDecoration(
-                color: (isDark ? Colors.white : Colors.black)
-                    .withValues(alpha: effectivePreset.opacity),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                color: (isDark ? Colors.white : Colors.black).withValues(
+                  alpha: effectivePreset.opacity,
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
                 border: Border(
                   top: BorderSide(
-                    color: (isDark ? Colors.white : Colors.black)
-                        .withValues(alpha: effectivePreset.borderOpacity),
-                    width: 1,
+                    color: (isDark ? Colors.white : Colors.black).withValues(
+                      alpha: effectivePreset.borderOpacity,
+                    ),
                   ),
                 ),
               ),
@@ -281,13 +284,14 @@ class GlassAlertDialog extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.white)
-                  .withValues(alpha: effectivePreset.opacity + 0.7),
+              color: (isDark ? Colors.white : Colors.white).withValues(
+                alpha: effectivePreset.opacity + 0.7,
+              ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: (isDark ? Colors.white : Colors.black)
-                    .withValues(alpha: effectivePreset.borderOpacity),
-                width: 1,
+                color: (isDark ? Colors.white : Colors.black).withValues(
+                  alpha: effectivePreset.borderOpacity,
+                ),
               ),
             ),
             child: Column(
@@ -345,11 +349,7 @@ void showGlassSnackbar({
 
   if (!enabled) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: duration,
-        action: action,
-      ),
+      SnackBar(content: Text(message), duration: duration, action: action),
     );
     return;
   }
@@ -360,9 +360,7 @@ void showGlassSnackbar({
       backgroundColor: Colors.transparent,
       elevation: 0,
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.all(16),
       padding: EdgeInsets.zero,
       // Wrap content with glass effect
@@ -377,13 +375,14 @@ void showGlassSnackbar({
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: effectivePreset.opacity + 0.6),
+              color: (isDark ? Colors.white : Colors.black).withValues(
+                alpha: effectivePreset.opacity + 0.6,
+              ),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: (isDark ? Colors.white : Colors.black)
-                    .withValues(alpha: effectivePreset.borderOpacity),
-                width: 1,
+                color: (isDark ? Colors.white : Colors.black).withValues(
+                  alpha: effectivePreset.borderOpacity,
+                ),
               ),
             ),
             child: Row(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -427,7 +428,7 @@ class _RotatingIconButtonState extends State<RotatingIconButton>
   void _handlePressed() async {
     await HapticService.buttonPress();
     if (widget.rotateOnPress) {
-      _controller.forward().then((_) => _controller.reverse());
+      unawaited(_controller.forward().then((_) => _controller.reverse()));
     }
     widget.onPressed?.call();
   }
@@ -514,7 +515,7 @@ class _BouncyButtonState extends State<BouncyButton>
 
   void _handlePressed() async {
     await HapticService.buttonPress();
-    _controller.forward(from: 0);
+    unawaited(_controller.forward(from: 0));
     widget.onPressed?.call();
   }
 

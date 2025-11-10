@@ -103,7 +103,8 @@ class InputValidator {
   /// Validate and sanitize price input
   ///
   /// Returns null if invalid, clamped value if valid
-  static double? sanitizePrice(double? price, {
+  static double? sanitizePrice(
+    double? price, {
     double min = 0,
     double max = 10000,
   }) {
@@ -120,10 +121,7 @@ class InputValidator {
   }
 
   /// Validate and sanitize integer input (guests, rooms, etc.)
-  static int? sanitizeInteger(int? value, {
-    int min = 0,
-    int max = 100,
-  }) {
+  static int? sanitizeInteger(int? value, {int min = 0, int max = 100}) {
     if (value == null) return null;
 
     // Clamp to range
@@ -165,7 +163,8 @@ class InputValidator {
   /// - Removes empty/null values
   /// - Limits list size
   /// - Validates each item
-  static List<String> sanitizeAmenities(List<String>? amenities, {
+  static List<String> sanitizeAmenities(
+    List<String>? amenities, {
     int maxCount = 20,
   }) {
     if (amenities == null || amenities.isEmpty) {
@@ -175,7 +174,7 @@ class InputValidator {
     // Remove empty values and limit count
     final sanitized = amenities
         .where((a) => a.trim().isNotEmpty)
-        .where((a) => isSafeString(a))
+        .where(isSafeString)
         .take(maxCount)
         .toList();
 
@@ -228,9 +227,7 @@ class InputValidator {
 
     // Minimum 1 night stay
     if (duration < 1) {
-      return DateRangeValidationResult.error(
-        'Minimum stay is 1 night',
-      );
+      return DateRangeValidationResult.error('Minimum stay is 1 night');
     }
 
     return DateRangeValidationResult.success();
@@ -242,9 +239,7 @@ class DateRangeValidationResult {
   final bool isValid;
   final String? errorMessage;
 
-  DateRangeValidationResult.success()
-      : isValid = true,
-        errorMessage = null;
+  DateRangeValidationResult.success() : isValid = true, errorMessage = null;
 
   DateRangeValidationResult.error(this.errorMessage) : isValid = false;
 }

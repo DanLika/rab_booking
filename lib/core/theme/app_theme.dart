@@ -22,7 +22,6 @@ class AppTheme {
       // Color scheme
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
-        onPrimary: Colors.white,
         primaryContainer: AppColors.primaryLight,
         secondary: AppColors.secondary,
         onSecondary: Colors.white,
@@ -31,8 +30,6 @@ class AppTheme {
         onTertiary: Colors.white,
         tertiaryContainer: AppColors.tertiaryLight,
         error: AppColors.error,
-        onError: Colors.white,
-        surface: AppColors.surfaceLight,
         onSurface: AppColors.textPrimaryLight,
         surfaceContainerHighest: AppColors.surfaceVariantLight,
         outline: AppColors.borderLight,
@@ -59,7 +56,8 @@ class AppTheme {
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
           statusBarColor: AppColors.primary, // Match AppBar color
           statusBarBrightness: Brightness.dark, // For iOS (light icons)
-          statusBarIconBrightness: Brightness.light, // For Android (light icons)
+          statusBarIconBrightness:
+              Brightness.light, // For Android (light icons)
         ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
           color: Colors.white, // White title text
@@ -79,7 +77,9 @@ class AppTheme {
         elevation: 4, // Modern elevated shadow
         shadowColor: AppColors.primary.withValues(alpha: 0.08),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
         margin: const EdgeInsets.all(16), // 16px padding
       ),
@@ -92,7 +92,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           elevation: 0,
           textStyle: AppTypography.buttonText,
@@ -106,7 +108,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           side: const BorderSide(color: AppColors.primary, width: 1.5),
           textStyle: AppTypography.buttonText,
@@ -144,7 +148,9 @@ class AppTheme {
         fillColor: AppColors.surfaceLight,
         constraints: const BoxConstraints(minHeight: 48), // 48px height
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius
           borderSide: const BorderSide(color: AppColors.borderLight),
         ),
         enabledBorder: OutlineInputBorder(
@@ -153,7 +159,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2), // Accent color border
+          borderSide: const BorderSide(
+            color: AppColors.primary,
+            width: 2,
+          ), // Accent color border
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
@@ -163,7 +172,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         labelStyle: AppTypography.textTheme.bodyLarge?.copyWith(
           color: AppColors.textSecondaryLight,
         ),
@@ -179,7 +191,9 @@ class AppTheme {
         labelStyle: AppTypography.textTheme.labelMedium,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
       ),
 
@@ -206,7 +220,9 @@ class AppTheme {
         backgroundColor: AppColors.surfaceLight,
         elevation: 8,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius (upgraded from 16)
         ),
         titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(
           color: AppColors.textPrimaryLight,
@@ -223,7 +239,9 @@ class AppTheme {
           color: Colors.white,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius (upgraded from 8)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius (upgraded from 8)
         ),
         behavior: SnackBarBehavior.floating,
       ),
@@ -247,17 +265,13 @@ class AppTheme {
       // Color scheme
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primaryLight,
-        onPrimary: Colors.black,
         primaryContainer: AppColors.primary,
         secondary: AppColors.secondaryLight,
-        onSecondary: Colors.black,
         secondaryContainer: AppColors.secondary,
         tertiary: AppColors.tertiaryLight,
         onTertiary: Colors.black,
         tertiaryContainer: AppColors.tertiary,
         error: AppColors.errorLight,
-        onError: Colors.black,
-        surface: AppColors.surfaceDark,
         onSurface: AppColors.textPrimaryDark,
         surfaceContainerHighest: AppColors.surfaceVariantDark,
         outline: AppColors.borderDark,
@@ -284,7 +298,8 @@ class AppTheme {
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
           statusBarColor: AppColors.surfaceDark, // Match AppBar color
           statusBarBrightness: Brightness.dark, // For iOS (light icons)
-          statusBarIconBrightness: Brightness.light, // For Android (light icons)
+          statusBarIconBrightness:
+              Brightness.light, // For Android (light icons)
         ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
           color: AppColors.textPrimaryDark,
@@ -298,7 +313,9 @@ class AppTheme {
         elevation: 4, // Modern elevated shadow
         shadowColor: AppColors.primaryLight.withValues(alpha: 0.12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
         margin: const EdgeInsets.all(16), // 16px padding
       ),
@@ -311,7 +328,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           elevation: 0,
           textStyle: AppTypography.buttonText,
@@ -325,7 +344,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           side: const BorderSide(color: AppColors.primaryLight, width: 1.5),
           textStyle: AppTypography.buttonText,
@@ -363,7 +384,9 @@ class AppTheme {
         fillColor: AppColors.surfaceVariantDark,
         constraints: const BoxConstraints(minHeight: 48), // 48px height
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius
           borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
@@ -372,7 +395,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.primaryLight, width: 2), // Accent color border
+          borderSide: const BorderSide(
+            color: AppColors.primaryLight,
+            width: 2,
+          ), // Accent color border
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
@@ -382,7 +408,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
           borderSide: const BorderSide(color: AppColors.errorLight, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         labelStyle: AppTypography.textTheme.bodyLarge?.copyWith(
           color: AppColors.textSecondaryDark,
         ),
@@ -398,7 +427,9 @@ class AppTheme {
         labelStyle: AppTypography.textTheme.labelMedium,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
       ),
 
@@ -425,7 +456,9 @@ class AppTheme {
         backgroundColor: AppColors.surfaceDark,
         elevation: 8,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius (upgraded from 16)
         ),
         titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(
           color: AppColors.textPrimaryDark,
@@ -442,7 +475,9 @@ class AppTheme {
           color: AppColors.textPrimaryDark,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius (upgraded from 8)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius (upgraded from 8)
         ),
         behavior: SnackBarBehavior.floating,
       ),

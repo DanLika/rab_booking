@@ -34,14 +34,22 @@ class UnitFutureBookingsDialog extends StatelessWidget {
           children: [
             // Header
             Container(
-              padding: EdgeInsets.all(isMobile ? AppDimensions.spaceS : AppDimensions.spaceM),
+              padding: EdgeInsets.all(
+                isMobile ? AppDimensions.spaceS : AppDimensions.spaceM,
+              ),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(4),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today, color: Colors.white, size: isMobile ? 20 : 24),
+                  Icon(
+                    Icons.calendar_today,
+                    color: Colors.white,
+                    size: isMobile ? 20 : 24,
+                  ),
                   const SizedBox(width: AppDimensions.spaceS),
                   Expanded(
                     child: AutoSizeText(
@@ -69,7 +77,9 @@ class UnitFutureBookingsDialog extends StatelessWidget {
               child: bookings.isEmpty
                   ? _buildEmptyState(context)
                   : ListView.separated(
-                      padding: EdgeInsets.all(isMobile ? AppDimensions.spaceS : AppDimensions.spaceM),
+                      padding: EdgeInsets.all(
+                        isMobile ? AppDimensions.spaceS : AppDimensions.spaceM,
+                      ),
                       itemCount: bookings.length,
                       separatorBuilder: (_, __) => const Divider(),
                       itemBuilder: (context, index) {
@@ -88,7 +98,9 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                   Text(
                     '${bookings.length} rezervacija',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                      color: theme.textTheme.bodySmall?.color?.withValues(
+                        alpha: 0.7,
+                      ),
                     ),
                   ),
                   TextButton(
@@ -129,10 +141,15 @@ class UnitFutureBookingsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildBookingTile(BuildContext context, BookingModel booking, bool isMobile) {
+  Widget _buildBookingTile(
+    BuildContext context,
+    BookingModel booking,
+    bool isMobile,
+  ) {
     final theme = Theme.of(context);
     final now = DateTime.now();
-    final isInProgress = booking.checkIn.isBefore(now) && booking.checkOut.isAfter(now);
+    final isInProgress =
+        booking.checkIn.isBefore(now) && booking.checkOut.isAfter(now);
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
 
     return InkWell(
@@ -169,7 +186,6 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,
-                    minFontSize: 12,
                   ),
                   const SizedBox(height: AppDimensions.spaceXXS / 2),
 
@@ -181,7 +197,10 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                       Expanded(
                         child: AutoSizeText(
                           'Check-in: ${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
-                          style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.textTheme.bodySmall?.color,
+                          ),
                           maxLines: 1,
                           minFontSize: 10,
                         ),
@@ -198,7 +217,10 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                       Expanded(
                         child: AutoSizeText(
                           'Check-out: ${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
-                          style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.textTheme.bodySmall?.color,
+                          ),
                           maxLines: 1,
                           minFontSize: 10,
                         ),
@@ -212,7 +234,9 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                     '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''} • $nights noć${nights > 1 ? 'i' : ''}',
                     style: TextStyle(
                       fontSize: 11,
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                      color: theme.textTheme.bodySmall?.color?.withValues(
+                        alpha: 0.7,
+                      ),
                     ),
                     maxLines: 1,
                     minFontSize: 9,
@@ -232,7 +256,9 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                 style: const TextStyle(fontSize: 11),
               ),
               backgroundColor: booking.status.color.withValues(alpha: 0.2),
-              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceXS),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.spaceXS,
+              ),
               visualDensity: VisualDensity.compact,
             ),
           ],

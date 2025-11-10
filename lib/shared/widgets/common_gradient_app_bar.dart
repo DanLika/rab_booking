@@ -58,7 +58,6 @@ class CommonGradientAppBar extends StatelessWidget {
 
     return SliverAppBar(
       expandedHeight: expandedHeight,
-      floating: false,
       pinned: pinned,
       elevation: 0,
       automaticallyImplyLeading: false,
@@ -76,8 +75,11 @@ class CommonGradientAppBar extends StatelessWidget {
           final maxHeight = expandedHeight + statusBarHeight;
           final currentHeight = constraints.maxHeight;
 
-          final collapseRatio = ((maxHeight - currentHeight) / (maxHeight - minHeight))
-              .clamp(0.0, 1.0);
+          final collapseRatio =
+              ((maxHeight - currentHeight) / (maxHeight - minHeight)).clamp(
+                0.0,
+                1.0,
+              );
 
           return Stack(
             fit: StackFit.expand,
@@ -105,9 +107,12 @@ class CommonGradientAppBar extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: gradientColors.map((c) =>
-                          c.withOpacity(0.85 + (collapseRatio * 0.15))
-                        ).toList(),
+                        colors: gradientColors
+                            .map(
+                              (c) =>
+                                  c.withOpacity(0.85 + (collapseRatio * 0.15)),
+                            )
+                            .toList(),
                       ),
                     ),
                   ),
@@ -127,11 +132,7 @@ class CommonGradientAppBar extends StatelessWidget {
                     children: [
                       Builder(
                         builder: (context) => IconButton(
-                          icon: Icon(
-                            leadingIcon,
-                            color: iconColor,
-                            size: 28,
-                          ),
+                          icon: Icon(leadingIcon, color: iconColor, size: 28),
                           onPressed: () => onLeadingIconTap(context),
                           tooltip: 'Menu',
                           padding: EdgeInsets.zero,

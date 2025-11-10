@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,16 +15,15 @@ import '../providers/price_list_provider.dart';
 class PriceListCalendarWidget extends ConsumerStatefulWidget {
   final UnitModel unit;
 
-  const PriceListCalendarWidget({
-    super.key,
-    required this.unit,
-  });
+  const PriceListCalendarWidget({super.key, required this.unit});
 
   @override
-  ConsumerState<PriceListCalendarWidget> createState() => _PriceListCalendarWidgetState();
+  ConsumerState<PriceListCalendarWidget> createState() =>
+      _PriceListCalendarWidgetState();
 }
 
-class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidget> {
+class _PriceListCalendarWidgetState
+    extends ConsumerState<PriceListCalendarWidget> {
   late DateTime _selectedMonth;
   final Set<DateTime> _selectedDays = {};
   bool _bulkEditMode = false;
@@ -31,7 +31,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
   @override
   void initState() {
     super.initState();
-    _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
+    _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   }
 
   @override
@@ -104,70 +104,12 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             ),
           ),
           padding: EdgeInsets.all(isMobile ? 20 : 24),
-        child: isMobile
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Month selector
-                  DropdownButtonFormField<DateTime>(
-                    initialValue: _selectedMonth,
-                    decoration: InputDecoration(
-                      labelText: 'Odaberi mjesec',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      prefixIcon: const Icon(Icons.calendar_month),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                    ),
-                    items: _generateMonthList().map((month) {
-                      return DropdownMenuItem(
-                        value: month,
-                        child: Text(DateFormat('MMMM yyyy').format(month)),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedMonth = value;
-                          _selectedDays.clear();
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  // Bulk edit toggle - full width on mobile
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _bulkEditMode = !_bulkEditMode;
-                        _selectedDays.clear();
-                      });
-                    },
-                    icon: Icon(
-                      _bulkEditMode ? Icons.check_box : Icons.check_box_outline_blank,
-                    ),
-                    label: Text(_bulkEditMode ? 'Odustani' : 'Bulk Edit'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _bulkEditMode ? AppColors.authPrimary : null,
-                      side: _bulkEditMode
-                          ? const BorderSide(color: AppColors.authPrimary, width: 2)
-                          : null,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : Row(
-                children: [
-                  // Month selector
-                  Expanded(
-                    child: DropdownButtonFormField<DateTime>(
+          child: isMobile
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Month selector
+                    DropdownButtonFormField<DateTime>(
                       initialValue: _selectedMonth,
                       decoration: InputDecoration(
                         labelText: 'Odaberi mjesec',
@@ -175,6 +117,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           borderRadius: BorderRadius.circular(12),
                         ),
                         prefixIcon: const Icon(Icons.calendar_month),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
                       ),
                       items: _generateMonthList().map((month) {
                         return DropdownMenuItem(
@@ -191,38 +137,106 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                         }
                       },
                     ),
-                  ),
-
-                  const SizedBox(width: 16),
-
-                  // Bulk edit mode toggle
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _bulkEditMode = !_bulkEditMode;
-                        _selectedDays.clear();
-                      });
-                    },
-                    icon: Icon(
-                      _bulkEditMode ? Icons.check_box : Icons.check_box_outline_blank,
-                    ),
-                    label: Text(_bulkEditMode ? 'Odustani' : 'Bulk Edit'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _bulkEditMode ? AppColors.authPrimary : null,
-                      side: _bulkEditMode
-                          ? const BorderSide(color: AppColors.authPrimary, width: 2)
-                          : null,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
+                    const SizedBox(height: 12),
+                    // Bulk edit toggle - full width on mobile
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _bulkEditMode = !_bulkEditMode;
+                          _selectedDays.clear();
+                        });
+                      },
+                      icon: Icon(
+                        _bulkEditMode
+                            ? Icons.check_box
+                            : Icons.check_box_outline_blank,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      label: Text(_bulkEditMode ? 'Odustani' : 'Bulk Edit'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _bulkEditMode
+                            ? AppColors.authPrimary
+                            : null,
+                        side: _bulkEditMode
+                            ? const BorderSide(
+                                color: AppColors.authPrimary,
+                                width: 2,
+                              )
+                            : null,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    // Month selector
+                    Expanded(
+                      child: DropdownButtonFormField<DateTime>(
+                        initialValue: _selectedMonth,
+                        decoration: InputDecoration(
+                          labelText: 'Odaberi mjesec',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.calendar_month),
+                        ),
+                        items: _generateMonthList().map((month) {
+                          return DropdownMenuItem(
+                            value: month,
+                            child: Text(DateFormat('MMMM yyyy').format(month)),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedMonth = value;
+                              _selectedDays.clear();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    // Bulk edit mode toggle
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _bulkEditMode = !_bulkEditMode;
+                          _selectedDays.clear();
+                        });
+                      },
+                      icon: Icon(
+                        _bulkEditMode
+                            ? Icons.check_box
+                            : Icons.check_box_outline_blank,
+                      ),
+                      label: Text(_bulkEditMode ? 'Odustani' : 'Bulk Edit'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _bulkEditMode
+                            ? AppColors.authPrimary
+                            : null,
+                        side: _bulkEditMode
+                            ? const BorderSide(
+                                color: AppColors.authPrimary,
+                                width: 2,
+                              )
+                            : null,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );
@@ -234,10 +248,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
       decoration: BoxDecoration(
         color: AppColors.authPrimary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.authPrimary,
-          width: 2,
-        ),
+        border: Border.all(color: AppColors.authPrimary, width: 2),
       ),
       child: Row(
         children: [
@@ -258,23 +269,19 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             child: Text(
               '${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan' : 'dana'} odabrano',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.authPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
+                color: AppColors.authPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
             ),
           ),
           TextButton.icon(
             onPressed: () {
-              setState(() {
-                _selectedDays.clear();
-              });
+              setState(_selectedDays.clear);
             },
             icon: const Icon(Icons.close, size: 18),
             label: const Text('Očisti'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.authPrimary,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppColors.authPrimary),
           ),
         ],
       ),
@@ -282,14 +289,22 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
   }
 
   Widget _buildCalendarGrid() {
-    final daysInMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
-    final firstDayOfWeek = DateTime(_selectedMonth.year, _selectedMonth.month, 1).weekday;
+    final daysInMonth = DateTime(
+      _selectedMonth.year,
+      _selectedMonth.month + 1,
+      0,
+    ).day;
+    final firstDayOfWeek = DateTime(
+      _selectedMonth.year,
+      _selectedMonth.month,
+    ).weekday;
 
     // Watch monthly prices from Firestore
-    final pricesAsync = ref.watch(monthlyPricesProvider(MonthlyPricesParams(
-      unitId: widget.unit.id,
-      month: _selectedMonth,
-    )));
+    final pricesAsync = ref.watch(
+      monthlyPricesProvider(
+        MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
+      ),
+    );
 
     // Calculate grid height based on number of rows needed
     final totalCells = firstDayOfWeek - 1 + daysInMonth;
@@ -303,121 +318,142 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         final isSmallMobile = availableWidth < 400;
 
         // Calculate cell dimensions based on available width
-        final cellWidth = (availableWidth - 40 - (8 * 6)) / 7; // padding + spacing
+        final cellWidth =
+            (availableWidth - 40 - (8 * 6)) / 7; // padding + spacing
         final aspectRatio = isSmallMobile ? 0.85 : (isMobile ? 1.0 : 1.2);
         final cellHeight = cellWidth / aspectRatio;
-        final gridHeight = (rows * cellHeight) + (rows * 8) + 50; // Add spacing between rows
+        final gridHeight =
+            (rows * cellHeight) + (rows * 8) + 50; // Add spacing between rows
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha((0.08 * 255).toInt()),
-            blurRadius: 40,
-            offset: const Offset(0, 20),
-          ),
-          BoxShadow(
-            color: Colors.black.withAlpha((0.04 * 255).toInt()),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
+        return Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withAlpha((0.95 * 255).toInt()),
-                Colors.white.withAlpha((0.90 * 255).toInt()),
-              ],
-            ),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Colors.white.withAlpha((0.4 * 255).toInt()),
-              width: 1.5,
-            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha((0.08 * 255).toInt()),
+                blurRadius: 40,
+                offset: const Offset(0, 20),
+              ),
+              BoxShadow(
+                color: Colors.black.withAlpha((0.04 * 255).toInt()),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          padding: EdgeInsets.all(isSmallMobile ? 12 : (isMobile ? 16 : 20)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Weekday headers
-            _buildWeekdayHeaders(),
-
-            const SizedBox(height: 8),
-            const Divider(),
-            const SizedBox(height: 8),
-
-            // Calendar grid with fixed height
-            SizedBox(
-              height: gridHeight,
-              child: pricesAsync.when(
-                data: (priceMap) {
-                  return GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 7,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      childAspectRatio: aspectRatio, // Dynamic aspect ratio
-                    ),
-                    itemCount: firstDayOfWeek - 1 + daysInMonth,
-                    itemBuilder: (context, index) {
-                      if (index < firstDayOfWeek - 1) {
-                        // Empty cell before first day
-                        return const SizedBox.shrink();
-                      }
-
-                      final day = index - (firstDayOfWeek - 1) + 1;
-                      final date = DateTime(_selectedMonth.year, _selectedMonth.month, day);
-
-                      return _buildDayCell(date, priceMap, isMobile, isSmallMobile);
-                    },
-                  );
-                },
-                loading: () => const Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.authPrimary),
-                  ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withAlpha((0.95 * 255).toInt()),
+                    Colors.white.withAlpha((0.90 * 255).toInt()),
+                  ],
                 ),
-                error: (error, stack) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.error_outline, size: 48, color: Colors.red[700]),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Greška pri učitavanju cijena',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red[700],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          error.toString(),
-                          style: const TextStyle(fontSize: 12),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.white.withAlpha((0.4 * 255).toInt()),
+                  width: 1.5,
                 ),
               ),
+              padding: EdgeInsets.all(
+                isSmallMobile ? 12 : (isMobile ? 16 : 20),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Weekday headers
+                  _buildWeekdayHeaders(),
+
+                  const SizedBox(height: 8),
+                  const Divider(),
+                  const SizedBox(height: 8),
+
+                  // Calendar grid with fixed height
+                  SizedBox(
+                    height: gridHeight,
+                    child: pricesAsync.when(
+                      data: (priceMap) {
+                        return GridView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 7,
+                                mainAxisSpacing: 8,
+                                crossAxisSpacing: 8,
+                                childAspectRatio:
+                                    aspectRatio, // Dynamic aspect ratio
+                              ),
+                          itemCount: firstDayOfWeek - 1 + daysInMonth,
+                          itemBuilder: (context, index) {
+                            if (index < firstDayOfWeek - 1) {
+                              // Empty cell before first day
+                              return const SizedBox.shrink();
+                            }
+
+                            final day = index - (firstDayOfWeek - 1) + 1;
+                            final date = DateTime(
+                              _selectedMonth.year,
+                              _selectedMonth.month,
+                              day,
+                            );
+
+                            return _buildDayCell(
+                              date,
+                              priceMap,
+                              isMobile,
+                              isSmallMobile,
+                            );
+                          },
+                        );
+                      },
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.authPrimary,
+                          ),
+                        ),
+                      ),
+                      error: (error, stack) => Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: Colors.red[700],
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Greška pri učitavanju cijena',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red[700],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                error.toString(),
+                                style: const TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
-      ),
-    );
+          ),
+        );
       },
     ); // Close LayoutBuilder
   }
@@ -432,9 +468,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             child: Text(
               day,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[700],
-                  ),
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700],
+              ),
             ),
           ),
         );
@@ -442,12 +478,19 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
     );
   }
 
-  Widget _buildDayCell(DateTime date, Map<DateTime, DailyPriceModel> priceMap, bool isMobile, bool isSmallMobile) {
+  Widget _buildDayCell(
+    DateTime date,
+    Map<DateTime, DailyPriceModel> priceMap,
+    bool isMobile,
+    bool isSmallMobile,
+  ) {
     final isSelected = _selectedDays.contains(date);
-    final isToday = DateTime.now().year == date.year &&
+    final isToday =
+        DateTime.now().year == date.year &&
         DateTime.now().month == date.month &&
         DateTime.now().day == date.day;
-    final isWeekend = date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    final isWeekend =
+        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
 
     // Get price data from Firestore or use base price
     final dateKey = DateTime(date.year, date.month, date.day);
@@ -464,7 +507,10 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
     final blockCheckIn = priceData?.blockCheckIn ?? false;
     final blockCheckOut = priceData?.blockCheckOut ?? false;
     final notes = priceData?.notes;
-    final hasRestrictions = blockCheckIn || blockCheckOut || (priceData?.minNightsOnArrival != null);
+    final hasRestrictions =
+        blockCheckIn ||
+        blockCheckOut ||
+        (priceData?.minNightsOnArrival != null);
 
     return InkWell(
       onTap: () {
@@ -486,22 +532,24 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           color: isSelected
               ? AppColors.authPrimary.withValues(alpha: 0.2)
               : !isAvailable
-                  ? Colors.grey[300] // Nedostupno - siva
-                  : hasWeekendPrice && isWeekend
-                      ? Colors.purple[50] // Vikend cijena - ljubičasta
-                      : hasPrice
-                          ? AppColors.authSecondary.withAlpha((0.1 * 255).toInt()) // Custom cijena - plava
-                          : hasRestrictions
-                              ? Colors.orange[50] // Restrikcije - narandžasta
-                              : null, // Base price - bela
+              ? Colors.grey[300] // Nedostupno - siva
+              : hasWeekendPrice && isWeekend
+              ? Colors.purple[50] // Vikend cijena - ljubičasta
+              : hasPrice
+              ? AppColors.authSecondary.withAlpha(
+                  (0.1 * 255).toInt(),
+                ) // Custom cijena - plava
+              : hasRestrictions
+              ? Colors.orange[50] // Restrikcije - narandžasta
+              : null, // Base price - bela
           border: Border.all(
             color: isSelected
                 ? AppColors.authPrimary
                 : isToday
-                    ? AppColors.authPrimary.withValues(alpha: 0.5)
-                    : hasRestrictions
-                        ? Colors.orange[300]!
-                        : Colors.grey[300]!,
+                ? AppColors.authPrimary.withValues(alpha: 0.5)
+                : hasRestrictions
+                ? Colors.orange[300]!
+                : Colors.grey[300]!,
             width: isSelected || hasRestrictions ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -521,10 +569,12 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     child: Text(
                       '${date.day}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                            fontSize: isSmallMobile ? 9 : (isMobile ? 10 : null),
-                            color: !isAvailable ? Colors.grey[600] : null,
-                          ),
+                        fontWeight: isToday
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontSize: isSmallMobile ? 9 : (isMobile ? 10 : null),
+                        color: !isAvailable ? Colors.grey[600] : null,
+                      ),
                     ),
                   ),
                 ),
@@ -548,16 +598,16 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     child: Text(
                       '€${price.toStringAsFixed(0)}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: isSmallMobile ? 11 : (isMobile ? 12 : null),
-                            color: !isAvailable
-                                ? Colors.grey[600]
-                                : hasWeekendPrice && isWeekend
-                                    ? Colors.purple[700]
-                                    : hasPrice
-                                        ? AppColors.authSecondary
-                                        : Colors.grey[700],
-                          ),
+                        fontWeight: FontWeight.bold,
+                        fontSize: isSmallMobile ? 11 : (isMobile ? 12 : null),
+                        color: !isAvailable
+                            ? Colors.grey[600]
+                            : hasWeekendPrice && isWeekend
+                            ? Colors.purple[700]
+                            : hasPrice
+                            ? AppColors.authSecondary
+                            : Colors.grey[700],
+                      ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -570,9 +620,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                       child: Text(
                         'base',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontSize: isMobile ? 7 : 8,
-                              color: Colors.grey[600],
-                            ),
+                          fontSize: isMobile ? 7 : 8,
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ),
                 ],
@@ -585,12 +635,22 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (blockCheckIn)
-                    Icon(Icons.login, size: isSmallMobile ? 10 : (isMobile ? 11 : 12), color: Colors.red[700]),
+                    Icon(
+                      Icons.login,
+                      size: isSmallMobile ? 10 : (isMobile ? 11 : 12),
+                      color: Colors.red[700],
+                    ),
                   if (blockCheckIn && blockCheckOut)
                     SizedBox(width: isSmallMobile ? 1 : 2),
                   if (blockCheckOut)
-                    Icon(Icons.logout, size: isSmallMobile ? 10 : (isMobile ? 11 : 12), color: Colors.red[700]),
-                  if ((blockCheckIn || blockCheckOut) && notes != null && notes.isNotEmpty)
+                    Icon(
+                      Icons.logout,
+                      size: isSmallMobile ? 10 : (isMobile ? 11 : 12),
+                      color: Colors.red[700],
+                    ),
+                  if ((blockCheckIn || blockCheckOut) &&
+                      notes != null &&
+                      notes.isNotEmpty)
                     SizedBox(width: isSmallMobile ? 1 : 2),
                   if (notes case final notesText?)
                     GestureDetector(
@@ -600,7 +660,11 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             ? '${notesText.substring(0, 47)}...'
                             : notesText,
                         preferBelow: false,
-                        child: Icon(Icons.notes, size: isSmallMobile ? 10 : (isMobile ? 11 : 12), color: Colors.orange[700]),
+                        child: Icon(
+                          Icons.notes,
+                          size: isSmallMobile ? 10 : (isMobile ? 11 : 12),
+                          color: Colors.orange[700],
+                        ),
                       ),
                     ),
                 ],
@@ -617,7 +681,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ElevatedButton.icon(
-            onPressed: () => _showBulkPriceDialog(),
+            onPressed: _showBulkPriceDialog,
             icon: const Icon(Icons.euro),
             label: const Text('Postavi cijenu'),
             style: ElevatedButton.styleFrom(
@@ -636,7 +700,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
-            onPressed: () => _showBulkAvailabilityDialog(),
+            onPressed: _showBulkAvailabilityDialog,
             icon: const Icon(Icons.block),
             label: const Text('Dostupnost'),
             style: OutlinedButton.styleFrom(
@@ -659,7 +723,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
       children: [
         Expanded(
           child: ElevatedButton.icon(
-            onPressed: () => _showBulkPriceDialog(),
+            onPressed: _showBulkPriceDialog,
             icon: const Icon(Icons.euro),
             label: const Text('Postavi cijenu'),
             style: ElevatedButton.styleFrom(
@@ -680,7 +744,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
         const SizedBox(width: 12),
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () => _showBulkAvailabilityDialog(),
+            onPressed: _showBulkAvailabilityDialog,
             icon: const Icon(Icons.block),
             label: const Text('Dostupnost'),
             style: OutlinedButton.styleFrom(
@@ -702,17 +766,23 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
   void _showPriceEditDialog(DateTime date) async {
     // Load existing price data for this date
-    final monthlyPrices = await ref.read(monthlyPricesProvider(MonthlyPricesParams(
-      unitId: widget.unit.id,
-      month: DateTime(date.year, date.month, 1),
-    )).future);
+    final monthlyPrices = await ref.read(
+      monthlyPricesProvider(
+        MonthlyPricesParams(
+          unitId: widget.unit.id,
+          month: DateTime(date.year, date.month),
+        ),
+      ).future,
+    );
 
     final dateKey = DateTime(date.year, date.month, date.day);
     final existingPrice = monthlyPrices[dateKey];
 
     // Controllers for all fields
     final priceController = TextEditingController(
-      text: (existingPrice?.price ?? widget.unit.pricePerNight).toStringAsFixed(0),
+      text: (existingPrice?.price ?? widget.unit.pricePerNight).toStringAsFixed(
+        0,
+      ),
     );
     final weekendPriceController = TextEditingController(
       text: existingPrice?.weekendPrice?.toStringAsFixed(0) ?? '',
@@ -738,7 +808,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
     final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = screenWidth < 600;
 
-    showDialog(
+    unawaited(showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
@@ -767,9 +837,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     Text(
                       'Cijene',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: isMobile ? 14 : null,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 14 : null,
+                      ),
                     ),
                     SizedBox(height: isMobile ? 6 : 8),
                     TextField(
@@ -809,28 +879,45 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     Text(
                       'Dostupnost',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: isMobile ? 14 : null,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 14 : null,
+                      ),
                     ),
                     SwitchListTile(
-                      title: Text('Dostupno', style: TextStyle(fontSize: isMobile ? 14 : null)),
+                      title: Text(
+                        'Dostupno',
+                        style: TextStyle(fontSize: isMobile ? 14 : null),
+                      ),
                       value: available,
                       onChanged: (value) => setState(() => available = value),
                       contentPadding: EdgeInsets.zero,
                     ),
                     SwitchListTile(
-                      title: Text('Blokiraj prijavu (check-in)', style: TextStyle(fontSize: isMobile ? 14 : null)),
-                      subtitle: Text('Gosti ne mogu započeti rezervaciju', style: TextStyle(fontSize: isMobile ? 12 : null)),
+                      title: Text(
+                        'Blokiraj prijavu (check-in)',
+                        style: TextStyle(fontSize: isMobile ? 14 : null),
+                      ),
+                      subtitle: Text(
+                        'Gosti ne mogu započeti rezervaciju',
+                        style: TextStyle(fontSize: isMobile ? 12 : null),
+                      ),
                       value: blockCheckIn,
-                      onChanged: (value) => setState(() => blockCheckIn = value),
+                      onChanged: (value) =>
+                          setState(() => blockCheckIn = value),
                       contentPadding: EdgeInsets.zero,
                     ),
                     SwitchListTile(
-                      title: Text('Blokiraj odjavu (check-out)', style: TextStyle(fontSize: isMobile ? 14 : null)),
-                      subtitle: Text('Gosti ne mogu završiti rezervaciju', style: TextStyle(fontSize: isMobile ? 12 : null)),
+                      title: Text(
+                        'Blokiraj odjavu (check-out)',
+                        style: TextStyle(fontSize: isMobile ? 14 : null),
+                      ),
+                      subtitle: Text(
+                        'Gosti ne mogu završiti rezervaciju',
+                        style: TextStyle(fontSize: isMobile ? 12 : null),
+                      ),
                       value: blockCheckOut,
-                      onChanged: (value) => setState(() => blockCheckOut = value),
+                      onChanged: (value) =>
+                          setState(() => blockCheckOut = value),
                       contentPadding: EdgeInsets.zero,
                     ),
 
@@ -840,9 +927,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     Text(
                       'Ograničenja boravka',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: isMobile ? 14 : null,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 14 : null,
+                      ),
                     ),
                     SizedBox(height: isMobile ? 6 : 8),
                     Row(
@@ -860,7 +947,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                               ),
                             ),
                             keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                           ),
                         ),
                         SizedBox(width: isMobile ? 8 : 12),
@@ -877,7 +966,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                               ),
                             ),
                             keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                           ),
                         ),
                       ],
@@ -887,8 +978,14 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
 
                     // Other options
                     SwitchListTile(
-                      title: Text('Označi kao važno', style: TextStyle(fontSize: isMobile ? 14 : null)),
-                      subtitle: Text('Istakni ovaj datum u kalendaru', style: TextStyle(fontSize: isMobile ? 12 : null)),
+                      title: Text(
+                        'Označi kao važno',
+                        style: TextStyle(fontSize: isMobile ? 14 : null),
+                      ),
+                      subtitle: Text(
+                        'Istakni ovaj datum u kalendaru',
+                        style: TextStyle(fontSize: isMobile ? 12 : null),
+                      ),
                       value: isImportant,
                       onChanged: (value) => setState(() => isImportant = value),
                       contentPadding: EdgeInsets.zero,
@@ -900,9 +997,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                     Text(
                       'Napomene',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: isMobile ? 14 : null,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 14 : null,
+                      ),
                     ),
                     SizedBox(height: isMobile ? 6 : 8),
                     TextField(
@@ -944,7 +1041,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                       if (mounted) {
                         navigator.pop();
                         messenger.showSnackBar(
-                          const SnackBar(content: Text('Vraćeno na osnovnu cijenu')),
+                          const SnackBar(
+                            content: Text('Vraćeno na osnovnu cijenu'),
+                          ),
                         );
                       }
                     } catch (e) {
@@ -981,7 +1080,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                   final price = double.tryParse(priceText);
                   if (price == null || price <= 0) {
                     messenger.showSnackBar(
-                      const SnackBar(content: Text('Cijena mora biti veća od 0')),
+                      const SnackBar(
+                        content: Text('Cijena mora biti veća od 0'),
+                      ),
                     );
                     return;
                   }
@@ -1001,10 +1102,12 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                       weekendPrice: weekendPriceController.text.trim().isEmpty
                           ? null
                           : double.tryParse(weekendPriceController.text.trim()),
-                      minNightsOnArrival: minNightsController.text.trim().isEmpty
+                      minNightsOnArrival:
+                          minNightsController.text.trim().isEmpty
                           ? null
                           : int.tryParse(minNightsController.text.trim()),
-                      maxNightsOnArrival: maxNightsController.text.trim().isEmpty
+                      maxNightsOnArrival:
+                          maxNightsController.text.trim().isEmpty
                           ? null
                           : int.tryParse(maxNightsController.text.trim()),
                       isImportant: isImportant,
@@ -1048,7 +1151,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           );
         },
       ),
-    );
+    ));
   }
 
   void _showBulkPriceDialog() {
@@ -1078,15 +1181,17 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                 const SizedBox(height: 16),
                 Text(
                   'Postavit će se cijena za sve odabrane datume',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
               ],
             ),
             actions: [
               TextButton(
-                onPressed: isProcessing ? null : () => Navigator.of(context).pop(),
+                onPressed: isProcessing
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 child: const Text('Otkaži'),
               ),
               ElevatedButton(
@@ -1107,7 +1212,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                         final price = double.tryParse(priceText);
                         if (price == null || price <= 0) {
                           messenger.showSnackBar(
-                            const SnackBar(content: Text('Cijena mora biti veća od 0')),
+                            const SnackBar(
+                              content: Text('Cijena mora biti veća od 0'),
+                            ),
                           );
                           return;
                         }
@@ -1115,7 +1222,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                         setState(() => isProcessing = true);
 
                         try {
-                          final repository = ref.read(dailyPriceRepositoryProvider);
+                          final repository = ref.read(
+                            dailyPriceRepositoryProvider,
+                          );
 
                           // Save price for each selected day
                           for (final date in _selectedDays) {
@@ -1132,12 +1241,14 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           if (mounted) {
                             navigator.pop();
                             messenger.showSnackBar(
-                              SnackBar(content: Text('Uspješno ažurirano ${_selectedDays.length} cijena')),
+                              SnackBar(
+                                content: Text(
+                                  'Uspješno ažurirano ${_selectedDays.length} cijena',
+                                ),
+                              ),
                             );
                             // Clear selection
-                            this.setState(() {
-                              _selectedDays.clear();
-                            });
+                            this.setState(_selectedDays.clear);
                           }
                         } catch (e) {
                           if (mounted) {
@@ -1197,7 +1308,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           setState(() => isProcessing = true);
 
                           try {
-                            final repository = ref.read(dailyPriceRepositoryProvider);
+                            final repository = ref.read(
+                              dailyPriceRepositoryProvider,
+                            );
 
                             // Create template model with available=true
                             final modelTemplate = DailyPriceModel(
@@ -1205,9 +1318,6 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                               unitId: widget.unit.id,
                               date: DateTime.now(),
                               price: widget.unit.pricePerNight,
-                              available: true,
-                              blockCheckIn: false,
-                              blockCheckOut: false,
                               createdAt: DateTime.now(),
                             );
 
@@ -1225,13 +1335,13 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                               navigator.pop();
                               messenger.showSnackBar(
                                 SnackBar(
-                                  content: Text('${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan označen' : 'dana označeno'} kao dostupno'),
+                                  content: Text(
+                                    '${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan označen' : 'dana označeno'} kao dostupno',
+                                  ),
                                 ),
                               );
                               // Clear selection
-                              this.setState(() {
-                                _selectedDays.clear();
-                              });
+                              this.setState(_selectedDays.clear);
                             }
                           } catch (e) {
                             if (mounted) {
@@ -1273,7 +1383,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           setState(() => isProcessing = true);
 
                           try {
-                            final repository = ref.read(dailyPriceRepositoryProvider);
+                            final repository = ref.read(
+                              dailyPriceRepositoryProvider,
+                            );
 
                             // Create template model with available=false
                             final modelTemplate = DailyPriceModel(
@@ -1281,8 +1393,8 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                               unitId: widget.unit.id,
                               date: DateTime.now(),
                               price: widget.unit.pricePerNight,
-                              available: false, // Block dates - set as unavailable
-                              blockCheckIn: false,
+                              available:
+                                  false, // Block dates - set as unavailable
                               blockCheckOut: false,
                               createdAt: DateTime.now(),
                             );
@@ -1301,13 +1413,13 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                               navigator.pop();
                               messenger.showSnackBar(
                                 SnackBar(
-                                  content: Text('${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan blokiran' : 'dana blokirano'}'),
+                                  content: Text(
+                                    '${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan blokiran' : 'dana blokirano'}',
+                                  ),
                                 ),
                               );
                               // Clear selection
-                              this.setState(() {
-                                _selectedDays.clear();
-                              });
+                              this.setState(_selectedDays.clear);
                             }
                           } catch (e) {
                             if (mounted) {
@@ -1349,7 +1461,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           setState(() => isProcessing = true);
 
                           try {
-                            final repository = ref.read(dailyPriceRepositoryProvider);
+                            final repository = ref.read(
+                              dailyPriceRepositoryProvider,
+                            );
 
                             // Create template model with blockCheckIn=true
                             final modelTemplate = DailyPriceModel(
@@ -1357,9 +1471,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                               unitId: widget.unit.id,
                               date: DateTime.now(),
                               price: widget.unit.pricePerNight,
-                              available: true, // Keep available, just block check-in
                               blockCheckIn: true, // Block check-in
-                              blockCheckOut: false,
                               createdAt: DateTime.now(),
                             );
 
@@ -1376,12 +1488,14 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             if (mounted) {
                               navigator.pop();
                               messenger.showSnackBar(
-                                const SnackBar(content: Text('Check-in blokiran za odabrane dane')),
+                                const SnackBar(
+                                  content: Text(
+                                    'Check-in blokiran za odabrane dane',
+                                  ),
+                                ),
                               );
                               // Clear selection
-                              this.setState(() {
-                                _selectedDays.clear();
-                              });
+                              this.setState(_selectedDays.clear);
                             }
                           } catch (e) {
                             if (mounted) {
@@ -1415,7 +1529,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                           setState(() => isProcessing = true);
 
                           try {
-                            final repository = ref.read(dailyPriceRepositoryProvider);
+                            final repository = ref.read(
+                              dailyPriceRepositoryProvider,
+                            );
 
                             // Create template model with blockCheckOut=true
                             final modelTemplate = DailyPriceModel(
@@ -1423,8 +1539,6 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                               unitId: widget.unit.id,
                               date: DateTime.now(),
                               price: widget.unit.pricePerNight,
-                              available: true, // Keep available, just block check-out
-                              blockCheckIn: false,
                               blockCheckOut: true, // Block check-out
                               createdAt: DateTime.now(),
                             );
@@ -1442,12 +1556,14 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
                             if (mounted) {
                               navigator.pop();
                               messenger.showSnackBar(
-                                const SnackBar(content: Text('Check-out blokiran za odabrane dane')),
+                                const SnackBar(
+                                  content: Text(
+                                    'Check-out blokiran za odabrane dane',
+                                  ),
+                                ),
                               );
                               // Clear selection
-                              this.setState(() {
-                                _selectedDays.clear();
-                              });
+                              this.setState(_selectedDays.clear);
                             }
                           } catch (e) {
                             if (mounted) {
@@ -1474,7 +1590,9 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
             ),
             actions: [
               TextButton(
-                onPressed: isProcessing ? null : () => Navigator.of(context).pop(),
+                onPressed: isProcessing
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 child: const Text('Zatvori'),
               ),
             ],
@@ -1494,10 +1612,7 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
           style: const TextStyle(fontSize: 16),
         ),
         content: SingleChildScrollView(
-          child: Text(
-            notes,
-            style: const TextStyle(fontSize: 14),
-          ),
+          child: Text(notes, style: const TextStyle(fontSize: 14)),
         ),
         actions: [
           TextButton(
@@ -1512,13 +1627,13 @@ class _PriceListCalendarWidgetState extends ConsumerState<PriceListCalendarWidge
   List<DateTime> _generateMonthList() {
     final List<DateTime> months = [];
     final now = DateTime.now();
-    final startDate = DateTime(now.year - 1, 1, 1);
-    final endDate = DateTime(now.year + 2, 12, 1);
+    final startDate = DateTime(now.year - 1, 1);
+    final endDate = DateTime(now.year + 2, 12);
 
     DateTime current = startDate;
     while (current.isBefore(endDate) || current.isAtSameMomentAs(endDate)) {
       months.add(current);
-      current = DateTime(current.year, current.month + 1, 1);
+      current = DateTime(current.year, current.month + 1);
     }
 
     return months;

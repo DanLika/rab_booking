@@ -47,10 +47,7 @@ class BookingSummarySidebar extends ConsumerWidget {
         color: ColorTokens.light.backgroundCard,
         borderRadius: BorderTokens.circularRounded,
         border: Border.fromBorderSide(
-          BorderSide(
-            color: ColorTokens.light.borderDefault,
-            width: BorderTokens.widthThin,
-          ),
+          BorderSide(color: ColorTokens.light.borderDefault),
         ),
         boxShadow: ShadowTokens.light,
       ),
@@ -66,7 +63,6 @@ class BookingSummarySidebar extends ConsumerWidget {
               borderRadius: BorderTokens.circularMedium,
               border: Border.all(
                 color: ColorTokens.withOpacity(ColorTokens.light.primary, 0.3),
-                width: BorderTokens.widthThin,
               ),
             ),
             child: Row(
@@ -81,7 +77,9 @@ class BookingSummarySidebar extends ConsumerWidget {
                   child: Text(
                     room.name,
                     style: GoogleFonts.inter(
-                      fontSize: isMobile ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeXL,
+                      fontSize: isMobile
+                          ? TypographyTokens.fontSizeL
+                          : TypographyTokens.fontSizeXL,
                       fontWeight: TypographyTokens.bold,
                       color: ColorTokens.light.textPrimary,
                     ),
@@ -99,7 +97,10 @@ class BookingSummarySidebar extends ConsumerWidget {
           ),
 
           const SizedBox(height: SpacingTokens.m2),
-          Divider(color: ColorTokens.light.borderDefault, thickness: BorderTokens.widthThin),
+          Divider(
+            color: ColorTokens.light.borderDefault,
+            thickness: BorderTokens.widthThin,
+          ),
           const SizedBox(height: SpacingTokens.m),
 
           // Check-in
@@ -136,7 +137,10 @@ class BookingSummarySidebar extends ConsumerWidget {
           ),
 
           const SizedBox(height: SpacingTokens.m2),
-          Divider(color: ColorTokens.light.borderDefault, thickness: BorderTokens.widthThin),
+          Divider(
+            color: ColorTokens.light.borderDefault,
+            thickness: BorderTokens.widthThin,
+          ),
           const SizedBox(height: SpacingTokens.m),
 
           // Pricing breakdown
@@ -170,7 +174,10 @@ class BookingSummarySidebar extends ConsumerWidget {
           ],
 
           const SizedBox(height: SpacingTokens.m),
-          Divider(color: ColorTokens.light.borderDefault, thickness: BorderTokens.widthMedium),
+          Divider(
+            color: ColorTokens.light.borderDefault,
+            thickness: BorderTokens.widthMedium,
+          ),
           const SizedBox(height: SpacingTokens.m),
 
           // Total
@@ -180,7 +187,10 @@ class BookingSummarySidebar extends ConsumerWidget {
               gradient: LinearGradient(
                 colors: [
                   ColorTokens.azure50, // Very light azure
-                  ColorTokens.withOpacity(ColorTokens.azure100, 0.9), // Light azure
+                  ColorTokens.withOpacity(
+                    ColorTokens.azure100,
+                    0.9,
+                  ), // Light azure
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -243,24 +253,34 @@ class BookingSummarySidebar extends ConsumerWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: onReserve,
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(
-                    vertical: isMobile ? SpacingTokens.m - 2 : SpacingTokens.m,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderTokens.button,
-                  ),
-                  elevation: 3,
-                  shadowColor: ColorTokens.withOpacity(ColorTokens.light.primary, 0.4),
-                ).copyWith(
-                  backgroundColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.hovered)) {
-                      return ColorTokens.light.primaryHover;
-                    }
-                    return ColorTokens.light.primary;
-                  }),
-                  foregroundColor: WidgetStatePropertyAll(ColorTokens.light.textOnPrimary),
-                ),
+                style:
+                    ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        vertical: isMobile
+                            ? SpacingTokens.m - 2
+                            : SpacingTokens.m,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderTokens.button,
+                      ),
+                      elevation: 3,
+                      shadowColor: ColorTokens.withOpacity(
+                        ColorTokens.light.primary,
+                        0.4,
+                      ),
+                    ).copyWith(
+                      backgroundColor: WidgetStateProperty.resolveWith((
+                        states,
+                      ) {
+                        if (states.contains(WidgetState.hovered)) {
+                          return ColorTokens.light.primaryHover;
+                        }
+                        return ColorTokens.light.primary;
+                      }),
+                      foregroundColor: WidgetStatePropertyAll(
+                        ColorTokens.light.textOnPrimary,
+                      ),
+                    ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -353,7 +373,9 @@ class BookingSummarySidebar extends ConsumerWidget {
         Text(
           label,
           style: GoogleFonts.inter(
-            fontSize: isMobile ? TypographyTokens.fontSizeS2 : TypographyTokens.fontSizeM,
+            fontSize: isMobile
+                ? TypographyTokens.fontSizeS2
+                : TypographyTokens.fontSizeM,
             color: ColorTokens.light.textSecondary,
             fontWeight: TypographyTokens.medium,
           ),
@@ -361,7 +383,9 @@ class BookingSummarySidebar extends ConsumerWidget {
         Text(
           value,
           style: GoogleFonts.inter(
-            fontSize: isMobile ? TypographyTokens.fontSizeS2 : TypographyTokens.fontSizeM,
+            fontSize: isMobile
+                ? TypographyTokens.fontSizeS2
+                : TypographyTokens.fontSizeM,
             fontWeight: TypographyTokens.bold,
             color: ColorTokens.light.textPrimary,
           ),

@@ -20,7 +20,6 @@ class BedBookingTheme {
       colorScheme: const ColorScheme.light(
         primary: BedBookingColors.primaryGreen,
         secondary: BedBookingColors.darkGreen,
-        surface: BedBookingColors.backgroundWhite,
         error: BedBookingColors.error,
       ),
 
@@ -36,9 +35,7 @@ class BedBookingTheme {
         color: BedBookingColors.backgroundWhite,
         elevation: 2,
         shadowColor: BedBookingColors.shadowLight,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
 
       // Input decoration theme
@@ -74,20 +71,12 @@ class BedBookingTheme {
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
-        bodyLarge: TextStyle(
-          color: BedBookingColors.textDark,
-          fontSize: 16,
-        ),
-        bodyMedium: TextStyle(
-          color: BedBookingColors.textGrey,
-          fontSize: 14,
-        ),
+        bodyLarge: TextStyle(color: BedBookingColors.textDark, fontSize: 16),
+        bodyMedium: TextStyle(color: BedBookingColors.textGrey, fontSize: 14),
       ),
 
       // Icon theme
-      iconTheme: const IconThemeData(
-        color: BedBookingColors.textDark,
-      ),
+      iconTheme: const IconThemeData(color: BedBookingColors.textDark),
     );
   }
 
@@ -117,9 +106,7 @@ class BedBookingTheme {
         color: BedBookingColors.backgroundDarkCard,
         elevation: 4,
         shadowColor: BedBookingColors.shadowDark,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
 
       // Input decoration theme
@@ -166,9 +153,7 @@ class BedBookingTheme {
       ),
 
       // Icon theme
-      iconTheme: const IconThemeData(
-        color: BedBookingColors.textDarkMode,
-      ),
+      iconTheme: const IconThemeData(color: BedBookingColors.textDarkMode),
     );
   }
 

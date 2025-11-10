@@ -26,7 +26,9 @@ class FirebasePropertyPerformanceRepository {
   FirebasePropertyPerformanceRepository(this._firestore);
 
   /// Helper method to get all unit IDs for given properties from subcollections
-  Future<List<String>> _getUnitIdsForProperties(List<String> propertyIds) async {
+  Future<List<String>> _getUnitIdsForProperties(
+    List<String> propertyIds,
+  ) async {
     final List<String> unitIds = [];
     for (final propertyId in propertyIds) {
       final unitsSnapshot = await _firestore
@@ -44,7 +46,7 @@ class FirebasePropertyPerformanceRepository {
   Future<double> getOccupancyRate(String ownerId) async {
     try {
       final now = DateTime.now();
-      final startOfMonth = DateTime(now.year, now.month, 1);
+      final startOfMonth = DateTime(now.year, now.month);
       final endOfMonth = DateTime(now.year, now.month + 1, 0);
 
       // Get all owner's active properties
@@ -102,7 +104,7 @@ class FirebasePropertyPerformanceRepository {
   Future<double> getOccupancyRateLastMonth(String ownerId) async {
     try {
       final now = DateTime.now();
-      final startOfLastMonth = DateTime(now.year, now.month - 1, 1);
+      final startOfLastMonth = DateTime(now.year, now.month - 1);
       final endOfLastMonth = DateTime(now.year, now.month, 0);
 
       // Get all owner's active properties
@@ -212,7 +214,7 @@ class FirebasePropertyPerformanceRepository {
   Future<int> getBookingsThisMonth(String ownerId) async {
     try {
       final now = DateTime.now();
-      final startOfMonth = DateTime(now.year, now.month, 1);
+      final startOfMonth = DateTime(now.year, now.month);
       final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
       // Get all owner's properties
@@ -256,7 +258,7 @@ class FirebasePropertyPerformanceRepository {
   Future<int> getBookingsLastMonth(String ownerId) async {
     try {
       final now = DateTime.now();
-      final startOfLastMonth = DateTime(now.year, now.month - 1, 1);
+      final startOfLastMonth = DateTime(now.year, now.month - 1);
       final endOfLastMonth = DateTime(now.year, now.month, 0, 23, 59, 59);
 
       // Get all owner's properties

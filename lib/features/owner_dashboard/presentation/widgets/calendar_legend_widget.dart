@@ -38,7 +38,9 @@ class CalendarLegendWidget extends StatelessWidget {
                 Icon(
                   Icons.info_outline,
                   size: isCompact ? 14 : 16,
-                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  color: isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -46,7 +48,9 @@ class CalendarLegendWidget extends StatelessWidget {
                   style: TextStyle(
                     fontSize: isCompact ? 12 : 13,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                    color: isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondaryLight,
                   ),
                 ),
               ],
@@ -59,7 +63,9 @@ class CalendarLegendWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isCompact ? 10 : 11,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
+                  color: isDark
+                      ? AppColors.textTertiaryDark
+                      : AppColors.textTertiaryLight,
                 ),
               ),
               const SizedBox(height: 4),
@@ -105,7 +111,9 @@ class CalendarLegendWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isCompact ? 10 : 11,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
+                  color: isDark
+                      ? AppColors.textTertiaryDark
+                      : AppColors.textTertiaryLight,
                 ),
               ),
               const SizedBox(height: 4),
@@ -116,17 +124,25 @@ class CalendarLegendWidget extends StatelessWidget {
                   _LegendItem(
                     color: isDark ? AppColors.surfaceDark : Colors.white,
                     label: 'Osnovna',
-                    borderColor: isDark ? AppColors.borderDark : AppColors.borderLight,
+                    borderColor: isDark
+                        ? AppColors.borderDark
+                        : AppColors.borderLight,
                     isCompact: isCompact,
                   ),
                   _LegendItem(
-                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
+                    color: AppColors.authSecondary.withAlpha(
+                      (0.1 * 255).toInt(),
+                    ),
                     label: 'Custom',
-                    borderColor: AppColors.authSecondary.withAlpha((0.5 * 255).toInt()),
+                    borderColor: AppColors.authSecondary.withAlpha(
+                      (0.5 * 255).toInt(),
+                    ),
                     isCompact: isCompact,
                   ),
                   _LegendItem(
-                    color: AppColors.primaryLight.withAlpha((0.1 * 255).toInt()),
+                    color: AppColors.primaryLight.withAlpha(
+                      (0.1 * 255).toInt(),
+                    ),
                     label: 'Vikend',
                     borderColor: AppColors.primaryLight,
                     isCompact: isCompact,
@@ -138,9 +154,13 @@ class CalendarLegendWidget extends StatelessWidget {
                     isCompact: isCompact,
                   ),
                   _LegendItem(
-                    color: isDark ? AppColors.surfaceVariantDark : AppColors.disabled,
+                    color: isDark
+                        ? AppColors.surfaceVariantDark
+                        : AppColors.disabled,
                     label: 'Nedostupno',
-                    borderColor: isDark ? AppColors.borderDark : AppColors.textDisabled,
+                    borderColor: isDark
+                        ? AppColors.borderDark
+                        : AppColors.textDisabled,
                     isCompact: isCompact,
                   ),
                 ],
@@ -156,7 +176,9 @@ class CalendarLegendWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isCompact ? 10 : 11,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
+                  color: isDark
+                      ? AppColors.textTertiaryDark
+                      : AppColors.textTertiaryLight,
                 ),
               ),
               const SizedBox(height: 4),
@@ -198,7 +220,8 @@ class CalendarLegendWidget extends StatelessWidget {
               ),
             ],
 
-            if ((showStatusColors || showPriceColors || showSources) && showIcons)
+            if ((showStatusColors || showPriceColors || showSources) &&
+                showIcons)
               SizedBox(height: isCompact ? 8 : 12),
 
             if (showIcons) ...[
@@ -207,7 +230,9 @@ class CalendarLegendWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isCompact ? 10 : 11,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
+                  color: isDark
+                      ? AppColors.textTertiaryDark
+                      : AppColors.textTertiaryLight,
                 ),
               ),
               const SizedBox(height: 4),
@@ -279,7 +304,6 @@ class _LegendItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(2),
             border: Border.all(
               color: borderColor ?? color.withValues(alpha: 0.5),
-              width: 1,
             ),
           ),
         ),
@@ -288,7 +312,9 @@ class _LegendItem extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: isCompact ? 10 : 11,
-            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+            color: isDark
+                ? AppColors.textSecondaryDark
+                : AppColors.textSecondaryLight,
           ),
         ),
       ],
@@ -318,17 +344,15 @@ class _IconLegendItem extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          icon,
-          size: isCompact ? 12 : 14,
-          color: color,
-        ),
+        Icon(icon, size: isCompact ? 12 : 14, color: color),
         const SizedBox(width: 4),
         Text(
           label,
           style: TextStyle(
             fontSize: isCompact ? 10 : 11,
-            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+            color: isDark
+                ? AppColors.textSecondaryDark
+                : AppColors.textSecondaryLight,
           ),
         ),
       ],

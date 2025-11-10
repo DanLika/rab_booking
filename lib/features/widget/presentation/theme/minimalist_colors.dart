@@ -56,7 +56,9 @@ class MinimalistColors {
   // Light mint/pink color scheme for modern booking widget (like reference image)
 
   /// Available date - light mint green background
-  static const Color statusAvailableBackground = Color(0xFFCCF5E8); // Light mint
+  static const Color statusAvailableBackground = Color(
+    0xFFCCF5E8,
+  ); // Light mint
 
   /// Available date - mint green border
   static const Color statusAvailableBorder = Color(0xFF5CD4B4); // Mint green
@@ -350,63 +352,60 @@ class MinimalistColorsDark {
 extension MinimalistShadows on MinimalistColors {
   /// Minimal shadow for subtle elevation (1-level)
   static List<BoxShadow> get minimal => [
-        const BoxShadow(
-          color: MinimalistColors.shadow01,
-          offset: Offset(0, 1),
-          blurRadius: 2,
-          spreadRadius: 0,
-        ),
-      ];
+    const BoxShadow(
+      color: MinimalistColors.shadow01,
+      offset: Offset(0, 1),
+      blurRadius: 2,
+    ),
+  ];
 
   /// Light shadow for cards (2-level)
   static List<BoxShadow> get light => [
-        const BoxShadow(
-          color: MinimalistColors.shadow02,
-          offset: Offset(0, 2),
-          blurRadius: 4,
-          spreadRadius: 0,
-        ),
-      ];
+    const BoxShadow(
+      color: MinimalistColors.shadow02,
+      offset: Offset(0, 2),
+      blurRadius: 4,
+    ),
+  ];
 
   /// Medium shadow for elevated components (3-level)
   static List<BoxShadow> get medium => [
-        const BoxShadow(
-          color: MinimalistColors.shadow02,
-          offset: Offset(0, 2),
-          blurRadius: 4,
-          spreadRadius: -1,
-        ),
-        const BoxShadow(
-          color: MinimalistColors.shadow03,
-          offset: Offset(0, 4),
-          blurRadius: 8,
-          spreadRadius: -2,
-        ),
-      ];
+    const BoxShadow(
+      color: MinimalistColors.shadow02,
+      offset: Offset(0, 2),
+      blurRadius: 4,
+      spreadRadius: -1,
+    ),
+    const BoxShadow(
+      color: MinimalistColors.shadow03,
+      offset: Offset(0, 4),
+      blurRadius: 8,
+      spreadRadius: -2,
+    ),
+  ];
 
   /// Strong shadow for emphasis (4-level)
   static List<BoxShadow> get strong => [
-        const BoxShadow(
-          color: MinimalistColors.shadow02,
-          offset: Offset(0, 4),
-          blurRadius: 6,
-          spreadRadius: -2,
-        ),
-        const BoxShadow(
-          color: MinimalistColors.shadow04,
-          offset: Offset(0, 8),
-          blurRadius: 16,
-          spreadRadius: -4,
-        ),
-      ];
+    const BoxShadow(
+      color: MinimalistColors.shadow02,
+      offset: Offset(0, 4),
+      blurRadius: 6,
+      spreadRadius: -2,
+    ),
+    const BoxShadow(
+      color: MinimalistColors.shadow04,
+      offset: Offset(0, 8),
+      blurRadius: 16,
+      spreadRadius: -4,
+    ),
+  ];
 
   /// Hover shadow for interactive elements
   static List<BoxShadow> get hover => [
-        const BoxShadow(
-          color: MinimalistColors.shadow03,
-          offset: Offset(0, 4),
-          blurRadius: 12,
-          spreadRadius: 0,
-        ),
-      ];
+    const BoxShadow(
+      color: MinimalistColors.shadow03,
+      offset: Offset(0, 4),
+      blurRadius: 12,
+    ),
+  ];
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -49,7 +50,8 @@ class EnhancedAuthState {
       userModel: userModel ?? this.userModel,
       isLoading: isLoading ?? this.isLoading,
       error: error,
-      requiresEmailVerification: requiresEmailVerification ?? this.requiresEmailVerification,
+      requiresEmailVerification:
+          requiresEmailVerification ?? this.requiresEmailVerification,
       requiresOnboarding: requiresOnboarding ?? this.requiresOnboarding,
     );
   }
@@ -72,11 +74,17 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   ) : super(const EnhancedAuthState()) {
     // Listen to auth state changes
     _auth.authStateChanges().listen((User? user) {
-      LoggingService.log('authStateChanges: user=${user?.uid}', tag: 'ENHANCED_AUTH');
+      LoggingService.log(
+        'authStateChanges: user=${user?.uid}',
+        tag: 'ENHANCED_AUTH',
+      );
       if (user != null) {
         _loadUserProfile(user);
       } else {
-        LoggingService.log('User signed out, clearing state', tag: 'ENHANCED_AUTH');
+        LoggingService.log(
+          'User signed out, clearing state',
+          tag: 'ENHANCED_AUTH',
+        );
         state = const EnhancedAuthState();
       }
     });
@@ -84,16 +92,26 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
   /// Load user profile from Firestore
   Future<void> _loadUserProfile(User firebaseUser) async {
-    LoggingService.log('Loading user profile for ${firebaseUser.uid}...', tag: 'ENHANCED_AUTH');
+    LoggingService.log(
+      'Loading user profile for ${firebaseUser.uid}...',
+      tag: 'ENHANCED_AUTH',
+    );
     try {
-      final doc = await _firestore.collection('users').doc(firebaseUser.uid).get();
+      final doc = await _firestore
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .get();
 
       if (doc.exists && doc.data() != null) {
-        LoggingService.log('User profile found in Firestore', tag: 'ENHANCED_AUTH');
+        LoggingService.log(
+          'User profile found in Firestore',
+          tag: 'ENHANCED_AUTH',
+        );
         final userModel = UserModel.fromJson({...doc.data()!, 'id': doc.id});
 
         // Check email verification status
-        final requiresVerification = !firebaseUser.emailVerified && !userModel.emailVerified;
+        final requiresVerification =
+            !firebaseUser.emailVerified && !userModel.emailVerified;
 
         // Check onboarding status
         final requiresOnboarding = userModel.needsOnboarding;
@@ -105,17 +123,23 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           requiresOnboarding: requiresOnboarding,
         );
 
-        LoggingService.log('State updated: isAuthenticated=${state.isAuthenticated}, requiresVerification=$requiresVerification, requiresOnboarding=$requiresOnboarding', tag: 'ENHANCED_AUTH');
+        LoggingService.log(
+          'State updated: isAuthenticated=${state.isAuthenticated}, requiresVerification=$requiresVerification, requiresOnboarding=$requiresOnboarding',
+          tag: 'ENHANCED_AUTH',
+        );
 
         // Update last login time
         await _updateLastLogin(firebaseUser.uid);
       } else {
-        LoggingService.log('User profile NOT found, creating new profile...', tag: 'ENHANCED_AUTH');
+        LoggingService.log(
+          'User profile NOT found, creating new profile...',
+          tag: 'ENHANCED_AUTH',
+        );
         // Create user profile if it doesn't exist
         await _createUserProfile(firebaseUser);
       }
     } catch (e) {
-      LoggingService.logError('ERROR loading user profile', e);
+      unawaited(LoggingService.logError('ERROR loading user profile', e));
       state = EnhancedAuthState(
         firebaseUser: firebaseUser,
         error: 'Failed to load user profile: $e',
@@ -131,7 +155,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       firstName: firebaseUser.displayName?.split(' ').first ?? '',
       lastName: firebaseUser.displayName?.split(' ').last ?? '',
       role: UserRole.guest,
-      accountType: AccountType.trial,
       emailVerified: firebaseUser.emailVerified,
       displayName: firebaseUser.displayName,
       phone: firebaseUser.phoneNumber,
@@ -139,7 +162,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       createdAt: DateTime.now(),
     );
 
-    await _firestore.collection('users').doc(firebaseUser.uid).set(userModel.toJson());
+    await _firestore
+        .collection('users')
+        .doc(firebaseUser.uid)
+        .set(userModel.toJson());
     state = EnhancedAuthState(firebaseUser: firebaseUser, userModel: userModel);
   }
 
@@ -149,24 +175,36 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     required String password,
     bool rememberMe = false,
   }) async {
-    LoggingService.log('signInWithEmail called for $email, rememberMe=$rememberMe', tag: 'ENHANCED_AUTH');
+    LoggingService.log(
+      'signInWithEmail called for $email, rememberMe=$rememberMe',
+      tag: 'ENHANCED_AUTH',
+    );
     try {
-      state = state.copyWith(isLoading: true, error: null);
+      state = state.copyWith(isLoading: true);
 
       // Check rate limit
       final rateLimit = await _rateLimit.checkRateLimit(email);
       if (rateLimit != null && rateLimit.isLocked) {
-        LoggingService.log('Rate limit exceeded for $email', tag: 'ENHANCED_AUTH');
+        LoggingService.log(
+          'Rate limit exceeded for $email',
+          tag: 'ENHANCED_AUTH',
+        );
         throw _rateLimit.getRateLimitMessage(rateLimit);
       }
 
       // Attempt sign in
-      LoggingService.log('Calling Firebase signInWithEmailAndPassword...', tag: 'ENHANCED_AUTH');
+      LoggingService.log(
+        'Calling Firebase signInWithEmailAndPassword...',
+        tag: 'ENHANCED_AUTH',
+      );
       final credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      LoggingService.log('Firebase sign in successful for ${credential.user?.uid}', tag: 'ENHANCED_AUTH');
+      LoggingService.log(
+        'Firebase sign in successful for ${credential.user?.uid}',
+        tag: 'ENHANCED_AUTH',
+      );
 
       // Reset rate limit on success
       await _rateLimit.resetAttempts(email);
@@ -193,9 +231,15 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       }
 
       // Auth state listener will handle the rest
-      LoggingService.log('Sign in completed, auth state listener will load profile', tag: 'ENHANCED_AUTH');
+      LoggingService.log(
+        'Sign in completed, auth state listener will load profile',
+        tag: 'ENHANCED_AUTH',
+      );
     } on FirebaseAuthException catch (e) {
-      LoggingService.logError('Firebase sign in FAILED: ${e.code} - ${e.message}', e);
+      unawaited(LoggingService.logError(
+        'Firebase sign in FAILED: ${e.code} - ${e.message}',
+        e,
+      ));
       // Record failed attempt
       await _rateLimit.recordFailedAttempt(email);
 
@@ -208,7 +252,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       state = state.copyWith(isLoading: false, error: errorMessage);
       rethrow;
     } catch (e) {
-      LoggingService.logError('Sign in ERROR', e);
+      unawaited(LoggingService.logError('Sign in ERROR', e));
       state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
@@ -244,7 +288,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
 
     try {
-      state = state.copyWith(isLoading: true, error: null);
+      state = state.copyWith(isLoading: true);
 
       // Check rate limit
       final rateLimit = await _rateLimit.checkRateLimit(email);
@@ -269,7 +313,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           );
         } catch (e) {
           // If image upload fails, continue without image
-          LoggingService.log('Failed to upload profile image during registration: $e', tag: 'AUTH_ERROR');
+          LoggingService.log(
+            'Failed to upload profile image during registration: $e',
+            tag: 'AUTH_ERROR',
+          );
         }
       }
 
@@ -280,7 +327,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         firstName: firstName,
         lastName: lastName,
         role: UserRole.owner, // Default to owner for registration
-        accountType: AccountType.trial,
         emailVerified: false,
         phone: phone,
         avatarUrl: finalAvatarUrl,
@@ -320,10 +366,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         userId: credential.user!.uid,
         type: SecurityEventType.registration,
         location: location,
-        metadata: {
-          'email': email,
-          'accountType': AccountType.trial.name,
-        },
+        metadata: {'email': email, 'accountType': AccountType.trial.name},
       );
 
       // Log email verification sent
@@ -399,7 +442,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
   /// Sign in anonymously (for demo purposes)
   Future<void> signInAnonymously() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final UserCredential userCredential = await _auth.signInAnonymously();
@@ -419,13 +462,14 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           firstName: 'Demo',
           lastName: 'User',
           role: UserRole.owner,
-          accountType: AccountType.trial,
-          emailVerified: false,
           displayName: 'Demo User',
           createdAt: DateTime.now(),
         );
 
-        await _firestore.collection('users').doc(userCredential.user!.uid).set(userModel.toJson());
+        await _firestore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set(userModel.toJson());
       } else {
         // Update last login for existing users
         await _updateLastLogin(userCredential.user!.uid);
@@ -440,14 +484,17 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       state = state.copyWith(isLoading: false);
     } on FirebaseAuthException catch (e) {
-      LoggingService.log('Anonymous Sign-In error: ${e.code} - ${e.message}', tag: 'AUTH_ERROR');
-      state = state.copyWith(
-        isLoading: false,
-        error: _getAuthErrorMessage(e),
+      LoggingService.log(
+        'Anonymous Sign-In error: ${e.code} - ${e.message}',
+        tag: 'AUTH_ERROR',
       );
+      state = state.copyWith(isLoading: false, error: _getAuthErrorMessage(e));
       rethrow;
     } catch (e) {
-      LoggingService.log('Anonymous Sign-In unexpected error: $e', tag: 'AUTH_ERROR');
+      LoggingService.log(
+        'Anonymous Sign-In unexpected error: $e',
+        tag: 'AUTH_ERROR',
+      );
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to sign in anonymously. Please try again.',
@@ -483,7 +530,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   /// 2. Add SHA-1 and SHA-256 certificates (for Android)
   /// 3. Download updated google-services.json / GoogleService-Info.plist
   Future<void> signInWithGoogle() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       // Create Google Auth Provider
@@ -494,7 +541,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       googleProvider.addScope('profile');
 
       // Sign in with popup for web, native SDK for mobile
-      final UserCredential userCredential = await _auth.signInWithProvider(googleProvider);
+      final UserCredential userCredential = await _auth.signInWithProvider(
+        googleProvider,
+      );
 
       if (userCredential.user == null) {
         throw Exception('Google Sign-In failed: No user returned');
@@ -520,14 +569,17 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       state = state.copyWith(isLoading: false);
     } on FirebaseAuthException catch (e) {
-      LoggingService.log('Google Sign-In error: ${e.code} - ${e.message}', tag: 'AUTH_ERROR');
-      state = state.copyWith(
-        isLoading: false,
-        error: _getAuthErrorMessage(e),
+      LoggingService.log(
+        'Google Sign-In error: ${e.code} - ${e.message}',
+        tag: 'AUTH_ERROR',
       );
+      state = state.copyWith(isLoading: false, error: _getAuthErrorMessage(e));
       rethrow;
     } catch (e) {
-      LoggingService.log('Google Sign-In unexpected error: $e', tag: 'AUTH_ERROR');
+      LoggingService.log(
+        'Google Sign-In unexpected error: $e',
+        tag: 'AUTH_ERROR',
+      );
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to sign in with Google. Please try again.',
@@ -544,7 +596,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   /// 3. Configure OAuth redirect URLs
   /// 4. Add Apple Sign-In capability in Xcode (for iOS)
   Future<void> signInWithApple() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       // Create Apple Auth Provider
@@ -555,7 +607,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       appleProvider.addScope('name');
 
       // Sign in with popup for web, native SDK for mobile
-      final UserCredential userCredential = await _auth.signInWithProvider(appleProvider);
+      final UserCredential userCredential = await _auth.signInWithProvider(
+        appleProvider,
+      );
 
       if (userCredential.user == null) {
         throw Exception('Apple Sign-In failed: No user returned');
@@ -582,14 +636,17 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       state = state.copyWith(isLoading: false);
     } on FirebaseAuthException catch (e) {
-      LoggingService.log('Apple Sign-In error: ${e.code} - ${e.message}', tag: 'AUTH_ERROR');
-      state = state.copyWith(
-        isLoading: false,
-        error: _getAuthErrorMessage(e),
+      LoggingService.log(
+        'Apple Sign-In error: ${e.code} - ${e.message}',
+        tag: 'AUTH_ERROR',
       );
+      state = state.copyWith(isLoading: false, error: _getAuthErrorMessage(e));
       rethrow;
     } catch (e) {
-      LoggingService.log('Apple Sign-In unexpected error: $e', tag: 'AUTH_ERROR');
+      LoggingService.log(
+        'Apple Sign-In unexpected error: $e',
+        tag: 'AUTH_ERROR',
+      );
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to sign in with Apple. Please try again.',
@@ -656,7 +713,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       await user.verifyBeforeUpdateEmail(newEmail);
 
       // Update email in Firestore
-      LoggingService.log('Updating email in Firestore...', tag: 'ENHANCED_AUTH');
+      LoggingService.log(
+        'Updating email in Firestore...',
+        tag: 'ENHANCED_AUTH',
+      );
       await _firestore.collection('users').doc(user.uid).update({
         'email': newEmail,
         'emailVerified': false, // Email now requires verification
@@ -666,14 +726,12 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       LoggingService.log('Email updated successfully!', tag: 'ENHANCED_AUTH');
 
       // Reload state to reflect changes
-      state = state.copyWith(
-        requiresEmailVerification: true,
-      );
+      state = state.copyWith(requiresEmailVerification: true);
     } on FirebaseAuthException catch (e) {
-      LoggingService.logError('Email update failed: ${e.code}', e);
+      unawaited(LoggingService.logError('Email update failed: ${e.code}', e));
       throw _getAuthErrorMessage(e);
     } catch (e) {
-      LoggingService.logError('Email update error', e);
+      unawaited(LoggingService.logError('Email update error', e));
       rethrow;
     }
   }
@@ -707,15 +765,22 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 }
 
 /// Enhanced Auth Provider
-final enhancedAuthProvider = StateNotifierProvider<EnhancedAuthNotifier, EnhancedAuthState>((ref) {
-  final auth = ref.watch(firebaseAuthProvider);
-  final firestore = ref.watch(firestoreProvider);
-  final rateLimit = RateLimitService();
-  final security = SecurityEventsService();
-  final geolocation = IpGeolocationService();
+final enhancedAuthProvider =
+    StateNotifierProvider<EnhancedAuthNotifier, EnhancedAuthState>((ref) {
+      final auth = ref.watch(firebaseAuthProvider);
+      final firestore = ref.watch(firestoreProvider);
+      final rateLimit = RateLimitService();
+      final security = SecurityEventsService();
+      final geolocation = IpGeolocationService();
 
-  return EnhancedAuthNotifier(auth, firestore, rateLimit, security, geolocation);
-});
+      return EnhancedAuthNotifier(
+        auth,
+        firestore,
+        rateLimit,
+        security,
+        geolocation,
+      );
+    });
 
 /// Current user provider (shorthand)
 final enhancedCurrentUserProvider = Provider<UserModel?>((ref) {

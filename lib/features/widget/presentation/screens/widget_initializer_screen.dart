@@ -16,20 +16,19 @@ import '../../../../shared/models/property_model.dart';
 /// 2. Validates that both property and unit exist in Firebase
 /// 3. Redirects to /rooms?property=PROPERTY_ID&unit=UNIT_ID with validated data
 class WidgetInitializerScreen extends ConsumerStatefulWidget {
-  const WidgetInitializerScreen({
-    super.key,
-    this.preResolvedUnitId,
-  });
+  const WidgetInitializerScreen({super.key, this.preResolvedUnitId});
 
   /// Pre-resolved unit ID from slug-based route
   /// If provided, skips URL parsing and uses this ID directly
   final String? preResolvedUnitId;
 
   @override
-  ConsumerState<WidgetInitializerScreen> createState() => _WidgetInitializerScreenState();
+  ConsumerState<WidgetInitializerScreen> createState() =>
+      _WidgetInitializerScreenState();
 }
 
-class _WidgetInitializerScreenState extends ConsumerState<WidgetInitializerScreen> {
+class _WidgetInitializerScreenState
+    extends ConsumerState<WidgetInitializerScreen> {
   bool _isValidating = true;
   String? _validationError;
 
@@ -69,7 +68,8 @@ class _WidgetInitializerScreenState extends ConsumerState<WidgetInitializerScree
         propertyId = unitData['property_id'] as String?;
         if (propertyId == null) {
           setState(() {
-            _validationError = 'Property ID not found for unit.\n\nUnit ID: $unitId';
+            _validationError =
+                'Property ID not found for unit.\n\nUnit ID: $unitId';
             _isValidating = false;
           });
           return;
@@ -83,7 +83,8 @@ class _WidgetInitializerScreenState extends ConsumerState<WidgetInitializerScree
         // Validate both parameters are provided
         if (propertyId == null || propertyId.isEmpty) {
           setState(() {
-            _validationError = 'Missing property parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
+            _validationError =
+                'Missing property parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
             _isValidating = false;
           });
           return;
@@ -91,7 +92,8 @@ class _WidgetInitializerScreenState extends ConsumerState<WidgetInitializerScree
 
         if (unitId == null || unitId.isEmpty) {
           setState(() {
-            _validationError = 'Missing unit parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
+            _validationError =
+                'Missing unit parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
             _isValidating = false;
           });
           return;
@@ -104,7 +106,8 @@ class _WidgetInitializerScreenState extends ConsumerState<WidgetInitializerScree
         property = await ref.read(propertyByIdProvider(propertyId).future);
       } catch (fetchError) {
         setState(() {
-          _validationError = 'Error fetching property from Firestore.\n\nProperty ID: $propertyId\n\nError: $fetchError\n\n[DEBUG v2.2: Fetch exception caught]';
+          _validationError =
+              'Error fetching property from Firestore.\n\nProperty ID: $propertyId\n\nError: $fetchError\n\n[DEBUG v2.2: Fetch exception caught]';
           _isValidating = false;
         });
         return;
@@ -112,7 +115,8 @@ class _WidgetInitializerScreenState extends ConsumerState<WidgetInitializerScree
 
       if (property == null) {
         setState(() {
-          _validationError = 'Property not found in database.\n\nProperty ID: $propertyId\n\n[DEBUG v2.2: Property returned null]';
+          _validationError =
+              'Property not found in database.\n\nProperty ID: $propertyId\n\n[DEBUG v2.2: Property returned null]';
           _isValidating = false;
         });
         return;
@@ -123,7 +127,8 @@ class _WidgetInitializerScreenState extends ConsumerState<WidgetInitializerScree
 
       if (unit == null) {
         setState(() {
-          _validationError = 'Unit not found.\n\nUnit ID: $unitId\nProperty ID: $propertyId';
+          _validationError =
+              'Unit not found.\n\nUnit ID: $unitId\nProperty ID: $propertyId';
           _isValidating = false;
         });
         return;
@@ -135,7 +140,9 @@ class _WidgetInitializerScreenState extends ConsumerState<WidgetInitializerScree
       if (mounted) {
         if (unitId.isNotEmpty) {
           // Unit specified → direct calendar for that unit
-          context.pushReplacement('/calendar?property=$propertyId&unit=$unitId');
+          context.pushReplacement(
+            '/calendar?property=$propertyId&unit=$unitId',
+          );
         } else {
           // Only property → show room selection
           context.pushReplacement('/rooms?property=$propertyId');
@@ -154,8 +161,9 @@ class _WidgetInitializerScreenState extends ConsumerState<WidgetInitializerScree
   Future<Map<String, dynamic>?> _getUnitData(String unitId) async {
     try {
       // Query units collection group to find this unit
-      final querySnapshot = await ref
-          .read(unitByIdAcrossPropertiesProvider(unitId).future);
+      final querySnapshot = await ref.read(
+        unitByIdAcrossPropertiesProvider(unitId).future,
+      );
 
       if (querySnapshot == null) {
         return null;
@@ -244,9 +252,7 @@ class _WidgetInitializerScreenState extends ConsumerState<WidgetInitializerScree
               ),
               const SizedBox(height: 32),
               ElevatedButton.icon(
-                onPressed: () {
-                  _validateAndRedirect();
-                },
+                onPressed: _validateAndRedirect,
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(

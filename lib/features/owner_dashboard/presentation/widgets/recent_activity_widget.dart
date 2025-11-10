@@ -5,13 +5,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/widgets/widgets.dart';
 
 /// Activity type enum
-enum ActivityType {
-  booking,
-  review,
-  message,
-  payment,
-  cancellation,
-}
+enum ActivityType { booking, review, message, payment, cancellation }
 
 /// Activity item model
 class ActivityItem {
@@ -188,8 +182,12 @@ class RecentActivityWidget extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            AppColors.authPrimary.withAlpha((0.15 * 255).toInt()),
-                            AppColors.authPrimary.withAlpha((0.05 * 255).toInt()),
+                            AppColors.authPrimary.withAlpha(
+                              (0.15 * 255).toInt(),
+                            ),
+                            AppColors.authPrimary.withAlpha(
+                              (0.05 * 255).toInt(),
+                            ),
                           ],
                         ),
                         shape: BoxShape.circle,
@@ -197,7 +195,9 @@ class RecentActivityWidget extends StatelessWidget {
                       child: Icon(
                         Icons.notifications_none_rounded,
                         size: 48,
-                        color: AppColors.authPrimary.withAlpha((0.6 * 255).toInt()),
+                        color: AppColors.authPrimary.withAlpha(
+                          (0.6 * 255).toInt(),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -260,10 +260,7 @@ class _ActivityTile extends StatelessWidget {
   final ActivityItem activity;
   final VoidCallback? onTap;
 
-  const _ActivityTile({
-    required this.activity,
-    this.onTap,
-  });
+  const _ActivityTile({required this.activity, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -271,10 +268,7 @@ class _ActivityTile extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 12,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       leading: Container(
         width: 48,
         height: 48,
@@ -290,14 +284,9 @@ class _ActivityTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: activity.color.withAlpha((0.2 * 255).toInt()),
-            width: 1,
           ),
         ),
-        child: Icon(
-          activity.icon,
-          color: activity.color,
-          size: 24,
-        ),
+        child: Icon(activity.icon, color: activity.color, size: 24),
       ),
       title: Text(
         activity.title,

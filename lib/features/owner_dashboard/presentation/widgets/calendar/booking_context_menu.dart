@@ -30,9 +30,7 @@ class BookingContextMenu extends StatelessWidget {
         Positioned.fill(
           child: GestureDetector(
             onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              color: Colors.transparent,
-            ),
+            child: Container(color: Colors.transparent),
           ),
         ),
 
@@ -57,7 +55,9 @@ class BookingContextMenu extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
+                      color: AppColors.authPrimary.withAlpha(
+                        (0.1 * 255).toInt(),
+                      ),
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(8),
                         topRight: Radius.circular(8),
@@ -196,13 +196,7 @@ class BookingContextMenu extends StatelessWidget {
             Icon(icon, size: 18, color: color),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: color,
-                ),
-              ),
+              child: Text(label, style: TextStyle(fontSize: 13, color: color)),
             ),
           ],
         ),
@@ -292,7 +286,6 @@ Future<void> showBookingContextMenu({
   return showDialog(
     context: context,
     barrierColor: Colors.transparent,
-    barrierDismissible: true,
     builder: (context) => BookingContextMenu(
       booking: booking,
       position: Offset(left, top),

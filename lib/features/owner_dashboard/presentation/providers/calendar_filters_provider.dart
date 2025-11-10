@@ -8,10 +8,11 @@ import 'owner_calendar_provider.dart';
 /// Provider for calendar and bookings list filters
 /// Unified filter state shared across Week, Month, Timeline, and Bookings List
 final calendarFiltersProvider =
-    StateNotifierProvider<CalendarFiltersNotifier, CalendarFilterOptions>(
-        (ref) {
-  return CalendarFiltersNotifier();
-});
+    StateNotifierProvider<CalendarFiltersNotifier, CalendarFilterOptions>((
+      ref,
+    ) {
+      return CalendarFiltersNotifier();
+    });
 
 /// State notifier for calendar filters
 class CalendarFiltersNotifier extends StateNotifier<CalendarFilterOptions> {
@@ -79,7 +80,9 @@ class _FilterParams {
 
 /// PERFORMANCE: Background filtering function for compute()
 /// Runs in separate isolate to avoid blocking UI thread
-Map<String, List<BookingModel>> _applyFiltersInBackground(_FilterParams params) {
+Map<String, List<BookingModel>> _applyFiltersInBackground(
+  _FilterParams params,
+) {
   final bookingsMap = params.bookingsMap;
   final filters = params.filters;
   final units = params.units;
@@ -118,7 +121,7 @@ Map<String, List<BookingModel>> _applyFiltersInBackground(_FilterParams params) 
       // Filter by source
       if (filters.sources.isNotEmpty &&
           booking.source != null &&
-          !filters.sources.contains(booking.source!)) {
+          !filters.sources.contains(booking.source)) {
         return false;
       }
 
@@ -170,48 +173,50 @@ Map<String, List<BookingModel>> _applyFiltersInBackground(_FilterParams params) 
 /// PERFORMANCE: Uses compute() for background filtering on large datasets
 final filteredCalendarBookingsProvider =
     FutureProvider<Map<String, List<BookingModel>>>((ref) async {
-  final allBookingsAsync = await ref.watch(calendarBookingsProvider.future);
-  final filters = ref.watch(calendarFiltersProvider);
-  final units = await ref.watch(allOwnerUnitsProvider.future);
+      final allBookingsAsync = await ref.watch(calendarBookingsProvider.future);
+      final filters = ref.watch(calendarFiltersProvider);
+      final units = await ref.watch(allOwnerUnitsProvider.future);
 
-  if (!filters.hasActiveFilters) {
-    return allBookingsAsync;
-  }
+      if (!filters.hasActiveFilters) {
+        return allBookingsAsync;
+      }
 
-  // Count total bookings to decide if compute() is worth the overhead
-  final totalBookings = allBookingsAsync.values
-      .fold<int>(0, (sum, list) => sum + list.length);
-
-  // PERFORMANCE: Use compute() for large datasets (>100 bookings)
-  // For smaller datasets, the compute() overhead isn't worth it
-  if (totalBookings > 100) {
-    try {
-      return await compute(
-        _applyFiltersInBackground,
-        _FilterParams(
-          bookingsMap: allBookingsAsync,
-          filters: filters,
-          units: units,
-        ),
+      // Count total bookings to decide if compute() is worth the overhead
+      final totalBookings = allBookingsAsync.values.fold<int>(
+        0,
+        (sum, list) => sum + list.length,
       );
-    } catch (e) {
-      // Fallback to synchronous filtering if compute() fails
-      return _applyFiltersInBackground(
-        _FilterParams(
-          bookingsMap: allBookingsAsync,
-          filters: filters,
-          units: units,
-        ),
-      );
-    }
-  } else {
-    // Small dataset - use synchronous filtering (no compute() overhead)
-    return _applyFiltersInBackground(
-      _FilterParams(
-        bookingsMap: allBookingsAsync,
-        filters: filters,
-        units: units,
-      ),
-    );
-  }
-});
+
+      // PERFORMANCE: Use compute() for large datasets (>100 bookings)
+      // For smaller datasets, the compute() overhead isn't worth it
+      if (totalBookings > 100) {
+        try {
+          return await compute(
+            _applyFiltersInBackground,
+            _FilterParams(
+              bookingsMap: allBookingsAsync,
+              filters: filters,
+              units: units,
+            ),
+          );
+        } catch (e) {
+          // Fallback to synchronous filtering if compute() fails
+          return _applyFiltersInBackground(
+            _FilterParams(
+              bookingsMap: allBookingsAsync,
+              filters: filters,
+              units: units,
+            ),
+          );
+        }
+      } else {
+        // Small dataset - use synchronous filtering (no compute() overhead)
+        return _applyFiltersInBackground(
+          _FilterParams(
+            bookingsMap: allBookingsAsync,
+            filters: filters,
+            units: units,
+          ),
+        );
+      }
+    });

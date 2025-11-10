@@ -263,7 +263,6 @@ class _NotificationSettingsScreenState
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: AppColors.warning.withAlpha((0.3 * 255).toInt()),
-                      width: 1,
                     ),
                   ),
                   child: const Row(
@@ -458,7 +457,6 @@ class _NotificationSettingsScreenState
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.3),
-          width: 1,
         ),
         boxShadow: [
           BoxShadow(

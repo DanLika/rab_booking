@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,14 +19,11 @@ class BookingCreateDialog extends ConsumerStatefulWidget {
   final String? unitId;
   final DateTime? initialCheckIn;
 
-  const BookingCreateDialog({
-    super.key,
-    this.unitId,
-    this.initialCheckIn,
-  });
+  const BookingCreateDialog({super.key, this.unitId, this.initialCheckIn});
 
   @override
-  ConsumerState<BookingCreateDialog> createState() => _BookingCreateDialogState();
+  ConsumerState<BookingCreateDialog> createState() =>
+      _BookingCreateDialogState();
 }
 
 class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
@@ -106,8 +104,8 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                 Text(
                   'Jedinica',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
 
@@ -156,8 +154,8 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                 Text(
                   'Datumi',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
 
@@ -167,7 +165,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       child: _buildDateField(
                         label: 'Check-in',
                         date: _checkInDate,
-                        onTap: () => _selectCheckInDate(),
+                        onTap: _selectCheckInDate,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -175,7 +173,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       child: _buildDateField(
                         label: 'Check-out',
                         date: _checkOutDate,
-                        onTap: () => _selectCheckOutDate(),
+                        onTap: _selectCheckOutDate,
                       ),
                     ),
                   ],
@@ -187,14 +185,24 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
+                    color: AppColors.authSecondary.withAlpha(
+                      (0.1 * 255).toInt(),
+                    ),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.authSecondary.withAlpha((0.3 * 255).toInt())),
+                    border: Border.all(
+                      color: AppColors.authSecondary.withAlpha(
+                        (0.3 * 255).toInt(),
+                      ),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.nights_stay, size: 18, color: AppColors.authSecondary),
+                      const Icon(
+                        Icons.nights_stay,
+                        size: 18,
+                        color: AppColors.authSecondary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         '${_checkOutDate.difference(_checkInDate).inDays} noć${_checkOutDate.difference(_checkInDate).inDays > 1 ? 'i' : ''}',
@@ -214,8 +222,8 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                 Text(
                   'Informacije o gostu',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
 
@@ -272,8 +280,8 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                 Text(
                   'Detalji rezervacije',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
 
@@ -315,12 +323,16 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                                   child: SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   ),
                                 )
                               : null,
                         ),
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Unesite cijenu';
@@ -342,7 +354,9 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: _selectedUnitId != null ? _calculatePrice : null,
+                        onPressed: _selectedUnitId != null
+                            ? _calculatePrice
+                            : null,
                         icon: const Icon(Icons.calculate, size: 18),
                         label: const Text('Auto'),
                         style: OutlinedButton.styleFrom(
@@ -365,7 +379,11 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.info_outline, size: 14, color: Colors.green[700]),
+                        Icon(
+                          Icons.info_outline,
+                          size: 14,
+                          color: Colors.green[700],
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Kalkulirana cijena: €${_calculatedPrice!.toStringAsFixed(2)}',
@@ -391,29 +409,30 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.info_outline),
                         ),
-                        items: [
-                          BookingStatus.confirmed,
-                          BookingStatus.pending,
-                          BookingStatus.blocked,
-                        ].map((status) {
-                          return DropdownMenuItem(
-                            value: status,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: status.color,
-                                    shape: BoxShape.circle,
-                                  ),
+                        items:
+                            [
+                              BookingStatus.confirmed,
+                              BookingStatus.pending,
+                              BookingStatus.blocked,
+                            ].map((status) {
+                              return DropdownMenuItem(
+                                value: status,
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: status.color,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(status.displayName),
+                                  ],
                                 ),
-                                const SizedBox(width: 8),
-                                Text(status.displayName),
-                              ],
-                            ),
-                          );
-                        }).toList(),
+                              );
+                            }).toList(),
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
@@ -433,10 +452,22 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                           prefixIcon: Icon(Icons.payment),
                         ),
                         items: const [
-                          DropdownMenuItem(value: 'cash', child: Text('Gotovina')),
-                          DropdownMenuItem(value: 'bank_transfer', child: Text('Bankovni transfer')),
-                          DropdownMenuItem(value: 'card', child: Text('Kartica')),
-                          DropdownMenuItem(value: 'other', child: Text('Ostalo')),
+                          DropdownMenuItem(
+                            value: 'cash',
+                            child: Text('Gotovina'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'bank_transfer',
+                            child: Text('Bankovni transfer'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'card',
+                            child: Text('Kartica'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'other',
+                            child: Text('Ostalo'),
+                          ),
                         ],
                         onChanged: (value) {
                           if (value != null) {
@@ -456,8 +487,8 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                 Text(
                   'Napomene',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
 
@@ -539,14 +570,15 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       setState(() {
         _checkInDate = selectedDate;
         // Ensure check-out is after check-in
-        if (_checkOutDate.isBefore(_checkInDate) || _checkOutDate.isAtSameMomentAs(_checkInDate)) {
+        if (_checkOutDate.isBefore(_checkInDate) ||
+            _checkOutDate.isAtSameMomentAs(_checkInDate)) {
           _checkOutDate = _checkInDate.add(const Duration(days: 1));
         }
       });
 
       // Recalculate price if unit is selected
       if (_selectedUnitId != null) {
-        _calculatePrice();
+        unawaited(_calculatePrice());
       }
     }
   }
@@ -569,7 +601,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
       // Recalculate price if unit is selected
       if (_selectedUnitId != null) {
-        _calculatePrice();
+        unawaited(_calculatePrice());
       }
     }
   }
@@ -588,15 +620,20 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
       // Fetch prices for each night
       while (currentDate.isBefore(_checkOutDate)) {
-        final monthStart = DateTime(currentDate.year, currentDate.month, 1);
+        final monthStart = DateTime(currentDate.year, currentDate.month);
 
         // Fetch prices for the month
-        final monthlyPrices = await ref.read(monthlyPricesProvider(MonthlyPricesParams(
-          unitId: _selectedUnitId!,
-          month: monthStart,
-        )).future);
+        final monthlyPrices = await ref.read(
+          monthlyPricesProvider(
+            MonthlyPricesParams(unitId: _selectedUnitId!, month: monthStart),
+          ).future,
+        );
 
-        final dateKey = DateTime(currentDate.year, currentDate.month, currentDate.day);
+        final dateKey = DateTime(
+          currentDate.year,
+          currentDate.month,
+          currentDate.day,
+        );
         final priceData = monthlyPrices[dateKey];
 
         // Get unit base price
@@ -659,8 +696,10 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         // Show detailed error with conflicting booking info
         final conflict = conflicts.first;
         final conflictGuestName = conflict.guestName ?? 'Unknown';
-        final conflictCheckIn = '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}';
-        final conflictCheckOut = '${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}';
+        final conflictCheckIn =
+            '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}';
+        final conflictCheckOut =
+            '${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}';
 
         _showError(
           conflicts.length == 1
@@ -687,7 +726,6 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         checkOut: _checkOutDate,
         guestCount: guestCount,
         totalPrice: totalPrice,
-        paidAmount: 0.0,
         paymentMethod: _paymentMethod,
         paymentStatus: 'pending',
         status: _status,
@@ -730,10 +768,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   void _showError(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.error,
-        ),
+        SnackBar(content: Text(message), backgroundColor: AppColors.error),
       );
     }
   }

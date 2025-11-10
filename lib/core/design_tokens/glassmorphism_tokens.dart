@@ -131,7 +131,12 @@ class GlassmorphismTokens {
         return presetExtraStrong;
       case 'none':
       case 'disabled':
-        return const GlassPreset(blur: 0, opacity: 0, borderOpacity: 0, name: 'none');
+        return const GlassPreset(
+          blur: 0,
+          opacity: 0,
+          borderOpacity: 0,
+          name: 'none',
+        );
       default:
         return presetMedium; // Default to medium
     }
@@ -139,7 +144,13 @@ class GlassmorphismTokens {
 
   /// Get preset by intensity (0.0 - 1.0)
   static GlassPreset getPresetByIntensity(double intensity) {
-    if (intensity <= 0.0) return const GlassPreset(blur: 0, opacity: 0, borderOpacity: 0, name: 'none');
+    if (intensity <= 0.0)
+      return const GlassPreset(
+        blur: 0,
+        opacity: 0,
+        borderOpacity: 0,
+        name: 'none',
+      );
     if (intensity <= 0.2) return presetSubtle;
     if (intensity <= 0.4) return presetLight;
     if (intensity <= 0.6) return presetMedium;
@@ -171,16 +182,19 @@ class GlassmorphismTokens {
       color: baseColor.withValues(alpha: opacity),
       borderRadius: borderRadius ?? BorderRadius.circular(12),
       border: Border.all(
-        color: (isDark ? Colors.white : Colors.black).withValues(alpha: preset.borderOpacity),
-        width: 1.0,
-      ),
-      boxShadow: shadows ?? [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
-          blurRadius: 20,
-          offset: const Offset(0, 8),
+        color: (isDark ? Colors.white : Colors.black).withValues(
+          alpha: preset.borderOpacity,
         ),
-      ],
+      ),
+      boxShadow:
+          shadows ??
+          [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
     );
   }
 

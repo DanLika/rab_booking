@@ -13,14 +13,7 @@ import '../../domain/models/widget_settings.dart';
 /// ```
 final blurConfigProvider = Provider<BlurConfig>((ref) {
   // Default configuration (will be overridden in widget_main.dart)
-  return const BlurConfig(
-    enabled: true,
-    intensity: 'medium',
-    enableCardBlur: true,
-    enableAppBarBlur: true,
-    enableModalBlur: true,
-    enableOverlayBlur: true,
-  );
+  return const BlurConfig(intensity: 'medium');
 });
 
 /// Helper provider to check if blur is globally enabled

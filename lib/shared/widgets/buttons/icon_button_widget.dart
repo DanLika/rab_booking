@@ -48,7 +48,8 @@ class IconButtonWidget extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: backgroundColor ?? Theme.of(context).colorScheme.primaryContainer,
+        color:
+            backgroundColor ?? Theme.of(context).colorScheme.primaryContainer,
         shape: BoxShape.circle,
       ),
       child: IconButton(
@@ -64,11 +65,6 @@ class IconButtonWidget extends StatelessWidget {
       ),
     );
 
-    return tooltip != null
-        ? Tooltip(
-            message: tooltip!,
-            child: button,
-          )
-        : button;
+    return tooltip != null ? Tooltip(message: tooltip, child: button) : button;
   }
 }

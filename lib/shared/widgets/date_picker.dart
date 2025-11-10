@@ -116,17 +116,16 @@ class _PremiumDatePickerState extends State<PremiumDatePicker> {
                 ? const ColorScheme.dark(
                     primary: AppColors.authPrimary,
                     onPrimary: Colors.white,
-                    surface: AppColors.surfaceDark,
                     onSurface: AppColors.textPrimaryDark,
                   )
                 : const ColorScheme.light(
                     primary: AppColors.authPrimary,
-                    onPrimary: Colors.white,
-                    surface: AppColors.surfaceLight,
                     onSurface: AppColors.textPrimaryLight,
                   ),
             dialogTheme: DialogThemeData(
-              backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+              backgroundColor: isDark
+                  ? AppColors.surfaceDark
+                  : AppColors.surfaceLight,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
@@ -173,7 +172,9 @@ class _PremiumDatePickerState extends State<PremiumDatePicker> {
             borderRadius: BorderRadius.circular(AppDimensions.radiusM),
             child: InputDecorator(
               decoration: InputDecoration(
-                labelText: widget.enableFloatingLabel && hasValue ? widget.label : null,
+                labelText: widget.enableFloatingLabel && hasValue
+                    ? widget.label
+                    : null,
                 prefixIcon: widget.prefixIcon != null
                     ? Icon(
                         widget.prefixIcon,
@@ -208,13 +209,13 @@ class _PremiumDatePickerState extends State<PremiumDatePicker> {
                 style: AppTypography.bodyMedium.copyWith(
                   color: hasValue
                       ? (!widget.enabled
-                          ? AppColors.textDisabled
-                          : isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimaryLight)
+                            ? AppColors.textDisabled
+                            : isDark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.textPrimaryLight)
                       : (isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight),
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight),
                 ),
               ),
             ),
@@ -252,19 +253,25 @@ class _PremiumDatePickerState extends State<PremiumDatePicker> {
       borderColor = AppColors.error;
       boxShadow = _isFocused ? AppShadows.errorShadow : null;
       backgroundColor = widget.variant == TextFieldVariant.filled
-          ? (isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight)
+          ? (isDark
+                ? AppColors.surfaceVariantDark
+                : AppColors.surfaceVariantLight)
           : null;
     } else if (_isFocused) {
       borderColor = AppColors.authPrimary;
       boxShadow = AppShadows.glowPrimary;
       backgroundColor = widget.variant == TextFieldVariant.filled
-          ? (isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight)
+          ? (isDark
+                ? AppColors.surfaceVariantDark
+                : AppColors.surfaceVariantLight)
           : null;
     } else {
       borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
       boxShadow = null;
       backgroundColor = widget.variant == TextFieldVariant.filled
-          ? (isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight)
+          ? (isDark
+                ? AppColors.surfaceVariantDark
+                : AppColors.surfaceVariantLight)
           : null;
     }
 

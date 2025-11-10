@@ -56,7 +56,8 @@ class BlurredAppBar extends StatelessWidget implements PreferredSizeWidget {
     final effectivePreset = preset ?? GlassmorphismTokens.presetLight;
 
     // Determine colors
-    final effectiveForegroundColor = foregroundColor ??
+    final effectiveForegroundColor =
+        foregroundColor ??
         theme.appBarTheme.foregroundColor ??
         (isDark ? Colors.white : Colors.black);
 
@@ -100,8 +101,9 @@ class BlurredAppBar extends StatelessWidget implements PreferredSizeWidget {
             preferredSize: const Size.fromHeight(1),
             child: Container(
               height: 1,
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: effectivePreset.borderOpacity),
+              color: (isDark ? Colors.white : Colors.black).withValues(
+                alpha: effectivePreset.borderOpacity,
+              ),
             ),
           ),
         ),
@@ -124,7 +126,9 @@ class BlurredAppBar extends StatelessWidget implements PreferredSizeWidget {
       return Colors.white.withValues(alpha: preset.opacity);
     } else {
       // Light mode: White with slight opacity
-      return Colors.white.withValues(alpha: preset.opacity + 0.7); // More opaque in light mode
+      return Colors.white.withValues(
+        alpha: preset.opacity + 0.7,
+      ); // More opaque in light mode
     }
   }
 }
@@ -183,7 +187,8 @@ class BlurredSliverAppBar extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final effectivePreset = preset ?? GlassmorphismTokens.presetLight;
-    final effectiveForegroundColor = foregroundColor ??
+    final effectiveForegroundColor =
+        foregroundColor ??
         theme.appBarTheme.foregroundColor ??
         (isDark ? Colors.white : Colors.black);
 
@@ -233,9 +238,9 @@ class BlurredSliverAppBar extends StatelessWidget {
               ),
               border: Border(
                 bottom: BorderSide(
-                  color: (isDark ? Colors.white : Colors.black)
-                      .withValues(alpha: effectivePreset.borderOpacity),
-                  width: 1,
+                  color: (isDark ? Colors.white : Colors.black).withValues(
+                    alpha: effectivePreset.borderOpacity,
+                  ),
                 ),
               ),
             ),

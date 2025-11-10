@@ -616,7 +616,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     Text('Depozit: $_stripeDepositPercentage%'),
                     Slider(
                       value: _stripeDepositPercentage.toDouble(),
-                      min: 0,
                       max: 100,
                       divisions: 20,
                       label: '$_stripeDepositPercentage%',
@@ -652,7 +651,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     Text('Depozit: $_bankDepositPercentage%'),
                     Slider(
                       value: _bankDepositPercentage.toDouble(),
-                      min: 0,
                       max: 100,
                       divisions: 20,
                       label: '$_bankDepositPercentage%',
@@ -808,7 +806,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     ),
                     Slider(
                       value: _cancellationHours.toDouble(),
-                      min: 0,
                       max: 168, // 7 days
                       divisions: 28,
                       label: '$_cancellationHours h',

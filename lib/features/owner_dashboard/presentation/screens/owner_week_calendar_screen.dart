@@ -44,70 +44,71 @@ class _OwnerWeekCalendarScreenState
     final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
 
     return Column(
-        children: [
-          // Top toolbar
-          CalendarTopToolbar(
-            dateRange: _currentWeek,
-            isWeekView: true,
-            onPreviousPeriod: _goToPreviousWeek,
-            onNextPeriod: _goToNextWeek,
-            onToday: _goToToday,
-            onDatePickerTap: _showDatePicker,
-            onSearchTap: showSearchDialog,
-            onRefresh: refreshCalendarData,
-            onFilterTap: showFiltersPanel,
-            notificationCount: unreadCountAsync.when(
-              data: (count) => count,
-              loading: () => 0,
-              error: (error, stackTrace) => 0,
-            ),
-            onNotificationsTap: showNotificationsPanel,
-            isCompact: MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint,
+      children: [
+        // Top toolbar
+        CalendarTopToolbar(
+          dateRange: _currentWeek,
+          isWeekView: true,
+          onPreviousPeriod: _goToPreviousWeek,
+          onNextPeriod: _goToNextWeek,
+          onToday: _goToToday,
+          onDatePickerTap: _showDatePicker,
+          onSearchTap: showSearchDialog,
+          onRefresh: refreshCalendarData,
+          onFilterTap: showFiltersPanel,
+          notificationCount: unreadCountAsync.when(
+            data: (count) => count,
+            loading: () => 0,
+            error: (error, stackTrace) => 0,
           ),
+          onNotificationsTap: showNotificationsPanel,
+          isCompact:
+              MediaQuery.of(context).size.width <
+              CalendarGridCalculator.mobileBreakpoint,
+        ),
 
-          // Filter chips (from shared widget)
-          const CalendarFilterChips(),
+        // Filter chips (from shared widget)
+        const CalendarFilterChips(),
 
-          // Calendar grid
-          Expanded(
-            child: unitsAsync.when(
-              data: (units) {
-                if (units.isEmpty) {
-                  return CalendarStateBuilders.buildEmptyState(context);
-                }
+        // Calendar grid
+        Expanded(
+          child: unitsAsync.when(
+            data: (units) {
+              if (units.isEmpty) {
+                return CalendarStateBuilders.buildEmptyState(context);
+              }
 
-                return bookingsAsync.when(
-                  data: (bookingsMap) {
-                    return OwnerWeekGridCalendar(
-                      dateRange: _currentWeek,
-                      units: units,
-                      bookings: bookingsMap,
-                      onBookingTap: showBookingDetailsDialog,
-                      onCellTap: (date, unit) {
-                        _showCreateBookingDialog(date, unit.id);
-                      },
-                      onRoomHeaderTap: _showUnitFutureBookings,
-                      enableDragDrop: true,
-                    );
-                  },
-                  loading: () => CalendarStateBuilders.buildLoadingState(),
-                  error: (error, stack) => CalendarStateBuilders.buildErrorState(
-                    context,
-                    error,
-                    refreshCalendarData,
-                  ),
-                );
-              },
-              loading: () => CalendarStateBuilders.buildLoadingState(),
-              error: (error, stack) => CalendarStateBuilders.buildErrorState(
-                context,
-                error,
-                refreshCalendarData,
-              ),
+              return bookingsAsync.when(
+                data: (bookingsMap) {
+                  return OwnerWeekGridCalendar(
+                    dateRange: _currentWeek,
+                    units: units,
+                    bookings: bookingsMap,
+                    onBookingTap: showBookingDetailsDialog,
+                    onCellTap: (date, unit) {
+                      _showCreateBookingDialog(date, unit.id);
+                    },
+                    onRoomHeaderTap: _showUnitFutureBookings,
+                  );
+                },
+                loading: CalendarStateBuilders.buildLoadingState,
+                error: (error, stack) => CalendarStateBuilders.buildErrorState(
+                  context,
+                  error,
+                  refreshCalendarData,
+                ),
+              );
+            },
+            loading: CalendarStateBuilders.buildLoadingState,
+            error: (error, stack) => CalendarStateBuilders.buildErrorState(
+              context,
+              error,
+              refreshCalendarData,
             ),
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
   /// Go to previous week
@@ -151,10 +152,8 @@ class _OwnerWeekCalendarScreenState
   void _showCreateBookingDialog([DateTime? initialDate, String? unitId]) {
     showDialog(
       context: context,
-      builder: (context) => BookingCreateDialog(
-        unitId: unitId,
-        initialCheckIn: initialDate,
-      ),
+      builder: (context) =>
+          BookingCreateDialog(unitId: unitId, initialCheckIn: initialDate),
     );
   }
 
@@ -166,8 +165,7 @@ class _OwnerWeekCalendarScreenState
 
     final futureBookings = bookings.where((booking) {
       return !booking.checkOut.isBefore(today);
-    }).toList()
-      ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
+    }).toList()..sort((a, b) => a.checkIn.compareTo(b.checkIn));
 
     showDialog(
       context: context,

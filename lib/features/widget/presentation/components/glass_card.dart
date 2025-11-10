@@ -87,7 +87,6 @@ class GlassCard extends StatelessWidget {
                   borderRadius: effectiveBorderRadius,
                   border: Border.all(
                     color: _getBorderColor(isDark, effectivePreset),
-                    width: 1.0,
                   ),
                   boxShadow: shadows ?? _getDefaultShadows(isDark),
                 ),
@@ -101,7 +100,11 @@ class GlassCard extends StatelessWidget {
   }
 
   /// Build normal card without blur (fallback)
-  Widget _buildNormalCard(BuildContext context, bool isDark, BorderRadius borderRadius) {
+  Widget _buildNormalCard(
+    BuildContext context,
+    bool isDark,
+    BorderRadius borderRadius,
+  ) {
     final theme = Theme.of(context);
 
     return Container(
@@ -110,23 +113,16 @@ class GlassCard extends StatelessWidget {
       margin: margin,
       padding: padding ?? const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.surface
-            : Colors.white,
+        color: isDark ? theme.colorScheme.surface : Colors.white,
         borderRadius: borderRadius,
         border: Border.all(
           color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-          width: 1.0,
         ),
         boxShadow: shadows ?? _getDefaultShadows(isDark),
       ),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: borderRadius,
-          child: child,
-        ),
+        child: InkWell(onTap: onTap, borderRadius: borderRadius, child: child),
       ),
     );
   }
@@ -214,9 +210,7 @@ class _GlassCardHoverableState extends State<GlassCardHoverable> {
     final basePreset = widget.preset ?? GlassmorphismTokens.presetMedium;
 
     // On hover, increase blur by 20%
-    final currentPreset = _isHovered
-        ? basePreset.scale(1.2)
-        : basePreset;
+    final currentPreset = _isHovered ? basePreset.scale(1.2) : basePreset;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -308,13 +302,14 @@ class GlassContainer extends StatelessWidget {
             padding: padding,
             alignment: alignment,
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: effectivePreset.opacity),
+              color: (isDark ? Colors.white : Colors.black).withValues(
+                alpha: effectivePreset.opacity,
+              ),
               borderRadius: effectiveBorderRadius,
               border: Border.all(
-                color: (isDark ? Colors.white : Colors.black)
-                    .withValues(alpha: effectivePreset.borderOpacity),
-                width: 1.0,
+                color: (isDark ? Colors.white : Colors.black).withValues(
+                  alpha: effectivePreset.borderOpacity,
+                ),
               ),
               boxShadow: shadows,
             ),

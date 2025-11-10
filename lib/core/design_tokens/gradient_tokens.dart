@@ -68,25 +68,15 @@ class GradientTokens {
 
   /// Shimmer gradient for loading states
   static const LinearGradient shimmer = LinearGradient(
-    begin: Alignment(-1.0, 0.0),
     end: Alignment(1.0, 0.0),
-    colors: [
-      Color(0xFFEBEBF4),
-      Color(0xFFF4F4F4),
-      Color(0xFFEBEBF4),
-    ],
+    colors: [Color(0xFFEBEBF4), Color(0xFFF4F4F4), Color(0xFFEBEBF4)],
     stops: [0.0, 0.5, 1.0],
   );
 
   /// Shimmer gradient for loading states (dark mode)
   static const LinearGradient shimmerDark = LinearGradient(
-    begin: Alignment(-1.0, 0.0),
     end: Alignment(1.0, 0.0),
-    colors: [
-      Color(0xFF2A2A2A),
-      Color(0xFF3A3A3A),
-      Color(0xFF2A2A2A),
-    ],
+    colors: [Color(0xFF2A2A2A), Color(0xFF3A3A3A), Color(0xFF2A2A2A)],
     stops: [0.0, 0.5, 1.0],
   );
 
@@ -96,7 +86,6 @@ class GradientTokens {
 
   /// Spotlight effect (for highlighting elements)
   static const RadialGradient spotlight = RadialGradient(
-    center: Alignment.center,
     radius: 1.0,
     colors: [
       Color(0x33FFFFFF), // Semi-transparent white center
@@ -106,7 +95,6 @@ class GradientTokens {
 
   /// Overlay gradient (for modal backgrounds)
   static const RadialGradient overlay = RadialGradient(
-    center: Alignment.center,
     radius: 1.5,
     colors: [
       Color(0x99000000), // Semi-transparent black
@@ -120,7 +108,6 @@ class GradientTokens {
 
   /// Loading spinner gradient
   static const SweepGradient loadingSpinner = SweepGradient(
-    startAngle: 0.0,
     endAngle: 6.28, // 2π radians
     colors: [
       Color(0xFF2196F3), // Blue

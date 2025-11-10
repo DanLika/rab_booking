@@ -14,7 +14,8 @@ class CalendarFiltersPanel extends ConsumerStatefulWidget {
   const CalendarFiltersPanel({super.key});
 
   @override
-  ConsumerState<CalendarFiltersPanel> createState() => _CalendarFiltersPanelState();
+  ConsumerState<CalendarFiltersPanel> createState() =>
+      _CalendarFiltersPanelState();
 }
 
 class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
@@ -40,7 +41,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isMobile = MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint;
+    final isMobile =
+        MediaQuery.of(context).size.width <
+        CalendarGridCalculator.mobileBreakpoint;
 
     return Dialog(
       child: Container(
@@ -62,10 +65,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.filter_list,
-                    color: theme.colorScheme.onPrimary,
-                  ),
+                  Icon(Icons.filter_list, color: theme.colorScheme.onPrimary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -77,10 +77,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: theme.colorScheme.onPrimary,
-                    ),
+                    icon: Icon(Icons.close, color: theme.colorScheme.onPrimary),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -129,9 +126,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: theme.dividerColor),
-                ),
+                border: Border(top: BorderSide(color: theme.dividerColor)),
               ),
               child: isMobile
                   ? Column(
@@ -141,11 +136,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                         ElevatedButton.icon(
                           onPressed: _applyFilters,
                           icon: const Icon(Icons.check),
-                          label: const AutoSizeText(
-                            'Primijeni',
-                            maxLines: 1,
-                            minFontSize: 12,
-                          ),
+                          label: const AutoSizeText('Primijeni', maxLines: 1),
                         ),
                         const SizedBox(height: 8),
                         // Cancel and Clear row
@@ -167,7 +158,8 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                 onPressed: _filters.hasActiveFilters
                                     ? () {
                                         setState(() {
-                                          _filters = const CalendarFilterOptions();
+                                          _filters =
+                                              const CalendarFilterOptions();
                                           _guestSearchController.clear();
                                           _bookingIdSearchController.clear();
                                         });
@@ -200,11 +192,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                 }
                               : null,
                           icon: const Icon(Icons.clear_all),
-                          label: const AutoSizeText(
-                            'Očisti sve',
-                            maxLines: 1,
-                            minFontSize: 12,
-                          ),
+                          label: const AutoSizeText('Očisti sve', maxLines: 1),
                         ),
 
                         // Apply filters button
@@ -217,7 +205,6 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                 child: const AutoSizeText(
                                   'Otkaži',
                                   maxLines: 1,
-                                  minFontSize: 12,
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -227,7 +214,6 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                 label: const AutoSizeText(
                                   'Primijeni',
                                   maxLines: 1,
-                                  minFontSize: 12,
                                 ),
                               ),
                             ],
@@ -256,9 +242,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
           children: [
             Text(
               'Objekti',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -272,7 +258,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   avatar: Icon(
                     Icons.home_outlined,
                     size: 18,
-                    color: isSelected ? Theme.of(context).colorScheme.onPrimary : null,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : null,
                   ),
                   onSelected: (selected) {
                     setState(() {
@@ -282,7 +270,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                         );
                       } else {
                         _filters = _filters.copyWith(
-                          propertyIds: _filters.propertyIds.where((id) => id != property.id).toList(),
+                          propertyIds: _filters.propertyIds
+                              .where((id) => id != property.id)
+                              .toList(),
                         );
                       }
                     });
@@ -310,7 +300,11 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         // Filter units by selected properties
         final filteredUnits = _filters.propertyIds.isEmpty
             ? units
-            : units.where((unit) => _filters.propertyIds.contains(unit.propertyId)).toList();
+            : units
+                  .where(
+                    (unit) => _filters.propertyIds.contains(unit.propertyId),
+                  )
+                  .toList();
 
         if (filteredUnits.isEmpty) {
           return const SizedBox.shrink();
@@ -321,9 +315,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
           children: [
             Text(
               'Jedinice',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -337,7 +331,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   avatar: Icon(
                     Icons.meeting_room,
                     size: 18,
-                    color: isSelected ? Theme.of(context).colorScheme.onPrimary : null,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : null,
                   ),
                   onSelected: (selected) {
                     setState(() {
@@ -347,7 +343,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                         );
                       } else {
                         _filters = _filters.copyWith(
-                          unitIds: _filters.unitIds.where((id) => id != unit.id).toList(),
+                          unitIds: _filters.unitIds
+                              .where((id) => id != unit.id)
+                              .toList(),
                         );
                       }
                     });
@@ -369,9 +367,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
       children: [
         Text(
           'Statusi',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -390,7 +388,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   color: status.color,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? Theme.of(context).colorScheme.onPrimary : Colors.transparent,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Colors.transparent,
                     width: 2,
                   ),
                 ),
@@ -403,7 +403,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                     );
                   } else {
                     _filters = _filters.copyWith(
-                      statuses: _filters.statuses.where((s) => s != statusString).toList(),
+                      statuses: _filters.statuses
+                          .where((s) => s != statusString)
+                          .toList(),
                     );
                   }
                 });
@@ -429,9 +431,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
       children: [
         Text(
           'Izvori rezervacija',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -446,7 +448,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
               avatar: Icon(
                 icon,
                 size: 18,
-                color: isSelected ? Theme.of(context).colorScheme.onPrimary : color,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : color,
               ),
               onSelected: (selected) {
                 setState(() {
@@ -456,7 +460,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                     );
                   } else {
                     _filters = _filters.copyWith(
-                      sources: _filters.sources.where((s) => s != value).toList(),
+                      sources: _filters.sources
+                          .where((s) => s != value)
+                          .toList(),
                     );
                   }
                 });
@@ -474,9 +480,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
       children: [
         Text(
           'Raspon datuma',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
@@ -497,10 +503,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             child: TextButton.icon(
               onPressed: () {
                 setState(() {
-                  _filters = _filters.copyWith(
-                    startDate: null,
-                    endDate: null,
-                  );
+                  _filters = _filters.copyWith(startDate: null, endDate: null);
                 });
               },
               icon: const Icon(Icons.clear, size: 16),
@@ -517,9 +520,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
       children: [
         Text(
           'Pretraži gosta',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -548,9 +551,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
       children: [
         Text(
           'Pretraži po ID-u rezervacije',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -595,16 +598,21 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
 
   void _applyFilters() {
     // Apply filters to provider
-    ref.read(calendarFiltersProvider.notifier).setPropertyIds(_filters.propertyIds);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setPropertyIds(_filters.propertyIds);
     ref.read(calendarFiltersProvider.notifier).setUnitIds(_filters.unitIds);
     ref.read(calendarFiltersProvider.notifier).setStatuses(_filters.statuses);
     ref.read(calendarFiltersProvider.notifier).setSources(_filters.sources);
-    ref.read(calendarFiltersProvider.notifier).setDateRange(
-      startDate: _filters.startDate,
-      endDate: _filters.endDate,
-    );
-    ref.read(calendarFiltersProvider.notifier).setGuestSearchQuery(_filters.guestSearchQuery);
-    ref.read(calendarFiltersProvider.notifier).setBookingIdSearch(_filters.bookingIdSearch);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setDateRange(startDate: _filters.startDate, endDate: _filters.endDate);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setGuestSearchQuery(_filters.guestSearchQuery);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setBookingIdSearch(_filters.bookingIdSearch);
 
     // Close dialog
     Navigator.of(context).pop(true);

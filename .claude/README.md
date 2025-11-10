@@ -52,6 +52,41 @@ Ovaj direktorijum sadrži konfiguraciju za Claude Code AI asistenta koji pobolj�
 - **Rezultat**: Claude dobija sav potreban context odmah, brže rešavanje
 - **Kada koristiti**: Kad imaš bug koji Claude treba da ispravi
 
+### `firebase-tools.sh` ⭐ NOVO
+- **Šta radi**: Interaktivni meni za Firebase operacije
+- **Opcije**: Start emulators, validate rules, deploy, test
+- **Upotreba**:
+  ```bash
+  ./.claude/firebase-tools.sh
+  ```
+- **Claude koristi**: Za brzo Firebase deployment i testing
+
+### `start-emulators.sh` ⭐ NOVO
+- **Šta radi**: Brzo pokreće Firebase Emulators (Firestore + Functions + Hosting)
+- **Upotreba**:
+  ```bash
+  ./.claude/start-emulators.sh
+  ```
+- **Claude koristi**: Za lokalno testiranje prije deployment-a
+
+### `supabase-tools.sh` ⭐ NOVO
+- **Šta radi**: Interaktivni meni za Supabase operacije
+- **Opcije**: Start local, migrations, reset DB, push/pull
+- **Upotreba**:
+  ```bash
+  ./.claude/supabase-tools.sh
+  ```
+- **Claude koristi**: Za Supabase development i migration management
+
+### `live-test.sh` ⭐ NOVO
+- **Šta radi**: Live testing workflow automation
+- **Scenariji**: Full stack, multi-browser, mobile emulator, production-like
+- **Upotreba**:
+  ```bash
+  ./.claude/live-test.sh
+  ```
+- **Claude koristi**: Za automated testing setups
+
 ### `hooks/after-edit.sh`
 - **Šta radi**: Automatski pokreće `flutter analyze` nakon što Claude edituje .dart fajl
 - **Rezultat**: Greške se odmah hvataju, brže ispravljanje

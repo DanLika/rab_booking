@@ -185,6 +185,115 @@
         "kind": "build",
         "isDefault": false
       }
+    },
+    {
+      "label": "🔥 Start Firebase Emulators",
+      "type": "shell",
+      "command": "./.claude/start-emulators.sh",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "none",
+        "isDefault": false
+      },
+      "isBackground": true
+    },
+    {
+      "label": "🔥 Firebase Tools Menu",
+      "type": "shell",
+      "command": "./.claude/firebase-tools.sh",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "none",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "🗄️  Supabase Tools Menu",
+      "type": "shell",
+      "command": "./.claude/supabase-tools.sh",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "none",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "🧪 Live Testing Menu",
+      "type": "shell",
+      "command": "./.claude/live-test.sh",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "🔥 Deploy Firestore Rules",
+      "type": "shell",
+      "command": "firebase deploy --only firestore:rules",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "none",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "🔥 Validate Firestore Rules",
+      "type": "shell",
+      "command": "firebase firestore:rules:validate firestore.rules",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      }
     }
   ]
 }

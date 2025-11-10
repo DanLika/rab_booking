@@ -175,6 +175,8 @@ class CalendarHoverTooltip extends StatelessWidget {
         return 'Check-Out Day';
       case DateStatus.disabled:
         return 'Past Date';
+      case DateStatus.pastReservation:
+        return 'Past Reservation';
     }
   }
 
@@ -193,6 +195,8 @@ class CalendarHoverTooltip extends StatelessWidget {
         return colors.statusPendingBorder;
       case DateStatus.disabled:
         return colors.textSecondary;
+      case DateStatus.pastReservation:
+        return colors.statusPastReservationBorder;
     }
   }
 }

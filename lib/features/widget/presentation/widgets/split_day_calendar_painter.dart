@@ -9,12 +9,14 @@ class SplitDayCalendarPainter extends CustomPainter {
   final Color borderColor;
   final String? priceText; // Price to display in cell (e.g., "€50")
   final WidgetColorScheme colors;
+  final bool isInRange; // Whether this date is in a selected range
 
   SplitDayCalendarPainter({
     required this.status,
     required this.borderColor,
     this.priceText,
     required this.colors,
+    this.isInRange = false,
   });
 
   @override
@@ -60,6 +62,15 @@ class SplitDayCalendarPainter extends CustomPainter {
 
       case DateStatus.disabled:
         // Solid disabled color (past dates)
+        paint.color = status.getColor(colors);
+        canvas.drawRect(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          paint,
+        );
+        break;
+
+      case DateStatus.pastReservation:
+        // Past reservation - red with reduced opacity (50%)
         paint.color = status.getColor(colors);
         canvas.drawRect(
           Rect.fromLTWH(0, 0, size.width, size.height),
@@ -118,6 +129,17 @@ class SplitDayCalendarPainter extends CustomPainter {
         break;
     }
 
+    // Draw range overlay with reduced opacity if date is in selected range
+    if (isInRange) {
+      final overlayPaint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = colors.buttonPrimary.withValues(alpha: 0.2);
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        overlayPaint,
+      );
+    }
+
     // Draw price text in center of cell - prominent and readable
     if (priceText != null && priceText!.isNotEmpty) {
       final textPainter = TextPainter(
@@ -155,7 +177,8 @@ class SplitDayCalendarPainter extends CustomPainter {
     return oldDelegate.status != status ||
            oldDelegate.borderColor != borderColor ||
            oldDelegate.priceText != priceText ||
-           oldDelegate.colors != colors;
+           oldDelegate.colors != colors ||
+           oldDelegate.isInRange != isInRange;
   }
 }
 

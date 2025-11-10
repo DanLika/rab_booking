@@ -1,3 +1,202 @@
 {
-  "firestore-explorer.serviceAccountKeyPath": " c:\\Users\\W10\\dusko1\\rab_booking\\.vscode\\settings.json"
+  "firestore-explorer.serviceAccountKeyPath": " c:\\Users\\W10\\dusko1\\rab_booking\\.vscode\\settings.json",
+
+  // ============================================
+  // CLAUDE CODE CONFIGURATION
+  // ============================================
+
+  // Claude Code Auto-Approval Settings
+  "claudeCode.autoApprove": {
+    // Git commands (safe read-only operations)
+    "bash": [
+      "git status",
+      "git log*",
+      "git diff*",
+      "git show*",
+      "git branch*",
+      "git blame*",
+
+      // Flutter commands
+      "flutter analyze",
+      "flutter test",
+      "flutter pub get",
+      "flutter pub deps",
+      "flutter clean",
+      "flutter doctor",
+      "dart format*",
+      "dart fix*",
+      "dart analyze*",
+
+      // Process management
+      "ps aux*",
+      "lsof*",
+      "pkill*",
+
+      // File operations (read-only)
+      "ls*",
+      "find*",
+      "cat*",
+      "grep*",
+      "rg*"
+    ],
+
+    // Allow Read tool without asking
+    "read": true,
+
+    // Allow Glob (file pattern search) without asking
+    "glob": true,
+
+    // Allow Grep (code search) without asking
+    "grep": true
+  },
+
+  // Claude Code Thinking Mode (always use for better reasoning)
+  "claudeCode.thinkingMode": "interleaved",
+
+  // Default to Sonnet model (best balance of speed/quality)
+  "claudeCode.model": "sonnet",
+
+  // Enable Task tool for complex operations
+  "claudeCode.useTaskTool": true,
+
+  // ============================================
+  // FLUTTER & DART CONFIGURATION
+  // ============================================
+
+  // Auto format Dart files on save
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.rulers": [80],
+    "editor.selectionHighlight": false,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.suggestSelection": "first",
+    "editor.tabCompletion": "onlySnippets",
+    "editor.wordBasedSuggestions": "off"
+  },
+
+  // Flutter hot reload on save
+  "dart.flutterHotReloadOnSave": "always",
+
+  // Enable Flutter DevTools
+  "dart.debugExternalPackageLibraries": true,
+  "dart.debugSdkLibraries": false,
+
+  // Dart analyzer settings
+  "dart.lineLength": 120,
+  "dart.showTodos": true,
+  "dart.previewFlutterUiGuides": true,
+  "dart.previewFlutterUiGuidesCustomTracking": true,
+
+  // ============================================
+  // GITLENS CONFIGURATION
+  // ============================================
+
+  // GitLens - Shows git blame, history inline
+  "gitlens.currentLine.enabled": true,
+  "gitlens.codeLens.enabled": true,
+  "gitlens.codeLens.authors.enabled": true,
+  "gitlens.codeLens.recentChange.enabled": true,
+  "gitlens.hovers.currentLine.over": "line",
+  "gitlens.blame.format": "${author}, ${date}",
+  "gitlens.blame.highlight.enabled": true,
+
+  // ============================================
+  // ERROR LENS CONFIGURATION
+  // ============================================
+
+  // Error Lens - Shows errors inline (helps Claude see errors immediately)
+  "errorLens.enabled": true,
+  "errorLens.enabledDiagnosticLevels": ["error", "warning", "info"],
+  "errorLens.followCursor": "allLines",
+  "errorLens.gutterIconsEnabled": true,
+
+  // ============================================
+  // TODO TREE CONFIGURATION
+  // ============================================
+
+  // TODO Tree - Helps Claude find TODO, FIXME, BUG comments
+  "todo-tree.general.tags": [
+    "TODO",
+    "FIXME",
+    "BUG",
+    "HACK",
+    "NOTE",
+    "XXX",
+    "OPTIMIZE",
+    "REVIEW"
+  ],
+  "todo-tree.highlights.defaultHighlight": {
+    "icon": "alert",
+    "type": "text",
+    "foreground": "#000000",
+    "background": "#ffff00",
+    "opacity": 50
+  },
+  "todo-tree.highlights.customHighlight": {
+    "TODO": {
+      "icon": "check",
+      "foreground": "#000000",
+      "background": "#ffff00"
+    },
+    "FIXME": {
+      "icon": "alert",
+      "foreground": "#ffffff",
+      "background": "#ff0000"
+    },
+    "BUG": {
+      "icon": "bug",
+      "foreground": "#ffffff",
+      "background": "#ff0000"
+    },
+    "OPTIMIZE": {
+      "icon": "zap",
+      "foreground": "#000000",
+      "background": "#00ff00"
+    }
+  },
+
+  // ============================================
+  // FIRESTORE EXPLORER CONFIGURATION
+  // ============================================
+
+  // Firestore explorer settings (already configured)
+  "vsfire.showFirestoreData": true,
+
+  // ============================================
+  // GENERAL IDE CONFIGURATION
+  // ============================================
+
+  // Show file path in breadcrumbs (helps Claude navigate)
+  "breadcrumbs.enabled": true,
+  "breadcrumbs.filePath": "on",
+
+  // File nesting (cleaner file explorer)
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "pubspec.yaml": "pubspec.lock, .flutter-plugins, .flutter-plugins-dependencies, .packages",
+    "*.dart": "${capture}.g.dart, ${capture}.freezed.dart"
+  },
+
+  // Auto save (helps with hot reload)
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+
+  // Exclude from search (faster searches for Claude)
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/*.code-search": true,
+    "**/.dart_tool": true,
+    "**/build": true,
+    "**/.flutter-plugins": true,
+    "**/.flutter-plugins-dependencies": true,
+    "**/ios/Pods": true,
+    "**/android/.gradle": true
+  },
+
+  // Terminal integration
+  "terminal.integrated.env.osx": {
+    "FIG_NEW_SESSION": "1"
+  }
 }

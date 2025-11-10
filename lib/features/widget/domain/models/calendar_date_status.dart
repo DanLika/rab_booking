@@ -10,6 +10,7 @@ enum DateStatus {
   partialCheckIn,
   partialCheckOut,
   disabled, // Past dates that cannot be selected
+  pastReservation, // Past booking (historical) - shown in red with reduced opacity
 }
 
 /// Extension to get color for each status
@@ -31,6 +32,8 @@ extension DateStatusExtension on DateStatus {
         return colors.statusAvailableBackground;
       case DateStatus.disabled:
         return colors.statusDisabledBackground;
+      case DateStatus.pastReservation:
+        return colors.statusPastReservationBackground;
     }
   }
 
@@ -50,6 +53,8 @@ extension DateStatusExtension on DateStatus {
         return colors.statusAvailableBorder;
       case DateStatus.disabled:
         return colors.borderDefault;
+      case DateStatus.pastReservation:
+        return colors.statusPastReservationBorder;
     }
   }
 
@@ -83,6 +88,8 @@ extension DateStatusExtension on DateStatus {
         return 'Check-out';
       case DateStatus.disabled:
         return 'Past Date';
+      case DateStatus.pastReservation:
+        return 'Past Reservation';
     }
   }
 }

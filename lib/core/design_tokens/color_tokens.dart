@@ -195,6 +195,8 @@ abstract class WidgetColorScheme {
   Color get statusTodayBorder;
   Color get statusDisabledBackground;
   Color get statusDisabledText;
+  Color get statusPastReservationBackground;
+  Color get statusPastReservationBorder;
 
   // Buttons
   Color get buttonPrimary;
@@ -337,6 +339,10 @@ class LightColorScheme implements WidgetColorScheme {
   Color get statusDisabledBackground => ColorTokens.grey100;
   @override
   Color get statusDisabledText => ColorTokens.grey300;
+  @override
+  Color get statusPastReservationBackground => ColorTokens.coral500.withValues(alpha: 0.5); // Red with 50% opacity
+  @override
+  Color get statusPastReservationBorder => ColorTokens.coral600.withValues(alpha: 0.5); // Darker red border with 50% opacity
 
   // Buttons - Black primary
   @override
@@ -550,6 +556,10 @@ class DarkColorScheme implements WidgetColorScheme {
   Color get statusDisabledBackground => ColorTokens.grey800;
   @override
   Color get statusDisabledText => ColorTokens.grey600;
+  @override
+  Color get statusPastReservationBackground => ColorTokens.coral500.withValues(alpha: 0.5); // Red with 50% opacity
+  @override
+  Color get statusPastReservationBorder => ColorTokens.coral600.withValues(alpha: 0.5); // Darker red border with 50% opacity
 
   // Buttons
   @override

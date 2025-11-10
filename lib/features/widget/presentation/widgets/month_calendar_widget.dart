@@ -10,6 +10,7 @@ import 'calendar_hover_tooltip.dart';
 import 'calendar_view_switcher.dart';
 import '../theme/responsive_helper.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/theme/custom_icons_tablericons.dart';
 
 class MonthCalendarWidget extends ConsumerStatefulWidget {
   final String unitId;
@@ -86,6 +87,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final currentView = ref.watch(calendarViewProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 400; // iPhone SE and similar
+    final isDarkMode = ref.watch(themeProvider);
 
     return Container(
       padding: EdgeInsets.all(isSmallScreen ? 2 : 4),
@@ -101,16 +103,21 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Week view tab hidden but code kept for future use
-          // _buildViewTab('Week', Icons.view_week, CalendarViewType.week, currentView == CalendarViewType.week, isSmallScreen, colors),
-          _buildViewTab('Month', Icons.calendar_month, CalendarViewType.month, currentView == CalendarViewType.month, isSmallScreen, colors),
+          // _buildViewTab('Week', TablerIcons.kviewWeek, CalendarViewType.week, currentView == CalendarViewType.week, isSmallScreen, colors, isDarkMode),
+          _buildViewTab('Month', TablerIcons.ktableFilled, CalendarViewType.month, currentView == CalendarViewType.month, isSmallScreen, colors, isDarkMode),
           SizedBox(width: isSmallScreen ? 2 : 4),
-          _buildViewTab('Year', Icons.calendar_today, CalendarViewType.year, currentView == CalendarViewType.year, isSmallScreen, colors),
+          _buildViewTab('Year', TablerIcons.ktableOptions, CalendarViewType.year, currentView == CalendarViewType.year, isSmallScreen, colors, isDarkMode),
         ],
       ),
     );
   }
 
-  Widget _buildViewTab(String label, IconData icon, CalendarViewType viewType, bool isSelected, bool isSmallScreen, WidgetColorScheme colors) {
+  Widget _buildViewTab(String label, IconData icon, CalendarViewType viewType, bool isSelected, bool isSmallScreen, WidgetColorScheme colors, bool isDarkMode) {
+    // Dark theme: selected button has white background with black text
+    // Light theme: selected button has black background with white text
+    final selectedBg = isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
+    final selectedText = isDarkMode ? ColorTokens.pureBlack : ColorTokens.pureWhite;
+
     return Semantics(
       label: '$label view',
       button: true,
@@ -127,7 +134,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             vertical: isSmallScreen ? 6 : 8,
           ),
           decoration: BoxDecoration(
-            color: isSelected ? colors.buttonPrimary : Colors.transparent,
+            color: isSelected ? selectedBg : Colors.transparent,
             borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
           ),
           child: Row(
@@ -135,7 +142,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             children: [
               Icon(
                 icon,
-                color: isSelected ? colors.buttonPrimaryText : colors.textSecondary,
+                color: isSelected ? selectedText : colors.textPrimary,
                 size: isSmallScreen ? 16 : IconSizeTokens.small,
                 semanticLabel: label,
               ),
@@ -144,7 +151,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 Text(
                   label,
                   style: TextStyle(
-                    color: isSelected ? colors.buttonPrimaryText : colors.textSecondary,
+                    color: isSelected ? selectedText : colors.textPrimary,
                     fontSize: TypographyTokens.fontSizeS2,
                     fontWeight: isSelected ? TypographyTokens.semiBold : TypographyTokens.regular,
                   ),
@@ -186,6 +193,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
               icon: Icon(
                 isDarkMode ? Icons.light_mode : Icons.dark_mode,
                 size: isSmallScreen ? 16 : IconSizeTokens.small,
+                color: colors.textPrimary,
               ),
               onPressed: () {
                 ref.read(themeProvider.notifier).state = !isDarkMode;
@@ -201,14 +209,14 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             SizedBox(width: isSmallScreen ? 4 : SpacingTokens.xxs),
 
             // Compact Navigation
-            _buildCompactMonthNavigation(),
+            _buildCompactMonthNavigation(colors),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCompactMonthNavigation() {
+  Widget _buildCompactMonthNavigation(WidgetColorScheme colors) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 400; // iPhone SE and similar
     final monthYear = DateFormat.yMMM().format(_currentMonth);
@@ -218,7 +226,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(Icons.chevron_left, size: isSmallScreen ? 16 : IconSizeTokens.small),
+          icon: Icon(Icons.chevron_left, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -235,10 +243,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           style: TextStyle(
             fontSize: isSmallScreen ? TypographyTokens.fontSizeS : TypographyTokens.fontSizeM,
             fontWeight: TypographyTokens.bold,
+            color: colors.textPrimary,
           ),
         ),
         IconButton(
-          icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small),
+          icon: Icon(Icons.chevron_right, size: isSmallScreen ? 16 : IconSizeTokens.small, color: colors.textPrimary),
           padding: EdgeInsets.zero,
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -425,7 +434,10 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final isInRange = _isDateInRange(date);
     final isRangeStart = _rangeStart != null && _isSameDay(date, _rangeStart!);
     final isRangeEnd = _rangeEnd != null && _isSameDay(date, _rangeEnd!);
-    final isToday = _isSameDay(date, DateTime.now());
+    final today = DateTime.now();
+    final todayNormalized = DateTime(today.year, today.month, today.day);
+    final isToday = _isSameDay(date, today);
+    final isPast = date.isBefore(todayNormalized);
 
     // Get price text for display
     final priceText = dateInfo.formattedPrice;
@@ -444,9 +456,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           decoration: BoxDecoration(
             border: Border.all(
               color: isRangeStart || isRangeEnd
-                  ? colors.buttonPrimary
+                  ? colors.textPrimary
                   : isToday
-                      ? colors.borderStrong
+                      ? colors.textPrimary
                       : isHovered
                           ? colors.borderStrong
                           : _getBorderColorForDate(dateInfo.status, colors),
@@ -476,25 +488,29 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                   borderColor: dateInfo.status.getBorderColor(colors),
                   priceText: priceText,
                   colors: colors,
+                  isInRange: isInRange,
                 ),
                 child: const SizedBox.expand(),
               ),
             ),
             // Day number overlay - centered
             Center(
-              child: Text(
-                date.day.toString(),
-                style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeL,
-                  fontWeight: TypographyTokens.bold,
-                  color: colors.textPrimary,
-                  shadows: [
-                    Shadow(
-                      offset: const Offset(0, 1),
-                      blurRadius: 2.0,
-                      color: colors.backgroundPrimary.withValues(alpha: 0.3),
-                    ),
-                  ],
+              child: Opacity(
+                opacity: isPast ? 0.5 : 1.0, // 50% opacity for past dates
+                child: Text(
+                  date.day.toString(),
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeL,
+                    fontWeight: TypographyTokens.bold,
+                    color: colors.textPrimary,
+                    shadows: [
+                      Shadow(
+                        offset: const Offset(0, 1),
+                        blurRadius: 2.0,
+                        color: colors.backgroundPrimary.withValues(alpha: 0.3),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -506,13 +522,13 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 child: Container(
                   padding: const EdgeInsets.all(SpacingTokens.xxs),
                   decoration: BoxDecoration(
-                    color: colors.buttonPrimary,
+                    color: colors.textPrimary,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     isRangeStart ? Icons.login : Icons.logout,
                     size: IconSizeTokens.xs,
-                    color: colors.buttonPrimaryText,
+                    color: colors.backgroundPrimary,
                   ),
                 ),
               ),
@@ -587,10 +603,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   }
 
   void _onDateTapped(DateTime date, CalendarDateInfo dateInfo, Map<String, CalendarDateInfo> data) {
-    if (dateInfo.status != DateStatus.available &&
-        dateInfo.status != DateStatus.partialCheckIn &&
-        dateInfo.status != DateStatus.partialCheckOut) {
-      // Can't select booked, pending, blocked, or disabled dates
+    // Only allow available dates to be selected
+    // partialCheckIn, partialCheckOut, and pending are blocked from selection
+    if (dateInfo.status != DateStatus.available) {
       return;
     }
 
@@ -634,17 +649,33 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     widget.onRangeSelected?.call(_rangeStart, _rangeEnd);
   }
 
-  /// Check if there are any booked or pending dates between start and end (inclusive)
+  /// Check if there are any booked, pending, or partial dates between start and end (inclusive)
+  /// Partial dates (partialCheckIn/partialCheckOut) are allowed at endpoints but not in between
   bool _hasBlockedDatesInRange(DateTime start, DateTime end, Map<String, CalendarDateInfo> data) {
     DateTime current = start;
     while (current.isBefore(end) || _isSameDay(current, end)) {
       final key = _getDateKey(current);
       final dateInfo = data[key];
 
-      if (dateInfo != null &&
-          (dateInfo.status == DateStatus.booked ||
-           dateInfo.status == DateStatus.pending)) {
-        return true; // Found a blocked date
+      if (dateInfo != null) {
+        // Check if this date has a blocking status
+        final isBlocked = dateInfo.status == DateStatus.booked ||
+            dateInfo.status == DateStatus.pending ||
+            dateInfo.status == DateStatus.partialCheckIn ||
+            dateInfo.status == DateStatus.partialCheckOut ||
+            dateInfo.status == DateStatus.blocked;
+
+        if (isBlocked) {
+          // Allow partial dates only at the exact start or end points
+          // This enables: check-in on a check-out day, and check-out on a check-in day
+          final isEndpoint = _isSameDay(current, start) || _isSameDay(current, end);
+          final isPartialDate = dateInfo.status == DateStatus.partialCheckIn ||
+              dateInfo.status == DateStatus.partialCheckOut;
+
+          if (!isEndpoint || !isPartialDate) {
+            return true; // Found a blocked date that's not an allowed endpoint
+          }
+        }
       }
 
       current = current.add(const Duration(days: 1));
@@ -680,6 +711,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       case DateStatus.blocked:
       case DateStatus.disabled:
         return colors.borderDefault;
+      case DateStatus.pastReservation:
+        return colors.statusPastReservationBorder;
     }
   }
 }

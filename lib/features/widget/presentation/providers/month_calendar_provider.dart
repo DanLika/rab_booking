@@ -65,8 +65,8 @@ final monthCalendarDataProvider = FutureProvider.family<Map<String, CalendarDate
 
           DateStatus status;
           if (isPast) {
-            // Past dates should remain disabled regardless of booking status
-            status = DateStatus.disabled;
+            // Past dates that were part of a reservation show as pastReservation (red with opacity)
+            status = DateStatus.pastReservation;
           } else if (isCheckIn && isCheckOut) {
             status = DateStatus.booked;
           } else if (isCheckIn) {

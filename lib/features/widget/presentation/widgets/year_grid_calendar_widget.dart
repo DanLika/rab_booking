@@ -92,10 +92,13 @@ class _YearGridCalendarWidgetState
   }
 
   Widget _buildHeader() {
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     return Container(
       padding: SpacingTokens.allM,
       decoration: BoxDecoration(
-        color: ColorTokens.light.backgroundSecondary,
+        color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularRounded,
         boxShadow: ShadowTokens.light,
       ),
@@ -103,7 +106,7 @@ class _YearGridCalendarWidgetState
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left),
+            icon: Icon(Icons.chevron_left, color: colors.textPrimary),
             onPressed: () {
               setState(() {
                 _currentYear--;
@@ -115,7 +118,7 @@ class _YearGridCalendarWidgetState
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeL,
               fontWeight: TypographyTokens.semiBold,
-              color: ColorTokens.light.textPrimary,
+              color: colors.textPrimary,
             ),
           ),
           Container(
@@ -125,7 +128,7 @@ class _YearGridCalendarWidgetState
             ),
             decoration: BoxDecoration(
               border: Border.all(
-                color: ColorTokens.light.borderDefault,
+                color: colors.borderDefault,
                 width: BorderTokens.widthThin,
               ),
               borderRadius: BorderTokens.circularSubtle,
@@ -134,6 +137,8 @@ class _YearGridCalendarWidgetState
               child: DropdownButton<int>(
                 value: _currentYear,
                 isDense: true,
+                dropdownColor: colors.backgroundSecondary,
+                style: TextStyle(color: colors.textPrimary),
                 items: List.generate(10, (index) {
                   final year = DateTime.now().year - 2 + index;
                   return DropdownMenuItem(
@@ -152,7 +157,7 @@ class _YearGridCalendarWidgetState
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right),
+            icon: Icon(Icons.chevron_right, color: colors.textPrimary),
             onPressed: () {
               setState(() {
                 _currentYear++;
@@ -165,17 +170,20 @@ class _YearGridCalendarWidgetState
   }
 
   Widget _buildLegend() {
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildLegendItem('Available', ColorTokens.light.statusAvailableBackground),
+        _buildLegendItem('Available', colors.statusAvailableBackground, colors),
         const SizedBox(width: SpacingTokens.l),
-        _buildLegendItem('Booked', ColorTokens.light.statusBookedBackground),
+        _buildLegendItem('Booked', colors.statusBookedBackground, colors),
       ],
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
+  Widget _buildLegendItem(String label, Color color, WidgetColorScheme colors) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -185,7 +193,7 @@ class _YearGridCalendarWidgetState
           decoration: BoxDecoration(
             color: color,
             border: Border.all(
-              color: ColorTokens.light.borderDefault,
+              color: colors.borderDefault,
               width: BorderTokens.widthThin,
             ),
             borderRadius: BorderTokens.circularSubtle,
@@ -196,7 +204,7 @@ class _YearGridCalendarWidgetState
           label,
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeM,
-            color: ColorTokens.light.textPrimary,
+            color: colors.textPrimary,
           ),
         ),
       ],
@@ -244,6 +252,9 @@ class _YearGridCalendarWidgetState
   }
 
   Widget _buildDayNumbersHeader(double cellSize, double monthLabelWidth) {
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     return Row(
       children: [
         SizedBox(width: monthLabelWidth),
@@ -257,7 +268,7 @@ class _YearGridCalendarWidgetState
                 dayNumber.toString(),
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeXS2,
-                  color: ColorTokens.light.textSecondary,
+                  color: colors.textSecondary,
                   fontWeight: TypographyTokens.medium,
                 ),
               ),
@@ -290,7 +301,7 @@ class _YearGridCalendarWidgetState
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeM,
                 fontWeight: TypographyTokens.semiBold,
-                color: ColorTokens.light.textPrimary,
+                color: colors.textPrimary,
               ),
             ),
           ),
@@ -306,9 +317,9 @@ class _YearGridCalendarWidgetState
                 height: cellSize,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: ColorTokens.light.backgroundTertiary,
+                    color: colors.backgroundTertiary,
                     border: Border.all(
-                      color: ColorTokens.light.borderLight,
+                      color: colors.borderLight,
                       width: BorderTokens.widthThin,
                     ),
                     borderRadius: BorderTokens.circularTiny, // Subtle radius for softer visual
@@ -361,13 +372,13 @@ class _YearGridCalendarWidgetState
                   height: cellSize,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isPastDate ? ColorTokens.light.backgroundTertiary : null,
+                      color: isPastDate ? colors.backgroundTertiary : null,
                       border: Border.all(
                         color: isSelected
-                            ? ColorTokens.light.borderFocus // Black for selection
+                            ? colors.borderFocus // Black for selection
                             : (isInRange
-                                ? ColorTokens.light.borderMedium
-                                : ColorTokens.light.borderDefault),
+                                ? colors.borderMedium
+                                : colors.borderDefault),
                         width: isSelected ? BorderTokens.widthThick : BorderTokens.widthMedium,
                       ),
                       borderRadius: BorderTokens.circularTiny, // Subtle radius for softer visual
@@ -381,7 +392,7 @@ class _YearGridCalendarWidgetState
                             child: Icon(
                               Icons.block,
                               size: cellSize * OpacityTokens.mostlyVisible,
-                              color: ColorTokens.light.textDisabled,
+                              color: colors.textDisabled,
                             ),
                           )
                         : CustomPaint(
@@ -490,12 +501,14 @@ class _YearGridCalendarWidgetState
         if (nights < widget.minStayNights) {
           // Show error message
           if (mounted) {
+            final isDarkMode = ref.read(themeProvider);
+            final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
                   'Minimum stay is ${widget.minStayNights} ${widget.minStayNights == 1 ? 'night' : 'nights'}. You selected $nights ${nights == 1 ? 'night' : 'nights'}.',
                 ),
-                backgroundColor: ColorTokens.light.error,
+                backgroundColor: colors.error,
                 duration: AnimationTokens.notification,
               ),
             );
@@ -563,12 +576,14 @@ class _YearGridCalendarWidgetState
         final nights = _rangeEnd!.difference(_rangeStart!).inDays;
         if (nights < widget.minStayNights) {
           if (mounted) {
+            final isDarkMode = ref.read(themeProvider);
+            final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
                   'Minimum stay is ${widget.minStayNights} ${widget.minStayNights == 1 ? 'night' : 'nights'}.',
                 ),
-                backgroundColor: ColorTokens.light.error,
+                backgroundColor: colors.error,
                 duration: AnimationTokens.fast,
               ),
             );
@@ -632,9 +647,9 @@ class _YearGridCalendarWidgetState
               width: tooltipWidth,
               padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s2),
               decoration: BoxDecoration(
-                color: ColorTokens.light.backgroundPrimary,
+                color: colors.backgroundPrimary,
                 borderRadius: BorderTokens.circularRounded,
-                border: Border.all(color: ColorTokens.light.borderDefault, width: BorderTokens.widthThin),
+                border: Border.all(color: colors.borderDefault, width: BorderTokens.widthThin),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -646,7 +661,7 @@ class _YearGridCalendarWidgetState
                     style: TextStyle(
                       fontWeight: TypographyTokens.bold,
                       fontSize: TypographyTokens.fontSizeM,
-                      color: ColorTokens.light.textPrimary,
+                      color: colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: SpacingTokens.s),
@@ -668,7 +683,7 @@ class _YearGridCalendarWidgetState
                         _getStatusLabel(status),
                         style: TextStyle(
                           fontSize: TypographyTokens.fontSizeS2,
-                          color: ColorTokens.light.textSecondary,
+                          color: colors.textSecondary,
                         ),
                       ),
                     ],
@@ -681,7 +696,7 @@ class _YearGridCalendarWidgetState
                       style: TextStyle(
                         fontSize: TypographyTokens.fontSizeM,
                         fontWeight: TypographyTokens.semiBold,
-                        color: ColorTokens.light.success,
+                        color: colors.success,
                       ),
                     ),
                   ],
@@ -722,10 +737,10 @@ class _YearGridCalendarWidgetState
               child: Container(
                 padding: const EdgeInsets.all(SpacingTokens.m2),
                 decoration: BoxDecoration(
-                  color: ColorTokens.light.backgroundPrimary,
+                  color: colors.backgroundPrimary,
                   borderRadius: BorderTokens.circularRounded,
-                  border: Border.all(color: ColorTokens.light.borderDefault, width: BorderTokens.widthThin),
-                  boxShadow: ColorTokens.light.shadowMedium,
+                  border: Border.all(color: colors.borderDefault, width: BorderTokens.widthThin),
+                  boxShadow: colors.shadowMedium,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -740,14 +755,14 @@ class _YearGridCalendarWidgetState
                           style: TextStyle(
                             fontWeight: TypographyTokens.bold,
                             fontSize: TypographyTokens.fontSizeL,
-                            color: ColorTokens.light.textPrimary,
+                            color: colors.textPrimary,
                           ),
                         ),
                         SizedBox(
                           width: 48,
                           height: 48,
                           child: IconButton(
-                            icon: const Icon(Icons.close, size: IconSizeTokens.medium),
+                            icon: Icon(Icons.close, size: IconSizeTokens.medium, color: colors.textPrimary),
                             onPressed: () {
                               setState(() {
                                 _tappedDate = null;
@@ -758,7 +773,7 @@ class _YearGridCalendarWidgetState
                         ),
                       ],
                     ),
-                    Divider(height: SpacingTokens.m, color: ColorTokens.light.borderDefault),
+                    Divider(height: SpacingTokens.m, color: colors.borderDefault),
                     // Status
                     Row(
                       children: [
@@ -777,7 +792,7 @@ class _YearGridCalendarWidgetState
                           style: TextStyle(
                             fontSize: TypographyTokens.fontSizeM2,
                             fontWeight: TypographyTokens.medium,
-                            color: ColorTokens.light.textPrimary,
+                            color: colors.textPrimary,
                           ),
                         ),
                       ],
@@ -791,7 +806,7 @@ class _YearGridCalendarWidgetState
                           vertical: SpacingTokens.s,
                         ),
                         decoration: BoxDecoration(
-                          color: ColorTokens.light.statusAvailableBackground,
+                          color: colors.statusAvailableBackground,
                           borderRadius: BorderTokens.circularSmall,
                         ),
                         child: Row(
@@ -800,7 +815,7 @@ class _YearGridCalendarWidgetState
                             Icon(
                               Icons.euro,
                               size: IconSizeTokens.small,
-                              color: ColorTokens.light.success,
+                              color: colors.success,
                             ),
                             const SizedBox(width: SpacingTokens.xs),
                             Text(
@@ -808,7 +823,7 @@ class _YearGridCalendarWidgetState
                               style: TextStyle(
                                 fontSize: TypographyTokens.fontSizeM2,
                                 fontWeight: TypographyTokens.bold,
-                                color: ColorTokens.light.success,
+                                color: colors.success,
                               ),
                             ),
                           ],
@@ -822,7 +837,7 @@ class _YearGridCalendarWidgetState
                         'Tap to select this date',
                         style: TextStyle(
                           fontSize: TypographyTokens.fontSizeS,
-                          color: ColorTokens.light.textSecondary,
+                          color: colors.textSecondary,
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -855,6 +870,8 @@ class _YearGridCalendarWidgetState
         return 'Check-in Day';
       case DateStatus.partialCheckOut:
         return 'Check-out Day';
+      case DateStatus.pastReservation:
+        return 'Past Reservation';
     }
   }
 

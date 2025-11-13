@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:uuid/uuid.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import '../../core/constants/enums.dart';
 import '../../shared/models/booking_model.dart';
 import 'logging_service.dart';
@@ -9,10 +9,13 @@ import 'logging_service.dart';
 /// This service creates and manages bookings before payment processing
 class BookingService {
   final FirebaseFirestore _firestore;
-  final _uuid = const Uuid();
+  final FirebaseFunctions _functions;
 
-  BookingService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  BookingService({
+    FirebaseFirestore? firestore,
+    FirebaseFunctions? functions,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _functions = functions ?? FirebaseFunctions.instance;
 
   /// Create a new booking in Firestore
   ///
@@ -59,17 +62,6 @@ class BookingService {
       LoggingService.logDebug('   Total: €$totalPrice');
       LoggingService.logDebug('   Payment: $paymentOption via $paymentMethod');
 
-      // Generate booking ID and reference
-      final bookingId = _uuid.v4();
-      final bookingReference = _generateBookingReference();
-
-      // Calculate deposit amount (20%, 100%, or 0 for no payment)
-      final depositAmount = paymentOption == 'none'
-          ? 0.0
-          : paymentOption == 'deposit'
-          ? totalPrice * 0.2
-          : totalPrice;
-
       // Determine initial status based on widget mode and payment method
       BookingStatus status;
       String paymentStatusValue;
@@ -89,9 +81,36 @@ class BookingService {
         paymentStatusValue = 'pending';
       }
 
-      // Create booking model
+      // Call atomic Cloud Function to prevent race conditions
+      LoggingService.logDebug('   Calling createBookingAtomic Cloud Function...');
+
+      final callable = _functions.httpsCallable('createBookingAtomic');
+      final result = await callable.call<Map<String, dynamic>>({
+        'unitId': unitId,
+        'propertyId': propertyId,
+        'ownerId': ownerId,
+        'checkIn': checkIn.toIso8601String(),
+        'checkOut': checkOut.toIso8601String(),
+        'guestName': guestName,
+        'guestEmail': guestEmail,
+        'guestPhone': guestPhone,
+        'guestCount': guestCount,
+        'totalPrice': totalPrice,
+        'paymentOption': paymentOption,
+        'paymentMethod': paymentMethod,
+        'requireOwnerApproval': requireOwnerApproval,
+        'notes': notes,
+      });
+
+      // Extract booking ID and reference from Cloud Function response
+      final responseData = result.data;
+      final createdBookingId = responseData['bookingId'] as String;
+      final createdBookingRef = responseData['bookingReference'] as String;
+      final createdDepositAmount = (responseData['depositAmount'] as num).toDouble();
+
+      // Create booking model with returned data
       final booking = BookingModel(
-        id: bookingId,
+        id: createdBookingId,
         unitId: unitId,
         ownerId: ownerId,
         guestName: guestName,
@@ -101,7 +120,7 @@ class BookingService {
         checkOut: checkOut,
         status: status,
         totalPrice: totalPrice,
-        advanceAmount: depositAmount,
+        advanceAmount: createdDepositAmount,
         paymentMethod: paymentMethod,
         paymentStatus: paymentStatusValue,
         source: 'widget',
@@ -110,28 +129,34 @@ class BookingService {
         createdAt: DateTime.now(),
       );
 
-      // Save to Firestore with additional fields needed by Cloud Functions
-      final docRef = _firestore.collection('bookings').doc(bookingId);
-      final bookingData = {
-        ...booking.toJson(),
-        'booking_reference':
-            bookingReference, // Required by Stripe Cloud Function
-        'property_id': propertyId, // Required by Stripe Cloud Function
-        'deposit_amount': depositAmount, // Required by Stripe Cloud Function
-        'require_owner_approval':
-            requireOwnerApproval, // For pending approval workflow
-      };
-
-      await docRef.set(bookingData);
-
       LoggingService.logSuccess(
-        '[BookingService] Booking created: $bookingReference (ID: $bookingId)',
+        '[BookingService] Booking created atomically: $createdBookingRef (ID: $createdBookingId)',
       );
       LoggingService.logDebug(
-        '   Deposit amount: €${depositAmount.toStringAsFixed(2)}',
+        '   Deposit amount: €${createdDepositAmount.toStringAsFixed(2)}',
       );
 
       return booking;
+    } on FirebaseFunctionsException catch (e) {
+      // Handle race condition - dates no longer available
+      if (e.code == 'already-exists') {
+        await LoggingService.logError(
+          '[BookingService] Booking conflict - dates unavailable',
+          e,
+        );
+        throw BookingConflictException(
+          'The selected dates are no longer available. '
+          'Another booking was made while you were completing your reservation. '
+          'Please select different dates.',
+        );
+      }
+
+      // Other Firebase Functions errors
+      await LoggingService.logError(
+        '[BookingService] Cloud Function error',
+        e,
+      );
+      throw BookingServiceException('Failed to create booking: ${e.message}');
     } catch (e) {
       await LoggingService.logError(
         '[BookingService] Error creating booking',
@@ -236,25 +261,6 @@ class BookingService {
     }
   }
 
-  /// Generate unique booking reference
-  ///
-  /// Format: BK-YYYYMMDD-XXXX
-  /// Example: BK-20250127-3456
-  String _generateBookingReference() {
-    final now = DateTime.now();
-    final dateStr =
-        '${now.year}'
-        '${now.month.toString().padLeft(2, '0')}'
-        '${now.day.toString().padLeft(2, '0')}';
-
-    // Generate 4-digit random number based on timestamp
-    final random = (now.millisecond * 1000 + now.second)
-        .toString()
-        .padLeft(4, '0')
-        .substring(0, 4);
-
-    return 'BK-$dateStr-$random';
-  }
 }
 
 /// Custom exception for booking service errors
@@ -265,4 +271,14 @@ class BookingServiceException implements Exception {
 
   @override
   String toString() => 'BookingServiceException: $message';
+}
+
+/// Exception thrown when booking dates are no longer available (race condition)
+class BookingConflictException implements Exception {
+  final String message;
+
+  BookingConflictException(this.message);
+
+  @override
+  String toString() => 'BookingConflictException: $message';
 }

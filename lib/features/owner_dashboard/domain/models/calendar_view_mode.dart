@@ -1,22 +1,18 @@
 /// Calendar view mode for owner dashboard
 ///
-/// Defines the three available calendar views:
+/// Defines the two available calendar views:
 /// - week: 7-day grid view (Monday-Sunday)
-/// - month: 28-31 day grid view
 /// - timeline: Gantt-style timeline view with booking blocks
 enum CalendarViewMode {
   week,
-  month,
   timeline;
 
   String get displayName {
     switch (this) {
       case CalendarViewMode.week:
-        return 'Week';
-      case CalendarViewMode.month:
-        return 'Month';
+        return 'Tjedni prikaz';
       case CalendarViewMode.timeline:
-        return 'Timeline';
+        return 'Gantt prikaz';
     }
   }
 
@@ -24,8 +20,6 @@ enum CalendarViewMode {
     switch (this) {
       case CalendarViewMode.week:
         return '/calendar/week';
-      case CalendarViewMode.month:
-        return '/calendar/month';
       case CalendarViewMode.timeline:
         return '/calendar/timeline';
     }
@@ -39,8 +33,6 @@ enum CalendarViewMode {
     switch (value) {
       case 'week':
         return CalendarViewMode.week;
-      case 'month':
-        return CalendarViewMode.month;
       case 'timeline':
         return CalendarViewMode.timeline;
       default:

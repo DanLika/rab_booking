@@ -27,7 +27,6 @@ class CalendarViewSwitcher extends StatelessWidget {
         onSelected: onViewChanged,
         itemBuilder: (context) => [
           _buildMenuItem(CalendarViewMode.week, Icons.view_week),
-          _buildMenuItem(CalendarViewMode.month, Icons.calendar_month),
           _buildMenuItem(CalendarViewMode.timeline, Icons.view_timeline),
         ],
         child: Container(
@@ -62,17 +61,12 @@ class CalendarViewSwitcher extends StatelessWidget {
         ButtonSegment<CalendarViewMode>(
           value: CalendarViewMode.week,
           icon: Icon(Icons.view_week, size: 18),
-          label: Text('Week'),
-        ),
-        ButtonSegment<CalendarViewMode>(
-          value: CalendarViewMode.month,
-          icon: Icon(Icons.calendar_month, size: 18),
-          label: Text('Month'),
+          label: Text('Tjedni'),
         ),
         ButtonSegment<CalendarViewMode>(
           value: CalendarViewMode.timeline,
           icon: Icon(Icons.view_timeline, size: 18),
-          label: Text('Timeline'),
+          label: Text('Gantt'),
         ),
       ],
       selected: {currentView},
@@ -129,8 +123,6 @@ class CalendarViewSwitcher extends StatelessWidget {
     switch (mode) {
       case CalendarViewMode.week:
         return Icons.view_week;
-      case CalendarViewMode.month:
-        return Icons.calendar_month;
       case CalendarViewMode.timeline:
         return Icons.view_timeline;
     }

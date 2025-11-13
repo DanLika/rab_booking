@@ -239,3 +239,19 @@ class UnknownException extends AppException {
     super.stackTrace,
   });
 }
+
+// ============================================================================
+// BOOKING EXCEPTIONS
+// ============================================================================
+
+/// Exception for dates that are no longer available (Bug #73 Fix)
+/// Thrown when price calculation or booking attempt is made for dates
+/// that have been booked by another user in the meantime
+class DatesNotAvailableException extends AppException {
+  const DatesNotAvailableException({
+    super.message = 'Selected dates are no longer available',
+    super.userMessage = 'Sorry, these dates were just booked by another guest. Please select different dates.',
+    super.originalError,
+    super.stackTrace,
+  });
+}

@@ -127,6 +127,16 @@ class SplitDayCalendarPainter extends CustomPainter {
 
         // Diagonal line removed for cleaner visual - triangles are self-explanatory
         break;
+
+      case DateStatus.partialBoth:
+        // Turnover day: Both check-out and check-in on same day
+        // Property is fully occupied - render as solid booked
+        paint.color = status.getColor(colors);
+        canvas.drawRect(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          paint,
+        );
+        break;
     }
 
     // Draw range overlay with reduced opacity if date is in selected range

@@ -77,7 +77,12 @@ class _OwnerMonthCalendarWidgetState
 
             // Month calendar for selected unit
             if (_selectedUnitId != null)
-              Expanded(child: MonthCalendarWidget(unitId: _selectedUnitId!))
+              Expanded(
+                child: MonthCalendarWidget(
+                  propertyId: units.firstWhere((u) => u.id == _selectedUnitId).propertyId,
+                  unitId: _selectedUnitId!,
+                ),
+              )
             else
               const Expanded(child: Center(child: Text('Odaberite jedinicu'))),
           ],

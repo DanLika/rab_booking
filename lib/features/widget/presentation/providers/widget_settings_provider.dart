@@ -85,14 +85,12 @@ final defaultWidgetSettingsProvider = Provider<WidgetSettings>((ref) {
     widgetMode:
         WidgetMode.bookingPending, // Default: simple booking without payment
     contactOptions: const ContactOptions(
-      showPhone: true,
       customMessage: 'Kontaktirajte nas za rezervaciju!',
     ),
     emailConfig:
         const EmailNotificationConfig(), // Default disabled email config
     taxLegalConfig: const TaxLegalConfig(), // Default enabled tax/legal config
     requireOwnerApproval: true, // Default: require approval
-    cancellationDeadlineHours: 48,
     createdAt: DateTime.now(),
     updatedAt: DateTime.now(),
   );

@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/models/booking_model.dart';
 import 'year_calendar_provider.dart';
-import 'week_calendar_provider.dart';
 import 'month_calendar_provider.dart';
 
 /// Provider for Firebase realtime bookings stream for a specific unit
@@ -31,9 +30,8 @@ final realtimeCalendarDataProvider = StreamProvider.family<bool, String>((ref, u
       .where('unit_id', isEqualTo: unitId)
       .snapshots()
       .map((snapshot) {
-    // Invalidate all calendar providers when bookings change
+    // Invalidate calendar providers when bookings change
     ref.invalidate(yearCalendarDataProvider);
-    ref.invalidate(weekCalendarDataProvider);
     ref.invalidate(monthCalendarDataProvider);
 
     return true;

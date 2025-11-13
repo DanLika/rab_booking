@@ -66,19 +66,23 @@ class ColorTokens {
   static const Color teal50 = Color(0xFFF0FDFA);
   static const Color teal100 = Color(0xFFCCF5E8);
   static const Color teal200 = Color(0xFFD1FAE5);
+  static const Color teal300 = Color(0xFF83E7BF); // Goldilocks - medium mint (between 200 and 400)
   static const Color teal400 = Color(0xFF34D399);
   static const Color teal500 = Color(0xFF14B8A6);
   static const Color teal600 = Color(0xFF0D9488);
   static const Color teal700 = Color(0xFF0F766E);
+  static const Color teal800 = Color(0xFF065F46); // Dark forest green for dark theme
   static const Color teal900 = Color(0xFF134E4A);
 
   // Status colors - Pink/Red (Booked)
   static const Color pink100 = Color(0xFFFFD4E5);
   static const Color pink200 = Color(0xFFFEE2E2);
+  static const Color pink300 = Color(0xFFFBAAAA); // Goldilocks - medium coral (between 200 and 400)
   static const Color pink400 = Color(0xFFF87171);
   static const Color pink500 = Color(0xFFEC4899);
   static const Color pink600 = Color(0xFFDB2777);
   static const Color pink700 = Color(0xFFEF4444);
+  static const Color pink800 = Color(0xFF7C2D12); // Dark burgundy/maroon for dark theme
   static const Color pink900 = Color(0xFF7F1D1D);
 
   // Status colors - Amber (Pending/Warning)
@@ -306,19 +310,19 @@ class LightColorScheme implements WidgetColorScheme {
   @override
   Color get info => ColorTokens.azure600;
 
-  // Calendar status - Modern mint/pink
+  // Calendar status - Light theme: Goldilocks srednje nijanse (balans između estetike i pristupačnosti)
   @override
-  Color get statusAvailableBackground => ColorTokens.teal100; // Light mint
+  Color get statusAvailableBackground => ColorTokens.teal300; // Medium mint - Goldilocks approach
   @override
-  Color get statusAvailableBorder => ColorTokens.teal500;
+  Color get statusAvailableBorder => ColorTokens.teal600; // Medium border
   @override
-  Color get statusAvailableText => ColorTokens.teal600;
+  Color get statusAvailableText => ColorTokens.teal900; // Dark text for contrast
   @override
-  Color get statusBookedBackground => ColorTokens.pink100; // Light pink
+  Color get statusBookedBackground => ColorTokens.pink300; // Medium coral - Goldilocks approach
   @override
-  Color get statusBookedBorder => ColorTokens.pink500;
+  Color get statusBookedBorder => ColorTokens.pink600; // Medium border
   @override
-  Color get statusBookedText => ColorTokens.pink600;
+  Color get statusBookedText => ColorTokens.pink700; // Dark text for contrast
   @override
   Color get statusPendingBackground => ColorTokens.amber200;
   @override
@@ -341,10 +345,10 @@ class LightColorScheme implements WidgetColorScheme {
   Color get statusDisabledText => ColorTokens.grey300;
   @override
   Color get statusPastReservationBackground =>
-      ColorTokens.coral500.withValues(alpha: 0.5); // Red with 50% opacity
+      ColorTokens.pink500.withValues(alpha: 0.1); // Very light - 10% opacity
   @override
   Color get statusPastReservationBorder =>
-      ColorTokens.coral600.withValues(alpha: 0.5); // Darker red border with 50% opacity
+      ColorTokens.pink500.withValues(alpha: 0.1); // Very light border - 10% opacity
 
   // Buttons - Black primary
   @override
@@ -510,19 +514,19 @@ class DarkColorScheme implements WidgetColorScheme {
   @override
   Color get info => ColorTokens.azure500;
 
-  // Calendar status - Dark mode adjusted
+  // Calendar status - Dark theme: saturisane živopisne boje (zelena + crvena)
   @override
-  Color get statusAvailableBackground => ColorTokens.teal900;
+  Color get statusAvailableBackground => ColorTokens.teal500; // Vibrant teal
   @override
-  Color get statusAvailableBorder => ColorTokens.teal500;
+  Color get statusAvailableBorder => ColorTokens.teal300; // Lighter border for contrast
   @override
-  Color get statusAvailableText => ColorTokens.teal400;
+  Color get statusAvailableText => ColorTokens.pureWhite; // White text for good contrast
   @override
-  Color get statusBookedBackground => ColorTokens.pink900;
+  Color get statusBookedBackground => ColorTokens.pink700; // TRUE RED (ne pink/magenta)
   @override
-  Color get statusBookedBorder => ColorTokens.pink400;
+  Color get statusBookedBorder => ColorTokens.pink300; // Lighter border for contrast
   @override
-  Color get statusBookedText => ColorTokens.pink400;
+  Color get statusBookedText => ColorTokens.pureWhite; // White text for good contrast
   @override
   Color get statusPendingBackground => ColorTokens.amber900;
   @override
@@ -545,10 +549,10 @@ class DarkColorScheme implements WidgetColorScheme {
   Color get statusDisabledText => ColorTokens.grey600;
   @override
   Color get statusPastReservationBackground =>
-      ColorTokens.coral500.withValues(alpha: 0.5); // Red with 50% opacity
+      ColorTokens.pink500.withValues(alpha: 0.1); // Very light - 10% opacity
   @override
   Color get statusPastReservationBorder =>
-      ColorTokens.coral600.withValues(alpha: 0.5); // Darker red border with 50% opacity
+      ColorTokens.pink500.withValues(alpha: 0.1); // Very light border - 10% opacity
 
   // Buttons
   @override

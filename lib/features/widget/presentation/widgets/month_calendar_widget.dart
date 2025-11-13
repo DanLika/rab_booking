@@ -2,22 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/calendar_date_status.dart';
+import '../../domain/models/calendar_view_type.dart';
 import '../providers/month_calendar_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/widget_settings_provider.dart';
+import '../providers/realtime_booking_calendar_provider.dart';
 import 'split_day_calendar_painter.dart';
 import 'calendar_hover_tooltip.dart';
-import 'calendar_view_switcher.dart';
 import '../theme/responsive_helper.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/theme/custom_icons_tablericons.dart';
 
 class MonthCalendarWidget extends ConsumerStatefulWidget {
+  final String propertyId;
   final String unitId;
   final Function(DateTime? start, DateTime? end)? onRangeSelected;
 
   const MonthCalendarWidget({
     super.key,
+    required this.propertyId,
     required this.unitId,
     this.onRangeSelected,
   });
@@ -36,8 +40,14 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // Get minNights from widget settings for gap blocking
+    final widgetSettings = ref.watch(
+      widgetSettingsProvider((widget.propertyId, widget.unitId)),
+    );
+    final minNights = widgetSettings.value?.minNights ?? 1;
+
     final calendarData = ref.watch(
-      monthCalendarDataProvider((widget.unitId, _currentMonth)),
+      monthCalendarDataProvider((widget.unitId, _currentMonth, minNights)),
     );
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
@@ -71,6 +81,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                   error: (error, stack) => Center(child: Text('Error: $error')),
                 ),
               ),
+              // Compact legend/info banner below calendar
+              if (minNights > 1)
+                _buildCompactLegend(minNights, colors, isDarkMode),
             ],
           ),
           // Hover tooltip overlay (desktop) - highest z-index
@@ -101,8 +114,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Week view tab hidden but code kept for future use
-          // _buildViewTab('Week', TablerIcons.kviewWeek, CalendarViewType.week, currentView == CalendarViewType.week, isSmallScreen, colors, isDarkMode),
           _buildViewTab(
             'Month',
             TablerIcons.ktableFilled,
@@ -281,7 +292,13 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 _currentMonth.year,
                 _currentMonth.month - 1,
               );
+              // Bug #70 Fix: Clear range selection when navigating months
+              // to prevent cross-month range corruption
+              _rangeStart = null;
+              _rangeEnd = null;
             });
+            // Notify parent that range was cleared
+            widget.onRangeSelected?.call(null, null);
           },
         ),
         Text(
@@ -311,7 +328,13 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 _currentMonth.year,
                 _currentMonth.month + 1,
               );
+              // Bug #70 Fix: Clear range selection when navigating months
+              // to prevent cross-month range corruption
+              _rangeStart = null;
+              _rangeEnd = null;
             });
+            // Notify parent that range was cleared
+            widget.onRangeSelected?.call(null, null);
           },
         ),
       ],
@@ -529,7 +552,10 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       onHover: (event) => setState(() => _mousePosition = event.position),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => _onDateTapped(date, dateInfo, data),
+        // Disable tap in calendar_only mode (when onRangeSelected is null)
+        onTap: widget.onRangeSelected != null
+            ? () => _onDateTapped(date, dateInfo, data, colors)
+            : null,
         child: Container(
           margin: const EdgeInsets.all(BorderTokens.widthThin),
           decoration: BoxDecoration(
@@ -686,10 +712,107 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     DateTime date,
     CalendarDateInfo dateInfo,
     Map<String, CalendarDateInfo> data,
+    WidgetColorScheme colors,
   ) {
-    // Only allow available dates to be selected
-    // partialCheckIn, partialCheckOut, and pending are blocked from selection
-    if (dateInfo.status != DateStatus.available) {
+    // Block past dates
+    if (dateInfo.status == DateStatus.disabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Cannot select past dates.',
+            style: TextStyle(color: colors.textPrimary),
+          ),
+          backgroundColor: colors.statusBookedBackground,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // Determine if this is check-in or check-out selection
+    final isSelectingCheckIn =
+        _rangeStart == null || (_rangeStart != null && _rangeEnd != null);
+    final isSelectingCheckOut = _rangeStart != null && _rangeEnd == null;
+
+    // Check advance booking window (only for check-in selection)
+    if (isSelectingCheckIn) {
+      final today = DateTime.now();
+      final todayNormalized = DateTime(today.year, today.month, today.day);
+      final daysInAdvance = date.difference(todayNormalized).inDays;
+
+      // Check minDaysAdvance
+      if (dateInfo.minDaysAdvance != null &&
+          daysInAdvance < dateInfo.minDaysAdvance!) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'This date requires booking at least ${dateInfo.minDaysAdvance} days in advance.',
+              style: TextStyle(color: colors.textPrimary),
+            ),
+            backgroundColor: colors.statusBookedBackground,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+
+      // Check maxDaysAdvance
+      if (dateInfo.maxDaysAdvance != null &&
+          daysInAdvance > dateInfo.maxDaysAdvance!) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'This date can only be booked up to ${dateInfo.maxDaysAdvance} days in advance.',
+              style: TextStyle(color: colors.textPrimary),
+            ),
+            backgroundColor: colors.statusBookedBackground,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+    }
+
+    // Check blockCheckIn/blockCheckOut restrictions
+    if (isSelectingCheckIn && dateInfo.blockCheckIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Check-in is not allowed on this date.',
+            style: TextStyle(color: colors.textPrimary),
+          ),
+          backgroundColor: colors.statusBookedBackground,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    if (isSelectingCheckOut && dateInfo.blockCheckOut) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Check-out is not allowed on this date.',
+            style: TextStyle(color: colors.textPrimary),
+          ),
+          backgroundColor: colors.statusBookedBackground,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // For check-in: allow available and partialCheckOut (checkout day of previous booking)
+    // For check-out: allow available and partialCheckIn (checkin day of next booking)
+    final canSelectForCheckIn =
+        dateInfo.status == DateStatus.available ||
+        dateInfo.status == DateStatus.partialCheckOut;
+    final canSelectForCheckOut =
+        dateInfo.status == DateStatus.available ||
+        dateInfo.status == DateStatus.partialCheckIn;
+
+    if ((isSelectingCheckIn && !canSelectForCheckIn) ||
+        (isSelectingCheckOut && !canSelectForCheckOut)) {
       return;
     }
 
@@ -699,83 +822,105 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         _rangeStart = date;
         _rangeEnd = null;
       } else if (_rangeStart != null && _rangeEnd == null) {
+        // Cannot select same date as check-in and check-out
+        if (_isSameDay(date, _rangeStart!)) {
+          return; // Do nothing if clicking on the same date
+        }
+
         // Complete range - validate no booked dates in between
         final DateTime start = date.isBefore(_rangeStart!)
             ? date
             : _rangeStart!;
         final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
 
-        // Check if there are any booked/pending dates in the range
-        if (_hasBlockedDatesInRange(start, end, data)) {
+        // Get minNights from widget settings (default to 1 if not set)
+        final minNights =
+            ref
+                .read(
+                  widgetSettingsProvider((widget.propertyId, widget.unitId)),
+                )
+                .value
+                ?.minNights ??
+            1;
+
+        // Check minNights validation
+        final selectedNights = end.difference(start).inDays;
+        if (selectedNights < minNights) {
           // Reset selection and show error
           _rangeStart = null;
           _rangeEnd = null;
 
           // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(
-                'Cannot select dates. There are already booked dates in this range.',
+                'Minimum stay is $minNights ${minNights == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
+                style: TextStyle(color: colors.textPrimary),
               ),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
+              backgroundColor: colors.statusBookedBackground,
+              duration: const Duration(seconds: 3),
             ),
           );
           return;
         }
 
-        // No blocked dates, set the range
-        if (date.isBefore(_rangeStart!)) {
-          _rangeEnd = _rangeStart;
-          _rangeStart = date;
-        } else {
-          _rangeEnd = date;
-        }
+        // Bug #72 Fix: Use backend availability check for cross-month validation
+        // Local data map only contains current month - cannot validate dates in other months
+        _validateAndSetRange(start, end, colors);
+      }
+    });
+  }
+
+  /// Bug #72 Fix: Async validation using backend availability check
+  /// This ensures cross-month date ranges are properly validated
+  Future<void> _validateAndSetRange(
+    DateTime start,
+    DateTime end,
+    WidgetColorScheme colors,
+  ) async {
+    // Check availability using backend (works across all months)
+    final isAvailable = await ref.read(
+      checkDateAvailabilityProvider(
+        unitId: widget.unitId,
+        checkIn: start,
+        checkOut: end,
+      ).future,
+    );
+
+    if (!mounted) return;
+
+    if (!isAvailable) {
+      // Reset selection and show error
+      setState(() {
+        _rangeStart = null;
+        _rangeEnd = null;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Cannot select dates. There are already booked dates in this range.',
+            style: TextStyle(color: colors.textPrimary),
+          ),
+          backgroundColor: colors.statusBookedBackground,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // Availability confirmed, set the range
+    setState(() {
+      if (end.isBefore(start)) {
+        _rangeStart = end;
+        _rangeEnd = start;
+      } else {
+        _rangeStart = start;
+        _rangeEnd = end;
       }
     });
 
     widget.onRangeSelected?.call(_rangeStart, _rangeEnd);
-  }
-
-  /// Check if there are any booked, pending, or partial dates between start and end (inclusive)
-  /// Partial dates (partialCheckIn/partialCheckOut) are allowed at endpoints but not in between
-  bool _hasBlockedDatesInRange(
-    DateTime start,
-    DateTime end,
-    Map<String, CalendarDateInfo> data,
-  ) {
-    DateTime current = start;
-    while (current.isBefore(end) || _isSameDay(current, end)) {
-      final key = _getDateKey(current);
-      final dateInfo = data[key];
-
-      if (dateInfo != null) {
-        // Check if this date has a blocking status
-        final isBlocked =
-            dateInfo.status == DateStatus.booked ||
-            dateInfo.status == DateStatus.pending ||
-            dateInfo.status == DateStatus.partialCheckIn ||
-            dateInfo.status == DateStatus.partialCheckOut ||
-            dateInfo.status == DateStatus.blocked;
-
-        if (isBlocked) {
-          // Allow partial dates only at the exact start or end points
-          // This enables: check-in on a check-out day, and check-out on a check-in day
-          final isEndpoint =
-              _isSameDay(current, start) || _isSameDay(current, end);
-          final isPartialDate =
-              dateInfo.status == DateStatus.partialCheckIn ||
-              dateInfo.status == DateStatus.partialCheckOut;
-
-          if (!isEndpoint || !isPartialDate) {
-            return true; // Found a blocked date that's not an allowed endpoint
-          }
-        }
-      }
-
-      current = current.add(const Duration(days: 1));
-    }
-    return false; // No blocked dates found
   }
 
   bool _isDateInRange(DateTime date) {
@@ -800,6 +945,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       case DateStatus.partialCheckOut:
         return colors.statusAvailableBorder;
       case DateStatus.booked:
+      case DateStatus.partialBoth:
         return colors.statusBookedBorder;
       case DateStatus.pending:
         return colors.statusPendingBorder;
@@ -809,5 +955,129 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       case DateStatus.pastReservation:
         return colors.statusPastReservationBorder;
     }
+  }
+
+  /// Build compact legend/info banner below calendar
+  /// Shows minimum stay requirement and color legend
+  Widget _buildCompactLegend(
+    int minNights,
+    WidgetColorScheme colors,
+    bool isDarkMode,
+  ) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isNarrowScreen = screenWidth < 600;
+
+    return Container(
+      margin: const EdgeInsets.only(
+        top: SpacingTokens.s,
+        bottom: SpacingTokens.xs,
+        left: SpacingTokens.xs,
+        right: SpacingTokens.xs,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingTokens.s,
+        vertical: SpacingTokens.xs,
+      ),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderTokens.circularMedium,
+        border: Border.all(color: colors.borderLight),
+      ),
+      child: isNarrowScreen
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Min stay info
+                Row(
+                  children: [
+                    Icon(
+                      Icons.bed_outlined,
+                      size: 14,
+                      color: colors.textSecondary,
+                    ),
+                    const SizedBox(width: SpacingTokens.xxs),
+                    Text(
+                      'Min. stay: $minNights ${minNights == 1 ? 'night' : 'nights'}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: SpacingTokens.xxs),
+                // Color legend
+                _buildColorLegend(colors),
+              ],
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Min stay info
+                Row(
+                  children: [
+                    Icon(
+                      Icons.bed_outlined,
+                      size: 14,
+                      color: colors.textSecondary,
+                    ),
+                    const SizedBox(width: SpacingTokens.xxs),
+                    Text(
+                      'Min. stay: $minNights ${minNights == 1 ? 'night' : 'nights'}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                // Color legend
+                _buildColorLegend(colors),
+              ],
+            ),
+    );
+  }
+
+  /// Build compact color legend with dots
+  Widget _buildColorLegend(WidgetColorScheme colors) {
+    return Wrap(
+      spacing: SpacingTokens.xs,
+      runSpacing: 4,
+      children: [
+        _buildLegendItem('Available', colors.statusAvailableBackground, colors),
+        _buildLegendItem('Booked', colors.statusBookedBackground, colors),
+        _buildLegendItem('Pending', colors.statusPendingBackground, colors),
+        _buildLegendItem('Unavailable', colors.backgroundTertiary, colors),
+      ],
+    );
+  }
+
+  /// Build a single legend item with colored dot
+  Widget _buildLegendItem(
+    String label,
+    Color dotColor,
+    WidgetColorScheme colors,
+  ) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: dotColor,
+            shape: BoxShape.circle,
+            border: Border.all(color: colors.borderDefault, width: 0.5),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, color: colors.textSecondary),
+        ),
+      ],
+    );
   }
 }

@@ -173,6 +173,8 @@ class CalendarHoverTooltip extends StatelessWidget {
         return 'Check-In Day';
       case DateStatus.partialCheckOut:
         return 'Check-Out Day';
+      case DateStatus.partialBoth:
+        return 'Turnover Day';
       case DateStatus.disabled:
         return 'Past Date';
       case DateStatus.pastReservation:
@@ -193,6 +195,8 @@ class CalendarHoverTooltip extends StatelessWidget {
       case DateStatus.partialCheckIn:
       case DateStatus.partialCheckOut:
         return colors.statusPendingBorder;
+      case DateStatus.partialBoth:
+        return colors.statusBookedBorder; // Turnover day - fully booked
       case DateStatus.disabled:
         return colors.textSecondary;
       case DateStatus.pastReservation:

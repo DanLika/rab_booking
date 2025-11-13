@@ -13,9 +13,6 @@ class CalendarTopToolbar extends StatelessWidget {
   final VoidCallback? onSearchTap;
   final VoidCallback? onRefresh;
   final VoidCallback? onFilterTap;
-  final VoidCallback? onAddRoom;
-  final bool? showSummary;
-  final ValueChanged<bool>? onSummaryToggle;
   final int? notificationCount;
   final VoidCallback? onNotificationsTap;
   final bool isCompact;
@@ -31,9 +28,6 @@ class CalendarTopToolbar extends StatelessWidget {
     this.onSearchTap,
     this.onRefresh,
     this.onFilterTap,
-    this.onAddRoom,
-    this.showSummary,
-    this.onSummaryToggle,
     this.notificationCount,
     this.onNotificationsTap,
     this.isCompact = false,
@@ -56,17 +50,6 @@ class CalendarTopToolbar extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 16),
       child: Row(
         children: [
-          // Filter button (mobile only - drawer icon)
-          if (isCompact && onFilterTap != null) ...[
-            IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: onFilterTap,
-              tooltip: 'Filteri',
-              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-            ),
-            const SizedBox(width: 8),
-          ],
-
           // Date range with navigation arrows
           Expanded(
             child: Row(
@@ -131,173 +114,205 @@ class CalendarTopToolbar extends StatelessWidget {
             ),
           ),
 
-          // Action buttons
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Search button
-              if (onSearchTap != null)
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: onSearchTap,
-                  tooltip: 'Pretraži rezervacije',
-                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                ),
+          // Action buttons - FIXED OVERFLOW
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // COMPACT MODE: Only show most important buttons
+                if (isCompact) ...[
+                  // Today button (most important for navigation)
+                  _buildTodayButton(theme),
 
-              // Refresh button
-              if (onRefresh != null)
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: onRefresh,
-                  tooltip: 'Osvježi',
-                  color: Colors.green,
-                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                ),
-
-              // Today button (calendar icon with day badge)
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.calendar_today_outlined),
-                    onPressed: onToday,
-                    tooltip: 'Idi na danas',
-                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                  ),
-                  Positioned(
-                    bottom: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 12,
-                      ),
-                      child: Text(
-                        '${DateTime.now().day}',
-                        style: TextStyle(
-                          color: theme.colorScheme.onPrimary,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                  // Notifications button
+                  if (onNotificationsTap != null)
+                    _buildNotificationsButton(
+                      theme,
+                      onNotificationsTap,
+                      notificationCount,
                     ),
-                  ),
-                ],
-              ),
 
-              // Add booking button (quick action)
-              if (onAddRoom != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: isCompact
-                      ? IconButton(
-                          onPressed: onAddRoom,
-                          icon: const Icon(Icons.add),
-                          tooltip: 'Nova rezervacija',
-                          style: IconButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            foregroundColor: theme.colorScheme.onPrimary,
-                            minimumSize: const Size(44, 44),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                  // Overflow menu for less important actions
+                  if (onSearchTap != null || onRefresh != null || onFilterTap != null)
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert),
+                      tooltip: 'Više opcija',
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'search':
+                            onSearchTap?.call();
+                            break;
+                          case 'refresh':
+                            onRefresh?.call();
+                            break;
+                          case 'filter':
+                            onFilterTap?.call();
+                            break;
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        if (onSearchTap != null)
+                          const PopupMenuItem(
+                            value: 'search',
+                            child: Row(
+                              children: [
+                                Icon(Icons.search, size: 20),
+                                SizedBox(width: 12),
+                                Text('Pretraži'),
+                              ],
                             ),
                           ),
-                          constraints: const BoxConstraints(
-                            minWidth: 44,
-                            minHeight: 44,
-                          ),
-                        )
-                      : ElevatedButton.icon(
-                          onPressed: onAddRoom,
-                          icon: const Icon(Icons.add, size: 20),
-                          label: const Text('Nova rezervacija'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            foregroundColor: theme.colorScheme.onPrimary,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            minimumSize: const Size(44, 44),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        if (onRefresh != null)
+                          const PopupMenuItem(
+                            value: 'refresh',
+                            child: Row(
+                              children: [
+                                Icon(Icons.refresh, size: 20, color: Colors.green),
+                                SizedBox(width: 12),
+                                Text('Osvježi'),
+                              ],
                             ),
                           ),
-                        ),
-                ),
-
-              // Summary toggle switch
-              if (onSummaryToggle != null && showSummary != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!isCompact) ...[
-                        Text(
-                          'Summary',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
+                        if (onFilterTap != null)
+                          const PopupMenuItem(
+                            value: 'filter',
+                            child: Row(
+                              children: [
+                                Icon(Icons.filter_list, size: 20),
+                                SizedBox(width: 12),
+                                Text('Filteri'),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
                       ],
-                      Switch(
-                        value: showSummary!,
-                        onChanged: onSummaryToggle,
-                        activeTrackColor: theme.colorScheme.primary,
-                        activeThumbColor: theme.colorScheme.onPrimary,
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                ] else ...[
+                  // DESKTOP MODE: Show all buttons
+                  // Search button
+                  if (onSearchTap != null)
+                    IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: onSearchTap,
+                      tooltip: 'Pretraži rezervacije',
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    ),
 
-              // Notifications button (with badge)
-              // TODO: Re-enable when NotificationsPanel is implemented
-              // if (notificationCount != null && notificationCount! > 0)
-              //   Stack(
-              //     children: [
-              //       IconButton(
-              //         icon: const Icon(Icons.notifications),
-              //         onPressed: onNotificationsTap,
-              //         tooltip: 'Obavijesti',
-              //         constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-              //       ),
-              //       Positioned(
-              //         right: 8,
-              //         top: 8,
-              //         child: Container(
-              //           padding: const EdgeInsets.all(4),
-              //           decoration: const BoxDecoration(
-              //             color: Colors.red,
-              //             shape: BoxShape.circle,
-              //           ),
-              //           constraints: const BoxConstraints(
-              //             minWidth: 18,
-              //             minHeight: 18,
-              //           ),
-              //           child: Text(
-              //             notificationCount! > 9 ? '9+' : '$notificationCount',
-              //             style: const TextStyle(
-              //               color: Colors.white,
-              //               fontSize: 10,
-              //               fontWeight: FontWeight.bold,
-              //             ),
-              //             textAlign: TextAlign.center,
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-            ],
+                  // Refresh button
+                  if (onRefresh != null)
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: onRefresh,
+                      tooltip: 'Osvježi',
+                      color: Colors.green,
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    ),
+
+                  // Filter button (desktop also gets it now)
+                  if (onFilterTap != null)
+                    IconButton(
+                      icon: const Icon(Icons.filter_list),
+                      onPressed: onFilterTap,
+                      tooltip: 'Filteri',
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    ),
+
+                  // Today button
+                  _buildTodayButton(theme),
+
+                  // Notifications button
+                  if (onNotificationsTap != null)
+                    _buildNotificationsButton(
+                      theme,
+                      onNotificationsTap,
+                      notificationCount,
+                    ),
+                ],
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  /// Build Today button with day badge
+  Widget _buildTodayButton(ThemeData theme) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.calendar_today_outlined),
+          onPressed: onToday,
+          tooltip: 'Idi na danas',
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+        ),
+        Positioned(
+          bottom: 10,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(3),
+            ),
+            constraints: const BoxConstraints(
+              minWidth: 16,
+              minHeight: 12,
+            ),
+            child: Text(
+              '${DateTime.now().day}',
+              style: TextStyle(
+                color: theme.colorScheme.onPrimary,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build Notifications button with badge
+  Widget _buildNotificationsButton(
+    ThemeData theme,
+    VoidCallback? onTap,
+    int? count,
+  ) {
+    return Stack(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          onPressed: onTap,
+          tooltip: 'Obavijesti',
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+        ),
+        if (count != null && count > 0)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 18,
+                minHeight: 18,
+              ),
+              child: Text(
+                count > 9 ? '9+' : '$count',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

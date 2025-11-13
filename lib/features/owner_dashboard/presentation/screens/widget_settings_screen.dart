@@ -249,6 +249,21 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   Future<void> _saveSettings() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Validation: At least one payment method must be enabled in bookingInstant mode
+    if (_selectedMode == WidgetMode.bookingInstant) {
+      final hasPaymentMethod = _stripeEnabled || _bankTransferEnabled || _payOnArrivalEnabled;
+      if (!hasPaymentMethod) {
+        if (mounted) {
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            Exception('Validation failed'),
+            userMessage: 'Mora biti uključen bar jedan način plaćanja u Instant Booking modu',
+          );
+        }
+        return;
+      }
+    }
+
     setState(() => _isSaving = true);
 
     try {
@@ -758,13 +773,37 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             const Divider(),
 
             // Pay on Arrival
-            SwitchListTile(
-              value: _payOnArrivalEnabled,
-              onChanged: (value) =>
-                  setState(() => _payOnArrivalEnabled = value),
-              title: const Text('Plaćanje po Dolasku'),
-              subtitle: const Text('Gost plaća prilikom prijave'),
-              contentPadding: EdgeInsets.zero,
+            Builder(
+              builder: (context) {
+                // Force Pay on Arrival if both Stripe and Bank Transfer are disabled
+                final isForced = !_stripeEnabled && !_bankTransferEnabled;
+
+                // Auto-enable if forced
+                if (isForced && !_payOnArrivalEnabled) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    setState(() => _payOnArrivalEnabled = true);
+                  });
+                }
+
+                return SwitchListTile(
+                  value: _payOnArrivalEnabled,
+                  onChanged: isForced
+                    ? null // Disabled when forced
+                    : (value) => setState(() => _payOnArrivalEnabled = value),
+                  title: const Text('Plaćanje po Dolasku'),
+                  subtitle: Text(
+                    isForced
+                      ? '⚠️ Obavezno (jer su ostale metode isključene)'
+                      : 'Gost plaća prilikom prijave',
+                    style: TextStyle(
+                      color: isForced
+                        ? Theme.of(context).colorScheme.error
+                        : null,
+                    ),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                );
+              },
             ),
           ],
         ),

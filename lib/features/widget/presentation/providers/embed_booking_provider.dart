@@ -109,7 +109,10 @@ class EmbedBookingNotifier extends StateNotifier<EmbedBookingState> {
               final month = int.parse(monthDoc.id);
               final date = DateTime.utc(year, month, day);
 
-              if (priceData is Map<String, dynamic>) {
+              // FIXED: Check if priceData is valid and has required fields
+              if (priceData is Map<String, dynamic> &&
+                  priceData['date'] != null &&
+                  priceData['unit_id'] != null) {
                 pricesMap[date] = DailyPriceModel.fromJson(priceData);
               }
             } catch (e) {
@@ -183,7 +186,7 @@ class EmbedBookingNotifier extends StateNotifier<EmbedBookingState> {
 
   /// Clear selection
   void clearSelection() {
-    state = state.copyWith(checkOutDate: null);
+    state = state.copyWith();
   }
 
   /// Check if date is available for booking

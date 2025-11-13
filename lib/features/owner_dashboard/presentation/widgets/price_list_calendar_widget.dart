@@ -808,232 +808,338 @@ class _PriceListCalendarWidgetState
     final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = screenWidth < 600;
 
-    unawaited(showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: Text(
-              'Uredi datum - ${DateFormat('d.M.yyyy').format(date)}',
-              style: TextStyle(fontSize: isMobile ? 16 : null),
-            ),
-            contentPadding: EdgeInsets.fromLTRB(
-              isMobile ? 16 : 24,
-              isMobile ? 12 : 20,
-              isMobile ? 16 : 24,
-              isMobile ? 12 : 20,
-            ),
-            content: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: isMobile ? screenHeight * 0.65 : screenHeight * 0.7,
-                maxWidth: isMobile ? screenWidth * 0.9 : 600,
+    unawaited(
+      showDialog(
+        context: context,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                'Uredi datum - ${DateFormat('d.M.yyyy').format(date)}',
+                style: TextStyle(fontSize: isMobile ? 16 : null),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Price section
-                    Text(
-                      'Cijene',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: isMobile ? 14 : null,
-                      ),
-                    ),
-                    SizedBox(height: isMobile ? 6 : 8),
-                    TextField(
-                      controller: priceController,
-                      decoration: InputDecoration(
-                        labelText: 'Osnovna cijena po noći (€)',
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.euro),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: isMobile ? 12 : 16,
-                          vertical: isMobile ? 12 : 16,
-                        ),
-                      ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    ),
-                    SizedBox(height: isMobile ? 8 : 12),
-                    TextField(
-                      controller: weekendPriceController,
-                      decoration: InputDecoration(
-                        labelText: 'Vikend cijena (opciono)',
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.weekend),
-                        hintText: 'Npr. 120',
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: isMobile ? 12 : 16,
-                          vertical: isMobile ? 12 : 16,
-                        ),
-                      ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    ),
-
-                    SizedBox(height: isMobile ? 16 : 24),
-
-                    // Availability section
-                    Text(
-                      'Dostupnost',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: isMobile ? 14 : null,
-                      ),
-                    ),
-                    SwitchListTile(
-                      title: Text(
-                        'Dostupno',
-                        style: TextStyle(fontSize: isMobile ? 14 : null),
-                      ),
-                      value: available,
-                      onChanged: (value) => setState(() => available = value),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    SwitchListTile(
-                      title: Text(
-                        'Blokiraj prijavu (check-in)',
-                        style: TextStyle(fontSize: isMobile ? 14 : null),
-                      ),
-                      subtitle: Text(
-                        'Gosti ne mogu započeti rezervaciju',
-                        style: TextStyle(fontSize: isMobile ? 12 : null),
-                      ),
-                      value: blockCheckIn,
-                      onChanged: (value) =>
-                          setState(() => blockCheckIn = value),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    SwitchListTile(
-                      title: Text(
-                        'Blokiraj odjavu (check-out)',
-                        style: TextStyle(fontSize: isMobile ? 14 : null),
-                      ),
-                      subtitle: Text(
-                        'Gosti ne mogu završiti rezervaciju',
-                        style: TextStyle(fontSize: isMobile ? 12 : null),
-                      ),
-                      value: blockCheckOut,
-                      onChanged: (value) =>
-                          setState(() => blockCheckOut = value),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-
-                    SizedBox(height: isMobile ? 16 : 24),
-
-                    // Length of stay restrictions
-                    Text(
-                      'Ograničenja boravka',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: isMobile ? 14 : null,
-                      ),
-                    ),
-                    SizedBox(height: isMobile ? 6 : 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: minNightsController,
-                            decoration: InputDecoration(
-                              labelText: 'Min. noći',
-                              border: const OutlineInputBorder(),
-                              hintText: 'npr. 2',
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: isMobile ? 12 : 16,
-                                vertical: isMobile ? 12 : 16,
-                              ),
+              contentPadding: EdgeInsets.fromLTRB(
+                isMobile ? 16 : 24,
+                isMobile ? 12 : 20,
+                isMobile ? 16 : 24,
+                isMobile ? 12 : 20,
+              ),
+              content: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: isMobile
+                      ? screenHeight * 0.65
+                      : screenHeight * 0.7,
+                  maxWidth: isMobile ? screenWidth * 0.9 : 600,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Price section
+                      Text(
+                        'Cijene',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: isMobile ? 14 : null,
                             ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
+                      ),
+                      SizedBox(height: isMobile ? 6 : 8),
+                      TextField(
+                        controller: priceController,
+                        decoration: InputDecoration(
+                          labelText: 'Osnovna cijena po noći (€)',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.euro),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 12 : 16,
+                            vertical: isMobile ? 12 : 16,
                           ),
                         ),
-                        SizedBox(width: isMobile ? 8 : 12),
-                        Expanded(
-                          child: TextField(
-                            controller: maxNightsController,
-                            decoration: InputDecoration(
-                              labelText: 'Max. noći',
-                              border: const OutlineInputBorder(),
-                              hintText: 'npr. 14',
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: isMobile ? 12 : 16,
-                                vertical: isMobile ? 12 : 16,
-                              ),
-                            ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                      ),
+                      SizedBox(height: isMobile ? 8 : 12),
+                      TextField(
+                        controller: weekendPriceController,
+                        decoration: InputDecoration(
+                          labelText: 'Vikend cijena (opciono)',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.weekend),
+                          hintText: 'Npr. 120',
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 12 : 16,
+                            vertical: isMobile ? 12 : 16,
                           ),
                         ),
-                      ],
-                    ),
-
-                    SizedBox(height: isMobile ? 16 : 24),
-
-                    // Other options
-                    SwitchListTile(
-                      title: Text(
-                        'Označi kao važno',
-                        style: TextStyle(fontSize: isMobile ? 14 : null),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                       ),
-                      subtitle: Text(
-                        'Istakni ovaj datum u kalendaru',
-                        style: TextStyle(fontSize: isMobile ? 12 : null),
-                      ),
-                      value: isImportant,
-                      onChanged: (value) => setState(() => isImportant = value),
-                      contentPadding: EdgeInsets.zero,
-                    ),
 
-                    SizedBox(height: isMobile ? 16 : 24),
+                      SizedBox(height: isMobile ? 16 : 24),
 
-                    // Notes section
-                    Text(
-                      'Napomene',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: isMobile ? 14 : null,
+                      // Availability section
+                      Text(
+                        'Dostupnost',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: isMobile ? 14 : null,
+                            ),
                       ),
-                    ),
-                    SizedBox(height: isMobile ? 6 : 8),
-                    TextField(
-                      controller: notesController,
-                      decoration: InputDecoration(
-                        labelText: 'Napomene za ovaj dan',
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.notes),
-                        hintText: 'Npr. Vjenčanje, poseban događaj...',
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: isMobile ? 12 : 16,
-                          vertical: isMobile ? 12 : 16,
+                      SwitchListTile(
+                        title: Text(
+                          'Dostupno',
+                          style: TextStyle(fontSize: isMobile ? 14 : null),
                         ),
+                        value: available,
+                        onChanged: (value) => setState(() => available = value),
+                        contentPadding: EdgeInsets.zero,
                       ),
-                      maxLines: isMobile ? 2 : 3,
-                      textCapitalization: TextCapitalization.sentences,
-                    ),
-                  ],
+                      SwitchListTile(
+                        title: Text(
+                          'Blokiraj prijavu (check-in)',
+                          style: TextStyle(fontSize: isMobile ? 14 : null),
+                        ),
+                        subtitle: Text(
+                          'Gosti ne mogu započeti rezervaciju',
+                          style: TextStyle(fontSize: isMobile ? 12 : null),
+                        ),
+                        value: blockCheckIn,
+                        onChanged: (value) =>
+                            setState(() => blockCheckIn = value),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      SwitchListTile(
+                        title: Text(
+                          'Blokiraj odjavu (check-out)',
+                          style: TextStyle(fontSize: isMobile ? 14 : null),
+                        ),
+                        subtitle: Text(
+                          'Gosti ne mogu završiti rezervaciju',
+                          style: TextStyle(fontSize: isMobile ? 12 : null),
+                        ),
+                        value: blockCheckOut,
+                        onChanged: (value) =>
+                            setState(() => blockCheckOut = value),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+
+                      SizedBox(height: isMobile ? 16 : 24),
+
+                      // Length of stay restrictions
+                      Text(
+                        'Ograničenja boravka',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: isMobile ? 14 : null,
+                            ),
+                      ),
+                      SizedBox(height: isMobile ? 6 : 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: minNightsController,
+                              decoration: InputDecoration(
+                                labelText: 'Min. noći',
+                                border: const OutlineInputBorder(),
+                                hintText: 'npr. 2',
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 12 : 16,
+                                  vertical: isMobile ? 12 : 16,
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: isMobile ? 8 : 12),
+                          Expanded(
+                            child: TextField(
+                              controller: maxNightsController,
+                              decoration: InputDecoration(
+                                labelText: 'Max. noći',
+                                border: const OutlineInputBorder(),
+                                hintText: 'npr. 14',
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 12 : 16,
+                                  vertical: isMobile ? 12 : 16,
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: isMobile ? 16 : 24),
+
+                      // Other options
+                      SwitchListTile(
+                        title: Text(
+                          'Označi kao važno',
+                          style: TextStyle(fontSize: isMobile ? 14 : null),
+                        ),
+                        subtitle: Text(
+                          'Istakni ovaj datum u kalendaru',
+                          style: TextStyle(fontSize: isMobile ? 12 : null),
+                        ),
+                        value: isImportant,
+                        onChanged: (value) =>
+                            setState(() => isImportant = value),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+
+                      SizedBox(height: isMobile ? 16 : 24),
+
+                      // Notes section
+                      Text(
+                        'Napomene',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: isMobile ? 14 : null,
+                            ),
+                      ),
+                      SizedBox(height: isMobile ? 6 : 8),
+                      TextField(
+                        controller: notesController,
+                        decoration: InputDecoration(
+                          labelText: 'Napomene za ovaj dan',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.notes),
+                          hintText: 'Npr. Vjenčanje, poseban događaj...',
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 12 : 16,
+                            vertical: isMobile ? 12 : 16,
+                          ),
+                        ),
+                        maxLines: isMobile ? 2 : 3,
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            actions: [
-              if (existingPrice != null)
-                TextButton(
-                  onPressed: () async {
-                    final navigator = Navigator.of(context);
-                    final messenger = ScaffoldMessenger.of(context);
+              actions: [
+                if (existingPrice != null)
+                  TextButton(
+                    onPressed: () async {
+                      final navigator = Navigator.of(context);
+                      final messenger = ScaffoldMessenger.of(context);
 
-                    // Delete custom price (revert to base price)
+                      // Delete custom price (revert to base price)
+                      try {
+                        final repository = ref.read(
+                          dailyPriceRepositoryProvider,
+                        );
+                        await repository.deletePriceForDate(
+                          unitId: widget.unit.id,
+                          date: date,
+                        );
+
+                        ref.invalidate(monthlyPricesProvider);
+
+                        if (mounted) {
+                          navigator.pop();
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Vraćeno na osnovnu cijenu'),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text('Greška: $e'),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: const Text('Obriši'),
+                  ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Odustani'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final navigator = Navigator.of(context);
+
+                    // Save price data
+                    final priceText = priceController.text.trim();
+                    if (priceText.isEmpty) {
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('Unesite cijenu')),
+                      );
+                      return;
+                    }
+
+                    final price = double.tryParse(priceText);
+                    if (price == null || price <= 0) {
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Cijena mora biti veća od 0'),
+                        ),
+                      );
+                      return;
+                    }
+
                     try {
                       final repository = ref.read(dailyPriceRepositoryProvider);
-                      await repository.deletePriceForDate(
+
+                      // Create price model with all fields
+                      final priceModel = DailyPriceModel(
+                        id: existingPrice?.id ?? '',
                         unitId: widget.unit.id,
                         date: date,
+                        price: price,
+                        available: available,
+                        blockCheckIn: blockCheckIn,
+                        blockCheckOut: blockCheckOut,
+                        weekendPrice: weekendPriceController.text.trim().isEmpty
+                            ? null
+                            : double.tryParse(
+                                weekendPriceController.text.trim(),
+                              ),
+                        minNightsOnArrival:
+                            minNightsController.text.trim().isEmpty
+                            ? null
+                            : int.tryParse(minNightsController.text.trim()),
+                        maxNightsOnArrival:
+                            maxNightsController.text.trim().isEmpty
+                            ? null
+                            : int.tryParse(maxNightsController.text.trim()),
+                        isImportant: isImportant,
+                        notes: notesController.text.trim().isEmpty
+                            ? null
+                            : notesController.text.trim(),
+                        createdAt: existingPrice?.createdAt ?? DateTime.now(),
+                        updatedAt: DateTime.now(),
+                      );
+
+                      // Save the full price model with all BedBooking fields
+                      await repository.setPriceForDate(
+                        unitId: widget.unit.id,
+                        date: date,
+                        price: price,
+                        priceModel: priceModel,
                       );
 
                       ref.invalidate(monthlyPricesProvider);
@@ -1041,9 +1147,7 @@ class _PriceListCalendarWidgetState
                       if (mounted) {
                         navigator.pop();
                         messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('Vraćeno na osnovnu cijenu'),
-                          ),
+                          const SnackBar(content: Text('Cijena spremljena')),
                         );
                       }
                     } catch (e) {
@@ -1057,101 +1161,14 @@ class _PriceListCalendarWidgetState
                       }
                     }
                   },
-                  child: const Text('Obriši'),
+                  child: const Text('Spremi'),
                 ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Odustani'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  final navigator = Navigator.of(context);
-
-                  // Save price data
-                  final priceText = priceController.text.trim();
-                  if (priceText.isEmpty) {
-                    messenger.showSnackBar(
-                      const SnackBar(content: Text('Unesite cijenu')),
-                    );
-                    return;
-                  }
-
-                  final price = double.tryParse(priceText);
-                  if (price == null || price <= 0) {
-                    messenger.showSnackBar(
-                      const SnackBar(
-                        content: Text('Cijena mora biti veća od 0'),
-                      ),
-                    );
-                    return;
-                  }
-
-                  try {
-                    final repository = ref.read(dailyPriceRepositoryProvider);
-
-                    // Create price model with all fields
-                    final priceModel = DailyPriceModel(
-                      id: existingPrice?.id ?? '',
-                      unitId: widget.unit.id,
-                      date: date,
-                      price: price,
-                      available: available,
-                      blockCheckIn: blockCheckIn,
-                      blockCheckOut: blockCheckOut,
-                      weekendPrice: weekendPriceController.text.trim().isEmpty
-                          ? null
-                          : double.tryParse(weekendPriceController.text.trim()),
-                      minNightsOnArrival:
-                          minNightsController.text.trim().isEmpty
-                          ? null
-                          : int.tryParse(minNightsController.text.trim()),
-                      maxNightsOnArrival:
-                          maxNightsController.text.trim().isEmpty
-                          ? null
-                          : int.tryParse(maxNightsController.text.trim()),
-                      isImportant: isImportant,
-                      notes: notesController.text.trim().isEmpty
-                          ? null
-                          : notesController.text.trim(),
-                      createdAt: existingPrice?.createdAt ?? DateTime.now(),
-                      updatedAt: DateTime.now(),
-                    );
-
-                    // Save the full price model with all BedBooking fields
-                    await repository.setPriceForDate(
-                      unitId: widget.unit.id,
-                      date: date,
-                      price: price,
-                      priceModel: priceModel,
-                    );
-
-                    ref.invalidate(monthlyPricesProvider);
-
-                    if (mounted) {
-                      navigator.pop();
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text('Cijena spremljena')),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text('Greška: $e'),
-                          backgroundColor: AppColors.error,
-                        ),
-                      );
-                    }
-                  }
-                },
-                child: const Text('Spremi'),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
-    ));
+    );
   }
 
   void _showBulkPriceDialog() {
@@ -1395,7 +1412,6 @@ class _PriceListCalendarWidgetState
                               price: widget.unit.pricePerNight,
                               available:
                                   false, // Block dates - set as unavailable
-                              blockCheckOut: false,
                               createdAt: DateTime.now(),
                             );
 
@@ -1627,7 +1643,7 @@ class _PriceListCalendarWidgetState
   List<DateTime> _generateMonthList() {
     final List<DateTime> months = [];
     final now = DateTime.now();
-    final startDate = DateTime(now.year - 1, 1);
+    final startDate = DateTime(now.year - 1);
     final endDate = DateTime(now.year + 2, 12);
 
     DateTime current = startDate;

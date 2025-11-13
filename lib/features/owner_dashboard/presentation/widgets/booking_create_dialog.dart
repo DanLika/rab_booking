@@ -693,20 +693,15 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       if (conflicts.isNotEmpty) {
         setState(() => _isSaving = false);
 
-        // Show detailed error with conflicting booking info
-        final conflict = conflicts.first;
-        final conflictGuestName = conflict.guestName ?? 'Unknown';
-        final conflictCheckIn =
-            '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}';
-        final conflictCheckOut =
-            '${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}';
+        // Show warning dialog with option to force-save
+        final shouldContinue = await _showConflictWarningDialog(conflicts);
 
-        _showError(
-          conflicts.length == 1
-              ? 'Overlap with booking for $conflictGuestName ($conflictCheckIn - $conflictCheckOut)'
-              : 'Overlap with ${conflicts.length} existing bookings',
-        );
-        return;
+        if (!shouldContinue) {
+          return; // User cancelled
+        }
+
+        // User confirmed to proceed despite conflict
+        setState(() => _isSaving = true);
       }
 
       final totalPrice = double.parse(_totalPriceController.text.trim());
@@ -771,5 +766,154 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         SnackBar(content: Text(message), backgroundColor: AppColors.error),
       );
     }
+  }
+
+  /// Show conflict warning dialog with option to force-save
+  Future<bool> _showConflictWarningDialog(List<BookingModel> conflicts) async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        icon: const Icon(
+          Icons.warning,
+          color: Colors.red,
+          size: 48,
+        ),
+        title: const Text(
+          'UPOZORENJE: Preklapanje rezervacija!',
+          style: TextStyle(
+            color: Colors.red,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                conflicts.length == 1
+                    ? 'Nova rezervacija se preklapa sa postojećom rezervacijom:'
+                    : 'Nova rezervacija se preklapa sa ${conflicts.length} postojećih rezervacija:',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              // Show conflict details
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 200),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: conflicts.map((conflict) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red[200]!),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.person, size: 16, color: Colors.red),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    conflict.guestName ?? 'Nepoznati gost',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(Icons.calendar_today, size: 14, color: Colors.black54),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}. - ${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}.',
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    color: conflict.status.color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  conflict.status.displayName,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: conflict.status.color,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 18, color: Colors.orange[700]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Želite li svejedno kreirati ovu rezervaciju?',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.orange[900],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Otkaži'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Kreiraj svejedno'),
+          ),
+        ],
+      ),
+    ) ?? false; // Return false if dialog dismissed
   }
 }

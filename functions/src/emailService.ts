@@ -24,6 +24,9 @@ function getResendClient(): Resend {
 const FROM_EMAIL = "onboarding@resend.dev"; // TEST MODE - update when you have a custom domain
 const FROM_NAME = "Rab Booking";
 
+// Widget URL for booking lookup (configure in environment variables)
+const WIDGET_URL = process.env.WIDGET_URL || "https://rab-booking-widget.web.app";
+
 /**
  * Send booking confirmation email to guest
  */
@@ -37,6 +40,7 @@ export async function sendBookingConfirmationEmail(
   depositAmount: number,
   unitName: string,
   propertyName: string,
+  accessToken: string,
   ownerEmail?: string
 ): Promise<void> {
   const subject = `[BedBooking] Potvrda rezervacije - ${bookingReference}`;
@@ -120,6 +124,17 @@ export async function sendBookingConfirmationEmail(
       </div>
 
       <p>Once we receive your payment, we will send you a confirmation email.</p>
+
+      <div style="text-align: center; margin: 25px 0;">
+        <a href="${WIDGET_URL}/view?ref=${encodeURIComponent(bookingReference)}&email=${encodeURIComponent(guestEmail)}&token=${encodeURIComponent(accessToken)}" class="button">
+          📋 View My Booking
+        </a>
+      </div>
+
+      <p style="font-size: 12px; color: #666; text-align: center;">
+        💡 Tip: Save this email to view your booking details anytime, or look up your booking manually using your email and booking reference.
+      </p>
+
       <p>If you have any questions, please contact us.</p>
     </div>
 
@@ -851,4 +866,147 @@ function formatDate(date: Date): string {
     month: "short",
     year: "numeric",
   });
+}
+
+/**
+ * Send email verification code to guest (OTP for booking)
+ *
+ * This sends a 6-digit code that the guest must enter to verify their email
+ * before completing a booking (if requireEmailVerification is enabled)
+ */
+export async function sendEmailVerificationCode(
+  guestEmail: string,
+  verificationCode: string
+): Promise<void> {
+  const subject = "Your Verification Code - Rab Booking";
+
+  // Plain text version (for email clients that don't support HTML)
+  const text = `
+Your verification code is: ${verificationCode}
+
+This code will expire in 10 minutes.
+
+If you didn't request this code, please ignore this email.
+
+---
+Rab Booking
+  `.trim();
+
+  // HTML version (clean, simple, spam-filter friendly)
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: white;
+      border-radius: 8px;
+      padding: 40px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #2563eb;
+      margin: 0;
+      font-size: 24px;
+    }
+    .code-container {
+      background-color: #f0f9ff;
+      border: 2px solid #2563eb;
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      margin: 24px 0;
+    }
+    .code {
+      font-size: 36px;
+      font-weight: bold;
+      color: #2563eb;
+      letter-spacing: 8px;
+      font-family: 'Courier New', monospace;
+    }
+    .expiry {
+      color: #666;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+    .instructions {
+      background-color: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 16px;
+      margin: 24px 0;
+      border-radius: 4px;
+    }
+    .instructions p {
+      margin: 0;
+      color: #78350f;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔐 Email Verification</h1>
+      <p>Complete your booking by verifying your email</p>
+    </div>
+
+    <p>Enter this verification code to continue with your booking:</p>
+
+    <div class="code-container">
+      <div class="code">${verificationCode}</div>
+      <div class="expiry">⏱️ Expires in 10 minutes</div>
+    </div>
+
+    <div class="instructions">
+      <p><strong>Important:</strong> If you didn't request this code, please ignore this email. Your booking will not be created without entering the code.</p>
+    </div>
+
+    <p style="color: #666; font-size: 14px; text-align: center;">
+      This is an automated security email to protect your booking.
+    </p>
+
+    <div class="footer">
+      <p><strong>Rab Booking</strong></p>
+      <p>Secure booking verification system</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  try {
+    await getResendClient().emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: guestEmail,
+      subject: subject,
+      html: html,
+      text: text,
+    });
+    logSuccess("Email verification code sent", {email: guestEmail});
+  } catch (error) {
+    logError("Error sending verification code email", error);
+    throw error;
+  }
 }

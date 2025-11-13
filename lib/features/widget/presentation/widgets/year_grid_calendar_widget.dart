@@ -5,6 +5,7 @@ import '../../domain/models/calendar_date_status.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/theme_provider.dart';
 import 'split_day_calendar_painter.dart';
+import 'year_view_preloader.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// Year-view grid calendar widget inspired by BedBooking
@@ -67,7 +68,7 @@ class _YearGridCalendarWidgetState
             Expanded(
               child: calendarData.when(
                 data: (data) => _buildYearGrid(data, colors),
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => YearViewPreloader(year: _currentYear),
                 error: (error, stack) => Center(
                   child: Text(
                     'Greška pri učitavanju kalendara: $error',
@@ -754,8 +755,9 @@ class _YearGridCalendarWidgetState
     AsyncValue<Map<DateTime, CalendarDateInfo>> calendarData,
     WidgetColorScheme colors,
   ) {
-    if (_tappedDate == null || _tapPosition == null)
+    if (_tappedDate == null || _tapPosition == null) {
       return const SizedBox.shrink();
+    }
 
     return calendarData.when(
       data: (data) {
@@ -920,6 +922,8 @@ class _YearGridCalendarWidgetState
         return 'Check-in Day';
       case DateStatus.partialCheckOut:
         return 'Check-out Day';
+      case DateStatus.partialBoth:
+        return 'Turnover Day';
       case DateStatus.pastReservation:
         return 'Past Reservation';
     }

@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
-import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../domain/models/date_range_selection.dart';
 import '../../../utils/calendar_grid_calculator.dart';
 import '../../../utils/date_range_utils.dart';
+import '../../../utils/booking_overlap_detector.dart';
 import '../../providers/calendar_drag_drop_provider.dart';
+import '../../providers/owner_calendar_provider.dart';
 import 'booking_block_widget.dart';
 import 'booking_context_menu.dart';
 import 'room_row_header.dart';
-import '../send_email_dialog.dart';
+import 'shared/calendar_booking_actions.dart';
+import '../booking_create_dialog.dart';
 
 /// Owner week grid calendar widget
 /// Shows 7-day grid (Monday-Sunday) with all units and bookings
@@ -206,36 +208,46 @@ class _OwnerWeekGridCalendarState extends ConsumerState<OwnerWeekGridCalendar> {
           bottom: BorderSide(color: theme.dividerColor, width: 1.5),
         ),
       ),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Weekday name
-          Text(
-            _getWeekdayName(date.weekday),
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-              color: isWeekend
-                  ? theme.colorScheme.error
-                  : (isToday ? theme.colorScheme.primary : null),
+          Flexible(
+            child: Text(
+              _getWeekdayName(date.weekday),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                fontSize: 11,
+                color: isWeekend
+                    ? theme.colorScheme.error
+                    : (isToday ? theme.colorScheme.primary : null),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           // Day number
-          Container(
-            width: 28,
-            height: 28,
-            decoration: isToday
-                ? BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    shape: BoxShape.circle,
-                  )
-                : null,
-            alignment: Alignment.center,
-            child: Text(
-              '${date.day}',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isToday ? theme.colorScheme.onPrimary : null,
+          Flexible(
+            child: Container(
+              width: 26,
+              height: 26,
+              decoration: isToday
+                  ? BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      shape: BoxShape.circle,
+                    )
+                  : null,
+              alignment: Alignment.center,
+              child: Text(
+                '${date.day}',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: isToday ? theme.colorScheme.onPrimary : null,
+                ),
               ),
             ),
           ),
@@ -282,6 +294,10 @@ class _OwnerWeekGridCalendarState extends ConsumerState<OwnerWeekGridCalendar> {
           return GestureDetector(
             onTap: widget.onCellTap != null
                 ? () => widget.onCellTap!(date, unit)
+                : null,
+            // QUICK CREATE: Double-tap on empty cell to create booking
+            onDoubleTap: !hasBookingOnDate && !isPast
+                ? () => _showQuickCreateDialog(date, unit.id)
                 : null,
             child: DragTarget<BookingModel>(
               onWillAcceptWithDetails: (details) {
@@ -442,6 +458,7 @@ class _OwnerWeekGridCalendarState extends ConsumerState<OwnerWeekGridCalendar> {
         isDraggable: widget.enableDragDrop,
         showGuestName: width > 80,
         showCheckInOut: width > 40,
+        hasConflict: _hasBookingConflict(booking),
       ),
     );
   }
@@ -503,81 +520,57 @@ class _OwnerWeekGridCalendarState extends ConsumerState<OwnerWeekGridCalendar> {
     );
   }
 
-  /// Delete booking
+  /// Delete booking - Using shared action
   Future<void> _deleteBooking(BookingModel booking) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Obriši rezervaciju'),
-        content: Text(
-          'Jeste li sigurni da želite obrisati rezervaciju za ${booking.guestName ?? 'N/A'}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Otkaži'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Obriši'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && mounted) {
-      try {
-        final repository = ref.read(bookingRepositoryProvider);
-        await repository.deleteBooking(booking.id);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Rezervacija obrisana'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
-          );
-        }
-      }
-    }
+    await CalendarBookingActions.deleteBooking(context, ref, booking);
   }
 
-  /// Change booking status
+  /// Change booking status - Using shared action
   Future<void> _changeBookingStatus(
     BookingModel booking,
     BookingStatus newStatus,
   ) async {
-    try {
-      final repository = ref.read(bookingRepositoryProvider);
-      final updatedBooking = booking.copyWith(status: newStatus);
-      await repository.updateBooking(updatedBooking);
+    await CalendarBookingActions.changeBookingStatus(
+      context,
+      ref,
+      booking,
+      newStatus,
+    );
+  }
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Status promijenjen u ${newStatus.displayName}'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
-        );
-      }
+  /// Send email to guest - Using shared action
+  void _sendEmailToGuest(BookingModel booking) {
+    CalendarBookingActions.sendEmailToGuest(context, ref, booking);
+  }
+
+  /// Show quick create booking dialog
+  void _showQuickCreateDialog(DateTime date, String unitId) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => BookingCreateDialog(
+        unitId: unitId,
+        initialCheckIn: date,
+      ),
+    );
+
+    // If booking was created, the parent providers will auto-refresh via Riverpod
+    if (result == true && mounted) {
+      // Force immediate refresh of calendar data
+      ref.invalidate(calendarBookingsProvider);
+      ref.invalidate(allOwnerUnitsProvider);
     }
   }
 
-  /// Send email to guest
-  void _sendEmailToGuest(BookingModel booking) {
-    showSendEmailDialog(context, ref, booking);
+  /// Check if a booking has conflicts with other bookings
+  bool _hasBookingConflict(BookingModel booking) {
+    final conflicts = BookingOverlapDetector.getConflictingBookings(
+      unitId: booking.unitId,
+      newCheckIn: booking.checkIn,
+      newCheckOut: booking.checkOut,
+      bookingIdToExclude: booking.id,
+      allBookings: widget.bookings,
+    );
+
+    return conflicts.isNotEmpty;
   }
 }

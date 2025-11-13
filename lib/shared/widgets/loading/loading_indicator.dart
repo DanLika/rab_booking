@@ -153,7 +153,6 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius),
             gradient: LinearGradient(
-              end: Alignment.centerRight,
               colors: isDark
                   ? [
                       AppColors.surfaceVariantDark,

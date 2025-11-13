@@ -68,14 +68,12 @@ class GradientTokens {
 
   /// Shimmer gradient for loading states
   static const LinearGradient shimmer = LinearGradient(
-    end: Alignment(1.0, 0.0),
     colors: [Color(0xFFEBEBF4), Color(0xFFF4F4F4), Color(0xFFEBEBF4)],
     stops: [0.0, 0.5, 1.0],
   );
 
   /// Shimmer gradient for loading states (dark mode)
   static const LinearGradient shimmerDark = LinearGradient(
-    end: Alignment(1.0, 0.0),
     colors: [Color(0xFF2A2A2A), Color(0xFF3A3A3A), Color(0xFF2A2A2A)],
     stops: [0.0, 0.5, 1.0],
   );

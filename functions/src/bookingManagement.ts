@@ -5,7 +5,6 @@ import {
   onDocumentCreated,
 } from "firebase-functions/v2/firestore";
 import {
-  sendBookingConfirmationEmail,
   sendBookingApprovedEmail,
   sendOwnerNotificationEmail,
   sendBookingCancellationEmail,
@@ -432,21 +431,11 @@ export const onBookingCreated = onDocumentCreated(
           logSuccess("Pending booking owner notification sent", {email: ownerData.email});
         }
       } else {
-        // Bank transfer booking - send payment instructions
-        await sendBookingConfirmationEmail(
-          booking.guest_email || "",
-          booking.guest_name || "Guest",
-          booking.booking_reference || "",
-          booking.check_in.toDate(),
-          booking.check_out.toDate(),
-          booking.total_price || 0,
-          booking.deposit_amount || (booking.total_price * 0.2),
-          unitData?.name || "Unit",
-          propertyData?.name || "Property",
-          propertyData?.contact_email
-        );
-
-        logSuccess("Bank transfer instructions sent to guest", {email: booking.guest_email});
+        // Bank transfer booking - email sent from atomicBooking.ts with access token
+        // (No email sent here to avoid duplicates - atomicBooking handles it)
+        logInfo("Bank transfer booking created - email sent from atomicBooking", {
+          bookingRef: booking.booking_reference,
+        });
 
         // Send owner notification for bank transfer
         if (ownerData?.email) {

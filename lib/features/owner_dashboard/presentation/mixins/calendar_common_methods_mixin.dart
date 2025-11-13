@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../providers/owner_calendar_provider.dart';
@@ -60,13 +61,9 @@ mixin CalendarCommonMethodsMixin<T extends ConsumerStatefulWidget>
     );
   }
 
-  /// Show notifications panel
+  /// Show notifications page
   void showNotificationsPanel() {
-    // TODO: Implement notifications panel
-    ErrorDisplayUtils.showInfoSnackBar(
-      context,
-      'Notifications panel - coming soon',
-    );
+    context.go('/owner/notifications');
   }
 
   /// Show booking details dialog with quick edit option

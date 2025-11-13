@@ -247,19 +247,32 @@ class UnitFutureBookingsDialog extends StatelessWidget {
 
             const SizedBox(width: AppDimensions.spaceS),
 
-            // Status chip
-            Chip(
-              label: AutoSizeText(
-                booking.status.displayName,
-                maxLines: 1,
-                minFontSize: 9,
-                style: const TextStyle(fontSize: 11),
+            // Status chip - FIXED: SizedBox with specific width to prevent layout errors
+            SizedBox(
+              width: 100,
+              height: 32,
+              child: Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.spaceXS,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: booking.status.color.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  booking.status.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: booking.status.color,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-              backgroundColor: booking.status.color.withValues(alpha: 0.2),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.spaceXS,
-              ),
-              visualDensity: VisualDensity.compact,
             ),
           ],
         ),

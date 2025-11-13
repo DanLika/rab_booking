@@ -236,10 +236,12 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         tag: 'ENHANCED_AUTH',
       );
     } on FirebaseAuthException catch (e) {
-      unawaited(LoggingService.logError(
-        'Firebase sign in FAILED: ${e.code} - ${e.message}',
-        e,
-      ));
+      unawaited(
+        LoggingService.logError(
+          'Firebase sign in FAILED: ${e.code} - ${e.message}',
+          e,
+        ),
+      );
       // Record failed attempt
       await _rateLimit.recordFailedAttempt(email);
 
@@ -327,7 +329,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         firstName: firstName,
         lastName: lastName,
         role: UserRole.owner, // Default to owner for registration
-        emailVerified: false,
         phone: phone,
         avatarUrl: finalAvatarUrl,
         displayName: '$firstName $lastName',

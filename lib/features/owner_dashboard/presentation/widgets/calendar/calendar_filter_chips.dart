@@ -21,31 +21,58 @@ class CalendarFilterChips extends ConsumerWidget {
       constraints: const BoxConstraints(maxHeight: 56),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt()),
         border: Border(
           bottom: BorderSide(color: Theme.of(context).dividerColor),
         ),
       ),
       child: Row(
         children: [
-          Flexible(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  Chip(
-                    label: Text('${filters.activeFilterCount} filters'),
-                    onDeleted: () {
-                      ref.read(calendarFiltersProvider.notifier).clearFilters();
-                    },
+          // Active filter count badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.filter_list,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${filters.activeFilterCount}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          TextButton.icon(
+          const SizedBox(width: 8),
+          Text(
+            filters.activeFilterCount == 1 ? 'aktivan filter' : 'aktivna filtera',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const Spacer(),
+          // Clear all button (elevated for visibility)
+          ElevatedButton.icon(
             icon: const Icon(Icons.clear_all, size: 18),
-            label: const Text('Clear all'),
+            label: const Text('Očisti sve'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              minimumSize: const Size(0, 36),
+            ),
             onPressed: () {
               ref.read(calendarFiltersProvider.notifier).clearFilters();
             },

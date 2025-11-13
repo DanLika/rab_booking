@@ -13,7 +13,7 @@ import '../../domain/models/widget_settings.dart';
 /// ```
 final blurConfigProvider = Provider<BlurConfig>((ref) {
   // Default configuration (will be overridden in widget_main.dart)
-  return const BlurConfig(intensity: 'medium');
+  return const BlurConfig();
 });
 
 /// Helper provider to check if blur is globally enabled

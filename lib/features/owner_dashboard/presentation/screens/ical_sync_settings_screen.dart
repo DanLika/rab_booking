@@ -43,7 +43,6 @@ class _IcalSyncSettingsScreenState
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            end: Alignment.centerRight,
             colors: theme.brightness == Brightness.dark
                 ? [AppColors.backgroundDark, AppColors.surfaceVariantDark]
                 : [AppColors.primary, AppColors.authSecondary],

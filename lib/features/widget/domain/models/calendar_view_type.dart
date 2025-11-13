@@ -1,13 +1,10 @@
 /// Calendar view types
 enum CalendarViewType {
-  week,
   month,
   year;
 
   String get label {
     switch (this) {
-      case CalendarViewType.week:
-        return 'Week';
       case CalendarViewType.month:
         return 'Month';
       case CalendarViewType.year:
@@ -21,7 +18,7 @@ enum CalendarViewType {
     if (this == CalendarViewType.year) {
       return width >= 1024;
     }
-    // Week and Month available on all devices
+    // Month available on all devices
     return true;
   }
 

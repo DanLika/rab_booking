@@ -1,12 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/calendar_view_switcher.dart';
 import '../providers/booking_price_provider.dart';
 import '../providers/widget_settings_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/calendar_view_provider.dart';
+import '../providers/realtime_booking_calendar_provider.dart';
+import '../providers/ical_sync_status_provider.dart';
+import '../../domain/models/calendar_view_type.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -15,7 +23,14 @@ import '../../../owner_dashboard/presentation/providers/owner_properties_provide
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/services/email_notification_service.dart';
-import 'bank_transfer_screen.dart';
+import '../../../../core/services/booking_service.dart';
+import '../../../../core/services/logging_service.dart';
+import '../../../../core/constants/enums.dart';
+import 'booking_confirmation_screen.dart';
+import '../widgets/country_code_dropdown.dart';
+import '../widgets/email_verification_dialog.dart';
+import '../utils/form_validators.dart';
+import '../../../../core/errors/app_exceptions.dart';
 
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size
@@ -47,6 +62,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _notesController = TextEditingController(); // Special requests
+  Country _selectedCountry = defaultCountry; // Default to Croatia
 
   // Guest count
   int _adults = 2;
@@ -57,6 +74,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   String _selectedPaymentMethod = 'stripe'; // 'stripe' or 'bank_transfer'
   final String _selectedPaymentOption = 'deposit'; // 'deposit' or 'full'
   bool _isProcessing = false;
+  bool _emailVerified = false; // Email verification status (OTP)
+
+  // Bug #64: Price locking to prevent payment mismatches
+  BookingPriceCalculation? _lockedPriceCalculation;
 
   // Draggable pill bar state
   Offset? _pillBarPosition; // null = default bottom center position
@@ -69,9 +90,36 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _propertyId = uri.queryParameters['property'];
     _unitId = uri.queryParameters['unit'] ?? '';
 
+    // Bug #53: Add listeners to text controllers for auto-save
+    _nameController.addListener(_saveFormData);
+    _emailController.addListener(_saveFormData);
+    _phoneController.addListener(_saveFormData);
+    _notesController.addListener(_saveFormData);
+
+    // Check for Stripe return with confirmation parameters
+    final confirmationRef = uri.queryParameters['confirmation'];
+    final confirmationEmail = uri.queryParameters['email'];
+    final bookingId = uri.queryParameters['bookingId'];
+    final paymentType = uri.queryParameters['payment'];
+
     // Validate unit and property immediately
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _validateUnitAndProperty();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _validateUnitAndProperty();
+
+      // Bug #53: Load saved form data if page was refreshed
+      await _loadFormData();
+
+      // If we have confirmation parameters, show confirmation screen
+      if (confirmationRef != null &&
+          confirmationEmail != null &&
+          bookingId != null &&
+          paymentType == 'stripe') {
+        await _showConfirmationFromUrl(
+          confirmationRef,
+          confirmationEmail,
+          bookingId,
+        );
+      }
     });
   }
 
@@ -133,6 +181,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       setState(() {
         _ownerId = property.ownerId;
         _unit = unit; // Store unit for guest capacity validation
+
+        // Adjust default guest count to respect property capacity
+        final totalGuests = _adults + _children;
+        if (totalGuests > unit.maxGuests) {
+          // If default exceeds capacity, set to max allowed
+          _adults = unit.maxGuests.clamp(1, unit.maxGuests); // At least 1 adult
+          _children = 0; // Reset children to 0
+        }
       });
 
       // Load widget settings
@@ -160,6 +216,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       setState(() {
         _widgetSettings = settings;
+        // Set default payment method based on what's enabled
+        _setDefaultPaymentMethod();
       });
     } catch (e) {
       // If loading fails, use default settings
@@ -169,24 +227,253 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           id: unitId,
           propertyId: propertyId,
         );
+        // Set default payment method based on what's enabled
+        _setDefaultPaymentMethod();
       });
+    }
+  }
+
+  /// Set default payment method based on enabled payment options
+  /// Priority: Stripe > Bank Transfer > Pay on Arrival
+  void _setDefaultPaymentMethod() {
+    // Only for bookingInstant mode (bookingPending has no payment)
+    if (_widgetSettings?.widgetMode != WidgetMode.bookingInstant) {
+      return;
+    }
+
+    // Check which payment methods are enabled
+    final isStripeEnabled = _widgetSettings?.stripeConfig?.enabled == true;
+    final isBankTransferEnabled =
+        _widgetSettings?.bankTransferConfig?.enabled == true;
+    final isPayOnArrivalEnabled = _widgetSettings?.allowPayOnArrival == true;
+
+    // If current selection is valid, keep it
+    if (_selectedPaymentMethod == 'stripe' && isStripeEnabled) return;
+    if (_selectedPaymentMethod == 'bankTransfer' && isBankTransferEnabled) {
+      return;
+    }
+    if (_selectedPaymentMethod == 'payOnArrival' && isPayOnArrivalEnabled) {
+      return;
+    }
+
+    // Current selection is invalid - set first available (priority order)
+    if (isStripeEnabled) {
+      _selectedPaymentMethod = 'stripe';
+    } else if (isBankTransferEnabled) {
+      _selectedPaymentMethod = 'bankTransfer';
+    } else if (isPayOnArrivalEnabled) {
+      _selectedPaymentMethod = 'payOnArrival';
+    } else {
+      // Edge case: No payment methods enabled (should not happen due to owner validation)
+      _selectedPaymentMethod = 'payOnArrival'; // Fallback
+    }
+  }
+
+  // Bug #53: Form data persistence methods
+  static const String _formDataKey = 'booking_widget_form_data';
+
+  /// Save current form data to localStorage
+  Future<void> _saveFormData() async {
+    if (_unitId.isEmpty) return; // Don't save if no unit selected
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final formData = {
+        'unitId': _unitId,
+        'propertyId': _propertyId,
+        'checkIn': _checkIn?.toIso8601String(),
+        'checkOut': _checkOut?.toIso8601String(),
+        'name': _nameController.text,
+        'email': _emailController.text,
+        'phone': _phoneController.text,
+        'countryCode': _selectedCountry.dialCode,
+        'adults': _adults,
+        'children': _children,
+        'notes': _notesController.text,
+        'paymentMethod': _selectedPaymentMethod,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+
+      await prefs.setString('${_formDataKey}_$_unitId', jsonEncode(formData));
+    } catch (e) {
+      // Silent fail - persistence is not critical
+      LoggingService.log(
+        'Failed to save form data: $e',
+        tag: 'FORM_PERSISTENCE',
+      );
+    }
+  }
+
+  /// Load saved form data from localStorage
+  Future<void> _loadFormData() async {
+    if (_unitId.isEmpty) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedData = prefs.getString('${_formDataKey}_$_unitId');
+
+      if (savedData == null) return;
+
+      final formData = jsonDecode(savedData) as Map<String, dynamic>;
+
+      // Check if data is not too old (max 24 hours)
+      final timestamp = DateTime.parse(formData['timestamp'] as String);
+      if (DateTime.now().difference(timestamp).inHours > 24) {
+        await _clearFormData(); // Clear old data
+        return;
+      }
+
+      // Restore form data
+      if (mounted) {
+        setState(() {
+          // Only restore if same unit
+          if (formData['unitId'] == _unitId) {
+            if (formData['checkIn'] != null) {
+              _checkIn = DateTime.parse(formData['checkIn'] as String);
+            }
+            if (formData['checkOut'] != null) {
+              _checkOut = DateTime.parse(formData['checkOut'] as String);
+            }
+
+            _nameController.text = formData['name'] as String? ?? '';
+            _emailController.text = formData['email'] as String? ?? '';
+            _phoneController.text = formData['phone'] as String? ?? '';
+
+            // Restore country code
+            final savedCountryCode = formData['countryCode'] as String?;
+            if (savedCountryCode != null) {
+              final country = countries.firstWhere(
+                (c) => c.dialCode == savedCountryCode,
+                orElse: () => defaultCountry,
+              );
+              _selectedCountry = country;
+            }
+
+            _adults = formData['adults'] as int? ?? 2;
+            _children = formData['children'] as int? ?? 0;
+            _notesController.text = formData['notes'] as String? ?? '';
+
+            // Restore payment method if valid
+            final savedPayment = formData['paymentMethod'] as String?;
+            if (savedPayment != null) {
+              _selectedPaymentMethod = savedPayment;
+            }
+
+            // Show guest form if data was entered
+            if (_checkIn != null && _checkOut != null) {
+              _showGuestForm =
+                  _nameController.text.isNotEmpty ||
+                  _emailController.text.isNotEmpty;
+            }
+          }
+        });
+
+        LoggingService.log(
+          '✅ Form data restored from cache',
+          tag: 'FORM_PERSISTENCE',
+        );
+      }
+    } catch (e) {
+      // Silent fail - just log
+      LoggingService.log(
+        'Failed to load form data: $e',
+        tag: 'FORM_PERSISTENCE',
+      );
+    }
+  }
+
+  /// Clear saved form data from localStorage
+  Future<void> _clearFormData() async {
+    if (_unitId.isEmpty) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('${_formDataKey}_$_unitId');
+      LoggingService.log('🗑️ Form data cleared', tag: 'FORM_PERSISTENCE');
+    } catch (e) {
+      // Silent fail
+      LoggingService.log(
+        'Failed to clear form data: $e',
+        tag: 'FORM_PERSISTENCE',
+      );
     }
   }
 
   @override
   void dispose() {
+    // Bug #53: Remove listeners before disposing
+    _nameController.removeListener(_saveFormData);
+    _emailController.removeListener(_saveFormData);
+    _phoneController.removeListener(_saveFormData);
+    _notesController.removeListener(_saveFormData);
+
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
     // Helper function to get theme-aware colors
     Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+
+    // Bug #73: Listen for price calculation errors (dates no longer available)
+    // Only listen if dates are selected to avoid unnecessary provider calls
+    if (_checkIn != null && _checkOut != null) {
+      ref.listen(
+        bookingPriceProvider(
+          unitId: _unitId,
+          checkIn: _checkIn,
+          checkOut: _checkOut,
+          depositPercentage:
+              _widgetSettings?.stripeConfig?.depositPercentage ?? 20,
+        ),
+        (previous, next) {
+          next.whenOrNull(
+            error: (error, stack) {
+              // Check if error is DatesNotAvailableException
+              if (error is DatesNotAvailableException) {
+                // Clear selected dates
+                setState(() {
+                  _checkIn = null;
+                  _checkOut = null;
+                  _showGuestForm = false;
+                  _pillBarPosition = null;
+                });
+
+                // Show user-friendly error message
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        error.getUserMessage(),
+                        style: TextStyle(
+                          color: getColor(
+                            MinimalistColors.textPrimary,
+                            MinimalistColorsDark.textPrimary,
+                          ),
+                        ),
+                      ),
+                      backgroundColor: getColor(
+                        MinimalistColors.error,
+                        MinimalistColorsDark.error,
+                      ),
+                      duration: const Duration(seconds: 5),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+          );
+        },
+      );
+    }
 
     // Show loading screen during validation
     if (_isValidating) {
@@ -298,50 +585,237 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true, // Bug #46: Resize when keyboard appears
       backgroundColor: getColor(
         MinimalistColors.backgroundPrimary,
         MinimalistColorsDark.backgroundPrimary,
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final screenWidth = constraints.maxWidth;
-          final forceMonthView =
-              screenWidth < 1024; // Year view only on desktop
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth = constraints.maxWidth;
+            final forceMonthView =
+                screenWidth < 1024; // Year view only on desktop
 
-          return Stack(
-            children: [
-              // Calendar - full screen
-              CalendarViewSwitcher(
-                unitId: unitId,
-                forceMonthView: forceMonthView,
-                onRangeSelected: (start, end) {
-                  setState(() {
-                    _checkIn = start;
-                    _checkOut = end;
-                    _pillBarPosition =
-                        null; // Reset position when new dates selected
-                  });
-                },
-              ),
+            // Responsive padding for iframe embedding
+            final horizontalPadding = screenWidth < 600
+                ? 12.0 // Mobile
+                : screenWidth < 1024
+                ? 16.0 // Tablet
+                : 24.0; // Desktop
 
-              // Contact info bar (calendar only mode - no booking) - positioned at bottom
-              if (widgetMode == WidgetMode.calendarOnly)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: _buildContactInfoBar(isDarkMode),
+            final topPadding = screenWidth < 600
+                ? 8.0 // Mobile
+                : screenWidth < 1024
+                ? 12.0 // Tablet
+                : 16.0; // Desktop
+
+            return Stack(
+              children: [
+                // Calendar - full screen
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: horizontalPadding,
+                    right: horizontalPadding,
+                    top: topPadding,
+                    bottom: topPadding, // Same as top padding
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Calendar instruction text
+                      if (widgetMode != WidgetMode.calendarOnly)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            'Select check-in date, then check-out date',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDarkMode
+                                  ? MinimalistColorsDark.textSecondary
+                                  : MinimalistColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      // Calendar
+                      Expanded(
+                        child: CalendarViewSwitcher(
+                          propertyId: _propertyId ?? '',
+                          unitId: unitId,
+                          forceMonthView: forceMonthView,
+                          // Disable date selection in calendar_only mode
+                          onRangeSelected: widgetMode == WidgetMode.calendarOnly
+                              ? null
+                              : (start, end) {
+                                  // Validate minimum nights requirement
+                                  if (start != null && end != null) {
+                                    final minNights =
+                                        _widgetSettings?.minNights ?? 1;
+                                    final selectedNights = end
+                                        .difference(start)
+                                        .inDays;
+
+                                    if (selectedNights < minNights) {
+                                      // Show error message
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Minimum $minNights ${minNights == 1 ? 'night' : 'nights'} required. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
+                                          ),
+                                          backgroundColor:
+                                              MinimalistColors.error,
+                                          duration: const Duration(seconds: 3),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                  }
+
+                                  setState(() {
+                                    _checkIn = start;
+                                    _checkOut = end;
+                                    _pillBarPosition =
+                                        null; // Reset position when new dates selected
+                                  });
+
+                                  // Bug #53: Save form data after date selection
+                                  _saveFormData();
+                                },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
-              // Floating draggable booking summary bar (booking modes - shown when dates selected)
-              if (widgetMode != WidgetMode.calendarOnly &&
-                  _checkIn != null &&
-                  _checkOut != null)
-                _buildFloatingDraggablePillBar(unitId, constraints, isDarkMode),
-            ],
-          );
-        },
+                // Custom logo display (if configured)
+                if (_widgetSettings?.themeOptions?.customLogoUrl != null &&
+                    _widgetSettings!.themeOptions!.customLogoUrl!.isNotEmpty)
+                  Positioned(
+                    top: topPadding + 8,
+                    left: horizontalPadding + 8,
+                    child: CachedNetworkImage(
+                      imageUrl: _widgetSettings!.themeOptions!.customLogoUrl!,
+                      height: 40,
+                      fit: BoxFit.contain,
+                      placeholder: (context, url) =>
+                          const SizedBox(height: 40, width: 40),
+                      errorWidget: (context, url, error) =>
+                          const SizedBox.shrink(),
+                    ),
+                  ),
+
+                // Bug #67 Fix: iCal sync warning banner - shows when external calendars are stale
+                _buildIcalSyncWarning(unitId, isDarkMode),
+
+                // Full-screen backdrop overlay when guest form is shown
+                if (_showGuestForm)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _showGuestForm = false;
+                        });
+                      },
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+
+                // Contact info bar (calendar only mode - no booking) - positioned at bottom
+                if (widgetMode == WidgetMode.calendarOnly)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: _buildContactInfoBar(isDarkMode),
+                  ),
+
+                // Floating draggable booking summary bar (booking modes - shown when dates selected)
+                if (widgetMode != WidgetMode.calendarOnly &&
+                    _checkIn != null &&
+                    _checkOut != null)
+                  _buildFloatingDraggablePillBar(
+                    unitId,
+                    constraints,
+                    isDarkMode,
+                  ),
+
+                // Rotate device overlay - HIGHEST z-index, only for year view in portrait
+                if (_shouldShowRotateOverlay(context))
+                  _buildRotateDeviceOverlay(colors),
+              ],
+            );
+          },
+        ),
       ),
+    );
+  }
+
+  /// Bug #67 Fix: Build iCal sync warning banner
+  /// Shows warning when external calendars (Airbnb/Booking.com) haven't been synced recently
+  Widget _buildIcalSyncWarning(String unitId, bool isDarkMode) {
+    final syncStatus = ref.watch(icalSyncStatusProvider(unitId));
+
+    return syncStatus.when(
+      data: (status) {
+        // Don't show banner if no active feeds or recently synced (< 30 min)
+        if (!status.hasActiveFeeds || !status.isStale) {
+          return const SizedBox.shrink();
+        }
+
+        return Positioned(
+          top: 8,
+          left: 8,
+          right: 8,
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDarkMode
+                    ? const Color(0xFF3D2800) // Dark amber background
+                    : const Color(0xFFFFF3CD), // Light amber background
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isDarkMode
+                      ? const Color(0xFF8B6914) // Dark amber border
+                      : const Color(0xFFFFE69C), // Light amber border
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: isDarkMode
+                        ? const Color(0xFFFFD54F) // Dark amber icon
+                        : const Color(0xFF856404), // Light amber icon
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      status.displayText,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDarkMode
+                            ? const Color(0xFFFFE082) // Dark amber text
+                            : const Color(0xFF856404), // Light amber text
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
@@ -520,12 +994,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     BoxConstraints constraints,
     bool isDarkMode,
   ) {
-    // Watch price calculation
+    // Watch price calculation with dynamic deposit percentage
+    final depositPercentage =
+        _widgetSettings?.stripeConfig?.depositPercentage ?? 20;
     final priceCalc = ref.watch(
       bookingPriceProvider(
         unitId: unitId,
         checkIn: _checkIn,
         checkOut: _checkOut,
+        depositPercentage: depositPercentage,
       ),
     );
 
@@ -535,94 +1012,99 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           return const SizedBox.shrink();
         }
 
-        // Calculate responsive width based on screen size
+        // Calculate responsive width and height based on screen size
         final screenWidth = constraints.maxWidth;
+        final screenHeight = constraints.maxHeight;
         double pillBarWidth;
+        double maxHeight;
 
         // Different widths for step 1 (compact) vs step 2 (form)
         if (_showGuestForm) {
-          // Step 2: Wider for form
+          // Step 2: Full form - responsive based on device
           if (screenWidth < 600) {
-            pillBarWidth = screenWidth * 0.9; // Mobile: 90%
+            // Mobile
+            pillBarWidth = screenWidth * 0.95; // 95% width
+            maxHeight = screenHeight * 0.9; // 90% height
           } else if (screenWidth < 1024) {
-            pillBarWidth = screenWidth * 0.8; // Tablet: 80%
+            // Tablet
+            pillBarWidth = screenWidth * 0.8; // 80% width
+            maxHeight = screenHeight * 0.8; // 80% height
           } else {
-            pillBarWidth = screenWidth * 0.7; // Desktop: 70%
+            // Desktop
+            pillBarWidth = screenWidth * 0.7; // 70% width
+            maxHeight = screenHeight * 0.7; // 70% height
           }
         } else {
-          // Step 1: Compact width
+          // Step 1: Compact pill bar
           if (screenWidth < 600) {
             pillBarWidth = 350.0; // Mobile: fixed 350px
           } else {
             pillBarWidth = 400.0; // Desktop/Tablet: fixed 400px
           }
+          maxHeight = 160.0; // Fixed height for compact view
         }
 
-        // Calculate default position (center of screen)
-        // Estimate pill bar height based on whether guest form is shown
-        final screenHeight = constraints.maxHeight;
-        double estimatedHeight;
-
-        if (_showGuestForm) {
-          // Step 2: Responsive height based on screen size
-          if (screenWidth < 600) {
-            estimatedHeight =
-                screenHeight * 0.85; // Mobile: 85% of screen height
-          } else if (screenWidth < 1024) {
-            estimatedHeight =
-                screenHeight * 0.75; // Tablet: 75% of screen height
-          } else {
-            estimatedHeight =
-                screenHeight * 0.65; // Desktop: 65% of screen height
-          }
-        } else {
-          // Step 1: Fixed small height for compact view
-          estimatedHeight = 80.0;
-        }
-
+        // Center booking flow on screen (not calendar)
         final defaultPosition = Offset(
           (constraints.maxWidth / 2) -
-              (pillBarWidth / 2), // Center horizontally with dynamic width
+              (pillBarWidth / 2), // Center horizontally
           (constraints.maxHeight / 2) -
-              (estimatedHeight / 2), // Center vertically
+              (maxHeight / 2), // Center vertically based on screen
         );
 
         final position = _pillBarPosition ?? defaultPosition;
+
+        // Check if pill bar is completely off-screen (dragged beyond bounds)
+        // Hide it if user drags it off the visible area
+        final isCompletelyOffScreen =
+            position.dx + pillBarWidth < 0 || // Dragged left off-screen
+            position.dy + maxHeight < 0 || // Dragged up off-screen
+            position.dx > constraints.maxWidth || // Dragged right off-screen
+            position.dy > constraints.maxHeight; // Dragged down off-screen
+
+        // If off-screen, hide the pill bar
+        if (isCompletelyOffScreen) {
+          return const SizedBox.shrink();
+        }
 
         return Positioned(
           left: position.dx,
           top: position.dy,
           child: GestureDetector(
-            behavior: HitTestBehavior.opaque, // Make entire area draggable
+            behavior:
+                HitTestBehavior.translucent, // Better hit test for dragging
+            onPanStart: (_) {
+              // Provide haptic feedback on drag start
+              HapticFeedback.selectionClick();
+            },
             onPanUpdate: (details) {
               setState(() {
+                // Allow dragging beyond screen bounds - pill bar will hide if off-screen
                 _pillBarPosition = Offset(
-                  (position.dx + details.delta.dx).clamp(
-                    0.0,
-                    constraints.maxWidth - pillBarWidth,
-                  ),
-                  (position.dy + details.delta.dy).clamp(
-                    0.0,
-                    constraints.maxHeight - 80,
-                  ),
+                  position.dx + details.delta.dx,
+                  position.dy + details.delta.dy,
                 );
               });
+            },
+            onPanEnd: (_) {
+              // If pill bar was dragged off-screen, reset to default position
+              // This allows users to "reset" the position by dragging it off-screen
+              if (isCompletelyOffScreen) {
+                setState(() {
+                  _pillBarPosition = null; // Reset to center
+                });
+              }
             },
             child: Material(
               elevation: 8,
               borderRadius: BorderRadius.circular(30),
               child: Container(
                 width: pillBarWidth,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
+                height: maxHeight, // Fixed height based on screen
                 decoration: BoxDecoration(
-                  color:
-                      (isDarkMode
-                              ? MinimalistColorsDark.backgroundPrimary
-                              : MinimalistColors.backgroundPrimary)
-                          .withValues(alpha: 0.95),
+                  color: isDarkMode
+                      ? MinimalistColorsDark.backgroundPrimary
+                      : MinimalistColors.backgroundPrimary,
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
                     color: isDarkMode
@@ -630,7 +1112,19 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         : MinimalistColors.borderLight,
                   ),
                 ),
-                child: _buildPillBarContent(calculation, isDarkMode),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(30),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      12,
+                      10,
+                      12,
+                      // Bug #46: Add keyboard height to bottom padding
+                      12 + MediaQuery.of(context).viewInsets.bottom,
+                    ),
+                    child: _buildPillBarContent(calculation, isDarkMode),
+                  ),
+                ),
               ),
             ),
           ),
@@ -702,7 +1196,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           // 2-column layout: Guest info (left) | Payment options (right)
           ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.6,
+              // Bug #46: Account for keyboard when calculating max height
+              maxHeight:
+                  (MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).viewInsets.bottom) *
+                  0.6,
             ),
             child: SingleChildScrollView(
               child: Row(
@@ -732,49 +1230,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Show guest form if needed (mobile)
         if (_showGuestForm && !isWideScreen) ...[
           const SizedBox(height: 12),
-          // Close button for mobile
-          Align(
-            alignment: Alignment.centerRight,
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  _checkIn = null;
-                  _checkOut = null;
-                  _showGuestForm = false;
-                  _pillBarPosition = null;
-                });
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: MinimalistColors.backgroundSecondary,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: MinimalistColors.borderLight),
-                ),
-                child: const Icon(
-                  Icons.close,
-                  size: 16,
-                  color: MinimalistColors.textSecondary,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.6,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildGuestInfoForm(calculation, showButton: false),
-                  const SizedBox(height: SpacingTokens.m),
-                  _buildPaymentSection(calculation),
-                ],
-              ),
-            ),
-          ),
+          _buildGuestInfoForm(calculation, showButton: false),
+          const SizedBox(height: SpacingTokens.m),
+          _buildPaymentSection(calculation),
         ],
       ],
     );
@@ -904,8 +1362,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (!_showGuestForm)
           InkWell(
             onTap: () {
+              // Bug #64: Lock price when user starts booking process
               setState(() {
                 _showGuestForm = true;
+                _lockedPriceCalculation = calculation.copyWithLock();
               });
             },
             borderRadius: BorderRadius.circular(20),
@@ -942,66 +1402,302 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Helper function to get theme-aware colors
     Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
 
+    // Safety check: At least one payment method must be available
+    final hasAnyPaymentMethod =
+        (_widgetSettings?.stripeConfig?.enabled == true) ||
+        (_widgetSettings?.bankTransferConfig?.enabled == true) ||
+        (_widgetSettings?.allowPayOnArrival == true);
+
+    // If no payment methods available, show error message
+    if (_widgetSettings?.widgetMode == WidgetMode.bookingInstant &&
+        !hasAnyPaymentMethod) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(SpacingTokens.m),
+            decoration: BoxDecoration(
+              color: getColor(
+                MinimalistColors.error,
+                MinimalistColorsDark.error,
+              ).withValues(alpha: 0.1),
+              borderRadius: BorderTokens.circularMedium,
+              border: Border.all(
+                color: getColor(
+                  MinimalistColors.error,
+                  MinimalistColorsDark.error,
+                ),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  color: getColor(
+                    MinimalistColors.error,
+                    MinimalistColorsDark.error,
+                  ),
+                  size: 24,
+                ),
+                const SizedBox(width: SpacingTokens.s),
+                Expanded(
+                  child: Text(
+                    'No payment methods available. Please contact property owner.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: getColor(
+                        MinimalistColors.error,
+                        MinimalistColorsDark.error,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: SpacingTokens.m),
+          // Disabled confirm button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: null, // Disabled
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderTokens.circularRounded,
+                ),
+              ),
+              child: const Text(
+                'Booking Not Available',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Payment method section (only for bookingInstant mode)
         if (_widgetSettings?.widgetMode == WidgetMode.bookingInstant) ...[
-          Text(
-            'Payment Method',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
-            ),
+          // Count enabled payment methods
+          Builder(
+            builder: (context) {
+              final isStripeEnabled =
+                  _widgetSettings?.stripeConfig?.enabled == true;
+              final isBankTransferEnabled =
+                  _widgetSettings?.bankTransferConfig?.enabled == true;
+              final isPayOnArrivalEnabled =
+                  _widgetSettings?.allowPayOnArrival == true;
+
+              int enabledCount = 0;
+              String? singleMethod;
+              String? singleMethodTitle;
+              String? singleMethodSubtitle;
+
+              if (isStripeEnabled) {
+                enabledCount++;
+                singleMethod = 'stripe';
+                singleMethodTitle = 'Credit/Debit Card via Stripe';
+                singleMethodSubtitle = calculation.formattedDeposit;
+              }
+              if (isBankTransferEnabled) {
+                enabledCount++;
+                singleMethod = 'bankTransfer';
+                singleMethodTitle = 'Bank Transfer';
+                singleMethodSubtitle = calculation.formattedDeposit;
+              }
+              if (isPayOnArrivalEnabled) {
+                enabledCount++;
+                singleMethod = 'payOnArrival';
+                singleMethodTitle = 'Pay on Arrival';
+                singleMethodSubtitle = 'Payment at property';
+              }
+
+              // If only one method, auto-select and show simplified UI
+              if (enabledCount == 1) {
+                // Auto-select the single method
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (_selectedPaymentMethod != singleMethod) {
+                    setState(() {
+                      _selectedPaymentMethod = singleMethod!;
+                    });
+                  }
+                });
+
+                // Show simplified payment info (no selector)
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Payment',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: getColor(
+                          MinimalistColors.textPrimary,
+                          MinimalistColorsDark.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: SpacingTokens.s),
+                    Container(
+                      padding: const EdgeInsets.all(SpacingTokens.m),
+                      decoration: BoxDecoration(
+                        color: getColor(
+                          MinimalistColors.backgroundSecondary,
+                          MinimalistColorsDark.backgroundSecondary,
+                        ),
+                        borderRadius: BorderTokens.circularMedium,
+                        border: Border.all(
+                          color: getColor(
+                            MinimalistColors.borderDefault,
+                            MinimalistColorsDark.borderDefault,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            singleMethod == 'stripe'
+                                ? Icons.credit_card
+                                : singleMethod == 'bankTransfer'
+                                ? Icons.account_balance
+                                : Icons.home_outlined,
+                            color: getColor(
+                              MinimalistColors.textPrimary,
+                              MinimalistColorsDark.textPrimary,
+                            ),
+                            size: 24,
+                          ),
+                          const SizedBox(width: SpacingTokens.s),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  singleMethodTitle!,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: getColor(
+                                      MinimalistColors.textPrimary,
+                                      MinimalistColorsDark.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                if (singleMethodSubtitle != null)
+                                  Text(
+                                    singleMethodSubtitle,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: getColor(
+                                        MinimalistColors.textSecondary,
+                                        MinimalistColorsDark.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: SpacingTokens.m),
+                  ],
+                );
+              }
+
+              // Multiple methods - show normal payment selector
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Payment Method',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: getColor(
+                        MinimalistColors.textPrimary,
+                        MinimalistColorsDark.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: SpacingTokens.s),
+                ],
+              );
+            },
           ),
-          const SizedBox(height: SpacingTokens.s),
 
-          // Stripe option (if enabled)
-          if (_widgetSettings?.stripeConfig?.enabled == true)
-            _buildPaymentOption(
-              icon: Icons.credit_card,
-              title: 'Credit/Debit Card',
-              subtitle: 'Instant confirmation via Stripe',
-              value: 'stripe',
-              depositAmount: calculation.formattedDeposit,
-            ),
+          // Payment options - only show if multiple methods available
+          Builder(
+            builder: (context) {
+              final isStripeEnabled =
+                  _widgetSettings?.stripeConfig?.enabled == true;
+              final isBankTransferEnabled =
+                  _widgetSettings?.bankTransferConfig?.enabled == true;
+              final isPayOnArrivalEnabled =
+                  _widgetSettings?.allowPayOnArrival == true;
 
-          // Bank Transfer option (if enabled)
-          if (_widgetSettings?.bankTransferConfig?.enabled == true)
-            Padding(
-              padding: EdgeInsets.only(
-                top: _widgetSettings?.stripeConfig?.enabled == true
-                    ? SpacingTokens.s
-                    : 0,
-              ),
-              child: _buildPaymentOption(
-                icon: Icons.account_balance,
-                title: 'Bank Transfer',
-                subtitle: 'Manual confirmation (3 business days)',
-                value: 'bankTransfer',
-                depositAmount: calculation.formattedDeposit,
-              ),
-            ),
+              int enabledCount = 0;
+              if (isStripeEnabled) enabledCount++;
+              if (isBankTransferEnabled) enabledCount++;
+              if (isPayOnArrivalEnabled) enabledCount++;
 
-          // Pay on Arrival option (always available for bookingInstant mode)
-          Padding(
-            padding: EdgeInsets.only(
-              top:
-                  (_widgetSettings?.stripeConfig?.enabled == true ||
-                      _widgetSettings?.bankTransferConfig?.enabled == true)
-                  ? SpacingTokens.s
-                  : 0,
-            ),
-            child: _buildPaymentOption(
-              icon: Icons.home_outlined,
-              title: 'Pay on Arrival',
-              subtitle: 'Pay at the property',
-              value: 'payOnArrival',
-            ),
+              // Only show payment selectors if multiple options
+              if (enabledCount <= 1) {
+                return const SizedBox.shrink(); // Hide payment options
+              }
+
+              // Multiple payment methods - show all options
+              return Column(
+                children: [
+                  // Stripe option
+                  if (isStripeEnabled)
+                    _buildPaymentOption(
+                      icon: Icons.credit_card,
+                      title: 'Credit/Debit Card',
+                      subtitle: 'Instant confirmation via Stripe',
+                      value: 'stripe',
+                      depositAmount: calculation.formattedDeposit,
+                    ),
+
+                  // Bank Transfer option
+                  if (isBankTransferEnabled)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        top: isStripeEnabled ? SpacingTokens.s : 0,
+                      ),
+                      child: _buildPaymentOption(
+                        icon: Icons.account_balance,
+                        title: 'Bank Transfer',
+                        subtitle: 'Manual confirmation (3 business days)',
+                        value: 'bankTransfer',
+                        depositAmount: calculation.formattedDeposit,
+                      ),
+                    ),
+
+                  // Pay on Arrival option
+                  if (isPayOnArrivalEnabled)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        top: (isStripeEnabled || isBankTransferEnabled)
+                            ? SpacingTokens.s
+                            : 0,
+                      ),
+                      child: _buildPaymentOption(
+                        icon: Icons.home_outlined,
+                        title: 'Pay on Arrival',
+                        subtitle: 'Pay at the property',
+                        value: 'payOnArrival',
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
 
           const SizedBox(height: SpacingTokens.m),
@@ -1129,6 +1825,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           // Name field
           TextFormField(
             controller: _nameController,
+            maxLength: 100, // Bug #60: Maximum field length validation
             style: TextStyle(
               color: getColor(
                 MinimalistColors.textPrimary,
@@ -1136,6 +1833,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               ),
             ),
             decoration: InputDecoration(
+              counterText: '', // Hide character counter
               labelText: 'Full Name *',
               hintText: 'John Doe',
               labelStyle: TextStyle(
@@ -1158,6 +1856,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
               ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderTokens.circularMedium,
+                borderSide: const BorderSide(color: Colors.red, width: 1.5),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderTokens.circularMedium,
+                borderSide: const BorderSide(color: Colors.red, width: 2),
+              ),
+              errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
               prefixIcon: Icon(
                 Icons.person_outline,
                 color: getColor(
@@ -1166,19 +1873,125 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 ),
               ),
             ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your name';
-              }
-              return null;
-            },
+            // Real-time validation
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            validator: NameValidator.validate,
           ),
           const SizedBox(height: SpacingTokens.s),
 
-          // Email field
+          // Email field with verification (if required)
+          _buildEmailFieldWithVerification(isDarkMode),
+          const SizedBox(height: SpacingTokens.s),
+
+          // Phone field with country code dropdown
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Country code dropdown
+              CountryCodeDropdown(
+                selectedCountry: _selectedCountry,
+                onChanged: (country) {
+                  setState(() {
+                    _selectedCountry = country;
+                    // Re-validate phone number with new country
+                    _formKey.currentState?.validate();
+                  });
+                },
+                textColor: getColor(
+                  MinimalistColors.textPrimary,
+                  MinimalistColorsDark.textPrimary,
+                ),
+                backgroundColor: getColor(
+                  MinimalistColors.backgroundSecondary,
+                  MinimalistColorsDark.backgroundSecondary,
+                ),
+                borderColor: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ).withValues(alpha: 0.3),
+              ),
+              const SizedBox(width: SpacingTokens.s),
+              // Phone number input
+              Expanded(
+                child: TextFormField(
+                  controller: _phoneController,
+                  maxLength: 20, // Bug #60: Maximum field length validation
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [
+                    PhoneNumberFormatter(_selectedCountry.dialCode),
+                  ],
+                  style: TextStyle(
+                    color: getColor(
+                      MinimalistColors.textPrimary,
+                      MinimalistColorsDark.textPrimary,
+                    ),
+                  ),
+                  decoration: InputDecoration(
+                    counterText: '', // Hide character counter
+                    labelText: 'Phone Number *',
+                    hintText: '99 123 4567',
+                    labelStyle: TextStyle(
+                      color: getColor(
+                        MinimalistColors.textSecondary,
+                        MinimalistColorsDark.textSecondary,
+                      ),
+                    ),
+                    hintStyle: TextStyle(
+                      color: getColor(
+                        MinimalistColors.textSecondary,
+                        MinimalistColorsDark.textSecondary,
+                      ).withValues(alpha: 0.5),
+                    ),
+                    filled: true,
+                    fillColor: getColor(
+                      MinimalistColors.backgroundSecondary,
+                      MinimalistColorsDark.backgroundSecondary,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(
+                        color: Colors.red,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
+                    ),
+                    errorStyle: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.phone_outlined,
+                      color: getColor(
+                        MinimalistColors.textSecondary,
+                        MinimalistColorsDark.textSecondary,
+                      ),
+                    ),
+                  ),
+                  // Real-time validation with country-specific rules
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  validator: (value) {
+                    return PhoneValidator.validate(
+                      value,
+                      _selectedCountry.dialCode,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SpacingTokens.m),
+
+          // Special requests field
           TextFormField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
+            controller: _notesController,
+            maxLines: 3,
+            maxLength: 500,
             style: TextStyle(
               color: getColor(
                 MinimalistColors.textPrimary,
@@ -1186,8 +1999,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               ),
             ),
             decoration: InputDecoration(
-              labelText: 'Email *',
-              hintText: 'john@example.com',
+              labelText: 'Special Requests (Optional)',
+              hintText: 'Any special requirements or preferences...',
               labelStyle: TextStyle(
                 color: getColor(
                   MinimalistColors.textSecondary,
@@ -1209,72 +2022,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 borderRadius: BorderTokens.circularMedium,
               ),
               prefixIcon: Icon(
-                Icons.email_outlined,
+                Icons.notes,
                 color: getColor(
                   MinimalistColors.textSecondary,
                   MinimalistColorsDark.textSecondary,
                 ),
               ),
             ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!value.contains('@')) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: SpacingTokens.s),
-
-          // Phone field
-          TextFormField(
-            controller: _phoneController,
-            keyboardType: TextInputType.phone,
-            style: TextStyle(
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Phone *',
-              hintText: '+385 99 123 4567',
-              labelStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
-              ),
-              hintStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ).withValues(alpha: 0.5),
-              ),
-              filled: true,
-              fillColor: getColor(
-                MinimalistColors.backgroundSecondary,
-                MinimalistColorsDark.backgroundSecondary,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-              ),
-              prefixIcon: Icon(
-                Icons.phone_outlined,
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
-              ),
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your phone number';
-              }
-              return null;
-            },
           ),
           const SizedBox(height: SpacingTokens.m),
 
@@ -1329,21 +2083,28 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   String _getConfirmButtonText() {
     final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
+    // Calculate nights if dates are selected
+    String nightsText = '';
+    if (_checkIn != null && _checkOut != null) {
+      final nights = _checkOut!.difference(_checkIn!).inDays;
+      nightsText = ' - $nights ${nights == 1 ? 'night' : 'nights'}';
+    }
+
     // bookingPending mode - no payment, just request
     if (widgetMode == WidgetMode.bookingPending) {
-      return 'Send Booking Request';
+      return 'Send Booking Request$nightsText';
     }
 
     // bookingInstant mode - depends on selected payment method
     if (_selectedPaymentMethod == 'stripe') {
-      return 'Pay with Stripe';
+      return 'Pay with Stripe$nightsText';
     } else if (_selectedPaymentMethod == 'bankTransfer') {
-      return 'Continue to Bank Transfer';
+      return 'Continue to Bank Transfer$nightsText';
     } else if (_selectedPaymentMethod == 'payOnArrival') {
-      return 'Rezervisi'; // Reserve in Serbian
+      return 'Rezervisi$nightsText'; // Reserve in Serbian
     }
 
-    return 'Confirm Booking';
+    return 'Confirm Booking$nightsText';
   }
 
   Widget _buildPaymentOption({
@@ -1504,6 +2265,84 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return;
     }
 
+    // Validate email verification if required
+    final requireEmailVerification =
+        _widgetSettings?.emailConfig.requireEmailVerification ?? false;
+    if (requireEmailVerification && !_emailVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please verify your email before booking'),
+          backgroundColor: MinimalistColors.error,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // Bug #64: Check if price changed since user started booking
+    if (_lockedPriceCalculation != null) {
+      final priceDelta =
+          calculation.totalPrice - _lockedPriceCalculation!.totalPrice;
+      if (priceDelta.abs() > 0.01) {
+        // 1 cent tolerance
+        final priceIncreased = priceDelta > 0;
+        final changeAmount = priceDelta.abs().toStringAsFixed(2);
+
+        if (mounted) {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(
+                priceIncreased ? '⚠️ Price Increased' : 'ℹ️ Price Decreased',
+                style: TextStyle(
+                  color: priceIncreased ? Colors.orange : Colors.blue,
+                ),
+              ),
+              content: Text(
+                priceIncreased
+                    ? 'The price has increased by €$changeAmount since you started booking.\n\n'
+                          'Original: €${_lockedPriceCalculation!.totalPrice.toStringAsFixed(2)}\n'
+                          'Current: €${calculation.totalPrice.toStringAsFixed(2)}\n\n'
+                          'Do you want to proceed with the new price?'
+                    : 'Good news! The price decreased by €$changeAmount.\n\n'
+                          'Original: €${_lockedPriceCalculation!.totalPrice.toStringAsFixed(2)}\n'
+                          'Current: €${calculation.totalPrice.toStringAsFixed(2)}\n\n'
+                          'Proceed with the new price?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: priceIncreased
+                        ? Colors.orange
+                        : Colors.blue,
+                  ),
+                  child: const Text('Proceed'),
+                ),
+              ],
+            ),
+          );
+
+          if (confirmed != true) {
+            // User cancelled - update locked price to current
+            setState(() {
+              _lockedPriceCalculation = calculation.copyWithLock();
+            });
+            return;
+          }
+
+          // User confirmed - update locked price to current
+          setState(() {
+            _lockedPriceCalculation = calculation.copyWithLock();
+          });
+        }
+      }
+    }
+
     // CRITICAL: Validate dates (check-in must be before check-out)
     if (_checkIn == null || _checkOut == null) {
       if (mounted) {
@@ -1530,6 +2369,47 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return;
     }
 
+    // BUG #22: Validate same-day check-in timing
+    // If check-in is today, ensure current time is before standard check-in time (3 PM)
+    // Bug #65 Fix: Use UTC for DST-safe date comparison
+    final now = DateTime.now().toUtc();
+    final today = DateTime.utc(now.year, now.month, now.day);
+    final checkInDate = DateTime.utc(
+      _checkIn!.year,
+      _checkIn!.month,
+      _checkIn!.day,
+    );
+
+    if (checkInDate.isAtSameMomentAs(today)) {
+      // Standard check-in time: 3 PM (15:00)
+      final checkInTimeHour = 15; // 3 PM
+
+      // If current time is after check-in time, show warning
+      if (now.hour >= checkInTimeHour) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Same-day check-in: Property check-in time is $checkInTimeHour:00. '
+                'Please note that you may not be able to check in until tomorrow.',
+              ),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 7),
+              action: SnackBarAction(
+                label: 'Continue',
+                textColor: Colors.white,
+                onPressed: () {
+                  // User acknowledges and wants to continue
+                },
+              ),
+            ),
+          );
+        }
+        // Don't block the booking, just show warning
+        // User might contact owner to arrange late check-in
+      }
+    }
+
     // Validate that we have propertyId and ownerId (should already be fetched in initState)
     if (_propertyId == null || _ownerId == null) {
       if (mounted) {
@@ -1545,41 +2425,100 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return;
     }
 
-    setState(() {
-      _isProcessing = true;
-    });
+    // Validate payment method for bookingInstant mode
+    final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
+    if (widgetMode == WidgetMode.bookingInstant) {
+      final isStripeEnabled = _widgetSettings?.stripeConfig?.enabled == true;
+      final isBankTransferEnabled =
+          _widgetSettings?.bankTransferConfig?.enabled == true;
 
-    try {
-      // RACE CONDITION CHECK: Verify dates are still available before booking
-      final bookingRepo = ref.read(bookingRepositoryProvider);
-      final conflictingBookings = await bookingRepo.getOverlappingBookings(
-        unitId: _unitId,
-        checkIn: _checkIn!,
-        checkOut: _checkOut!,
-      );
-
-      if (conflictingBookings.isNotEmpty) {
-        // Dates are no longer available
+      // Check if selected payment method is valid
+      if (_selectedPaymentMethod == 'stripe' && !isStripeEnabled) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
-                'Sorry, these dates are no longer available. Please select different dates.',
+                'Stripe payment is not available. Please select another payment method.',
               ),
               backgroundColor: Colors.red,
               duration: Duration(seconds: 5),
             ),
           );
-
-          // Reset selection
-          setState(() {
-            _checkIn = null;
-            _checkOut = null;
-            _showGuestForm = false;
-          });
         }
         return;
       }
+
+      if (_selectedPaymentMethod == 'bankTransfer' && !isBankTransferEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Bank transfer is not available. Please select another payment method.',
+              ),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
+
+      if (_selectedPaymentMethod == 'payOnArrival' &&
+          !(_widgetSettings?.allowPayOnArrival ?? false)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Pay on arrival is not available. Please select another payment method.',
+              ),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
+    }
+
+    // Validate guest count against property capacity
+    final totalGuests = _adults + _children;
+    final maxGuests = _unit?.maxGuests ?? 10;
+    if (totalGuests > maxGuests) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Maximum $maxGuests ${maxGuests == 1 ? 'guest' : 'guests'} allowed for this property. You selected $totalGuests ${totalGuests == 1 ? 'guest' : 'guests'}.',
+            ),
+            backgroundColor: MinimalistColors.error,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Validate minimum 1 adult required
+    if (_adults == 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('At least 1 adult is required for booking.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      // Race condition is handled atomically by createBookingAtomic Cloud Function
+      // Client-side checks are unsafe due to TOCTOU (Time-of-check-to-time-of-use)
 
       final widgetMode =
           _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
@@ -1595,13 +2534,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           checkOut: _checkOut!,
           guestName: _nameController.text.trim(),
           guestEmail: _emailController.text.trim(),
-          guestPhone: _phoneController.text.trim(),
+          guestPhone:
+              '${_selectedCountry.dialCode} ${_phoneController.text.trim()}',
           guestCount: _adults + _children,
           totalPrice: calculation.totalPrice,
           paymentOption: 'none', // No payment for pending bookings
           paymentMethod: 'none',
           requireOwnerApproval:
               true, // Always requires approval in bookingPending mode
+          notes: _notesController.text.trim().isEmpty
+              ? null
+              : _notesController.text.trim(),
         );
 
         // Send email notifications (if configured)
@@ -1611,45 +2554,46 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           final propertyName = _unit?.name ?? 'Vacation Rental';
 
           // Send booking confirmation to guest
-          unawaited(emailService.sendBookingConfirmationEmail(
-            booking: booking,
-            emailConfig: _widgetSettings!.emailConfig,
-            propertyName: propertyName,
-            bookingReference: bookingReference,
-          ));
+          unawaited(
+            emailService.sendBookingConfirmationEmail(
+              booking: booking,
+              emailConfig: _widgetSettings!.emailConfig,
+              propertyName: propertyName,
+              bookingReference: bookingReference,
+              allowGuestCancellation: _widgetSettings!.allowGuestCancellation,
+              cancellationDeadlineHours:
+                  _widgetSettings!.cancellationDeadlineHours,
+              ownerEmail: _widgetSettings!.contactOptions.emailAddress,
+              ownerPhone: _widgetSettings!.contactOptions.phoneNumber,
+              customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
+            ),
+          );
 
           // Send owner notification (if owner email is available and configured)
           if (_widgetSettings!.emailConfig.sendOwnerNotification) {
             // Get owner email from property or use configured email
             final ownerEmail = _widgetSettings!.emailConfig.fromEmail;
             if (ownerEmail != null) {
-              unawaited(emailService.sendOwnerNotificationEmail(
-                booking: booking,
-                emailConfig: _widgetSettings!.emailConfig,
-                propertyName: propertyName,
-                bookingReference: bookingReference,
-                ownerEmail: ownerEmail,
-                requiresApproval: true,
-              ));
+              unawaited(
+                emailService.sendOwnerNotificationEmail(
+                  booking: booking,
+                  emailConfig: _widgetSettings!.emailConfig,
+                  propertyName: propertyName,
+                  bookingReference: bookingReference,
+                  ownerEmail: ownerEmail,
+                  requiresApproval: true,
+                  customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
+                ),
+              );
             }
           }
 
           emailService.dispose();
         }
 
-        // Show success message
+        // Navigate to confirmation screen
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Booking request sent! Reference: ${booking.id.substring(0, 8)}',
-              ),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 5),
-            ),
-          );
-
-          // Reset form
+          // Reset form before navigation
           setState(() {
             _checkIn = null;
             _checkOut = null;
@@ -1660,6 +2604,38 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             _adults = 2;
             _children = 0;
           });
+
+          // Navigate to confirmation screen
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => BookingConfirmationScreen(
+                bookingReference: booking.id.substring(0, 8).toUpperCase(),
+                guestEmail: booking.guestEmail!,
+                guestName: booking.guestName!,
+                checkIn: booking.checkIn,
+                checkOut: booking.checkOut,
+                totalPrice: booking.totalPrice,
+                nights: booking.checkOut.difference(booking.checkIn).inDays,
+                guests: booking.guestCount,
+                propertyName: _unit?.name ?? 'Property',
+                unitName: _unit?.name,
+                paymentMethod: 'pending',
+                booking: booking,
+                emailConfig: _widgetSettings?.emailConfig,
+                widgetSettings: _widgetSettings,
+              ),
+            ),
+          );
+
+          // CRITICAL: Invalidate calendar cache after booking
+          // This ensures the calendar refreshes and shows newly booked dates
+          if (mounted) {
+            ref.invalidate(realtimeYearCalendarProvider);
+            ref.invalidate(realtimeMonthCalendarProvider);
+
+            // Bug #53: Clear saved form data after successful booking
+            await _clearFormData();
+          }
         }
         return;
       }
@@ -1673,12 +2649,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         checkOut: _checkOut!,
         guestName: _nameController.text.trim(),
         guestEmail: _emailController.text.trim(),
-        guestPhone: _phoneController.text.trim(),
+        guestPhone:
+            '${_selectedCountry.dialCode} ${_phoneController.text.trim()}',
         guestCount: _adults + _children,
         totalPrice: calculation.totalPrice,
         paymentOption: _selectedPaymentOption, // 'deposit' or 'full'
         paymentMethod: _selectedPaymentMethod, // 'stripe' or 'bank_transfer'
         requireOwnerApproval: _widgetSettings?.requireOwnerApproval ?? false,
+        notes: _notesController.text.trim().isEmpty
+            ? null
+            : _notesController.text.trim(),
       );
 
       // Send booking confirmation email (pre-payment)
@@ -1695,26 +2675,38 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         );
         final dateFormat = DateFormat('dd.MM.yyyy');
 
-        unawaited(emailService.sendBookingConfirmationEmail(
-          booking: booking,
-          emailConfig: _widgetSettings!.emailConfig,
-          propertyName: propertyName,
-          bookingReference: bookingReference,
-          paymentDeadline: dateFormat.format(paymentDeadline),
-        ));
+        unawaited(
+          emailService.sendBookingConfirmationEmail(
+            booking: booking,
+            emailConfig: _widgetSettings!.emailConfig,
+            propertyName: propertyName,
+            bookingReference: bookingReference,
+            paymentDeadline: dateFormat.format(paymentDeadline),
+            allowGuestCancellation: _widgetSettings!.allowGuestCancellation,
+            cancellationDeadlineHours:
+                _widgetSettings!.cancellationDeadlineHours,
+            ownerEmail: _widgetSettings!.contactOptions.emailAddress,
+            ownerPhone: _widgetSettings!.contactOptions.phoneNumber,
+            customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
+          ),
+        );
 
         // Send owner notification
         if (_widgetSettings!.emailConfig.sendOwnerNotification) {
           final ownerEmail = _widgetSettings!.emailConfig.fromEmail;
           if (ownerEmail != null) {
-            unawaited(emailService.sendOwnerNotificationEmail(
-              booking: booking,
-              emailConfig: _widgetSettings!.emailConfig,
-              propertyName: propertyName,
-              bookingReference: bookingReference,
-              ownerEmail: ownerEmail,
-              requiresApproval: _widgetSettings?.requireOwnerApproval ?? false,
-            ));
+            unawaited(
+              emailService.sendOwnerNotificationEmail(
+                booking: booking,
+                emailConfig: _widgetSettings!.emailConfig,
+                propertyName: propertyName,
+                bookingReference: bookingReference,
+                ownerEmail: ownerEmail,
+                requiresApproval:
+                    _widgetSettings?.requireOwnerApproval ?? false,
+                customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
+              ),
+            );
           }
         }
 
@@ -1723,36 +2715,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       if (_selectedPaymentMethod == 'stripe') {
         // Stripe payment - redirect to checkout
-        await _handleStripePayment(booking.id);
+        // Pass booking details for return URL construction
+        await _handleStripePayment(
+          bookingId: booking.id,
+          bookingReference: booking.id.substring(0, 8).toUpperCase(),
+          guestEmail: booking.guestEmail!,
+        );
       } else if (_selectedPaymentMethod == 'bankTransfer') {
-        // Bank transfer - show instructions
+        // Bank transfer - navigate to confirmation screen
         if (mounted) {
-          unawaited(Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => BankTransferScreen(
-                propertyId: _propertyId!,
-                unitId: _unitId,
-                checkIn: _checkIn!,
-                checkOut: _checkOut!,
-                bookingReference: booking.id,
-              ),
-            ),
-          ));
-        }
-      } else if (_selectedPaymentMethod == 'payOnArrival') {
-        // Pay on Arrival - show success message and reset form
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Booking confirmed! Pay on arrival at the property.',
-              ),
-              backgroundColor: MinimalistColors.success,
-              duration: Duration(seconds: 5),
-            ),
-          );
-
-          // Reset form
+          // Reset form before navigation
           setState(() {
             _checkIn = null;
             _checkOut = null;
@@ -1763,7 +2735,104 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             _adults = 2;
             _children = 0;
           });
+
+          // Navigate to confirmation screen
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => BookingConfirmationScreen(
+                bookingReference: booking.id.substring(0, 8).toUpperCase(),
+                guestEmail: booking.guestEmail!,
+                guestName: booking.guestName!,
+                checkIn: booking.checkIn,
+                checkOut: booking.checkOut,
+                totalPrice: booking.totalPrice,
+                nights: booking.checkOut.difference(booking.checkIn).inDays,
+                guests: booking.guestCount,
+                propertyName: _unit?.name ?? 'Property',
+                unitName: _unit?.name,
+                paymentMethod: 'bankTransfer',
+                booking: booking,
+                emailConfig: _widgetSettings?.emailConfig,
+                widgetSettings: _widgetSettings,
+              ),
+            ),
+          );
+
+          // CRITICAL: Invalidate calendar cache after booking
+          // This ensures the calendar refreshes and shows newly booked dates
+          if (mounted) {
+            ref.invalidate(realtimeYearCalendarProvider);
+            ref.invalidate(realtimeMonthCalendarProvider);
+
+            // Bug #53: Clear saved form data after successful booking
+            await _clearFormData();
+          }
         }
+      } else if (_selectedPaymentMethod == 'payOnArrival') {
+        // Pay on Arrival - navigate to confirmation screen
+        if (mounted) {
+          // Reset form before navigation
+          setState(() {
+            _checkIn = null;
+            _checkOut = null;
+            _showGuestForm = false;
+            _nameController.clear();
+            _emailController.clear();
+            _phoneController.clear();
+            _adults = 2;
+            _children = 0;
+          });
+
+          // Navigate to confirmation screen
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => BookingConfirmationScreen(
+                bookingReference: booking.id.substring(0, 8).toUpperCase(),
+                guestEmail: booking.guestEmail!,
+                guestName: booking.guestName!,
+                checkIn: booking.checkIn,
+                checkOut: booking.checkOut,
+                totalPrice: booking.totalPrice,
+                nights: booking.checkOut.difference(booking.checkIn).inDays,
+                guests: booking.guestCount,
+                propertyName: _unit?.name ?? 'Property',
+                unitName: _unit?.name,
+                paymentMethod: 'payOnArrival',
+                booking: booking,
+                emailConfig: _widgetSettings?.emailConfig,
+                widgetSettings: _widgetSettings,
+              ),
+            ),
+          );
+
+          // CRITICAL: Invalidate calendar cache after booking
+          // This ensures the calendar refreshes and shows newly booked dates
+          if (mounted) {
+            ref.invalidate(realtimeYearCalendarProvider);
+            ref.invalidate(realtimeMonthCalendarProvider);
+
+            // Bug #53: Clear saved form data after successful booking
+            await _clearFormData();
+          }
+        }
+      }
+    } on BookingConflictException catch (e) {
+      // Race condition - dates were booked by another user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: MinimalistColors.error,
+            duration: const Duration(seconds: 7),
+          ),
+        );
+
+        // Reset selection so user can pick new dates
+        setState(() {
+          _checkIn = null;
+          _checkOut = null;
+          _showGuestForm = false;
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -1789,6 +2858,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final totalGuests = _adults + _children;
     final isAtCapacity = totalGuests >= maxGuests;
     final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
     // Helper function to get theme-aware colors
     Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
@@ -2021,22 +3091,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: isAtCapacity
-                  ? getColor(
-                      MinimalistColors.error,
-                      MinimalistColorsDark.error,
-                    ).withValues(alpha: 0.1)
+                  ? colors.statusBookedBackground.withValues(alpha: 0.1)
                   : getColor(
                       MinimalistColors.backgroundSecondary,
                       MinimalistColorsDark.backgroundSecondary,
                     ),
               borderRadius: BorderRadius.circular(8),
               border: isAtCapacity
-                  ? Border.all(
-                      color: getColor(
-                        MinimalistColors.error,
-                        MinimalistColorsDark.error,
-                      ),
-                    )
+                  ? Border.all(color: colors.statusBookedBackground)
                   : null,
             ),
             child: Row(
@@ -2045,10 +3107,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 Icon(
                   isAtCapacity ? Icons.warning : Icons.groups,
                   color: isAtCapacity
-                      ? getColor(
-                          MinimalistColors.error,
-                          MinimalistColorsDark.error,
-                        )
+                      ? colors.statusBookedBackground
                       : getColor(
                           MinimalistColors.textPrimary,
                           MinimalistColorsDark.textPrimary,
@@ -2064,10 +3123,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: isAtCapacity
-                        ? getColor(
-                            MinimalistColors.error,
-                            MinimalistColorsDark.error,
-                          )
+                        ? colors.statusBookedBackground
                         : getColor(
                             MinimalistColors.textPrimary,
                             MinimalistColorsDark.textPrimary,
@@ -2082,13 +3138,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     );
   }
 
-  Future<void> _handleStripePayment(String bookingId) async {
+  Future<void> _handleStripePayment({
+    required String bookingId,
+    required String bookingReference,
+    required String guestEmail,
+  }) async {
     try {
       final stripeService = ref.read(stripeServiceProvider);
 
+      // Build return URL with confirmation parameters
+      // Include full booking ID to fetch from Firestore after Stripe return
+      final baseUrl = Uri.base;
+      final returnUrl = Uri(
+        scheme: baseUrl.scheme,
+        host: baseUrl.host,
+        port: baseUrl.port,
+        path: baseUrl.path,
+        queryParameters: {
+          ...baseUrl.queryParameters,
+          'confirmation': bookingReference,
+          'bookingId': bookingId, // Full booking ID for Firestore fetch
+          'email': guestEmail,
+          'payment': 'stripe',
+        },
+      ).toString();
+
       final checkoutResult = await stripeService.createCheckoutSession(
         bookingId: bookingId,
-        returnUrl: Uri.base.toString(),
+        returnUrl: returnUrl,
       );
 
       // Redirect to Stripe Checkout
@@ -2107,6 +3184,438 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           ),
         );
       }
+    }
+  }
+
+  /// Show confirmation screen after Stripe return
+  /// Fetches booking from Firestore using booking ID and displays confirmation
+  Future<void> _showConfirmationFromUrl(
+    String bookingReference,
+    String guestEmail,
+    String bookingId,
+  ) async {
+    try {
+      // Fetch booking from Firestore using booking ID
+      final bookingRepo = ref.read(bookingRepositoryProvider);
+      var booking = await bookingRepo.fetchBookingById(bookingId);
+
+      if (booking == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Booking not found. Please check your email for confirmation.',
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Bug #40 Fix: Poll for webhook update if payment still pending
+      // Stripe webhook may take a few seconds to process
+      if (booking.paymentStatus == 'pending' ||
+          booking.status == BookingStatus.pending) {
+        LoggingService.log(
+          '⚠️ Payment status pending after Stripe return, polling for webhook update...',
+          tag: 'STRIPE_WEBHOOK_FALLBACK',
+        );
+
+        // Poll up to 10 times with 2-second intervals (20 seconds total)
+        for (var i = 0; i < 10; i++) {
+          await Future.delayed(const Duration(seconds: 2));
+
+          final updatedBooking = await bookingRepo.fetchBookingById(bookingId);
+          if (updatedBooking == null) break;
+
+          // Check if webhook has updated the booking
+          if (updatedBooking.paymentStatus == 'paid' ||
+              updatedBooking.status == BookingStatus.confirmed) {
+            LoggingService.log(
+              '✅ Webhook update detected after ${(i + 1) * 2} seconds',
+              tag: 'STRIPE_WEBHOOK_FALLBACK',
+            );
+            booking = updatedBooking;
+            break;
+          }
+
+          // Still pending, continue polling
+          booking = updatedBooking;
+        }
+
+        // If still pending after polling, log warning but proceed
+        if (booking?.paymentStatus == 'pending' ||
+            booking?.status == BookingStatus.pending) {
+          LoggingService.log(
+            '⚠️ Webhook not received after 20 seconds. Showing confirmation with pending status.',
+            tag: 'STRIPE_WEBHOOK_FALLBACK',
+          );
+        }
+      }
+
+      // Final null check (should never happen, but satisfies flow analysis)
+      if (booking == null) return;
+
+      // Create local non-null variable for use in closure
+      final confirmedBooking = booking;
+
+      // Navigate to confirmation screen
+      if (mounted) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => BookingConfirmationScreen(
+              bookingReference: bookingReference,
+              guestEmail: confirmedBooking.guestEmail ?? guestEmail,
+              guestName: confirmedBooking.guestName ?? 'Guest',
+              checkIn: confirmedBooking.checkIn,
+              checkOut: confirmedBooking.checkOut,
+              totalPrice: confirmedBooking.totalPrice,
+              nights: confirmedBooking.checkOut
+                  .difference(confirmedBooking.checkIn)
+                  .inDays,
+              guests: confirmedBooking.guestCount,
+              propertyName: _unit?.name ?? 'Property',
+              unitName: _unit?.name,
+              paymentMethod: 'stripe',
+              booking: confirmedBooking,
+              emailConfig: _widgetSettings?.emailConfig,
+              widgetSettings: _widgetSettings,
+            ),
+          ),
+        );
+
+        // CRITICAL: Invalidate calendar cache after Stripe return
+        // This ensures the calendar refreshes and shows newly booked dates
+        ref.invalidate(realtimeYearCalendarProvider);
+        ref.invalidate(realtimeMonthCalendarProvider);
+
+        // Bug #53: Clear saved form data after successful booking
+        await _clearFormData();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading booking: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Check if rotate device overlay should be shown
+  /// Returns true only when: year view + portrait orientation + narrow screen
+  bool _shouldShowRotateOverlay(BuildContext context) {
+    final currentView = ref.watch(calendarViewProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final orientation = MediaQuery.of(context).orientation;
+
+    // Show only in year view
+    if (currentView != CalendarViewType.year) return false;
+
+    // Show only on narrow screens (mobile/tablet portrait)
+    if (screenWidth >= 768) return false;
+
+    // Show only in portrait mode (aspect ratio + orientation)
+    // Use both orientation enum AND aspect ratio for iframe compatibility
+    final isPortrait =
+        orientation == Orientation.portrait || screenHeight > screenWidth;
+
+    return isPortrait;
+  }
+
+  /// Build rotate device overlay - prompts user to rotate to landscape
+  Widget _buildRotateDeviceOverlay(WidgetColorScheme colors) {
+    final isDarkMode = ref.watch(themeProvider);
+
+    return Positioned.fill(
+      child: Container(
+        color: colors.backgroundPrimary.withValues(alpha: 0.95),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(SpacingTokens.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.screen_rotation,
+                  size: 80,
+                  color: colors.textPrimary, // Black (light) / White (dark)
+                ),
+                const SizedBox(height: SpacingTokens.l),
+                Text(
+                  'Rotate Your Device',
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeXXL,
+                    fontWeight: TypographyTokens.bold,
+                    color: colors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: SpacingTokens.m),
+                Text(
+                  'For the best year view experience, please rotate your device to landscape mode.',
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeM,
+                    color: colors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: SpacingTokens.xl),
+                ElevatedButton(
+                  onPressed: () {
+                    // Switch to month view
+                    ref.read(calendarViewProvider.notifier).state =
+                        CalendarViewType.month;
+                  },
+                  style: ElevatedButton.styleFrom(
+                    // Black button (light theme) / White button (dark theme)
+                    backgroundColor: isDarkMode
+                        ? ColorTokens.pureWhite
+                        : ColorTokens.pureBlack,
+                    foregroundColor: isDarkMode
+                        ? ColorTokens.pureBlack
+                        : ColorTokens.pureWhite,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: SpacingTokens.xl,
+                      vertical: SpacingTokens.m,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                    ),
+                  ),
+                  child: const Text(
+                    'Switch to Month View',
+                    style: TextStyle(
+                      fontSize: TypographyTokens.fontSizeM,
+                      fontWeight: TypographyTokens.semiBold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build email field with verification button (if required)
+  Widget _buildEmailFieldWithVerification(bool isDarkMode) {
+    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+    final requireVerification =
+        _widgetSettings?.emailConfig.requireEmailVerification ?? false;
+
+    if (!requireVerification) {
+      // Standard email field without verification
+      return TextFormField(
+        controller: _emailController,
+        maxLength: 100, // Bug #60: Maximum field length validation
+        keyboardType: TextInputType.emailAddress,
+        style: TextStyle(
+          color: getColor(
+            MinimalistColors.textPrimary,
+            MinimalistColorsDark.textPrimary,
+          ),
+        ),
+        decoration: InputDecoration(
+          counterText: '', // Hide character counter
+          labelText: 'Email *',
+          hintText: 'john@example.com',
+          labelStyle: TextStyle(
+            color: getColor(
+              MinimalistColors.textSecondary,
+              MinimalistColorsDark.textSecondary,
+            ),
+          ),
+          hintStyle: TextStyle(
+            color: getColor(
+              MinimalistColors.textSecondary,
+              MinimalistColorsDark.textSecondary,
+            ).withValues(alpha: 0.5),
+          ),
+          filled: true,
+          fillColor: getColor(
+            MinimalistColors.backgroundSecondary,
+            MinimalistColorsDark.backgroundSecondary,
+          ),
+          border: OutlineInputBorder(borderRadius: BorderTokens.circularMedium),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderTokens.circularMedium,
+            borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderTokens.circularMedium,
+            borderSide: const BorderSide(color: Colors.red, width: 2),
+          ),
+          errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
+          prefixIcon: Icon(
+            Icons.email_outlined,
+            color: getColor(
+              MinimalistColors.textSecondary,
+              MinimalistColorsDark.textSecondary,
+            ),
+          ),
+        ),
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        validator: EmailValidator.validate,
+        onChanged: (value) {
+          // Reset verification when email changes
+          if (_emailVerified) {
+            setState(() {
+              _emailVerified = false;
+            });
+          }
+        },
+      );
+    }
+
+    // Email field with verification button
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: TextFormField(
+            controller: _emailController,
+            maxLength: 100, // Bug #60: Maximum field length validation
+            keyboardType: TextInputType.emailAddress,
+            style: TextStyle(
+              color: getColor(
+                MinimalistColors.textPrimary,
+                MinimalistColorsDark.textPrimary,
+              ),
+            ),
+            decoration: InputDecoration(
+              counterText: '', // Hide character counter
+              labelText: 'Email *',
+              hintText: 'john@example.com',
+              labelStyle: TextStyle(
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ),
+              ),
+              hintStyle: TextStyle(
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ).withValues(alpha: 0.5),
+              ),
+              filled: true,
+              fillColor: getColor(
+                MinimalistColors.backgroundSecondary,
+                MinimalistColorsDark.backgroundSecondary,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderTokens.circularMedium,
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderTokens.circularMedium,
+                borderSide: const BorderSide(color: Colors.red, width: 1.5),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderTokens.circularMedium,
+                borderSide: const BorderSide(color: Colors.red, width: 2),
+              ),
+              errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
+              prefixIcon: Icon(
+                Icons.email_outlined,
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ),
+              ),
+            ),
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            validator: EmailValidator.validate,
+            onChanged: (value) {
+              // Reset verification when email changes
+              if (_emailVerified) {
+                setState(() {
+                  _emailVerified = false;
+                });
+              }
+            },
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Verification status/button
+        if (_emailVerified)
+          Container(
+            height: 56,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: MinimalistColors.success.withValues(alpha: 0.1),
+              borderRadius: BorderTokens.circularMedium,
+              border: Border.all(color: MinimalistColors.success, width: 1.5),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.verified,
+                color: MinimalistColors.success,
+                size: 24,
+              ),
+            ),
+          )
+        else
+          SizedBox(
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () {
+                final email = _emailController.text.trim();
+                if (email.isEmpty || !email.contains('@')) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a valid email first'),
+                      backgroundColor: MinimalistColors.error,
+                    ),
+                  );
+                  return;
+                }
+                _openVerificationDialog();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isDarkMode
+                    ? MinimalistColorsDark.buttonPrimary
+                    : MinimalistColors.buttonPrimary,
+                foregroundColor: isDarkMode
+                    ? MinimalistColorsDark.buttonPrimaryText
+                    : MinimalistColors.buttonPrimaryText,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderTokens.circularMedium,
+                ),
+              ),
+              child: const Text('Verify'),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Open email verification dialog
+  Future<void> _openVerificationDialog() async {
+    final email = _emailController.text.trim();
+    final isDarkMode = ref.read(themeProvider);
+
+    final verified = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => EmailVerificationDialog(
+        email: email,
+        colors: isDarkMode ? const DarkColorScheme() : const LightColorScheme(),
+      ),
+    );
+
+    if (verified == true && mounted) {
+      setState(() {
+        _emailVerified = true;
+      });
     }
   }
 }

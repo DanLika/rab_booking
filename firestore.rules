@@ -153,6 +153,14 @@ service cloud.firestore {
       allow read, write: if true; // Anyone can read/write (for rate limiting)
     }
 
+    // Email verifications - OTP codes for guest booking verification
+    // Only Cloud Functions can read/write (enforced via Firebase Admin SDK)
+    // Client apps should use Cloud Functions to verify codes
+    match /email_verifications/{emailHash} {
+      allow read: if false; // Only Cloud Functions can read
+      allow write: if false; // Only Cloud Functions can write
+    }
+
     // Security events - security audit log
     match /securityEvents/{eventId} {
       allow read: if isOwnerOrAdmin();

@@ -27,6 +27,12 @@ class EmailNotificationService {
     required String propertyName,
     required String bookingReference,
     String? paymentDeadline,
+    String? paymentMethod,
+    bool allowGuestCancellation = false,
+    int? cancellationDeadlineHours,
+    String? ownerEmail,
+    String? ownerPhone,
+    String? customLogoUrl,
   }) async {
     try {
       if (!emailConfig.enabled || !emailConfig.sendBookingConfirmation) {
@@ -53,6 +59,12 @@ class EmailNotificationService {
         propertyName: propertyName,
         bookingReference: bookingReference,
         paymentDeadline: paymentDeadline,
+        paymentMethod: paymentMethod,
+        allowGuestCancellation: allowGuestCancellation,
+        cancellationDeadlineHours: cancellationDeadlineHours,
+        ownerEmail: ownerEmail,
+        ownerPhone: ownerPhone,
+        customLogoUrl: customLogoUrl,
       );
 
       await _sendEmail(
@@ -86,6 +98,7 @@ class EmailNotificationService {
     required String bookingReference,
     required double paidAmount,
     required String paymentMethod,
+    String? customLogoUrl,
   }) async {
     try {
       if (!emailConfig.enabled || !emailConfig.sendPaymentReceipt) {
@@ -113,6 +126,7 @@ class EmailNotificationService {
         bookingReference: bookingReference,
         paidAmount: paidAmount,
         paymentMethod: paymentMethod,
+        customLogoUrl: customLogoUrl,
       );
 
       await _sendEmail(
@@ -146,6 +160,7 @@ class EmailNotificationService {
     required String bookingReference,
     required String ownerEmail,
     bool requiresApproval = false,
+    String? customLogoUrl,
   }) async {
     try {
       if (!emailConfig.enabled || !emailConfig.sendOwnerNotification) {
@@ -175,6 +190,7 @@ class EmailNotificationService {
         propertyName: propertyName,
         bookingReference: bookingReference,
         requiresApproval: requiresApproval,
+        customLogoUrl: customLogoUrl,
       );
 
       await _sendEmail(
@@ -242,6 +258,12 @@ class EmailNotificationService {
     required String propertyName,
     required String bookingReference,
     String? paymentDeadline,
+    String? paymentMethod,
+    bool allowGuestCancellation = false,
+    int? cancellationDeadlineHours,
+    String? ownerEmail,
+    String? ownerPhone,
+    String? customLogoUrl,
   }) {
     final dateFormat = DateFormat('dd.MM.yyyy');
     final checkInDate = dateFormat.format(booking.checkIn);
@@ -275,6 +297,10 @@ class EmailNotificationService {
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 2px solid #0066cc;
+        }
+        .header img {
+            max-height: 60px;
+            margin-bottom: 15px;
         }
         h1 {
             color: #0066cc;
@@ -322,6 +348,20 @@ class EmailNotificationService {
             padding: 15px;
             margin: 20px 0;
         }
+        .cancellation-box {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .cancellation-box h3 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        .cancellation-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
         .footer {
             margin-top: 30px;
             padding-top: 20px;
@@ -335,6 +375,7 @@ class EmailNotificationService {
 <body>
     <div class="container">
         <div class="header">
+            ${customLogoUrl != null && customLogoUrl.isNotEmpty ? '<img src="$customLogoUrl" alt="Logo" />' : ''}
             <h1>Potvrda rezervacije</h1>
             <p>$propertyName</p>
         </div>
@@ -380,10 +421,39 @@ class EmailNotificationService {
             </div>
         </div>
 
-        ${paymentDeadline != null ? '''
+        ${paymentMethod == 'pay_on_arrival' ? '''
+        <div class="info-box">
+            <strong>💳 Plaćanje pri dolasku</strong><br>
+            <p>Vaša rezervacija je potvrđena! Plaćanje ćete izvršiti po dolasku na smještaj.</p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Ukupan iznos: <strong>€${booking.totalPrice.toStringAsFixed(2)}</strong></li>
+                <li>Prihvaćamo: gotovinu i kartice</li>
+                <li>Plaćanje pri prijavi (check-in)</li>
+            </ul>
+            <p style="font-size: 12px; color: #666;">
+                Molimo donesite ID/putovnicu za registraciju pri dolasku.
+            </p>
+        </div>
+        ''' : paymentDeadline != null ? '''
         <div class="info-box">
             <strong>Rok za plaćanje:</strong> $paymentDeadline<br>
             Molimo izvršite plaćanje do navedenog roka kako bi Vaša rezervacija bila potvrđena.
+        </div>
+        ''' : ''}
+
+        ${allowGuestCancellation && cancellationDeadlineHours != null ? '''
+        <div class="cancellation-box">
+            <h3>📋 Politika otkazivanja</h3>
+            <p><strong>Besplatno otkazivanje:</strong> Do $cancellationDeadlineHours sati prije dolaska</p>
+            <p><strong>Za otkazivanje rezervacije:</strong></p>
+            <ul>
+                <li>Odgovorite na ovaj email sa brojem rezervacije: <strong>$bookingReference</strong></li>
+                ${ownerEmail != null ? '<li>Email: $ownerEmail</li>' : ''}
+                ${ownerPhone != null ? '<li>Telefon: $ownerPhone</li>' : ''}
+            </ul>
+            <p style="font-size: 12px; color: #666;">
+                Molimo navedite broj rezervacije u svakoj komunikaciji kako bismo brže obradili Vaš zahtjev.
+            </p>
         </div>
         ''' : ''}
 
@@ -404,6 +474,7 @@ class EmailNotificationService {
     required String bookingReference,
     required double paidAmount,
     required String paymentMethod,
+    String? customLogoUrl,
   }) {
     final dateFormat = DateFormat('dd.MM.yyyy');
     final checkInDate = dateFormat.format(booking.checkIn);
@@ -513,6 +584,7 @@ class EmailNotificationService {
 <body>
     <div class="container">
         <div class="header">
+            ${customLogoUrl != null && customLogoUrl.isNotEmpty ? '<img src="$customLogoUrl" alt="Logo" />' : ''}
             <h1>Potvrda plaćanja</h1>
             <div class="success-badge">✓ Plaćanje uspješno primljeno</div>
         </div>
@@ -583,6 +655,7 @@ class EmailNotificationService {
     required String propertyName,
     required String bookingReference,
     required bool requiresApproval,
+    String? customLogoUrl,
   }) {
     final dateFormat = DateFormat('dd.MM.yyyy');
     final checkInDate = dateFormat.format(booking.checkIn);
@@ -617,6 +690,10 @@ class EmailNotificationService {
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 2px solid #0066cc;
+        }
+        .header img {
+            max-height: 60px;
+            margin-bottom: 15px;
         }
         h1 {
             color: #0066cc;
@@ -684,6 +761,7 @@ class EmailNotificationService {
 <body>
     <div class="container">
         <div class="header">
+            ${customLogoUrl != null && customLogoUrl.isNotEmpty ? '<img src="$customLogoUrl" alt="Logo" />' : ''}
             <h1>Nova rezervacija</h1>
             <div class="alert-badge">${requiresApproval ? '⚠ Zahteva potvrdu' : '✓ Automatski potvrđena'}</div>
         </div>

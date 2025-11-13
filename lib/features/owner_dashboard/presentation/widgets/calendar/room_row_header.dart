@@ -154,7 +154,7 @@ class RoomRowHeader extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '${unit.maxGuests} guests',
+                    '${unit.maxGuests} gostiju',
                     style: theme.textTheme.bodySmall,
                   ),
                 ],

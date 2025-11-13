@@ -77,7 +77,6 @@ class FirebaseWidgetSettingsRepository {
         taxLegalConfig:
             const TaxLegalConfig(), // Default enabled tax/legal config
         requireOwnerApproval: true, // Owner approval required for bookings
-        cancellationDeadlineHours: 48,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );

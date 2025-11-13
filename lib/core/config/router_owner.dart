@@ -14,7 +14,8 @@ import '../../features/owner_dashboard/presentation/providers/owner_properties_p
 import '../../features/owner_dashboard/presentation/screens/analytics_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/overview_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/properties_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/owner_calendar_main_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/owner_week_calendar_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_bookings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/property_form_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/unit_form_screen.dart';
@@ -38,7 +39,6 @@ import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_
 import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
 import '../../features/widget/presentation/screens/embed_calendar_screen.dart';
-import '../../features/widget/presentation/screens/enhanced_booking_flow_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../shared/providers/repository_providers.dart';
 import '../providers/enhanced_auth_provider.dart';
@@ -65,7 +65,6 @@ class GoRouterRefreshStream extends ChangeNotifier {
 class OwnerRoutes {
   // Public routes (no auth required)
   static const String embedUnit = '/embed/units/:id';
-  static const String booking = '/booking';
 
   // Onboarding routes
   static const String onboardingWelcome = '/onboarding/welcome';
@@ -84,9 +83,7 @@ class OwnerRoutes {
   // Owner dashboard routes
   static const String overview = '/owner/overview';
   static const String properties = '/owner/properties';
-  static const String calendar = '/owner/calendar'; // Main calendar (redirects to last view)
   static const String calendarWeek = '/owner/calendar/week';
-  static const String calendarMonth = '/owner/calendar/month';
   static const String calendarTimeline = '/owner/calendar/timeline';
   static const String bookings = '/owner/bookings';
   static const String analytics = '/owner/analytics';
@@ -202,15 +199,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Enhanced Booking Flow (public)
-      GoRoute(
-        path: OwnerRoutes.booking,
-        builder: (context, state) {
-          final propertyId = state.uri.queryParameters['propertyId'];
-          return EnhancedBookingFlowScreen(propertyId: propertyId);
-        },
-      ),
-
       // Onboarding routes (public - shown BEFORE auth)
       GoRoute(
         path: OwnerRoutes.onboardingWelcome,
@@ -260,22 +248,14 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.properties,
         builder: (context, state) => const PropertiesScreen(),
       ),
-      // Calendar routes with main container
-      GoRoute(
-        path: OwnerRoutes.calendar,
-        builder: (context, state) => const OwnerCalendarMainScreen(),
-      ),
+      // Calendar routes
       GoRoute(
         path: OwnerRoutes.calendarWeek,
-        builder: (context, state) => const OwnerCalendarMainScreen(),
-      ),
-      GoRoute(
-        path: OwnerRoutes.calendarMonth,
-        builder: (context, state) => const OwnerCalendarMainScreen(),
+        builder: (context, state) => const OwnerWeekCalendarScreen(),
       ),
       GoRoute(
         path: OwnerRoutes.calendarTimeline,
-        builder: (context, state) => const OwnerCalendarMainScreen(),
+        builder: (context, state) => const OwnerTimelineCalendarScreen(),
       ),
       GoRoute(
         path: OwnerRoutes.bookings,

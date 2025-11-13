@@ -71,7 +71,6 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius),
             gradient: LinearGradient(
-              end: Alignment.centerRight,
               colors: isDark
                   ? [Colors.grey[800]!, Colors.grey[700]!, Colors.grey[800]!]
                   : [Colors.grey[300]!, Colors.grey[200]!, Colors.grey[300]!],

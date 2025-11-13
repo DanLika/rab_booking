@@ -10,6 +10,9 @@
 // Export booking management functions
 export * from "./bookingManagement";
 
+// Export atomic booking function (prevents race conditions)
+export * from "./atomicBooking";
+
 // Export Stripe payment functions
 export * from "./stripePayment";
 
@@ -25,3 +28,12 @@ export * from "./securityEmail";
 // Export iCal sync functions (Overbooking prevention)
 // Note: Scheduled function removed, only manual sync available
 export * from "./icalSync";
+
+// Export cleanup functions for abandoned Stripe bookings
+export * from "./cleanupAbandonedBookings";
+
+// Export booking access verification functions (Booking lookup)
+export * from "./verifyBookingAccess";
+
+// Export email verification functions (OTP for guest bookings)
+export * from "./emailVerification";

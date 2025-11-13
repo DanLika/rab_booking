@@ -59,8 +59,7 @@ class BookingWidgetApp extends ConsumerWidget {
     final widgetSettings = widgetSettingsAsync?.valueOrNull;
 
     // Get blur configuration from settings (or use defaults)
-    final blurConfig =
-        widgetSettings?.blurConfig ?? const BlurConfig(intensity: 'medium');
+    final blurConfig = widgetSettings?.blurConfig ?? const BlurConfig();
 
     // Determine theme mode (priority: URL > Firestore > default 'system')
     final String themeMode = widgetConfig.themeMode.isNotEmpty

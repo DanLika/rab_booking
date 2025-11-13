@@ -113,15 +113,28 @@ class FirebaseUnitRepository implements UnitRepository {
     required DateTime checkIn,
     required DateTime checkOut,
   }) async {
-    // Check for overlapping bookings
+    // Fetch all active bookings for this unit
+    // Note: Using client-side filtering to avoid Firestore limitation of
+    // multiple inequality filters on different fields (check_in and check_out)
     final snapshot = await _firestore
         .collection('bookings')
         .where('unit_id', isEqualTo: unitId)
-        .where('check_out', isGreaterThan: Timestamp.fromDate(checkIn))
-        .where('check_in', isLessThan: Timestamp.fromDate(checkOut))
+        .where('status', whereIn: ['pending', 'confirmed', 'in_progress'])
         .get();
 
-    return snapshot.docs.isEmpty;
+    // Check for overlap in memory (client-side)
+    final hasOverlap = snapshot.docs.any((doc) {
+      final data = doc.data();
+      final bookingCheckIn = (data['check_in'] as Timestamp).toDate();
+      final bookingCheckOut = (data['check_out'] as Timestamp).toDate();
+
+      // Overlap logic: bookings overlap if:
+      // (bookingCheckOut > checkIn) AND (bookingCheckIn < checkOut)
+      return bookingCheckOut.isAfter(checkIn) &&
+             bookingCheckIn.isBefore(checkOut);
+    });
+
+    return !hasOverlap;  // Return true if NO overlap (unit is available)
   }
 
   @override

@@ -144,13 +144,14 @@ class GlassmorphismTokens {
 
   /// Get preset by intensity (0.0 - 1.0)
   static GlassPreset getPresetByIntensity(double intensity) {
-    if (intensity <= 0.0)
+    if (intensity <= 0.0) {
       return const GlassPreset(
         blur: 0,
         opacity: 0,
         borderOpacity: 0,
         name: 'none',
       );
+    }
     if (intensity <= 0.2) return presetSubtle;
     if (intensity <= 0.4) return presetLight;
     if (intensity <= 0.6) return presetMedium;

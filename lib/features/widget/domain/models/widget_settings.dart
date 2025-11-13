@@ -19,6 +19,7 @@ class WidgetSettings {
   final bool requireOwnerApproval; // If true, all bookings start as 'pending'
   final bool allowGuestCancellation;
   final int? cancellationDeadlineHours; // Hours before check-in
+  final int minNights; // Minimum nights required for booking (default: 1)
 
   // Contact Information (for calendar_only mode)
   final ContactOptions contactOptions;
@@ -52,6 +53,7 @@ class WidgetSettings {
     this.requireOwnerApproval = false,
     this.allowGuestCancellation = true,
     this.cancellationDeadlineHours = 48,
+    this.minNights = 1,
     required this.contactOptions,
     required this.emailConfig,
     this.externalCalendarConfig,
@@ -80,6 +82,7 @@ class WidgetSettings {
       requireOwnerApproval: data['require_owner_approval'] ?? false,
       allowGuestCancellation: data['allow_guest_cancellation'] ?? true,
       cancellationDeadlineHours: data['cancellation_deadline_hours'] ?? 48,
+      minNights: data['min_nights'] ?? 1,
       contactOptions: ContactOptions.fromMap(data['contact_options'] ?? {}),
       emailConfig: EmailNotificationConfig.fromMap(data['email_config'] ?? {}),
       externalCalendarConfig: data['external_calendar_config'] != null
@@ -108,6 +111,7 @@ class WidgetSettings {
       'require_owner_approval': requireOwnerApproval,
       'allow_guest_cancellation': allowGuestCancellation,
       'cancellation_deadline_hours': cancellationDeadlineHours,
+      'min_nights': minNights,
       'contact_options': contactOptions.toMap(),
       'email_config': emailConfig.toMap(),
       'external_calendar_config': externalCalendarConfig?.toMap(),
@@ -145,6 +149,7 @@ class WidgetSettings {
     bool? requireOwnerApproval,
     bool? allowGuestCancellation,
     int? cancellationDeadlineHours,
+    int? minNights,
     ContactOptions? contactOptions,
     EmailNotificationConfig? emailConfig,
     ExternalCalendarConfig? externalCalendarConfig,
@@ -164,6 +169,7 @@ class WidgetSettings {
       requireOwnerApproval: requireOwnerApproval ?? this.requireOwnerApproval,
       allowGuestCancellation: allowGuestCancellation ?? this.allowGuestCancellation,
       cancellationDeadlineHours: cancellationDeadlineHours ?? this.cancellationDeadlineHours,
+      minNights: minNights ?? this.minNights,
       contactOptions: contactOptions ?? this.contactOptions,
       emailConfig: emailConfig ?? this.emailConfig,
       externalCalendarConfig: externalCalendarConfig ?? this.externalCalendarConfig,

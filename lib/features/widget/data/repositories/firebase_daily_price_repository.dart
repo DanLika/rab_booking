@@ -55,7 +55,10 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
           .where((doc) {
             final data = doc.data();
             // Skip documents without valid date or unit_id field
-            return data['date'] != null && data['unit_id'] != null;
+            // FIXED: Also check if date is a valid Timestamp
+            return data['date'] != null &&
+                   data['date'] is Timestamp &&
+                   data['unit_id'] != null;
           })
           .map((doc) {
             try {
@@ -328,7 +331,10 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
           .where((doc) {
             final data = doc.data();
             // Skip documents without valid date or unit_id field
-            return data['date'] != null && data['unit_id'] != null;
+            // FIXED: Also check if date is a valid Timestamp
+            return data['date'] != null &&
+                   data['date'] is Timestamp &&
+                   data['unit_id'] != null;
           })
           .map((doc) {
             try {
@@ -382,7 +388,10 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
           .where((doc) {
             final data = doc.data();
             // Skip documents without valid date or unit_id field
-            return data['date'] != null && data['unit_id'] != null;
+            // FIXED: Also check if date is a valid Timestamp
+            return data['date'] != null &&
+                   data['date'] is Timestamp &&
+                   data['unit_id'] != null;
           })
           .map((doc) {
             try {

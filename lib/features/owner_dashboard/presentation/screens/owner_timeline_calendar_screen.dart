@@ -109,7 +109,8 @@ class _OwnerTimelineCalendarScreenState
                   error: (error, stackTrace) => 0,
                 ),
                 onNotificationsTap: showNotificationsPanel,
-                isCompact: MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint,
+                // Use higher breakpoint for toolbar to prevent overflow
+                isCompact: MediaQuery.of(context).size.width < 900,
                 // ENHANCED: Analytics toggle integrated in single row
                 showSummaryToggle: true,
                 isSummaryVisible: _showSummary,

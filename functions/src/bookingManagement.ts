@@ -100,8 +100,8 @@ export const createPendingBooking = onCall(async (request) => {
       deposit_amount: depositAmount || 0,
       remaining_amount: remainingAmount || totalAmount,
       paid_amount: 0,
-      payment_method: paymentMethod || "bankTransfer",
-      status: paymentMethod === "bankTransfer" ? "pending" : "confirmed",
+      payment_method: paymentMethod || "bank_transfer",
+      status: paymentMethod === "bank_transfer" ? "pending" : "confirmed",
       booking_reference: bookingRef,
       source: "widget", // Mark as widget booking
       payment_deadline: admin.firestore.Timestamp.fromDate(
@@ -139,7 +139,7 @@ export const createPendingBooking = onCall(async (request) => {
       bookingReference: bookingRef,
       status: bookingData.status,
       paymentDeadline: bookingData.payment_deadline.toDate(),
-      message: paymentMethod === "bankTransfer" ?
+      message: paymentMethod === "bank_transfer" ?
         "Booking created. Awaiting bank transfer payment." :
         "Booking created. Please complete payment.",
     };

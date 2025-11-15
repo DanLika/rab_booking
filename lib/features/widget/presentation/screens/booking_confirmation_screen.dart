@@ -32,7 +32,7 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
   final String propertyName;
   final String? unitName;
   final String
-  paymentMethod; // 'stripe', 'bankTransfer', 'payOnArrival', 'pending'
+  paymentMethod; // 'stripe', 'bank_transfer', 'pay_on_arrival', 'pending'
   final BookingModel? booking; // Optional - for resend email functionality
   final EmailNotificationConfig?
   emailConfig; // Optional - for resend email functionality
@@ -106,9 +106,9 @@ class _BookingConfirmationScreenState
     switch (widget.paymentMethod) {
       case 'stripe':
         return 'Payment successful! Your booking is confirmed.';
-      case 'bankTransfer':
+      case 'bank_transfer':
         return 'Booking received! Please complete the bank transfer to confirm.';
-      case 'payOnArrival':
+      case 'pay_on_arrival':
         return 'Booking confirmed! You can pay at the property.';
       case 'pending':
         return 'Booking request sent! Waiting for owner approval.';
@@ -121,9 +121,9 @@ class _BookingConfirmationScreenState
     switch (widget.paymentMethod) {
       case 'stripe':
         return const Icon(Icons.check_circle, size: 80, color: Colors.green);
-      case 'bankTransfer':
+      case 'bank_transfer':
         return Icon(Icons.schedule, size: 80, color: Colors.orange.shade700);
-      case 'payOnArrival':
+      case 'pay_on_arrival':
         return const Icon(Icons.hotel, size: 80, color: Colors.blue);
       case 'pending':
         return Icon(Icons.pending, size: 80, color: Colors.orange.shade700);
@@ -154,6 +154,19 @@ class _BookingConfirmationScreenState
         const SnackBar(
           content: Text('Unable to resend email - missing configuration'),
           backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Bug #15: Check if email service is enabled and configured
+    if (widget.emailConfig!.enabled != true ||
+        widget.emailConfig!.isConfigured != true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email service is not enabled or configured. Please contact the property owner.'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 4),
         ),
       );
       return;
@@ -692,7 +705,7 @@ class _BookingConfirmationScreenState
                     ),
 
                   // Bank Transfer Instructions (if payment method is bank transfer)
-                  if (widget.paymentMethod == 'bankTransfer' &&
+                  if (widget.paymentMethod == 'bank_transfer' &&
                       widget
                               .widgetSettings
                               ?.bankTransferConfig
@@ -1189,7 +1202,7 @@ class _BookingConfirmationScreenState
         ];
         break;
 
-      case 'bankTransfer':
+      case 'bank_transfer':
         steps = [
           {
             'icon': Icons.account_balance,
@@ -1212,7 +1225,7 @@ class _BookingConfirmationScreenState
         ];
         break;
 
-      case 'payOnArrival':
+      case 'pay_on_arrival':
         steps = [
           {
             'icon': Icons.email,

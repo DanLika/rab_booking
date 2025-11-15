@@ -253,10 +253,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // If current selection is valid, keep it
     if (_selectedPaymentMethod == 'stripe' && isStripeEnabled) return;
-    if (_selectedPaymentMethod == 'bankTransfer' && isBankTransferEnabled) {
+    if (_selectedPaymentMethod == 'bank_transfer' && isBankTransferEnabled) {
       return;
     }
-    if (_selectedPaymentMethod == 'payOnArrival' && isPayOnArrivalEnabled) {
+    if (_selectedPaymentMethod == 'pay_on_arrival' && isPayOnArrivalEnabled) {
       return;
     }
 
@@ -264,9 +264,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     if (isStripeEnabled) {
       _selectedPaymentMethod = 'stripe';
     } else if (isBankTransferEnabled) {
-      _selectedPaymentMethod = 'bankTransfer';
+      _selectedPaymentMethod = 'bank_transfer';
     } else if (isPayOnArrivalEnabled) {
-      _selectedPaymentMethod = 'payOnArrival';
+      _selectedPaymentMethod = 'pay_on_arrival';
     } else {
       // Edge case: No payment methods enabled
       // Don't set any payment method - submit validation will block the booking
@@ -1724,13 +1724,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               }
               if (isBankTransferEnabled) {
                 enabledCount++;
-                singleMethod = 'bankTransfer';
+                singleMethod = 'bank_transfer';
                 singleMethodTitle = 'Bank Transfer';
                 singleMethodSubtitle = calculation.formattedDeposit;
               }
               if (isPayOnArrivalEnabled) {
                 enabledCount++;
-                singleMethod = 'payOnArrival';
+                singleMethod = 'pay_on_arrival';
                 singleMethodTitle = 'Pay on Arrival';
                 singleMethodSubtitle = 'Payment at property';
               }
@@ -1827,7 +1827,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                           Icon(
                             singleMethod == 'stripe'
                                 ? Icons.credit_card
-                                : singleMethod == 'bankTransfer'
+                                : singleMethod == 'bank_transfer'
                                 ? Icons.account_balance
                                 : Icons.home_outlined,
                             color: getColor(
@@ -1938,7 +1938,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         icon: Icons.account_balance,
                         title: 'Bank Transfer',
                         subtitle: 'Manual confirmation (3 business days)',
-                        value: 'bankTransfer',
+                        value: 'bank_transfer',
                         depositAmount: calculation.formattedDeposit,
                       ),
                     ),
@@ -1955,7 +1955,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         icon: Icons.home_outlined,
                         title: 'Pay on Arrival',
                         subtitle: 'Pay at the property',
-                        value: 'payOnArrival',
+                        value: 'pay_on_arrival',
                       ),
                     ),
                 ],
@@ -2361,9 +2361,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // bookingInstant mode - depends on selected payment method
     if (_selectedPaymentMethod == 'stripe') {
       return 'Pay with Stripe$nightsText';
-    } else if (_selectedPaymentMethod == 'bankTransfer') {
+    } else if (_selectedPaymentMethod == 'bank_transfer') {
       return 'Continue to Bank Transfer$nightsText';
-    } else if (_selectedPaymentMethod == 'payOnArrival') {
+    } else if (_selectedPaymentMethod == 'pay_on_arrival') {
       return 'Rezervisi$nightsText'; // Reserve in Serbian
     }
 
@@ -2741,7 +2741,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         return;
       }
 
-      if (_selectedPaymentMethod == 'bankTransfer' && !isBankTransferEnabled) {
+      if (_selectedPaymentMethod == 'bank_transfer' && !isBankTransferEnabled) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -2756,7 +2756,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         return;
       }
 
-      if (_selectedPaymentMethod == 'payOnArrival' &&
+      if (_selectedPaymentMethod == 'pay_on_arrival' &&
           !(_widgetSettings?.allowPayOnArrival ?? false)) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -3027,7 +3027,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           bookingReference: booking.id.substring(0, 8).toUpperCase(),
           guestEmail: booking.guestEmail!,
         );
-      } else if (_selectedPaymentMethod == 'bankTransfer') {
+      } else if (_selectedPaymentMethod == 'bank_transfer') {
         // Bank transfer - navigate to confirmation screen
         if (mounted) {
           // Reset form before navigation
@@ -3056,7 +3056,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 guests: booking.guestCount,
                 propertyName: _unit?.name ?? 'Property',
                 unitName: _unit?.name,
-                paymentMethod: 'bankTransfer',
+                paymentMethod: 'bank_transfer',
                 booking: booking,
                 emailConfig: _widgetSettings?.emailConfig,
                 widgetSettings: _widgetSettings,
@@ -3074,7 +3074,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             await _clearFormData();
           }
         }
-      } else if (_selectedPaymentMethod == 'payOnArrival') {
+      } else if (_selectedPaymentMethod == 'pay_on_arrival') {
         // Pay on Arrival - navigate to confirmation screen
         if (mounted) {
           // Reset form before navigation
@@ -3103,7 +3103,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 guests: booking.guestCount,
                 propertyName: _unit?.name ?? 'Property',
                 unitName: _unit?.name,
-                paymentMethod: 'payOnArrival',
+                paymentMethod: 'pay_on_arrival',
                 booking: booking,
                 emailConfig: _widgetSettings?.emailConfig,
                 widgetSettings: _widgetSettings,

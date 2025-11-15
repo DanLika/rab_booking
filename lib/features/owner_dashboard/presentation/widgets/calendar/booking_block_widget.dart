@@ -8,6 +8,7 @@ import '../../../../../core/utils/platform_utils.dart';
 import 'enhanced_booking_drag_feedback.dart';
 import 'skewed_booking_painter.dart';
 import 'smart_booking_tooltip.dart';
+import 'check_in_out_diagonal_indicator.dart';
 
 /// Draggable booking block widget for calendar grid
 /// Shows booking information as a colored block spanning multiple days
@@ -129,6 +130,28 @@ class BookingBlockWidget extends StatelessWidget {
               clipper: SkewedBookingClipper(),
               child: Stack(
                 children: [
+              // Check-in diagonal indicator (left edge)
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: CheckInDiagonalIndicator(
+                  height: height,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+              ),
+
+              // Check-out diagonal indicator (right edge)
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: CheckOutDiagonalIndicator(
+                  height: height,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+              ),
+
               // ENHANCED: Resize visual feedback overlay
               if (isResizing)
                 Positioned.fill(

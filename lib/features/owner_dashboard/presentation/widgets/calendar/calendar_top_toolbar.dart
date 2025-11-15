@@ -66,8 +66,9 @@ class CalendarTopToolbar extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 16),
       child: Row(
         children: [
-          // Date range with navigation arrows
-          Expanded(
+          // Date range with navigation arrows - FIXED: Use Flexible instead of Expanded
+          Flexible(
+            flex: isCompact ? 0 : 1,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -76,7 +77,8 @@ class CalendarTopToolbar extends StatelessWidget {
                   icon: const Icon(Icons.chevron_left),
                   onPressed: onPreviousPeriod,
                   tooltip: isWeekView ? 'Prethodni tjedan' : 'Prethodni mjesec',
-                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                  iconSize: isCompact ? 20 : 24,
                 ),
 
                 // Date range display (tappable for date picker)
@@ -85,8 +87,11 @@ class CalendarTopToolbar extends StatelessWidget {
                     onTap: onDatePickerTap,
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
+                      constraints: isCompact
+                          ? const BoxConstraints(maxWidth: 160)
+                          : null,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isCompact ? 8 : 12,
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
@@ -99,7 +104,9 @@ class CalendarTopToolbar extends StatelessWidget {
                           Flexible(
                             child: Text(
                               dateRange.toDisplayString(isWeek: isWeekView),
-                              style: theme.textTheme.titleSmall?.copyWith(
+                              style: (isCompact
+                                  ? theme.textTheme.labelLarge
+                                  : theme.textTheme.titleSmall)?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: theme.colorScheme.primary,
                               ),
@@ -107,10 +114,10 @@ class CalendarTopToolbar extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          SizedBox(width: isCompact ? 2 : 4),
                           Icon(
                             Icons.arrow_drop_down,
-                            size: 20,
+                            size: isCompact ? 16 : 20,
                             color: theme.colorScheme.primary,
                           ),
                         ],
@@ -124,118 +131,152 @@ class CalendarTopToolbar extends StatelessWidget {
                   icon: const Icon(Icons.chevron_right),
                   onPressed: onNextPeriod,
                   tooltip: isWeekView ? 'Sljedeći tjedan' : 'Sljedeći mjesec',
-                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                  iconSize: isCompact ? 20 : 24,
                 ),
               ],
             ),
           ),
 
+          // Spacing between navigation and actions
+          if (!isCompact) const SizedBox(width: 8),
+
           // Action buttons - FIXED OVERFLOW
-          Flexible(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // COMPACT MODE: Only show most important buttons
-                if (isCompact) ...[
-                  // Today button (most important for navigation)
-                  _buildTodayButton(theme),
-
-                  // Notifications button
-                  if (onNotificationsTap != null)
-                    _buildNotificationsButton(
-                      theme,
-                      onNotificationsTap,
-                      notificationCount,
-                    ),
-
-                  // Analytics toggle (COMPACT MODE - icon only)
-                  if (showSummaryToggle && onSummaryToggleChanged != null)
-                    IconButton(
-                      icon: Icon(
-                        isSummaryVisible
-                            ? Icons.analytics
-                            : Icons.analytics_outlined,
-                      ),
-                      onPressed: () => onSummaryToggleChanged!(!isSummaryVisible),
-                      tooltip: isSummaryVisible
-                          ? 'Sakrij statistiku'
-                          : 'Prikaži statistiku',
-                      color: isSummaryVisible ? theme.colorScheme.primary : null,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                    ),
-
-                  // Multi-select toggle (COMPACT MODE - icon only)
-                  if (showMultiSelectToggle && onMultiSelectToggle != null)
-                    IconButton(
-                      icon: Icon(
-                        isMultiSelectActive
-                            ? Icons.checklist
-                            : Icons.checklist_outlined,
-                      ),
-                      onPressed: onMultiSelectToggle,
-                      tooltip: isMultiSelectActive
-                          ? 'Isključi višestruku selekciju'
-                          : 'Uključi višestruku selekciju',
-                      color: isMultiSelectActive ? theme.colorScheme.primary : null,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                    ),
-
-                  // Overflow menu for less important actions
-                  if (onSearchTap != null || onRefresh != null || onFilterTap != null)
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert),
-                      tooltip: 'Više opcija',
-                      onSelected: (value) {
-                        switch (value) {
-                          case 'search':
-                            onSearchTap?.call();
-                            break;
-                          case 'refresh':
-                            onRefresh?.call();
-                            break;
-                          case 'filter':
-                            onFilterTap?.call();
-                            break;
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        if (onSearchTap != null)
-                          const PopupMenuItem(
-                            value: 'search',
-                            child: Row(
-                              children: [
-                                Icon(Icons.search, size: 20),
-                                SizedBox(width: 12),
-                                Text('Pretraži'),
-                              ],
-                            ),
-                          ),
-                        if (onRefresh != null)
-                          const PopupMenuItem(
-                            value: 'refresh',
-                            child: Row(
-                              children: [
-                                Icon(Icons.refresh, size: 20, color: Colors.green),
-                                SizedBox(width: 12),
-                                Text('Osvježi'),
-                              ],
-                            ),
-                          ),
-                        if (onFilterTap != null)
-                          const PopupMenuItem(
-                            value: 'filter',
-                            child: Row(
-                              children: [
-                                Icon(Icons.filter_list, size: 20),
-                                SizedBox(width: 12),
-                                Text('Filteri'),
-                              ],
-                            ),
-                          ),
+          if (isCompact)
+            // COMPACT MODE: Only overflow menu
+            PopupMenuButton<String>(
+              icon: Badge(
+                label: (notificationCount ?? 0) > 0 ? Text('$notificationCount') : null,
+                isLabelVisible: (notificationCount ?? 0) > 0,
+                child: const Icon(Icons.more_vert),
+              ),
+              tooltip: 'Opcije',
+              onSelected: (value) {
+                switch (value) {
+                  case 'today':
+                    onToday();
+                    break;
+                  case 'search':
+                    onSearchTap?.call();
+                    break;
+                  case 'refresh':
+                    onRefresh?.call();
+                    break;
+                  case 'filter':
+                    onFilterTap?.call();
+                    break;
+                  case 'notifications':
+                    onNotificationsTap?.call();
+                    break;
+                  case 'analytics':
+                    onSummaryToggleChanged?.call(!isSummaryVisible);
+                    break;
+                  case 'multiselect':
+                    onMultiSelectToggle?.call();
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'today',
+                  child: Row(
+                    children: [
+                      Icon(Icons.today, size: 20),
+                      SizedBox(width: 12),
+                      Text('Danas'),
+                    ],
+                  ),
+                ),
+                if (onNotificationsTap != null)
+                  PopupMenuItem(
+                    value: 'notifications',
+                    child: Row(
+                      children: [
+                        Badge(
+                          label: (notificationCount ?? 0) > 0 ? Text('$notificationCount') : null,
+                          isLabelVisible: (notificationCount ?? 0) > 0,
+                          child: const Icon(Icons.notifications, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text('Obavijesti'),
                       ],
                     ),
-                ] else ...[
-                  // DESKTOP MODE: Show all buttons
+                  ),
+                if (onSearchTap != null)
+                  const PopupMenuItem(
+                    value: 'search',
+                    child: Row(
+                      children: [
+                        Icon(Icons.search, size: 20),
+                        SizedBox(width: 12),
+                        Text('Pretraži'),
+                      ],
+                    ),
+                  ),
+                if (onRefresh != null)
+                  const PopupMenuItem(
+                    value: 'refresh',
+                    child: Row(
+                      children: [
+                        Icon(Icons.refresh, size: 20, color: Colors.green),
+                        SizedBox(width: 12),
+                        Text('Osvježi'),
+                      ],
+                    ),
+                  ),
+                if (onFilterTap != null)
+                  const PopupMenuItem(
+                    value: 'filter',
+                    child: Row(
+                      children: [
+                        Icon(Icons.filter_list, size: 20),
+                        SizedBox(width: 12),
+                        Text('Filteri'),
+                      ],
+                    ),
+                  ),
+                if (showSummaryToggle && onSummaryToggleChanged != null)
+                  PopupMenuItem(
+                    value: 'analytics',
+                    child: Row(
+                      children: [
+                        Icon(
+                          isSummaryVisible ? Icons.analytics : Icons.analytics_outlined,
+                          size: 20,
+                          color: isSummaryVisible ? theme.colorScheme.primary : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(isSummaryVisible ? 'Sakrij statistiku' : 'Prikaži statistiku'),
+                      ],
+                    ),
+                  ),
+                if (showMultiSelectToggle && onMultiSelectToggle != null)
+                  PopupMenuItem(
+                    value: 'multiselect',
+                    child: Row(
+                      children: [
+                        Icon(
+                          isMultiSelectActive ? Icons.checklist : Icons.checklist_outlined,
+                          size: 20,
+                          color: isMultiSelectActive ? theme.colorScheme.primary : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          isMultiSelectActive
+                              ? 'Isključi višestruku selekciju'
+                              : 'Uključi višestruku selekciju',
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            )
+          else
+            // DESKTOP MODE: Show all buttons
+            Flexible(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   // Search button
                   if (onSearchTap != null)
                     IconButton(
@@ -275,41 +316,21 @@ class CalendarTopToolbar extends StatelessWidget {
                       notificationCount,
                     ),
 
-                  // Analytics toggle (DESKTOP MODE - with label)
-                  if (showSummaryToggle && onSummaryToggleChanged != null) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.only(left: 12),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          left: BorderSide(color: theme.dividerColor),
-                        ),
+                  // Analytics toggle (DESKTOP MODE - icon only to save space)
+                  if (showSummaryToggle && onSummaryToggleChanged != null)
+                    IconButton(
+                      icon: Icon(
+                        isSummaryVisible
+                            ? Icons.analytics
+                            : Icons.analytics_outlined,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.analytics_outlined,
-                            size: 18,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Statistika',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Switch(
-                            value: isSummaryVisible,
-                            onChanged: onSummaryToggleChanged,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ],
-                      ),
+                      onPressed: () => onSummaryToggleChanged?.call(!isSummaryVisible),
+                      tooltip: isSummaryVisible
+                          ? 'Sakrij statistiku'
+                          : 'Prikaži statistiku',
+                      color: isSummaryVisible ? theme.colorScheme.primary : null,
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     ),
-                  ],
 
                   // Multi-select toggle (DESKTOP MODE - icon only to save space)
                   if (showMultiSelectToggle && onMultiSelectToggle != null)
@@ -327,9 +348,8 @@ class CalendarTopToolbar extends StatelessWidget {
                       constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     ),
                 ],
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );

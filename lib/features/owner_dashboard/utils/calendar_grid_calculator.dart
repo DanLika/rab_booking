@@ -23,9 +23,9 @@ class CalendarGridCalculator {
 
   /// Day cell width bounds (each day column)
   static const double mobileDayCellMinWidth = 65;
-  static const double mobileDayCellMaxWidth = 110;
-  static const double desktopDayCellMinWidth = 80;
-  static const double desktopDayCellMaxWidth = 120;
+  static const double mobileDayCellMaxWidth = 90;
+  static const double desktopDayCellMinWidth = 70;
+  static const double desktopDayCellMaxWidth = 100;
 
   /// Header height (date headers row)
   static const double mobileHeaderHeight = 48;

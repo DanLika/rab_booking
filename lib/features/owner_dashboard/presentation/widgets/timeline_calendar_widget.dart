@@ -6,6 +6,7 @@ import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/platform_utils.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../providers/calendar_drag_drop_provider.dart';
@@ -19,6 +20,8 @@ import 'calendar/calendar_skeleton_loader.dart';
 import 'calendar/calendar_error_state.dart';
 import 'calendar/booking_action_menu.dart';
 import 'calendar/smart_booking_tooltip.dart';
+import 'calendar/shared/calendar_booking_actions.dart';
+import 'calendar/check_in_out_diagonal_indicator.dart';
 
 /// BedBooking-style Timeline Calendar
 /// Gantt/Timeline layout: Units vertical, Dates horizontal
@@ -1055,6 +1058,28 @@ class _TimelineCalendarWidgetState
                 clipper: SkewedBookingClipper(),
                 child: Stack(
                   children: [
+                    // Check-in diagonal indicator (left edge)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: CheckInDiagonalIndicator(
+                        height: blockHeight,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+
+                    // Check-out diagonal indicator (right edge)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: CheckOutDiagonalIndicator(
+                        height: blockHeight,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+
                     // Main content
                     Padding(
                       padding: bookingPadding,
@@ -1128,16 +1153,10 @@ class _TimelineCalendarWidgetState
         _showReservationDetails(booking);
         break;
       case 'status':
-        // TODO: Show status change dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Status change - coming soon')),
-        );
+        await _showStatusChangeDialog(booking);
         break;
       case 'delete':
-        // TODO: Show delete confirmation dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Delete - coming soon')));
+        await _deleteBooking(booking);
         break;
     }
   }
@@ -1152,6 +1171,43 @@ class _TimelineCalendarWidgetState
     );
 
     // Calendar will auto-refresh via provider invalidation in the menu
+  }
+
+  /// Delete booking - Using shared action
+  Future<void> _deleteBooking(BookingModel booking) async {
+    await CalendarBookingActions.deleteBooking(context, ref, booking);
+  }
+
+  /// Show status change dialog
+  Future<void> _showStatusChangeDialog(BookingModel booking) async {
+    final newStatus = await showDialog<BookingStatus>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Promijeni status'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: BookingStatus.values.map((status) {
+            return ListTile(
+              title: Text(status.displayName),
+              leading: Icon(
+                Icons.circle,
+                color: status.color,
+              ),
+              onTap: () => Navigator.of(context).pop(status),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+
+    if (newStatus != null && mounted) {
+      await CalendarBookingActions.changeBookingStatus(
+        context,
+        ref,
+        booking,
+        newStatus,
+      );
+    }
   }
 
   Widget _buildSummaryBar(

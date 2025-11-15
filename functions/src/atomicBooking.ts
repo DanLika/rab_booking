@@ -10,11 +10,11 @@ import {sendBookingConfirmationEmail} from "./emailService";
 /**
  * Cloud Function: Create Booking with Atomic Availability Check
  *
- * This function uses Firestore transaction to ATOMICALLY check availability
- * and create booking, preventing race conditions where two users book same dates.
+ * This function uses Firestore transaction to check availability
+ * and create booking, preventing race conditions.
  *
- * CRITICAL: This prevents double bookings by ensuring only ONE booking can
- * succeed when multiple users try to book the same dates simultaneously.
+ * CRITICAL: Prevents double bookings by ensuring only ONE booking
+ * succeeds when multiple users try to book same dates simultaneously.
  */
 export const createBookingAtomic = onCall(async (request) => {
   const userId = request.auth?.uid || null;
@@ -57,16 +57,100 @@ export const createBookingAtomic = onCall(async (request) => {
     const checkInDate = admin.firestore.Timestamp.fromDate(new Date(checkIn));
     const checkOutDate = admin.firestore.Timestamp.fromDate(new Date(checkOut));
 
+    // ========================================================================
+    // STEP 1: Fetch and validate widget settings
+    // ========================================================================
+    const widgetSettingsDoc = await db
+      .collection("properties")
+      .doc(propertyId)
+      .collection("widget_settings")
+      .doc(unitId)
+      .get();
+
+    if (!widgetSettingsDoc.exists) {
+      throw new HttpsError(
+        "not-found",
+        "Widget settings not found. Please contact property owner."
+      );
+    }
+
+    const widgetSettings = widgetSettingsDoc.data();
+    const stripeConfig = widgetSettings?.stripe_config;
+    const bankTransferConfig = widgetSettings?.bank_transfer_config;
+    const allowPayOnArrival =
+      widgetSettings?.allow_pay_on_arrival ?? false;
+    const icalExportEnabled =
+      widgetSettings?.ical_export_enabled ?? false;
+
+    // Validate payment method is enabled in settings
+    const isStripeDisabled =
+      paymentMethod === "stripe" && (!stripeConfig || !stripeConfig.enabled);
+    const isBankTransferDisabled = paymentMethod === "bank_transfer" &&
+      (!bankTransferConfig || !bankTransferConfig.enabled);
+    const isPayOnArrivalDisabled =
+      paymentMethod === "none" && !allowPayOnArrival;
+
+    if (isStripeDisabled) {
+      throw new HttpsError(
+        "permission-denied",
+        "Stripe payment not enabled. Select another payment method."
+      );
+    }
+
+    if (isBankTransferDisabled) {
+      throw new HttpsError(
+        "permission-denied",
+        "Bank transfer not enabled. Select another payment method."
+      );
+    }
+
+    if (isPayOnArrivalDisabled) {
+      throw new HttpsError(
+        "permission-denied",
+        "Pay on arrival not enabled. Select another payment method."
+      );
+    }
+
+    logInfo("[AtomicBooking] Widget settings validated", {
+      paymentMethod,
+      stripeEnabled: stripeConfig?.enabled ?? false,
+      bankTransferEnabled: bankTransferConfig?.enabled ?? false,
+      allowPayOnArrival,
+    });
+
     // Generate unique booking ID and reference
     const bookingId = db.collection("bookings").doc().id;
     const bookingRef = `BK-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
-    // Calculate deposit amount
-    const depositAmount = paymentOption === "none"
-      ? 0.0
-      : paymentOption === "deposit"
-        ? totalPrice * 0.2
-        : totalPrice;
+    // Calculate deposit amount using settings
+    let depositAmount = 0.0;
+    let depositPercentage = 20; // Default fallback
+
+    if (paymentOption !== "none") {
+      // Get deposit percentage from appropriate config
+      if (paymentMethod === "stripe") {
+        depositPercentage = stripeConfig?.deposit_percentage ?? 20;
+      } else if (paymentMethod === "bank_transfer") {
+        depositPercentage = bankTransferConfig?.deposit_percentage ?? 20;
+      }
+
+      // Calculate deposit
+      if (paymentOption === "deposit") {
+        // Percentage-based deposit
+        const calculated = totalPrice * (depositPercentage / 100);
+        depositAmount = parseFloat(calculated.toFixed(2));
+      } else {
+        // Full payment
+        depositAmount = totalPrice;
+      }
+    }
+
+    logInfo("[AtomicBooking] Deposit calculated", {
+      paymentOption,
+      depositPercentage,
+      depositAmount,
+      totalPrice,
+    });
 
     // Determine booking status
     let status: string;
@@ -83,13 +167,13 @@ export const createBookingAtomic = onCall(async (request) => {
       paymentStatus = "pending";
     }
 
-    // ========================================================================
-    // CRITICAL: Use Firestore transaction for ATOMIC availability check + create
-    // ========================================================================
+    // ====================================================================
+    // CRITICAL: Use Firestore transaction for atomic availability
+    // ====================================================================
     const result = await db.runTransaction(async (transaction) => {
       // Step 1: Query conflicting bookings INSIDE transaction
-      // Bug #62 Fix: Changed "check_out" > to >= to properly detect same-day turnover conflicts
-      // This ensures checkout day = checkin day is treated as conflict (no same-day turnover)
+      // Bug #62 Fix: Changed "check_out" > to >= to detect
+      // same-day turnover conflicts (checkout = checkin = conflict)
       const conflictingBookingsQuery = db
         .collection("bookings")
         .where("unit_id", "==", unitId)
@@ -97,7 +181,8 @@ export const createBookingAtomic = onCall(async (request) => {
         .where("check_in", "<", checkOutDate)
         .where("check_out", ">=", checkInDate);
 
-      const conflictingBookings = await transaction.get(conflictingBookingsQuery);
+      const conflictingBookings =
+        await transaction.get(conflictingBookingsQuery);
 
       // Step 2: Check for conflicts
       if (!conflictingBookings.empty) {
@@ -115,7 +200,7 @@ export const createBookingAtomic = onCall(async (request) => {
 
         throw new HttpsError(
           "already-exists",
-          "Selected dates are no longer available. Please select different dates."
+          "Dates no longer available. Select different dates."
         );
       }
 
@@ -147,11 +232,11 @@ export const createBookingAtomic = onCall(async (request) => {
         source: "widget",
         notes: notes || null,
         require_owner_approval: requireOwnerApproval,
-        payment_deadline: paymentMethod === "bank_transfer"
-          ? admin.firestore.Timestamp.fromDate(
+        payment_deadline: paymentMethod === "bank_transfer" ?
+          admin.firestore.Timestamp.fromDate(
             new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days
-          )
-          : null,
+          ) :
+          null,
         // Booking lookup security
         access_token: hashedToken,
         token_expires_at: tokenExpiration,
@@ -176,6 +261,7 @@ export const createBookingAtomic = onCall(async (request) => {
         status,
         paymentStatus,
         accessToken, // Include plaintext token for email
+        icalExportEnabled, // For widget to show "Add to Calendar" button
       };
     });
 
@@ -186,8 +272,10 @@ export const createBookingAtomic = onCall(async (request) => {
     if (paymentMethod === "bank_transfer") {
       try {
         // Fetch property and unit data for email
-        const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        const unitDoc = await db.collection("units").doc(unitId).get();
+        const propertyDoc =
+          await db.collection("properties").doc(propertyId).get();
+        const unitDoc =
+          await db.collection("units").doc(unitId).get();
         const propertyData = propertyDoc.data();
         const unitData = unitDoc.data();
 
@@ -210,18 +298,21 @@ export const createBookingAtomic = onCall(async (request) => {
         });
       } catch (emailError) {
         // Log error but don't fail the booking
-        logError("[AtomicBooking] Failed to send confirmation email", emailError);
+        logError(
+          "[AtomicBooking] Failed to send confirmation email",
+          emailError
+        );
       }
     }
 
     return {
       success: true,
       ...result,
-      message: paymentMethod === "bank_transfer"
-        ? "Booking created. Awaiting bank transfer payment."
-        : requireOwnerApproval
-          ? "Booking request submitted. Awaiting owner approval."
-          : "Booking created. Please complete payment.",
+      message: paymentMethod === "bank_transfer" ?
+        "Booking created. Awaiting bank transfer payment." :
+        requireOwnerApproval ?
+          "Booking request submitted. Awaiting owner approval." :
+          "Booking created. Please complete payment.",
     };
   } catch (error: any) {
     // Check if it's our "already-exists" error

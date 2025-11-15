@@ -102,7 +102,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
               children: [
                 // Unit Selection
                 Text(
-                  'Jedinica',
+                  'Jedinica *',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -120,7 +120,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.bed_outlined),
-                        hintText: 'Odaberite jedinicu',
+                        hintText: 'Odaberite jedinicu *',
                       ),
                       items: units.map((unit) {
                         return DropdownMenuItem(
@@ -152,7 +152,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
                 // Dates
                 Text(
-                  'Datumi',
+                  'Datumi *',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -163,7 +163,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                   children: [
                     Expanded(
                       child: _buildDateField(
-                        label: 'Check-in',
+                        label: 'Check-in *',
                         date: _checkInDate,
                         onTap: _selectCheckInDate,
                       ),
@@ -171,7 +171,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildDateField(
-                        label: 'Check-out',
+                        label: 'Check-out *',
                         date: _checkOutDate,
                         onTap: _selectCheckOutDate,
                       ),

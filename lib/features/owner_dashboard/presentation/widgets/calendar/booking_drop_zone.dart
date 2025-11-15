@@ -16,6 +16,7 @@ class BookingDropZone extends ConsumerWidget {
   final Widget? child;
   final VoidCallback? onTap;
   final VoidCallback? onDoubleTap;
+  final VoidCallback? onLongPress;
   final void Function(BookingModel booking)? onBookingDropped;
   final bool isEnabled;
   final bool isPast;
@@ -31,6 +32,7 @@ class BookingDropZone extends ConsumerWidget {
     this.child,
     this.onTap,
     this.onDoubleTap,
+    this.onLongPress,
     this.onBookingDropped,
     this.isEnabled = true,
     this.isPast = false,
@@ -46,6 +48,7 @@ class BookingDropZone extends ConsumerWidget {
       return GestureDetector(
         onTap: onTap,
         onDoubleTap: onDoubleTap,
+        onLongPress: onLongPress,
         child: Container(
           width: width,
           height: height,
@@ -58,6 +61,7 @@ class BookingDropZone extends ConsumerWidget {
     return GestureDetector(
       onTap: onTap,
       onDoubleTap: onDoubleTap,
+      onLongPress: onLongPress,
       child: DragTarget<BookingModel>(
         onWillAcceptWithDetails: (details) {
           // Validate drop in real-time

@@ -2,8 +2,18 @@ import '../../../shared/models/booking_model.dart';
 
 /// Booking overlap detector for drag-and-drop validation
 /// Checks if a booking can be moved to a new date/unit without conflicts
+///
+/// IMPORTANT: This detector SUPPORTS same-day turnover (BedBooking-style)
+/// - Booking A can check-out on May 5
+/// - Booking B can check-in on May 5 (same day)
+/// - This is NOT considered an overlap
 class BookingOverlapDetector {
   /// Check if a booking overlaps with another booking
+  ///
+  /// SAME-DAY TURNOVER SUPPORT:
+  /// - Uses isBefore/isAfter (not <=/>= comparisons)
+  /// - This allows check-out date to equal check-in date of next booking
+  /// - Example: Booking A (May 1-5) does NOT overlap with Booking B (May 5-10)
   static bool doBookingsOverlap({
     required DateTime start1,
     required DateTime end1,
@@ -11,8 +21,11 @@ class BookingOverlapDetector {
     required DateTime end2,
   }) {
     // Two bookings overlap if:
-    // - start1 is before end2 AND
-    // - end1 is after start2
+    // - start1 is BEFORE end2 (not equal) AND
+    // - end1 is AFTER start2 (not equal)
+    //
+    // This ensures same-day turnover is allowed:
+    // - If end1 == start2, they DON'T overlap (checkout = next checkin)
     return start1.isBefore(end2) && end1.isAfter(start2);
   }
 

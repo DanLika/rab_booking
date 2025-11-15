@@ -30,6 +30,11 @@ class WidgetSettings {
   // External Calendar Integration
   final ExternalCalendarConfig? externalCalendarConfig;
 
+  // iCal Export Configuration
+  final bool icalExportEnabled; // Master toggle for iCal export feature
+  final String? icalExportUrl; // Generated iCal URL (if enabled)
+  final DateTime? icalExportLastGenerated; // Last time iCal was generated
+
   // Tax/Legal Disclaimer
   final TaxLegalConfig taxLegalConfig;
 
@@ -57,6 +62,9 @@ class WidgetSettings {
     required this.contactOptions,
     required this.emailConfig,
     this.externalCalendarConfig,
+    this.icalExportEnabled = false,
+    this.icalExportUrl,
+    this.icalExportLastGenerated,
     required this.taxLegalConfig,
     this.themeOptions,
     this.blurConfig,
@@ -88,6 +96,9 @@ class WidgetSettings {
       externalCalendarConfig: data['external_calendar_config'] != null
           ? ExternalCalendarConfig.fromMap(data['external_calendar_config'])
           : null,
+      icalExportEnabled: data['ical_export_enabled'] ?? false,
+      icalExportUrl: data['ical_export_url'],
+      icalExportLastGenerated: (data['ical_export_last_generated'] as Timestamp?)?.toDate(),
       taxLegalConfig: TaxLegalConfig.fromMap(data['tax_legal_config'] ?? {}),
       themeOptions: data['theme_options'] != null
           ? ThemeOptions.fromMap(data['theme_options'])
@@ -115,6 +126,11 @@ class WidgetSettings {
       'contact_options': contactOptions.toMap(),
       'email_config': emailConfig.toMap(),
       'external_calendar_config': externalCalendarConfig?.toMap(),
+      'ical_export_enabled': icalExportEnabled,
+      'ical_export_url': icalExportUrl,
+      'ical_export_last_generated': icalExportLastGenerated != null
+          ? Timestamp.fromDate(icalExportLastGenerated!)
+          : null,
       'tax_legal_config': taxLegalConfig.toMap(),
       'theme_options': themeOptions?.toMap(),
       'blur_config': blurConfig?.toMap(),
@@ -153,6 +169,9 @@ class WidgetSettings {
     ContactOptions? contactOptions,
     EmailNotificationConfig? emailConfig,
     ExternalCalendarConfig? externalCalendarConfig,
+    bool? icalExportEnabled,
+    String? icalExportUrl,
+    DateTime? icalExportLastGenerated,
     TaxLegalConfig? taxLegalConfig,
     ThemeOptions? themeOptions,
     BlurConfig? blurConfig,
@@ -173,6 +192,9 @@ class WidgetSettings {
       contactOptions: contactOptions ?? this.contactOptions,
       emailConfig: emailConfig ?? this.emailConfig,
       externalCalendarConfig: externalCalendarConfig ?? this.externalCalendarConfig,
+      icalExportEnabled: icalExportEnabled ?? this.icalExportEnabled,
+      icalExportUrl: icalExportUrl ?? this.icalExportUrl,
+      icalExportLastGenerated: icalExportLastGenerated ?? this.icalExportLastGenerated,
       taxLegalConfig: taxLegalConfig ?? this.taxLegalConfig,
       themeOptions: themeOptions ?? this.themeOptions,
       blurConfig: blurConfig ?? this.blurConfig,

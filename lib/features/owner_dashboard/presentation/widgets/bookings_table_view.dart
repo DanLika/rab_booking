@@ -448,6 +448,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             ),
           );
           ref.invalidate(ownerBookingsProvider);
+
+          // Auto-regenerate iCal if enabled
+          _triggerIcalRegeneration(bookingId);
         }
       } catch (e) {
         if (mounted) {
@@ -496,6 +499,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             ),
           );
           ref.invalidate(ownerBookingsProvider);
+
+          // Auto-regenerate iCal if enabled
+          _triggerIcalRegeneration(bookingId);
         }
       } catch (e) {
         if (mounted) {
@@ -582,6 +588,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             ),
           );
           ref.invalidate(ownerBookingsProvider);
+
+          // Auto-regenerate iCal if enabled
+          _triggerIcalRegeneration(bookingId);
         }
       } catch (e) {
         if (mounted) {
@@ -711,6 +720,29 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           );
         }
       }
+    }
+  }
+
+  /// Trigger iCal regeneration for the unit after booking status changes
+  void _triggerIcalRegeneration(String bookingId) async {
+    try {
+      // Find booking in the list
+      final ownerBooking = widget.bookings.firstWhere(
+        (b) => b.booking.id == bookingId,
+      );
+
+      // Get iCal export service
+      final icalService = ref.read(icalExportServiceProvider);
+
+      // Auto-regenerate if enabled (service will check if enabled)
+      await icalService.autoRegenerateIfEnabled(
+        propertyId: ownerBooking.property.id,
+        unitId: ownerBooking.unit.id,
+        unit: ownerBooking.unit,
+      );
+    } catch (e) {
+      // Silently fail - iCal regeneration is non-critical
+      debugPrint('iCal regeneration failed: $e');
     }
   }
 }

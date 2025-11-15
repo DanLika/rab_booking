@@ -430,185 +430,114 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                 // Desktop/Large tablets: >= 500px → Row (horizontal layout)
                 final isVerySmall = constraints.maxWidth < 500;
 
+                // Extract common TextField widget
+                final priceInput = _buildPriceTextField(theme);
+                final saveButton = _buildSaveButton(theme, isVerySmall);
+
                 if (isVerySmall) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      TextField(
-                        controller: _basePriceController,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Cijena po noći (€)',
-                          labelStyle: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                          prefixText: '€ ',
-                          prefixIcon: const Icon(Icons.euro_outlined, size: 20),
-                          filled: true,
-                          fillColor: theme.colorScheme.surfaceContainerHighest
-                              .withAlpha((0.5 * 255).toInt()),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 14,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: theme.colorScheme.outline.withAlpha(
-                                (0.3 * 255).toInt(),
-                              ),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: theme.colorScheme.outline.withAlpha(
-                                (0.25 * 255).toInt(),
-                              ),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(10),
-                            ),
-                            borderSide: BorderSide(
-                              color: theme.colorScheme.primary,
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                      ),
+                      priceInput,
                       const SizedBox(height: 12),
-                      FilledButton.icon(
-                        onPressed: _isUpdatingBasePrice
-                            ? null
-                            : _updateBasePrice,
-                        icon: _isUpdatingBasePrice
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.save_outlined, size: 18),
-                        label: const Text('Sačuvaj Cijenu'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
+                      saveButton,
                     ],
                   );
                 }
 
                 return Row(
                   children: [
-                    Expanded(
-                      flex: 2,
-                      child: TextField(
-                        controller: _basePriceController,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Cijena po noći (€)',
-                          labelStyle: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                          prefixText: '€ ',
-                          prefixIcon: const Icon(Icons.euro_outlined, size: 20),
-                          filled: true,
-                          fillColor: theme.colorScheme.surfaceContainerHighest
-                              .withAlpha((0.5 * 255).toInt()),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 14,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: theme.colorScheme.outline.withAlpha(
-                                (0.3 * 255).toInt(),
-                              ),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: theme.colorScheme.outline.withAlpha(
-                                (0.25 * 255).toInt(),
-                              ),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(10),
-                            ),
-                            borderSide: BorderSide(
-                              color: theme.colorScheme.primary,
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                      ),
-                    ),
+                    Expanded(flex: 2, child: priceInput),
                     const SizedBox(width: 16),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: _isUpdatingBasePrice
-                            ? null
-                            : _updateBasePrice,
-                        icon: _isUpdatingBasePrice
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.save_outlined, size: 18),
-                        label: const Text('Sačuvaj'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
-                    ),
+                    Expanded(child: saveButton),
                   ],
                 );
               },
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPriceTextField(ThemeData theme) {
+    return TextField(
+      controller: _basePriceController,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        fontWeight: FontWeight.w500,
+      ),
+      decoration: InputDecoration(
+        labelText: 'Cijena po noći (€)',
+        labelStyle: theme.textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.w500,
+        ),
+        prefixText: '€ ',
+        prefixIcon: const Icon(Icons.euro_outlined, size: 20),
+        filled: true,
+        fillColor: theme.colorScheme.surfaceContainerHighest
+            .withAlpha((0.5 * 255).toInt()),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: theme.colorScheme.outline.withAlpha(
+              (0.3 * 255).toInt(),
+            ),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: theme.colorScheme.outline.withAlpha(
+              (0.25 * 255).toInt(),
+            ),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: const BorderRadius.all(
+            Radius.circular(10),
+          ),
+          borderSide: BorderSide(
+            color: theme.colorScheme.primary,
+            width: 1.5,
+          ),
+        ),
+      ),
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+      ],
+    );
+  }
+
+  Widget _buildSaveButton(ThemeData theme, bool isVerySmall) {
+    return FilledButton.icon(
+      onPressed: _isUpdatingBasePrice ? null : _updateBasePrice,
+      icon: _isUpdatingBasePrice
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : const Icon(Icons.save_outlined, size: 18),
+      label: Text(isVerySmall ? 'Sačuvaj Cijenu' : 'Sačuvaj'),
+      style: FilledButton.styleFrom(
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: isVerySmall ? 14 : 16,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        elevation: 0,
       ),
     );
   }

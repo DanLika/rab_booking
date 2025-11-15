@@ -28,6 +28,7 @@ class EmailNotificationService {
     required String bookingReference,
     String? paymentDeadline,
     String? paymentMethod,
+    BankTransferConfig? bankTransferConfig,
     bool allowGuestCancellation = false,
     int? cancellationDeadlineHours,
     String? ownerEmail,
@@ -60,6 +61,7 @@ class EmailNotificationService {
         bookingReference: bookingReference,
         paymentDeadline: paymentDeadline,
         paymentMethod: paymentMethod,
+        bankTransferConfig: bankTransferConfig,
         allowGuestCancellation: allowGuestCancellation,
         cancellationDeadlineHours: cancellationDeadlineHours,
         ownerEmail: ownerEmail,
@@ -259,6 +261,7 @@ class EmailNotificationService {
     required String bookingReference,
     String? paymentDeadline,
     String? paymentMethod,
+    BankTransferConfig? bankTransferConfig,
     bool allowGuestCancellation = false,
     int? cancellationDeadlineHours,
     String? ownerEmail,
@@ -432,6 +435,24 @@ class EmailNotificationService {
             </ul>
             <p style="font-size: 12px; color: #666;">
                 Molimo donesite ID/putovnicu za registraciju pri dolasku.
+            </p>
+        </div>
+        ''' : paymentMethod == 'bankTransfer' && bankTransferConfig != null ? '''
+        <div class="info-box">
+            <strong>🏦 Upute za bankovni prijenos</strong><br>
+            <p>Molimo izvršite plaćanje na sljedeći račun:</p>
+            <table style="width: 100%; margin: 10px 0; border-collapse: collapse;">
+                ${bankTransferConfig.iban != null ? '<tr><td style="padding: 8px 0; font-weight: 600; color: #333;">IBAN:</td><td style="padding: 8px 0; color: #333;">${bankTransferConfig.iban}</td></tr>' : ''}
+                ${bankTransferConfig.accountNumber != null && bankTransferConfig.iban == null ? '<tr><td style="padding: 8px 0; font-weight: 600; color: #333;">Broj računa:</td><td style="padding: 8px 0; color: #333;">${bankTransferConfig.accountNumber}</td></tr>' : ''}
+                ${bankTransferConfig.swift != null ? '<tr><td style="padding: 8px 0; font-weight: 600; color: #333;">SWIFT/BIC:</td><td style="padding: 8px 0; color: #333;">${bankTransferConfig.swift}</td></tr>' : ''}
+                ${bankTransferConfig.bankName != null ? '<tr><td style="padding: 8px 0; font-weight: 600; color: #333;">Banka:</td><td style="padding: 8px 0; color: #333;">${bankTransferConfig.bankName}</td></tr>' : ''}
+                ${bankTransferConfig.accountHolder != null ? '<tr><td style="padding: 8px 0; font-weight: 600; color: #333;">Primalac:</td><td style="padding: 8px 0; color: #333;">${bankTransferConfig.accountHolder}</td></tr>' : ''}
+                <tr><td style="padding: 8px 0; font-weight: 600; color: #333;">Iznos:</td><td style="padding: 8px 0; color: #333; font-size: 18px; font-weight: bold;">€${booking.totalPrice.toStringAsFixed(2)}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: 600; color: #333;">Poziv na broj:</td><td style="padding: 8px 0; color: #333;"><strong>$bookingReference</strong></td></tr>
+            </table>
+            ${paymentDeadline != null ? '<p style="margin: 10px 0;"><strong>⏰ Rok za plaćanje:</strong> $paymentDeadline</p>' : ''}
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                Važno: Molimo unesite broj rezervacije (<strong>$bookingReference</strong>) kao poziv na broj ili opis uplate kako bismo mogli identificirati Vašu uplatu.
             </p>
         </div>
         ''' : paymentDeadline != null ? '''

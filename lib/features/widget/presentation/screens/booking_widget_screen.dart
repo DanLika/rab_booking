@@ -8,12 +8,15 @@ import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/calendar_view_switcher.dart';
+import '../widgets/additional_services_widget.dart';
+import '../widgets/tax_legal_disclaimer_widget.dart';
 import '../providers/booking_price_provider.dart';
 import '../providers/widget_settings_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/ical_sync_status_provider.dart';
+import '../providers/additional_services_provider.dart';
 import '../../domain/models/calendar_view_type.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
@@ -72,9 +75,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // UI state
   bool _showGuestForm = false;
   String _selectedPaymentMethod = 'stripe'; // 'stripe' or 'bank_transfer'
-  final String _selectedPaymentOption = 'deposit'; // 'deposit' or 'full'
+  String _selectedPaymentOption = 'deposit'; // 'deposit' or 'full' - Bug #12: Made mutable so users can choose
   bool _isProcessing = false;
   bool _emailVerified = false; // Email verification status (OTP)
+  bool _taxLegalAccepted = false; // Bug #68: Tax/Legal disclaimer acceptance
 
   // Bug #64: Price locking to prevent payment mismatches
   BookingPriceCalculation? _lockedPriceCalculation;
@@ -264,8 +268,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     } else if (isPayOnArrivalEnabled) {
       _selectedPaymentMethod = 'payOnArrival';
     } else {
-      // Edge case: No payment methods enabled (should not happen due to owner validation)
-      _selectedPaymentMethod = 'payOnArrival'; // Fallback
+      // Edge case: No payment methods enabled
+      // Don't set any payment method - submit validation will block the booking
+      _selectedPaymentMethod = '';
     }
   }
 
@@ -706,6 +711,30 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     ),
                   ),
 
+                // Property/Unit title header
+                if (_unit?.name != null && _unit!.name.isNotEmpty)
+                  Positioned(
+                    top: (_widgetSettings?.themeOptions?.customLogoUrl != null &&
+                            _widgetSettings!.themeOptions!.customLogoUrl!.isNotEmpty)
+                        ? topPadding + 56 // Below logo if logo exists
+                        : topPadding + 8, // Top if no logo
+                    left: horizontalPadding + 8,
+                    right: horizontalPadding + 8,
+                    child: Text(
+                      _unit!.name,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode
+                            ? MinimalistColorsDark.textPrimary
+                            : MinimalistColors.textPrimary,
+                        fontFamily: 'Manrope',
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
                 // Bug #67 Fix: iCal sync warning banner - shows when external calendars are stale
                 _buildIcalSyncWarning(unitId, isDarkMode),
 
@@ -777,13 +806,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: isDarkMode
-                    ? const Color(0xFF3D2800) // Dark amber background
-                    : const Color(0xFFFFF3CD), // Light amber background
+                    ? MinimalistColorsDark.statusPendingBackground
+                    : MinimalistColors.statusPendingBackground,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isDarkMode
-                      ? const Color(0xFF8B6914) // Dark amber border
-                      : const Color(0xFFFFE69C), // Light amber border
+                      ? MinimalistColorsDark.statusPendingBorder
+                      : MinimalistColors.statusPendingBorder,
                 ),
               ),
               child: Row(
@@ -791,8 +820,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   Icon(
                     Icons.warning_amber_rounded,
                     color: isDarkMode
-                        ? const Color(0xFFFFD54F) // Dark amber icon
-                        : const Color(0xFF856404), // Light amber icon
+                        ? MinimalistColorsDark.warning
+                        : MinimalistColors.warning,
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -802,8 +831,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       style: TextStyle(
                         fontSize: 13,
                         color: isDarkMode
-                            ? const Color(0xFFFFE082) // Dark amber text
-                            : const Color(0xFF856404), // Light amber text
+                            ? MinimalistColorsDark.statusPendingText
+                            : MinimalistColors.statusPendingText,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1007,10 +1036,33 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     );
 
     return priceCalc.when(
-      data: (calculation) {
-        if (calculation == null) {
+      data: (calculationBase) {
+        if (calculationBase == null) {
           return const SizedBox.shrink();
         }
+
+        // Watch additional services selection
+        final servicesAsync = ref.watch(unitAdditionalServicesProvider(unitId));
+        final selectedServices = ref.watch(selectedAdditionalServicesProvider);
+
+        // Calculate additional services total
+        double servicesTotal = 0.0;
+        servicesAsync.whenData((services) {
+          if (services.isNotEmpty && selectedServices.isNotEmpty) {
+            servicesTotal = ref.read(additionalServicesTotalProvider((
+              services,
+              selectedServices,
+              _checkOut!.difference(_checkIn!).inDays,
+              _adults + _children,
+            )));
+          }
+        });
+
+        // Update calculation with additional services
+        final calculation = calculationBase.copyWithServices(
+          servicesTotal,
+          depositPercentage,
+        );
 
         // Calculate responsive width and height based on screen size
         final screenWidth = constraints.maxWidth;
@@ -1206,10 +1258,30 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Left column: Guest info (55%)
+                  // Left column: Guest info + Additional Services (55%)
                   Expanded(
                     flex: 55,
-                    child: _buildGuestInfoForm(calculation, showButton: false),
+                    child: Column(
+                      children: [
+                        _buildGuestInfoForm(calculation, showButton: false),
+                        const SizedBox(height: SpacingTokens.m),
+                        // Additional Services section
+                        AdditionalServicesWidget(
+                          unitId: _unitId,
+                          nights: _checkOut!.difference(_checkIn!).inDays,
+                          guests: _adults + _children,
+                        ),
+                        const SizedBox(height: SpacingTokens.m),
+                        // Tax/Legal Disclaimer section
+                        TaxLegalDisclaimerWidget(
+                          propertyId: _propertyId ?? '',
+                          unitId: _unitId,
+                          onAcceptedChanged: (accepted) {
+                            setState(() => _taxLegalAccepted = accepted);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(width: SpacingTokens.m),
                   // Right column: Payment options + button (45%)
@@ -1231,6 +1303,22 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (_showGuestForm && !isWideScreen) ...[
           const SizedBox(height: 12),
           _buildGuestInfoForm(calculation, showButton: false),
+          const SizedBox(height: SpacingTokens.m),
+          // Additional Services section
+          AdditionalServicesWidget(
+            unitId: _unitId,
+            nights: _checkOut!.difference(_checkIn!).inDays,
+            guests: _adults + _children,
+          ),
+          const SizedBox(height: SpacingTokens.m),
+          // Tax/Legal Disclaimer section
+          TaxLegalDisclaimerWidget(
+            propertyId: _propertyId ?? '',
+            unitId: _unitId,
+            onAcceptedChanged: (accepted) {
+              setState(() => _taxLegalAccepted = accepted);
+            },
+          ),
           const SizedBox(height: SpacingTokens.m),
           _buildPaymentSection(calculation),
         ],
@@ -1358,6 +1446,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         ),
         const SizedBox(height: 12),
 
+        // Price breakdown section
+        _buildPriceBreakdown(calculation, isDarkMode, getColor),
+
+        const SizedBox(height: 12),
+
         // Reserve button (only show when guest form is NOT visible)
         if (!_showGuestForm)
           InkWell(
@@ -1391,6 +1484,131 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               ),
             ),
           ),
+      ],
+    );
+  }
+
+  /// Build price breakdown (room + services + total + deposit)
+  Widget _buildPriceBreakdown(
+    BookingPriceCalculation calculation,
+    bool isDarkMode,
+    Color Function(Color, Color) getColor,
+  ) {
+    // Calculate deposit percentage from amounts
+    final depositPercentage = calculation.totalPrice > 0
+        ? ((calculation.depositAmount / calculation.totalPrice) * 100).round()
+        : 20;
+
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: getColor(
+          MinimalistColors.backgroundSecondary,
+          MinimalistColorsDark.backgroundSecondary,
+        ),
+        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+      ),
+      child: Column(
+        children: [
+          // Room price
+          _buildPriceRow(
+            'Room (${calculation.nights} ${calculation.nights == 1 ? 'night' : 'nights'})',
+            calculation.formattedRoomPrice,
+            isDarkMode,
+            getColor,
+          ),
+
+          // Additional services (only show if > 0)
+          if (calculation.additionalServicesTotal > 0) ...[
+            const SizedBox(height: SpacingTokens.s),
+            _buildPriceRow(
+              'Additional Services',
+              calculation.formattedAdditionalServices,
+              isDarkMode,
+              getColor,
+              color: getColor(
+                MinimalistColors.statusAvailableBorder,
+                MinimalistColorsDark.statusAvailableBorder,
+              ),
+            ),
+          ],
+
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
+            child: Divider(
+              height: 1,
+              color: getColor(
+                MinimalistColors.borderDefault,
+                MinimalistColorsDark.borderDefault,
+              ),
+            ),
+          ),
+
+          // Total
+          _buildPriceRow(
+            'Total',
+            calculation.formattedTotal,
+            isDarkMode,
+            getColor,
+            isBold: true,
+          ),
+
+          // Deposit info
+          const SizedBox(height: SpacingTokens.s),
+          Text(
+            'Deposit: ${calculation.formattedDeposit} ($depositPercentage%)',
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeXS,
+              color: getColor(
+                MinimalistColors.textSecondary,
+                MinimalistColorsDark.textSecondary,
+              ),
+              fontFamily: 'Manrope',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper method to build price row
+  Widget _buildPriceRow(
+    String label,
+    String amount,
+    bool isDarkMode,
+    Color Function(Color, Color) getColor, {
+    Color? color,
+    bool isBold = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: isBold ? TypographyTokens.fontSizeM : TypographyTokens.fontSizeS,
+            color: color ??
+                getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ),
+            fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+            fontFamily: 'Manrope',
+          ),
+        ),
+        Text(
+          amount,
+          style: TextStyle(
+            fontSize: isBold ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeS,
+            color: color ??
+                getColor(
+                  MinimalistColors.textPrimary,
+                  MinimalistColorsDark.textPrimary,
+                ),
+            fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
+            fontFamily: 'Manrope',
+          ),
+        ),
       ],
     );
   }
@@ -1515,6 +1733,51 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 singleMethod = 'payOnArrival';
                 singleMethodTitle = 'Pay on Arrival';
                 singleMethodSubtitle = 'Payment at property';
+              }
+
+              // If no payment methods enabled, show error
+              if (enabledCount == 0) {
+                return Container(
+                  margin: const EdgeInsets.only(top: SpacingTokens.m),
+                  padding: const EdgeInsets.all(SpacingTokens.m),
+                  decoration: BoxDecoration(
+                    color: getColor(
+                      MinimalistColors.error.withValues(alpha: 0.1),
+                      MinimalistColorsDark.error.withValues(alpha: 0.2),
+                    ),
+                    borderRadius: BorderTokens.circularMedium,
+                    border: Border.all(
+                      color: getColor(
+                        MinimalistColors.error,
+                        MinimalistColorsDark.error,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: getColor(
+                          MinimalistColors.error,
+                          MinimalistColorsDark.error,
+                        ),
+                      ),
+                      const SizedBox(width: SpacingTokens.s),
+                      Expanded(
+                        child: Text(
+                          'No payment methods are currently configured. Please contact the property owner to complete your booking.',
+                          style: TextStyle(
+                            fontSize: TypographyTokens.fontSizeS,
+                            color: getColor(
+                              MinimalistColors.error,
+                              MinimalistColorsDark.error,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               }
 
               // If only one method, auto-select and show simplified UI
@@ -2279,6 +2542,19 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return;
     }
 
+    // Bug #68: Validate Tax/Legal disclaimer acceptance if required
+    final taxConfig = _widgetSettings?.taxLegalConfig;
+    if (taxConfig != null && taxConfig.enabled && !_taxLegalAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please accept the tax and legal obligations before booking'),
+          backgroundColor: MinimalistColors.error,
+          duration: Duration(seconds: 5),
+        ),
+      );
+      return;
+    }
+
     // Bug #64: Check if price changed since user started booking
     if (_lockedPriceCalculation != null) {
       final priceDelta =
@@ -2431,6 +2707,23 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       final isStripeEnabled = _widgetSettings?.stripeConfig?.enabled == true;
       final isBankTransferEnabled =
           _widgetSettings?.bankTransferConfig?.enabled == true;
+      final isPayOnArrivalEnabled = _widgetSettings?.allowPayOnArrival == true;
+
+      // Check if at least one payment method is enabled
+      if (!isStripeEnabled && !isBankTransferEnabled && !isPayOnArrivalEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'No payment methods are currently available. Please contact the property owner.',
+              ),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
 
       // Check if selected payment method is valid
       if (_selectedPaymentMethod == 'stripe' && !isStripeEnabled) {
@@ -2545,10 +2838,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           notes: _notesController.text.trim().isEmpty
               ? null
               : _notesController.text.trim(),
+          taxLegalAccepted: _widgetSettings?.taxLegalConfig != null &&
+                  _widgetSettings!.taxLegalConfig.enabled
+              ? _taxLegalAccepted
+              : null,
         );
 
-        // Send email notifications (if configured)
-        if (_widgetSettings?.emailConfig != null) {
+        // Send email notifications (if configured and enabled)
+        final emailConfig = _widgetSettings?.emailConfig;
+        if (emailConfig?.enabled == true && emailConfig?.isConfigured == true) {
           final emailService = EmailNotificationService();
           final bookingReference = booking.id.substring(0, 8).toUpperCase();
           final propertyName = _unit?.name ?? 'Vacation Rental';
@@ -2560,6 +2858,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               emailConfig: _widgetSettings!.emailConfig,
               propertyName: propertyName,
               bookingReference: bookingReference,
+              bankTransferConfig: _widgetSettings!.bankTransferConfig,
               allowGuestCancellation: _widgetSettings!.allowGuestCancellation,
               cancellationDeadlineHours:
                   _widgetSettings!.cancellationDeadlineHours,
@@ -2659,10 +2958,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
+        taxLegalAccepted: _widgetSettings?.taxLegalConfig != null &&
+                _widgetSettings!.taxLegalConfig.enabled
+            ? _taxLegalAccepted
+            : null,
       );
 
       // Send booking confirmation email (pre-payment)
-      if (_widgetSettings?.emailConfig != null) {
+      final emailConfigInstant = _widgetSettings?.emailConfig;
+      if (emailConfigInstant?.enabled == true && emailConfigInstant?.isConfigured == true) {
         final emailService = EmailNotificationService();
         final bookingReference = booking.id.substring(0, 8).toUpperCase();
         final propertyName = _unit?.name ?? 'Vacation Rental';
@@ -2682,6 +2986,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             propertyName: propertyName,
             bookingReference: bookingReference,
             paymentDeadline: dateFormat.format(paymentDeadline),
+            paymentMethod: _selectedPaymentMethod,
+            bankTransferConfig: _widgetSettings!.bankTransferConfig,
             allowGuestCancellation: _widgetSettings!.allowGuestCancellation,
             cancellationDeadlineHours:
                 _widgetSettings!.cancellationDeadlineHours,
@@ -3608,7 +3914,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       barrierDismissible: false,
       builder: (context) => EmailVerificationDialog(
         email: email,
-        colors: isDarkMode ? const DarkColorScheme() : const LightColorScheme(),
+        colors: MinimalistColorSchemeAdapter(dark: isDarkMode),
       ),
     );
 

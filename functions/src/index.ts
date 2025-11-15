@@ -37,3 +37,6 @@ export * from "./verifyBookingAccess";
 
 // Export email verification functions (OTP for guest bookings)
 export * from "./emailVerification";
+
+// Export widget configuration setup function
+export * from "./setupWidgetConfig";

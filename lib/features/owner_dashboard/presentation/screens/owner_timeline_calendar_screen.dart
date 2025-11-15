@@ -8,9 +8,12 @@ import '../providers/owner_calendar_provider.dart';
 import '../widgets/timeline_calendar_widget.dart';
 import '../widgets/calendar/calendar_top_toolbar.dart';
 import '../widgets/calendar/calendar_filter_chips.dart';
+import '../widgets/calendar/multi_select_action_bar.dart';
 import '../widgets/booking_create_dialog.dart';
+import '../widgets/booking_quick_create_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../mixins/calendar_common_methods_mixin.dart';
+import '../providers/multi_select_provider.dart';
 import '../../utils/calendar_grid_calculator.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 
@@ -29,12 +32,28 @@ class _OwnerTimelineCalendarScreenState
     with CalendarCommonMethodsMixin {
   late DateRangeSelection _currentRange;
   bool _showSummary = false;
+  int _visibleDays = 30; // Default to 30 days, will be updated based on screen size
 
   @override
   void initState() {
     super.initState();
-    // Initialize with current month
-    _currentRange = DateRangeSelection.month(DateTime.now());
+    // Initialize with today as start date
+    // Number of days will be calculated in didChangeDependencies based on screen size
+    _currentRange = DateRangeSelection.days(DateTime.now(), _visibleDays);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Update visible days based on screen width
+    final newVisibleDays = CalendarGridCalculator.getTimelineVisibleDays(context);
+    if (newVisibleDays != _visibleDays) {
+      setState(() {
+        _visibleDays = newVisibleDays;
+        // Recreate range with new day count
+        _currentRange = DateRangeSelection.days(_currentRange.startDate, _visibleDays);
+      });
+    }
   }
 
   @override
@@ -68,76 +87,49 @@ class _OwnerTimelineCalendarScreenState
             drawer: const OwnerAppDrawer(currentRoute: 'calendar/timeline'),
       body: Column(
         children: [
-          // Top toolbar with navigation and actions - OPTIMIZED: Consumer for notifications only
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              border: Border(
-                bottom: BorderSide(color: Theme.of(context).dividerColor),
-              ),
-            ),
-            child: Column(
-              children: [
-                Consumer(
-                  builder: (context, ref, child) {
-                    final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
+          // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
+          Consumer(
+            builder: (context, ref, child) {
+              final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
+              final multiSelectState = ref.watch(multiSelectProvider);
 
-                    return CalendarTopToolbar(
-                      dateRange: _currentRange,
-                      isWeekView: false,
-                      onPreviousPeriod: _goToPreviousMonth,
-                      onNextPeriod: _goToNextMonth,
-                      onToday: _goToToday,
-                      onDatePickerTap: _showDatePicker,
-                      onSearchTap: showSearchDialog,
-                      onRefresh: refreshCalendarData,
-                      onFilterTap: showFiltersPanel,
-                      notificationCount: unreadCountAsync.when(
-                        data: (count) => count,
-                        loading: () => 0,
-                        error: (error, stackTrace) => 0,
-                      ),
-                      onNotificationsTap: showNotificationsPanel,
-                      isCompact: MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint,
-                    );
-                  },
+              return CalendarTopToolbar(
+                dateRange: _currentRange,
+                isWeekView: false,
+                onPreviousPeriod: _goToPreviousMonth,
+                onNextPeriod: _goToNextMonth,
+                onToday: _goToToday,
+                onDatePickerTap: _showDatePicker,
+                onSearchTap: showSearchDialog,
+                onRefresh: refreshCalendarData,
+                onFilterTap: showFiltersPanel,
+                notificationCount: unreadCountAsync.when(
+                  data: (count) => count,
+                  loading: () => 0,
+                  error: (error, stackTrace) => 0,
                 ),
-                // Summary toggle button
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.analytics_outlined,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          'Statistika',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const Spacer(),
-                      Switch(
-                        value: _showSummary,
-                        onChanged: (value) {
-                          setState(() {
-                            _showSummary = value;
-                          });
-                        },
-                        activeTrackColor: Theme.of(context).colorScheme.primary,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+                onNotificationsTap: showNotificationsPanel,
+                isCompact: MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint,
+                // ENHANCED: Analytics toggle integrated in single row
+                showSummaryToggle: true,
+                isSummaryVisible: _showSummary,
+                onSummaryToggleChanged: (value) {
+                  setState(() {
+                    _showSummary = value;
+                  });
+                },
+                // ENHANCED: Multi-select mode toggle
+                showMultiSelectToggle: true,
+                isMultiSelectActive: multiSelectState.isEnabled,
+                onMultiSelectToggle: () {
+                  if (multiSelectState.isEnabled) {
+                    ref.read(multiSelectProvider.notifier).disableMultiSelect();
+                  } else {
+                    ref.read(multiSelectProvider.notifier).enableMultiSelect();
+                  }
+                },
+              );
+            },
           ),
 
           // Filter chips (from shared widget)
@@ -148,19 +140,33 @@ class _OwnerTimelineCalendarScreenState
             child: TimelineCalendarWidget(
               key: ValueKey(_currentRange.startDate), // Rebuild on date change
               showSummary: _showSummary,
+              onCellLongPress: (date, unit) => _showCreateBookingDialog(
+                initialCheckIn: date,
+                unitId: unit.id,
+              ),
             ),
           ),
+
+          // Multi-select action bar (bottom)
+          const MultiSelectActionBar(),
         ],
       ),
-            floatingActionButton: FloatingActionButton.extended(
-              onPressed: _showCreateBookingDialog,
-              backgroundColor: AppColors.primary,
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
-                'Nova rezervacija',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-              ),
-              elevation: 4,
+            floatingActionButton: Consumer(
+              builder: (context, ref, child) {
+                final multiSelectState = ref.watch(multiSelectProvider);
+
+                // Hide FAB when multi-select is active
+                if (multiSelectState.isEnabled) {
+                  return const SizedBox.shrink();
+                }
+
+                return FloatingActionButton(
+                  onPressed: _showBookingOptionsBottomSheet,
+                  backgroundColor: AppColors.primary,
+                  elevation: 4,
+                  child: const Icon(Icons.add, color: Colors.white),
+                );
+              },
             ),
             floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           ),
@@ -169,24 +175,24 @@ class _OwnerTimelineCalendarScreenState
     );
   }
 
-  /// Go to previous month
+  /// Go to previous period (moves back by visible days count)
   void _goToPreviousMonth() {
     setState(() {
       _currentRange = _currentRange.previous(isWeek: false);
     });
   }
 
-  /// Go to next month
+  /// Go to next period (moves forward by visible days count)
   void _goToNextMonth() {
     setState(() {
       _currentRange = _currentRange.next(isWeek: false);
     });
   }
 
-  /// Go to today's month
+  /// Go to today - creates new range starting from today
   void _goToToday() {
     setState(() {
-      _currentRange = DateRangeSelection.month(DateTime.now());
+      _currentRange = DateRangeSelection.days(DateTime.now(), _visibleDays);
     });
   }
 
@@ -201,16 +207,137 @@ class _OwnerTimelineCalendarScreenState
 
     if (picked != null) {
       setState(() {
-        _currentRange = DateRangeSelection.month(picked);
+        // Create new range starting from picked date with current visible days
+        _currentRange = DateRangeSelection.days(picked, _visibleDays);
       });
     }
   }
 
-  /// Show create booking dialog
-  void _showCreateBookingDialog() async {
+  /// Show booking options bottom sheet
+  void _showBookingOptionsBottomSheet() async {
+    final theme = Theme.of(context);
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Title
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Odaberi način kreiranja',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              // Quick booking option
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.flash_on,
+                    color: AppColors.primary,
+                  ),
+                ),
+                title: const Text(
+                  'Brza rezervacija',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: const Text('Samo osnovni podaci - brzo i jednostavno'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showQuickBookingDialog();
+                },
+              ),
+              const Divider(height: 1),
+              // Full booking option
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary.withAlpha((0.1 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.description,
+                    color: AppColors.secondary,
+                  ),
+                ),
+                title: const Text(
+                  'Detaljna rezervacija',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: const Text('Svi detalji i dodatne opcije'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCreateBookingDialog();
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Show quick booking dialog
+  void _showQuickBookingDialog({
+    DateTime? initialCheckIn,
+    String? unitId,
+  }) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => const BookingCreateDialog(),
+      builder: (context) => BookingQuickCreateDialog(
+        initialCheckIn: initialCheckIn,
+        unitId: unitId,
+      ),
+    );
+
+    // If booking was created successfully, refresh calendar
+    if (result == true && mounted) {
+      await Future.wait([
+        ref.refresh(calendarBookingsProvider.future),
+        ref.refresh(allOwnerUnitsProvider.future),
+      ]);
+    }
+  }
+
+  /// Show create booking dialog
+  /// ENHANCED: Now accepts optional initialCheckIn date and unitId for auto-fill
+  void _showCreateBookingDialog({
+    DateTime? initialCheckIn,
+    String? unitId,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => BookingCreateDialog(
+        initialCheckIn: initialCheckIn,
+        unitId: unitId,
+      ),
     );
 
     // If booking was created successfully, refresh calendar

@@ -6,18 +6,32 @@ import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/utils/platform_utils.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../providers/calendar_drag_drop_provider.dart';
+import '../../utils/booking_overlap_detector.dart';
+import '../../utils/calendar_grid_calculator.dart';
 import 'calendar/booking_inline_edit_dialog.dart';
 import 'calendar/booking_drop_zone.dart';
+import 'calendar/skewed_booking_painter.dart';
+import 'calendar/calendar_empty_state.dart';
+import 'calendar/calendar_skeleton_loader.dart';
+import 'calendar/calendar_error_state.dart';
+import 'calendar/booking_action_menu.dart';
+import 'calendar/smart_booking_tooltip.dart';
 
 /// BedBooking-style Timeline Calendar
 /// Gantt/Timeline layout: Units vertical, Dates horizontal
 /// Starts from today, horizontal scroll, pinch-to-zoom support
 class TimelineCalendarWidget extends ConsumerStatefulWidget {
   final bool showSummary;
+  final Function(DateTime date, UnitModel unit)? onCellLongPress;
 
-  const TimelineCalendarWidget({super.key, this.showSummary = false});
+  const TimelineCalendarWidget({
+    super.key,
+    this.showSummary = false,
+    this.onCellLongPress,
+  });
 
   @override
   ConsumerState<TimelineCalendarWidget> createState() =>
@@ -49,65 +63,50 @@ class _TimelineCalendarWidgetState
   static const int _bufferDays = 30; // Extra days before/after visible area
 
   // Responsive dimensions based on screen size and accessibility settings
+  // Using CalendarGridCalculator for consistency
   double _getDayWidth(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final textScaleFactor = MediaQuery.textScalerOf(context).scale(1.0);
 
-    // Base width adjusted for screen size
-    double baseWidth = 80.0;
-    if (screenWidth < AppDimensions.mobile) {
-      baseWidth = 80.0; // Mobile
-    } else if (screenWidth < AppDimensions.tablet) {
-      baseWidth = 90.0; // Tablet
-    } else {
-      baseWidth = 100.0; // Desktop
-    }
+    // Get optimal visible days for screen size
+    final visibleDays = CalendarGridCalculator.getOptimalVisibleDays(
+      screenWidth,
+    );
+
+    // Get base width from CalendarGridCalculator
+    final baseWidth = CalendarGridCalculator.getDayCellWidth(
+      screenWidth,
+      visibleDays,
+      textScaleFactor: textScaleFactor,
+    );
 
     // Apply zoom scale (pinch-to-zoom)
-    baseWidth = baseWidth * _zoomScale;
-
-    // Adjust for text scaling (accessibility)
-    return baseWidth * textScaleFactor.clamp(0.8, 1.2);
+    return baseWidth * _zoomScale;
   }
 
   double _getUnitRowHeight(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final textScaleFactor = MediaQuery.textScalerOf(context).scale(1.0);
 
-    // Base height adjusted for text scaling and screen size
-    double baseHeight = 64.0; // Increased for better touch targets
-    if (screenWidth < AppDimensions.mobile) {
-      baseHeight = 72.0; // Mobile - larger touch targets
-    }
-    return baseHeight * textScaleFactor.clamp(0.8, 1.3);
+    return CalendarGridCalculator.getRowHeight(
+      screenWidth,
+      textScaleFactor: textScaleFactor,
+    );
   }
 
   double _getUnitColumnWidth(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final textScaleFactor = MediaQuery.textScalerOf(context).scale(1.0);
 
-    // Base width adjusted for screen size
-    double baseWidth = 150.0;
-    if (screenWidth < AppDimensions.mobile) {
-      baseWidth = 100.0; // Mobile - ~28% of screen
-    } else if (screenWidth < AppDimensions.tablet) {
-      baseWidth = 130.0; // Tablet
-    }
-
-    // Adjust for text scaling (accessibility)
-    return baseWidth * textScaleFactor.clamp(0.8, 1.2);
+    return CalendarGridCalculator.getRowHeaderWidth(
+      screenWidth,
+      textScaleFactor: textScaleFactor,
+    );
   }
 
   double _getHeaderHeight(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-
-    if (screenWidth < AppDimensions.mobile) {
-      return 74.0; // Mobile - compact (increased to prevent overflow)
-    } else if (screenWidth < AppDimensions.tablet) {
-      return 86.0; // Tablet - standard (increased)
-    } else {
-      return 100.0; // Desktop - spacious (increased)
-    }
+    return CalendarGridCalculator.getHeaderHeight(screenWidth);
   }
 
   @override
@@ -373,89 +372,20 @@ class _TimelineCalendarWidgetState
 
                       // Show empty state if no bookings exist
                       if (!hasAnyBookings) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(32),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.event_busy,
-                                  size: 80,
-                                  color: AppColors.primary.withAlpha(
-                                    (0.3 * 255).toInt(),
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                Text(
-                                  'Nema rezervacija',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Dodajte prvu rezervaciju koristeći dugme "Nova rezervacija" u donjem desnom uglu',
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.color
-                                            ?.withAlpha((0.7 * 255).toInt()),
-                                      ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
+                        return const CalendarEmptyState();
                       }
 
                       return _buildTimelineView(units, bookingsByUnit);
                     },
-                    loading: () => const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: AppDimensions.spaceM),
-                          Text('Učitavanje rezervacija...'),
-                        ],
-                      ),
+                    loading: () => const CalendarSkeletonLoader(
+                      unitCount: 3,
+                      dayCount: 30,
                     ),
-                    error: (error, stack) => Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppDimensions.spaceM),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              size: 48,
-                              color: AppColors.error,
-                            ),
-                            const SizedBox(height: AppDimensions.spaceM),
-                            const Text(
-                              'Greška pri učitavanju rezervacija',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: AppDimensions.spaceS),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                ref.invalidate(calendarBookingsProvider);
-                              },
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Pokušaj ponovno'),
-                            ),
-                          ],
-                        ),
-                      ),
+                    error: (error, stack) => CalendarErrorState(
+                      errorMessage: error.toString(),
+                      onRetry: () {
+                        ref.invalidate(calendarBookingsProvider);
+                      },
                     ),
                   );
                 },
@@ -860,7 +790,13 @@ class _TimelineCalendarWidgetState
     return Column(
       children: units.map((unit) {
         final bookings = bookingsByUnit[unit.id] ?? [];
-        return _buildUnitRow(unit, bookings, dates, offsetWidth);
+        return _buildUnitRow(
+          unit,
+          bookings,
+          dates,
+          offsetWidth,
+          bookingsByUnit,
+        );
       }).toList(),
     );
   }
@@ -870,6 +806,7 @@ class _TimelineCalendarWidgetState
     List<BookingModel> bookings,
     List<DateTime> dates,
     double offsetWidth,
+    Map<String, List<BookingModel>> allBookingsByUnit,
   ) {
     final unitRowHeight = _getUnitRowHeight(context);
     final theme = Theme.of(context);
@@ -898,7 +835,12 @@ class _TimelineCalendarWidgetState
           ..._buildDropZones(unit, dates, offsetWidth, bookings),
 
           // Reservation blocks (foreground)
-          ..._buildReservationBlocks(bookings, dates, offsetWidth),
+          ..._buildReservationBlocks(
+            bookings,
+            dates,
+            offsetWidth,
+            allBookingsByUnit,
+          ),
         ],
       ),
     );
@@ -940,6 +882,9 @@ class _TimelineCalendarWidgetState
               height: unitRowHeight,
               isPast: isPast,
               isToday: isToday,
+              onLongPress: widget.onCellLongPress != null
+                  ? () => widget.onCellLongPress!(date, unit)
+                  : null,
               onBookingDropped: (booking) {
                 _handleBookingDrop(booking, date, unit, allBookings);
               },
@@ -1016,6 +961,7 @@ class _TimelineCalendarWidgetState
     List<BookingModel> bookings,
     List<DateTime> dates,
     double offsetWidth,
+    Map<String, List<BookingModel>> allBookingsByUnit,
   ) {
     final dayWidth = _getDayWidth(context);
     final List<Widget> blocks = [];
@@ -1033,14 +979,16 @@ class _TimelineCalendarWidgetState
       final left = offsetWidth + (startIndex * dayWidth);
 
       // Calculate width (number of nights * day width)
-      final width = nights * dayWidth;
+      // FIXED: Add 1 day to include check-out day in visualization
+      // If check-in is Nov 10 and check-out is Nov 12 (2 nights), we need to show 3 cells (10, 11, 12)
+      final width = (nights + 1) * dayWidth;
 
       // Create reservation block
       blocks.add(
         Positioned(
           left: left,
           top: 8,
-          child: _buildReservationBlock(booking, width),
+          child: _buildReservationBlock(booking, width, allBookingsByUnit),
         ),
       );
     }
@@ -1048,109 +996,106 @@ class _TimelineCalendarWidgetState
     return blocks;
   }
 
-  Widget _buildReservationBlock(BookingModel booking, double width) {
+  Widget _buildReservationBlock(
+    BookingModel booking,
+    double width,
+    Map<String, List<BookingModel>> allBookingsByUnit,
+  ) {
     final unitRowHeight = _getUnitRowHeight(context);
     final blockHeight = unitRowHeight - 16;
     final nights = _calculateNights(booking.checkIn, booking.checkOut);
-    final isIcalBooking =
-        booking.source == 'ical' ||
-        booking.source == 'airbnb' ||
-        booking.source == 'booking_com';
+    final screenWidth = MediaQuery.of(context).size.width;
 
-    return GestureDetector(
-      onTap: () => _showReservationDetails(booking),
-      child: Stack(
-        children: [
-          // Main reservation block
-          Container(
-            width: width - 4,
-            height: blockHeight,
-            margin: const EdgeInsets.symmetric(horizontal: 2),
-            decoration: BoxDecoration(
-              color: booking.status.color,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusXS),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 2,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.spaceXS,
-              vertical: AppDimensions.spaceXXS,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    booking.guestName ?? 'Gost',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Flexible(
-                  child: Text(
-                    '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''} • $nights noć${nights > 1 ? 'i' : ''}',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 10,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
+    // Get responsive dimensions from CalendarGridCalculator
+    final guestNameFontSize =
+        CalendarGridCalculator.getBookingGuestNameFontSize(screenWidth);
+    final metadataFontSize = CalendarGridCalculator.getBookingMetadataFontSize(
+      screenWidth,
+    );
+    final bookingPadding = CalendarGridCalculator.getBookingPadding(
+      screenWidth,
+    );
 
-          // iCal sync badge (top right)
-          if (isIcalBooking)
-            Positioned(
-              right: 6,
-              top: 4,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(3),
-                  border: Border.all(color: Colors.grey.shade400),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 2,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
+    // ENHANCED: Detect conflicts with other bookings in the same unit
+    final hasConflict = _hasBookingConflict(booking, allBookingsByUnit);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: PlatformUtils.supportsHover
+          ? (event) => SmartBookingTooltip.show(
+              context: context,
+              booking: booking,
+              position: event.position,
+            )
+          : null,
+      onExit: PlatformUtils.supportsHover
+          ? (_) => SmartBookingTooltip.hide()
+          : null,
+      child: GestureDetector(
+        onTap: () => _showBookingActionMenu(booking),
+        onLongPress: () => _showMoveToUnitMenu(booking),
+        child: Container(
+          width: width - 4,
+          height: blockHeight,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          child: Stack(
+            children: [
+              // Background layer with skewed parallelogram
+              CustomPaint(
+                painter: SkewedBookingPainter(
+                  backgroundColor: booking.status.color,
+                  borderColor: booking.status.color,
+                  hasConflict: hasConflict,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                size: Size(width - 4, blockHeight),
+              ),
+
+              // Content layer - clipped to skewed shape
+              ClipPath(
+                clipper: SkewedBookingClipper(),
+                child: Stack(
                   children: [
-                    Icon(Icons.sync, size: 10, color: Colors.blue[700]),
-                    const SizedBox(width: 2),
-                    Text(
-                      'iCal',
-                      style: TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue[700],
+                    // Main content
+                    Padding(
+                      padding: bookingPadding,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              booking.guestName ?? 'Gost',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: guestNameFontSize,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(height: 1),
+                          Flexible(
+                            child: Text(
+                              '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''} • $nights noć${nights > 1 ? 'i' : ''}',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: metadataFontSize,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1165,6 +1110,48 @@ class _TimelineCalendarWidgetState
     if (result == true && mounted) {
       // Calendar already refreshed by dialog
     }
+  }
+
+  /// Show booking action menu (short tap)
+  /// Displays bottom sheet with Edit, Change Status, Delete options
+  void _showBookingActionMenu(BookingModel booking) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BookingActionBottomSheet(booking: booking),
+    );
+
+    if (!mounted || action == null) return;
+
+    switch (action) {
+      case 'edit':
+        _showReservationDetails(booking);
+        break;
+      case 'status':
+        // TODO: Show status change dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Status change - coming soon')),
+        );
+        break;
+      case 'delete':
+        // TODO: Show delete confirmation dialog
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Delete - coming soon')));
+        break;
+    }
+  }
+
+  /// Show move to unit menu (long press)
+  /// Displays bottom sheet with list of other units
+  void _showMoveToUnitMenu(BookingModel booking) async {
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BookingMoveToUnitMenu(booking: booking),
+    );
+
+    // Calendar will auto-refresh via provider invalidation in the menu
   }
 
   Widget _buildSummaryBar(
@@ -1334,31 +1321,6 @@ class _TimelineCalendarWidgetState
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  void _scrollToDate(DateTime date) {
-    // Check if scroll controller is attached to a scroll view
-    if (!_horizontalScrollController.hasClients) {
-      return;
-    }
-
-    final dayWidth = _getDayWidth(context);
-    final startDate = _getStartDate();
-    final daysSinceStart = date.difference(startDate).inDays;
-    final scrollPosition = daysSinceStart * dayWidth;
-
-    final maxScroll = _horizontalScrollController.position.maxScrollExtent;
-    final targetScroll =
-        (scrollPosition - (MediaQuery.of(context).size.width / 2)).clamp(
-          0.0,
-          maxScroll,
-        );
-
-    _horizontalScrollController.animateTo(
-      targetScroll,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
-  }
-
   /// Calculate nights between two dates with proper normalization
   /// Normalizes dates to midnight to avoid time-of-day calculation errors
   int _calculateNights(DateTime checkIn, DateTime checkOut) {
@@ -1373,5 +1335,21 @@ class _TimelineCalendarWidgetState
       checkOut.day,
     );
     return normalizedCheckOut.difference(normalizedCheckIn).inDays;
+  }
+
+  /// Check if a booking has conflicts with other bookings in the same unit
+  bool _hasBookingConflict(
+    BookingModel booking,
+    Map<String, List<BookingModel>> allBookingsByUnit,
+  ) {
+    final conflicts = BookingOverlapDetector.getConflictingBookings(
+      unitId: booking.unitId,
+      newCheckIn: booking.checkIn,
+      newCheckOut: booking.checkOut,
+      bookingIdToExclude: booking.id,
+      allBookings: allBookingsByUnit,
+    );
+
+    return conflicts.isNotEmpty;
   }
 }

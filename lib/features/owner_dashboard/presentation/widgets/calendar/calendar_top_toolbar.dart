@@ -17,6 +17,16 @@ class CalendarTopToolbar extends StatelessWidget {
   final VoidCallback? onNotificationsTap;
   final bool isCompact;
 
+  // ENHANCED: Analytics/Summary toggle (consolidated from separate row)
+  final bool showSummaryToggle;
+  final bool isSummaryVisible;
+  final ValueChanged<bool>? onSummaryToggleChanged;
+
+  // ENHANCED: Multi-select mode toggle
+  final bool showMultiSelectToggle;
+  final bool isMultiSelectActive;
+  final VoidCallback? onMultiSelectToggle;
+
   const CalendarTopToolbar({
     super.key,
     required this.dateRange,
@@ -31,6 +41,12 @@ class CalendarTopToolbar extends StatelessWidget {
     this.notificationCount,
     this.onNotificationsTap,
     this.isCompact = false,
+    this.showSummaryToggle = false,
+    this.isSummaryVisible = false,
+    this.onSummaryToggleChanged,
+    this.showMultiSelectToggle = false,
+    this.isMultiSelectActive = false,
+    this.onMultiSelectToggle,
   });
 
   @override
@@ -132,6 +148,38 @@ class CalendarTopToolbar extends StatelessWidget {
                       notificationCount,
                     ),
 
+                  // Analytics toggle (COMPACT MODE - icon only)
+                  if (showSummaryToggle && onSummaryToggleChanged != null)
+                    IconButton(
+                      icon: Icon(
+                        isSummaryVisible
+                            ? Icons.analytics
+                            : Icons.analytics_outlined,
+                      ),
+                      onPressed: () => onSummaryToggleChanged!(!isSummaryVisible),
+                      tooltip: isSummaryVisible
+                          ? 'Sakrij statistiku'
+                          : 'Prikaži statistiku',
+                      color: isSummaryVisible ? theme.colorScheme.primary : null,
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    ),
+
+                  // Multi-select toggle (COMPACT MODE - icon only)
+                  if (showMultiSelectToggle && onMultiSelectToggle != null)
+                    IconButton(
+                      icon: Icon(
+                        isMultiSelectActive
+                            ? Icons.checklist
+                            : Icons.checklist_outlined,
+                      ),
+                      onPressed: onMultiSelectToggle,
+                      tooltip: isMultiSelectActive
+                          ? 'Isključi višestruku selekciju'
+                          : 'Uključi višestruku selekciju',
+                      color: isMultiSelectActive ? theme.colorScheme.primary : null,
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    ),
+
                   // Overflow menu for less important actions
                   if (onSearchTap != null || onRefresh != null || onFilterTap != null)
                     PopupMenuButton<String>(
@@ -225,6 +273,58 @@ class CalendarTopToolbar extends StatelessWidget {
                       theme,
                       onNotificationsTap,
                       notificationCount,
+                    ),
+
+                  // Analytics toggle (DESKTOP MODE - with label)
+                  if (showSummaryToggle && onSummaryToggleChanged != null) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.only(left: 12),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          left: BorderSide(color: theme.dividerColor),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.analytics_outlined,
+                            size: 18,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Statistika',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Switch(
+                            value: isSummaryVisible,
+                            onChanged: onSummaryToggleChanged,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // Multi-select toggle (DESKTOP MODE - icon only to save space)
+                  if (showMultiSelectToggle && onMultiSelectToggle != null)
+                    IconButton(
+                      icon: Icon(
+                        isMultiSelectActive
+                            ? Icons.checklist
+                            : Icons.checklist_outlined,
+                      ),
+                      onPressed: onMultiSelectToggle,
+                      tooltip: isMultiSelectActive
+                          ? 'Isključi višestruku selekciju'
+                          : 'Uključi višestruku selekciju',
+                      color: isMultiSelectActive ? theme.colorScheme.primary : null,
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     ),
                 ],
               ],

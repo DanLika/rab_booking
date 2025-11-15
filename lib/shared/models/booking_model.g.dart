@@ -29,6 +29,7 @@ _$BookingModelImpl _$$BookingModelImplFromJson(Map<String, dynamic> json) =>
       source: json['source'] as String?,
       guestCount: (json['guest_count'] as num?)?.toInt() ?? 1,
       notes: json['notes'] as String?,
+      taxLegalAccepted: json['tax_legal_accepted'] as bool?,
       paymentIntentId: json['payment_intent_id'] as String?,
       createdAt: const TimestampConverter().fromJson(json['created_at']),
       updatedAt: const NullableTimestampConverter().fromJson(
@@ -65,6 +66,7 @@ Map<String, dynamic> _$$BookingModelImplToJson(
   'source': instance.source,
   'guest_count': instance.guestCount,
   'notes': instance.notes,
+  'tax_legal_accepted': instance.taxLegalAccepted,
   'payment_intent_id': instance.paymentIntentId,
   'created_at': const TimestampConverter().toJson(instance.createdAt),
   'updated_at': const NullableTimestampConverter().toJson(instance.updatedAt),

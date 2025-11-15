@@ -7,24 +7,29 @@ class CalendarGridCalculator {
   static const double mobileBreakpoint = 600;
   static const double tabletBreakpoint = 900;
 
-  /// Row header width (room name column)
-  static const double mobileRowHeaderWidth = 100;
-  static const double tabletRowHeaderWidth = 150;
-  static const double desktopRowHeaderWidth = 200;
+  /// Row header width bounds (room name column)
+  static const double minRowHeaderWidth = 100;
+  static const double maxRowHeaderWidth = 250;
+
+  /// Row header percentage of screen width
+  static const double mobileRowHeaderPercent = 0.25; // 25% on mobile
+  static const double tabletRowHeaderPercent = 0.20; // 20% on tablet
+  static const double desktopRowHeaderPercent = 0.15; // 15% on desktop
 
   /// Row height (each room row)
-  static const double mobileRowHeight = 56; // Increased from 48 for better touch targets
-  static const double tabletRowHeight = 60;
-  static const double desktopRowHeight = 64;
+  static const double mobileRowHeight = 56;
+  static const double tabletRowHeight = 62;
+  static const double desktopRowHeight = 68;
 
-  /// Day cell width (each day column)
-  static const double mobileDayCellWidth = 90; // Increased from 80 for better touch targets
-  static const double tabletDayCellWidth = 100;
-  static const double desktopDayCellWidth = 120;
+  /// Day cell width bounds (each day column)
+  static const double mobileDayCellMinWidth = 65;
+  static const double mobileDayCellMaxWidth = 110;
+  static const double desktopDayCellMinWidth = 80;
+  static const double desktopDayCellMaxWidth = 120;
 
   /// Header height (date headers row)
-  static const double mobileHeaderHeight = 50; // Reduced for mobile to save space
-  static const double tabletHeaderHeight = 55;
+  static const double mobileHeaderHeight = 48;
+  static const double tabletHeaderHeight = 54;
   static const double desktopHeaderHeight = 60;
 
   /// Minimum touch target size (for mobile accessibility)
@@ -42,20 +47,23 @@ class CalendarGridCalculator {
   }
 
   /// Get row header width based on screen width and text scale factor
+  /// Dynamically calculated as percentage of screen width with bounds
   static double getRowHeaderWidth(double screenWidth, {double textScaleFactor = 1.0}) {
-    double baseWidth;
+    double percentageWidth;
 
     if (screenWidth < mobileBreakpoint) {
-      baseWidth = mobileRowHeaderWidth;
+      percentageWidth = screenWidth * mobileRowHeaderPercent;
     } else if (screenWidth < tabletBreakpoint) {
-      baseWidth = tabletRowHeaderWidth;
+      percentageWidth = screenWidth * tabletRowHeaderPercent;
     } else {
-      baseWidth = desktopRowHeaderWidth;
+      percentageWidth = screenWidth * desktopRowHeaderPercent;
     }
 
-    // Adjust for text scaling (accessibility)
-    // Clamp to avoid extreme values (Android accessibility can go up to 2.0)
-    return baseWidth * textScaleFactor.clamp(0.8, 1.5);
+    // Apply text scale factor for accessibility
+    percentageWidth = percentageWidth * textScaleFactor.clamp(0.8, 1.5);
+
+    // Clamp to min/max bounds
+    return percentageWidth.clamp(minRowHeaderWidth, maxRowHeaderWidth);
   }
 
   /// Get row height based on screen width and text scale factor
@@ -77,37 +85,36 @@ class CalendarGridCalculator {
   }
 
   /// Get day cell width based on screen width, number of days, and text scale factor
+  /// Dynamically calculated as (availableWidth / visibleDays) with bounds
   static double getDayCellWidth(
     double screenWidth,
     int numberOfDays, {
     double textScaleFactor = 1.0,
   }) {
-    double baseWidth;
+    // Calculate available width for day cells
+    final rowHeaderWidth = getRowHeaderWidth(screenWidth, textScaleFactor: textScaleFactor);
+    final availableWidth = screenWidth - rowHeaderWidth - 32; // 32 for padding
+
+    // Calculate width per day
+    double calculatedWidth = availableWidth / numberOfDays;
+
+    // Apply bounds based on screen size
+    double minWidth;
+    double maxWidth;
 
     if (screenWidth < mobileBreakpoint) {
-      baseWidth = mobileDayCellWidth;
-    } else if (screenWidth < tabletBreakpoint) {
-      baseWidth = tabletDayCellWidth;
+      minWidth = mobileDayCellMinWidth;
+      maxWidth = mobileDayCellMaxWidth;
     } else {
-      baseWidth = desktopDayCellWidth;
+      minWidth = desktopDayCellMinWidth;
+      maxWidth = desktopDayCellMaxWidth;
     }
 
-    // Adjust base width for text scaling
-    baseWidth = baseWidth * textScaleFactor.clamp(0.8, 1.5);
+    // Apply text scale factor for accessibility
+    calculatedWidth = calculatedWidth * textScaleFactor.clamp(0.8, 1.5);
 
-    // For desktop, if there's extra space, distribute it across days
-    if (screenWidth >= tabletBreakpoint) {
-      final rowHeaderWidth = getRowHeaderWidth(screenWidth, textScaleFactor: textScaleFactor);
-      final availableWidth = screenWidth - rowHeaderWidth - 32; // 32 for padding
-      final calculatedWidth = availableWidth / numberOfDays;
-
-      // Use calculated width if it's larger than base, but cap at reasonable max
-      if (calculatedWidth > baseWidth) {
-        return calculatedWidth.clamp(baseWidth, 200);
-      }
-    }
-
-    return baseWidth;
+    // Clamp to bounds
+    return calculatedWidth.clamp(minWidth, maxWidth);
   }
 
   /// Calculate total grid width for horizontal scrolling
@@ -238,6 +245,78 @@ class CalendarGridCalculator {
 
     // Icons should scale slightly with text for accessibility
     return baseIconSize * textScaleFactor.clamp(0.9, 1.2);
+  }
+
+  /// Get font size for booking guest name
+  static double getBookingGuestNameFontSize(double screenWidth) {
+    if (screenWidth < mobileBreakpoint) {
+      return 11;
+    } else if (screenWidth < tabletBreakpoint) {
+      return 12;
+    } else {
+      return 13;
+    }
+  }
+
+  /// Get font size for booking metadata (dates, icons, etc.)
+  static double getBookingMetadataFontSize(double screenWidth) {
+    if (screenWidth < mobileBreakpoint) {
+      return 9;
+    } else if (screenWidth < tabletBreakpoint) {
+      return 10;
+    } else {
+      return 11;
+    }
+  }
+
+  /// Get icon size for booking block icons
+  static double getBookingIconSize(double screenWidth) {
+    if (screenWidth < mobileBreakpoint) {
+      return 11;
+    } else if (screenWidth < tabletBreakpoint) {
+      return 12;
+    } else {
+      return 13;
+    }
+  }
+
+  /// Get padding for booking blocks (horizontal and vertical)
+  static EdgeInsets getBookingPadding(double screenWidth) {
+    if (screenWidth < mobileBreakpoint) {
+      return const EdgeInsets.symmetric(horizontal: 4, vertical: 4);
+    } else if (screenWidth < tabletBreakpoint) {
+      return const EdgeInsets.symmetric(horizontal: 5, vertical: 5);
+    } else {
+      return const EdgeInsets.symmetric(horizontal: 6, vertical: 6);
+    }
+  }
+
+  /// Get optimal number of visible days based on screen width
+  /// Mobile: 6-8 days, Tablet: 10-16 days, Desktop: 20-35 days
+  static int getOptimalVisibleDays(double screenWidth) {
+    final rowHeaderWidth = getRowHeaderWidth(screenWidth);
+    final availableWidth = screenWidth - rowHeaderWidth - 32; // 32 for padding
+
+    if (screenWidth < mobileBreakpoint) {
+      // Mobile: Calculate how many days fit using max cell width, minimum 6, maximum 8
+      final fittingDays = (availableWidth / mobileDayCellMaxWidth).floor();
+      return fittingDays.clamp(6, 8);
+    } else if (screenWidth < tabletBreakpoint) {
+      // Tablet: Calculate how many days fit, minimum 10, maximum 16
+      final fittingDays = (availableWidth / desktopDayCellMaxWidth).floor();
+      return fittingDays.clamp(10, 16);
+    } else {
+      // Desktop: Calculate how many days fit using max cell width, minimum 20, maximum 35
+      final fittingDays = (availableWidth / desktopDayCellMaxWidth).floor();
+      return fittingDays.clamp(20, 35);
+    }
+  }
+
+  /// Get visible days range for timeline view
+  /// Returns number of days to show based on screen size
+  static int getTimelineVisibleDays(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    return getOptimalVisibleDays(screenWidth);
   }
 }
 

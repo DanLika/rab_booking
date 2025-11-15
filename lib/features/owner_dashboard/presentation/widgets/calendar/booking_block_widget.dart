@@ -3,8 +3,11 @@ import 'package:intl/intl.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/utils/platform_utils.dart';
 import 'enhanced_booking_drag_feedback.dart';
-import 'check_in_out_diagonal_indicator.dart';
+import 'skewed_booking_painter.dart';
+import 'smart_booking_tooltip.dart';
 
 /// Draggable booking block widget for calendar grid
 /// Shows booking information as a colored block spanning multiple days
@@ -64,16 +67,14 @@ class BookingBlockWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor(booking.status);
     final isCompact = height < 50 || width < 80;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // FIXED: Prevent badge overlap on small blocks
-    final showBadges = height >= 40 && width >= 60;
-    final hasSourceBadge = booking.source != null &&
-                          booking.source != 'widget' &&
-                          booking.source != 'manual';
-
-    // ENHANCED: Get source border color
+    // ENHANCED: Get source border color for left stripe indicator
     final sourceBorderColor = _getSourceBorderColor(booking.source);
     final showSourceBorder = sourceBorderColor != null;
+
+    // ENHANCED: Read-only logic for external sources (iCal, Airbnb, Booking.com)
+    final isFromExternalSource = _isFromExternalSource(booking.source);
 
     // FIXED: Add accessibility semantics
     final semanticsLabel = _buildSemanticLabel();
@@ -82,35 +83,52 @@ class BookingBlockWidget extends StatelessWidget {
       label: semanticsLabel,
       button: true,
       enabled: true,
-      child: GestureDetector(
+      child: MouseRegion(
+        // Smart hover - automatically works only on desktop
+        cursor: SystemMouseCursors.click,
+        onEnter: PlatformUtils.supportsHover
+            ? (event) => SmartBookingTooltip.show(
+                  context: context,
+                  booking: booking,
+                  position: event.position,
+                )
+            : null,
+        onExit: PlatformUtils.supportsHover
+            ? (_) => SmartBookingTooltip.hide()
+            : null,
+        child: GestureDetector(
         // In multi-select mode, tap toggles selection
-        onTap: isMultiSelectMode ? onSelectionToggle : onTap,
+        // If no onTap callback provided, show tooltip on tap (mobile)
+        onTap: isMultiSelectMode
+            ? onSelectionToggle
+            : onTap ??
+                () => SmartBookingTooltip.show(
+                      context: context,
+                      booking: booking,
+                    ),
         onLongPress: onLongPress,
         onSecondaryTapDown: onSecondaryTapDown,
-        child: Container(
+        child: SizedBox(
         width: width,
         height: height,
-        decoration: BoxDecoration(
-          color: statusColor.withAlpha((0.9 * 255).toInt()),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: hasConflict ? Colors.red : statusColor,
-            width: hasConflict ? 2.5 : 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: hasConflict
-                  ? Colors.red.withAlpha((0.3 * 255).toInt())
-                  : Colors.black.withAlpha((0.1 * 255).toInt()),
-              blurRadius: hasConflict ? 4 : 2,
-              offset: const Offset(0, 1),
+        child: Stack(
+          children: [
+            // Background layer with skewed parallelogram shape
+            CustomPaint(
+              painter: SkewedBookingPainter(
+                backgroundColor: statusColor.withAlpha((0.9 * 255).toInt()),
+                borderColor: hasConflict ? Colors.red : statusColor,
+                borderWidth: hasConflict ? 2.5 : 1.5,
+                hasConflict: hasConflict,
+              ),
+              size: Size(width, height),
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: Stack(
-            children: [
+
+            // Content layer - clipped to skewed shape
+            ClipPath(
+              clipper: SkewedBookingClipper(),
+              child: Stack(
+                children: [
               // ENHANCED: Resize visual feedback overlay
               if (isResizing)
                 Positioned.fill(
@@ -158,7 +176,7 @@ class BookingBlockWidget extends StatelessWidget {
                   ),
                 ),
 
-              // Main content
+              // Main content - BedBooking style: minimal and clean
               Padding(
                 padding: EdgeInsets.only(
                   left: showSourceBorder ? 10 : 6,
@@ -168,116 +186,6 @@ class BookingBlockWidget extends StatelessWidget {
                 ),
                 child: _buildContent(context, isCompact),
               ),
-
-              // ENHANCED: Check-in diagonal line indicator (left side)
-              if (showCheckInOut && height >= 40)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: CheckInDiagonalIndicator(
-                    height: height,
-                    color: Colors.white.withAlpha((0.8 * 255).toInt()),
-                  ),
-                ),
-
-              // Check-in indicator (modern badge) - FIXED: Only show if enough space
-              if (showCheckInOut && showBadges)
-                Positioned(
-                  left: 2,
-                  top: 2,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha((0.95 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha((0.1 * 255).toInt()),
-                          blurRadius: 2,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.login,
-                          size: 10,
-                          color: Colors.green.shade700,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          'IN',
-                          style: TextStyle(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-              // ENHANCED: Check-out diagonal line indicator (right side)
-              if (showCheckInOut && height >= 40)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: CheckOutDiagonalIndicator(
-                    height: height,
-                    color: Colors.white.withAlpha((0.8 * 255).toInt()),
-                  ),
-                ),
-
-              // Check-out indicator (modern badge) - FIXED: Only show if enough space
-              if (showCheckInOut && showBadges)
-                Positioned(
-                  right: 2,
-                  bottom: 2,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha((0.95 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha((0.1 * 255).toInt()),
-                          blurRadius: 2,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.logout,
-                          size: 10,
-                          color: Colors.orange.shade700,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          'OUT',
-                          style: TextStyle(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-              // Source badge (if iCal, Booking.com, Airbnb) - FIXED: Only show if enough space
-              if (hasSourceBadge && showBadges && width >= 100)
-                Positioned(
-                  right: 4,
-                  top: showCheckInOut ? 20 : 4, // Move down if check-in badge is present
-                  child: _buildSourceBadge(booking.source!),
-                ),
 
               // Conflict warning indicator - always visible if conflict exists
               if (hasConflict)
@@ -291,13 +199,7 @@ class BookingBlockWidget extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.red,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha((0.3 * 255).toInt()),
-                            blurRadius: 3,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
+                        boxShadow: AppShadows.getElevation(2, isDark: isDark),
                       ),
                       child: const Icon(
                         Icons.warning,
@@ -308,93 +210,25 @@ class BookingBlockWidget extends StatelessWidget {
                   ),
                 ),
 
-              // ENHANCED: Guest count indicator (top right dots)
-              if (showBadges && !hasConflict && width >= 80)
+              // ENHANCED: Read-only lock icon for external sources
+              if (isFromExternalSource && !isCompact)
                 Positioned(
-                  right: 4,
-                  top: 4,
-                  child: _buildGuestCountIndicator(),
-                ),
-
-              // ENHANCED: Payment status indicator (bottom left)
-              if (showBadges && height >= 50 && width >= 70)
-                Positioned(
-                  left: showSourceBorder ? 8 : 4,
-                  bottom: 4,
-                  child: _buildPaymentStatusIndicator(),
-                ),
-
-              // ENHANCED: Left resize handle (check-in date)
-              if (isResizable && width >= 60 && !isMultiSelectMode)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: GestureDetector(
-                    onHorizontalDragStart: onResizeStartLeft,
-                    onHorizontalDragUpdate: onResizeUpdateLeft,
-                    onHorizontalDragEnd: onResizeEndLeft,
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.resizeLeft,
-                      child: Container(
-                        width: 8,
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          border: Border(
-                            left: BorderSide(
-                              color: AppColors.primary.withAlpha((0.6 * 255).toInt()),
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        child: Center(
-                          child: Container(
-                            width: 2,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(1),
-                            ),
-                          ),
-                        ),
+                  left: hasConflict ? 4 : null,
+                  right: hasConflict ? null : 4,
+                  top: hasConflict ? 24 : 4,
+                  child: Tooltip(
+                    message: 'Rezervacija iz vanjskog izvora (${_getSourceName(booking.source)}) - nije moguće editirati ovdje',
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade700,
+                        shape: BoxShape.circle,
+                        boxShadow: AppShadows.getElevation(2, isDark: isDark),
                       ),
-                    ),
-                  ),
-                ),
-
-              // ENHANCED: Right resize handle (check-out date)
-              if (isResizable && width >= 60 && !isMultiSelectMode)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: GestureDetector(
-                    onHorizontalDragStart: onResizeStartRight,
-                    onHorizontalDragUpdate: onResizeUpdateRight,
-                    onHorizontalDragEnd: onResizeEndRight,
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.resizeRight,
-                      child: Container(
-                        width: 8,
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          border: Border(
-                            right: BorderSide(
-                              color: AppColors.primary.withAlpha((0.6 * 255).toInt()),
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        child: Center(
-                          child: Container(
-                            width: 2,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(1),
-                            ),
-                          ),
-                        ),
+                      child: const Icon(
+                        Icons.lock,
+                        size: 12,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -419,13 +253,7 @@ class BookingBlockWidget extends StatelessWidget {
                           width: 2,
                         ),
                         borderRadius: BorderRadius.circular(4),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha((0.2 * 255).toInt()),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
+                        boxShadow: AppShadows.getElevation(1, isDark: isDark),
                       ),
                       child: isSelected
                           ? const Icon(
@@ -437,11 +265,14 @@ class BookingBlockWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-            ],
-          ),
-        ),
-      ),  // Close Container
-    ),  // Close GestureDetector
+                ],  // Close children of inner Stack
+              ),  // Close inner Stack (child of ClipPath)
+            ),  // Close ClipPath
+          ],  // Close children of outer Stack
+        ),  // Close outer Stack (child of SizedBox)
+      ),  // Close SizedBox (child of GestureDetector)
+    ),  // Close GestureDetector (child of MouseRegion)
+    ),  // Close MouseRegion (child of Semantics)
     );  // Close Semantics
 
     // Wrap in Draggable if enabled (but not in multi-select mode)
@@ -562,42 +393,6 @@ class BookingBlockWidget extends StatelessWidget {
     return '${dateFormat.format(checkIn)} - ${dateFormat.format(checkOut)}';
   }
 
-  Widget _buildSourceBadge(String source) {
-    IconData icon;
-    Color color;
-
-    switch (source.toLowerCase()) {
-      case 'ical':
-        icon = Icons.sync;
-        color = Colors.orange;
-        break;
-      case 'booking_com':
-      case 'booking.com':
-        icon = Icons.business;
-        color = AppColors.authSecondary;
-        break;
-      case 'airbnb':
-        icon = Icons.home;
-        color = Colors.red;
-        break;
-      default:
-        return const SizedBox.shrink();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(2),
-      ),
-      child: Icon(
-        icon,
-        size: 10,
-        color: color,
-      ),
-    );
-  }
-
   Color _getStatusColor(BookingStatus status) {
     switch (status) {
       case BookingStatus.pending:
@@ -656,7 +451,7 @@ class BookingBlockWidget extends StatelessWidget {
     }
   }
 
-  /// ENHANCED: Get source border color for visual distinction
+  /// ENHANCED: Get source border color for visual distinction (BedBooking-style left stripe)
   Color? _getSourceBorderColor(String? source) {
     if (source == null) return null;
 
@@ -683,117 +478,31 @@ class BookingBlockWidget extends StatelessWidget {
     }
   }
 
-  /// ENHANCED: Build guest count indicator with dots
-  Widget _buildGuestCountIndicator() {
-    final guestCount = booking.guestCount;
-    if (guestCount <= 0) return const SizedBox.shrink();
-
-    // Show up to 4 dots, then add number for 5+
-    final dotsToShow = guestCount > 4 ? 4 : guestCount;
-
-    return Tooltip(
-      message: '$guestCount ${guestCount == 1 ? 'gost' : 'gostiju'}',
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        decoration: BoxDecoration(
-          color: Colors.white.withAlpha((0.95 * 255).toInt()),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha((0.15 * 255).toInt()),
-              blurRadius: 2,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Dots
-            ...List.generate(dotsToShow, (index) {
-              return Padding(
-                padding: EdgeInsets.only(right: index < dotsToShow - 1 ? 2 : 0),
-                child: Container(
-                  width: 4,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: _getGuestCountColor(guestCount),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              );
-            }),
-            // Add number if more than 4 guests
-            if (guestCount > 4) ...[
-              const SizedBox(width: 2),
-              Text(
-                '$guestCount',
-                style: TextStyle(
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                  color: _getGuestCountColor(guestCount),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
+  /// Check if booking is from external source (iCal, Airbnb, Booking.com)
+  /// External bookings are read-only and cannot be edited/moved/resized
+  bool _isFromExternalSource(String? source) {
+    if (source == null) return false;
+    final normalizedSource = source.toLowerCase();
+    return normalizedSource == 'ical' ||
+        normalizedSource == 'airbnb' ||
+        normalizedSource == 'booking_com' ||
+        normalizedSource == 'booking.com';
   }
 
-  /// Get color based on guest count (intensity increases with more guests)
-  Color _getGuestCountColor(int guestCount) {
-    if (guestCount >= 6) return AppColors.error; // Red for large groups
-    if (guestCount >= 4) return AppColors.warning; // Orange for medium groups
-    if (guestCount >= 2) return AppColors.info; // Blue for couples
-    return AppColors.success; // Green for solo travelers
-  }
-
-  /// ENHANCED: Build payment status indicator
-  Widget _buildPaymentStatusIndicator() {
-    final isPaid = booking.isFullyPaid;
-    final paymentPercentage = booking.paymentPercentage;
-
-    IconData icon;
-    Color color;
-    String tooltip;
-
-    if (isPaid) {
-      icon = Icons.check_circle;
-      color = AppColors.success;
-      tooltip = 'Plaćeno';
-    } else if (paymentPercentage > 0) {
-      icon = Icons.schedule;
-      color = AppColors.warning;
-      tooltip = 'Djelomično plaćeno (${paymentPercentage.toStringAsFixed(0)}%)';
-    } else {
-      icon = Icons.payment;
-      color = AppColors.error;
-      tooltip = 'Nije plaćeno';
+  /// Get user-friendly source name for tooltip/messages
+  String _getSourceName(String? source) {
+    if (source == null) return 'nepoznat izvor';
+    switch (source.toLowerCase()) {
+      case 'airbnb':
+        return 'Airbnb';
+      case 'booking_com':
+      case 'booking.com':
+        return 'Booking.com';
+      case 'ical':
+        return 'iCal sync';
+      default:
+        return source;
     }
-
-    return Tooltip(
-      message: tooltip,
-      child: Container(
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          color: Colors.white.withAlpha((0.95 * 255).toInt()),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha((0.15 * 255).toInt()),
-              blurRadius: 2,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Icon(
-          icon,
-          size: 10,
-          color: color,
-        ),
-      ),
-    );
   }
 }
 

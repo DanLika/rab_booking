@@ -436,7 +436,9 @@ class _OwnerWeekGridCalendarState extends ConsumerState<OwnerWeekGridCalendar> {
         : booking.checkOut;
 
     final startDayOffset = bookingStart.difference(startDate).inDays.toDouble();
-    final duration = bookingEnd.difference(bookingStart).inDays.toDouble();
+    // FIXED: Add 1 to include check-out day in visualization
+    // If check-in is Nov 10 and check-out is Nov 12, we need to show 3 cells (10, 11, 12)
+    final duration = bookingEnd.difference(bookingStart).inDays.toDouble() + 1;
 
     final left = startDayOffset * dayCellWidth;
     final width = duration * dayCellWidth;

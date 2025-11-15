@@ -74,78 +74,40 @@ class _OwnerWeekCalendarScreenState
             drawer: const OwnerAppDrawer(currentRoute: 'calendar/week'),
       body: Column(
         children: [
-          // Top toolbar with summary toggle - OPTIMIZED: Consumer for notifications only
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              border: Border(
-                bottom: BorderSide(color: Theme.of(context).dividerColor),
-              ),
-            ),
-            child: Column(
-              children: [
-                Consumer(
-                  builder: (context, ref, child) {
-                    final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
+          // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
+          Consumer(
+            builder: (context, ref, child) {
+              final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
 
-                    return CalendarTopToolbar(
-                      dateRange: _currentWeek,
-                      isWeekView: true,
-                      onPreviousPeriod: _goToPreviousWeek,
-                      onNextPeriod: _goToNextWeek,
-                      onToday: _goToToday,
-                      onDatePickerTap: _showDatePicker,
-                      onSearchTap: showSearchDialog,
-                      onRefresh: refreshCalendarData,
-                      onFilterTap: showFiltersPanel,
-                      notificationCount: unreadCountAsync.when(
-                        data: (count) => count,
-                        loading: () => 0,
-                        error: (error, stackTrace) => 0,
-                      ),
-                      onNotificationsTap: showNotificationsPanel,
-                      isCompact:
-                          MediaQuery.of(context).size.width <
-                          CalendarGridCalculator.mobileBreakpoint,
-                    );
-                  },
+              return CalendarTopToolbar(
+                dateRange: _currentWeek,
+                isWeekView: true,
+                onPreviousPeriod: _goToPreviousWeek,
+                onNextPeriod: _goToNextWeek,
+                onToday: _goToToday,
+                onDatePickerTap: _showDatePicker,
+                onSearchTap: showSearchDialog,
+                onRefresh: refreshCalendarData,
+                onFilterTap: showFiltersPanel,
+                notificationCount: unreadCountAsync.when(
+                  data: (count) => count,
+                  loading: () => 0,
+                  error: (error, stackTrace) => 0,
                 ),
-                // Summary toggle button
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.analytics_outlined,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          'Statistika',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const Spacer(),
-                      Switch(
-                        value: _showSummary,
-                        onChanged: (value) {
-                          setState(() {
-                            _showSummary = value;
-                          });
-                        },
-                        activeTrackColor: Theme.of(context).colorScheme.primary,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+                onNotificationsTap: showNotificationsPanel,
+                isCompact:
+                    MediaQuery.of(context).size.width <
+                    CalendarGridCalculator.mobileBreakpoint,
+                // ENHANCED: Analytics toggle integrated in single row
+                showSummaryToggle: true,
+                isSummaryVisible: _showSummary,
+                onSummaryToggleChanged: (value) {
+                  setState(() {
+                    _showSummary = value;
+                  });
+                },
+              );
+            },
           ),
 
           // Filter chips (from shared widget)
@@ -266,15 +228,11 @@ class _OwnerWeekCalendarScreenState
           ),
         ],
       ),
-            floatingActionButton: FloatingActionButton.extended(
+            floatingActionButton: FloatingActionButton(
               onPressed: _showCreateBookingDialog,
               backgroundColor: AppColors.primary,
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
-                'Nova rezervacija',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-              ),
               elevation: 4,
+              child: const Icon(Icons.add, color: Colors.white),
             ),
             floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           ),

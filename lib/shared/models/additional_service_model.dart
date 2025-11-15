@@ -19,6 +19,12 @@ class AdditionalServiceModel with _$AdditionalServiceModel {
     /// Service description
     String? description,
 
+    /// Service name (English)
+    @JsonKey(name: 'name_en') String? nameEn,
+
+    /// Service description (English)
+    @JsonKey(name: 'description_en') String? descriptionEn,
+
     /// Service type
     @JsonKey(name: 'service_type') required String serviceType,
 
@@ -36,6 +42,15 @@ class AdditionalServiceModel with _$AdditionalServiceModel {
 
     /// Maximum quantity (null = unlimited)
     @JsonKey(name: 'max_quantity') int? maxQuantity,
+
+    /// Unit ID (null = available for all units)
+    @JsonKey(name: 'unit_id') String? unitId,
+
+    /// Property ID (null = available for all properties)
+    @JsonKey(name: 'property_id') String? propertyId,
+
+    /// Sort order for display
+    @JsonKey(name: 'sort_order') @Default(0) int sortOrder,
 
     /// Icon name (Material icon)
     @JsonKey(name: 'icon_name') String? iconName,

@@ -40,6 +40,17 @@ class DateRangeSelection with _$DateRangeSelection {
     );
   }
 
+  /// Create a custom range with specific number of days from a starting date
+  /// Used for responsive timeline view (6-7 days mobile, 12-15 tablet, 20-30+ desktop)
+  factory DateRangeSelection.days(DateTime startDate, int numberOfDays) {
+    final start = DateTime(startDate.year, startDate.month, startDate.day);
+    final end = start.add(Duration(days: numberOfDays - 1));
+    return DateRangeSelection(
+      startDate: start,
+      endDate: DateTime(end.year, end.month, end.day, 23, 59, 59),
+    );
+  }
+
   /// Get Monday of the week for a given date
   static DateTime _getMonday(DateTime date) {
     // weekday: 1 = Monday, 7 = Sunday
@@ -73,37 +84,55 @@ class DateRangeSelection with _$DateRangeSelection {
         (dateOnly.isBefore(endOnly) || dateOnly.isAtSameMomentAs(endOnly));
   }
 
-  /// Move to next week/month
+  /// Move to next period (week/month/custom range)
+  /// For custom ranges, moves forward by the same number of days
   DateRangeSelection next({required bool isWeek}) {
     if (isWeek) {
       return DateRangeSelection.week(startDate.add(const Duration(days: 7)));
     } else {
-      // Handle month overflow explicitly
-      int nextMonth = startDate.month + 1;
-      int nextYear = startDate.year;
-      if (nextMonth > 12) {
-        nextMonth = 1;
-        nextYear++;
+      final currentDayCount = dayCount;
+      // If it's exactly 28-31 days, treat as month view
+      if (currentDayCount >= 28 && currentDayCount <= 31) {
+        // Handle month overflow explicitly
+        int nextMonth = startDate.month + 1;
+        int nextYear = startDate.year;
+        if (nextMonth > 12) {
+          nextMonth = 1;
+          nextYear++;
+        }
+        return DateRangeSelection.month(DateTime(nextYear, nextMonth));
+      } else {
+        // Custom range - move forward by same number of days
+        final nextStart = startDate.add(Duration(days: currentDayCount));
+        return DateRangeSelection.days(nextStart, currentDayCount);
       }
-      return DateRangeSelection.month(DateTime(nextYear, nextMonth));
     }
   }
 
-  /// Move to previous week/month
+  /// Move to previous period (week/month/custom range)
+  /// For custom ranges, moves backward by the same number of days
   DateRangeSelection previous({required bool isWeek}) {
     if (isWeek) {
       return DateRangeSelection.week(
         startDate.subtract(const Duration(days: 7)),
       );
     } else {
-      // Handle month underflow explicitly
-      int prevMonth = startDate.month - 1;
-      int prevYear = startDate.year;
-      if (prevMonth < 1) {
-        prevMonth = 12;
-        prevYear--;
+      final currentDayCount = dayCount;
+      // If it's exactly 28-31 days, treat as month view
+      if (currentDayCount >= 28 && currentDayCount <= 31) {
+        // Handle month underflow explicitly
+        int prevMonth = startDate.month - 1;
+        int prevYear = startDate.year;
+        if (prevMonth < 1) {
+          prevMonth = 12;
+          prevYear--;
+        }
+        return DateRangeSelection.month(DateTime(prevYear, prevMonth));
+      } else {
+        // Custom range - move backward by same number of days
+        final prevStart = startDate.subtract(Duration(days: currentDayCount));
+        return DateRangeSelection.days(prevStart, currentDayCount);
       }
-      return DateRangeSelection.month(DateTime(prevYear, prevMonth));
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/constants/enums.dart';
 
 /// Enhanced Booking Drag Feedback Widget
@@ -19,6 +20,8 @@ class EnhancedBookingDragFeedback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
       elevation: 12,
       borderRadius: BorderRadius.circular(8),
@@ -38,11 +41,7 @@ class EnhancedBookingDragFeedback extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppColors.primary, width: 3),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha((0.3 * 255).toInt()),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
+            ...AppShadows.getElevation(4, isDark: isDark),
             BoxShadow(
               color: AppColors.primary.withAlpha((0.5 * 255).toInt()),
               blurRadius: 20,

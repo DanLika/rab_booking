@@ -32,6 +32,7 @@ import '../../features/owner_dashboard/presentation/screens/onboarding_welcome_s
 import '../../features/owner_dashboard/presentation/screens/onboarding_wizard_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/onboarding_success_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical_sync_settings_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/ical_debug_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/stripe_guide_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/ical_guide_screen.dart';
@@ -41,6 +42,7 @@ import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
 import '../../features/widget/presentation/screens/embed_calendar_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../shared/providers/repository_providers.dart';
+import '../../shared/models/unit_model.dart';
 import '../providers/enhanced_auth_provider.dart';
 
 /// Helper class to convert Stream to Listenable for GoRouter
@@ -103,6 +105,8 @@ class OwnerRoutes {
   // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
   static const String icalIntegration = '/owner/integrations/ical';
+  // Debug
+  static const String icalDebug = '/owner/debug/ical';
   // Guides
   static const String guideStripe = '/owner/guides/stripe';
   static const String guideIcal = '/owner/guides/ical';
@@ -354,6 +358,20 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: OwnerRoutes.icalIntegration,
         builder: (context, state) => const IcalSyncSettingsScreen(),
+      ),
+
+      // Debug routes
+      GoRoute(
+        path: OwnerRoutes.icalDebug,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          final unit = extra['unit'] as UnitModel;
+          final propertyId = extra['propertyId'] as String;
+          return IcalDebugScreen(
+            unit: unit,
+            propertyId: propertyId,
+          );
+        },
       ),
 
       // Guide routes

@@ -191,14 +191,14 @@ class CalendarHoverTooltip extends StatelessWidget {
       case DateStatus.pending:
         return colors.statusPendingBorder;
       case DateStatus.blocked:
-        return colors.textSecondary;
+        return colors.textPrimary; // Changed from textSecondary for better visibility
       case DateStatus.partialCheckIn:
       case DateStatus.partialCheckOut:
         return colors.statusPendingBorder;
       case DateStatus.partialBoth:
         return colors.statusBookedBorder; // Turnover day - fully booked
       case DateStatus.disabled:
-        return colors.textSecondary;
+        return colors.textPrimary; // Changed from textSecondary for better visibility
       case DateStatus.pastReservation:
         return colors.statusPastReservationBorder;
     }

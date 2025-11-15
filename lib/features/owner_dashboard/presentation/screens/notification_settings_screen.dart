@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../../shared/models/notification_preferences_model.dart';
 import '../providers/user_profile_provider.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -458,13 +459,7 @@ class _NotificationSettingsScreenState
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.3),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha((0.04 * 255).toInt()),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppShadows.getElevation(1, isDark: isDark),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),

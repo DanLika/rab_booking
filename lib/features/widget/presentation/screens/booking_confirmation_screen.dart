@@ -1,12 +1,19 @@
+import 'dart:convert';
+import 'dart:html' as html;
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../providers/theme_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/services/email_notification_service.dart';
+import '../../../../core/services/ical_generator.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../domain/models/widget_settings.dart';
 
@@ -29,7 +36,8 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
   final BookingModel? booking; // Optional - for resend email functionality
   final EmailNotificationConfig?
   emailConfig; // Optional - for resend email functionality
-  final WidgetSettings? widgetSettings; // Optional - for cancellation policy display
+  final WidgetSettings?
+  widgetSettings; // Optional - for cancellation policy display
 
   const BookingConfirmationScreen({
     super.key,
@@ -62,6 +70,7 @@ class _BookingConfirmationScreenState
   late Animation<double> _fadeAnimation;
   bool _isResendingEmail = false;
   bool _emailResent = false;
+  bool _isGeneratingIcs = false;
 
   @override
   void initState() {
@@ -161,8 +170,10 @@ class _BookingConfirmationScreenState
         emailConfig: widget.emailConfig!,
         propertyName: widget.propertyName,
         bookingReference: widget.bookingReference,
-        allowGuestCancellation: widget.widgetSettings?.allowGuestCancellation ?? false,
-        cancellationDeadlineHours: widget.widgetSettings?.cancellationDeadlineHours,
+        allowGuestCancellation:
+            widget.widgetSettings?.allowGuestCancellation ?? false,
+        cancellationDeadlineHours:
+            widget.widgetSettings?.cancellationDeadlineHours,
         ownerEmail: widget.widgetSettings?.contactOptions.emailAddress,
         ownerPhone: widget.widgetSettings?.contactOptions.phoneNumber,
         customLogoUrl: widget.widgetSettings?.themeOptions?.customLogoUrl,
@@ -195,6 +206,94 @@ class _BookingConfirmationScreenState
             duration: const Duration(seconds: 5),
           ),
         );
+      }
+    }
+  }
+
+  /// Handle "Add to Calendar" button click
+  /// Generates .ics file and triggers download
+  Future<void> _handleAddToCalendar() async {
+    setState(() => _isGeneratingIcs = true);
+
+    try {
+      // Validate booking data
+      final booking = widget.booking;
+      if (booking == null) {
+        throw Exception('Booking data not available');
+      }
+
+      // Generate .ics content using Terminal 2's IcalGenerator service
+      final unitName = widget.unitName ?? widget.propertyName;
+      final icsContent = IcalGenerator.generateBookingEvent(
+        booking: booking,
+        unitName: unitName,
+      );
+
+      // Download file (platform-specific)
+      final filename = 'booking-${widget.bookingReference}.ics';
+      await _downloadIcsFile(icsContent, filename);
+
+      // Success feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Calendar event downloaded! Check your downloads folder.',
+            ),
+            backgroundColor: getColor(
+              MinimalistColors.statusAvailableBorder,
+              MinimalistColorsDark.statusAvailableBorder,
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Error handling
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate calendar file: $e'),
+            backgroundColor: MinimalistColors.error,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingIcs = false);
+      }
+    }
+  }
+
+  /// Download .ics file (platform-specific implementation)
+  /// Web: Triggers browser download via anchor tag
+  /// Mobile/Desktop: Shares .ics file via share dialog using share_plus
+  Future<void> _downloadIcsFile(String content, String filename) async {
+    if (kIsWeb) {
+      // Web: Use anchor tag download
+      final bytes = utf8.encode(content);
+      final blob = html.Blob([bytes], 'text/calendar');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      html.AnchorElement(href: url)
+        ..setAttribute('download', filename)
+        ..click();
+      html.Url.revokeObjectUrl(url);
+    } else {
+      // Mobile/Desktop: Save to temporary directory and share
+      try {
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/$filename');
+        await file.writeAsString(content);
+
+        // Share the file using share_plus
+        await Share.shareXFiles(
+          [XFile(file.path, mimeType: 'text/calendar')],
+          subject: 'Booking Calendar Event',
+          text: 'Add your booking to your calendar',
+        );
+      } catch (e) {
+        throw Exception('Failed to share calendar file: $e');
       }
     }
   }
@@ -246,14 +345,22 @@ class _BookingConfirmationScreenState
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Custom logo display (if configured)
-                  if (widget.widgetSettings?.themeOptions?.customLogoUrl != null &&
-                      widget.widgetSettings!.themeOptions!.customLogoUrl!.isNotEmpty) ...[
+                  if (widget.widgetSettings?.themeOptions?.customLogoUrl !=
+                          null &&
+                      widget
+                          .widgetSettings!
+                          .themeOptions!
+                          .customLogoUrl!
+                          .isNotEmpty) ...[
                     CachedNetworkImage(
-                      imageUrl: widget.widgetSettings!.themeOptions!.customLogoUrl!,
+                      imageUrl:
+                          widget.widgetSettings!.themeOptions!.customLogoUrl!,
                       height: 80,
                       fit: BoxFit.contain,
-                      placeholder: (context, url) => const SizedBox(height: 80, width: 80),
-                      errorWidget: (context, url, error) => const SizedBox.shrink(),
+                      placeholder: (context, url) =>
+                          const SizedBox(height: 80, width: 80),
+                      errorWidget: (context, url, error) =>
+                          const SizedBox.shrink(),
                     ),
                     const SizedBox(height: SpacingTokens.l),
                   ],
@@ -516,11 +623,15 @@ class _BookingConfirmationScreenState
                         const SizedBox(height: SpacingTokens.s),
                         _buildDetailRow(
                           'Check-in',
-                          DateFormat('EEEE, MMM dd, yyyy').format(widget.checkIn),
+                          DateFormat(
+                            'EEEE, MMM dd, yyyy',
+                          ).format(widget.checkIn),
                         ),
                         _buildDetailRow(
                           'Check-out',
-                          DateFormat('EEEE, MMM dd, yyyy').format(widget.checkOut),
+                          DateFormat(
+                            'EEEE, MMM dd, yyyy',
+                          ).format(widget.checkOut),
                         ),
                         _buildDetailRow(
                           'Duration',
@@ -541,6 +652,192 @@ class _BookingConfirmationScreenState
                   ),
 
                   const SizedBox(height: SpacingTokens.l),
+
+                  // Add to Calendar button (if booking data available and iCal export enabled)
+                  if (widget.booking != null &&
+                      (widget.widgetSettings?.icalExportEnabled ?? false))
+                    Container(
+                      margin: const EdgeInsets.only(bottom: SpacingTokens.l),
+                      child: ElevatedButton.icon(
+                        onPressed: _isGeneratingIcs
+                            ? null
+                            : _handleAddToCalendar,
+                        icon: Icon(
+                          _isGeneratingIcs
+                              ? Icons.hourglass_empty
+                              : Icons.calendar_today,
+                        ),
+                        label: Text(
+                          _isGeneratingIcs
+                              ? 'Generating...'
+                              : 'Add to My Calendar',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: getColor(
+                            MinimalistColors.statusAvailableBorder,
+                            MinimalistColorsDark.statusAvailableBorder,
+                          ),
+                          foregroundColor: getColor(
+                            MinimalistColors.backgroundPrimary,
+                            MinimalistColorsDark.backgroundPrimary,
+                          ),
+                          minimumSize: const Size(double.infinity, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              BorderTokens.radiusMedium,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Bank Transfer Instructions (if payment method is bank transfer)
+                  if (widget.paymentMethod == 'bankTransfer' &&
+                      widget
+                              .widgetSettings
+                              ?.bankTransferConfig
+                              ?.hasCompleteDetails ==
+                          true)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: SpacingTokens.l),
+                      padding: const EdgeInsets.all(SpacingTokens.m),
+                      decoration: BoxDecoration(
+                        color: getColor(
+                          MinimalistColors.statusPendingBackground,
+                          MinimalistColorsDark.statusPendingBackground,
+                        ),
+                        borderRadius: BorderTokens.circularMedium,
+                        border: Border.all(
+                          color: getColor(
+                            MinimalistColors.statusPendingBorder,
+                            MinimalistColorsDark.statusPendingBorder,
+                          ),
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.account_balance,
+                                color: getColor(
+                                  MinimalistColors.statusPendingText,
+                                  MinimalistColorsDark.statusPendingText,
+                                ),
+                                size: 24,
+                              ),
+                              const SizedBox(width: SpacingTokens.s),
+                              Text(
+                                'Bank Transfer Instructions',
+                                style: TextStyle(
+                                  fontSize: TypographyTokens.fontSizeL,
+                                  fontWeight: TypographyTokens.bold,
+                                  color: getColor(
+                                    MinimalistColors.textPrimary,
+                                    MinimalistColorsDark.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: SpacingTokens.m),
+                          _buildBankTransferDetail(
+                            'Bank Name',
+                            widget
+                                .widgetSettings!
+                                .bankTransferConfig!
+                                .bankName!,
+                          ),
+                          const SizedBox(height: SpacingTokens.s),
+                          _buildBankTransferDetail(
+                            'Account Holder',
+                            widget
+                                .widgetSettings!
+                                .bankTransferConfig!
+                                .accountHolder!,
+                          ),
+                          const SizedBox(height: SpacingTokens.s),
+                          if (widget.widgetSettings!.bankTransferConfig!.iban !=
+                              null)
+                            _buildBankTransferDetail(
+                              'IBAN',
+                              widget.widgetSettings!.bankTransferConfig!.iban!,
+                              copyable: true,
+                            )
+                          else if (widget
+                                  .widgetSettings!
+                                  .bankTransferConfig!
+                                  .accountNumber !=
+                              null)
+                            _buildBankTransferDetail(
+                              'Account Number',
+                              widget
+                                  .widgetSettings!
+                                  .bankTransferConfig!
+                                  .accountNumber!,
+                              copyable: true,
+                            ),
+                          if (widget
+                                  .widgetSettings!
+                                  .bankTransferConfig!
+                                  .swift !=
+                              null) ...[
+                            const SizedBox(height: SpacingTokens.s),
+                            _buildBankTransferDetail(
+                              'SWIFT/BIC',
+                              widget.widgetSettings!.bankTransferConfig!.swift!,
+                              copyable: true,
+                            ),
+                          ],
+                          const SizedBox(height: SpacingTokens.s),
+                          _buildBankTransferDetail(
+                            'Reference',
+                            widget.bookingReference,
+                            copyable: true,
+                            highlight: true,
+                          ),
+                          const SizedBox(height: SpacingTokens.m),
+                          Container(
+                            padding: const EdgeInsets.all(SpacingTokens.s),
+                            decoration: BoxDecoration(
+                              color: getColor(
+                                MinimalistColors.statusAvailableBackground,
+                                MinimalistColorsDark.statusAvailableBackground,
+                              ),
+                              borderRadius: BorderTokens.circularSmall,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 16,
+                                  color: getColor(
+                                    MinimalistColors.statusAvailableText,
+                                    MinimalistColorsDark.statusAvailableText,
+                                  ),
+                                ),
+                                const SizedBox(width: SpacingTokens.xs),
+                                Expanded(
+                                  child: Text(
+                                    'Please complete the transfer within 3 days and include the reference number.',
+                                    style: TextStyle(
+                                      fontSize: TypographyTokens.fontSizeS,
+                                      color: getColor(
+                                        MinimalistColors.statusAvailableText,
+                                        MinimalistColorsDark
+                                            .statusAvailableText,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   // Email confirmation info
                   Container(
@@ -832,7 +1129,10 @@ class _BookingConfirmationScreenState
 
   Widget _buildCancellationStep(String text) {
     return Padding(
-      padding: const EdgeInsets.only(left: SpacingTokens.m, top: SpacingTokens.xxs),
+      padding: const EdgeInsets.only(
+        left: SpacingTokens.m,
+        top: SpacingTokens.xxs,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -878,7 +1178,8 @@ class _BookingConfirmationScreenState
           {
             'icon': Icons.calendar_today,
             'title': 'Add to Calendar',
-            'description': 'Download the .ics file from your email',
+            'description':
+                'Click the "Add to My Calendar" button above to download the event',
           },
           {
             'icon': Icons.directions,
@@ -893,17 +1194,20 @@ class _BookingConfirmationScreenState
           {
             'icon': Icons.account_balance,
             'title': 'Complete Bank Transfer',
-            'description': 'Transfer the deposit amount within 3 days using the reference number',
+            'description':
+                'Transfer the deposit amount within 3 days using the reference number',
           },
           {
             'icon': Icons.email,
             'title': 'Check Your Email',
-            'description': 'Bank transfer instructions and booking details have been sent',
+            'description':
+                'Bank transfer instructions and booking details have been sent',
           },
           {
             'icon': Icons.pending,
             'title': 'Awaiting Confirmation',
-            'description': 'We\'ll confirm your booking once payment is received (usually within 24h)',
+            'description':
+                'We\'ll confirm your booking once payment is received (usually within 24h)',
           },
         ];
         break;
@@ -913,22 +1217,26 @@ class _BookingConfirmationScreenState
           {
             'icon': Icons.email,
             'title': 'Check Your Email',
-            'description': 'Confirmation email sent with all booking details and payment instructions',
+            'description':
+                'Confirmation email sent with all booking details and payment instructions',
           },
           {
             'icon': Icons.calendar_today,
             'title': 'Add to Calendar',
-            'description': 'Download the .ics file from your email',
+            'description':
+                'Click the "Add to My Calendar" button above to download the event',
           },
           {
             'icon': Icons.payments_outlined,
             'title': 'Payment on Arrival',
-            'description': 'Bring payment with you - cash or card accepted at the property',
+            'description':
+                'Bring payment with you - cash or card accepted at the property',
           },
           {
             'icon': Icons.directions,
             'title': 'Prepare for Your Stay',
-            'description': 'Check-in instructions will be sent 24h before arrival',
+            'description':
+                'Check-in instructions will be sent 24h before arrival',
           },
         ];
         break;
@@ -1062,6 +1370,120 @@ class _BookingConfirmationScreenState
           ],
         ),
       ),
+    );
+  }
+
+  /// Build bank transfer detail row with optional copy functionality
+  Widget _buildBankTransferDetail(
+    String label,
+    String value, {
+    bool copyable = false,
+    bool highlight = false,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 2,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeS,
+              fontWeight: TypographyTokens.semiBold,
+              color: getColor(
+                MinimalistColors.textSecondary,
+                MinimalistColorsDark.textSecondary,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: SpacingTokens.s),
+        Expanded(
+          flex: 3,
+          child: Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: highlight
+                      ? const EdgeInsets.symmetric(
+                          horizontal: SpacingTokens.xs,
+                          vertical: SpacingTokens.xxs,
+                        )
+                      : null,
+                  decoration: highlight
+                      ? BoxDecoration(
+                          color: getColor(
+                            MinimalistColors.statusAvailableBackground,
+                            MinimalistColorsDark.statusAvailableBackground,
+                          ),
+                          borderRadius: BorderTokens.circularSmall,
+                          border: Border.all(
+                            color: getColor(
+                              MinimalistColors.statusAvailableBorder,
+                              MinimalistColorsDark.statusAvailableBorder,
+                            ),
+                          ),
+                        )
+                      : null,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: TypographyTokens.fontSizeS,
+                      fontWeight: highlight
+                          ? TypographyTokens.bold
+                          : TypographyTokens.medium,
+                      color: highlight
+                          ? getColor(
+                              MinimalistColors.statusAvailableText,
+                              MinimalistColorsDark.statusAvailableText,
+                            )
+                          : getColor(
+                              MinimalistColors.textPrimary,
+                              MinimalistColorsDark.textPrimary,
+                            ),
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+              ),
+              if (copyable) ...[
+                const SizedBox(width: SpacingTokens.xs),
+                IconButton(
+                  icon: Icon(
+                    Icons.copy,
+                    size: 16,
+                    color: getColor(
+                      MinimalistColors.textSecondary,
+                      MinimalistColorsDark.textSecondary,
+                    ),
+                  ),
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: value));
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$label copied to clipboard'),
+                          backgroundColor: getColor(
+                            MinimalistColors.statusAvailableBorder,
+                            MinimalistColorsDark.statusAvailableBorder,
+                          ),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  tooltip: 'Copy $label',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

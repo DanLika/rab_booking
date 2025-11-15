@@ -8,6 +8,7 @@ import '../providers/calendar_view_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/widget_settings_provider.dart';
 import '../theme/responsive_helper.dart';
+import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/theme/custom_icons_tablericons.dart';
 import 'calendar_hover_tooltip.dart';
@@ -47,7 +48,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       yearCalendarDataProvider((widget.unitId, _currentYear, minNights)),
     );
     final isDarkMode = ref.watch(themeProvider);
-    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Stack(
       children: [

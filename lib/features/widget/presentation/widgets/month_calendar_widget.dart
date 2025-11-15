@@ -11,6 +11,7 @@ import '../providers/realtime_booking_calendar_provider.dart';
 import 'split_day_calendar_painter.dart';
 import 'calendar_hover_tooltip.dart';
 import '../theme/responsive_helper.dart';
+import '../theme/minimalist_colors.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/theme/custom_icons_tablericons.dart';
 
@@ -50,7 +51,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       monthCalendarDataProvider((widget.unitId, _currentMonth, minNights)),
     );
     final isDarkMode = ref.watch(themeProvider);
-    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

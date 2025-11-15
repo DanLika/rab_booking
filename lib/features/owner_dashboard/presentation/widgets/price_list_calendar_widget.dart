@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../shared/models/daily_price_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/price_list_provider.dart';
 
@@ -69,21 +70,12 @@ class _PriceListCalendarWidgetState
   }
 
   Widget _buildHeader(bool isMobile) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha((0.08 * 255).toInt()),
-            blurRadius: 40,
-            offset: const Offset(0, 20),
-          ),
-          BoxShadow(
-            color: Colors.black.withAlpha((0.04 * 255).toInt()),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        boxShadow: AppShadows.getElevation(3, isDark: isDark),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -306,10 +298,6 @@ class _PriceListCalendarWidgetState
       ),
     );
 
-    // Calculate grid height based on number of rows needed
-    final totalCells = firstDayOfWeek - 1 + daysInMonth;
-    final rows = (totalCells / 7).ceil();
-
     // Use LayoutBuilder to get screen constraints for responsive sizing
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -317,29 +305,14 @@ class _PriceListCalendarWidgetState
         final isMobile = availableWidth < 600;
         final isSmallMobile = availableWidth < 400;
 
-        // Calculate cell dimensions based on available width
-        final cellWidth =
-            (availableWidth - 40 - (8 * 6)) / 7; // padding + spacing
+        // Calculate aspect ratio based on device size
         final aspectRatio = isSmallMobile ? 0.85 : (isMobile ? 1.0 : 1.2);
-        final cellHeight = cellWidth / aspectRatio;
-        final gridHeight =
-            (rows * cellHeight) + (rows * 8) + 50; // Add spacing between rows
+        final isDark = Theme.of(context).brightness == Brightness.dark;
 
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha((0.08 * 255).toInt()),
-                blurRadius: 40,
-                offset: const Offset(0, 20),
-              ),
-              BoxShadow(
-                color: Colors.black.withAlpha((0.04 * 255).toInt()),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            boxShadow: AppShadows.getElevation(3, isDark: isDark),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
@@ -372,22 +345,21 @@ class _PriceListCalendarWidgetState
                   const Divider(),
                   const SizedBox(height: 8),
 
-                  // Calendar grid with fixed height
-                  SizedBox(
-                    height: gridHeight,
-                    child: pricesAsync.when(
-                      data: (priceMap) {
-                        return GridView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 7,
-                                mainAxisSpacing: 8,
-                                crossAxisSpacing: 8,
-                                childAspectRatio:
-                                    aspectRatio, // Dynamic aspect ratio
-                              ),
-                          itemCount: firstDayOfWeek - 1 + daysInMonth,
+                  // Calendar grid with dynamic height
+                  pricesAsync.when(
+                    data: (priceMap) {
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 7,
+                              mainAxisSpacing: 8,
+                              crossAxisSpacing: 8,
+                              childAspectRatio:
+                                  aspectRatio, // Dynamic aspect ratio
+                            ),
+                        itemCount: firstDayOfWeek - 1 + daysInMonth,
                           itemBuilder: (context, index) {
                             if (index < firstDayOfWeek - 1) {
                               // Empty cell before first day
@@ -448,7 +420,6 @@ class _PriceListCalendarWidgetState
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

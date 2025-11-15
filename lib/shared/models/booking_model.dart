@@ -74,6 +74,9 @@ class BookingModel with _$BookingModel {
     /// Special requests or notes
     String? notes,
 
+    /// Tax/Legal disclaimer acceptance (for compliance audit trail)
+    @JsonKey(name: 'tax_legal_accepted') bool? taxLegalAccepted,
+
     /// Stripe payment intent ID
     @JsonKey(name: 'payment_intent_id') String? paymentIntentId,
 

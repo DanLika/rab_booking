@@ -36,6 +36,7 @@ class BookingService {
   /// - [paymentMethod]: 'stripe', 'bank_transfer', or 'none'
   /// - [requireOwnerApproval]: If true, booking starts as pending approval
   /// - [notes]: Special requests/notes (optional)
+  /// - [taxLegalAccepted]: If guest accepted tax/legal disclaimer (for compliance)
   ///
   /// Returns: BookingModel with generated ID and booking reference
   Future<BookingModel> createBooking({
@@ -53,6 +54,7 @@ class BookingService {
     required String paymentMethod, // 'stripe', 'bank_transfer', or 'none'
     bool requireOwnerApproval = false,
     String? notes,
+    bool? taxLegalAccepted,
   }) async {
     try {
       LoggingService.logOperation('[BookingService] Creating booking...');
@@ -100,6 +102,7 @@ class BookingService {
         'paymentMethod': paymentMethod,
         'requireOwnerApproval': requireOwnerApproval,
         'notes': notes,
+        'taxLegalAccepted': taxLegalAccepted,
       });
 
       // Extract booking ID and reference from Cloud Function response
@@ -126,6 +129,7 @@ class BookingService {
         source: 'widget',
         guestCount: guestCount,
         notes: notes,
+        taxLegalAccepted: taxLegalAccepted,
         createdAt: DateTime.now(),
       );
 

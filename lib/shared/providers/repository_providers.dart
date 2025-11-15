@@ -25,6 +25,7 @@ import '../../features/widget/data/repositories/firebase_widget_settings_reposit
 // Services
 import '../../core/services/booking_service.dart';
 import '../../core/services/stripe_service.dart';
+import '../../core/services/ical_export_service.dart';
 
 /// Firestore instance provider
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
@@ -129,4 +130,16 @@ final bookingServiceProvider = Provider<BookingService>((ref) {
 final stripeServiceProvider = Provider<StripeService>((ref) {
   final functions = ref.watch(firebaseFunctionsProvider);
   return StripeService(functions: functions);
+});
+
+/// iCal Export Service provider
+final icalExportServiceProvider = Provider<IcalExportService>((ref) {
+  final bookingRepository = ref.watch(bookingRepositoryProvider);
+  final settingsRepository = ref.watch(widgetSettingsRepositoryProvider);
+  final storage = ref.watch(firebaseStorageProvider);
+  return IcalExportService(
+    bookingRepository: bookingRepository,
+    settingsRepository: settingsRepository,
+    storage: storage,
+  );
 });

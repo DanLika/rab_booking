@@ -103,6 +103,10 @@ mixin _$BookingModel {
   /// Special requests or notes
   String? get notes => throw _privateConstructorUsedError;
 
+  /// Tax/Legal disclaimer acceptance (for compliance audit trail)
+  @JsonKey(name: 'tax_legal_accepted')
+  bool? get taxLegalAccepted => throw _privateConstructorUsedError;
+
   /// Stripe payment intent ID
   @JsonKey(name: 'payment_intent_id')
   String? get paymentIntentId => throw _privateConstructorUsedError;
@@ -169,6 +173,7 @@ abstract class $BookingModelCopyWith<$Res> {
     String? source,
     @JsonKey(name: 'guest_count') int guestCount,
     String? notes,
+    @JsonKey(name: 'tax_legal_accepted') bool? taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') String? paymentIntentId,
     @TimestampConverter() @JsonKey(name: 'created_at') DateTime createdAt,
     @NullableTimestampConverter()
@@ -218,6 +223,7 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
     Object? source = freezed,
     Object? guestCount = null,
     Object? notes = freezed,
+    Object? taxLegalAccepted = freezed,
     Object? paymentIntentId = freezed,
     Object? createdAt = null,
     Object? updatedAt = freezed,
@@ -311,6 +317,10 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
                       as String?,
+            taxLegalAccepted: freezed == taxLegalAccepted
+                ? _value.taxLegalAccepted
+                : taxLegalAccepted // ignore: cast_nullable_to_non_nullable
+                      as bool?,
             paymentIntentId: freezed == paymentIntentId
                 ? _value.paymentIntentId
                 : paymentIntentId // ignore: cast_nullable_to_non_nullable
@@ -372,6 +382,7 @@ abstract class _$$BookingModelImplCopyWith<$Res>
     String? source,
     @JsonKey(name: 'guest_count') int guestCount,
     String? notes,
+    @JsonKey(name: 'tax_legal_accepted') bool? taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') String? paymentIntentId,
     @TimestampConverter() @JsonKey(name: 'created_at') DateTime createdAt,
     @NullableTimestampConverter()
@@ -420,6 +431,7 @@ class __$$BookingModelImplCopyWithImpl<$Res>
     Object? source = freezed,
     Object? guestCount = null,
     Object? notes = freezed,
+    Object? taxLegalAccepted = freezed,
     Object? paymentIntentId = freezed,
     Object? createdAt = null,
     Object? updatedAt = freezed,
@@ -513,6 +525,10 @@ class __$$BookingModelImplCopyWithImpl<$Res>
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
                   as String?,
+        taxLegalAccepted: freezed == taxLegalAccepted
+            ? _value.taxLegalAccepted
+            : taxLegalAccepted // ignore: cast_nullable_to_non_nullable
+                  as bool?,
         paymentIntentId: freezed == paymentIntentId
             ? _value.paymentIntentId
             : paymentIntentId // ignore: cast_nullable_to_non_nullable
@@ -567,6 +583,7 @@ class _$BookingModelImpl extends _BookingModel {
     this.source,
     @JsonKey(name: 'guest_count') this.guestCount = 1,
     this.notes,
+    @JsonKey(name: 'tax_legal_accepted') this.taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') this.paymentIntentId,
     @TimestampConverter() @JsonKey(name: 'created_at') required this.createdAt,
     @NullableTimestampConverter() @JsonKey(name: 'updated_at') this.updatedAt,
@@ -683,6 +700,11 @@ class _$BookingModelImpl extends _BookingModel {
   @override
   final String? notes;
 
+  /// Tax/Legal disclaimer acceptance (for compliance audit trail)
+  @override
+  @JsonKey(name: 'tax_legal_accepted')
+  final bool? taxLegalAccepted;
+
   /// Stripe payment intent ID
   @override
   @JsonKey(name: 'payment_intent_id')
@@ -718,7 +740,7 @@ class _$BookingModelImpl extends _BookingModel {
 
   @override
   String toString() {
-    return 'BookingModel(id: $id, unitId: $unitId, userId: $userId, guestId: $guestId, ownerId: $ownerId, guestName: $guestName, guestEmail: $guestEmail, guestPhone: $guestPhone, checkIn: $checkIn, checkInTime: $checkInTime, checkOutTime: $checkOutTime, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, advanceAmount: $advanceAmount, paymentMethod: $paymentMethod, paymentStatus: $paymentStatus, source: $source, guestCount: $guestCount, notes: $notes, paymentIntentId: $paymentIntentId, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt, cancelledBy: $cancelledBy)';
+    return 'BookingModel(id: $id, unitId: $unitId, userId: $userId, guestId: $guestId, ownerId: $ownerId, guestName: $guestName, guestEmail: $guestEmail, guestPhone: $guestPhone, checkIn: $checkIn, checkInTime: $checkInTime, checkOutTime: $checkOutTime, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, advanceAmount: $advanceAmount, paymentMethod: $paymentMethod, paymentStatus: $paymentStatus, source: $source, guestCount: $guestCount, notes: $notes, taxLegalAccepted: $taxLegalAccepted, paymentIntentId: $paymentIntentId, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt, cancelledBy: $cancelledBy)';
   }
 
   @override
@@ -759,6 +781,8 @@ class _$BookingModelImpl extends _BookingModel {
             (identical(other.guestCount, guestCount) ||
                 other.guestCount == guestCount) &&
             (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.taxLegalAccepted, taxLegalAccepted) ||
+                other.taxLegalAccepted == taxLegalAccepted) &&
             (identical(other.paymentIntentId, paymentIntentId) ||
                 other.paymentIntentId == paymentIntentId) &&
             (identical(other.createdAt, createdAt) ||
@@ -798,6 +822,7 @@ class _$BookingModelImpl extends _BookingModel {
     source,
     guestCount,
     notes,
+    taxLegalAccepted,
     paymentIntentId,
     createdAt,
     updatedAt,
@@ -847,6 +872,7 @@ abstract class _BookingModel extends BookingModel {
     final String? source,
     @JsonKey(name: 'guest_count') final int guestCount,
     final String? notes,
+    @JsonKey(name: 'tax_legal_accepted') final bool? taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') final String? paymentIntentId,
     @TimestampConverter()
     @JsonKey(name: 'created_at')
@@ -967,6 +993,11 @@ abstract class _BookingModel extends BookingModel {
   /// Special requests or notes
   @override
   String? get notes;
+
+  /// Tax/Legal disclaimer acceptance (for compliance audit trail)
+  @override
+  @JsonKey(name: 'tax_legal_accepted')
+  bool? get taxLegalAccepted;
 
   /// Stripe payment intent ID
   @override

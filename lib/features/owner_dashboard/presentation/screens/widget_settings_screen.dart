@@ -6,6 +6,7 @@ import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/domain/models/widget_mode.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import 'widget_advanced_settings_screen.dart';
 
 /// Widget Settings Screen - Configure embedded widget for each unit
 class WidgetSettingsScreen extends ConsumerStatefulWidget {
@@ -74,16 +75,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   bool _enableModalBlur = true;
   bool _enableOverlayBlur = true;
 
-  // Email Notification Options
-  bool _emailEnabled = false;
-  bool _sendBookingConfirmation = true;
-  bool _sendPaymentReceipt = true;
-  bool _sendOwnerNotification = true;
-  bool _requireEmailVerification = false;
-  final _resendApiKeyController = TextEditingController();
-  final _fromEmailController = TextEditingController();
-  final _fromNameController = TextEditingController();
-
   // External Calendar Sync Options
   bool _externalCalendarEnabled = false;
   bool _syncBookingCom = false;
@@ -93,11 +84,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   final _airbnbAccountIdController = TextEditingController();
   final _airbnbAccessTokenController = TextEditingController();
   int _syncIntervalMinutes = 60;
-
-  // Tax/Legal Disclaimer Options
-  bool _taxLegalEnabled = true;
-  bool _useDefaultTaxText = true;
-  final _customTaxTextController = TextEditingController();
 
   bool _isLoading = true;
   bool _isSaving = false;
@@ -195,16 +181,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       _enableModalBlur = settings.blurConfig?.enableModalBlur ?? true;
       _enableOverlayBlur = settings.blurConfig?.enableOverlayBlur ?? true;
 
-      // Email Notification Options
-      _emailEnabled = settings.emailConfig.enabled;
-      _sendBookingConfirmation = settings.emailConfig.sendBookingConfirmation;
-      _sendPaymentReceipt = settings.emailConfig.sendPaymentReceipt;
-      _sendOwnerNotification = settings.emailConfig.sendOwnerNotification;
-      _requireEmailVerification = settings.emailConfig.requireEmailVerification;
-      _resendApiKeyController.text = settings.emailConfig.resendApiKey ?? '';
-      _fromEmailController.text = settings.emailConfig.fromEmail ?? '';
-      _fromNameController.text = settings.emailConfig.fromName ?? '';
-
       // External Calendar Sync Options
       _externalCalendarEnabled =
           settings.externalCalendarConfig?.enabled ?? false;
@@ -221,11 +197,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           settings.externalCalendarConfig?.airbnbAccessToken ?? '';
       _syncIntervalMinutes =
           settings.externalCalendarConfig?.syncIntervalMinutes ?? 60;
-
-      // Tax/Legal Disclaimer Options
-      _taxLegalEnabled = settings.taxLegalConfig.enabled;
-      _useDefaultTaxText = settings.taxLegalConfig.useDefaultText;
-      _customTaxTextController.text = settings.taxLegalConfig.customText ?? '';
     });
   }
 
@@ -324,22 +295,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               ? null
               : _customMessageController.text,
         ),
-        emailConfig: EmailNotificationConfig(
-          enabled: _emailEnabled,
-          sendBookingConfirmation: _sendBookingConfirmation,
-          sendPaymentReceipt: _sendPaymentReceipt,
-          sendOwnerNotification: _sendOwnerNotification,
-          requireEmailVerification: _requireEmailVerification,
-          resendApiKey: _resendApiKeyController.text.isEmpty
-              ? null
-              : _resendApiKeyController.text,
-          fromEmail: _fromEmailController.text.isEmpty
-              ? null
-              : _fromEmailController.text,
-          fromName: _fromNameController.text.isEmpty
-              ? null
-              : _fromNameController.text,
-        ),
+        emailConfig: _existingSettings?.emailConfig ??
+            const EmailNotificationConfig(),
         externalCalendarConfig: _externalCalendarEnabled
             ? ExternalCalendarConfig(
                 enabled: true,
@@ -361,13 +318,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 syncIntervalMinutes: _syncIntervalMinutes,
               )
             : null,
-        taxLegalConfig: TaxLegalConfig(
-          enabled: _taxLegalEnabled,
-          useDefaultText: _useDefaultTaxText,
-          customText: _customTaxTextController.text.isEmpty
-              ? null
-              : _customTaxTextController.text,
-        ),
+        taxLegalConfig: _existingSettings?.taxLegalConfig ??
+            const TaxLegalConfig(enabled: false),
         themeOptions: ThemeOptions(
           primaryColor: _colorToHex(_primaryColor),
           showBranding: _showBranding,
@@ -417,7 +369,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     _emailController.dispose();
     _whatsAppController.dispose();
     _customMessageController.dispose();
-    _customTaxTextController.dispose();
+    _bookingComAccountIdController.dispose();
+    _bookingComAccessTokenController.dispose();
+    _airbnbAccountIdController.dispose();
+    _airbnbAccessTokenController.dispose();
+    _bankCustomNotesController.dispose();
     super.dispose();
   }
 
@@ -459,19 +415,31 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
                   const SizedBox(height: 24),
 
-                  if (_selectedMode != WidgetMode.calendarOnly) ...[
-                    _buildSectionTitle('Email Notifikacije', Icons.email),
-                    _buildEmailNotificationsSection(),
-                    const SizedBox(height: 24),
-                  ],
-
                   _buildSectionTitle('Eksterni Kalendari', Icons.sync),
                   _buildExternalCalendarSection(),
 
                   const SizedBox(height: 24),
 
-                  _buildSectionTitle('Pravna Napomena', Icons.gavel),
-                  _buildTaxLegalSection(),
+                  _buildSectionTitle('Napredne Postavke', Icons.settings_applications),
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.tune, color: AppColors.primary),
+                      title: const Text('Email i Pravne Postavke'),
+                      subtitle: const Text('Konfigurišite email notifikacije i pravne napomene'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => WidgetAdvancedSettingsScreen(
+                              propertyId: widget.propertyId,
+                              unitId: widget.unitId,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
 
                   const SizedBox(height: 24),
 
@@ -969,143 +937,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     );
   }
 
-  Widget _buildEmailNotificationsSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Konfigurirajte email notifikacije za goste i vlasnike:',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Master Enable Toggle
-            SwitchListTile(
-              value: _emailEnabled,
-              onChanged: (value) => setState(() => _emailEnabled = value),
-              title: const Text('Omogući Email Notifikacije'),
-              subtitle: const Text('Glavni prekidač za sve email funkcije'),
-              contentPadding: EdgeInsets.zero,
-            ),
-
-            if (_emailEnabled) ...[
-              const Divider(height: 32),
-
-              // Booking Confirmation
-              SwitchListTile(
-                value: _sendBookingConfirmation,
-                onChanged: (value) =>
-                    setState(() => _sendBookingConfirmation = value),
-                title: const Text('Potvrda Rezervacije'),
-                subtitle: const Text(
-                  'Pošalji email gostu nakon kreiranja rezervacije',
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-              const SizedBox(height: 8),
-
-              // Payment Receipt
-              SwitchListTile(
-                value: _sendPaymentReceipt,
-                onChanged: (value) =>
-                    setState(() => _sendPaymentReceipt = value),
-                title: const Text('Račun za Plaćanje'),
-                subtitle: const Text(
-                  'Pošalji email gostu nakon uspješnog plaćanja',
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-              const SizedBox(height: 8),
-
-              // Owner Notification
-              SwitchListTile(
-                value: _sendOwnerNotification,
-                onChanged: (value) =>
-                    setState(() => _sendOwnerNotification = value),
-                title: const Text('Notifikacija Vlasniku'),
-                subtitle: const Text(
-                  'Pošalji email vlasniku o novim rezervacijama',
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-              const SizedBox(height: 8),
-
-              // Email Verification
-              SwitchListTile(
-                value: _requireEmailVerification,
-                onChanged: (value) =>
-                    setState(() => _requireEmailVerification = value),
-                title: const Text('Zahtijevaj Email Verifikaciju'),
-                subtitle: const Text(
-                  'Gost mora potvrditi email prije rezervacije',
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-
-              const Divider(height: 32),
-
-              const Text(
-                'Resend API Konfiguracija:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 12),
-
-              // Resend API Key
-              TextFormField(
-                controller: _resendApiKeyController,
-                decoration: const InputDecoration(
-                  labelText: 'Resend API Ključ',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                  prefixIcon: Icon(Icons.key),
-                  helperText: 'API ključ sa Resend.com',
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 12),
-
-              // From Email
-              TextFormField(
-                controller: _fromEmailController,
-                decoration: const InputDecoration(
-                  labelText: 'Od Email Adrese',
-                  hintText: 'noreply@vasadomena.com',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                  prefixIcon: Icon(Icons.alternate_email),
-                  helperText: 'Email adresa pošiljaoca',
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 12),
-
-              // From Name
-              TextFormField(
-                controller: _fromNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Od Ime',
-                  hintText: 'Ime Vašeg Objekta',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                  prefixIcon: Icon(Icons.person),
-                  helperText: 'Ime koje će vidjeti primatelji',
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildExternalCalendarSection() {
     return Card(
       child: Padding(
@@ -1251,188 +1082,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 ],
                 onChanged: (value) =>
                     setState(() => _syncIntervalMinutes = value!),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTaxLegalSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Poreska i pravna napomena za goste:',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Master Enable Toggle
-            SwitchListTile(
-              value: _taxLegalEnabled,
-              onChanged: (value) => setState(() => _taxLegalEnabled = value),
-              title: const Text('Prikaži Pravnu Napomenu'),
-              subtitle: const Text(
-                'Obavijesti goste o poreznim i pravnim obavezama',
-              ),
-              contentPadding: EdgeInsets.zero,
-            ),
-
-            if (_taxLegalEnabled) ...[
-              const Divider(height: 32),
-
-              // Text Source Selection
-              const Text(
-                'Izvor Teksta:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-
-              RadioListTile<bool>(
-                value: true,
-                groupValue: _useDefaultTaxText,
-                onChanged: (value) =>
-                    setState(() => _useDefaultTaxText = value!),
-                title: const Text('Koristi Podrazumijevani Tekst'),
-                subtitle: const Text('Standardna hrvatska pravna napomena'),
-                contentPadding: EdgeInsets.zero,
-              ),
-
-              RadioListTile<bool>(
-                value: false,
-                groupValue: _useDefaultTaxText,
-                onChanged: (value) =>
-                    setState(() => _useDefaultTaxText = value!),
-                title: const Text('Prilagođeni Tekst'),
-                subtitle: const Text('Napišite vlastiti tekst napomene'),
-                contentPadding: EdgeInsets.zero,
-              ),
-
-              const SizedBox(height: 16),
-
-              // Preview of default text OR custom text field
-              if (_useDefaultTaxText) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withAlpha((0.3 * 255).toInt()),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Pregled Podrazumijevanog Teksta:',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'VAŽNO - Pravne i porezne informacije:\n\n'
-                        '• Boravišna pristojba: Gosti su dužni platiti boravišnu pristojbu prema Zakonu o boravišnoj pristojbi (NN 52/22). Iznos pristojbe ovisi o kategoriji smještaja i dobi gosta.\n\n'
-                        '• Fiskalizacija: Vlasnik smještajnog objekta je obvezan izdati fiskalizirani račun za pružene usluge prema Zakonu o fiskalizaciji (NN 115/16).\n\n'
-                        '• Prijavljivanje gostiju: Gosti moraju biti prijavljeni u eVisitor sustav u roku od 24 sata od dolaska prema Zakonu o ugostiteljskoj djelatnosti (NN 85/15).\n\n'
-                        '• Turistička naknada: Dodatno se naplaćuje turistička naknada prema odluci jedinice lokalne samouprave.\n\n'
-                        '• Odgovornost vlasnika: Vlasnik objekta je u potpunosti odgovoran za ispunjavanje svih zakonskih obveza vezanih uz iznajmljivanje smještaja, uključujući plaćanje poreza na dohodak.\n\n'
-                        '• Booking platforma: Ova platforma olakšava direktnu komunikaciju između vlasnika i gostiju. Ne preuzimamo odgovornost za porezne obveze vlasnika niti za pravnu usklađenost poslovanja.\n\n'
-                        'Rezervacijom prihvaćate gore navedene uvjete i obveze.',
-                        style: TextStyle(fontSize: 12, height: 1.5),
-                      ),
-                    ],
-                  ),
-                ),
-              ] else ...[
-                TextFormField(
-                  controller: _customTaxTextController,
-                  decoration: InputDecoration(
-                    labelText: 'Prilagođeni Tekst Napomene',
-                    border: const OutlineInputBorder(),
-                    helperText:
-                        'Unesite vlastiti tekst pravne napomene (max 1500 znakova)',
-                    helperMaxLines: 2,
-                    prefixIcon: const Icon(Icons.edit_document),
-                    counterText: '${_customTaxTextController.text.length}/1500',
-                  ),
-                  maxLines: 12,
-                  maxLength: 1500,
-                  validator: (value) {
-                    if (!_useDefaultTaxText &&
-                        (value == null || value.trim().isEmpty)) {
-                      return 'Molimo unesite tekst napomene ili koristite podrazumijevani tekst';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) =>
-                      setState(() {}), // Update character count
-                ),
-              ],
-
-              const SizedBox(height: 16),
-
-              // Info message
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.errorContainer.withAlpha((0.3 * 255).toInt()),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.error.withAlpha((0.2 * 255).toInt()),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.warning_amber,
-                      color: Theme.of(context).colorScheme.error,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Ova napomena će biti prikazana gostima na dnu formulara za rezervaciju i u email porukama. '
-                        'Vi ste odgovorni za točnost i pravnu ispravnost teksta.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onErrorContainer,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ],

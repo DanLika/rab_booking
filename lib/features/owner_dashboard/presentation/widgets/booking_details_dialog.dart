@@ -305,6 +305,9 @@ class BookingDetailsDialog extends ConsumerWidget {
           context,
           'Rezervacija uspješno otkazana',
         );
+
+        // Auto-regenerate iCal if enabled
+        _triggerIcalRegeneration(ref);
       }
     } catch (e) {
       // FIXED: Use ErrorDisplayUtils for user-friendly error messages
@@ -315,6 +318,24 @@ class BookingDetailsDialog extends ConsumerWidget {
           userMessage: 'Greška prilikom otkazivanja rezervacije',
         );
       }
+    }
+  }
+
+  /// Trigger iCal regeneration for the unit after booking status changes
+  void _triggerIcalRegeneration(WidgetRef ref) async {
+    try {
+      // Get iCal export service
+      final icalService = ref.read(icalExportServiceProvider);
+
+      // Auto-regenerate if enabled (service will check if enabled)
+      await icalService.autoRegenerateIfEnabled(
+        propertyId: ownerBooking.property.id,
+        unitId: ownerBooking.unit.id,
+        unit: ownerBooking.unit,
+      );
+    } catch (e) {
+      // Silently fail - iCal regeneration is non-critical
+      debugPrint('iCal regeneration failed: $e');
     }
   }
 }

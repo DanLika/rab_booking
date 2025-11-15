@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_color_extensions.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../auth/presentation/widgets/auth_logo_icon.dart';
 
 /// Premium Owner App Navigation Drawer
@@ -256,6 +257,7 @@ class OwnerAppDrawer extends ConsumerWidget {
     dynamic authState,
   ) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final displayName =
         authState.userModel?.firstName != null &&
             authState.userModel?.lastName != null
@@ -298,13 +300,7 @@ class OwnerAppDrawer extends ConsumerWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha((0.1 * 255).toInt()),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  boxShadow: AppShadows.getElevation(2, isDark: isDark),
                 ),
                 child:
                     authState.userModel?.avatarUrl != null &&

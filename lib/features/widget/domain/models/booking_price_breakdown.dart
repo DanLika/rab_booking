@@ -23,7 +23,12 @@ class BookingPriceBreakdown {
   /// Total amount including additional services
   double get total => subtotal + additionalServicesTotal;
 
-  /// Deposit amount (20% of total by default)
+  /// Deposit amount (calculated client-side for display purposes only)
+  ///
+  /// ⚠️ SECURITY WARNING: This is CLIENT-SIDE calculation and can be manipulated!
+  /// The createBookingAtomic Cloud Function MUST recalculate and validate the
+  /// deposit amount server-side before creating Stripe checkout sessions.
+  /// Never trust client-provided deposit amounts for payment processing.
   double get depositAmount => total * depositPercentage;
 
   /// Remaining balance after deposit

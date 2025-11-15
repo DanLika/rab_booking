@@ -61,64 +61,94 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      // Header Card
-                      Container(
-                        padding: const EdgeInsets.all(_kHeaderCardPadding),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: isDark
-                                ? [theme.colorScheme.darkGray, theme.colorScheme.mediumDarkGray]
-                                : [theme.colorScheme.brandPurple, theme.colorScheme.brandBlue],
-                          ),
-                          borderRadius: BorderRadius.circular(_kCardBorderRadius),
-                          boxShadow: isDark
-                              ? null
-                              : [
-                                  BoxShadow(
-                                    color: theme.colorScheme.brandPurple.withAlpha((0.2 * 255).toInt()),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                      // Responsive Header + Stats Layout
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isDesktop = constraints.maxWidth >= 800;
+
+                          // Build header card widget
+                          final headerCard = Container(
+                            padding: const EdgeInsets.all(_kHeaderCardPadding),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: isDark
+                                    ? [theme.colorScheme.darkGray, theme.colorScheme.mediumDarkGray]
+                                    : [theme.colorScheme.brandPurple, theme.colorScheme.brandBlue],
+                              ),
+                              borderRadius: BorderRadius.circular(_kCardBorderRadius),
+                              boxShadow: isDark
+                                  ? null
+                                  : [
+                                      BoxShadow(
+                                        color: theme.colorScheme.brandPurple.withAlpha((0.2 * 255).toInt()),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: context.onGradientColor.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.widgets,
+                                        color: context.onGradientIconColor,
+                                        size: 28,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Widget Podešavanja',
+                                            style: TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                              color: context.onGradientColor,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Prilagodite izgled booking widget-a za svaku jedinicu',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: context.onGradientColor.withValues(alpha: 0.9),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: context.onGradientColor.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(12),
+                                    color: context.onGradientColor.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Icon(
-                                    Icons.widgets,
-                                    color: context.onGradientIconColor,
-                                    size: 28,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                  child: Row(
                                     children: [
-                                      Text(
-                                        'Widget Podešavanja',
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: context.onGradientColor,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Prilagodite izgled booking widget-a za svaku jedinicu',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: context.onGradientColor.withValues(alpha: 0.9),
+                                      Icon(Icons.info_outline, color: context.onGradientIconColor, size: 20),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'Kliknite na jedinicu da podesite boje, branding i generišete embed kod',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: context.onGradientColor.withValues(alpha: 0.95),
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -126,66 +156,71 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: context.onGradientColor.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.info_outline, color: context.onGradientIconColor, size: 20),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      'Kliknite na jedinicu da podesite boje, branding i generišete embed kod',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: context.onGradientColor.withValues(alpha: 0.95),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                          );
 
-                      // Stats Row
-                      Container(
-                        padding: const EdgeInsets.all(_kContentPadding),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _StatItem(
-                              icon: Icons.apartment,
-                              label: 'Ukupno jedinica',
-                              value: '${units.length}',
-                              color: theme.colorScheme.brandPurple,
+                          // Build stats card widget
+                          final statsCard = Container(
+                            padding: const EdgeInsets.all(_kContentPadding),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+                              ),
                             ),
-                            Container(
-                              height: 40,
-                              width: 1,
-                              color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _StatItem(
+                                  icon: Icons.apartment,
+                                  label: 'Ukupno jedinica',
+                                  value: '${units.length}',
+                                  color: theme.colorScheme.brandPurple,
+                                ),
+                                const SizedBox(height: 16),
+                                Container(
+                                  height: 1,
+                                  width: double.infinity,
+                                  color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+                                ),
+                                const SizedBox(height: 16),
+                                _StatItem(
+                                  icon: Icons.check_circle_outline,
+                                  label: 'Dostupne',
+                                  value: '${units.where((u) => u.isAvailable).length}',
+                                  color: theme.colorScheme.success,
+                                ),
+                              ],
                             ),
-                            _StatItem(
-                              icon: Icons.check_circle_outline,
-                              label: 'Dostupne',
-                              value: '${units.where((u) => u.isAvailable).length}',
-                              color: theme.colorScheme.success,
-                            ),
-                          ],
-                        ),
+                          );
+
+                          // Desktop: Row layout
+                          if (isDesktop) {
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: headerCard,
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: statsCard,
+                                ),
+                              ],
+                            );
+                          }
+
+                          // Mobile: Column layout
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              headerCard,
+                              const SizedBox(height: 16),
+                              statsCard,
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 24),
                     ]),

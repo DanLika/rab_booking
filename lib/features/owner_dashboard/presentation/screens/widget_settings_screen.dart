@@ -582,166 +582,285 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Stripe Payment
-            SwitchListTile(
-              value: _stripeEnabled,
-              onChanged: (value) => setState(() => _stripeEnabled = value),
-              title: const Text('Stripe Plaćanje'),
-              subtitle: const Text('Plaćanje karticom preko Stripe-a'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_stripeEnabled) ...[
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Depozit: $_stripeDepositPercentage%'),
-                    Slider(
-                      value: _stripeDepositPercentage.toDouble(),
-                      max: 100,
-                      divisions: 20,
-                      label: '$_stripeDepositPercentage%',
-                      onChanged: (value) {
-                        setState(
-                          () => _stripeDepositPercentage = value.round(),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+            // Info text
+            Text(
+              'Odaberite metode plaćanja dostupne gostima:',
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
-            ],
-
-            const Divider(),
-
-            // Bank Transfer
-            SwitchListTile(
-              value: _bankTransferEnabled,
-              onChanged: (value) =>
-                  setState(() => _bankTransferEnabled = value),
-              title: const Text('Bankovna Uplata'),
-              subtitle: const Text('Uplata na bankovni račun'),
-              contentPadding: EdgeInsets.zero,
             ),
-            if (_bankTransferEnabled) ...[
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Depozit: $_bankDepositPercentage%'),
-                    Slider(
-                      value: _bankDepositPercentage.toDouble(),
-                      max: 100,
-                      divisions: 20,
-                      label: '$_bankDepositPercentage%',
-                      onChanged: (value) {
-                        setState(() => _bankDepositPercentage = value.round());
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _bankNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Naziv banke',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _ibanController,
-                      decoration: const InputDecoration(
-                        labelText: 'IBAN',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _swiftController,
-                      decoration: const InputDecoration(
-                        labelText: 'SWIFT/BIC',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _accountHolderController,
-                      decoration: const InputDecoration(
-                        labelText: 'Vlasnik računa',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<int>(
-                      initialValue: _bankPaymentDeadlineDays,
-                      decoration: const InputDecoration(
-                        labelText: 'Rok za uplatu (dana)',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 1, child: Text('1 dan')),
-                        DropdownMenuItem(value: 3, child: Text('3 dana')),
-                        DropdownMenuItem(value: 5, child: Text('5 dana')),
-                        DropdownMenuItem(value: 7, child: Text('7 dana')),
-                        DropdownMenuItem(value: 14, child: Text('14 dana')),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _bankPaymentDeadlineDays = value);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      value: _bankEnableQrCode,
-                      onChanged: (value) =>
-                          setState(() => _bankEnableQrCode = value),
-                      title: const Text('Prikaži QR kod'),
-                      subtitle: const Text('EPC QR kod za brzu uplatu'),
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
-                    ),
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      value: _bankUseCustomNotes,
-                      onChanged: (value) =>
-                          setState(() => _bankUseCustomNotes = value),
-                      title: const Text('Prilagođena napomena'),
-                      subtitle: const Text('Dodajte vlastitu poruku za goste'),
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
-                    ),
-                    if (_bankUseCustomNotes) ...[
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _bankCustomNotesController,
-                        decoration: const InputDecoration(
-                          labelText: 'Napomena (max 500 znakova)',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                          helperText:
-                              'Prilagođena poruka koja će se prikazati gostima',
-                        ),
-                        maxLines: 3,
-                        maxLength: 500,
+            const SizedBox(height: 16),
+
+            // Stripe Payment - Collapsible
+            _buildPaymentMethodExpansionTile(
+              icon: Icons.credit_card,
+              title: 'Stripe Plaćanje',
+              subtitle: 'Plaćanje karticom',
+              enabled: _stripeEnabled,
+              onToggle: (val) => setState(() => _stripeEnabled = val),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(Icons.percent, size: 20, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Depozit: $_stripeDepositPercentage%',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ],
-                  ],
-                ),
+                  ),
+                  Slider(
+                    value: _stripeDepositPercentage.toDouble(),
+                    max: 100,
+                    divisions: 20,
+                    label: '$_stripeDepositPercentage%',
+                    onChanged: (value) {
+                      setState(() => _stripeDepositPercentage = value.round());
+                    },
+                  ),
+                ],
               ),
-            ],
+            ),
 
-            const Divider(),
+            const SizedBox(height: 12),
 
-            // Pay on Arrival
+            // Bank Transfer - Collapsible
+            _buildPaymentMethodExpansionTile(
+              icon: Icons.account_balance,
+              title: 'Bankovna Uplata',
+              subtitle: 'Uplata na račun',
+              enabled: _bankTransferEnabled,
+              onToggle: (val) => setState(() => _bankTransferEnabled = val),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
+
+                  // Deposit percentage
+                  Row(
+                    children: [
+                      Icon(Icons.percent, size: 20, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Depozit: $_bankDepositPercentage%',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: _bankDepositPercentage.toDouble(),
+                    max: 100,
+                    divisions: 20,
+                    label: '$_bankDepositPercentage%',
+                    onChanged: (value) {
+                      setState(() => _bankDepositPercentage = value.round());
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Bank details in responsive grid
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isDesktop = constraints.maxWidth >= 600;
+
+                      if (isDesktop) {
+                        // Desktop: 2 columns
+                        return Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _bankNameController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Naziv banke',
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _accountHolderController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Vlasnik računa',
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: TextFormField(
+                                    controller: _ibanController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'IBAN',
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _swiftController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'SWIFT/BIC',
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      } else {
+                        // Mobile: Vertical
+                        return Column(
+                          children: [
+                            TextFormField(
+                              controller: _bankNameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Naziv banke',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _ibanController,
+                              decoration: const InputDecoration(
+                                labelText: 'IBAN',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _swiftController,
+                              decoration: const InputDecoration(
+                                labelText: 'SWIFT/BIC',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _accountHolderController,
+                              decoration: const InputDecoration(
+                                labelText: 'Vlasnik računa',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Payment deadline dropdown
+                  DropdownButtonFormField<int>(
+                    initialValue: _bankPaymentDeadlineDays,
+                    decoration: const InputDecoration(
+                      labelText: 'Rok za uplatu (dana)',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 1, child: Text('1 dan')),
+                      DropdownMenuItem(value: 3, child: Text('3 dana')),
+                      DropdownMenuItem(value: 5, child: Text('5 dana')),
+                      DropdownMenuItem(value: 7, child: Text('7 dana')),
+                      DropdownMenuItem(value: 14, child: Text('14 dana')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _bankPaymentDeadlineDays = value);
+                      }
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Additional options in responsive grid
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isDesktop = constraints.maxWidth >= 600;
+
+                      final qrSwitch = _buildCompactSwitchCard(
+                        icon: Icons.qr_code,
+                        label: 'Prikaži QR kod',
+                        subtitle: 'EPC QR kod',
+                        value: _bankEnableQrCode,
+                        onChanged: (val) => setState(() => _bankEnableQrCode = val),
+                      );
+
+                      final customNotesSwitch = _buildCompactSwitchCard(
+                        icon: Icons.edit_note,
+                        label: 'Prilagođena napomena',
+                        subtitle: 'Dodaj poruku',
+                        value: _bankUseCustomNotes,
+                        onChanged: (val) => setState(() => _bankUseCustomNotes = val),
+                      );
+
+                      if (isDesktop) {
+                        // Desktop: 2 columns
+                        return Row(
+                          children: [
+                            Expanded(child: qrSwitch),
+                            const SizedBox(width: 12),
+                            Expanded(child: customNotesSwitch),
+                          ],
+                        );
+                      } else {
+                        // Mobile: Vertical
+                        return Column(
+                          children: [
+                            qrSwitch,
+                            const SizedBox(height: 12),
+                            customNotesSwitch,
+                          ],
+                        );
+                      }
+                    },
+                  ),
+
+                  // Custom notes text field (conditional)
+                  if (_bankUseCustomNotes) ...[
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _bankCustomNotesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Napomena (max 500 znakova)',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        helperText: 'Prilagođena poruka koja će se prikazati gostima',
+                      ),
+                      maxLines: 3,
+                      maxLength: 500,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Pay on Arrival - Simple switch card (not collapsible since no options)
             Builder(
               builder: (context) {
                 // Force Pay on Arrival if both Stripe and Bank Transfer are disabled
@@ -754,28 +873,170 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   });
                 }
 
-                return SwitchListTile(
-                  value: _payOnArrivalEnabled,
-                  onChanged: isForced
-                    ? null // Disabled when forced
-                    : (value) => setState(() => _payOnArrivalEnabled = value),
-                  title: const Text('Plaćanje po Dolasku'),
-                  subtitle: Text(
-                    isForced
+                return _buildCompactSwitchCard(
+                  icon: Icons.payments,
+                  label: 'Plaćanje po Dolasku',
+                  subtitle: isForced
                       ? '⚠️ Obavezno (jer su ostale metode isključene)'
                       : 'Gost plaća prilikom prijave',
-                    style: TextStyle(
-                      color: isForced
-                        ? Theme.of(context).colorScheme.error
-                        : null,
-                    ),
-                  ),
-                  contentPadding: EdgeInsets.zero,
+                  value: _payOnArrivalEnabled,
+                  onChanged: isForced ? null : (val) => setState(() => _payOnArrivalEnabled = val),
+                  isWarning: isForced,
                 );
               },
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Helper: Payment method expansion tile
+  Widget _buildPaymentMethodExpansionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool enabled,
+    required ValueChanged<bool> onToggle,
+    required Widget child,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: enabled
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.2 * 255).toInt())
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: enabled
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+          width: enabled ? 2 : 1,
+        ),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          leading: Icon(
+            icon,
+            color: enabled
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: enabled
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
+            ),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Switch(
+                value: enabled,
+                onChanged: onToggle,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              if (enabled) ...[
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.expand_more,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ],
+          ),
+          children: enabled ? [child] : [],
+        ),
+      ),
+    );
+  }
+
+  // Helper: Compact switch card (for small options)
+  Widget _buildCompactSwitchCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool>? onChanged,
+    bool isWarning = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: value && !isWarning
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+            : isWarning
+            ? Theme.of(context).colorScheme.errorContainer.withAlpha((0.2 * 255).toInt())
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: value && !isWarning
+              ? Theme.of(context).colorScheme.primary
+              : isWarning
+              ? Theme.of(context).colorScheme.error
+              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+          width: value || isWarning ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: value && !isWarning
+                ? Theme.of(context).colorScheme.primary
+                : isWarning
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: value ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: 14,
+                    color: value && !isWarning
+                        ? Theme.of(context).colorScheme.onSurface
+                        : isWarning
+                        ? Theme.of(context).colorScheme.error
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isWarning
+                        ? Theme.of(context).colorScheme.error.withAlpha((0.8 * 255).toInt())
+                        : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ],
       ),
     );
   }

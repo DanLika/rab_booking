@@ -35,6 +35,7 @@ export const createBookingAtomic = onCall(async (request) => {
     paymentMethod, // 'stripe', 'bank_transfer', or 'none'
     requireOwnerApproval = false,
     notes,
+    taxLegalAccepted,
   } = data;
 
   // Validate required fields
@@ -232,6 +233,7 @@ export const createBookingAtomic = onCall(async (request) => {
         source: "widget",
         notes: notes || null,
         require_owner_approval: requireOwnerApproval,
+        tax_legal_accepted: taxLegalAccepted || null,
         payment_deadline: paymentMethod === "bank_transfer" ?
           admin.firestore.Timestamp.fromDate(
             new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days

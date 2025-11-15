@@ -192,12 +192,56 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Units List - Using SliverList.builder for performance
+                // Units List - Using responsive SliverGrid for better layout
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverList.builder(
-                    itemCount: units.length,
-                    itemBuilder: (context, index) => _UnitWidgetCard(unit: units[index]),
+                  sliver: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Calculate number of columns based on screen width
+                      int crossAxisCount;
+                      double childAspectRatio;
+                      double crossAxisSpacing;
+                      double mainAxisSpacing;
+
+                      if (constraints.maxWidth >= 1200) {
+                        // Desktop: 3 columns
+                        crossAxisCount = 3;
+                        childAspectRatio = 0.75;
+                        crossAxisSpacing = 16;
+                        mainAxisSpacing = 16;
+                      } else if (constraints.maxWidth >= 800) {
+                        // Tablet landscape: 2 columns
+                        crossAxisCount = 2;
+                        childAspectRatio = 0.75;
+                        crossAxisSpacing = 16;
+                        mainAxisSpacing = 16;
+                      } else if (constraints.maxWidth >= 600) {
+                        // Tablet portrait: 2 columns
+                        crossAxisCount = 2;
+                        childAspectRatio = 0.72;
+                        crossAxisSpacing = 12;
+                        mainAxisSpacing = 16;
+                      } else {
+                        // Mobile: 1 column
+                        crossAxisCount = 1;
+                        childAspectRatio = 0.85;
+                        crossAxisSpacing = 0;
+                        mainAxisSpacing = 16;
+                      }
+
+                      return SliverGrid(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          childAspectRatio: childAspectRatio,
+                          crossAxisSpacing: crossAxisSpacing,
+                          mainAxisSpacing: mainAxisSpacing,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => _UnitWidgetCard(unit: units[index]),
+                          childCount: units.length,
+                        ),
+                      );
+                    },
                   ),
                 ),
 
@@ -364,7 +408,6 @@ class _UnitWidgetCard extends ConsumerWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(_kCardBorderRadius),

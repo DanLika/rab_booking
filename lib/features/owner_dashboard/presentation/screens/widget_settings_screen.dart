@@ -787,31 +787,94 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SwitchListTile(
-              value: _requireApproval,
-              onChanged: (value) => setState(() => _requireApproval = value),
-              title: const Text('Zahtijeva Odobrenje'),
-              subtitle: const Text('Morate ručno odobriti svaku rezervaciju'),
-              contentPadding: EdgeInsets.zero,
+            // Responsive Grid for Switches
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = constraints.maxWidth >= 600;
+
+                if (isDesktop) {
+                  // Desktop: 2 columns
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: _buildBehaviorSwitchCard(
+                          icon: Icons.approval,
+                          label: 'Zahtijeva Odobrenje',
+                          subtitle: 'Ručno odobravanje',
+                          value: _requireApproval,
+                          onChanged: (val) => setState(() => _requireApproval = val),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildBehaviorSwitchCard(
+                          icon: Icons.event_busy,
+                          label: 'Dozvolite Otkazivanje',
+                          subtitle: 'Gosti mogu otkazati',
+                          value: _allowCancellation,
+                          onChanged: (val) => setState(() => _allowCancellation = val),
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  // Mobile: Vertical
+                  return Column(
+                    children: [
+                      _buildBehaviorSwitchCard(
+                        icon: Icons.approval,
+                        label: 'Zahtijeva Odobrenje',
+                        subtitle: 'Ručno odobravanje',
+                        value: _requireApproval,
+                        onChanged: (val) => setState(() => _requireApproval = val),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildBehaviorSwitchCard(
+                        icon: Icons.event_busy,
+                        label: 'Dozvolite Otkazivanje',
+                        subtitle: 'Gosti mogu otkazati',
+                        value: _allowCancellation,
+                        onChanged: (val) => setState(() => _allowCancellation = val),
+                      ),
+                    ],
+                  );
+                }
+              },
             ),
-            const Divider(),
-            SwitchListTile(
-              value: _allowCancellation,
-              onChanged: (value) => setState(() => _allowCancellation = value),
-              title: const Text('Dozvolite Otkazivanje'),
-              subtitle: const Text('Gosti mogu otkazati rezervaciju'),
-              contentPadding: EdgeInsets.zero,
-            ),
+
+            // Cancellation deadline slider (conditional)
             if (_allowCancellation) ...[
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(left: 16),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                  ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Otkazivanje do: $_cancellationHours sati prije prijave',
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Rok za otkazivanje: $_cancellationHours sati prije prijave',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 8),
                     Slider(
                       value: _cancellationHours.toDouble(),
                       max: 168, // 7 days
@@ -827,6 +890,72 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  // Helper widget for behavior switch cards
+  Widget _buildBehaviorSwitchCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: value
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: value
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+          width: value ? 2 : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: value
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 24,
+              ),
+              const Spacer(),
+              Switch(
+                value: value,
+                onChanged: onChanged,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              color: value
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -847,79 +976,124 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
-            const SizedBox(height: 12),
-
-            // Phone
-            SwitchListTile(
-              value: _showPhone,
-              onChanged: (value) => setState(() => _showPhone = value),
-              title: const Text('Prikaži Telefon'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_showPhone) ...[
-              Padding(
-                padding: const EdgeInsets.only(left: 16, top: 8),
-                child: TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Broj telefona',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.phone),
-                  ),
-                  keyboardType: TextInputType.phone,
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-
-            // Email
-            SwitchListTile(
-              value: _showEmail,
-              onChanged: (value) => setState(() => _showEmail = value),
-              title: const Text('Prikaži Email'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_showEmail) ...[
-              Padding(
-                padding: const EdgeInsets.only(left: 16, top: 8),
-                child: TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email adresa',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-
-            // WhatsApp
-            SwitchListTile(
-              value: _showWhatsApp,
-              onChanged: (value) => setState(() => _showWhatsApp = value),
-              title: const Text('Prikaži WhatsApp'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_showWhatsApp) ...[
-              Padding(
-                padding: const EdgeInsets.only(left: 16, top: 8),
-                child: TextFormField(
-                  controller: _whatsAppController,
-                  decoration: const InputDecoration(
-                    labelText: 'WhatsApp broj',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.message),
-                  ),
-                  keyboardType: TextInputType.phone,
-                ),
-              ),
-            ],
             const SizedBox(height: 16),
+
+            // Responsive Grid for Switches
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = constraints.maxWidth >= 600;
+
+                if (isDesktop) {
+                  // Desktop: 2 columns grid
+                  return Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      // Row 1
+                      SizedBox(
+                        width: (constraints.maxWidth - 12) / 2,
+                        child: _buildContactSwitchCard(
+                          icon: Icons.phone,
+                          label: 'Telefon',
+                          value: _showPhone,
+                          onChanged: (val) => setState(() => _showPhone = val),
+                        ),
+                      ),
+                      SizedBox(
+                        width: (constraints.maxWidth - 12) / 2,
+                        child: _buildContactSwitchCard(
+                          icon: Icons.email,
+                          label: 'Email',
+                          value: _showEmail,
+                          onChanged: (val) => setState(() => _showEmail = val),
+                        ),
+                      ),
+                      // Row 2
+                      SizedBox(
+                        width: (constraints.maxWidth - 12) / 2,
+                        child: _buildContactSwitchCard(
+                          icon: Icons.message,
+                          label: 'WhatsApp',
+                          value: _showWhatsApp,
+                          onChanged: (val) => setState(() => _showWhatsApp = val),
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  // Mobile: Vertical column
+                  return Column(
+                    children: [
+                      _buildContactSwitchCard(
+                        icon: Icons.phone,
+                        label: 'Telefon',
+                        value: _showPhone,
+                        onChanged: (val) => setState(() => _showPhone = val),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildContactSwitchCard(
+                        icon: Icons.email,
+                        label: 'Email',
+                        value: _showEmail,
+                        onChanged: (val) => setState(() => _showEmail = val),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildContactSwitchCard(
+                        icon: Icons.message,
+                        label: 'WhatsApp',
+                        value: _showWhatsApp,
+                        onChanged: (val) => setState(() => _showWhatsApp = val),
+                      ),
+                    ],
+                  );
+                }
+              },
+            ),
+
+            // Input Fields (conditional based on enabled switches)
+            const SizedBox(height: 20),
+
+            if (_showPhone) ...[
+              TextFormField(
+                controller: _phoneController,
+                decoration: const InputDecoration(
+                  labelText: 'Broj telefona',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            if (_showEmail) ...[
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email adresa',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                  prefixIcon: Icon(Icons.email),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            if (_showWhatsApp) ...[
+              TextFormField(
+                controller: _whatsAppController,
+                decoration: const InputDecoration(
+                  labelText: 'WhatsApp broj',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                  prefixIcon: Icon(Icons.message),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 12),
+            ],
 
             // Custom Message
             TextFormField(
@@ -934,6 +1108,58 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Helper widget for contact switch cards
+  Widget _buildContactSwitchCard({
+    required IconData icon,
+    required String label,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: value
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: value
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+          width: value ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: value
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: value ? FontWeight.w600 : FontWeight.normal,
+                color: value
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ],
       ),
     );
   }

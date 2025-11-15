@@ -424,7 +424,7 @@ class EmailNotificationService {
             </div>
         </div>
 
-        ${paymentMethod == 'pay_on_arrival' ? '''
+        ${paymentMethod == 'none' ? '''
         <div class="info-box">
             <strong>💳 Plaćanje pri dolasku</strong><br>
             <p>Vaša rezervacija je potvrđena! Plaćanje ćete izvršiti po dolasku na smještaj.</p>
@@ -437,7 +437,7 @@ class EmailNotificationService {
                 Molimo donesite ID/putovnicu za registraciju pri dolasku.
             </p>
         </div>
-        ''' : paymentMethod == 'bankTransfer' && bankTransferConfig != null ? '''
+        ''' : paymentMethod == 'bank_transfer' && bankTransferConfig != null ? '''
         <div class="info-box">
             <strong>🏦 Upute za bankovni prijenos</strong><br>
             <p>Molimo izvršite plaćanje na sljedeći račun:</p>

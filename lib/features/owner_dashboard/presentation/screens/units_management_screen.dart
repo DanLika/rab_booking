@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import 'unit_form_screen.dart';
@@ -138,12 +137,12 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.error.withAlpha((0.1 * 255).toInt()),
+                    color: context.errorColor.withAlpha((0.1 * 255).toInt()),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: AppColors.error,
+                    color: context.errorColor,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -176,26 +175,36 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
         builder: (context, constraints) {
           // Calculate number of columns based on screen width
           int crossAxisCount;
+          double topPadding;
+          double horizontalPadding;
 
           if (constraints.maxWidth >= 1200) {
             // Desktop: 3 columns
             crossAxisCount = 3;
+            topPadding = 24; // Minimal padding for desktop
+            horizontalPadding = 24;
           } else if (constraints.maxWidth >= 800) {
             // Tablet landscape: 2 columns
             crossAxisCount = 2;
+            topPadding = 20;
+            horizontalPadding = 20;
           } else if (constraints.maxWidth >= 600) {
             // Tablet portrait: 2 columns
             crossAxisCount = 2;
+            topPadding = 20;
+            horizontalPadding = 16;
           } else {
             // Mobile: 1 column
             crossAxisCount = 1;
+            topPadding = 16; // Less padding on mobile for more content
+            horizontalPadding = 16;
           }
 
           return GridView.builder(
-            padding: const EdgeInsets.only(
-              top: 140 + 16,
-              left: 16,
-              right: 16,
+            padding: EdgeInsets.only(
+              top: topPadding,
+              left: horizontalPadding,
+              right: horizontalPadding,
               bottom: 16,
             ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -438,7 +447,7 @@ class _UnitCard extends StatelessWidget {
                       height: 8,
                       decoration: BoxDecoration(
                         color: unit.isAvailable
-                            ? AppColors.success
+                            ? context.successColor
                             : theme.colorScheme.outline,
                         shape: BoxShape.circle,
                       ),
@@ -448,7 +457,7 @@ class _UnitCard extends StatelessWidget {
                       unit.isAvailable ? 'Dostupno' : 'Nedostupno',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: unit.isAvailable
-                            ? AppColors.success
+                            ? context.successColor
                             : theme.colorScheme.onSurface.withAlpha(
                                 (0.6 * 255).toInt(),
                               ),
@@ -516,24 +525,26 @@ class _UnitCard extends StatelessWidget {
                 Expanded(
                   child: Tooltip(
                     message: 'Upravljaj cijenama',
-                    child: OutlinedButton(
-                      onPressed: onManagePricing,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.success,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 10,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        side: BorderSide(
-                          color: AppColors.success.withAlpha(
-                            (0.4 * 255).toInt(),
+                    child: Builder(
+                      builder: (context) => OutlinedButton(
+                        onPressed: onManagePricing,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: context.successColor,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          side: BorderSide(
+                            color: context.successColor.withAlpha(
+                              (0.4 * 255).toInt(),
+                            ),
                           ),
                         ),
+                        child: const Icon(Icons.euro_symbol, size: 18),
                       ),
-                      child: const Icon(Icons.euro_symbol, size: 18),
                     ),
                   ),
                 ),

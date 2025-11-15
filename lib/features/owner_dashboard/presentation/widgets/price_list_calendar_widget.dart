@@ -7,6 +7,7 @@ import '../../../../shared/models/daily_price_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/theme_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/price_list_provider.dart';
 
@@ -70,7 +71,7 @@ class _PriceListCalendarWidgetState
   }
 
   Widget _buildHeader(bool isMobile) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = context.isDarkMode;
 
     return Container(
       decoration: BoxDecoration(
@@ -84,14 +85,19 @@ class _PriceListCalendarWidgetState
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withAlpha((0.95 * 255).toInt()),
-                Colors.white.withAlpha((0.90 * 255).toInt()),
-              ],
+              colors: isDark
+                  ? [
+                      context.surfaceColor.withValues(alpha: 0.95),
+                      context.surfaceVariantColor.withValues(alpha: 0.90),
+                    ]
+                  : [
+                      context.surfaceColor.withValues(alpha: 0.95),
+                      context.surfaceColor.withValues(alpha: 0.90),
+                    ],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.white.withAlpha((0.4 * 255).toInt()),
+              color: context.borderColor.withValues(alpha: 0.4),
               width: 1.5,
             ),
           ),
@@ -146,11 +152,11 @@ class _PriceListCalendarWidgetState
                       label: Text(_bulkEditMode ? 'Odustani' : 'Bulk Edit'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: _bulkEditMode
-                            ? AppColors.authPrimary
+                            ? context.primaryColor
                             : null,
                         side: _bulkEditMode
-                            ? const BorderSide(
-                                color: AppColors.authPrimary,
+                            ? BorderSide(
+                                color: context.primaryColor,
                                 width: 2,
                               )
                             : null,
@@ -210,11 +216,11 @@ class _PriceListCalendarWidgetState
                       label: Text(_bulkEditMode ? 'Odustani' : 'Bulk Edit'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: _bulkEditMode
-                            ? AppColors.authPrimary
+                            ? context.primaryColor
                             : null,
                         side: _bulkEditMode
-                            ? const BorderSide(
-                                color: AppColors.authPrimary,
+                            ? BorderSide(
+                                color: context.primaryColor,
                                 width: 2,
                               )
                             : null,
@@ -238,16 +244,16 @@ class _PriceListCalendarWidgetState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.authPrimary.withValues(alpha: 0.1),
+        color: context.primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.authPrimary, width: 2),
+        border: Border.all(color: context.primaryColor, width: 2),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.authPrimary,
+              color: context.primaryColor,
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
@@ -261,7 +267,7 @@ class _PriceListCalendarWidgetState
             child: Text(
               '${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan' : 'dana'} odabrano',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.authPrimary,
+                color: context.primaryColor,
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
               ),
@@ -273,7 +279,7 @@ class _PriceListCalendarWidgetState
             },
             icon: const Icon(Icons.close, size: 18),
             label: const Text('Očisti'),
-            style: TextButton.styleFrom(foregroundColor: AppColors.authPrimary),
+            style: TextButton.styleFrom(foregroundColor: context.primaryColor),
           ),
         ],
       ),
@@ -321,14 +327,19 @@ class _PriceListCalendarWidgetState
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withAlpha((0.95 * 255).toInt()),
-                    Colors.white.withAlpha((0.90 * 255).toInt()),
-                  ],
+                  colors: isDark
+                      ? [
+                          context.surfaceColor.withValues(alpha: 0.95),
+                          context.surfaceVariantColor.withValues(alpha: 0.90),
+                        ]
+                      : [
+                          context.surfaceColor.withValues(alpha: 0.95),
+                          context.surfaceColor.withValues(alpha: 0.90),
+                        ],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: Colors.white.withAlpha((0.4 * 255).toInt()),
+                  color: context.borderColor.withValues(alpha: 0.4),
                   width: 1.5,
                 ),
               ),
@@ -382,10 +393,10 @@ class _PriceListCalendarWidgetState
                           },
                         );
                       },
-                      loading: () => const Center(
+                      loading: () => Center(
                         child: CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.authPrimary,
+                            context.primaryColor,
                           ),
                         ),
                       ),
@@ -398,7 +409,7 @@ class _PriceListCalendarWidgetState
                               Icon(
                                 Icons.error_outline,
                                 size: 48,
-                                color: Colors.red[700],
+                                color: context.errorColor,
                               ),
                               const SizedBox(height: 12),
                               Text(
@@ -406,7 +417,7 @@ class _PriceListCalendarWidgetState
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.red[700],
+                                  color: context.errorColor,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -440,7 +451,7 @@ class _PriceListCalendarWidgetState
               day,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
+                color: context.textColorSecondary,
               ),
             ),
           ),
@@ -501,26 +512,24 @@ class _PriceListCalendarWidgetState
       child: Container(
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.authPrimary.withValues(alpha: 0.2)
+              ? context.primaryColor.withValues(alpha: 0.2)
               : !isAvailable
-              ? Colors.grey[300] // Nedostupno - siva
+              ? context.surfaceVariantColor.withValues(alpha: 0.5) // Nedostupno
               : hasWeekendPrice && isWeekend
-              ? Colors.purple[50] // Vikend cijena - ljubičasta
+              ? context.secondaryColor.withValues(alpha: 0.1) // Vikend cijena
               : hasPrice
-              ? AppColors.authSecondary.withAlpha(
-                  (0.1 * 255).toInt(),
-                ) // Custom cijena - plava
+              ? context.primaryColor.withValues(alpha: 0.08) // Custom cijena
               : hasRestrictions
-              ? Colors.orange[50] // Restrikcije - narandžasta
-              : null, // Base price - bela
+              ? context.warningColor.withValues(alpha: 0.1) // Restrikcije
+              : null, // Base price
           border: Border.all(
             color: isSelected
-                ? AppColors.authPrimary
+                ? context.primaryColor
                 : isToday
-                ? AppColors.authPrimary.withValues(alpha: 0.5)
+                ? context.primaryColor.withValues(alpha: 0.5)
                 : hasRestrictions
-                ? Colors.orange[300]!
-                : Colors.grey[300]!,
+                ? context.warningColor.withValues(alpha: 0.6)
+                : context.borderColor,
             width: isSelected || hasRestrictions ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -544,7 +553,7 @@ class _PriceListCalendarWidgetState
                             ? FontWeight.bold
                             : FontWeight.normal,
                         fontSize: isSmallMobile ? 9 : (isMobile ? 10 : null),
-                        color: !isAvailable ? Colors.grey[600] : null,
+                        color: !isAvailable ? context.textColorTertiary : null,
                       ),
                     ),
                   ),
@@ -553,7 +562,7 @@ class _PriceListCalendarWidgetState
                   Icon(
                     Icons.check_circle,
                     size: isSmallMobile ? 12 : (isMobile ? 14 : 16),
-                    color: AppColors.authPrimary,
+                    color: context.primaryColor,
                   ),
               ],
             ),
@@ -572,12 +581,12 @@ class _PriceListCalendarWidgetState
                         fontWeight: FontWeight.bold,
                         fontSize: isSmallMobile ? 11 : (isMobile ? 12 : null),
                         color: !isAvailable
-                            ? Colors.grey[600]
+                            ? context.textColorTertiary
                             : hasWeekendPrice && isWeekend
-                            ? Colors.purple[700]
+                            ? context.secondaryColor
                             : hasPrice
-                            ? AppColors.authSecondary
-                            : Colors.grey[700],
+                            ? context.primaryColor
+                            : context.textColorSecondary,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -592,7 +601,7 @@ class _PriceListCalendarWidgetState
                         'base',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: isMobile ? 7 : 8,
-                          color: Colors.grey[600],
+                          color: context.textColorTertiary,
                         ),
                       ),
                     ),
@@ -609,7 +618,7 @@ class _PriceListCalendarWidgetState
                     Icon(
                       Icons.login,
                       size: isSmallMobile ? 10 : (isMobile ? 11 : 12),
-                      color: Colors.red[700],
+                      color: context.errorColor,
                     ),
                   if (blockCheckIn && blockCheckOut)
                     SizedBox(width: isSmallMobile ? 1 : 2),
@@ -617,7 +626,7 @@ class _PriceListCalendarWidgetState
                     Icon(
                       Icons.logout,
                       size: isSmallMobile ? 10 : (isMobile ? 11 : 12),
-                      color: Colors.red[700],
+                      color: context.errorColor,
                     ),
                   if ((blockCheckIn || blockCheckOut) &&
                       notes != null &&
@@ -634,7 +643,7 @@ class _PriceListCalendarWidgetState
                         child: Icon(
                           Icons.notes,
                           size: isSmallMobile ? 10 : (isMobile ? 11 : 12),
-                          color: Colors.orange[700],
+                          color: context.warningColor,
                         ),
                       ),
                     ),
@@ -657,7 +666,7 @@ class _PriceListCalendarWidgetState
             label: const Text('Postavi cijenu'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: AppColors.authPrimary,
+              backgroundColor: context.primaryColor,
               foregroundColor: Colors.white,
               textStyle: const TextStyle(
                 fontSize: 16,
@@ -699,7 +708,7 @@ class _PriceListCalendarWidgetState
             label: const Text('Postavi cijenu'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: AppColors.authPrimary,
+              backgroundColor: context.primaryColor,
               foregroundColor: Colors.white,
               textStyle: const TextStyle(
                 fontSize: 16,
@@ -1126,7 +1135,7 @@ class _PriceListCalendarWidgetState
                         messenger.showSnackBar(
                           SnackBar(
                             content: Text('Greška: $e'),
-                            backgroundColor: AppColors.error,
+                            backgroundColor: context.errorColor,
                           ),
                         );
                       }
@@ -1171,7 +1180,7 @@ class _PriceListCalendarWidgetState
                   'Postavit će se cijena za sve odabrane datume',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                  ).textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
                 ),
               ],
             ),
@@ -1355,7 +1364,7 @@ class _PriceListCalendarWidgetState
                       : const Icon(Icons.check_circle),
                   label: const Text('Označi kao dostupno'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[700],
+                    backgroundColor: context.successColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.all(16),
                   ),
@@ -1432,7 +1441,7 @@ class _PriceListCalendarWidgetState
                       : const Icon(Icons.block),
                   label: const Text('Blokiraj datume'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[700],
+                    backgroundColor: context.errorColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.all(16),
                   ),

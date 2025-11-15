@@ -10,6 +10,7 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/platform_utils.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../providers/calendar_drag_drop_provider.dart';
+import '../providers/calendar_filters_provider.dart';
 import '../../utils/booking_overlap_detector.dart';
 import '../../utils/calendar_grid_calculator.dart';
 import 'calendar/booking_inline_edit_dialog.dart';
@@ -353,7 +354,7 @@ class _TimelineCalendarWidgetState
           child: Consumer(
             builder: (context, ref, child) {
               final unitsAsync = ref.watch(allOwnerUnitsProvider);
-              final bookingsAsync = ref.watch(calendarBookingsProvider);
+              final bookingsAsync = ref.watch(filteredCalendarBookingsProvider);
 
               return unitsAsync.when(
                 data: (units) {
@@ -387,7 +388,7 @@ class _TimelineCalendarWidgetState
                     error: (error, stack) => CalendarErrorState(
                       errorMessage: error.toString(),
                       onRetry: () {
-                        ref.invalidate(calendarBookingsProvider);
+                        ref.invalidate(filteredCalendarBookingsProvider);
                       },
                     ),
                   );
@@ -860,7 +861,7 @@ class _TimelineCalendarWidgetState
     final unitRowHeight = _getUnitRowHeight(context);
 
     // Get all bookings for validation
-    final allBookingsAsync = ref.watch(calendarBookingsProvider);
+    final allBookingsAsync = ref.watch(filteredCalendarBookingsProvider);
 
     return dates.asMap().entries.map((entry) {
       final index = entry.key;
@@ -1065,7 +1066,7 @@ class _TimelineCalendarWidgetState
                       bottom: 0,
                       child: CheckInDiagonalIndicator(
                         height: blockHeight,
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
 
@@ -1076,7 +1077,7 @@ class _TimelineCalendarWidgetState
                       bottom: 0,
                       child: CheckOutDiagonalIndicator(
                         height: blockHeight,
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
 

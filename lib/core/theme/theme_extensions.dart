@@ -184,6 +184,20 @@ extension ThemeColors on BuildContext {
   Color get iconColorInverted => textColorInverted;
 
   // ============================================================================
+  // GRADIENT OVERLAY COLORS
+  // ============================================================================
+
+  /// Get text color for colored gradient backgrounds
+  ///
+  /// Always returns white for consistent contrast on both:
+  /// - Light mode: Purple/Blue gradients (dark backgrounds)
+  /// - Dark mode: Dark gray gradients (dark backgrounds)
+  Color get onGradientColor => Colors.white;
+
+  /// Get icon color for colored gradient backgrounds
+  Color get onGradientIconColor => Colors.white;
+
+  // ============================================================================
   // HELPER METHODS
   // ============================================================================
 

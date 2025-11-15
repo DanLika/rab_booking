@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/app_color_extensions.dart';
+import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../shared/models/unit_model.dart';
@@ -90,12 +91,12 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                                    color: context.onGradientColor.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.widgets,
-                                    color: Colors.white,
+                                    color: context.onGradientIconColor,
                                     size: 28,
                                   ),
                                 ),
@@ -104,12 +105,12 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                      Text(
                                         'Widget Podešavanja',
                                         style: TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                                          color: context.onGradientColor,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -117,7 +118,7 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                         'Prilagodite izgled booking widget-a za svaku jedinicu',
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                                          color: context.onGradientColor.withValues(alpha: 0.9),
                                         ),
                                       ),
                                     ],
@@ -129,19 +130,19 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withAlpha((0.15 * 255).toInt()),
+                                color: context.onGradientColor.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.info_outline, color: Colors.white, size: 20),
+                                  Icon(Icons.info_outline, color: context.onGradientIconColor, size: 20),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
                                       'Kliknite na jedinicu da podesite boje, branding i generišete embed kod',
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: Colors.white.withAlpha((0.95 * 255).toInt()),
+                                        color: context.onGradientColor.withValues(alpha: 0.95),
                                       ),
                                     ),
                                   ),

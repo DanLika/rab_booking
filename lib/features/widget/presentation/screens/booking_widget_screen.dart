@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import '../widgets/calendar_view_switcher.dart';
 import '../widgets/additional_services_widget.dart';
 import '../widgets/tax_legal_disclaimer_widget.dart';
@@ -628,20 +629,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Calendar instruction text
-                      if (widgetMode != WidgetMode.calendarOnly)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            'Select check-in date, then check-out date',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDarkMode
-                                  ? MinimalistColorsDark.textSecondary
-                                  : MinimalistColors.textSecondary,
-                            ),
-                          ),
-                        ),
                       // Calendar
                       Expanded(
                         child: CalendarViewSwitcher(
@@ -1264,14 +1251,33 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     child: Column(
                       children: [
                         _buildGuestInfoForm(calculation, showButton: false),
-                        const SizedBox(height: SpacingTokens.m),
-                        // Additional Services section
-                        AdditionalServicesWidget(
-                          unitId: _unitId,
-                          nights: _checkOut!.difference(_checkIn!).inDays,
-                          guests: _adults + _children,
+                        // Additional Services section (only show if services exist)
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final servicesAsync = ref.watch(
+                              unitAdditionalServicesProvider(_unitId),
+                            );
+                            return servicesAsync.when(
+                              data: (services) {
+                                if (services.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Column(
+                                  children: [
+                                    const SizedBox(height: SpacingTokens.m),
+                                    AdditionalServicesWidget(
+                                      unitId: _unitId,
+                                      nights: _checkOut!.difference(_checkIn!).inDays,
+                                      guests: _adults + _children,
+                                    ),
+                                  ],
+                                );
+                              },
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, __) => const SizedBox.shrink(),
+                            );
+                          },
                         ),
-                        const SizedBox(height: SpacingTokens.m),
                         // Tax/Legal Disclaimer section
                         TaxLegalDisclaimerWidget(
                           propertyId: _propertyId ?? '',
@@ -2487,8 +2493,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  AutoSizeText(
                     subtitle,
+                    maxLines: 2,
+                    minFontSize: 10,
+                    maxFontSize: 12,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 12,
                       color: getColor(
@@ -3783,13 +3793,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Email field with verification button
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
-          child: TextFormField(
-            controller: _emailController,
-            maxLength: 100, // Bug #60: Maximum field length validation
-            keyboardType: TextInputType.emailAddress,
+          child: SizedBox(
+            height: 56,
+            child: TextFormField(
+              controller: _emailController,
+              maxLength: 100, // Bug #60: Maximum field length validation
+              keyboardType: TextInputType.emailAddress,
             style: TextStyle(
               color: getColor(
                 MinimalistColors.textPrimary,
@@ -3849,6 +3861,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             },
           ),
         ),
+        ),
         const SizedBox(width: 12),
         // Verification status/button
         if (_emailVerified)
@@ -3892,7 +3905,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 foregroundColor: isDarkMode
                     ? MinimalistColorsDark.buttonPrimaryText
                     : MinimalistColors.buttonPrimaryText,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                minimumSize: const Size(0, 56),
+                maximumSize: const Size(double.infinity, 56),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderTokens.circularMedium,
                 ),

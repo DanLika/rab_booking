@@ -16,7 +16,6 @@ import '../../utils/calendar_grid_calculator.dart';
 import 'calendar/booking_inline_edit_dialog.dart';
 import 'calendar/booking_drop_zone.dart';
 import 'calendar/skewed_booking_painter.dart';
-import 'calendar/calendar_empty_state.dart';
 import 'calendar/calendar_skeleton_loader.dart';
 import 'calendar/calendar_error_state.dart';
 import 'calendar/booking_action_menu.dart';
@@ -369,16 +368,9 @@ class _TimelineCalendarWidgetState
 
                   return bookingsAsync.when(
                     data: (bookingsByUnit) {
-                      // Check if there are any bookings at all
-                      final hasAnyBookings = bookingsByUnit.values.any(
-                        (list) => list.isNotEmpty,
-                      );
-
-                      // Show empty state if no bookings exist
-                      if (!hasAnyBookings) {
-                        return const CalendarEmptyState();
-                      }
-
+                      // Always show timeline view, even if no bookings exist
+                      // (empty calendar grid is better UX than empty state)
+                      print('[TIMELINE] Building timeline with ${units.length} units and ${bookingsByUnit.length} booking groups');
                       return _buildTimelineView(units, bookingsByUnit);
                     },
                     loading: () => const CalendarSkeletonLoader(

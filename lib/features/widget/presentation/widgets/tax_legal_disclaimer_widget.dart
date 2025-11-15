@@ -65,9 +65,11 @@ class _TaxLegalDisclaimerWidgetState
     Color Function(Color, Color) getColor,
   ) {
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.m,
-        vertical: SpacingTokens.l,
+      margin: const EdgeInsets.only(
+        left: SpacingTokens.m,
+        right: SpacingTokens.m,
+        top: SpacingTokens.m,
+        bottom: SpacingTokens.xs,
       ),
       decoration: BoxDecoration(
         color: getColor(
@@ -189,8 +191,8 @@ class _TaxLegalDisclaimerWidgetState
             ),
             controlAffinity: ListTileControlAffinity.leading,
             activeColor: getColor(
-              MinimalistColors.statusAvailableBorder,
-              MinimalistColorsDark.statusAvailableBorder,
+              MinimalistColors.buttonPrimary,
+              MinimalistColorsDark.buttonPrimary,
             ),
             dense: true,
           ),

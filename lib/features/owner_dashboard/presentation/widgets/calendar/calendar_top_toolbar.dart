@@ -63,79 +63,79 @@ class CalendarTopToolbar extends StatelessWidget {
           bottom: BorderSide(color: theme.dividerColor),
         ),
       ),
-      padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 16),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 4 : 16),
       child: Row(
         children: [
-          // Date range with navigation arrows - FIXED: Use Flexible instead of Expanded
-          Flexible(
-            flex: isCompact ? 0 : 1,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Previous period
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: onPreviousPeriod,
-                  tooltip: isWeekView ? 'Prethodni tjedan' : 'Prethodni mjesec',
-                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                  iconSize: isCompact ? 20 : 24,
-                ),
+          // Date range with navigation arrows - OVERFLOW FIX: Shrink arrows in compact
+          // Previous period (smaller in compact mode)
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: onPreviousPeriod,
+            tooltip: isWeekView ? 'Prethodni tjedan' : 'Prethodni mjesec',
+            constraints: BoxConstraints(
+              minWidth: isCompact ? 32 : 40,
+              minHeight: isCompact ? 32 : 40,
+            ),
+            iconSize: isCompact ? 18 : 24,
+            padding: EdgeInsets.zero,
+          ),
 
-                // Date range display (tappable for date picker)
-                Flexible(
-                  child: InkWell(
-                    onTap: onDatePickerTap,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      constraints: isCompact
-                          ? const BoxConstraints(maxWidth: 160)
-                          : null,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isCompact ? 8 : 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              dateRange.toDisplayString(isWeek: isWeekView),
-                              style: (isCompact
-                                  ? theme.textTheme.labelLarge
-                                  : theme.textTheme.titleSmall)?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.primary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          SizedBox(width: isCompact ? 2 : 4),
-                          Icon(
-                            Icons.arrow_drop_down,
-                            size: isCompact ? 16 : 20,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ],
+          // Date range display (flexible, can shrink)
+          Flexible(
+            child: InkWell(
+              onTap: onDatePickerTap,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                constraints: isCompact
+                    ? const BoxConstraints(maxWidth: 120)
+                    : null,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isCompact ? 6 : 12,
+                  vertical: isCompact ? 6 : 8,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        dateRange.toDisplayString(isWeek: isWeekView),
+                        style: (isCompact
+                            ? theme.textTheme.labelSmall
+                            : theme.textTheme.titleSmall)?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.primary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ),
+                    SizedBox(width: isCompact ? 2 : 4),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      size: isCompact ? 14 : 20,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ],
                 ),
-
-                // Next period
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: onNextPeriod,
-                  tooltip: isWeekView ? 'Sljedeći tjedan' : 'Sljedeći mjesec',
-                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                  iconSize: isCompact ? 20 : 24,
-                ),
-              ],
+              ),
             ),
+          ),
+
+          // Next period (smaller in compact mode)
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: onNextPeriod,
+            tooltip: isWeekView ? 'Sljedeći tjedan' : 'Sljedeći mjesec',
+            constraints: BoxConstraints(
+              minWidth: isCompact ? 32 : 40,
+              minHeight: isCompact ? 32 : 40,
+            ),
+            iconSize: isCompact ? 18 : 24,
+            padding: EdgeInsets.zero,
           ),
 
           // Spacing between navigation and actions

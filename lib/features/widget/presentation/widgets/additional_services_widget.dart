@@ -53,8 +53,8 @@ class AdditionalServicesWidget extends ConsumerWidget {
               Icon(
                 Icons.add_circle,
                 color: getColor(
-                  MinimalistColors.statusAvailableBorder,
-                  MinimalistColorsDark.statusAvailableBorder,
+                  MinimalistColors.buttonPrimary,
+                  MinimalistColorsDark.buttonPrimary,
                 ),
               ),
               const SizedBox(width: SpacingTokens.xs),

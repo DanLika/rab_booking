@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/domain/models/widget_mode.dart';
@@ -423,7 +424,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   _buildSectionTitle('Napredne Postavke', Icons.settings_applications),
                   Card(
                     child: ListTile(
-                      leading: const Icon(Icons.tune, color: AppColors.primary),
+                      leading: Icon(Icons.tune, color: context.primaryColor),
                       title: const Text('Email i Pravne Postavke'),
                       subtitle: const Text('Konfigurišite email notifikacije i pravne napomene'),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),

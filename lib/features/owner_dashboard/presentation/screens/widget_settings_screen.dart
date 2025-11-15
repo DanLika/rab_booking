@@ -1425,6 +1425,194 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     );
   }
 
+  // Helper: Theme Mode Selection Card
+  Widget _buildThemeModeCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required String value,
+  }) {
+    final isSelected = _themeMode == value;
+
+    return InkWell(
+      onTap: () => setState(() => _themeMode = value),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+              : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 32,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 15,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withAlpha((0.7 * 255).toInt()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper: Blur Intensity Selection Card
+  Widget _buildBlurIntensityCard({
+    required String label,
+    required String subtitle,
+    required String value,
+  }) {
+    final isSelected = _blurIntensity == value;
+
+    return InkWell(
+      onTap: () => setState(() => _blurIntensity = value),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.5 * 255).toInt())
+              : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 13,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withAlpha((0.6 * 255).toInt()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper: Blur Location Switch Card
+  Widget _buildBlurLocationCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: value
+            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
+            : Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: value
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+          width: value ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: value
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: value ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: 13,
+                    color: value
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withAlpha((0.7 * 255).toInt()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildExternalCalendarSection() {
     return Card(
       child: Padding(
@@ -1594,74 +1782,81 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            // Theme Mode Selector
+            // Theme Mode Selector - Responsive Grid
             const Text(
               'Tema:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
-            const SizedBox(height: 8),
-            ...['light', 'dark', 'system'].map(
-              (mode) => InkWell(
-                onTap: () => setState(() => _themeMode = mode),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
+            const SizedBox(height: 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = constraints.maxWidth >= 600;
+
+                if (isDesktop) {
+                  // Desktop: 3 columns
+                  return Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
                     children: [
-                      Container(
-                        width: 20,
-                        height: 20,
-                        margin: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _themeMode == mode
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurface
-                                      .withAlpha((0.3 * 255).toInt()),
-                            width: 2,
-                          ),
+                      SizedBox(
+                        width: (constraints.maxWidth - 24) / 3,
+                        child: _buildThemeModeCard(
+                          icon: Icons.light_mode,
+                          label: 'Svijetla',
+                          subtitle: 'Light mode',
+                          value: 'light',
                         ),
-                        child: _themeMode == mode
-                            ? Center(
-                                child: Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
-                                ),
-                              )
-                            : null,
                       ),
-                      Icon(
-                        mode == 'light'
-                            ? Icons.light_mode
-                            : mode == 'dark'
-                            ? Icons.dark_mode
-                            : Icons.settings_brightness,
-                        size: 20,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                      SizedBox(
+                        width: (constraints.maxWidth - 24) / 3,
+                        child: _buildThemeModeCard(
+                          icon: Icons.dark_mode,
+                          label: 'Tamna',
+                          subtitle: 'OLED optimized',
+                          value: 'dark',
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        mode == 'light'
-                            ? 'Svijetla Tema'
-                            : mode == 'dark'
-                            ? 'Tamna Tema (OLED Optimizovana)'
-                            : 'Sistem (Auto)',
-                        style: const TextStyle(fontSize: 14),
+                      SizedBox(
+                        width: (constraints.maxWidth - 24) / 3,
+                        child: _buildThemeModeCard(
+                          icon: Icons.settings_brightness,
+                          label: 'Sistem',
+                          subtitle: 'Auto',
+                          value: 'system',
+                        ),
                       ),
                     ],
-                  ),
-                ),
-              ),
+                  );
+                } else {
+                  // Mobile: Vertical
+                  return Column(
+                    children: [
+                      _buildThemeModeCard(
+                        icon: Icons.light_mode,
+                        label: 'Svijetla',
+                        subtitle: 'Light mode',
+                        value: 'light',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildThemeModeCard(
+                        icon: Icons.dark_mode,
+                        label: 'Tamna',
+                        subtitle: 'OLED optimized',
+                        value: 'dark',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildThemeModeCard(
+                        icon: Icons.settings_brightness,
+                        label: 'Sistem',
+                        subtitle: 'Auto',
+                        value: 'system',
+                      ),
+                    ],
+                  );
+                }
+              },
             ),
 
             const SizedBox(height: 24),
@@ -1685,170 +1880,371 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Enable/Disable Blur
-            SwitchListTile(
+            // Enable/Disable Blur - Compact Card
+            _buildCompactSwitchCard(
+              icon: Icons.blur_on,
+              label: 'Omogući Blur Efekte',
+              subtitle: 'Glassmorphism za kartice, modale i app bar',
               value: _blurEnabled,
               onChanged: (value) => setState(() => _blurEnabled = value),
-              title: const Text('Omogući Blur Efekte'),
-              subtitle: const Text(
-                'Glassmorphism za kartice, modale i app bar',
-              ),
-              contentPadding: EdgeInsets.zero,
             ),
 
             // Blur Intensity Selector
             if (_blurEnabled) ...[
-              const SizedBox(height: 12),
-              const Text(
-                'Intenzitet Blur-a:',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              ...['subtle', 'light', 'medium', 'strong', 'extra_strong'].map(
-                (intensity) => InkWell(
-                  onTap: () => setState(() => _blurIntensity = intensity),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHighest
+                      .withAlpha((0.3 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withAlpha((0.3 * 255).toInt()),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Container(
-                          width: 20,
-                          height: 20,
-                          margin: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _blurIntensity == intensity
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.onSurface
-                                        .withAlpha((0.3 * 255).toInt()),
-                              width: 2,
-                            ),
-                          ),
-                          child: _blurIntensity == intensity
-                              ? Center(
-                                  child: Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                                  ),
-                                )
-                              : null,
-                        ),
                         Icon(
-                          Icons.blur_on,
+                          Icons.tune,
                           size: 20,
-                          color: Theme.of(context).colorScheme.onSurface
-                              .withAlpha((0.6 * 255).toInt()),
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          intensity == 'subtle'
-                              ? 'Suptilan (Barely visible)'
-                              : intensity == 'light'
-                              ? 'Lagan (Light frosted)'
-                              : intensity == 'medium'
-                              ? 'Srednji (Standard glass)'
-                              : intensity == 'strong'
-                              ? 'Jak (Prominent glass)'
-                              : 'Ekstra Jak (Maximum blur)',
-                          style: const TextStyle(fontSize: 14),
+                        const Text(
+                          'Intenzitet Blur-a:',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 12),
+
+                    // Blur intensity options - Responsive Grid
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isDesktop = constraints.maxWidth >= 600;
+
+                        final intensities = [
+                          {
+                            'value': 'subtle',
+                            'label': 'Suptilan',
+                            'desc': 'Barely visible'
+                          },
+                          {
+                            'value': 'light',
+                            'label': 'Lagan',
+                            'desc': 'Light frosted'
+                          },
+                          {
+                            'value': 'medium',
+                            'label': 'Srednji',
+                            'desc': 'Standard glass'
+                          },
+                          {
+                            'value': 'strong',
+                            'label': 'Jak',
+                            'desc': 'Prominent glass'
+                          },
+                          {
+                            'value': 'extra_strong',
+                            'label': 'Ekstra Jak',
+                            'desc': 'Maximum blur'
+                          },
+                        ];
+
+                        if (isDesktop) {
+                          // Desktop: 3 columns
+                          return Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: intensities
+                                .map(
+                                  (intensity) => SizedBox(
+                                    width: (constraints.maxWidth - 16) / 3,
+                                    child: _buildBlurIntensityCard(
+                                      label: intensity['label']!,
+                                      subtitle: intensity['desc']!,
+                                      value: intensity['value']!,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          );
+                        } else {
+                          // Mobile: Vertical
+                          return Column(
+                            children: intensities
+                                .map(
+                                  (intensity) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: _buildBlurIntensityCard(
+                                      label: intensity['label']!,
+                                      subtitle: intensity['desc']!,
+                                      value: intensity['value']!,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          );
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 20),
 
-              const SizedBox(height: 16),
-              const Text(
-                'Gdje primijeniti blur:',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
+              // Blur Location Switches - Responsive Grid
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHighest
+                      .withAlpha((0.3 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withAlpha((0.3 * 255).toInt()),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.layers,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Gdje primijeniti blur:',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
 
-              // Card Blur
-              CheckboxListTile(
-                value: _enableCardBlur,
-                onChanged: (value) =>
-                    setState(() => _enableCardBlur = value ?? true),
-                title: const Text('Kartice (Cards)'),
-                subtitle: const Text('Blur za informacijske kartice'),
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-              ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isDesktop = constraints.maxWidth >= 600;
 
-              // App Bar Blur
-              CheckboxListTile(
-                value: _enableAppBarBlur,
-                onChanged: (value) =>
-                    setState(() => _enableAppBarBlur = value ?? true),
-                title: const Text('App Bar'),
-                subtitle: const Text('Blur za gornji navigation bar'),
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-              ),
-
-              // Modal Blur
-              CheckboxListTile(
-                value: _enableModalBlur,
-                onChanged: (value) =>
-                    setState(() => _enableModalBlur = value ?? true),
-                title: const Text('Modale i Dijalozi'),
-                subtitle: const Text('Blur za pop-up prozore'),
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-              ),
-
-              // Overlay Blur
-              CheckboxListTile(
-                value: _enableOverlayBlur,
-                onChanged: (value) =>
-                    setState(() => _enableOverlayBlur = value ?? true),
-                title: const Text('Overlay Pozadine'),
-                subtitle: const Text('Blur za pozadinske overlaye'),
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
+                        if (isDesktop) {
+                          // Desktop: 2x2 grid
+                          return Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildBlurLocationCard(
+                                      icon: Icons.credit_card,
+                                      label: 'Kartice',
+                                      subtitle: 'Info kartice',
+                                      value: _enableCardBlur,
+                                      onChanged: (val) => setState(
+                                        () => _enableCardBlur = val,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: _buildBlurLocationCard(
+                                      icon: Icons.view_agenda,
+                                      label: 'App Bar',
+                                      subtitle: 'Navigation bar',
+                                      value: _enableAppBarBlur,
+                                      onChanged: (val) => setState(
+                                        () => _enableAppBarBlur = val,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildBlurLocationCard(
+                                      icon: Icons.chat_bubble,
+                                      label: 'Modale',
+                                      subtitle: 'Pop-up prozori',
+                                      value: _enableModalBlur,
+                                      onChanged: (val) => setState(
+                                        () => _enableModalBlur = val,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: _buildBlurLocationCard(
+                                      icon: Icons.fullscreen,
+                                      label: 'Overlay',
+                                      subtitle: 'Pozadine',
+                                      value: _enableOverlayBlur,
+                                      onChanged: (val) => setState(
+                                        () => _enableOverlayBlur = val,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        } else {
+                          // Mobile: Vertical
+                          return Column(
+                            children: [
+                              _buildBlurLocationCard(
+                                icon: Icons.credit_card,
+                                label: 'Kartice',
+                                subtitle: 'Info kartice',
+                                value: _enableCardBlur,
+                                onChanged: (val) =>
+                                    setState(() => _enableCardBlur = val),
+                              ),
+                              const SizedBox(height: 12),
+                              _buildBlurLocationCard(
+                                icon: Icons.view_agenda,
+                                label: 'App Bar',
+                                subtitle: 'Navigation bar',
+                                value: _enableAppBarBlur,
+                                onChanged: (val) =>
+                                    setState(() => _enableAppBarBlur = val),
+                              ),
+                              const SizedBox(height: 12),
+                              _buildBlurLocationCard(
+                                icon: Icons.chat_bubble,
+                                label: 'Modale',
+                                subtitle: 'Pop-up prozori',
+                                value: _enableModalBlur,
+                                onChanged: (val) =>
+                                    setState(() => _enableModalBlur = val),
+                              ),
+                              const SizedBox(height: 12),
+                              _buildBlurLocationCard(
+                                icon: Icons.fullscreen,
+                                label: 'Overlay',
+                                subtitle: 'Pozadine',
+                                value: _enableOverlayBlur,
+                                onChanged: (val) =>
+                                    setState(() => _enableOverlayBlur = val),
+                              ),
+                            ],
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             const Divider(),
+            const SizedBox(height: 16),
 
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Primarna Boja'),
-              trailing: GestureDetector(
-                onTap: _showColorPicker,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: _primaryColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
-                    ),
+            // Color Picker Card
+            GestureDetector(
+              onTap: _showColorPicker,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHighest
+                      .withAlpha((0.3 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withAlpha((0.3 * 255).toInt()),
                   ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.palette,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Primarna Boja',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Kliknite za promjenu boje',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: _primaryColor,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withAlpha((0.5 * 255).toInt()),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.edit,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withAlpha((0.5 * 255).toInt()),
+                      size: 20,
+                    ),
+                  ],
                 ),
               ),
             ),
 
+            const SizedBox(height: 16),
             const Divider(),
+            const SizedBox(height: 16),
 
-            SwitchListTile(
+            // Branding Switch - Compact Card
+            _buildCompactSwitchCard(
+              icon: Icons.branding_watermark,
+              label: 'Prikaži Branding',
+              subtitle: '"Powered by BedBooking" badge',
               value: _showBranding,
               onChanged: (value) => setState(() => _showBranding = value),
-              title: const Text('Prikaži Branding'),
-              subtitle: const Text('"Powered by BedBooking" badge'),
-              contentPadding: EdgeInsets.zero,
             ),
           ],
         ),

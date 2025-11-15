@@ -26,6 +26,27 @@ class AdditionalServicesWidget extends ConsumerWidget {
     // Helper function to get theme-aware colors
     Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
 
+    return servicesAsync.when(
+      data: (services) {
+        // Don't show widget at all if no services are available
+        if (services.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return _buildServicesWidget(context, ref, services, isDarkMode, getColor);
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildServicesWidget(
+    BuildContext context,
+    WidgetRef ref,
+    List<AdditionalServiceModel> services,
+    bool isDarkMode,
+    Color Function(Color, Color) getColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
@@ -73,69 +94,27 @@ class AdditionalServicesWidget extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: SpacingTokens.m),
-          servicesAsync.when(
-            data: (services) {
-              if (services.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: SpacingTokens.l,
-                  ),
-                  child: Center(
-                    child: Text(
-                      'No additional services available',
-                      style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeS,
-                        color: getColor(
-                          MinimalistColors.textTertiary,
-                          MinimalistColorsDark.textTertiary,
-                        ),
-                        fontFamily: 'Manrope',
-                      ),
-                    ),
-                  ),
-                );
-              }
-              return Column(
-                children: [
-                  ...services.map(
-                    (service) => _buildServiceItem(
-                      context,
-                      ref,
-                      service,
-                      isDarkMode,
-                      getColor,
-                    ),
-                  ),
-                  const SizedBox(height: SpacingTokens.m),
-                  Divider(
-                    color: getColor(
-                      MinimalistColors.borderDefault,
-                      MinimalistColorsDark.borderDefault,
-                    ),
-                  ),
-                  const SizedBox(height: SpacingTokens.xs),
-                  _buildServicesTotal(ref, services, isDarkMode, getColor),
-                ],
-              );
-            },
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(SpacingTokens.m),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-            error: (error, stack) => Center(
-              child: Text(
-                'Error loading services: $error',
-                style: TextStyle(
-                  color: getColor(
-                    MinimalistColors.error,
-                    MinimalistColorsDark.error,
-                  ),
-                  fontFamily: 'Manrope',
+          Column(
+            children: [
+              ...services.map(
+                (service) => _buildServiceItem(
+                  context,
+                  ref,
+                  service,
+                  isDarkMode,
+                  getColor,
                 ),
               ),
-            ),
+              const SizedBox(height: SpacingTokens.m),
+              Divider(
+                color: getColor(
+                  MinimalistColors.borderDefault,
+                  MinimalistColorsDark.borderDefault,
+                ),
+              ),
+              const SizedBox(height: SpacingTokens.xs),
+              _buildServicesTotal(ref, services, isDarkMode, getColor),
+            ],
           ),
         ],
       ),

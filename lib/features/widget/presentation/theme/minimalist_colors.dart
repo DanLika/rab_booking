@@ -56,10 +56,8 @@ class MinimalistColors {
   // ==================== CALENDAR STATUS COLORS ====================
   // Light mint/pink color scheme for modern booking widget (like reference image)
 
-  /// Available date - light mint green background
-  static const Color statusAvailableBackground = Color(
-    0xFFCCF5E8,
-  ); // Light mint
+  /// Available date - mint green background
+  static const Color statusAvailableBackground = Color(0xFF83e6bf); // #83e6bf
 
   /// Available date - mint green border
   static const Color statusAvailableBorder = Color(0xFF5CD4B4); // Mint green
@@ -67,14 +65,20 @@ class MinimalistColors {
   /// Available date - teal text
   static const Color statusAvailableText = Color(0xFF0D9488); // Teal 600
 
-  /// Booked date - light pink background
-  static const Color statusBookedBackground = Color(0xFFFFD4E5); // Light pink
+  /// Booked date - blue background
+  static const Color statusBookedBackground = Color(0xFF2596be); // #2596be
 
-  /// Booked date - pink border
-  static const Color statusBookedBorder = Color(0xFFFF8FB8); // Pink
+  /// Booked date - blue border
+  static const Color statusBookedBorder = Color(0xFF2596be); // #2596be
 
-  /// Booked date - pink text
-  static const Color statusBookedText = Color(0xFFDB2777); // Pink 600
+  /// Booked date - blue text
+  static const Color statusBookedText = Color(0xFF2596be); // #2596be
+
+  /// Past booked date - light pink background
+  static const Color statusPastReservationBackground = Color(0xFFebdae2); // #ebdae2
+
+  /// Past booked date - border
+  static const Color statusPastReservationBorder = Color(0xFFebdae2); // #ebdae2
 
   /// Pending date - amber background (vibrant)
   static const Color statusPendingBackground = Color(0xFFFDE68A); // Amber 200
@@ -171,8 +175,8 @@ class MinimalistColorsDark {
   /// Off-black - secondary background for subtle contrast
   static const Color backgroundSecondary = Color(0xFF0A0A0A);
 
-  /// Dark grey - tertiary background for disabled/inactive areas
-  static const Color backgroundTertiary = Color(0xFF1A1A1A);
+  /// Pure black - tertiary background (same as primary for clean dark theme)
+  static const Color backgroundTertiary = Color(0xFF000000);
 
   /// Black with shadow - elevated cards
   static const Color backgroundCard = Color(0xFF000000);
@@ -196,17 +200,17 @@ class MinimalistColorsDark {
 
   // ==================== BORDER COLORS ====================
 
-  /// Almost black - very subtle borders
-  static const Color borderLight = Color(0xFF0F0F0F);
+  /// Dark grey - very subtle borders
+  static const Color borderLight = Color(0xFF333333);
 
-  /// Dark grey - default borders
-  static const Color borderDefault = Color(0xFF1F1F1F);
+  /// Light grey - default borders (bright for visibility on black)
+  static const Color borderDefault = Color(0xFFCCCCCC);
 
-  /// Medium grey - hover borders
-  static const Color borderMedium = Color(0xFF333333);
+  /// Lighter grey - hover borders
+  static const Color borderMedium = Color(0xFFDDDDDD);
 
-  /// Light grey - active/strong borders
-  static const Color borderStrong = Color(0xFF999999);
+  /// Almost white - active/strong borders
+  static const Color borderStrong = Color(0xFFEEEEEE);
 
   /// Pure white - emphasis borders (selected, active)
   static const Color borderBlack = Color(0xFFFFFFFF);
@@ -214,23 +218,32 @@ class MinimalistColorsDark {
   // ==================== CALENDAR STATUS COLORS ====================
   // Brighter versions for dark mode (more visible against dark background)
 
-  /// Available date - mint green background (brighter for visibility)
-  static const Color statusAvailableBackground = Color(0xFF2D6B5E);
+  /// Available date - teal background
+  static const Color statusAvailableBackground = Color(0xFF15b8a6); // #15b8a6
 
-  /// Available date - mint green border
-  static const Color statusAvailableBorder = Color(0xFF5CD4B4);
+  /// Available date - teal border
+  static const Color statusAvailableBorder = Color(0xFF15b8a6); // #15b8a6
 
   /// Available date - teal text
-  static const Color statusAvailableText = Color(0xFF5CD4B4);
+  static const Color statusAvailableText = Color(0xFF15b8a6); // #15b8a6
 
-  /// Booked date - pink background (brighter for visibility)
-  static const Color statusBookedBackground = Color(0xFF6B2D47);
+  /// Booked date - red background
+  static const Color statusBookedBackground = Color(0xFFef4444); // #ef4444
 
-  /// Booked date - pink border
-  static const Color statusBookedBorder = Color(0xFFFF8FB8);
+  /// Booked date - red border
+  static const Color statusBookedBorder = Color(0xFFef4444); // #ef4444
 
-  /// Booked date - pink text
-  static const Color statusBookedText = Color(0xFFFF8FB8);
+  /// Booked date - red text
+  static const Color statusBookedText = Color(0xFFef4444); // #ef4444
+
+  /// Past booked date - dark purple background
+  static const Color statusPastReservationBackground = Color(0xFF180710); // #180710
+
+  /// Past booked date - border
+  static const Color statusPastReservationBorder = Color(0xFF180710); // #180710
+
+  /// Day header background - pure black for clean dark theme
+  static const Color backgroundDayHeader = Color(0xFF000000);
 
   /// Pending date - amber background (brighter for visibility)
   static const Color statusPendingBackground = Color(0xFF6B5A2D);
@@ -566,10 +579,10 @@ class MinimalistColorSchemeAdapter implements WidgetColorScheme {
   Color get statusDisabledText => dark ? MinimalistColorsDark.textDisabled : MinimalistColors.textDisabled;
 
   @override
-  Color get statusPastReservationBackground => dark ? MinimalistColorsDark.backgroundTertiary : MinimalistColors.backgroundTertiary;
+  Color get statusPastReservationBackground => dark ? MinimalistColorsDark.statusPastReservationBackground : MinimalistColors.statusPastReservationBackground;
 
   @override
-  Color get statusPastReservationBorder => dark ? MinimalistColorsDark.borderMedium : MinimalistColors.borderMedium;
+  Color get statusPastReservationBorder => dark ? MinimalistColorsDark.statusPastReservationBorder : MinimalistColors.statusPastReservationBorder;
 
   // Buttons
   @override

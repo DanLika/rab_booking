@@ -73,7 +73,7 @@ class RevenueChartWidget extends StatelessWidget {
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                      gradient: AppColors.authGradient,
+                      color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -218,9 +218,9 @@ class _BarChart extends StatelessWidget {
                                 // Dynamic height based on available space
                                 Container(
                                   height: heightRatio * barChartHeight,
-                                  decoration: const BoxDecoration(
-                                    gradient: AppColors.authGradient,
-                                    borderRadius: BorderRadius.vertical(
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    borderRadius: const BorderRadius.vertical(
                                       top: Radius.circular(AppDimensions.radiusS),
                                     ),
                                   ),

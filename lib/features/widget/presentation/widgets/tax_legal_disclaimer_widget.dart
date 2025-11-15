@@ -69,7 +69,6 @@ class _TaxLegalDisclaimerWidgetState
         left: SpacingTokens.m,
         right: SpacingTokens.m,
         top: SpacingTokens.m,
-        bottom: SpacingTokens.xs,
       ),
       decoration: BoxDecoration(
         color: getColor(
@@ -177,6 +176,7 @@ class _TaxLegalDisclaimerWidgetState
               setState(() => _isAccepted = val ?? false);
               widget.onAcceptedChanged(_isAccepted);
             },
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
             title: Text(
               'I understand and accept the tax and legal obligations',
               style: TextStyle(
@@ -193,6 +193,16 @@ class _TaxLegalDisclaimerWidgetState
             activeColor: getColor(
               MinimalistColors.buttonPrimary,
               MinimalistColorsDark.buttonPrimary,
+            ),
+            checkColor: getColor(
+              MinimalistColors.backgroundPrimary,
+              MinimalistColorsDark.backgroundPrimary,
+            ),
+            side: BorderSide(
+              color: getColor(
+                MinimalistColors.borderDefault,
+                MinimalistColorsDark.borderDefault,
+              ),
             ),
             dense: true,
           ),

@@ -226,12 +226,10 @@ class CountryCodeDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 100, // Fixed width for dropdown
-      height: 48, // Match TextFormField height with contentPadding
+      width: 115, // Fixed width for dropdown
+      height: 49, // Match button height (5px smaller than text fields)
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: SpacingTokens.s,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
           color: backgroundColor,
           border: Border.all(

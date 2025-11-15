@@ -63,7 +63,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
   // Guest info form
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController(); // Special requests
@@ -96,7 +97,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _unitId = uri.queryParameters['unit'] ?? '';
 
     // Bug #53: Add listeners to text controllers for auto-save
-    _nameController.addListener(_saveFormData);
+    _firstNameController.addListener(_saveFormData);
+    _lastNameController.addListener(_saveFormData);
     _emailController.addListener(_saveFormData);
     _phoneController.addListener(_saveFormData);
     _notesController.addListener(_saveFormData);
@@ -289,7 +291,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         'propertyId': _propertyId,
         'checkIn': _checkIn?.toIso8601String(),
         'checkOut': _checkOut?.toIso8601String(),
-        'name': _nameController.text,
+        'firstName': _firstNameController.text,
+        'lastName': _lastNameController.text,
         'email': _emailController.text,
         'phone': _phoneController.text,
         'countryCode': _selectedCountry.dialCode,
@@ -341,7 +344,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               _checkOut = DateTime.parse(formData['checkOut'] as String);
             }
 
-            _nameController.text = formData['name'] as String? ?? '';
+            _firstNameController.text = formData['firstName'] as String? ?? '';
+            _lastNameController.text = formData['lastName'] as String? ?? '';
             _emailController.text = formData['email'] as String? ?? '';
             _phoneController.text = formData['phone'] as String? ?? '';
 
@@ -368,7 +372,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             // Show guest form if data was entered
             if (_checkIn != null && _checkOut != null) {
               _showGuestForm =
-                  _nameController.text.isNotEmpty ||
+                  _firstNameController.text.isNotEmpty ||
+                  _lastNameController.text.isNotEmpty ||
                   _emailController.text.isNotEmpty;
             }
           }
@@ -408,12 +413,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   @override
   void dispose() {
     // Bug #53: Remove listeners before disposing
-    _nameController.removeListener(_saveFormData);
+    _firstNameController.removeListener(_saveFormData);
+    _lastNameController.removeListener(_saveFormData);
     _emailController.removeListener(_saveFormData);
     _phoneController.removeListener(_saveFormData);
     _notesController.removeListener(_saveFormData);
 
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
@@ -454,6 +461,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
                 // Show user-friendly error message
                 if (mounted) {
+                  ScaffoldMessenger.of(context).clearSnackBars();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
@@ -610,11 +618,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 ? 16.0 // Tablet
                 : 24.0; // Desktop
 
-            final topPadding = screenWidth < 600
-                ? 8.0 // Mobile
-                : screenWidth < 1024
-                ? 12.0 // Tablet
-                : 16.0; // Desktop
+            final topPadding = 0.0; // Minimal padding for maximum content space
 
             return Stack(
               children: [
@@ -624,7 +628,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     left: horizontalPadding,
                     right: horizontalPadding,
                     top: topPadding,
-                    bottom: topPadding, // Same as top padding
+                    bottom: 0.0, // Minimal bottom padding
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1080,7 +1084,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           } else {
             pillBarWidth = 400.0; // Desktop/Tablet: fixed 400px
           }
-          maxHeight = 160.0; // Fixed height for compact view
+          maxHeight = 270.0; // Fixed height for compact view (updated from 160px)
         }
 
         // Center booking flow on screen (not calendar)
@@ -1093,15 +1097,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         final position = _pillBarPosition ?? defaultPosition;
 
+        // Check if more than 50% of pill bar is off-screen (drag-to-dismiss)
+        final isMoreThanHalfOffScreen =
+            position.dx < -pillBarWidth / 2 || // >50% dragged left
+            position.dy < -maxHeight / 2 || // >50% dragged up
+            position.dx > constraints.maxWidth - pillBarWidth / 2 || // >50% dragged right
+            position.dy > constraints.maxHeight - maxHeight / 2; // >50% dragged down
+
         // Check if pill bar is completely off-screen (dragged beyond bounds)
-        // Hide it if user drags it off the visible area
         final isCompletelyOffScreen =
             position.dx + pillBarWidth < 0 || // Dragged left off-screen
             position.dy + maxHeight < 0 || // Dragged up off-screen
             position.dx > constraints.maxWidth || // Dragged right off-screen
             position.dy > constraints.maxHeight; // Dragged down off-screen
 
-        // If off-screen, hide the pill bar
+        // If completely off-screen, hide the pill bar
         if (isCompletelyOffScreen) {
           return const SizedBox.shrink();
         }
@@ -1126,9 +1136,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               });
             },
             onPanEnd: (_) {
-              // If pill bar was dragged off-screen, reset to default position
-              // This allows users to "reset" the position by dragging it off-screen
-              if (isCompletelyOffScreen) {
+              // Drag-to-dismiss: If >50% of pill bar is off-screen, close it
+              if (isMoreThanHalfOffScreen) {
+                setState(() {
+                  _checkIn = null;
+                  _checkOut = null;
+                  _showGuestForm = false;
+                  _pillBarPosition = null;
+                });
+              } else if (isCompletelyOffScreen) {
+                // If completely off-screen (but <50%), reset to default position
                 setState(() {
                   _pillBarPosition = null; // Reset to center
                 });
@@ -1156,10 +1173,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   child: SingleChildScrollView(
                     padding: EdgeInsets.fromLTRB(
                       12,
-                      10,
+                      8,
                       12,
                       // Bug #46: Add keyboard height to bottom padding
-                      12 + MediaQuery.of(context).viewInsets.bottom,
+                      8 + MediaQuery.of(context).viewInsets.bottom,
                     ),
                     child: _buildPillBarContent(calculation, isDarkMode),
                   ),
@@ -2091,66 +2108,142 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           ),
           const SizedBox(height: SpacingTokens.m),
 
-          // Name field
-          TextFormField(
-            controller: _nameController,
-            maxLength: 100, // Bug #60: Maximum field length validation
-            style: TextStyle(
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
-            ),
-            decoration: InputDecoration(
-              counterText: '', // Hide character counter
-              labelText: 'Full Name *',
-              hintText: 'John Doe',
-              labelStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
+          // Name fields (First Name + Last Name in a Row)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // First Name field
+              Expanded(
+                child: TextFormField(
+                  controller: _firstNameController,
+                  maxLength: 50, // Bug #60: Maximum field length validation
+                  style: const TextStyle(
+                    color: Color(0xFF000000),
+                  ),
+                  decoration: InputDecoration(
+                    counterText: '', // Hide character counter
+                    labelText: 'First Name *',
+                    hintText: 'John',
+                    labelStyle: const TextStyle(
+                      color: Color(0xFF000000),
+                    ),
+                    hintStyle: const TextStyle(
+                      color: Color(0xFF808080),
+                    ),
+                    filled: true,
+                    fillColor: getColor(
+                      MinimalistColors.backgroundSecondary,
+                      MinimalistColorsDark.backgroundSecondary,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(color: Color(0xFF000000)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(color: Color(0xFF000000)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(color: Color(0xFF000000), width: 2),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
+                    ),
+                    errorStyle: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                      height: 1.0,
+                    ),
+                    errorMaxLines: 1,
+                    prefixIcon: const Icon(
+                      Icons.person_outline,
+                      color: Color(0xFF000000),
+                    ),
+                  ),
+                  // Real-time validation
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  validator: NameValidator.validate,
                 ),
               ),
-              hintStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ).withValues(alpha: 0.5),
-              ),
-              filled: true,
-              fillColor: getColor(
-                MinimalistColors.backgroundSecondary,
-                MinimalistColorsDark.backgroundSecondary,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(color: Colors.red, width: 1.5),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(color: Colors.red, width: 2),
-              ),
-              errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
-              prefixIcon: Icon(
-                Icons.person_outline,
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
+              const SizedBox(width: SpacingTokens.m),
+              // Last Name field
+              Expanded(
+                child: TextFormField(
+                  controller: _lastNameController,
+                  maxLength: 50, // Bug #60: Maximum field length validation
+                  style: const TextStyle(
+                    color: Color(0xFF000000),
+                  ),
+                  decoration: InputDecoration(
+                    counterText: '', // Hide character counter
+                    labelText: 'Last Name *',
+                    hintText: 'Doe',
+                    labelStyle: const TextStyle(
+                      color: Color(0xFF000000),
+                    ),
+                    hintStyle: const TextStyle(
+                      color: Color(0xFF808080),
+                    ),
+                    filled: true,
+                    fillColor: getColor(
+                      MinimalistColors.backgroundSecondary,
+                      MinimalistColorsDark.backgroundSecondary,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(color: Color(0xFF000000)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(color: Color(0xFF000000)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(color: Color(0xFF000000), width: 2),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderTokens.circularMedium,
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
+                    ),
+                    errorStyle: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                      height: 1.0,
+                    ),
+                    errorMaxLines: 1,
+                  ),
+                  // Real-time validation
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  validator: NameValidator.validate,
                 ),
               ),
-            ),
-            // Real-time validation
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            validator: NameValidator.validate,
+            ],
           ),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: 12),
 
           // Email field with verification (if required)
           _buildEmailFieldWithVerification(isDarkMode),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: 12),
 
           // Phone field with country code dropdown
           Row(
@@ -2297,13 +2390,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   MinimalistColorsDark.textSecondary,
                 ),
               ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
 
           // Guest count picker
           _buildGuestCountPicker(),
-          const SizedBox(height: SpacingTokens.xl),
+          const SizedBox(height: SpacingTokens.s),
 
           // Confirm booking button (only show if showButton parameter is true)
           if (showButton)
@@ -2516,7 +2610,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               Text(
                 depositAmount,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 12.0,
                   fontWeight: FontWeight.bold,
                   color: getColor(
                     MinimalistColors.textPrimary,
@@ -2533,6 +2627,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   Future<void> _handleConfirmBooking(
     BookingPriceCalculation calculation,
   ) async {
+    final isDarkMode = ref.watch(themeProvider);
+    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+
     // Validate form
     if (!_formKey.currentState!.validate()) {
       return;
@@ -2542,11 +2639,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final requireEmailVerification =
         _widgetSettings?.emailConfig.requireEmailVerification ?? false;
     if (requireEmailVerification && !_emailVerified) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please verify your email before booking'),
-          backgroundColor: MinimalistColors.error,
-          duration: Duration(seconds: 3),
+        SnackBar(
+          content: const Text('Please verify your email before booking'),
+          backgroundColor: getColor(
+            MinimalistColors.error,
+            MinimalistColorsDark.error,
+          ),
+          duration: const Duration(seconds: 3),
         ),
       );
       return;
@@ -2555,11 +2656,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Bug #68: Validate Tax/Legal disclaimer acceptance if required
     final taxConfig = _widgetSettings?.taxLegalConfig;
     if (taxConfig != null && taxConfig.enabled && !_taxLegalAccepted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please accept the tax and legal obligations before booking'),
-          backgroundColor: MinimalistColors.error,
-          duration: Duration(seconds: 5),
+        SnackBar(
+          content: const Text('Please accept the tax and legal obligations before booking'),
+          backgroundColor: getColor(
+            MinimalistColors.error,
+            MinimalistColorsDark.error,
+          ),
+          duration: const Duration(seconds: 5),
         ),
       );
       return;
@@ -2632,10 +2737,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // CRITICAL: Validate dates (check-in must be before check-out)
     if (_checkIn == null || _checkOut == null) {
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select check-in and check-out dates.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Please select check-in and check-out dates.'),
+            backgroundColor: getColor(
+              Colors.red,
+              Colors.red,
+            ),
           ),
         );
       }
@@ -2645,10 +2754,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     if (_checkOut!.isBefore(_checkIn!) ||
         _checkOut!.isAtSameMomentAs(_checkIn!)) {
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Check-out must be after check-in date.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Check-out must be after check-in date.'),
+            backgroundColor: getColor(
+              Colors.red,
+              Colors.red,
+            ),
           ),
         );
       }
@@ -2673,13 +2786,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // If current time is after check-in time, show warning
       if (now.hour >= checkInTimeHour) {
         if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
                 'Same-day check-in: Property check-in time is $checkInTimeHour:00. '
                 'Please note that you may not be able to check in until tomorrow.',
               ),
-              backgroundColor: Colors.orange,
+              backgroundColor: getColor(
+                Colors.orange,
+                Colors.orange,
+              ),
               duration: const Duration(seconds: 7),
               action: SnackBarAction(
                 label: 'Continue',
@@ -2699,12 +2816,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Validate that we have propertyId and ownerId (should already be fetched in initState)
     if (_propertyId == null || _ownerId == null) {
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
+          SnackBar(
+            content: const Text(
               'Property information not loaded. Please refresh the page.',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: getColor(
+              Colors.red,
+              Colors.red,
+            ),
           ),
         );
       }
@@ -2722,13 +2843,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Check if at least one payment method is enabled
       if (!isStripeEnabled && !isBankTransferEnabled && !isPayOnArrivalEnabled) {
         if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
+            SnackBar(
+              content: const Text(
                 'No payment methods are currently available. Please contact the property owner.',
               ),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 5),
+              backgroundColor: getColor(
+                Colors.red,
+                Colors.red,
+              ),
+              duration: const Duration(seconds: 5),
             ),
           );
         }
@@ -2738,13 +2863,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Check if selected payment method is valid
       if (_selectedPaymentMethod == 'stripe' && !isStripeEnabled) {
         if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
+            SnackBar(
+              content: const Text(
                 'Stripe payment is not available. Please select another payment method.',
               ),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 5),
+              backgroundColor: getColor(
+                Colors.red,
+                Colors.red,
+              ),
+              duration: const Duration(seconds: 5),
             ),
           );
         }
@@ -2753,13 +2882,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       if (_selectedPaymentMethod == 'bank_transfer' && !isBankTransferEnabled) {
         if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
+            SnackBar(
+              content: const Text(
                 'Bank transfer is not available. Please select another payment method.',
               ),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 5),
+              backgroundColor: getColor(
+                Colors.red,
+                Colors.red,
+              ),
+              duration: const Duration(seconds: 5),
             ),
           );
         }
@@ -2769,13 +2902,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (_selectedPaymentMethod == 'pay_on_arrival' &&
           !(_widgetSettings?.allowPayOnArrival ?? false)) {
         if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
+            SnackBar(
+              content: const Text(
                 'Pay on arrival is not available. Please select another payment method.',
               ),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 5),
+              backgroundColor: getColor(
+                Colors.red,
+                Colors.red,
+              ),
+              duration: const Duration(seconds: 5),
             ),
           );
         }
@@ -2788,12 +2925,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final maxGuests = _unit?.maxGuests ?? 10;
     if (totalGuests > maxGuests) {
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               'Maximum $maxGuests ${maxGuests == 1 ? 'guest' : 'guests'} allowed for this property. You selected $totalGuests ${totalGuests == 1 ? 'guest' : 'guests'}.',
             ),
-            backgroundColor: MinimalistColors.error,
+            backgroundColor: getColor(
+              MinimalistColors.error,
+              MinimalistColorsDark.error,
+            ),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -2804,11 +2945,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Validate minimum 1 adult required
     if (_adults == 0) {
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('At least 1 adult is required for booking.'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 5),
+          SnackBar(
+            content: const Text('At least 1 adult is required for booking.'),
+            backgroundColor: getColor(
+              Colors.red,
+              Colors.red,
+            ),
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -2835,7 +2980,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           ownerId: _ownerId!,
           checkIn: _checkIn!,
           checkOut: _checkOut!,
-          guestName: _nameController.text.trim(),
+          guestName: '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'.trim(),
           guestEmail: _emailController.text.trim(),
           guestPhone:
               '${_selectedCountry.dialCode} ${_phoneController.text.trim()}',
@@ -2907,7 +3052,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             _checkIn = null;
             _checkOut = null;
             _showGuestForm = false;
-            _nameController.clear();
+            _firstNameController.clear();
+            _lastNameController.clear();
             _emailController.clear();
             _phoneController.clear();
             _adults = 2;
@@ -2956,7 +3102,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         ownerId: _ownerId!,
         checkIn: _checkIn!,
         checkOut: _checkOut!,
-        guestName: _nameController.text.trim(),
+        guestName: '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'.trim(),
         guestEmail: _emailController.text.trim(),
         guestPhone:
             '${_selectedCountry.dialCode} ${_phoneController.text.trim()}',
@@ -3045,7 +3191,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             _checkIn = null;
             _checkOut = null;
             _showGuestForm = false;
-            _nameController.clear();
+            _firstNameController.clear();
+            _lastNameController.clear();
             _emailController.clear();
             _phoneController.clear();
             _adults = 2;
@@ -3092,7 +3239,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             _checkIn = null;
             _checkOut = null;
             _showGuestForm = false;
-            _nameController.clear();
+            _firstNameController.clear();
+            _lastNameController.clear();
             _emailController.clear();
             _phoneController.clear();
             _adults = 2;
@@ -3135,10 +3283,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     } on BookingConflictException catch (e) {
       // Race condition - dates were booked by another user
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.message),
-            backgroundColor: MinimalistColors.error,
+            backgroundColor: getColor(
+              MinimalistColors.error,
+              MinimalistColorsDark.error,
+            ),
             duration: const Duration(seconds: 7),
           ),
         );
@@ -3152,10 +3304,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
     } catch (e) {
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error creating booking: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: getColor(
+              Colors.red,
+              Colors.red,
+            ),
           ),
         );
       }
@@ -3459,6 +3615,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     required String bookingReference,
     required String guestEmail,
   }) async {
+    final isDarkMode = ref.watch(themeProvider);
+    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+
     try {
       final stripeService = ref.read(stripeServiceProvider);
 
@@ -3493,10 +3652,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
     } catch (e) {
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error launching Stripe: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: getColor(
+              Colors.red,
+              Colors.red,
+            ),
           ),
         );
       }
@@ -3510,6 +3673,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     String guestEmail,
     String bookingId,
   ) async {
+    final isDarkMode = ref.watch(themeProvider);
+    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+
     try {
       // Fetch booking from Firestore using booking ID
       final bookingRepo = ref.read(bookingRepositoryProvider);
@@ -3517,13 +3683,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       if (booking == null) {
         if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
+            SnackBar(
+              content: const Text(
                 'Booking not found. Please check your email for confirmation.',
               ),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 5),
+              backgroundColor: getColor(
+                Colors.orange,
+                Colors.orange,
+              ),
+              duration: const Duration(seconds: 5),
             ),
           );
         }
@@ -3612,10 +3782,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
     } catch (e) {
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error loading booking: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: getColor(
+              Colors.red,
+              Colors.red,
+            ),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -3733,34 +3907,41 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         controller: _emailController,
         maxLength: 100, // Bug #60: Maximum field length validation
         keyboardType: TextInputType.emailAddress,
-        style: TextStyle(
-          color: getColor(
-            MinimalistColors.textPrimary,
-            MinimalistColorsDark.textPrimary,
-          ),
+        style: const TextStyle(
+          color: Color(0xFF000000),
         ),
         decoration: InputDecoration(
           counterText: '', // Hide character counter
           labelText: 'Email *',
           hintText: 'john@example.com',
-          labelStyle: TextStyle(
-            color: getColor(
-              MinimalistColors.textSecondary,
-              MinimalistColorsDark.textSecondary,
-            ),
+          labelStyle: const TextStyle(
+            color: Color(0xFF000000),
           ),
-          hintStyle: TextStyle(
-            color: getColor(
-              MinimalistColors.textSecondary,
-              MinimalistColorsDark.textSecondary,
-            ).withValues(alpha: 0.5),
+          hintStyle: const TextStyle(
+            color: Color(0xFF808080),
           ),
           filled: true,
           fillColor: getColor(
             MinimalistColors.backgroundSecondary,
             MinimalistColorsDark.backgroundSecondary,
           ),
-          border: OutlineInputBorder(borderRadius: BorderTokens.circularMedium),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+          isDense: true,
+          border: OutlineInputBorder(
+            borderRadius: BorderTokens.circularMedium,
+            borderSide: const BorderSide(color: Color(0xFF000000)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderTokens.circularMedium,
+            borderSide: const BorderSide(color: Color(0xFF000000)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderTokens.circularMedium,
+            borderSide: const BorderSide(color: Color(0xFF000000), width: 2),
+          ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderTokens.circularMedium,
             borderSide: const BorderSide(color: Colors.red, width: 1.5),
@@ -3769,13 +3950,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             borderRadius: BorderTokens.circularMedium,
             borderSide: const BorderSide(color: Colors.red, width: 2),
           ),
-          errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
-          prefixIcon: Icon(
+          errorStyle: const TextStyle(
+            color: Colors.red,
+            fontSize: 12,
+            height: 1.0,
+          ),
+          errorMaxLines: 1,
+          prefixIcon: const Icon(
             Icons.email_outlined,
-            color: getColor(
-              MinimalistColors.textSecondary,
-              MinimalistColorsDark.textSecondary,
-            ),
+            color: Color(0xFF000000),
           ),
         ),
         autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -3793,44 +3976,47 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Email field with verification button
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: SizedBox(
-            height: 56,
-            child: TextFormField(
-              controller: _emailController,
-              maxLength: 100, // Bug #60: Maximum field length validation
-              keyboardType: TextInputType.emailAddress,
-            style: TextStyle(
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
+          child: TextFormField(
+            controller: _emailController,
+            maxLength: 100, // Bug #60: Maximum field length validation
+            keyboardType: TextInputType.emailAddress,
+            style: const TextStyle(
+              color: Color(0xFF000000),
             ),
             decoration: InputDecoration(
               counterText: '', // Hide character counter
               labelText: 'Email *',
               hintText: 'john@example.com',
-              labelStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
+              labelStyle: const TextStyle(
+                color: Color(0xFF000000),
               ),
-              hintStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ).withValues(alpha: 0.5),
+              hintStyle: const TextStyle(
+                color: Color(0xFF808080),
               ),
               filled: true,
               fillColor: getColor(
                 MinimalistColors.backgroundSecondary,
                 MinimalistColorsDark.backgroundSecondary,
               ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              isDense: true,
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
+                borderSide: const BorderSide(color: Color(0xFF000000)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderTokens.circularMedium,
+                borderSide: const BorderSide(color: Color(0xFF000000)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderTokens.circularMedium,
+                borderSide: const BorderSide(color: Color(0xFF000000), width: 2),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
@@ -3840,13 +4026,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 borderRadius: BorderTokens.circularMedium,
                 borderSide: const BorderSide(color: Colors.red, width: 2),
               ),
-              errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
-              prefixIcon: Icon(
+              errorStyle: const TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+                height: 1.0,
+              ),
+              errorMaxLines: 1,
+              prefixIcon: const Icon(
                 Icons.email_outlined,
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
+                color: Color(0xFF000000),
               ),
             ),
             autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -3861,13 +4049,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             },
           ),
         ),
-        ),
-        const SizedBox(width: 12),
+        const SizedBox(width: SpacingTokens.m),
         // Verification status/button
         if (_emailVerified)
           Container(
-            height: 56,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            width: 49,
+            height: 49,
             decoration: BoxDecoration(
               color: MinimalistColors.success.withValues(alpha: 0.1),
               borderRadius: BorderTokens.circularMedium,
@@ -3883,15 +4070,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           )
         else
           SizedBox(
-            height: 56,
+            width: 49,
+            height: 49,
             child: ElevatedButton(
               onPressed: () {
                 final email = _emailController.text.trim();
                 if (email.isEmpty || !email.contains('@')) {
+                  ScaffoldMessenger.of(context).clearSnackBars();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a valid email first'),
-                      backgroundColor: MinimalistColors.error,
+                    SnackBar(
+                      content: const Text('Please enter a valid email first'),
+                      backgroundColor: getColor(
+                        MinimalistColors.error,
+                        MinimalistColorsDark.error,
+                      ),
                     ),
                   );
                   return;
@@ -3899,15 +4091,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 _openVerificationDialog();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: isDarkMode
-                    ? MinimalistColorsDark.buttonPrimary
-                    : MinimalistColors.buttonPrimary,
-                foregroundColor: isDarkMode
-                    ? MinimalistColorsDark.buttonPrimaryText
-                    : MinimalistColors.buttonPrimaryText,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                minimumSize: const Size(0, 56),
-                maximumSize: const Size(double.infinity, 56),
+                backgroundColor: const Color(0xFF000000),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderTokens.circularMedium,
                 ),

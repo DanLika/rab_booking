@@ -28,15 +28,15 @@ class ActivityItem {
   IconData get icon {
     switch (type) {
       case ActivityType.booking:
-        return Icons.book_online;
+        return Icons.event_available_rounded;
       case ActivityType.review:
-        return Icons.star;
+        return Icons.star_rounded;
       case ActivityType.message:
-        return Icons.message;
+        return Icons.message_rounded;
       case ActivityType.payment:
-        return Icons.euro;
+        return Icons.payments_rounded;
       case ActivityType.cancellation:
-        return Icons.cancel;
+        return Icons.event_busy_rounded;
     }
   }
 

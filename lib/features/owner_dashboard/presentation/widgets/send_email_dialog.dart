@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/booking_model.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/providers/repository_providers.dart';
 
@@ -148,12 +147,14 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.email, color: AppColors.authPrimary),
-          SizedBox(width: 8),
-          Text('Pošalji Email Gostu'),
+          Icon(Icons.email, color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          const Text('Pošalji Email Gostu'),
         ],
       ),
       content: SizedBox(
@@ -169,12 +170,12 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
+                    color: theme.colorScheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.person, color: AppColors.authSecondary),
+                      Icon(Icons.person, color: theme.colorScheme.secondary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(
@@ -182,15 +183,16 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           children: [
                             Text(
                               widget.booking.guestName ?? 'Gost',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSecondaryContainer,
                               ),
                             ),
                             Text(
                               widget.booking.guestEmail ?? '',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade700,
+                                color: theme.colorScheme.onSecondaryContainer.withAlpha((0.7 * 255).toInt()),
                               ),
                             ),
                           ],
@@ -223,9 +225,12 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           _loadTemplate(template);
                         }
                       },
-                      selectedColor: AppColors.authPrimary.withAlpha((0.2 * 255).toInt()),
+                      selectedColor: theme.colorScheme.primaryContainer,
+                      backgroundColor: theme.colorScheme.surface,
                       labelStyle: TextStyle(
-                        color: isSelected ? AppColors.authPrimary : null,
+                        color: isSelected
+                          ? theme.colorScheme.onPrimaryContainer
+                          : theme.colorScheme.onSurface,
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                         fontSize: 12,
                       ),
@@ -278,23 +283,25 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
+                    color: theme.colorScheme.tertiaryContainer,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.authSecondary.withAlpha((0.3 * 255).toInt())),
+                    border: Border.all(
+                      color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
+                    ),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       Icon(Icons.info_outline,
                         size: 20,
-                        color: AppColors.authSecondary,
+                        color: theme.colorScheme.tertiary,
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Email će biti poslan sa vaše registrirane email adrese',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.authSecondary,
+                            color: theme.colorScheme.onTertiaryContainer,
                           ),
                         ),
                       ),
@@ -314,19 +321,21 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
         ElevatedButton.icon(
           onPressed: _isLoading ? null : _sendEmail,
           icon: _isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.colorScheme.onPrimary,
+                    ),
                   ),
                 )
               : const Icon(Icons.send),
           label: Text(_isLoading ? 'Šaljem...' : 'Pošalji Email'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.authPrimary,
-            foregroundColor: Colors.white,
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
           ),
         ),
       ],

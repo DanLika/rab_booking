@@ -6,7 +6,7 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../widgets/price_list_calendar_widget.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../shared/widgets/common_gradient_app_bar.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../../../../core/constants/app_dimensions.dart';
 
@@ -25,6 +25,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   final _basePriceController = TextEditingController();
   bool _isUpdatingBasePrice = false;
   UnitModel? _selectedUnit;
+  bool _hasScheduledAutoSelect = false; // Flag to prevent multiple callbacks
 
   @override
   void initState() {
@@ -32,8 +33,19 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     // If unit is provided directly, use it
     if (widget.unit != null) {
       _selectedUnit = widget.unit;
-      _basePriceController.text = widget.unit!.pricePerNight.toStringAsFixed(0);
+      // Safe handling of pricePerNight to prevent crashes
+      final price = widget.unit!.pricePerNight;
+      _basePriceController.text = _formatPrice(price);
     }
+  }
+
+  /// Safely format price with validation
+  /// Returns '0' for null, NaN, infinity, or negative values
+  String _formatPrice(double? price) {
+    if (price == null || price.isNaN || price.isInfinite || price < 0) {
+      return '0';
+    }
+    return price.toStringAsFixed(0);
   }
 
   @override
@@ -45,7 +57,8 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   void _updateSelectedUnit(UnitModel unit) {
     setState(() {
       _selectedUnit = unit;
-      _basePriceController.text = unit.pricePerNight.toStringAsFixed(0);
+      // Safe handling of pricePerNight to prevent crashes
+      _basePriceController.text = _formatPrice(unit.pricePerNight);
     });
   }
 
@@ -58,39 +71,47 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     if (widget.unit == null) {
       final unitsAsync = ref.watch(allOwnerUnitsProvider);
 
-      return Scaffold(
-        resizeToAvoidBottomInset: true,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        body: SafeArea(
-          child: unitsAsync.when(
-            data: (units) {
-              if (units.isEmpty) {
-                return _buildEmptyState();
-              }
+      return unitsAsync.when(
+        data: (units) {
+          if (units.isEmpty) {
+            return _buildEmptyState();
+          }
 
-              // Auto-select first unit if none selected
-              if (_selectedUnit == null || !units.contains(_selectedUnit)) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    _updateSelectedUnit(units.first);
-                  }
-                });
+          // Auto-select first unit if none selected
+          // Use flag to prevent adding multiple callbacks on rebuild
+          if ((_selectedUnit == null || !units.contains(_selectedUnit)) &&
+              !_hasScheduledAutoSelect) {
+            _hasScheduledAutoSelect = true; // Set flag BEFORE adding callback
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _updateSelectedUnit(units.first);
+                // Reset flag after selection completes
+                _hasScheduledAutoSelect = false;
               }
+            });
+          }
 
-              if (_selectedUnit == null) {
-                return const SizedBox.shrink();
-              }
+          if (_selectedUnit == null) {
+            return const SizedBox.shrink();
+          }
 
-              return _buildMainContent(
-                isMobile: isMobile,
-                units: units,
-                showUnitSelector: true,
-              );
-            },
-            loading: _buildLoadingState,
-            error: (error, stack) => _buildErrorState(error),
-          ),
-        ),
+          return Scaffold(
+            resizeToAvoidBottomInset: true,
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            appBar: CommonAppBar(
+              title: 'Cjenovnik',
+              leadingIcon: Icons.arrow_back,
+              onLeadingIconTap: (context) => Navigator.of(context).pop(),
+            ),
+            body: _buildMainContent(
+              isMobile: isMobile,
+              units: units,
+              showUnitSelector: true,
+            ),
+          );
+        },
+        loading: _buildLoadingState,
+        error: (error, stack) => _buildErrorState(error),
       );
     }
 
@@ -98,12 +119,15 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SafeArea(
-        child: _buildMainContent(
-          isMobile: isMobile,
-          units: null,
-          showUnitSelector: false,
-        ),
+      appBar: CommonAppBar(
+        title: 'Cjenovnik',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+      ),
+      body: _buildMainContent(
+        isMobile: isMobile,
+        units: null,
+        showUnitSelector: false,
       ),
     );
   }
@@ -115,19 +139,12 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   }) {
     if (_selectedUnit == null) return const SizedBox.shrink();
 
-    return CustomScrollView(
-      slivers: [
-        // Gradient header
-        CommonGradientAppBar(
-          title: 'Cjenovnik',
-          leadingIcon: Icons.arrow_back,
-          onLeadingIconTap: (context) => Navigator.of(context).pop(),
-        ),
-
-        // Unit selector (only when accessed from drawer)
-        if (showUnitSelector && units != null)
-          SliverToBoxAdapter(
-            child: Padding(
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Unit selector (only when accessed from drawer)
+          if (showUnitSelector && units != null)
+            Padding(
               padding: EdgeInsets.fromLTRB(
                 isMobile ? 16 : 24,
                 isMobile ? 16 : 20,
@@ -136,11 +153,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
               ),
               child: _buildUnitSelector(units, isMobile),
             ),
-          ),
 
-        // Base price section
-        SliverToBoxAdapter(
-          child: Padding(
+          // Base price section
+          Padding(
             padding: EdgeInsets.fromLTRB(
               isMobile ? 16 : 24,
               isMobile ? 16 : 20,
@@ -149,11 +164,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             ),
             child: _buildBasePriceSection(isMobile),
           ),
-        ),
 
-        // Calendar section
-        SliverToBoxAdapter(
-          child: Padding(
+          // Calendar section
+          Padding(
             padding: EdgeInsets.fromLTRB(
               isMobile ? 16 : 24,
               isMobile ? 8 : 12,
@@ -162,11 +175,11 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             ),
             child: PriceListCalendarWidget(unit: _selectedUnit!),
           ),
-        ),
 
-        // Bottom spacing
-        const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-      ],
+          // Bottom spacing
+          const SizedBox(height: 24),
+        ],
+      ),
     );
   }
 
@@ -218,7 +231,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             const SizedBox(height: 16),
             // Dropdown
             DropdownButtonFormField<UnitModel>(
+              // Safe: null initialValue is acceptable, shows hint until selection
               initialValue: _selectedUnit,
+              hint: const Text('Izaberite jedinicu'), // Shown when null
               decoration: InputDecoration(
                 labelText: 'Jedinica',
                 border: const OutlineInputBorder(),
@@ -250,118 +265,112 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
 
-    return CustomScrollView(
-      slivers: [
-        CommonGradientAppBar(
-          title: 'Cjenovnik',
-          leadingIcon: Icons.arrow_back,
-          onLeadingIconTap: (context) => Navigator.of(context).pop(),
-        ),
-        SliverFillRemaining(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppDimensions.spaceL),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 140,
-                    height: 140,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: theme.colorScheme.primary.withAlpha(
-                        (0.1 * 255).toInt(),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.meeting_room_outlined,
-                      size: 70,
-                      color: theme.colorScheme.primary,
-                    ),
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: CommonAppBar(
+        title: 'Cjenovnik',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.spaceL),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 140,
+                height: 140,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.colorScheme.primary.withAlpha(
+                    (0.1 * 255).toInt(),
                   ),
-                  const SizedBox(height: AppDimensions.spaceL),
-                  Text(
-                    'Nemate dodane jedinice',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: AppDimensions.spaceS),
-                  Text(
-                    'Dodajte jedinicu kako biste mogli upravljati cijenama za vaše smještajne objekte.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: context.textColorSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 3,
-                  ),
-                ],
+                ),
+                child: Icon(
+                  Icons.meeting_room_outlined,
+                  size: 70,
+                  color: theme.colorScheme.primary,
+                ),
               ),
-            ),
+              const SizedBox(height: AppDimensions.spaceL),
+              Text(
+                'Nemate dodane jedinice',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spaceS),
+              Text(
+                'Dodajte jedinicu kako biste mogli upravljati cijenama za vaše smještajne objekte.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: context.textColorSecondary,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 
   Widget _buildLoadingState() {
-    return CustomScrollView(
-      slivers: [
-        CommonGradientAppBar(
-          title: 'Cjenovnik',
-          leadingIcon: Icons.arrow_back,
-          onLeadingIconTap: (context) => Navigator.of(context).pop(),
-        ),
-        const SliverFillRemaining(
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      ],
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: CommonAppBar(
+        title: 'Cjenovnik',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+      ),
+      body: const Center(child: CircularProgressIndicator()),
     );
   }
 
   Widget _buildErrorState(Object error) {
     final theme = Theme.of(context);
 
-    return CustomScrollView(
-      slivers: [
-        CommonGradientAppBar(
-          title: 'Cjenovnik',
-          leadingIcon: Icons.arrow_back,
-          onLeadingIconTap: (context) => Navigator.of(context).pop(),
-        ),
-        SliverFillRemaining(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppDimensions.spaceL),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: theme.colorScheme.error,
-                  ),
-                  const SizedBox(height: AppDimensions.spaceM),
-                  Text(
-                    'Greška pri učitavanju jedinica',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: theme.colorScheme.error,
-                    ),
-                  ),
-                  const SizedBox(height: AppDimensions.spaceXS),
-                  Text(
-                    error.toString(),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: context.textColorSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: CommonAppBar(
+        title: 'Cjenovnik',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.spaceL),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: theme.colorScheme.error,
               ),
-            ),
+              const SizedBox(height: AppDimensions.spaceM),
+              Text(
+                'Greška pri učitavanju jedinica',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spaceXS),
+              Text(
+                error.toString(),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: context.textColorSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 

@@ -70,6 +70,8 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: Builder(
           builder: (context) => IconButton(
             icon: Icon(

@@ -1504,6 +1504,197 @@ lib/core/config/router_owner.dart
 
 ---
 
+### CommonAppBar (Glavni App Bar Komponent)
+
+**Datum: 2025-11-16**
+**Status: ✅ STABILAN - Jedini app bar komponent u aplikaciji**
+
+#### 📋 Svrha
+`CommonAppBar` je GLAVNI i JEDINI app bar komponent koji se koristi kroz cijelu aplikaciju. Pruža konzistentan izgled sa gradient pozadinom, bez blur/scroll efekata.
+
+---
+
+#### 📁 Ključni Fajl
+
+**CommonAppBar**
+```
+lib/shared/widgets/common_app_bar.dart
+```
+**Svrha:** Reusable standard AppBar (non-sliver) za sve screen-e
+**Status:** ✅ Optimizovan - blur/scroll efekti uklonjeni (2025-11-16)
+**Veličina:** 92 linije
+
+**Karakteristike:**
+- ✅ **Simple non-sliver AppBar** - Obični `AppBar` wrapper sa gradient pozadinom
+- ✅ **NO BLUR** - `scrolledUnderElevation: 0` + `surfaceTintColor: Colors.transparent`
+- ✅ **NO SCROLL EFFECTS** - Statički, bez animacija ili collapse-a
+- ✅ **Gradient background** - Container sa LinearGradient
+- ✅ **Customizable** - Title, leading icon, colors, height
+- ✅ **Koristi se u 20+ screen-ova** - Dashboard, Analytics, Profile, Properties, itd.
+
+**Parametri:**
+```dart
+CommonAppBar({
+  required String title,
+  required IconData leadingIcon,
+  required void Function(BuildContext) onLeadingIconTap,
+  List<Color> gradientColors = [0xFF6B4CE6, 0xFF4A90E2], // Purple-Blue
+  Color titleColor = Colors.white,
+  Color iconColor = Colors.white,
+  double height = 56.0,
+})
+```
+
+---
+
+#### 🚫 OBRISANI App Bar Komponenti (2025-11-16)
+
+**1. CommonGradientAppBar** ❌ OBRISAN
+- **Razlog:** SliverAppBar sa BackdropFilter blur efektom tokom scroll-a
+- **Blur logika:** `ImageFilter.blur(sigmaX: collapseRatio * 10, ...)`
+- **Korištenje:** Samo u `unit_pricing_screen.dart`
+- **Izbačeno:** 164 linije koda
+
+**2. PremiumAppBar / PremiumSliverAppBar** ❌ OBRISANO
+- **Razlog:** Dead code - nigdje se nije koristio
+- **Feature-i:** Glass morphism, blur effects, scroll animations
+- **Izbačeno:** 338 linija koda
+
+---
+
+#### 🔧 Refactoring - Unit Pricing Screen (2025-11-16)
+
+**Šta je urađeno:**
+`unit_pricing_screen.dart` je refaktorisan sa `CommonGradientAppBar` na `CommonAppBar`:
+
+**PRIJE:**
+```dart
+CustomScrollView(
+  slivers: [
+    CommonGradientAppBar(  // ❌ Sliver sa blur-om
+      title: 'Cjenovnik',
+      leadingIcon: Icons.arrow_back,
+      onLeadingIconTap: (context) => Navigator.of(context).pop(),
+    ),
+    SliverToBoxAdapter(child: ...),
+    SliverToBoxAdapter(child: ...),
+  ],
+)
+```
+
+**POSLIJE:**
+```dart
+Scaffold(
+  appBar: CommonAppBar(  // ✅ Običan app bar bez blur-a
+    title: 'Cjenovnik',
+    leadingIcon: Icons.arrow_back,
+    onLeadingIconTap: (context) => Navigator.of(context).pop(),
+  ),
+  body: SingleChildScrollView(  // ✅ Obični scroll view
+    child: Column(
+      children: [...],
+    ),
+  ),
+)
+```
+
+**Izmjene:**
+- ✅ Zamijenjen `CustomScrollView` → `Scaffold` + `SingleChildScrollView`
+- ✅ Zamijenjen `CommonGradientAppBar` → `CommonAppBar`
+- ✅ `SliverToBoxAdapter` → `Padding` + `Column` children
+- ✅ Sve 4 build metode refaktorisane (_buildMainContent, _buildEmptyState, _buildLoadingState, _buildErrorState)
+
+---
+
+#### ⚠️ UPOZORENJE - PAŽLJIVO MIJENJATI!
+
+**KADA Claude Code naiđe na app bar-ove:**
+
+1. **PRVO PROČITAJ OVU DOKUMENTACIJU** - Razumij odluke!
+
+2. **KORISTI SAMO CommonAppBar:**
+   - ✅ `CommonAppBar` je JEDINI app bar u aplikaciji
+   - ❌ **NE KREIRAJ** nove sliver/blur/premium app bar komponente
+   - ❌ **NE VRAĆAJ** `CommonGradientAppBar` ili `PremiumAppBar` (OBRISANI!)
+   - ❌ **NE DODAVAJ** blur/scroll efekte u `CommonAppBar`
+
+3. **AKO KORISNIK TRAŽI SLIVER/SCROLL EFEKTE:**
+   - Objasni da su namjerno uklonjeni (2025-11-16)
+   - Pitaj da li je siguran da želi da ih vrati
+   - Upozori da će dodati kompleksnost i maintenance teret
+
+4. **AKO MORAŠ DA MIJENJAJ CommonAppBar:**
+   - ⚠️ **EKSTREMNO OPREZNO** - koristi se u 20+ screen-ova!
+   - Testiraj sa `flutter analyze` ODMAH nakon izmjene
+   - Provjeri da `scrolledUnderElevation: 0` ostane (blokira blur)
+   - Provjeri da `surfaceTintColor: Colors.transparent` ostane (blokira tint)
+   - Testiraj na nekoliko različitih screen-ova (Dashboard, Analytics, Properties)
+
+5. **PRETPOSTAVI DA JE SVE ISPRAVNO:**
+   - ✅ Blur efekti su namjerno uklonjeni
+   - ✅ Sliver app bar-ovi su namjerno uklonjeni
+   - ✅ `CommonAppBar` je dovoljan za sve use case-ove
+   - ✅ 502 linije koda eliminirano (164 + 338)
+   - **Ako nešto izgleda čudno, PITAJ KORISNIKA prije izmjene!**
+
+---
+
+#### 🧪 Kako Testirati Nakon Izmjene
+
+```bash
+# 1. Flutter analyzer
+flutter analyze lib/shared/widgets/common_app_bar.dart
+# Očekivano: 0 issues
+
+# 2. Check usage count
+grep -r "CommonAppBar" lib/features --include="*.dart" | wc -l
+# Očekivano: 20+
+
+# 3. Manual UI test
+# - Otvori bilo koji screen (Dashboard, Analytics, Properties, Profile)
+# - Scroll down → app bar treba ostati isti (bez blur-a, bez tint-a)
+# - Provjeri u light mode → gradient vidljiv
+# - Provjeri u dark mode → gradient vidljiv
+
+# 4. Check that old app bars are deleted
+ls lib/shared/widgets/common_gradient_app_bar.dart 2>/dev/null && echo "ERROR: File still exists!"
+ls lib/shared/widgets/app_bar.dart 2>/dev/null && echo "ERROR: File still exists!"
+# Očekivano: Oba fajla ne postoje
+```
+
+---
+
+#### 📝 Commit History
+
+**2025-11-16:** `refactor: remove blur/sliver app bars, use only CommonAppBar`
+- Dodato `scrolledUnderElevation: 0` + `surfaceTintColor: Colors.transparent` u CommonAppBar
+- Obrisan `common_gradient_app_bar.dart` (164 linije - sliver sa blur-om)
+- Obrisan `app_bar.dart` (338 linija - PremiumAppBar dead code)
+- Refaktorisan `unit_pricing_screen.dart` sa CustomScrollView → Scaffold + SingleChildScrollView
+- Result: 502 linije koda eliminirano, 0 errors, cleaner architecture
+
+---
+
+#### 🎯 TL;DR - Najvažnije
+
+1. **SAMO CommonAppBar** - Jedini app bar komponent u aplikaciji!
+2. **NO BLUR, NO SLIVER** - Namjerno uklonjeno (2025-11-16)!
+3. **NE VRAĆAJ stare app bar-ove** - Obrisani su sa razlogom!
+4. **NE DODAVAJ blur/scroll efekte** - Keep it simple!
+5. **KORISTI SE U 20+ SCREEN-OVA** - Mijenjaj EKSTRA oprezno!
+6. **PRETPOSTAVI DA JE ISPRAVNO** - Arhitekturna odluka, ne bug!
+7. **PITAJ KORISNIKA** - Ako nešto izgleda čudno, pitaj PRIJE nego što mijenjaj!
+
+**Key Stats:**
+- 📏 92 lines - CommonAppBar (jedini preostali)
+- 🗑️ 502 lines - Obrisano (164 + 338)
+- 📱 20+ screens - Koristi CommonAppBar
+- ✅ 0 blur effects - Namjerno
+- ✅ 0 sliver animations - Namjerno
+- 🎨 Simple gradient - Purple-Blue by default
+
+---
+
 ## Budući TODO
 
 _Ovdje dodaj dokumentaciju za druge kritične dijelove projekta..._

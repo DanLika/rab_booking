@@ -31,11 +31,11 @@ import '../../features/owner_dashboard/presentation/screens/notification_setting
 import '../../features/owner_dashboard/presentation/screens/onboarding_welcome_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/onboarding_wizard_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/onboarding_success_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/ical_sync_settings_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/ical_debug_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/stripe_guide_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/guides/ical_guide_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/ical/guides/ical_guide_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/ical/ical_export_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
@@ -104,12 +104,19 @@ class OwnerRoutes {
   static const String widgetSettings = '/owner/widget-settings';
   // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
+  // iCal routes (NEW structure - organized under /ical/)
+  static const String icalImport = '/owner/integrations/ical/import';   // iCal Sync Settings (Import)
+  static const String icalExport = '/owner/integrations/ical/export';   // iCal Export (Debug)
+  static const String icalGuide = '/owner/guides/ical';                 // iCal Guide
+  // DEPRECATED routes - will be removed in future versions
+  @Deprecated('Use icalImport instead')
   static const String icalIntegration = '/owner/integrations/ical';
-  // Debug
+  @Deprecated('Use icalExport instead')
   static const String icalDebug = '/owner/debug/ical';
+  @Deprecated('Use icalGuide instead')
+  static const String guideIcal = '/owner/guides/ical';  // Same path as icalGuide
   // Guides
   static const String guideStripe = '/owner/guides/stripe';
-  static const String guideIcal = '/owner/guides/ical';
   static const String guideEmbedWidget = '/owner/guides/embed-widget';
   static const String guideFaq = '/owner/guides/faq';
   static const String notFound = '/404';
@@ -355,19 +362,19 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.stripeIntegration,
         builder: (context, state) => const StripeConnectSetupScreen(),
       ),
+      // iCal Sync Settings (Import) - NEW
       GoRoute(
-        path: OwnerRoutes.icalIntegration,
+        path: OwnerRoutes.icalImport,
         builder: (context, state) => const IcalSyncSettingsScreen(),
       ),
-
-      // Debug routes
+      // iCal Export (Debug) - NEW
       GoRoute(
-        path: OwnerRoutes.icalDebug,
+        path: OwnerRoutes.icalExport,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>;
           final unit = extra['unit'] as UnitModel;
           final propertyId = extra['propertyId'] as String;
-          return IcalDebugScreen(
+          return IcalExportScreen(
             unit: unit,
             propertyId: propertyId,
           );
@@ -379,8 +386,9 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.guideStripe,
         builder: (context, state) => const StripeGuideScreen(),
       ),
+      // iCal Guide - NEW
       GoRoute(
-        path: OwnerRoutes.guideIcal,
+        path: OwnerRoutes.icalGuide,
         builder: (context, state) => const IcalGuideScreen(),
       ),
       GoRoute(

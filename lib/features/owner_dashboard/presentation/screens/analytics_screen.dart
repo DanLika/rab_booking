@@ -31,7 +31,10 @@ class AnalyticsScreen extends ConsumerWidget {
           _DateRangeSelector(dateRange: dateRange),
           Expanded(
             child: analyticsAsync.when(
-              data: (analytics) => _AnalyticsContent(analytics: analytics),
+              data: (analytics) => _AnalyticsContent(
+                analytics: analytics,
+                dateRange: dateRange,
+              ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => ErrorStateWidget(
                 message: 'Failed to load analytics',
@@ -161,8 +164,12 @@ class _FilterChip extends StatelessWidget {
 
 class _AnalyticsContent extends StatelessWidget {
   final AnalyticsSummary analytics;
+  final DateRangeFilter dateRange;
 
-  const _AnalyticsContent({required this.analytics});
+  const _AnalyticsContent({
+    required this.analytics,
+    required this.dateRange,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +179,10 @@ class _AnalyticsContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Metric Cards
-          _MetricCardsGrid(analytics: analytics),
+          _MetricCardsGrid(
+            analytics: analytics,
+            dateRange: dateRange,
+          ),
           const SizedBox(height: 32),
 
           // Revenue Chart
@@ -191,6 +201,19 @@ class _AnalyticsContent extends StatelessWidget {
           const _SectionTitle(title: 'Top Performing Properties'),
           const SizedBox(height: 16),
           _TopPropertiesList(properties: analytics.topPerformingProperties),
+          const SizedBox(height: 32),
+
+          // Widget Analytics
+          const _SectionTitle(title: 'Widget Performance'),
+          const SizedBox(height: 16),
+          _WidgetAnalyticsCard(
+            widgetBookings: analytics.widgetBookings,
+            totalBookings: analytics.totalBookings,
+            widgetRevenue: analytics.widgetRevenue,
+            totalRevenue: analytics.totalRevenue,
+          ),
+          const SizedBox(height: 16),
+          _BookingsBySourceChart(bookingsBySource: analytics.bookingsBySource),
         ],
       ),
     );
@@ -213,8 +236,19 @@ class _SectionTitle extends StatelessWidget {
 
 class _MetricCardsGrid extends StatelessWidget {
   final AnalyticsSummary analytics;
+  final DateRangeFilter dateRange;
 
-  const _MetricCardsGrid({required this.analytics});
+  const _MetricCardsGrid({
+    required this.analytics,
+    required this.dateRange,
+  });
+
+  String _getRecentPeriodLabel() {
+    final totalDays = dateRange.endDate.difference(dateRange.startDate).inDays;
+    if (totalDays <= 7) return 'Last 7 days';
+    if (totalDays <= 30) return 'Last $totalDays days';
+    return 'Last 30 days';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -245,14 +279,14 @@ class _MetricCardsGrid extends StatelessWidget {
               title: 'Total Revenue',
               value: '\$${analytics.totalRevenue.toStringAsFixed(2)}',
               subtitle:
-                  'Monthly: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
+                  '${_getRecentPeriodLabel()}: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
               icon: Icons.attach_money,
               color: AppColors.success,
             ),
             _MetricCard(
               title: 'Total Bookings',
               value: '${analytics.totalBookings}',
-              subtitle: 'Monthly: ${analytics.monthlyBookings}',
+              subtitle: '${_getRecentPeriodLabel()}: ${analytics.monthlyBookings}',
               icon: Icons.book,
               color: AppColors.info,
             ),
@@ -562,6 +596,277 @@ class _TopPropertiesList extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// Widget Analytics Card - Shows widget performance metrics
+class _WidgetAnalyticsCard extends StatelessWidget {
+  final int widgetBookings;
+  final int totalBookings;
+  final double widgetRevenue;
+  final double totalRevenue;
+
+  const _WidgetAnalyticsCard({
+    required this.widgetBookings,
+    required this.totalBookings,
+    required this.widgetRevenue,
+    required this.totalRevenue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final widgetBookingsPercent = totalBookings > 0
+        ? (widgetBookings / totalBookings * 100).toStringAsFixed(1)
+        : '0.0';
+    final widgetRevenuePercent = totalRevenue > 0
+        ? (widgetRevenue / totalRevenue * 100).toStringAsFixed(1)
+        : '0.0';
+
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Widget Bookings Row
+            Row(
+              children: [
+                const Icon(Icons.widgets, color: AppColors.info, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Widget Bookings',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            '$widgetBookings',
+                            style: AppTypography.h2.copyWith(
+                              color: AppColors.info,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '($widgetBookingsPercent% of total)',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Progress bar for bookings
+            LinearProgressIndicator(
+              value: totalBookings > 0 ? widgetBookings / totalBookings : 0,
+              backgroundColor: AppColors.surface,
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.info),
+              minHeight: 8,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            const SizedBox(height: 24),
+
+            // Widget Revenue Row
+            Row(
+              children: [
+                const Icon(Icons.attach_money, color: AppColors.success, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Widget Revenue',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            '\$${widgetRevenue.toStringAsFixed(2)}',
+                            style: AppTypography.h2.copyWith(
+                              color: AppColors.success,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '($widgetRevenuePercent% of total)',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Progress bar for revenue
+            LinearProgressIndicator(
+              value: totalRevenue > 0 ? widgetRevenue / totalRevenue : 0,
+              backgroundColor: AppColors.surface,
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
+              minHeight: 8,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bookings By Source Chart - Shows distribution of bookings by source
+class _BookingsBySourceChart extends StatelessWidget {
+  final Map<String, int> bookingsBySource;
+
+  const _BookingsBySourceChart({required this.bookingsBySource});
+
+  String _getSourceDisplayName(String source) {
+    switch (source.toLowerCase()) {
+      case 'widget':
+        return 'Widget';
+      case 'admin':
+        return 'Admin';
+      case 'direct':
+        return 'Direct';
+      case 'api':
+        return 'API';
+      case 'booking.com':
+      case 'booking_com':
+        return 'Booking.com';
+      case 'airbnb':
+        return 'Airbnb';
+      case 'ical':
+        return 'iCal Sync';
+      default:
+        return source;
+    }
+  }
+
+  Color _getSourceColor(String source, int index) {
+    switch (source.toLowerCase()) {
+      case 'widget':
+        return AppColors.info;
+      case 'admin':
+        return AppColors.secondary;
+      case 'direct':
+        return AppColors.warning;
+      case 'booking.com':
+      case 'booking_com':
+        return const Color(0xFF003580); // Booking.com blue
+      case 'airbnb':
+        return const Color(0xFFFF5A5F); // Airbnb red
+      default:
+        return AppColors.textSecondary;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (bookingsBySource.isEmpty) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: Text('No source data available')),
+      );
+    }
+
+    final sortedEntries = bookingsBySource.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final totalCount = bookingsBySource.values.fold<int>(0, (sum, count) => sum + count);
+
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Bookings by Source',
+              style: AppTypography.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ...sortedEntries.asMap().entries.map((entry) {
+              final index = entry.key;
+              final sourceEntry = entry.value;
+              final source = sourceEntry.key;
+              final count = sourceEntry.value;
+              final percentage = totalCount > 0
+                  ? (count / totalCount * 100).toStringAsFixed(1)
+                  : '0.0';
+              final color = _getSourceColor(source, index);
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _getSourceDisplayName(source),
+                              style: AppTypography.bodyMedium,
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '$count ($percentage%)',
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: totalCount > 0 ? count / totalCount : 0,
+                      backgroundColor: AppColors.surface,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                      minHeight: 8,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }

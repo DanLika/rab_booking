@@ -18,6 +18,10 @@ class AnalyticsSummary with _$AnalyticsSummary {
     required List<RevenueDataPoint> revenueHistory,
     required List<BookingDataPoint> bookingHistory,
     required List<PropertyPerformance> topPerformingProperties,
+    // Widget Analytics
+    required int widgetBookings,
+    required double widgetRevenue,
+    required Map<String, int> bookingsBySource,
   }) = _AnalyticsSummary;
 
   factory AnalyticsSummary.fromJson(Map<String, dynamic> json) =>

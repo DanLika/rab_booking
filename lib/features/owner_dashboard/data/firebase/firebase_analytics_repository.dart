@@ -26,13 +26,17 @@ class FirebaseAnalyticsRepository {
 
       // Get all units for these properties from subcollections
       final List<String> unitIds = [];
+      final Map<String, String> unitToPropertyMap = {}; // Cache for optimization
       for (final propertyId in propertyIds) {
         final unitsSnapshot = await _firestore
             .collection('properties')
             .doc(propertyId)
             .collection('units')
             .get();
-        unitIds.addAll(unitsSnapshot.docs.map((doc) => doc.id));
+        for (final doc in unitsSnapshot.docs) {
+          unitIds.add(doc.id);
+          unitToPropertyMap[doc.id] = propertyId; // Map unitId -> propertyId
+        }
       }
 
       if (unitIds.isEmpty) {
@@ -66,17 +70,34 @@ class FirebaseAnalyticsRepository {
 
       final totalBookings = bookings.length;
 
-      // Get monthly bookings (last 30 days)
-      final monthStart = DateTime.now().subtract(const Duration(days: 30));
+      // Get monthly bookings (last portion of date range, max 30 days)
+      final totalDays = dateRange.endDate.difference(dateRange.startDate).inDays;
+      final monthlyPeriodDays = totalDays > 30 ? 30 : totalDays;
+      final monthStart = dateRange.endDate.subtract(Duration(days: monthlyPeriodDays));
       final monthlyBookings = bookings.where((b) {
         final checkIn = (b['check_in'] as Timestamp).toDate();
-        return checkIn.isAfter(monthStart);
+        return checkIn.isAfter(monthStart) && checkIn.isBefore(dateRange.endDate.add(const Duration(days: 1)));
       }).toList();
 
       final monthlyRevenue = monthlyBookings.fold<double>(
         0.0,
         (total, b) => total + ((b['total_price'] as num?)?.toDouble() ?? 0.0),
       );
+
+      // Calculate widget analytics metrics
+      final Map<String, int> bookingsBySource = {};
+      int widgetBookings = 0;
+      double widgetRevenue = 0.0;
+
+      for (final booking in bookings) {
+        final source = booking['source'] as String? ?? 'unknown';
+        bookingsBySource[source] = (bookingsBySource[source] ?? 0) + 1;
+
+        if (source == 'widget') {
+          widgetBookings++;
+          widgetRevenue += (booking['total_price'] as num?)?.toDouble() ?? 0.0;
+        }
+      }
 
       // Calculate occupancy rate
       final totalDaysInRange = dateRange.endDate
@@ -131,6 +152,7 @@ class FirebaseAnalyticsRepository {
         propertyIds,
         unitIds,
         dateRange,
+        unitToPropertyMap, // Pass cached map to avoid duplicate queries
       );
 
       // Get total and active properties count
@@ -151,6 +173,10 @@ class FirebaseAnalyticsRepository {
         revenueHistory: revenueHistory,
         bookingHistory: bookingHistory,
         topPerformingProperties: propertyPerformance,
+        // Widget Analytics
+        widgetBookings: widgetBookings,
+        widgetRevenue: widgetRevenue,
+        bookingsBySource: bookingsBySource,
       );
     } catch (e) {
       throw Exception('Failed to fetch analytics: $e');
@@ -226,22 +252,11 @@ class FirebaseAnalyticsRepository {
     List<String> propertyIds,
     List<String> unitIds,
     DateRangeFilter dateRange,
+    Map<String, String> unitToPropertyMap, // Use cached map from parent
   ) async {
     final List<PropertyPerformance> performances = [];
 
-    // Create a map of unitId -> propertyId
-    final Map<String, String> unitToPropertyMap = {};
-    for (final propertyId in propertyIds) {
-      final unitsSnapshot = await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('units')
-          .get();
-
-      for (final doc in unitsSnapshot.docs) {
-        unitToPropertyMap[doc.id] = propertyId;
-      }
-    }
+    // unitToPropertyMap is now passed from parent - no duplicate query needed!
 
     // Get bookings grouped by property
     final Map<String, List<Map<String, dynamic>>> bookingsByProperty = {};
@@ -356,6 +371,10 @@ class FirebaseAnalyticsRepository {
       revenueHistory: [],
       bookingHistory: [],
       topPerformingProperties: [],
+      // Widget Analytics
+      widgetBookings: 0,
+      widgetRevenue: 0.0,
+      bookingsBySource: {},
     );
   }
 }

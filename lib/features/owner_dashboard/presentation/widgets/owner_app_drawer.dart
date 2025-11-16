@@ -101,6 +101,16 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
+            // Analytics
+            _DrawerItem(
+              icon: Icons.analytics_outlined,
+              title: 'Analitika',
+              isSelected: currentRoute == 'analytics',
+              onTap: () => context.go(OwnerRoutes.analytics),
+            ),
+
+            const SizedBox(height: 4),
+
             // Podešavanja Expansion (Widget, Integracije, Konfiguracija)
             _PremiumExpansionTile(
               icon: Icons.settings_outlined,

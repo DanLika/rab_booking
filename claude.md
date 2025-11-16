@@ -2165,6 +2165,419 @@ lib/features/owner_dashboard/presentation/screens/profile_screen.dart
 
 ---
 
+### iCal Integration (Import/Export Screens)
+
+**Datum: 2025-11-16**
+**Status: ✅ STABILAN - Kompletno refaktorisan sa Master-Detail pattern-om**
+
+#### 📋 Svrha
+iCal Integration omogućava owner-ima da:
+- **IMPORT** - Sinhronizuju rezervacije sa vanjskih platformi (Booking.com, Airbnb) putem iCal feed-ova
+- **EXPORT** - Generišu iCal feed URL-ove koje mogu share-ovati sa platformama za blokirane datume
+
+Screen-ovi su organizovani u `/ical/` folder sa Master-Detail pattern-om za bolje UX.
+
+---
+
+#### 📁 Struktura Fajlova
+
+```
+lib/features/owner_dashboard/presentation/screens/ical/
+├── ical_sync_settings_screen.dart    # IMPORT - Sync settings (dodaj/uredi feed-ove)
+├── ical_export_list_screen.dart      # EXPORT MASTER - Lista svih jedinica
+├── ical_export_screen.dart           # EXPORT DETAIL - iCal URL za jedinicu
+└── guides/
+    └── ical_guide_screen.dart        # Uputstvo - Booking.com/Airbnb setup
+```
+
+---
+
+#### 📱 Screen-ovi
+
+**1. iCal Sync Settings Screen (Import)**
+```
+lib/features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart
+```
+**Svrha:** Import rezervacija sa vanjskih platformi (Booking.com, Airbnb)
+**Ruta:** `/owner/integrations/ical/import`
+**Features:**
+- ✅ Lista svih dodanih iCal feed-ova (sa platform info)
+- ✅ "Add iCal Feed" button → otvara dialog za dodavanje
+- ✅ Manual sync button (osvježi sada)
+- ✅ Auto-sync toggle + interval selektor
+- ✅ Horizontal gradient background (primary → authSecondary)
+- ✅ Empty state sa CTA button
+- ✅ Info card sa objašnjenjem
+
+**UI karakteristike:**
+- Gradient: `AppColors.primary` → `AppColors.authSecondary` (left-to-right)
+- Theme-aware: sve boje koriste `theme.colorScheme.*`
+- Responsive: Mobile/Tablet/Desktop adaptive
+
+---
+
+**2. iCal Export List Screen (Master)**
+```
+lib/features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart
+```
+**Svrha:** Lista svih smještajnih jedinica sa "Export" dugmetom
+**Ruta:** `/owner/integrations/ical/export-list`
+**Status:** ✅ NOVO (2025-11-16)
+
+**Features:**
+- ✅ Dinamičko učitavanje jedinica iz Firestore
+  ```dart
+  // Koristi unitRepositoryProvider za fetch
+  for (final property in properties) {
+    final units = await ref.read(unitRepositoryProvider)
+        .fetchUnitsByProperty(property.id);
+  }
+  ```
+- ✅ Card lista sa info za svaku jedinicu:
+  - Unit name (velika font, bold)
+  - Property name (subtitle)
+  - Max guests (ikona + broj)
+  - "Export" button (gradient, upload ikona)
+- ✅ Empty state sa CTA "Dodaj Nekretninu"
+- ✅ Loading state (CircularProgressIndicator)
+- ✅ Horizontal gradient background
+
+**Navigation:**
+```dart
+// Klik na "Export" button:
+context.push(
+  OwnerRoutes.icalExport,
+  extra: {
+    'unit': unit,
+    'propertyId': property.id,
+  },
+);
+```
+
+⚠️ **VAŽNO:**
+- Screen koristi `ConsumerStatefulWidget` sa `initState` za fetch
+- **NE MIJENJAJ** fetch logiku - koristi repository pattern!
+- Provjerava `mounted` prije `setState()` (memory leak zaštita)
+
+---
+
+**3. iCal Export Screen (Detail)**
+```
+lib/features/owner_dashboard/presentation/screens/ical/ical_export_screen.dart
+```
+**Svrha:** Prikazuje iCal feed URL za KONKRETNU jedinicu
+**Ruta:** `/owner/integrations/ical/export` (zahtijeva `extra` params!)
+**Status:** ✅ Refaktorisan sa null-safety (2025-11-16)
+
+**Features:**
+- ✅ Prikazuje iCal URL (read-only polje sa copy dugmetom)
+- ✅ Download .ics file button
+- ✅ Instructions kako koristiti URL
+- ✅ Unit info display (ime, property, max guests)
+
+**Route Builder (KRITIČNO!):**
+```dart
+// router_owner.dart
+GoRoute(
+  path: OwnerRoutes.icalExport,
+  builder: (context, state) {
+    // NULL CHECK - ruta zahtijeva params!
+    if (state.extra == null) {
+      return const NotFoundScreen();
+    }
+
+    final extra = state.extra as Map<String, dynamic>;
+    final unit = extra['unit'] as UnitModel?;
+    final propertyId = extra['propertyId'] as String?;
+
+    if (unit == null || propertyId == null) {
+      return const NotFoundScreen();
+    }
+
+    return IcalExportScreen(unit: unit, propertyId: propertyId);
+  },
+),
+```
+
+⚠️ **KRITIČNO UPOZORENJE:**
+- **NE MIJENJAJ** null check validaciju u route builder-u!
+- **NE OTVORI** ovaj screen direktno sa `context.go()` (nema params!)
+- **UVIJEK** koristi `context.push()` sa `extra` parametrima
+- Ako korisnik direktno pristupa URL-u (bookmark/refresh) → NotFoundScreen ✅
+
+---
+
+**4. iCal Guide Screen (Uputstvo)**
+```
+lib/features/owner_dashboard/presentation/screens/ical/guides/ical_guide_screen.dart
+```
+**Svrha:** Step-by-step uputstvo za Booking.com i Airbnb setup
+**Ruta:** `/owner/guides/ical`
+**Status:** ✅ Refaktorisan (2025-11-16) - 800+ linija
+
+**Features:**
+- ✅ Booking.com import/export uputstva (sa screenshot-ovima)
+- ✅ Airbnb import/export uputstva
+- ✅ FAQ sekcija (20+ pitanja)
+- ✅ Troubleshooting sekcija
+- ✅ Horizontal gradient background
+- ✅ Theme-aware tekstovi (sve helper metode fixed)
+
+**Karakteristike:**
+- 18 `isDark` referenci UKLONJENO (2025-11-16) ✅
+- Sve boje koriste `theme.colorScheme.*` ✅
+- Helper metode: `_buildFAQItem()`, `_buildTroubleshootItem()` ✅
+
+---
+
+#### 🗺️ Navigation Flow
+
+**Drawer → ExpansionTile:**
+```
+📱 iCal Integracija (ExpansionTile)
+   ├─ 📥 Import Rezervacija → /integrations/ical/import
+   └─ 📤 Export Kalendara → /integrations/ical/export-list
+```
+
+**Drawer implementacija:**
+```dart
+// owner_app_drawer.dart
+_PremiumExpansionTile(
+  icon: Icons.sync,
+  title: 'iCal Integracija',
+  isExpanded: currentRoute.startsWith('integrations/ical'),
+  children: [
+    _DrawerSubItem(
+      title: 'Import Rezervacija',
+      subtitle: 'Sync sa booking.com',
+      icon: Icons.download,
+      isSelected: currentRoute == 'integrations/ical/import',
+      onTap: () => context.go(OwnerRoutes.icalImport),
+    ),
+    _DrawerSubItem(
+      title: 'Export Kalendara',
+      subtitle: 'iCal feed URL',
+      icon: Icons.upload,
+      isSelected: currentRoute == 'integrations/ical/export-list',
+      onTap: () => context.go(OwnerRoutes.icalExportList),
+    ),
+  ],
+),
+```
+
+**Export Flow (Master-Detail):**
+```
+1. Drawer → "Export Kalendara"
+   ↓
+2. Export List Screen (lista svih jedinica)
+   ↓
+3. Klik na "Export" button za "Villa Jasko - Unit 1"
+   ↓
+4. Export Screen (iCal URL za tu jedinicu)
+   ↓
+5. Copy URL → paste u Booking.com/Airbnb
+```
+
+---
+
+#### 🔗 Routing Konfiguracija
+
+**Route constants:**
+```dart
+// router_owner.dart
+static const String icalImport = '/owner/integrations/ical/import';
+static const String icalExportList = '/owner/integrations/ical/export-list';
+static const String icalExport = '/owner/integrations/ical/export';
+static const String icalGuide = '/owner/guides/ical';
+
+// DEPRECATED (backward compatibility)
+@Deprecated('Use icalImport instead')
+static const String icalIntegration = '/owner/integrations/ical';
+```
+
+**Route builders:**
+```dart
+// Import screen (no params)
+GoRoute(
+  path: OwnerRoutes.icalImport,
+  builder: (context, state) => const IcalSyncSettingsScreen(),
+),
+
+// Export list screen (no params)
+GoRoute(
+  path: OwnerRoutes.icalExportList,
+  builder: (context, state) => const IcalExportListScreen(),
+),
+
+// Export detail screen (REQUIRES params!)
+GoRoute(
+  path: OwnerRoutes.icalExport,
+  builder: (context, state) {
+    if (state.extra == null) return const NotFoundScreen();
+    // ... null check validacija (vidi gore)
+  },
+),
+
+// Guide screen (no params)
+GoRoute(
+  path: OwnerRoutes.icalGuide,
+  builder: (context, state) => const IcalGuideScreen(),
+),
+```
+
+---
+
+#### 🎨 Design Konzistentnost
+
+**Sve 4 screen-a koriste:**
+- ✅ Horizontal gradient background: `AppColors.primary` → `AppColors.authSecondary`
+- ✅ `CommonAppBar` sa gradient pozadinom
+- ✅ `OwnerAppDrawer` za navigation
+- ✅ Theme-aware tekstovi (`theme.colorScheme.*`)
+- ✅ Responsive padding (mobile vs desktop)
+- ✅ Empty state sa CTA button-ima
+- ✅ Loading state sa CircularProgressIndicator
+
+**Gradient direkcija:**
+```dart
+// Line direction: left → right (horizontal)
+decoration: const BoxDecoration(
+  gradient: LinearGradient(
+    colors: [AppColors.primary, AppColors.authSecondary],
+    // Default: begin: Alignment.centerLeft, end: Alignment.centerRight
+  ),
+)
+```
+
+---
+
+#### ⚠️ UPOZORENJE - PAŽLJIVO MIJENJATI!
+
+**KADA Claude Code naiđe na iCal screens:**
+
+1. **PRVO PROČITAJ OVU DOKUMENTACIJU** - Razumij Master-Detail pattern!
+
+2. **PRETPOSTAVI DA JE SVE ISPRAVNO:**
+   - ✅ Screen-ovi su refaktorisani (2025-11-16)
+   - ✅ Master-Detail pattern radi (Export List → Export Screen)
+   - ✅ Null-safety validation u route builder-u ✅
+   - ✅ Horizontal gradient konzistentan na svim screen-ima ✅
+   - ✅ Theme-aware boje svugdje ✅
+   - ✅ ExpansionTile u drawer-u radi ✅
+   - ✅ flutter analyze: 0 errors
+
+3. **NE MIJENJAJ KOD "NA BRZINU":**
+   - ⚠️ **NE KVARI** null check u `icalExport` route builder-u!
+   - ⚠️ **NE MIJENJAJ** fetch logiku u Export List screen-u
+   - ⚠️ **NE MIJENJAJ** gradient direkciju (mora biti horizontal!)
+   - ⚠️ **NE HARDCODUJ** boje - koristi `theme.colorScheme.*`
+   - ⚠️ **NE OTVORI** Export Screen direktno sa `context.go()` bez params!
+
+4. **MASTER-DETAIL PATTERN:**
+   - Export List Screen = MASTER (lista jedinica, no params)
+   - Export Screen = DETAIL (iCal URL za 1 jedinicu, requires params)
+   - **NE MIJENJAJ** ovaj pattern bez razloga!
+   - Razlog: `context.go()` ne može slati params, mora `context.push()` ✅
+
+5. **DRAWER ExpansionTile:**
+   - Import i Export MORAJU biti u istom ExpansionTile-u
+   - **NE KREIRAJ** duplicate drawer items
+   - **NE KORISTI** `context.go()` za Export Screen direktno (nema params!)
+
+6. **AKO KORISNIK PRIJAVI BUG:**
+   - Prvo pitaj za detalje - šta tačno ne radi?
+   - Provjeri da li je problem u screenu, routing-u ili drawer-u
+   - Provjeri da li je problem sa params validacijom
+   - **Pitaj korisnika PRIJE nego što mijenjaj bilo šta!**
+
+---
+
+#### 🧪 Kako Testirati Nakon Izmjene
+
+```bash
+# 1. Flutter analyzer (svi iCal screen-ovi)
+flutter analyze lib/features/owner_dashboard/presentation/screens/ical/
+# Očekivano: 0 issues
+
+# 2. Check routing
+grep -A10 "icalImport\|icalExport" lib/core/config/router_owner.dart
+# Očekivano: 4 route definicije (import, export-list, export, guide)
+
+# 3. Check drawer
+grep -A20 "iCal Integracija" lib/features/owner_dashboard/presentation/widgets/owner_app_drawer.dart
+# Očekivano: ExpansionTile sa 2 sub-item-a
+
+# 4. Manual UI test - KRITIČNO!
+# Import screen:
+# - Otvori drawer → "iCal Integracija" → "Import Rezervacija"
+# - Provjeri da se otvara sync settings screen
+# - Provjeri gradient (horizontal, left→right)
+
+# Export flow:
+# - Otvori drawer → "iCal Integracija" → "Export Kalendara"
+# - Provjeri da se prikazuje lista jedinica
+# - Klik na "Export" dugme → provjeri da se otvara export screen sa URL-om
+# - Refresh browser → provjeri da prikazuje NotFoundScreen (no params!)
+
+# Guide:
+# - Otvori drawer → "Uputstva" → "iCal Sinhronizacija"
+# - Provjeri da se prikazuje guide sa FAQ/Troubleshooting
+# - Provjeri gradient i theme-aware tekstove
+```
+
+---
+
+#### 📝 Commit History
+
+**2025-11-16:** `feat: add iCal export list screen and improve navigation`
+- Kreiran `ical_export_list_screen.dart` (Master screen)
+- Dodato route `/owner/integrations/ical/export-list`
+- Ažuriran `owner_app_drawer.dart` sa ExpansionTile (Import + Export List)
+- Fixed `ical_export_screen.dart` route sa null-safety validation
+- Applied horizontal gradient na sve 4 iCal screen-a
+- Result: Master-Detail pattern, 0 errors, production-ready
+
+**Refactoring prije toga:**
+- Phase 1-3: Folder reorg, file rename (debug → export)
+- Phase 4: Refaktorisan `ical_guide_screen.dart` (18 isDark removed)
+- Phase 5-7: Router updates, drawer updates, navigation links
+- Bug fixes: Route crash fix, Firestore rules/indexes
+
+---
+
+#### 🎯 TL;DR - Najvažnije
+
+1. **MASTER-DETAIL PATTERN** - Export List (master) → Export Screen (detail)!
+2. **NULL-SAFETY VALIDATION** - Export Screen route builder MORA provjeriti params!
+3. **HORIZONTAL GRADIENT** - Sve 4 screen-a koriste left→right gradient!
+4. **EXPANSION TILE** - Import i Export u istom ExpansionTile-u u drawer-u!
+5. **NE KORISTI context.go()** - Za Export Screen MORA `context.push()` sa params!
+6. **PRETPOSTAVI DA JE ISPRAVNO** - Screen-ovi su temeljno refaktorisani!
+7. **PITAJ KORISNIKA** - Ako nešto izgleda čudno, pitaj PRIJE nego što mijenjaj!
+
+**Key Stats:**
+- 📏 4 screens - Import, Export List, Export Detail, Guide
+- 🗂️ Master-Detail pattern - Export flow
+- 🎨 Horizontal gradient - konzistentan dizajn
+- 🔒 Null-safety - route validation
+- ✅ 0 analyzer issues
+- 🚀 Production-ready
+
+**Navigation struktura:**
+```
+Drawer
+└─ iCal Integracija (ExpansionTile)
+    ├─ Import Rezervacija → Sync Settings Screen
+    └─ Export Kalendara → Export List Screen
+                           └─ Klik "Export" → Export Screen (iCal URL)
+
+Drawer
+└─ Uputstva (ExpansionTile)
+    └─ iCal Sinhronizacija → Guide Screen (FAQ + Troubleshooting)
+```
+
+---
+
 ## Budući TODO
 
 _Ovdje dodaj dokumentaciju za druge kritične dijelove projekta..._

@@ -2578,6 +2578,103 @@ Drawer
 
 ---
 
+## Widget Padding i Custom Title
+
+**Datum: 2025-11-16**
+**Status: ✅ STABILAN - Optimizovano za iframe embedding**
+
+#### 📋 Svrha
+Optimizacija spacing-a booking widgeta za bolju iskoristivost prostora u iframe-u i podrška za custom title umjesto prikaza unit name-a.
+
+---
+
+#### 🔧 Promjene
+
+**1. Vertical Padding Optimizacija**
+```
+lib/features/widget/presentation/screens/booking_widget_screen.dart
+```
+**Linija 608:**
+```dart
+final verticalPadding = horizontalPadding / 2; // Half of horizontal padding
+```
+
+**Linija 615:**
+```dart
+double reservedHeight = topPadding + (verticalPadding * 2); // Include top + bottom padding
+```
+
+**Linija 637-640:**
+```dart
+padding: EdgeInsets.symmetric(
+  horizontal: horizontalPadding,
+  vertical: verticalPadding,
+),
+```
+
+**Opis:**
+- Vertical (top/bottom) padding je sada 50% horizontalnog padding-a
+- Mobile: horizontal 12px, vertical 6px (bilo 12px svuda)
+- Tablet: horizontal 16px, vertical 8px (bilo 16px svuda)
+- Desktop: horizontal 24px, vertical 12px (bilo 24px svuda)
+- Više prostora za kalendar bez scrolling-a na većim ekranima
+
+---
+
+**2. Custom Title Support**
+```
+lib/features/widget/domain/models/widget_settings.dart
+```
+**Linija 453:**
+```dart
+final String? customTitle; // Custom title text to display above calendar
+```
+
+**ThemeOptions Model:**
+- Dodano polje `customTitle` u `ThemeOptions` class
+- Implementirano u `fromMap`, `toMap`, i `copyWith` metodama
+- Owner može postaviti custom title u widget settings
+
+**Widget Display:**
+```
+lib/features/widget/presentation/screens/booking_widget_screen.dart
+```
+**Linija 644-656:**
+- Widget sada prikazuje `_widgetSettings?.themeOptions?.customTitle` umjesto `_unit?.name`
+- Ako custom title nije postavljen, title se ne prikazuje (nema fallback-a na unit name)
+
+---
+
+**3. Logo Code Removal**
+- Uklonjeni svi ostaci logo display koda
+- Widget više ne prikazuje logo
+- Fokus samo na custom title (opcionalno) i kalendar
+
+---
+
+#### ⚠️ Važne Napomene
+
+1. **Responsive Padding Vrijednosti:**
+   - Horizontal padding: 12px (mobile), 16px (tablet), 24px (desktop)
+   - Vertical padding: **TAČNO POLOVINA** horizontal padding-a
+   - Reserved height kalkulacija **MORA** koristiti `(verticalPadding * 2)`
+
+2. **Custom Title:**
+   - Prikazuje se **SAMO** ako je `themeOptions.customTitle` postavljen
+   - Nema fallback-a na unit name
+   - Ako owner ne želi title, jednostavno ne postavlja customTitle
+
+3. **Reserved Height:**
+   - Mora uključiti vertical padding (`verticalPadding * 2`)
+   - Mora uključiti title height ako je custom title postavljen (+60px)
+   - Mora uključiti buffer za iCal warning (+16px)
+
+---
+
+**Commit:** `a77a037` - feat: add custom title support to booking widget
+
+---
+
 ## Budući TODO
 
 _Ovdje dodaj dokumentaciju za druge kritične dijelove projekta..._

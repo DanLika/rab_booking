@@ -85,7 +85,7 @@ class DailyPriceModel with _$DailyPriceModel {
     @JsonKey(name: 'created_at') required DateTime createdAt,
 
     /// Updated at timestamp
-    @TimestampConverter()
+    @NullableTimestampConverter()
     @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _DailyPriceModel;
 

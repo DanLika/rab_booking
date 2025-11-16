@@ -16,6 +16,7 @@ import '../../../../core/services/email_notification_service.dart';
 import '../../../../core/services/ical_generator.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../domain/models/widget_settings.dart';
+import '../utils/snackbar_helper.dart';
 
 /// Simplified Booking Confirmation Screen for Embedded Widget
 /// Shows booking confirmation with reference number and details
@@ -135,26 +136,24 @@ class _BookingConfirmationScreenState
   Future<void> _copyToClipboard() async {
     await Clipboard.setData(ClipboardData(text: widget.bookingReference));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Booking reference copied to clipboard!'),
-          backgroundColor: getColor(
-            MinimalistColors.success,
-            MinimalistColorsDark.success,
-          ),
-          duration: const Duration(seconds: 2),
-        ),
+      final isDarkMode = ref.read(themeProvider);
+      SnackBarHelper.showSuccess(
+        context: context,
+        message: 'Booking reference copied to clipboard!',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 2),
       );
     }
   }
 
   Future<void> _resendConfirmationEmail() async {
+    final isDarkMode = ref.read(themeProvider);
+
     if (widget.booking == null || widget.emailConfig == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to resend email - missing configuration'),
-          backgroundColor: Colors.red,
-        ),
+      SnackBarHelper.showError(
+        context: context,
+        message: 'Unable to resend email - missing configuration',
+        isDarkMode: isDarkMode,
       );
       return;
     }
@@ -162,12 +161,11 @@ class _BookingConfirmationScreenState
     // Bug #15: Check if email service is enabled and configured
     if (widget.emailConfig!.enabled != true ||
         widget.emailConfig!.isConfigured != true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email service is not enabled or configured. Please contact the property owner.'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 4),
-        ),
+      SnackBarHelper.showWarning(
+        context: context,
+        message: 'Email service is not enabled or configured. Please contact the property owner.',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 4),
       );
       return;
     }
@@ -198,12 +196,11 @@ class _BookingConfirmationScreenState
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Confirmation email sent successfully!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
+        SnackBarHelper.showSuccess(
+          context: context,
+          message: 'Confirmation email sent successfully!',
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 3),
         );
       }
     } catch (e) {
@@ -212,12 +209,11 @@ class _BookingConfirmationScreenState
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send email: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Failed to send email: $e',
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 5),
         );
       }
     }
@@ -248,28 +244,23 @@ class _BookingConfirmationScreenState
 
       // Success feedback
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Calendar event downloaded! Check your downloads folder.',
-            ),
-            backgroundColor: getColor(
-              MinimalistColors.statusAvailableBorder,
-              MinimalistColorsDark.statusAvailableBorder,
-            ),
-            duration: const Duration(seconds: 3),
-          ),
+        final isDarkMode = ref.read(themeProvider);
+        SnackBarHelper.showSuccess(
+          context: context,
+          message: 'Calendar event downloaded! Check your downloads folder.',
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 3),
         );
       }
     } catch (e) {
       // Error handling
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to generate calendar file: $e'),
-            backgroundColor: MinimalistColors.error,
-            duration: const Duration(seconds: 5),
-          ),
+        final isDarkMode = ref.read(themeProvider);
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Failed to generate calendar file: $e',
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 5),
         );
       }
     } finally {
@@ -1473,15 +1464,12 @@ class _BookingConfirmationScreenState
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: value));
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('$label copied to clipboard'),
-                          backgroundColor: getColor(
-                            MinimalistColors.statusAvailableBorder,
-                            MinimalistColorsDark.statusAvailableBorder,
-                          ),
-                          duration: const Duration(seconds: 2),
-                        ),
+                      final isDarkMode = ref.read(themeProvider);
+                      SnackBarHelper.showSuccess(
+                        context: context,
+                        message: '$label copied to clipboard',
+                        isDarkMode: isDarkMode,
+                        duration: const Duration(seconds: 2),
                       );
                     }
                   },

@@ -650,7 +650,7 @@ class _WidgetAdvancedSettingsScreenState
 
                         if (unit != null && mounted) {
                           await context.push(
-                            OwnerRoutes.icalDebug,
+                            OwnerRoutes.icalExport,
                             extra: {
                               'unit': unit,
                               'propertyId': widget.propertyId,

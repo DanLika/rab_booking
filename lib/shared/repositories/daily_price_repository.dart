@@ -48,6 +48,15 @@ abstract class DailyPriceRepository {
     required DailyPriceModel modelTemplate,
   });
 
+  /// Bulk PARTIAL update - merges fields without overwriting existing data
+  /// Only updates fields that are explicitly set in partialData
+  /// Example: To only update 'available' field, pass {'available': true}
+  Future<List<DailyPriceModel>> bulkPartialUpdate({
+    required String unitId,
+    required List<DateTime> dates,
+    required Map<String, dynamic> partialData,
+  });
+
   /// Delete price for specific date (revert to base price)
   Future<void> deletePriceForDate({
     required String unitId,

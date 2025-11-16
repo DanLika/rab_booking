@@ -368,12 +368,34 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const IcalSyncSettingsScreen(),
       ),
       // iCal Export (Debug) - NEW
+      // NOTE: This route requires 'extra' params (unit, propertyId)
+      // It should only be accessed via context.push() from Widget Settings
       GoRoute(
         path: OwnerRoutes.icalExport,
         builder: (context, state) {
+          // Handle missing extra params (direct navigation)
+          if (state.extra == null) {
+            LoggingService.log(
+              'icalExport: Missing required params, redirecting to widget settings',
+              tag: 'ROUTER',
+            );
+            // Redirect to widget settings list instead of crashing
+            return const NotFoundScreen();
+          }
+
           final extra = state.extra as Map<String, dynamic>;
-          final unit = extra['unit'] as UnitModel;
-          final propertyId = extra['propertyId'] as String;
+          final unit = extra['unit'] as UnitModel?;
+          final propertyId = extra['propertyId'] as String?;
+
+          // Validate required params
+          if (unit == null || propertyId == null) {
+            LoggingService.log(
+              'icalExport: Invalid params, redirecting',
+              tag: 'ROUTER',
+            );
+            return const NotFoundScreen();
+          }
+
           return IcalExportScreen(
             unit: unit,
             propertyId: propertyId,

@@ -111,6 +111,16 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
+            // iCal Sinhronizacija (Import)
+            _DrawerItem(
+              icon: Icons.sync,
+              title: 'iCal Sinhronizacija',
+              isSelected: currentRoute == 'integrations/ical/import',
+              onTap: () => context.go(OwnerRoutes.icalImport),
+            ),
+
+            const SizedBox(height: 4),
+
             // Podešavanja Expansion (Widget, Integracije, Konfiguracija)
             _PremiumExpansionTile(
               icon: Icons.settings_outlined,
@@ -139,13 +149,6 @@ class OwnerAppDrawer extends ConsumerWidget {
                   isSelected: currentRoute == 'integrations/stripe',
                   onTap: () => context.go(OwnerRoutes.stripeIntegration),
                 ),
-                _DrawerSubItem(
-                  title: 'iCal Sinhronizacija',
-                  subtitle: 'Booking.com, Airbnb...',
-                  icon: Icons.sync,
-                  isSelected: currentRoute == 'integrations/ical',
-                  onTap: () => context.go(OwnerRoutes.icalIntegration),
-                ),
 
                 // KONFIGURACIJA Section
                 const _DrawerSectionDivider(label: 'KONFIGURACIJA'),
@@ -165,6 +168,13 @@ class OwnerAppDrawer extends ConsumerWidget {
               title: 'Uputstva',
               isExpanded: currentRoute.startsWith('guides'),
               children: [
+                _DrawerSubItem(
+                  title: 'iCal Sinhronizacija',
+                  subtitle: 'Import/Export uputstvo',
+                  icon: Icons.sync,
+                  isSelected: currentRoute == 'guides/ical',
+                  onTap: () => context.go(OwnerRoutes.icalGuide),
+                ),
                 _DrawerSubItem(
                   title: 'Embed Widget',
                   subtitle: 'Dodavanje na sajt',

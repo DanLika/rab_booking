@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -66,16 +68,41 @@ class _AdditionalServicesScreenState
 
     if (confirmed != true || !mounted) return;
 
+    // Show loading dialog
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Deleting service...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
     try {
       await ref.read(additionalServicesRepositoryProvider).delete(service.id);
 
       if (mounted) {
+        Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Service deleted successfully')),
         );
       }
     } catch (e) {
       if (mounted) {
+        Navigator.pop(context); // Close loading dialog
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           e,
@@ -547,7 +574,7 @@ class _AddEditServiceDialogState extends ConsumerState<_AddEditServiceDialog> {
       text: service?.descriptionEn ?? '',
     );
     _priceController = TextEditingController(
-      text: service?.price.toStringAsFixed(2) ?? '',
+      text: service != null ? service.price.toStringAsFixed(2) : '',
     );
     _maxQuantityController = TextEditingController(
       text: service?.maxQuantity?.toString() ?? '',
@@ -567,6 +594,86 @@ class _AddEditServiceDialogState extends ConsumerState<_AddEditServiceDialog> {
     _priceController.dispose();
     _maxQuantityController.dispose();
     super.dispose();
+  }
+
+  /// Get available pricing units based on service type
+  /// This ensures logical consistency between service type and pricing model
+  List<DropdownMenuItem<String>> _getAvailablePricingUnits() {
+    switch (_selectedServiceType) {
+      case 'parking':
+        // Parking is typically per booking or per night
+        return const [
+          DropdownMenuItem(value: 'per_booking', child: Text('Per Booking')),
+          DropdownMenuItem(value: 'per_night', child: Text('Per Night')),
+        ];
+      case 'breakfast':
+        // Breakfast is typically per person per night or per person
+        return const [
+          DropdownMenuItem(value: 'per_person', child: Text('Per Person')),
+          DropdownMenuItem(
+            value: 'per_night',
+            child: Text('Per Night (total)'),
+          ),
+        ];
+      case 'late_checkin':
+      case 'early_checkout':
+        // Check-in/out modifications are one-time fees
+        return const [
+          DropdownMenuItem(value: 'per_booking', child: Text('Per Booking')),
+        ];
+      case 'transfer':
+        // Transfers are typically per booking
+        return const [
+          DropdownMenuItem(value: 'per_booking', child: Text('Per Booking')),
+        ];
+      case 'cleaning':
+        // Cleaning can be per booking or per night (daily cleaning)
+        return const [
+          DropdownMenuItem(value: 'per_booking', child: Text('Per Booking')),
+          DropdownMenuItem(value: 'per_night', child: Text('Per Night')),
+        ];
+      case 'baby_cot':
+        // Baby cot is typically per item per night or per booking
+        return const [
+          DropdownMenuItem(value: 'per_booking', child: Text('Per Booking')),
+          DropdownMenuItem(value: 'per_night', child: Text('Per Night')),
+          DropdownMenuItem(value: 'per_item', child: Text('Per Item')),
+        ];
+      case 'pet_fee':
+        // Pet fee can be per booking or per pet
+        return const [
+          DropdownMenuItem(value: 'per_booking', child: Text('Per Booking')),
+          DropdownMenuItem(value: 'per_item', child: Text('Per Pet')),
+        ];
+      case 'other':
+      default:
+        // For other services, allow all options
+        return const [
+          DropdownMenuItem(value: 'per_booking', child: Text('Per Booking')),
+          DropdownMenuItem(value: 'per_night', child: Text('Per Night')),
+          DropdownMenuItem(value: 'per_person', child: Text('Per Person')),
+          DropdownMenuItem(value: 'per_item', child: Text('Per Item')),
+        ];
+    }
+  }
+
+  /// Validate and adjust pricing unit when service type changes
+  void _onServiceTypeChanged(String? newServiceType) {
+    if (newServiceType == null) return;
+
+    setState(() {
+      _selectedServiceType = newServiceType;
+
+      // Check if current pricing unit is valid for new service type
+      final availableUnits = _getAvailablePricingUnits();
+      final isCurrentUnitAvailable = availableUnits
+          .any((item) => item.value == _selectedPricingUnit);
+
+      // If current pricing unit is not available, reset to first available
+      if (!isCurrentUnitAvailable) {
+        _selectedPricingUnit = availableUnits.first.value!;
+      }
+    });
   }
 
   Future<void> _save() async {
@@ -634,8 +741,6 @@ class _AddEditServiceDialogState extends ConsumerState<_AddEditServiceDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Dialog(
       child: Container(
         constraints: const BoxConstraints(maxWidth: 600),
@@ -740,8 +845,111 @@ class _AddEditServiceDialogState extends ConsumerState<_AddEditServiceDialog> {
                     ),
                     DropdownMenuItem(value: 'other', child: Text('Other')),
                   ],
+                  onChanged: _onServiceTypeChanged,
+                ),
+                const SizedBox(height: 16),
+                // Icon Selector
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedIcon ?? 'add_circle',
+                  decoration: const InputDecoration(
+                    labelText: 'Icon',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.palette),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'local_parking',
+                      child: Row(
+                        children: [
+                          Icon(Icons.local_parking, size: 20),
+                          SizedBox(width: 8),
+                          Text('Parking'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'restaurant',
+                      child: Row(
+                        children: [
+                          Icon(Icons.restaurant, size: 20),
+                          SizedBox(width: 8),
+                          Text('Restaurant'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'access_time',
+                      child: Row(
+                        children: [
+                          Icon(Icons.access_time, size: 20),
+                          SizedBox(width: 8),
+                          Text('Clock'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'exit_to_app',
+                      child: Row(
+                        children: [
+                          Icon(Icons.exit_to_app, size: 20),
+                          SizedBox(width: 8),
+                          Text('Exit'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'cleaning_services',
+                      child: Row(
+                        children: [
+                          Icon(Icons.cleaning_services, size: 20),
+                          SizedBox(width: 8),
+                          Text('Cleaning'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'child_care',
+                      child: Row(
+                        children: [
+                          Icon(Icons.child_care, size: 20),
+                          SizedBox(width: 8),
+                          Text('Baby Cot'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'pets',
+                      child: Row(
+                        children: [
+                          Icon(Icons.pets, size: 20),
+                          SizedBox(width: 8),
+                          Text('Pets'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'local_taxi',
+                      child: Row(
+                        children: [
+                          Icon(Icons.local_taxi, size: 20),
+                          SizedBox(width: 8),
+                          Text('Taxi/Transfer'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'add_circle',
+                      child: Row(
+                        children: [
+                          Icon(Icons.add_circle, size: 20),
+                          SizedBox(width: 8),
+                          Text('Default'),
+                        ],
+                      ),
+                    ),
+                  ],
                   onChanged: (value) {
-                    setState(() => _selectedServiceType = value!);
+                    setState(() => _selectedIcon = value);
                   },
                 ),
                 const SizedBox(height: 16),
@@ -784,24 +992,7 @@ class _AddEditServiceDialogState extends ConsumerState<_AddEditServiceDialog> {
                           labelText: 'Pricing Unit *',
                           border: OutlineInputBorder(),
                         ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'per_booking',
-                            child: Text('Per Booking'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'per_night',
-                            child: Text('Per Night'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'per_person',
-                            child: Text('Per Person'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'per_item',
-                            child: Text('Per Item'),
-                          ),
-                        ],
+                        items: _getAvailablePricingUnits(),
                         onChanged: (value) {
                           setState(() => _selectedPricingUnit = value!);
                         },
@@ -821,6 +1012,20 @@ class _AddEditServiceDialogState extends ConsumerState<_AddEditServiceDialog> {
                   ),
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (value) {
+                    // Allow empty (optional field)
+                    if (value == null || value.trim().isEmpty) {
+                      return null;
+                    }
+
+                    final qty = int.tryParse(value);
+                    // Validate > 0
+                    if (qty == null || qty <= 0) {
+                      return 'Max quantity must be greater than 0';
+                    }
+
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 24),
                 // Actions

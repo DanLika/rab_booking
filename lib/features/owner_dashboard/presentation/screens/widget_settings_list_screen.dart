@@ -230,27 +230,29 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                 // Units List - Using responsive SliverGrid for better layout
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: LayoutBuilder(
+                  sliver: SliverLayoutBuilder(
                     builder: (context, constraints) {
                       // Calculate number of columns based on screen width
+                      // SliverConstraints uses crossAxisExtent instead of maxWidth
+                      final width = constraints.crossAxisExtent;
                       int crossAxisCount;
                       double childAspectRatio;
                       double crossAxisSpacing;
                       double mainAxisSpacing;
 
-                      if (constraints.maxWidth >= 1200) {
+                      if (width >= 1200) {
                         // Desktop: 3 columns
                         crossAxisCount = 3;
                         childAspectRatio = 0.75;
                         crossAxisSpacing = 16;
                         mainAxisSpacing = 16;
-                      } else if (constraints.maxWidth >= 800) {
+                      } else if (width >= 800) {
                         // Tablet landscape: 2 columns
                         crossAxisCount = 2;
                         childAspectRatio = 0.75;
                         crossAxisSpacing = 16;
                         mainAxisSpacing = 16;
-                      } else if (constraints.maxWidth >= 600) {
+                      } else if (width >= 600) {
                         // Tablet portrait: 2 columns
                         crossAxisCount = 2;
                         childAspectRatio = 0.72;

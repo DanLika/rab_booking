@@ -2058,6 +2058,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Confirm button
         SizedBox(
           width: double.infinity,
+          height: 44,
           child: ElevatedButton(
             onPressed: _isProcessing
                 ? null
@@ -2073,7 +2074,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               ),
               padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderTokens.circularRounded,
+                borderRadius: BorderTokens.circularMedium,
               ),
             ),
             child: _isProcessing
@@ -2488,6 +2489,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           if (showButton)
             SizedBox(
               width: double.infinity,
+              height: 44,
               child: ElevatedButton(
                 onPressed: _isProcessing
                     ? null
@@ -2498,7 +2500,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     vertical: SpacingTokens.m,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderTokens.circularRounded,
+                    borderRadius: BorderTokens.circularMedium,
                   ),
                 ),
                 child: _isProcessing

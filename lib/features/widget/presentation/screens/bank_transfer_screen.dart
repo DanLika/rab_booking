@@ -9,6 +9,7 @@ import '../theme/minimalist_colors.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../utils/snackbar_helper.dart';
 
 /// Modern Bank Transfer Instructions Screen
 /// Displays owner's actual bank details with responsive design
@@ -454,15 +455,11 @@ class BankTransferScreen extends ConsumerWidget {
                   ),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: bookingReference));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Referentni broj kopiran'),
-                        backgroundColor: getColor(
-                          MinimalistColors.success,
-                          MinimalistColorsDark.success,
-                        ),
-                        duration: const Duration(seconds: 2),
-                      ),
+                    SnackBarHelper.showSuccess(
+                      context: context,
+                      message: 'Referentni broj kopiran',
+                      isDarkMode: isDarkMode,
+                      duration: const Duration(seconds: 2),
                     );
                   },
                   tooltip: 'Kopiraj',
@@ -933,15 +930,11 @@ class BankTransferScreen extends ConsumerWidget {
             ),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: value));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('$label kopiran'),
-                  backgroundColor: getColor(
-                    MinimalistColors.success,
-                    MinimalistColorsDark.success,
-                  ),
-                  duration: const Duration(seconds: 2),
-                ),
+              SnackBarHelper.showSuccess(
+                context: context,
+                message: '$label kopiran',
+                isDarkMode: isDarkMode,
+                duration: const Duration(seconds: 2),
               );
             },
             tooltip: 'Kopiraj',

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -51,7 +52,7 @@ class _BookingLookupScreenState extends ConsumerState<BookingLookupScreen> {
 
       if (mounted) {
         // Navigate to booking details screen
-        context.push('/view', extra: booking);
+        unawaited(context.push('/view', extra: booking));
       }
     } catch (e) {
       setState(() {

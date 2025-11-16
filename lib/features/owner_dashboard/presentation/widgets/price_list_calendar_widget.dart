@@ -30,10 +30,15 @@ class _PriceListCalendarWidgetState
   final Set<DateTime> _selectedDays = {};
   bool _bulkEditMode = false;
 
+  // Cached month list to avoid regenerating on every build
+  late final List<DateTime> _cachedMonthList;
+
   @override
   void initState() {
     super.initState();
     _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+    // Generate month list once during initialization
+    _cachedMonthList = _generateMonthList();
   }
 
   @override
@@ -108,6 +113,7 @@ class _PriceListCalendarWidgetState
                   children: [
                     // Month selector
                     DropdownButtonFormField<DateTime>(
+                      // Safe: _selectedMonth is initialized in initState() before first build
                       initialValue: _selectedMonth,
                       decoration: InputDecoration(
                         labelText: 'Odaberi mjesec',
@@ -120,7 +126,7 @@ class _PriceListCalendarWidgetState
                           vertical: 12,
                         ),
                       ),
-                      items: _generateMonthList().map((month) {
+                      items: _cachedMonthList.map((month) {
                         return DropdownMenuItem(
                           value: month,
                           child: Text(DateFormat('MMMM yyyy').format(month)),
@@ -173,6 +179,7 @@ class _PriceListCalendarWidgetState
                     // Month selector
                     Expanded(
                       child: DropdownButtonFormField<DateTime>(
+                        // Safe: _selectedMonth is initialized in initState() before first build
                         initialValue: _selectedMonth,
                         decoration: InputDecoration(
                           labelText: 'Odaberi mjesec',
@@ -181,7 +188,7 @@ class _PriceListCalendarWidgetState
                           ),
                           prefixIcon: const Icon(Icons.calendar_month),
                         ),
-                        items: _generateMonthList().map((month) {
+                        items: _cachedMonthList.map((month) {
                           return DropdownMenuItem(
                             value: month,
                             child: Text(DateFormat('MMMM yyyy').format(month)),
@@ -479,12 +486,18 @@ class _PriceListCalendarWidgetState
     final priceData = priceMap[dateKey];
     final hasPrice = priceData != null;
     final isAvailable = priceData?.available ?? true;
-    final hasWeekendPrice = priceData?.weekendPrice != null;
+
+    // Extract prices safely without null assertions
+    final weekendPrice = priceData?.weekendPrice;
+    final regularPrice = priceData?.price;
 
     // IMPORTANT: Use weekend price on weekends if it's set, otherwise use base price
-    final price = (hasWeekendPrice && isWeekend)
-        ? priceData!.weekendPrice!
-        : (priceData?.price ?? widget.unit.pricePerNight);
+    // Use safe null-aware operators instead of dangerous double assertion (!!)
+    final price = (isWeekend && weekendPrice != null)
+        ? weekendPrice
+        : (regularPrice ?? widget.unit.pricePerNight);
+
+    final hasWeekendPrice = weekendPrice != null;
 
     final blockCheckIn = priceData?.blockCheckIn ?? false;
     final blockCheckOut = priceData?.blockCheckOut ?? false;
@@ -788,6 +801,10 @@ class _PriceListCalendarWidgetState
     final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = screenWidth < 600;
 
+    // Processing state to prevent duplicate button clicks
+    bool isProcessing = false;
+
+    // Show dialog and dispose controllers when it closes
     unawaited(
       showDialog(
         context: context,
@@ -1016,9 +1033,40 @@ class _PriceListCalendarWidgetState
               actions: [
                 if (existingPrice != null)
                   TextButton(
-                    onPressed: () async {
+                    onPressed: isProcessing
+                        ? null
+                        : () async {
                       final navigator = Navigator.of(context);
                       final messenger = ScaffoldMessenger.of(context);
+
+                      // Show confirmation dialog before deleting
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Potvrda brisanja'),
+                          content: const Text(
+                            'Da li ste sigurni da želite obrisati custom cijenu? '
+                            'Datum će biti vraćen na osnovnu cijenu.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Odustani'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppColors.error,
+                              ),
+                              child: const Text('Obriši'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirmed != true) return;
+
+                      setState(() => isProcessing = true);
 
                       // Delete custom price (revert to base price)
                       try {
@@ -1030,7 +1078,19 @@ class _PriceListCalendarWidgetState
                           date: date,
                         );
 
-                        ref.invalidate(monthlyPricesProvider);
+                        // Wait for Firestore to propagate changes to prevent race condition
+                        // This small delay ensures data is available when provider refetches
+                        await Future.delayed(const Duration(milliseconds: 100));
+
+                        // Invalidate provider to trigger reload with fresh data
+                        ref.invalidate(
+                          monthlyPricesProvider(
+                            MonthlyPricesParams(
+                              unitId: widget.unit.id,
+                              month: DateTime(date.year, date.month),
+                            ),
+                          ),
+                        );
 
                         if (mounted) {
                           navigator.pop();
@@ -1049,16 +1109,24 @@ class _PriceListCalendarWidgetState
                             ),
                           );
                         }
+                      } finally {
+                        if (mounted) {
+                          setState(() => isProcessing = false);
+                        }
                       }
                     },
                     child: const Text('Obriši'),
                   ),
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: isProcessing
+                      ? null
+                      : () => Navigator.of(context).pop(),
                   child: const Text('Odustani'),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
+                  onPressed: isProcessing
+                      ? null
+                      : () async {
                     final messenger = ScaffoldMessenger.of(context);
                     final navigator = Navigator.of(context);
 
@@ -1081,8 +1149,61 @@ class _PriceListCalendarWidgetState
                       return;
                     }
 
+                    // Validate optional fields for consistency
+                    final weekendPriceText = weekendPriceController.text.trim();
+                    if (weekendPriceText.isNotEmpty) {
+                      final weekendPrice = double.tryParse(weekendPriceText);
+                      if (weekendPrice == null || weekendPrice <= 0) {
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Vikend cijena mora biti veća od 0'),
+                          ),
+                        );
+                        return;
+                      }
+                    }
+
+                    final minNightsText = minNightsController.text.trim();
+                    if (minNightsText.isNotEmpty) {
+                      final minNights = int.tryParse(minNightsText);
+                      if (minNights == null || minNights <= 0) {
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Min. noći mora biti veće od 0'),
+                          ),
+                        );
+                        return;
+                      }
+                    }
+
+                    final maxNightsText = maxNightsController.text.trim();
+                    if (maxNightsText.isNotEmpty) {
+                      final maxNights = int.tryParse(maxNightsText);
+                      if (maxNights == null || maxNights <= 0) {
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Max. noći mora biti veće od 0'),
+                          ),
+                        );
+                        return;
+                      }
+                    }
+
+                    setState(() => isProcessing = true);
+
                     try {
                       final repository = ref.read(dailyPriceRepositoryProvider);
+
+                      // Parse optional fields after validation
+                      final weekendPrice = weekendPriceText.isEmpty
+                          ? null
+                          : double.tryParse(weekendPriceText);
+                      final minNights = minNightsText.isEmpty
+                          ? null
+                          : int.tryParse(minNightsText);
+                      final maxNights = maxNightsText.isEmpty
+                          ? null
+                          : int.tryParse(maxNightsText);
 
                       // Create price model with all fields
                       final priceModel = DailyPriceModel(
@@ -1093,19 +1214,9 @@ class _PriceListCalendarWidgetState
                         available: available,
                         blockCheckIn: blockCheckIn,
                         blockCheckOut: blockCheckOut,
-                        weekendPrice: weekendPriceController.text.trim().isEmpty
-                            ? null
-                            : double.tryParse(
-                                weekendPriceController.text.trim(),
-                              ),
-                        minNightsOnArrival:
-                            minNightsController.text.trim().isEmpty
-                            ? null
-                            : int.tryParse(minNightsController.text.trim()),
-                        maxNightsOnArrival:
-                            maxNightsController.text.trim().isEmpty
-                            ? null
-                            : int.tryParse(maxNightsController.text.trim()),
+                        weekendPrice: weekendPrice,
+                        minNightsOnArrival: minNights,
+                        maxNightsOnArrival: maxNights,
                         isImportant: isImportant,
                         notes: notesController.text.trim().isEmpty
                             ? null
@@ -1122,7 +1233,18 @@ class _PriceListCalendarWidgetState
                         priceModel: priceModel,
                       );
 
-                      ref.invalidate(monthlyPricesProvider);
+                      // Wait for Firestore to propagate changes to prevent race condition
+                      await Future.delayed(const Duration(milliseconds: 100));
+
+                      // Invalidate provider to trigger reload with fresh data
+                      ref.invalidate(
+                        monthlyPricesProvider(
+                          MonthlyPricesParams(
+                            unitId: widget.unit.id,
+                            month: DateTime(date.year, date.month),
+                          ),
+                        ),
+                      );
 
                       if (mounted) {
                         navigator.pop();
@@ -1139,15 +1261,32 @@ class _PriceListCalendarWidgetState
                           ),
                         );
                       }
+                    } finally {
+                      if (mounted) {
+                        setState(() => isProcessing = false);
+                      }
                     }
                   },
-                  child: const Text('Spremi'),
+                  child: isProcessing
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Spremi'),
                 ),
               ],
             );
           },
         ),
-      ),
+      ).then((_) {
+        // Dispose all controllers when dialog closes to prevent memory leak
+        priceController.dispose();
+        weekendPriceController.dispose();
+        minNightsController.dispose();
+        maxNightsController.dispose();
+        notesController.dispose();
+      }),
     );
   }
 
@@ -1223,17 +1362,28 @@ class _PriceListCalendarWidgetState
                             dailyPriceRepositoryProvider,
                           );
 
-                          // Save price for each selected day
-                          for (final date in _selectedDays) {
-                            await repository.setPriceForDate(
-                              unitId: widget.unit.id,
-                              date: date,
-                              price: price,
-                            );
-                          }
+                          // Use BATCH operation for efficiency (1 API call vs N calls)
+                          // Only update 'price' field, preserve other data
+                          await repository.bulkPartialUpdate(
+                            unitId: widget.unit.id,
+                            dates: _selectedDays.toList(),
+                            partialData: {
+                              'price': price,
+                            },
+                          );
 
-                          // Refresh the price data
-                          ref.invalidate(monthlyPricesProvider);
+                          // Wait for Firestore to propagate changes to prevent race condition
+                          await Future.delayed(const Duration(milliseconds: 150));
+
+                          // Invalidate provider to trigger reload with fresh data
+                          ref.invalidate(
+                            monthlyPricesProvider(
+                              MonthlyPricesParams(
+                                unitId: widget.unit.id,
+                                month: _selectedMonth,
+                              ),
+                            ),
+                          );
 
                           if (mounted) {
                             navigator.pop();
@@ -1274,7 +1424,10 @@ class _PriceListCalendarWidgetState
           );
         },
       ),
-    );
+    ).then((_) {
+      // Dispose controller when dialog closes to prevent memory leak
+      priceController.dispose();
+    });
   }
 
   void _showBulkAvailabilityDialog() {
@@ -1309,24 +1462,28 @@ class _PriceListCalendarWidgetState
                               dailyPriceRepositoryProvider,
                             );
 
-                            // Create template model with available=true
-                            final modelTemplate = DailyPriceModel(
-                              id: '',
-                              unitId: widget.unit.id,
-                              date: DateTime.now(),
-                              price: widget.unit.pricePerNight,
-                              createdAt: DateTime.now(),
-                            );
-
-                            // Bulk update using batch operation
-                            await repository.bulkUpdatePricesWithModel(
+                            // Use PARTIAL update to preserve existing data
+                            // Only update 'available' field, keep custom prices & notes
+                            await repository.bulkPartialUpdate(
                               unitId: widget.unit.id,
                               dates: _selectedDays.toList(),
-                              modelTemplate: modelTemplate,
+                              partialData: {
+                                'available': true,
+                              },
                             );
 
-                            // Refresh the price data
-                            ref.invalidate(monthlyPricesProvider);
+                            // Wait for Firestore to propagate changes to prevent race condition
+                            await Future.delayed(const Duration(milliseconds: 150));
+
+                            // Invalidate provider to trigger reload with fresh data
+                            ref.invalidate(
+                              monthlyPricesProvider(
+                                MonthlyPricesParams(
+                                  unitId: widget.unit.id,
+                                  month: _selectedMonth,
+                                ),
+                              ),
+                            );
 
                             if (mounted) {
                               navigator.pop();
@@ -1384,26 +1541,28 @@ class _PriceListCalendarWidgetState
                               dailyPriceRepositoryProvider,
                             );
 
-                            // Create template model with available=false
-                            final modelTemplate = DailyPriceModel(
-                              id: '',
-                              unitId: widget.unit.id,
-                              date: DateTime.now(),
-                              price: widget.unit.pricePerNight,
-                              available:
-                                  false, // Block dates - set as unavailable
-                              createdAt: DateTime.now(),
-                            );
-
-                            // Bulk update using batch operation
-                            await repository.bulkUpdatePricesWithModel(
+                            // Use PARTIAL update to preserve existing data
+                            // Only update 'available' field, keep custom prices & notes
+                            await repository.bulkPartialUpdate(
                               unitId: widget.unit.id,
                               dates: _selectedDays.toList(),
-                              modelTemplate: modelTemplate,
+                              partialData: {
+                                'available': false, // Block dates
+                              },
                             );
 
-                            // Refresh the price data
-                            ref.invalidate(monthlyPricesProvider);
+                            // Wait for Firestore to propagate changes to prevent race condition
+                            await Future.delayed(const Duration(milliseconds: 150));
+
+                            // Invalidate provider to trigger reload with fresh data
+                            ref.invalidate(
+                              monthlyPricesProvider(
+                                MonthlyPricesParams(
+                                  unitId: widget.unit.id,
+                                  month: _selectedMonth,
+                                ),
+                              ),
+                            );
 
                             if (mounted) {
                               navigator.pop();
@@ -1461,25 +1620,28 @@ class _PriceListCalendarWidgetState
                               dailyPriceRepositoryProvider,
                             );
 
-                            // Create template model with blockCheckIn=true
-                            final modelTemplate = DailyPriceModel(
-                              id: '',
-                              unitId: widget.unit.id,
-                              date: DateTime.now(),
-                              price: widget.unit.pricePerNight,
-                              blockCheckIn: true, // Block check-in
-                              createdAt: DateTime.now(),
-                            );
-
-                            // Bulk update using batch operation
-                            await repository.bulkUpdatePricesWithModel(
+                            // Use PARTIAL update to preserve existing data
+                            // Only update 'block_checkin' field, keep prices & notes
+                            await repository.bulkPartialUpdate(
                               unitId: widget.unit.id,
                               dates: _selectedDays.toList(),
-                              modelTemplate: modelTemplate,
+                              partialData: {
+                                'block_checkin': true, // Block check-in
+                              },
                             );
 
-                            // Refresh the price data
-                            ref.invalidate(monthlyPricesProvider);
+                            // Wait for Firestore to propagate changes to prevent race condition
+                            await Future.delayed(const Duration(milliseconds: 150));
+
+                            // Invalidate provider to trigger reload with fresh data
+                            ref.invalidate(
+                              monthlyPricesProvider(
+                                MonthlyPricesParams(
+                                  unitId: widget.unit.id,
+                                  month: _selectedMonth,
+                                ),
+                              ),
+                            );
 
                             if (mounted) {
                               navigator.pop();
@@ -1529,25 +1691,28 @@ class _PriceListCalendarWidgetState
                               dailyPriceRepositoryProvider,
                             );
 
-                            // Create template model with blockCheckOut=true
-                            final modelTemplate = DailyPriceModel(
-                              id: '',
-                              unitId: widget.unit.id,
-                              date: DateTime.now(),
-                              price: widget.unit.pricePerNight,
-                              blockCheckOut: true, // Block check-out
-                              createdAt: DateTime.now(),
-                            );
-
-                            // Bulk update using batch operation
-                            await repository.bulkUpdatePricesWithModel(
+                            // Use PARTIAL update to preserve existing data
+                            // Only update 'block_checkout' field, keep prices & notes
+                            await repository.bulkPartialUpdate(
                               unitId: widget.unit.id,
                               dates: _selectedDays.toList(),
-                              modelTemplate: modelTemplate,
+                              partialData: {
+                                'block_checkout': true, // Block check-out
+                              },
                             );
 
-                            // Refresh the price data
-                            ref.invalidate(monthlyPricesProvider);
+                            // Wait for Firestore to propagate changes to prevent race condition
+                            await Future.delayed(const Duration(milliseconds: 150));
+
+                            // Invalidate provider to trigger reload with fresh data
+                            ref.invalidate(
+                              monthlyPricesProvider(
+                                MonthlyPricesParams(
+                                  unitId: widget.unit.id,
+                                  month: _selectedMonth,
+                                ),
+                              ),
+                            );
 
                             if (mounted) {
                               navigator.pop();

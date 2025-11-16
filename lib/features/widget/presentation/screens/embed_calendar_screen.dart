@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/year_grid_calendar_widget.dart';
 import '../providers/embed_booking_provider.dart';
 import '../components/adaptive_glass_card.dart';
+import '../utils/snackbar_helper.dart';
 
 /// Embedded calendar screen - public view for guests
 /// URL: /embed/units/:unitId
@@ -268,11 +269,11 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
               onPressed: () {
                 // Navigate to enhanced booking flow (guest info is in EnhancedPaymentScreen)
                 // Full flow: EnhancedRoomSelectionScreen → EnhancedSummaryScreen → EnhancedPaymentScreen → EnhancedConfirmationScreen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Redirecting to booking flow...'),
-                    duration: Duration(seconds: 2),
-                  ),
+                SnackBarHelper.showInfo(
+                  context: context,
+                  message: 'Redirecting to booking flow...',
+                  isDarkMode: false,
+                  duration: const Duration(seconds: 2),
                 );
                 // NOTE: Implement navigation to /booking route with selected dates
               },

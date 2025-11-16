@@ -151,19 +151,15 @@ class _StripeConnectSetupScreenState
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/stripe'),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: theme.brightness == Brightness.dark
-                ? [AppColors.backgroundDark, AppColors.surfaceVariantDark]
-                : [AppColors.primary, AppColors.authSecondary],
+            colors: [AppColors.primary, AppColors.authSecondary],
           ),
         ),
         child: _isLoading
-            ? Center(
+            ? const Center(
                 child: CircularProgressIndicator(
-                  color: theme.brightness == Brightness.dark
-                      ? AppColors.primary
-                      : Colors.white,
+                  color: Colors.white,
                 ),
               )
             : SingleChildScrollView(
@@ -236,18 +232,14 @@ class _StripeConnectSetupScreenState
                     // Help link
                     TextButton.icon(
                       onPressed: () => context.go(OwnerRoutes.guideStripe),
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.help_outline,
-                        color: theme.brightness == Brightness.dark
-                            ? AppColors.primary
-                            : Colors.white,
+                        color: Colors.white,
                       ),
-                      label: Text(
+                      label: const Text(
                         'Kako funkcionira Stripe Connect?',
                         style: TextStyle(
-                          color: theme.brightness == Brightness.dark
-                              ? AppColors.primary
-                              : Colors.white,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -348,20 +340,15 @@ class _StripeConnectSetupScreenState
   }
 
   Widget _buildInfoSection() {
-    final theme = Theme.of(context);
-    final textColor = theme.brightness == Brightness.dark
-        ? AppColors.primary
-        : Colors.white;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Zašto Stripe Connect?',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: textColor,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 12),
@@ -390,17 +377,12 @@ class _StripeConnectSetupScreenState
   }
 
   Widget _buildInfoItem(IconData icon, String title, String description) {
-    final theme = Theme.of(context);
-    final textColor = theme.brightness == Brightness.dark
-        ? AppColors.primary
-        : Colors.white;
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: textColor, size: 24),
+          Icon(icon, color: Colors.white, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -408,10 +390,10 @@ class _StripeConnectSetupScreenState
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: textColor,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -419,7 +401,7 @@ class _StripeConnectSetupScreenState
                   description,
                   style: TextStyle(
                     fontSize: 13,
-                    color: textColor.withAlpha((0.85 * 255).toInt()),
+                    color: Colors.white.withAlpha((0.85 * 255).toInt()),
                   ),
                 ),
               ],

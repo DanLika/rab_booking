@@ -276,6 +276,91 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     return createdPrices;
   }
 
+  /// Bulk PARTIAL update - merges fields without overwriting existing data
+  /// This method preserves existing custom prices, notes, and other fields
+  /// Only updates the specific fields provided in partialData
+  @override
+  Future<List<DailyPriceModel>> bulkPartialUpdate({
+    required String unitId,
+    required List<DateTime> dates,
+    required Map<String, dynamic> partialData,
+  }) async {
+    final List<DailyPriceModel> updatedPrices = [];
+    final batch = _firestore.batch();
+    int operationCount = 0;
+    const maxBatchSize = 500;
+
+    // Add timestamp to partial data
+    final dataToUpdate = {
+      ...partialData,
+      'updated_at': Timestamp.now(),
+    };
+
+    for (final date in dates) {
+      final dateOnly = DateTime(date.year, date.month, date.day);
+
+      // Query for existing document with this date
+      final existingDocs = await _firestore
+          .collection('daily_prices')
+          .where('unit_id', isEqualTo: unitId)
+          .where('date', isEqualTo: Timestamp.fromDate(dateOnly))
+          .limit(1)
+          .get();
+
+      if (existingDocs.docs.isNotEmpty) {
+        // Document exists - UPDATE with merge
+        final docRef = existingDocs.docs.first.reference;
+        batch.update(docRef, dataToUpdate);
+
+        // Parse existing data and apply partial update for return value
+        final existingData = existingDocs.docs.first.data();
+        final mergedData = {...existingData, ...dataToUpdate, 'id': docRef.id};
+        try {
+          updatedPrices.add(DailyPriceModel.fromJson(mergedData));
+        } catch (e) {
+          unawaited(LoggingService.logError('Error parsing updated price', e));
+        }
+      } else {
+        // Document doesn't exist - CREATE with defaults + partial data
+        final docRef = _firestore.collection('daily_prices').doc();
+        final fullData = {
+          'unit_id': unitId,
+          'date': Timestamp.fromDate(dateOnly),
+          'price': partialData['price'] ?? 0.0, // Must provide price for new docs
+          'available': partialData['available'] ?? true,
+          'created_at': Timestamp.now(),
+          ...dataToUpdate,
+        };
+
+        batch.set(docRef, fullData);
+
+        try {
+          updatedPrices.add(DailyPriceModel.fromJson({
+            ...fullData,
+            'id': docRef.id,
+          }));
+        } catch (e) {
+          unawaited(LoggingService.logError('Error parsing new price', e));
+        }
+      }
+
+      operationCount++;
+
+      // Commit batch if reaching limit
+      if (operationCount >= maxBatchSize) {
+        await batch.commit();
+        operationCount = 0;
+      }
+    }
+
+    // Commit remaining operations
+    if (operationCount > 0) {
+      await batch.commit();
+    }
+
+    return updatedPrices;
+  }
+
   @override
   Future<void> deletePriceForDate({
     required String unitId,

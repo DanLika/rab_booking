@@ -77,7 +77,7 @@ class ColorTokens {
   // Status colors - Pink/Red (Booked)
   static const Color pink100 = Color(0xFFFFD4E5);
   static const Color pink200 = Color(0xFFFEE2E2);
-  static const Color pink300 = Color(0xFFFBAAAA); // Goldilocks - medium coral (between 200 and 400)
+  static const Color pink300 = Color(0xFF83e6bf); // Light mint/turquoise for booked dates
   static const Color pink400 = Color(0xFFF87171);
   static const Color pink500 = Color(0xFFEC4899);
   static const Color pink600 = Color(0xFFDB2777);

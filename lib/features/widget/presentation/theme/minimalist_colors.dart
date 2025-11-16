@@ -68,8 +68,8 @@ class MinimalistColors {
   /// Available date - teal text
   static const Color statusAvailableText = Color(0xFF83e6bf); // #83e6bf
 
-  /// Booked date - blue background
-  static const Color statusBookedBackground = Color(0xFF2596be); // #2596be
+  /// Booked date - pink/red background
+  static const Color statusBookedBackground = Color(0xFFfba9aa); // #fba9aa
 
   /// Booked date - blue border
   static const Color statusBookedBorder = Color(0xFF2596be); // #2596be

@@ -184,14 +184,14 @@ export const createBookingAtomic = onCall(async (request) => {
     // ====================================================================
     const result = await db.runTransaction(async (transaction) => {
       // Step 1: Query conflicting bookings INSIDE transaction
-      // Bug #62 Fix: Changed "check_out" > to >= to detect
-      // same-day turnover conflicts (checkout = checkin = conflict)
+      // Bug #77 Fix: Changed "check_out" >= to > to allow same-day turnover
+      // (checkout = 15 should allow new checkin = 15, no conflict)
       const conflictingBookingsQuery = db
         .collection("bookings")
         .where("unit_id", "==", unitId)
         .where("status", "in", ["pending", "confirmed"])
         .where("check_in", "<", checkOutDate)
-        .where("check_out", ">=", checkInDate);
+        .where("check_out", ">", checkInDate);
 
       const conflictingBookings =
         await transaction.get(conflictingBookingsQuery);

@@ -61,7 +61,7 @@ class DashboardOverviewTab extends ConsumerWidget {
               ref.read(dashboardStatsProvider.future),
             ]);
           },
-          color: AppColors.primary,
+          color: theme.colorScheme.primary,
           child: ListView(
             children: [
               // Stats cards section
@@ -75,12 +75,12 @@ class DashboardOverviewTab extends ConsumerWidget {
                 child: statsAsync.when(
                   data: (stats) =>
                       _buildStatsCards(context: context, stats: stats),
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: Padding(
-                      padding: EdgeInsets.all(40),
+                      padding: const EdgeInsets.all(40),
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.primary,
+                          theme.colorScheme.primary,
                         ),
                       ),
                     ),
@@ -183,11 +183,13 @@ class DashboardOverviewTab extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(
+      loading: () => Center(
         child: Padding(
-          padding: EdgeInsets.all(AppDimensions.spaceXL),
+          padding: const EdgeInsets.all(AppDimensions.spaceXL),
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
           ),
         ),
       ),

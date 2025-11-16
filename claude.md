@@ -3174,6 +3174,98 @@ ClipRRect(
 
 ---
 
+## Unused Utils Cleanup
+
+**Datum: 2025-11-16**
+**Status: ✅ ZAVRŠENO - Obrisano 23 nekorištenih utility fajlova**
+
+#### 📋 Svrha
+Eliminisanje dead code-a iz `lib/core/utils/` direktorijuma - fajlovi koji nisu referencirani nigdje u kodu i predstavljaju tehnički dug.
+
+---
+
+#### 🗑️ Obrisani Fajlovi (23 Fajla)
+
+**Accessibility & Navigation (2 fajla):**
+```
+❌ accessibility_utils.dart - Accessibility helpers (unused)
+❌ keyboard_navigation_utils.dart - Keyboard navigation (unused)
+```
+
+**Layout & Responsive (6 fajlova):**
+```
+❌ adaptive_spacing.dart - Adaptive spacing system (unused)
+❌ layout_helpers.dart - Layout helper functions (unused)
+❌ responsive_grid_delegates.dart - Grid delegates (unused)
+❌ responsive_layout.dart - Responsive layout utilities (unused)
+❌ responsive_utils.dart - Responsive helpers (unused)
+❌ tablet_layout_utils.dart - Tablet-specific layouts (unused)
+```
+
+**Performance & Optimization (3 fajla):**
+```
+❌ list_virtualization.dart - List virtualization (unused)
+❌ performance_tracker.dart - Performance tracking (unused)
+❌ performance_utils.dart - Performance utilities (unused)
+```
+
+**Async & State (2 fajla):**
+```
+❌ async_helpers.dart - Async helper functions (unused)
+❌ debounce.dart - Debounce utilities (unused)
+```
+
+**Validation & Formatting (2 fajla):**
+```
+❌ date_formatter.dart - Date formatting utilities (unused)
+❌ input_validator.dart - Input validation (unused)
+```
+
+**UI & Styling (2 fajla):**
+```
+❌ dialog_colors.dart - Dialog color constants (unused)
+❌ web_hover_utils.dart - Web hover effects (unused)
+```
+
+**Business Logic (4 fajla):**
+```
+❌ booking_status_utils.dart - Booking status helpers (unused)
+❌ unit_resolver.dart - Unit resolution logic (unused)
+❌ navigation_helpers.dart - Navigation utilities (unused)
+❌ result.dart - Result type wrapper (unused)
+```
+
+**SEO & Web (2 fajla):**
+```
+❌ seo_utils.dart - SEO utilities (unused)
+❌ seo_web_impl.dart - SEO web implementation (unused)
+```
+
+---
+
+#### ⚠️ Važne Napomene
+
+1. **Dead Code Elimination:**
+   - Svi fajlovi su provereni sa `grep -r "import.*filename"` kroz codebase
+   - Nijedan nije bio importovan ili korišćen
+   - Safe za brisanje bez breaking changes
+
+2. **Bundle Size Impact:**
+   - Tree-shaking će ionako eliminisati nekorišteni kod
+   - Ali fizičko brisanje smanjuje maintenance teret
+   - Manje fajlova = brže pretraživanje i refactoring
+
+3. **Možda će trebati u budućnosti:**
+   - Neki od ovih utility-ja mogu biti korisni kasnije
+   - Git history ih čuva - mogu se restore-ovati sa `git checkout <commit> -- <file>`
+   - Dokumentovano ovdje za buduće reference
+
+---
+
+**Commit:** [pending] - chore: remove 23 unused utility files from lib/core/utils
+
+---
+
 ## Budući TODO
 
 _Ovdje dodaj dokumentaciju za druge kritične dijelove projekta..._

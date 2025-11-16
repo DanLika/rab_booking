@@ -78,7 +78,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // UI state
   bool _showGuestForm = false;
   String _selectedPaymentMethod = 'stripe'; // 'stripe' or 'bank_transfer'
-  String _selectedPaymentOption = 'deposit'; // 'deposit' or 'full' - Bug #12: Made mutable so users can choose
+  final String _selectedPaymentOption =
+      'deposit'; // 'deposit' or 'full' - Bug #12: Made mutable so users can choose
   bool _isProcessing = false;
   bool _emailVerified = false; // Email verification status (OTP)
   bool _taxLegalAccepted = false; // Bug #68: Tax/Legal disclaimer acceptance
@@ -627,28 +628,31 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             reservedHeight += 16; // Buffer for potential warning banner
 
             // Calendar gets remaining height (ensure minimum of 400px)
-            final calendarHeight = (screenHeight - reservedHeight).clamp(400.0, double.infinity);
+            final calendarHeight = (screenHeight - reservedHeight).clamp(
+              400.0,
+              double.infinity,
+            );
 
             return Stack(
               children: [
                 // Scrollable content
                 SingleChildScrollView(
                   child: Padding(
-                    padding: EdgeInsets.only(
-                      left: horizontalPadding,
-                      right: horizontalPadding,
-                      top: topPadding + 8,
-                    ),
+                    padding: EdgeInsets.all(horizontalPadding),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // Custom logo display (if configured)
-                        if (_widgetSettings?.themeOptions?.customLogoUrl != null &&
-                            _widgetSettings!.themeOptions!.customLogoUrl!.isNotEmpty)
+                        if (_widgetSettings?.themeOptions?.customLogoUrl !=
+                                null &&
+                            _widgetSettings!
+                                .themeOptions!
+                                .customLogoUrl!
+                                .isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: CachedNetworkImage(
-                              imageUrl: _widgetSettings!.themeOptions!.customLogoUrl!,
+                              imageUrl:
+                                  _widgetSettings!.themeOptions!.customLogoUrl!,
                               height: 40,
                               fit: BoxFit.contain,
                               placeholder: (context, url) =>
@@ -689,7 +693,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             unitId: unitId,
                             forceMonthView: forceMonthView,
                             // Disable date selection in calendar_only mode
-                            onRangeSelected: widgetMode == WidgetMode.calendarOnly
+                            onRangeSelected:
+                                widgetMode == WidgetMode.calendarOnly
                                 ? null
                                 : (start, end) {
                                     // Validate minimum nights requirement
@@ -711,7 +716,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                             ),
                                             backgroundColor:
                                                 MinimalistColors.error,
-                                            duration: const Duration(seconds: 3),
+                                            duration: const Duration(
+                                              seconds: 3,
+                                            ),
                                           ),
                                         );
                                         return;
@@ -730,9 +737,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                   },
                           ),
                         ),
-
-                        // Add spacing at bottom for contact info bar or pill bar
-                        SizedBox(height: widgetMode == WidgetMode.calendarOnly ? 80 : 120),
                       ],
                     ),
                   ),
@@ -1047,12 +1051,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         double servicesTotal = 0.0;
         servicesAsync.whenData((services) {
           if (services.isNotEmpty && selectedServices.isNotEmpty) {
-            servicesTotal = ref.read(additionalServicesTotalProvider((
-              services,
-              selectedServices,
-              _checkOut!.difference(_checkIn!).inDays,
-              _adults + _children,
-            )));
+            servicesTotal = ref.read(
+              additionalServicesTotalProvider((
+                services,
+                selectedServices,
+                _checkOut!.difference(_checkIn!).inDays,
+                _adults + _children,
+              )),
+            );
           }
         });
 
@@ -1091,7 +1097,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           } else {
             pillBarWidth = 400.0; // Desktop/Tablet: fixed 400px
           }
-          maxHeight = 282.0; // Fixed height for compact view (increased by 12px)
+          maxHeight =
+              282.0; // Fixed height for compact view (increased by 12px)
         }
 
         // Center booking flow on screen (not calendar)
@@ -1108,8 +1115,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         final isMoreThanHalfOffScreen =
             position.dx < -pillBarWidth / 2 || // >50% dragged left
             position.dy < -maxHeight / 2 || // >50% dragged up
-            position.dx > constraints.maxWidth - pillBarWidth / 2 || // >50% dragged right
-            position.dy > constraints.maxHeight - maxHeight / 2; // >50% dragged down
+            position.dx >
+                constraints.maxWidth - pillBarWidth / 2 || // >50% dragged right
+            position.dy >
+                constraints.maxHeight - maxHeight / 2; // >50% dragged down
 
         // Check if pill bar is completely off-screen (dragged beyond bounds)
         final isCompletelyOffScreen =
@@ -1291,7 +1300,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                     const SizedBox(height: SpacingTokens.m),
                                     AdditionalServicesWidget(
                                       unitId: _unitId,
-                                      nights: _checkOut!.difference(_checkIn!).inDays,
+                                      nights: _checkOut!
+                                          .difference(_checkIn!)
+                                          .inDays,
                                       guests: _adults + _children,
                                     ),
                                   ],
@@ -1636,8 +1647,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         Text(
           label,
           style: TextStyle(
-            fontSize: isBold ? TypographyTokens.fontSizeM : TypographyTokens.fontSizeS,
-            color: color ??
+            fontSize: isBold
+                ? TypographyTokens.fontSizeM
+                : TypographyTokens.fontSizeS,
+            color:
+                color ??
                 getColor(
                   MinimalistColors.textSecondary,
                   MinimalistColorsDark.textSecondary,
@@ -1649,8 +1663,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         Text(
           amount,
           style: TextStyle(
-            fontSize: isBold ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeS,
-            color: color ??
+            fontSize: isBold
+                ? TypographyTokens.fontSizeL
+                : TypographyTokens.fontSizeS,
+            color:
+                color ??
                 getColor(
                   MinimalistColors.textPrimary,
                   MinimalistColorsDark.textPrimary,
@@ -2212,7 +2229,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     ),
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                      borderSide: const BorderSide(
+                        color: Colors.red,
+                        width: 1.5,
+                      ),
                     ),
                     focusedErrorBorder: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
@@ -2305,7 +2325,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     ),
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                      borderSide: const BorderSide(
+                        color: Colors.red,
+                        width: 1.5,
+                      ),
                     ),
                     focusedErrorBorder: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
@@ -2476,7 +2499,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   MinimalistColorsDark.textSecondary,
                 ),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7), // Reduced by 10px total (5px top + 5px bottom)
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 7,
+              ), // Reduced by 10px total (5px top + 5px bottom)
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
@@ -2856,7 +2882,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (mounted) {
           SnackBarHelper.showWarning(
             context: context,
-            message: 'Same-day check-in: Property check-in time is $checkInTimeHour:00. '
+            message:
+                'Same-day check-in: Property check-in time is $checkInTimeHour:00. '
                 'Please note that you may not be able to check in until tomorrow.',
             isDarkMode: isDarkMode,
             duration: const Duration(seconds: 7),
@@ -2888,11 +2915,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       final isPayOnArrivalEnabled = _widgetSettings?.allowPayOnArrival == true;
 
       // Check if at least one payment method is enabled
-      if (!isStripeEnabled && !isBankTransferEnabled && !isPayOnArrivalEnabled) {
+      if (!isStripeEnabled &&
+          !isBankTransferEnabled &&
+          !isPayOnArrivalEnabled) {
         if (mounted) {
           SnackBarHelper.showError(
             context: context,
-            message: 'No payment methods are currently available. Please contact the property owner.',
+            message:
+                'No payment methods are currently available. Please contact the property owner.',
             isDarkMode: isDarkMode,
             duration: const Duration(seconds: 5),
           );
@@ -2905,7 +2935,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (mounted) {
           SnackBarHelper.showError(
             context: context,
-            message: 'Stripe payment is not available. Please select another payment method.',
+            message:
+                'Stripe payment is not available. Please select another payment method.',
             isDarkMode: isDarkMode,
             duration: const Duration(seconds: 5),
           );
@@ -2917,7 +2948,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (mounted) {
           SnackBarHelper.showError(
             context: context,
-            message: 'Bank transfer is not available. Please select another payment method.',
+            message:
+                'Bank transfer is not available. Please select another payment method.',
             isDarkMode: isDarkMode,
             duration: const Duration(seconds: 5),
           );
@@ -2930,7 +2962,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (mounted) {
           SnackBarHelper.showError(
             context: context,
-            message: 'Pay on arrival is not available. Please select another payment method.',
+            message:
+                'Pay on arrival is not available. Please select another payment method.',
             isDarkMode: isDarkMode,
             duration: const Duration(seconds: 5),
           );
@@ -2946,7 +2979,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: 'Maximum $maxGuests ${maxGuests == 1 ? 'guest' : 'guests'} allowed for this property. You selected $totalGuests ${totalGuests == 1 ? 'guest' : 'guests'}.',
+          message:
+              'Maximum $maxGuests ${maxGuests == 1 ? 'guest' : 'guests'} allowed for this property. You selected $totalGuests ${totalGuests == 1 ? 'guest' : 'guests'}.',
           isDarkMode: isDarkMode,
           duration: const Duration(seconds: 5),
         );
@@ -2987,7 +3021,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           ownerId: _ownerId!,
           checkIn: _checkIn!,
           checkOut: _checkOut!,
-          guestName: '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'.trim(),
+          guestName:
+              '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
+                  .trim(),
           guestEmail: _emailController.text.trim(),
           guestPhone:
               '${_selectedCountry.dialCode} ${_phoneController.text.trim()}',
@@ -3000,7 +3036,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           notes: _notesController.text.trim().isEmpty
               ? null
               : _notesController.text.trim(),
-          taxLegalAccepted: _widgetSettings?.taxLegalConfig != null &&
+          taxLegalAccepted:
+              _widgetSettings?.taxLegalConfig != null &&
                   _widgetSettings!.taxLegalConfig.enabled
               ? _taxLegalAccepted
               : null,
@@ -3109,7 +3146,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         ownerId: _ownerId!,
         checkIn: _checkIn!,
         checkOut: _checkOut!,
-        guestName: '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'.trim(),
+        guestName:
+            '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
+                .trim(),
         guestEmail: _emailController.text.trim(),
         guestPhone:
             '${_selectedCountry.dialCode} ${_phoneController.text.trim()}',
@@ -3121,7 +3160,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
-        taxLegalAccepted: _widgetSettings?.taxLegalConfig != null &&
+        taxLegalAccepted:
+            _widgetSettings?.taxLegalConfig != null &&
                 _widgetSettings!.taxLegalConfig.enabled
             ? _taxLegalAccepted
             : null,
@@ -3129,7 +3169,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // Send booking confirmation email (pre-payment)
       final emailConfigInstant = _widgetSettings?.emailConfig;
-      if (emailConfigInstant?.enabled == true && emailConfigInstant?.isConfigured == true) {
+      if (emailConfigInstant?.enabled == true &&
+          emailConfigInstant?.isConfigured == true) {
         final emailService = EmailNotificationService();
         final bookingReference = booking.id.substring(0, 8).toUpperCase();
         final propertyName = _unit?.name ?? 'Vacation Rental';
@@ -3676,7 +3717,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (mounted) {
           SnackBarHelper.showWarning(
             context: context,
-            message: 'Booking not found. Please check your email for confirmation.',
+            message:
+                'Booking not found. Please check your email for confirmation.',
             isDarkMode: isDarkMode,
             duration: const Duration(seconds: 5),
           );

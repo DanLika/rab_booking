@@ -57,6 +57,127 @@ static const Color statusBookedText = Color(0xFFef4444); // #ef4444
 
 ## 🧹 Widget Feature Cleanup
 
+## 🔧 Turnover Day Bug Fix (Bug #77)
+
+**Datum: 2025-11-16**
+**Status: ✅ ZAVRŠENO - Same-day turnover bookings sada rade**
+
+#### 📋 Problem
+Korisnici nisu mogli da selektuju dan koji je označen kao checkOut postojeće rezervacije za checkIn nove rezervacije. Ovo sprečava standardnu hotel praksu "turnover day" gdje jedan gost može napustiti jedinicu (checkout) i drugi može ući istog dana (checkin).
+
+**Primjer:**
+- Postojeća rezervacija: checkIn = 10. januar, checkOut = 15. januar
+- Nova rezervacija: checkIn = 15. januar ← **BLOKIRANO** ❌
+- Očekivano ponašanje: checkIn = 15. januar ← **DOZVOLJENO** ✅
+
+#### 🔧 Rješenje
+
+**Fajl:** `functions/src/atomicBooking.ts`
+
+**Linija 194 - Conflict Detection Query:**
+```typescript
+// PRIJE (❌ - >= operator):
+.where("check_out", ">=", checkInDate);
+// Problem: Ako postojeća rezervacija ima checkOut = 15. januar,
+// nova rezervacija sa checkIn = 15. januar se odbija kao konflikt
+
+// POSLIJE (✅ - > operator):
+.where("check_out", ">", checkInDate);
+// Rješenje: checkOut = 15 i checkIn = 15 se NE smatra konfliktom
+// Konflikt postoji SAMO ako checkOut > checkIn (npr. 16 > 15)
+```
+
+**Updated Comment:**
+```typescript
+// Bug #77 Fix: Changed "check_out" >= to > to allow same-day turnover
+// (checkout = 15 should allow new checkin = 15, no conflict)
+```
+
+#### ✅ Rezultat
+
+**Prije:**
+- checkOut = 15. januar ❌ blokira checkIn = 15. januar
+- Korisnik dobija error: "Dates no longer available"
+
+**Poslije:**
+- checkOut = 15. januar ✅ dozvoljava checkIn = 15. januar
+- Samo PRAVA preklapanja se odbijaju (checkOut > checkIn)
+
+#### 📊 Conflict Detection Logic
+
+**Konflikt postoji kada:**
+```typescript
+existing.check_in < new.check_out  AND  existing.check_out > new.check_in
+```
+
+**Primjeri:**
+
+**Existing booking: Jan 10-15**
+- New: Jan 15-20 → **NO CONFLICT** ✅ (15 = 15, ne >)
+- New: Jan 14-18 → **CONFLICT** ❌ (15 > 14)
+- New: Jan 5-10 → **NO CONFLICT** ✅ (10 = 10, ne >)
+- New: Jan 8-12 → **CONFLICT** ❌ (10 < 12 i 15 > 8)
+
+**Industry Standard:**
+- Hotel/rental industry: same-day turnover je STANDARD praksa
+- Cleaning crew ima vremena između gostiju (npr. checkout 11:00, checkin 15:00)
+- Maksimalna iskorištenost jedinice (100% occupancy moguć)
+
+#### 🚀 Deployment
+
+**Commit:** `0c056e3` - fix: allow same-day turnover bookings (Bug #77)
+
+**Deployed:**
+```bash
+firebase deploy --only functions
+# Status: ✅ Deploy complete!
+# createBookingAtomic function updated successfully
+```
+
+**Production URL:**
+- `https://createbookingatomic-e2afn4c6mq-uc.a.run.app` (Cloud Function)
+
+#### ⚠️ Šta Claude Code Treba Znati
+
+**1. NIKADA NE VRAĆAJ >= operator:**
+- Conflict detection MORA koristiti `>` (strict greater than)
+- `>=` (greater or equal) blokira same-day turnover
+- Ovo NIJE bug - to je arhitekturna odluka!
+
+**2. Timestamp Comparison:**
+```typescript
+// Firestore Timestamp objekti se porede sa <, >, <=, >= operatorima
+checkInDate = Timestamp.fromDate(new Date('2025-01-15'))
+checkOutDate = Timestamp.fromDate(new Date('2025-01-15'))
+// checkOutDate > checkInDate → FALSE ✅
+// checkOutDate >= checkInDate → TRUE (zato smo mijenjali)
+```
+
+**3. Transaction Context:**
+- Query se izvršava UNUTAR `db.runTransaction()`
+- Ovo osigurava atomičnost - samo 1 booking uspijeva za iste datume
+- Konflikt se provjerava PRIJE kreiranja booking-a
+
+**4. Edge Case - Isti Dan:**
+- Ako korisnik pokušava: checkIn = checkOut = isti dan
+- `check_in < checkOut` validation na frontend-u to sprečava
+- Cloud Function nema special handling za ovo
+
+**5. Status Filter:**
+```typescript
+.where("status", "in", ["pending", "confirmed"])
+```
+- Samo aktivne rezervacije se gledaju
+- Cancelled/Completed bookings se ignorišu
+
+---
+
+**Commit:** `0c056e3` - fix: allow same-day turnover bookings (Bug #77)
+**Deployed:** 2025-11-16
+
+---
+
+
 **Datum: 2025-11-16**
 **Status: ✅ ZAVRŠENO - Kompletno očišćen widget feature od dead code-a**
 

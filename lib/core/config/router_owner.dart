@@ -42,6 +42,9 @@ import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.da
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
 import '../../features/widget/presentation/screens/embed_calendar_screen.dart';
 import '../../features/widget/presentation/screens/booking_widget_screen.dart';
+import '../../features/widget/presentation/screens/booking_lookup_screen.dart';
+import '../../features/widget/presentation/screens/booking_view_screen.dart';
+import '../../features/widget/presentation/screens/booking_details_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../shared/providers/repository_providers.dart';
 import '../../shared/models/unit_model.dart';
@@ -150,10 +153,11 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       LoggingService.log('  - userModel: ${authState.userModel?.id}', tag: 'ROUTER');
       LoggingService.log('  - isLoading: ${authState.isLoading}', tag: 'ROUTER');
 
-      // Allow public access to embed, booking, and calendar routes (no auth required)
+      // Allow public access to embed, booking, calendar, and view routes (no auth required)
       final isPublicRoute = state.matchedLocation.startsWith('/embed/') ||
           state.matchedLocation.startsWith('/booking') ||
-          state.matchedLocation == '/calendar';
+          state.matchedLocation == '/calendar' ||
+          state.matchedLocation.startsWith('/view');
       if (isPublicRoute) {
         LoggingService.log('  → Allowing public route', tag: 'ROUTER');
         return null; // Allow access
@@ -219,6 +223,35 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/calendar',
         builder: (context, state) => const BookingWidgetScreen(),
+      ),
+
+      // Public booking lookup (from email link)
+      // URL: /view?ref=BOOKING_REF&email=EMAIL&token=TOKEN
+      GoRoute(
+        path: '/view',
+        builder: (context, state) {
+          final ref = state.uri.queryParameters['ref'];
+          final email = state.uri.queryParameters['email'];
+          final token = state.uri.queryParameters['token'];
+          return BookingViewScreen(
+            bookingRef: ref,
+            email: email,
+            token: token,
+          );
+        },
+        routes: [
+          // Booking details sub-route
+          GoRoute(
+            path: 'details',
+            builder: (context, state) {
+              final booking = state.extra;
+              if (booking == null) {
+                return const NotFoundScreen();
+              }
+              return BookingDetailsScreen(booking: booking as dynamic);
+            },
+          ),
+        ],
       ),
 
       // Onboarding routes (public - shown BEFORE auth)

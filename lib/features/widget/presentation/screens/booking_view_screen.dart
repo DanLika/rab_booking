@@ -1,0 +1,151 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../providers/theme_provider.dart';
+import '../providers/booking_lookup_provider.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
+
+/// Booking View Screen (Auto-lookup from URL params)
+/// Automatically fetches booking using ref, email, token from query params
+/// URL: /view?ref=BOOKING_REF&email=EMAIL&token=TOKEN
+class BookingViewScreen extends ConsumerStatefulWidget {
+  final String? bookingRef;
+  final String? email;
+  final String? token;
+
+  const BookingViewScreen({
+    super.key,
+    this.bookingRef,
+    this.email,
+    this.token,
+  });
+
+  @override
+  ConsumerState<BookingViewScreen> createState() => _BookingViewScreenState();
+}
+
+class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _autoLookupBooking();
+  }
+
+  Future<void> _autoLookupBooking() async {
+    // Validate query params
+    if (widget.bookingRef == null || widget.email == null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Missing booking reference or email in URL';
+      });
+      return;
+    }
+
+    try {
+      final service = ref.read(bookingLookupServiceProvider);
+      final booking = await service.verifyBookingAccess(
+        bookingReference: widget.bookingRef!,
+        email: widget.email!,
+        accessToken: widget.token, // Optional - for secure access
+      );
+
+      if (mounted) {
+        // Navigate to booking details screen
+        context.go('/view/details', extra: booking);
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
+    return Scaffold(
+      backgroundColor: colors.backgroundPrimary,
+      appBar: AppBar(
+        title: Text(
+          'View Booking',
+          style: GoogleFonts.inter(
+            color: colors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: colors.backgroundPrimary,
+        elevation: 0,
+        iconTheme: IconThemeData(color: colors.textPrimary),
+      ),
+      body: Center(
+        child: _isLoading
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading your booking...',
+                    style: GoogleFonts.inter(
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              )
+            : _errorMessage != null
+                ? Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: colors.error,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Unable to load booking',
+                          style: GoogleFonts.inter(
+                            color: colors.textPrimary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            color: colors.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: () => context.go('/'),
+                          icon: const Icon(Icons.home),
+                          label: const Text('Go to Home'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colors.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
+      ),
+    );
+  }
+}

@@ -59,6 +59,12 @@ class _PriceListCalendarWidgetState
           // Selected days counter (in bulk edit mode)
           if (_bulkEditMode && _selectedDays.isNotEmpty) ...[
             _buildSelectionCounter(),
+            const SizedBox(height: 12),
+          ],
+
+          // Select All / Deselect All buttons (in bulk edit mode)
+          if (_bulkEditMode) ...[
+            _buildBulkSelectionButtons(),
             const SizedBox(height: 16),
           ],
 
@@ -290,6 +296,67 @@ class _PriceListCalendarWidgetState
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBulkSelectionButtons() {
+    final daysInMonth = DateTime(
+      _selectedMonth.year,
+      _selectedMonth.month + 1,
+      0,
+    ).day;
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              setState(() {
+                // Select all days in current month
+                _selectedDays.clear();
+                for (int day = 1; day <= daysInMonth; day++) {
+                  _selectedDays.add(
+                    DateTime(_selectedMonth.year, _selectedMonth.month, day),
+                  );
+                }
+              });
+            },
+            icon: const Icon(Icons.select_all, size: 18),
+            label: const Text('Selektuj sve dane'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: context.primaryColor,
+              side: BorderSide(color: context.primaryColor, width: 1.5),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _selectedDays.isEmpty
+                ? null
+                : () {
+                    setState(_selectedDays.clear);
+                  },
+            icon: const Icon(Icons.deselect, size: 18),
+            label: const Text('Deselektuj sve'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: context.textColorSecondary,
+              side: BorderSide(
+                color: context.borderColor,
+                width: 1.5,
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -821,13 +888,11 @@ class _PriceListCalendarWidgetState
                 isMobile ? 16 : 24,
                 isMobile ? 12 : 20,
               ),
-              content: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: isMobile
-                      ? screenHeight * 0.65
-                      : screenHeight * 0.7,
-                  maxWidth: isMobile ? screenWidth * 0.9 : 600,
-                ),
+              content: SizedBox(
+                height: isMobile
+                    ? screenHeight * 0.65
+                    : screenHeight * 0.7,
+                width: isMobile ? screenWidth * 0.9 : 600,
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1372,6 +1437,9 @@ class _PriceListCalendarWidgetState
                             },
                           );
 
+                          // Save count before clearing for snackbar message
+                          final count = _selectedDays.length;
+
                           // Wait for Firestore to propagate changes to prevent race condition
                           await Future.delayed(const Duration(milliseconds: 150));
 
@@ -1387,15 +1455,17 @@ class _PriceListCalendarWidgetState
 
                           if (mounted) {
                             navigator.pop();
+                            // Clear selection AFTER dialog closes
+                            _selectedDays.clear();
+                            // Trigger parent widget rebuild
+                            this.setState(() {});
                             messenger.showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Uspješno ažurirano ${_selectedDays.length} cijena',
+                                  'Uspješno ažurirano $count cijena',
                                 ),
                               ),
                             );
-                            // Clear selection
-                            this.setState(_selectedDays.clear);
                           }
                         } catch (e) {
                           if (mounted) {
@@ -1472,6 +1542,9 @@ class _PriceListCalendarWidgetState
                               },
                             );
 
+                            // Save count before clearing for snackbar message
+                            final count = _selectedDays.length;
+
                             // Wait for Firestore to propagate changes to prevent race condition
                             await Future.delayed(const Duration(milliseconds: 150));
 
@@ -1487,15 +1560,17 @@ class _PriceListCalendarWidgetState
 
                             if (mounted) {
                               navigator.pop();
+                              // Clear selection AFTER dialog closes
+                              _selectedDays.clear();
+                              // Trigger parent widget rebuild
+                              this.setState(() {});
                               messenger.showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    '${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan označen' : 'dana označeno'} kao dostupno',
+                                    '$count ${count == 1 ? 'dan označen' : 'dana označeno'} kao dostupno',
                                   ),
                                 ),
                               );
-                              // Clear selection
-                              this.setState(_selectedDays.clear);
                             }
                           } catch (e) {
                             if (mounted) {
@@ -1551,6 +1626,9 @@ class _PriceListCalendarWidgetState
                               },
                             );
 
+                            // Save count before clearing for snackbar message
+                            final count = _selectedDays.length;
+
                             // Wait for Firestore to propagate changes to prevent race condition
                             await Future.delayed(const Duration(milliseconds: 150));
 
@@ -1566,15 +1644,17 @@ class _PriceListCalendarWidgetState
 
                             if (mounted) {
                               navigator.pop();
+                              // Clear selection AFTER dialog closes
+                              _selectedDays.clear();
+                              // Trigger parent widget rebuild
+                              this.setState(() {});
                               messenger.showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    '${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan blokiran' : 'dana blokirano'}',
+                                    '$count ${count == 1 ? 'dan blokiran' : 'dana blokirano'}',
                                   ),
                                 ),
                               );
-                              // Clear selection
-                              this.setState(_selectedDays.clear);
                             }
                           } catch (e) {
                             if (mounted) {
@@ -1645,6 +1725,10 @@ class _PriceListCalendarWidgetState
 
                             if (mounted) {
                               navigator.pop();
+                              // Clear selection AFTER dialog closes
+                              _selectedDays.clear();
+                              // Trigger parent widget rebuild
+                              this.setState(() {});
                               messenger.showSnackBar(
                                 const SnackBar(
                                   content: Text(
@@ -1652,8 +1736,6 @@ class _PriceListCalendarWidgetState
                                   ),
                                 ),
                               );
-                              // Clear selection
-                              this.setState(_selectedDays.clear);
                             }
                           } catch (e) {
                             if (mounted) {
@@ -1716,6 +1798,10 @@ class _PriceListCalendarWidgetState
 
                             if (mounted) {
                               navigator.pop();
+                              // Clear selection AFTER dialog closes
+                              _selectedDays.clear();
+                              // Trigger parent widget rebuild
+                              this.setState(() {});
                               messenger.showSnackBar(
                                 const SnackBar(
                                   content: Text(
@@ -1723,8 +1809,6 @@ class _PriceListCalendarWidgetState
                                   ),
                                 ),
                               );
-                              // Clear selection
-                              this.setState(_selectedDays.clear);
                             }
                           } catch (e) {
                             if (mounted) {

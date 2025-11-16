@@ -157,7 +157,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
-    if (!_formKey.currentState!.validate()) return;
+    // Validate form and show error if validation fails
+    if (!_formKey.currentState!.validate()) {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          'Please fill in all required fields correctly',
+        );
+      }
+      return;
+    }
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
@@ -323,6 +332,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       maxWidth: 600,
                       child: Form(
                         key: _formKey,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,

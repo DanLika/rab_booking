@@ -66,9 +66,11 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                 final isMobile = constraints.maxWidth < 400;
                 final isSmallMobile = constraints.maxWidth < 350;
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                return ClipRect(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     // Tappable area (Image + Main Info)
                     InkWell(
                       onTap: widget.onTap,
@@ -81,7 +83,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                           // Main Content (without action buttons)
                           Padding(
                             padding: EdgeInsets.all(
-                              isSmallMobile ? 14 : (isMobile ? 16 : 20),
+                              isSmallMobile ? 10 : (isMobile ? 12 : 14),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,10 +102,10 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                     // Action buttons (separate, not tappable for main action)
                     Padding(
                       padding: EdgeInsets.fromLTRB(
-                        isSmallMobile ? 14 : (isMobile ? 16 : 20),
+                        isSmallMobile ? 10 : (isMobile ? 12 : 16),
                         0,
-                        isSmallMobile ? 14 : (isMobile ? 16 : 20),
-                        isSmallMobile ? 14 : (isMobile ? 16 : 20),
+                        isSmallMobile ? 10 : (isMobile ? 12 : 16),
+                        isSmallMobile ? 10 : (isMobile ? 12 : 16),
                       ),
                       child: _buildActions(
                         context,
@@ -113,7 +115,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       ),
                     ),
                   ],
-                );
+                ),
+              );
               },
             ),
           ),
@@ -146,11 +149,11 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: isSmallMobile ? 4 : 6),
+                SizedBox(height: isSmallMobile ? 3 : 4),
                 Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isSmallMobile ? 8 : 10,
-                    vertical: isSmallMobile ? 3 : 4,
+                    horizontal: isSmallMobile ? 6 : 8,
+                    vertical: isSmallMobile ? 2 : 3,
                   ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -179,7 +182,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
           ),
         ],
       ),
-      SizedBox(height: isSmallMobile ? 10 : (isMobile ? 12 : 14)),
+      SizedBox(height: isSmallMobile ? 8 : (isMobile ? 10 : 12)),
 
       // Location
       Row(
@@ -207,7 +210,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
         ],
       ),
 
-      SizedBox(height: isSmallMobile ? 10 : (isMobile ? 12 : 16)),
+      SizedBox(height: isSmallMobile ? 8 : (isMobile ? 10 : 12)),
       Container(
         height: 1,
         decoration: BoxDecoration(
@@ -220,7 +223,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
           ),
         ),
       ),
-      SizedBox(height: isSmallMobile ? 10 : (isMobile ? 12 : 16)),
+      SizedBox(height: isSmallMobile ? 8 : (isMobile ? 10 : 12)),
 
       // Stats row
       Row(
@@ -280,7 +283,7 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
             ),
           ),
         ),
-        SizedBox(height: isSmallMobile ? 10 : (isMobile ? 12 : 16)),
+        SizedBox(height: isSmallMobile ? 8 : (isMobile ? 10 : 12)),
 
         // Actions row
         LayoutBuilder(
@@ -385,8 +388,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
   }
 
   Widget _buildImage(bool isSmallMobile, bool isMobile) {
-    // Use smaller aspect ratio on very small screens to save vertical space
-    final aspectRatio = isSmallMobile ? 1.8 : (isMobile ? 16 / 9.5 : 16 / 9);
+    // Use higher aspect ratio (wider/shorter) to save vertical space
+    final aspectRatio = isSmallMobile ? 2.2 : (isMobile ? 2.0 : 1.95);
 
     return AspectRatio(
       aspectRatio: aspectRatio,
@@ -428,8 +431,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isSmallMobile ? 6 : (isMobile ? 8 : 12),
-        vertical: isSmallMobile ? 4 : (isMobile ? 6 : 8),
+        horizontal: isSmallMobile ? 4 : (isMobile ? 6 : 8),
+        vertical: isSmallMobile ? 3 : (isMobile ? 4 : 6),
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withAlpha(

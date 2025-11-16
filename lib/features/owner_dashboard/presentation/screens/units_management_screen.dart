@@ -181,7 +181,7 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
           if (constraints.maxWidth >= 1200) {
             // Desktop: 3 columns
             crossAxisCount = 3;
-            topPadding = 24; // Minimal padding for desktop
+            topPadding = 24;
             horizontalPadding = 24;
           } else if (constraints.maxWidth >= 800) {
             // Tablet landscape: 2 columns
@@ -196,42 +196,59 @@ class _UnitsManagementScreenState extends ConsumerState<UnitsManagementScreen> {
           } else {
             // Mobile: 1 column
             crossAxisCount = 1;
-            topPadding = 16; // Less padding on mobile for more content
+            topPadding = 16;
             horizontalPadding = 16;
           }
 
-          return GridView.builder(
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.only(
               top: topPadding,
               left: horizontalPadding,
               right: horizontalPadding,
               bottom: 16,
             ),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              // Adjust aspect ratio based on columns for better card proportions
-              childAspectRatio: crossAxisCount == 1
-                  ? 1.1 // Mobile: slightly taller cards
-                  : crossAxisCount == 2
-                  ? 1.0 // Tablet: square-ish cards
-                  : 0.95, // Desktop: slightly wider cards
+            child: Wrap(
+              spacing: 16, // Horizontal spacing between cards
+              runSpacing: 16, // Vertical spacing between rows
+              children: _units!.map((unit) {
+                // Calculate card width based on screen width & columns
+                final cardWidth = _calculateCardWidth(
+                  constraints.maxWidth,
+                  crossAxisCount,
+                  horizontalPadding,
+                );
+
+                return SizedBox(
+                  width: cardWidth,
+                  child: _UnitCard(
+                    unit: unit,
+                    onEdit: () => _navigateToEditUnit(unit),
+                    onDelete: () => _confirmDeleteUnit(unit.id),
+                    onManagePricing: () => _navigateToManagePricing(unit),
+                  ),
+                );
+              }).toList(),
             ),
-            itemCount: _units!.length,
-            itemBuilder: (context, index) {
-              final unit = _units![index];
-              return _UnitCard(
-                unit: unit,
-                onEdit: () => _navigateToEditUnit(unit),
-                onDelete: () => _confirmDeleteUnit(unit.id),
-                onManagePricing: () => _navigateToManagePricing(unit),
-              );
-            },
           );
         },
       ),
     );
+  }
+
+  double _calculateCardWidth(
+    double screenWidth,
+    int columns,
+    double horizontalPadding,
+  ) {
+    // Available width = screen - left padding - right padding
+    final availableWidth = screenWidth - (horizontalPadding * 2);
+
+    // Spacing between columns = (columns - 1) × 16px
+    final totalSpacing = (columns - 1) * 16.0;
+
+    // Card width = (available - spacing) / columns
+    return (availableWidth - totalSpacing) / columns;
   }
 
   Widget _buildEmptyState() {
@@ -395,10 +412,9 @@ class _UnitCard extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min, // Important for GridView
           children: [
             // Unit name and status
             Column(
@@ -468,7 +484,7 @@ class _UnitCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Unit details
             Wrap(
@@ -502,7 +518,7 @@ class _UnitCard extends StatelessWidget {
             ),
 
             if (unit.description != null && unit.description!.isNotEmpty) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Text(
                 unit.description!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -513,7 +529,7 @@ class _UnitCard extends StatelessWidget {
               ),
             ],
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             const Divider(),
             const SizedBox(height: 8),
 

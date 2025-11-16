@@ -52,20 +52,20 @@ class PropertiesScreen extends ConsumerWidget {
 
                     if (constraints.maxWidth >= 1200) {
                       crossAxisCount = 3; // Desktop: 3 columns
-                      mainAxisExtent = 420; // Slightly larger for better layout
+                      mainAxisExtent = 540; // Increased to fit card content
                     } else if (constraints.maxWidth >= 900) {
                       crossAxisCount = 2; // Tablet landscape: 2 columns
-                      mainAxisExtent = 440;
+                      mainAxisExtent = 540;
                     } else if (constraints.maxWidth >= 600) {
                       crossAxisCount = 2; // Tablet portrait: 2 columns
                       mainAxisExtent =
-                          460; // More space for 2 columns on tablet
+                          540; // Increased to fit card content
                     } else if (constraints.maxWidth >= 400) {
                       crossAxisCount = 1; // Mobile landscape: 1 column
-                      mainAxisExtent = 480;
+                      mainAxisExtent = 540;
                     } else {
                       crossAxisCount = 1; // Small mobile: 1 column
-                      mainAxisExtent = 520; // More space for narrow screens
+                      mainAxisExtent = 540; // Increased to fit card content
                     }
 
                     return GridView.builder(

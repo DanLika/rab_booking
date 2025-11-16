@@ -266,7 +266,7 @@ Screen je direktno povezan sa Firestore bazom i prikazuje REAL-TIME podatke o re
 lib/features/owner_dashboard/presentation/screens/analytics_screen.dart
 ```
 **Svrha:** Glavni screen za prikaz analytics podataka i vizualizacija
-**Status:** ✅ Kompletno refaktorisan (2025-11-16) - 874 linije koda
+**Status:** ✅ Kompletno refaktorisan (2025-11-16) - **1114 linija koda** (povećano sa 874)
 **Sadrži:**
 - `AnalyticsScreen` - Main screen sa date range selector
 - `_AnalyticsContent` - Container za sve analytics sekcije
@@ -471,10 +471,17 @@ const AlwaysStoppedAnimation<Color>(AppColors.info),
 #### 🎨 UI/UX Features
 
 **Responsive Grid Layout:**
-- Desktop (>900px): 4 columns
-- Tablet (>600px): 2 columns
-- Mobile (<600px): 1 column
-- Aspect ratio se prilagođava za optimalan prikaz
+- Desktop (>900px): 4 columns, aspect ratio 1.4
+- Tablet (>600px): 2 columns, aspect ratio 1.2
+- Mobile (<600px): 1 column, aspect ratio 1.0
+- **UPDATED (2025-11-16):** Aspect ratios smanjeni da eliminišu overflow errors
+
+**Premium MetricCard Design:**
+- Gradient backgrounds (theme-aware, auto-darkens 30% u dark mode)
+- BorderRadius 20 sa BoxShadow
+- Bijeli tekst na gradijentima (odličan kontrast)
+- Ikone u polu-prozirnim bijelim kontejnerima
+- Responsive padding i spacing
 
 **Dynamic Labels:**
 - "Last 7 days" za week filter
@@ -488,6 +495,11 @@ const AlwaysStoppedAnimation<Color>(AppColors.info),
 - Booking.com: `#003580` (brand color)
 - Airbnb: `#FF5A5F` (brand color)
 - Unknown: `AppColors.textSecondary`
+
+**Gradient Background:**
+- Dark theme: veryDarkGray → mediumDarkGray
+- Light theme: veryLightGray → white
+- Stops: [0.0, 0.3] (fade at top 30%)
 
 ---
 
@@ -504,7 +516,7 @@ const AlwaysStoppedAnimation<Color>(AppColors.info),
    - Da li je problem u modelu/data strukturi?
 
 3. **AKO MIJENJAJ UI (analytics_screen.dart):**
-   - ⚠️ **EKSTRA OPREZNO** - 874 linije koda!
+   - ⚠️ **EKSTRA OPREZNO** - 1114 linija koda!
    - NE mijenjaj chart komponente bez poznavanja fl_chart paketa
    - NE kvari responsive grid layout
    - NE mijenjaj dynamic label logiku
@@ -577,11 +589,46 @@ const AlwaysStoppedAnimation<Color>(AppColors.info),
 - Fiksovani const constructor warnings
 - Total: +361 insertions, -23 deletions
 
+**2025-11-16:** `refactor: redesign analytics screen to match overview page styling`
+- **MAJOR UI REDESIGN** - Potpuno redesigniran da odgovara Overview page-u
+- Dodato gradient background (dark/light theme aware)
+- MetricCard potpuno redesigniran:
+  * Gradient backgrounds umjesto solid boja
+  * BorderRadius 20 sa BoxShadow za premium izgled
+  * Bijeli tekst na gradijentima
+  * Ikone u polu-prozirnim bijelim kontejnerima
+  * theme.textTheme umjesto AppTypography
+- Layout poboljšanja:
+  * SingleChildScrollView → ListView (bolja performance)
+  * Responsive padding (16px mobile, 24px desktop)
+  * Transparent DateRangeSelector pozadina
+- **FIXED OVERFLOW ERRORS:**
+  * Aspect ratios: Desktop 1.8→1.4, Tablet 1.6→1.2, Mobile 1.55→1.0
+  * Smanjeno padding i spacing za kompaktniji layout
+  * Manje ikone (20-22px umjesto 22-24px)
+  * Eliminisan "RenderFlex overflowed by 44 pixels" error
+- Theme support:
+  * Sve boje theme-aware (colorScheme)
+  * FilterChips koriste primaryContainer
+  * Empty states sa themed ikonama i HR porukama
+  * Progress bar-ovi sa dark/light pozadinom
+- Chart enhancements:
+  * Responsive chart heights (300/250/200px)
+  * Bolji empty states
+- MetricCard gradijenti:
+  * Total Revenue: info + infoDark (plavi)
+  * Total Bookings: primary + primaryDark (ljubičasti)
+  * Occupancy Rate: primaryLight + primary (svijetlo ljubičasti)
+  * Avg. Nightly Rate: textSecondary + textDisabled (sivi)
+- Dodato _createThemeGradient() helper (auto-darkens 30% u dark mode)
+- Result: +422 insertions, -181 deletions
+- **0 analyzer errors, 0 overflow errors, potpun dark/light theme support**
+
 ---
 
 #### 🎯 TL;DR - Najvažnije
 
-1. **NE MIJENJAJ Analytics Screen "na brzinu" - 874 linije kompleksnog koda!**
+1. **NE MIJENJAJ Analytics Screen "na brzinu" - 1114 linija kompleksnog koda!**
 2. **NE KVARI performance optimizacije - cache map je kritičan!**
 3. **NE DODAVAJ duplicate Firestore pozive - bile su eliminirane!**
 4. **NE MIJENJAJ fl_chart komponente bez poznavanja biblioteke!**

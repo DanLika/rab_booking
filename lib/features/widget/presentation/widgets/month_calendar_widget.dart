@@ -801,8 +801,23 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         dateInfo.status == DateStatus.available ||
         dateInfo.status == DateStatus.partialCheckIn;
 
-    if ((isSelectingCheckIn && !canSelectForCheckIn) ||
-        (isSelectingCheckOut && !canSelectForCheckOut)) {
+    if (isSelectingCheckIn && !canSelectForCheckIn) {
+      SnackBarHelper.showError(
+        context: context,
+        message: 'This date is not available for check-in. Please select an available date.',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 3),
+      );
+      return;
+    }
+
+    if (isSelectingCheckOut && !canSelectForCheckOut) {
+      SnackBarHelper.showError(
+        context: context,
+        message: 'This date is not available for check-out. Please select an available date.',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 3),
+      );
       return;
     }
 

@@ -11,6 +11,7 @@ import '../../../../shared/models/unit_model.dart';
 import '../providers/owner_properties_provider.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
 
 // UI Constants
 const double _kUnitImageHeight = 160.0;
@@ -75,14 +76,14 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                 end: Alignment.bottomRight,
                                 colors: isDark
                                     ? [theme.colorScheme.darkGray, theme.colorScheme.mediumDarkGray]
-                                    : [theme.colorScheme.brandPurple, theme.colorScheme.brandBlue],
+                                    : [theme.colorScheme.primary, theme.colorScheme.secondary],
                               ),
                               borderRadius: BorderRadius.circular(_kCardBorderRadius),
                               boxShadow: isDark
                                   ? null
                                   : [
                                       BoxShadow(
-                                        color: theme.colorScheme.brandPurple.withAlpha((0.2 * 255).toInt()),
+                                        color: theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
                                         blurRadius: 20,
                                         offset: const Offset(0, 8),
                                       ),
@@ -175,7 +176,7 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                   icon: Icons.apartment,
                                   label: 'Ukupno jedinica',
                                   value: '${units.length}',
-                                  color: theme.colorScheme.brandPurple,
+                                  color: theme.colorScheme.primary,
                                 ),
                                 const SizedBox(height: 16),
                                 Container(
@@ -227,58 +228,43 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Units List - Using responsive SliverGrid for better layout
+                // Units List - Using Wrap for flexible adaptive layout
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverLayoutBuilder(
-                    builder: (context, constraints) {
-                      // Calculate number of columns based on screen width
-                      // SliverConstraints uses crossAxisExtent instead of maxWidth
-                      final width = constraints.crossAxisExtent;
-                      int crossAxisCount;
-                      double childAspectRatio;
-                      double crossAxisSpacing;
-                      double mainAxisSpacing;
+                  sliver: SliverToBoxAdapter(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Calculate card width based on screen width
+                        // Min 300px, max 400px, adaptive to fit screen
+                        final screenWidth = constraints.maxWidth;
+                        double cardWidth;
 
-                      if (width >= 1200) {
-                        // Desktop: 3 columns
-                        crossAxisCount = 3;
-                        childAspectRatio = 0.75;
-                        crossAxisSpacing = 16;
-                        mainAxisSpacing = 16;
-                      } else if (width >= 800) {
-                        // Tablet landscape: 2 columns
-                        crossAxisCount = 2;
-                        childAspectRatio = 0.75;
-                        crossAxisSpacing = 16;
-                        mainAxisSpacing = 16;
-                      } else if (width >= 600) {
-                        // Tablet portrait: 2 columns
-                        crossAxisCount = 2;
-                        childAspectRatio = 0.72;
-                        crossAxisSpacing = 12;
-                        mainAxisSpacing = 16;
-                      } else {
-                        // Mobile: 1 column
-                        crossAxisCount = 1;
-                        childAspectRatio = 0.85;
-                        crossAxisSpacing = 0;
-                        mainAxisSpacing = 16;
-                      }
+                        if (screenWidth >= 1200) {
+                          // Desktop: 3 cards if possible
+                          cardWidth = ((screenWidth - 32) / 3).clamp(300, 400);
+                        } else if (screenWidth >= 800) {
+                          // Tablet: 2 cards if possible
+                          cardWidth = ((screenWidth - 16) / 2).clamp(300, 400);
+                        } else if (screenWidth >= 600) {
+                          // Small tablet: 2 cards
+                          cardWidth = ((screenWidth - 16) / 2).clamp(300, 350);
+                        } else {
+                          // Mobile: 1 card, full width
+                          cardWidth = screenWidth;
+                        }
 
-                      return SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          childAspectRatio: childAspectRatio,
-                          crossAxisSpacing: crossAxisSpacing,
-                          mainAxisSpacing: mainAxisSpacing,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) => _UnitWidgetCard(unit: units[index]),
-                          childCount: units.length,
-                        ),
-                      );
-                    },
+                        return Wrap(
+                          spacing: 16,
+                          runSpacing: 16,
+                          children: units.map((unit) {
+                            return SizedBox(
+                              width: cardWidth,
+                              child: _UnitWidgetCard(unit: unit),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
                   ),
                 ),
 
@@ -287,9 +273,36 @@ class WidgetSettingsListScreen extends ConsumerWidget {
               ],
             );
           },
-          loading: () => Center(
-            child: CircularProgressIndicator(
-              color: theme.colorScheme.brandPurple,
+          loading: () => Padding(
+            padding: const EdgeInsets.all(16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Calculate card width for skeleton (same logic as Wrap)
+                final screenWidth = constraints.maxWidth;
+                double cardWidth;
+
+                if (screenWidth >= 1200) {
+                  cardWidth = ((screenWidth - 32) / 3).clamp(300, 400);
+                } else if (screenWidth >= 800) {
+                  cardWidth = ((screenWidth - 16) / 2).clamp(300, 400);
+                } else if (screenWidth >= 600) {
+                  cardWidth = ((screenWidth - 16) / 2).clamp(300, 350);
+                } else {
+                  cardWidth = screenWidth - 32;
+                }
+
+                return Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: List.generate(
+                    6, // Show 6 skeleton cards
+                    (index) => SizedBox(
+                      width: cardWidth,
+                      child: _SkeletonUnitCard(),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           error: (error, stack) => Center(
@@ -322,7 +335,7 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                     icon: const Icon(Icons.refresh),
                     label: const Text('Pokušaj ponovo'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: theme.colorScheme.brandPurple,
+                      backgroundColor: theme.colorScheme.primary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
                         vertical: 16,
@@ -351,12 +364,12 @@ class WidgetSettingsListScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: theme.colorScheme.brandPurple.withAlpha((0.1 * 255).toInt()),
+                color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
               ),
               child: Icon(
                 Icons.widgets_outlined,
                 size: _kEmptyStateIconSize,
-                color: theme.colorScheme.brandPurple,
+                color: theme.colorScheme.primary,
               ),
             ),
             const SizedBox(height: 24),
@@ -380,7 +393,7 @@ class WidgetSettingsListScreen extends ConsumerWidget {
               icon: const Icon(Icons.add),
               label: const Text('Dodaj jedinicu'),
               style: FilledButton.styleFrom(
-                backgroundColor: theme.colorScheme.brandPurple,
+                backgroundColor: theme.colorScheme.primary,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               ),
             ),
@@ -477,14 +490,14 @@ class _UnitWidgetCard extends ConsumerWidget {
                       if (loadingProgress == null) return child;
                       return Container(
                         height: _kUnitImageHeight,
-                        color: theme.colorScheme.brandPurple.withAlpha((0.05 * 255).toInt()),
+                        color: theme.colorScheme.primary.withAlpha((0.05 * 255).toInt()),
                         child: Center(
                           child: CircularProgressIndicator(
                             value: loadingProgress.expectedTotalBytes != null
                                 ? loadingProgress.cumulativeBytesLoaded /
                                     loadingProgress.expectedTotalBytes!
                                 : null,
-                            color: theme.colorScheme.brandPurple,
+                            color: theme.colorScheme.primary,
                             strokeWidth: 2,
                           ),
                         ),
@@ -493,7 +506,7 @@ class _UnitWidgetCard extends ConsumerWidget {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         height: _kUnitImageHeight,
-                        color: theme.colorScheme.brandPurple.withAlpha((0.1 * 255).toInt()),
+                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
                         child: Icon(
                           Icons.apartment,
                           size: 48,
@@ -504,7 +517,7 @@ class _UnitWidgetCard extends ConsumerWidget {
                   )
                 : Container(
                     height: _kUnitImageHeight,
-                    color: theme.colorScheme.brandPurple.withAlpha((0.1 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
                     child: Icon(
                       Icons.apartment,
                       size: 48,
@@ -710,6 +723,124 @@ class _InfoChip extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Skeleton Unit Card Widget (Loading placeholder)
+class _SkeletonUnitCard extends StatelessWidget {
+  const _SkeletonUnitCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(_kCardBorderRadius),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+        ),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withAlpha((0.04 * 255).toInt()),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image skeleton
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(_kCardBorderRadius)),
+            child: SkeletonLoader(
+              height: _kUnitImageHeight,
+              width: double.infinity,
+            ),
+          ),
+          // Content skeleton
+          Padding(
+            padding: const EdgeInsets.all(_kHeaderCardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title skeleton
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SkeletonLoader(
+                            height: 20,
+                            width: double.infinity,
+                          ),
+                          const SizedBox(height: 8),
+                          SkeletonLoader(
+                            height: 12,
+                            width: 100,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SkeletonLoader(
+                      height: 24,
+                      width: 80,
+                      borderRadius: 20,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Info chips skeleton
+                Row(
+                  children: [
+                    SkeletonLoader(
+                      height: 20,
+                      width: 80,
+                    ),
+                    const SizedBox(width: 16),
+                    SkeletonLoader(
+                      height: 20,
+                      width: 90,
+                    ),
+                    const SizedBox(width: 16),
+                    SkeletonLoader(
+                      height: 20,
+                      width: 70,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // Buttons skeleton
+                Row(
+                  children: [
+                    SkeletonLoader(
+                      height: 48,
+                      width: 48,
+                      borderRadius: 12,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SkeletonLoader(
+                        height: 48,
+                        width: double.infinity,
+                        borderRadius: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -36,6 +36,7 @@ import '../../features/owner_dashboard/presentation/screens/guides/stripe_guide_
 import '../../features/owner_dashboard/presentation/screens/ical/guides/ical_guide_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_export_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
@@ -106,6 +107,7 @@ class OwnerRoutes {
   static const String stripeIntegration = '/owner/integrations/stripe';
   // iCal routes (NEW structure - organized under /ical/)
   static const String icalImport = '/owner/integrations/ical/import';   // iCal Sync Settings (Import)
+  static const String icalExportList = '/owner/integrations/ical/export-list'; // iCal Export List (select unit)
   static const String icalExport = '/owner/integrations/ical/export';   // iCal Export (Debug)
   static const String icalGuide = '/owner/guides/ical';                 // iCal Guide
   // DEPRECATED routes - will be removed in future versions
@@ -366,6 +368,11 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: OwnerRoutes.icalImport,
         builder: (context, state) => const IcalSyncSettingsScreen(),
+      ),
+      // iCal Export List (select unit) - NEW
+      GoRoute(
+        path: OwnerRoutes.icalExportList,
+        builder: (context, state) => const IcalExportListScreen(),
       ),
       // iCal Export (Debug) - NEW
       // NOTE: This route requires 'extra' params (unit, propertyId)

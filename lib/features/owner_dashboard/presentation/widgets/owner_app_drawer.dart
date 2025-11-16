@@ -111,12 +111,27 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            // iCal Sinhronizacija (Import)
-            _DrawerItem(
+            // iCal Integracija Expansion
+            _PremiumExpansionTile(
               icon: Icons.sync,
-              title: 'iCal Sinhronizacija',
-              isSelected: currentRoute == 'integrations/ical/import',
-              onTap: () => context.go(OwnerRoutes.icalImport),
+              title: 'iCal Integracija',
+              isExpanded: currentRoute.startsWith('integrations/ical'),
+              children: [
+                _DrawerSubItem(
+                  title: 'Import Rezervacija',
+                  subtitle: 'Sync sa booking.com',
+                  icon: Icons.download,
+                  isSelected: currentRoute == 'integrations/ical/import',
+                  onTap: () => context.go(OwnerRoutes.icalImport),
+                ),
+                _DrawerSubItem(
+                  title: 'Export Kalendara',
+                  subtitle: 'iCal feed URL',
+                  icon: Icons.upload,
+                  isSelected: currentRoute == 'integrations/ical/export-list',
+                  onTap: () => context.go(OwnerRoutes.icalExportList),
+                ),
+              ],
             ),
 
             const SizedBox(height: 4),

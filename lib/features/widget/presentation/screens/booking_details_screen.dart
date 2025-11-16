@@ -7,7 +7,6 @@ import '../providers/theme_provider.dart';
 import '../../domain/models/booking_details_model.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../theme/responsive_helper.dart';
-import '../components/adaptive_glass_card.dart';
 
 /// Booking Details Screen
 /// Displays complete booking information for guest
@@ -160,7 +159,11 @@ class BookingDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildBookingReferenceCard(WidgetColorScheme colors) {
-    return AdaptiveGlassCard(
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -206,7 +209,11 @@ class BookingDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildPropertyCard(WidgetColorScheme colors) {
-    return AdaptiveGlassCard(
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -231,7 +238,11 @@ class BookingDetailsScreen extends ConsumerWidget {
     final checkOut = DateTime.parse(booking.checkOut);
     final formatter = DateFormat('MMM d, yyyy');
 
-    return AdaptiveGlassCard(
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -271,7 +282,11 @@ class BookingDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildPaymentCard(WidgetColorScheme colors) {
-    return AdaptiveGlassCard(
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -374,7 +389,11 @@ class BookingDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildContactCard(WidgetColorScheme colors) {
-    return AdaptiveGlassCard(
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -402,7 +421,11 @@ class BookingDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildNotesCard(WidgetColorScheme colors) {
-    return AdaptiveGlassCard(
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(

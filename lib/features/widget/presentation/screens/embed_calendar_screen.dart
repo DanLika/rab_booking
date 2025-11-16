@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/year_grid_calendar_widget.dart';
 import '../providers/embed_booking_provider.dart';
-import '../components/adaptive_glass_card.dart';
 import '../utils/snackbar_helper.dart';
 
 /// Embedded calendar screen - public view for guests
@@ -31,7 +30,9 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AdaptiveBlurredAppBar(
+      appBar: AppBar(
+        elevation: 0,
+        centerTitle: true,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -100,10 +101,15 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
       current = current.add(const Duration(days: 1));
     }
 
-    return AdaptiveGlassCard(
+    return Card(
+      elevation: 2,
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
-      child: Column(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -244,6 +250,7 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
             ],
           ),
         ],
+      ),
       ),
     );
   }

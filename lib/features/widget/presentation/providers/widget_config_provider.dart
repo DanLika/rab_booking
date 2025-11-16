@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/widget_config.dart';
-import '../theme/villa_jasko_theme_data.dart';
+import '../theme/minimalist_theme.dart';
 
 /// Provider for widget configuration
 ///
@@ -35,8 +35,8 @@ final widgetThemeModeProvider = Provider<ThemeMode>((ref) {
 final widgetLightThemeProvider = Provider<ThemeData>((ref) {
   final config = ref.watch(widgetConfigProvider);
 
-  // Start with Villa Jasko light theme (Azure Blue design system)
-  ThemeData theme = VillaJaskoTheme.lightTheme;
+  // Start with Minimalist light theme
+  ThemeData theme = MinimalistTheme.light;
 
   // Apply custom colors if provided
   if (config.primaryColor != null) {
@@ -72,8 +72,8 @@ final widgetLightThemeProvider = Provider<ThemeData>((ref) {
 final widgetDarkThemeProvider = Provider<ThemeData>((ref) {
   final config = ref.watch(widgetConfigProvider);
 
-  // Start with Villa Jasko dark theme
-  ThemeData theme = VillaJaskoTheme.darkTheme;
+  // Start with Minimalist dark theme
+  ThemeData theme = MinimalistTheme.dark;
 
   // Apply custom colors if provided
   if (config.primaryColor != null) {

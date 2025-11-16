@@ -37,7 +37,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
         return _buildServicesWidget(context, ref, services, isDarkMode, getColor);
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (error, stackTrace) => const SizedBox.shrink(),
     );
   }
 

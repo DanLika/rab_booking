@@ -7,7 +7,6 @@ import '../providers/theme_provider.dart';
 import '../providers/booking_lookup_provider.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../theme/responsive_helper.dart';
-import '../components/adaptive_glass_card.dart';
 
 /// Booking Lookup Screen
 /// Allows guests to find their booking using booking reference + email
@@ -93,7 +92,11 @@ class _BookingLookupScreenState extends ConsumerState<BookingLookupScreen> {
                   const SizedBox(height: 32),
 
                   // Lookup form card
-                  AdaptiveGlassCard(
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Form(

@@ -636,99 +636,97 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
             return Stack(
               children: [
-                // Scrollable content
-                SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding,
-                      vertical: verticalPadding,
-                    ),
-                    child: Column(
-                      children: [
-                        // Custom title header (if configured)
-                        if (_widgetSettings?.themeOptions?.customTitle != null &&
-                            _widgetSettings!.themeOptions!.customTitle!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: Text(
-                              _widgetSettings!.themeOptions!.customTitle!,
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: isDarkMode
-                                    ? MinimalistColorsDark.textPrimary
-                                    : MinimalistColors.textPrimary,
-                                fontFamily: 'Manrope',
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
+                // No-scroll content (embedded widget - host site scrolls)
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: verticalPadding,
+                  ),
+                  child: Column(
+                    children: [
+                      // Custom title header (if configured)
+                      if (_widgetSettings?.themeOptions?.customTitle != null &&
+                          _widgetSettings!.themeOptions!.customTitle!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            _widgetSettings!.themeOptions!.customTitle!,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: isDarkMode
+                                  ? MinimalistColorsDark.textPrimary
+                                  : MinimalistColors.textPrimary,
+                              fontFamily: 'Manrope',
                             ),
-                          ),
-
-                        // Bug #67 Fix: iCal sync warning banner
-                        _buildIcalSyncWarningInline(unitId, isDarkMode),
-
-                        // Calendar with calculated height
-                        SizedBox(
-                          height: calendarHeight,
-                          child: CalendarViewSwitcher(
-                            propertyId: _propertyId ?? '',
-                            unitId: unitId,
-                            forceMonthView: forceMonthView,
-                            // Disable date selection in calendar_only mode
-                            onRangeSelected:
-                                widgetMode == WidgetMode.calendarOnly
-                                ? null
-                                : (start, end) {
-                                    // Validate minimum nights requirement
-                                    if (start != null && end != null) {
-                                      final minNights =
-                                          _widgetSettings?.minNights ?? 1;
-                                      final selectedNights = end
-                                          .difference(start)
-                                          .inDays;
-
-                                      if (selectedNights < minNights) {
-                                        // Show error message
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Minimum $minNights ${minNights == 1 ? 'night' : 'nights'} required. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-                                            ),
-                                            backgroundColor:
-                                                MinimalistColors.error,
-                                            duration: const Duration(
-                                              seconds: 3,
-                                            ),
-                                          ),
-                                        );
-                                        return;
-                                      }
-                                    }
-
-                                    setState(() {
-                                      _checkIn = start;
-                                      _checkOut = end;
-                                      _pillBarPosition =
-                                          null; // Reset position when new dates selected
-                                    });
-
-                                    // Bug #53: Save form data after date selection
-                                    _saveFormData();
-                                  },
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
                           ),
                         ),
 
-                        // Contact pill card (calendar only mode - inline, below calendar)
-                        if (widgetMode == WidgetMode.calendarOnly) ...[
-                          const SizedBox(height: 16),
-                          _buildContactPillCard(isDarkMode, screenWidth),
-                        ],
+                      // Bug #67 Fix: iCal sync warning banner
+                      _buildIcalSyncWarningInline(unitId, isDarkMode),
+
+                      // Calendar - takes all available space
+                      Expanded(
+                        child: CalendarViewSwitcher(
+                          propertyId: _propertyId ?? '',
+                          unitId: unitId,
+                          forceMonthView: forceMonthView,
+                          // Disable date selection in calendar_only mode
+                          onRangeSelected:
+                              widgetMode == WidgetMode.calendarOnly
+                              ? null
+                              : (start, end) {
+                                  // Validate minimum nights requirement
+                                  if (start != null && end != null) {
+                                    final minNights =
+                                        _widgetSettings?.minNights ?? 1;
+                                    final selectedNights = end
+                                        .difference(start)
+                                        .inDays;
+
+                                    if (selectedNights < minNights) {
+                                      // Show error message
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Minimum $minNights ${minNights == 1 ? 'night' : 'nights'} required. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
+                                          ),
+                                          backgroundColor:
+                                              MinimalistColors.error,
+                                          duration: const Duration(
+                                            seconds: 3,
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                  }
+
+                                  setState(() {
+                                    _checkIn = start;
+                                    _checkOut = end;
+                                    _pillBarPosition =
+                                        null; // Reset position when new dates selected
+                                  });
+
+                                  // Bug #53: Save form data after date selection
+                                  _saveFormData();
+                                },
+                        ),
+                      ),
+
+                      // Contact pill card (calendar only mode - inline, below calendar)
+                      if (widgetMode == WidgetMode.calendarOnly) ...[
+                        const SizedBox(height: 12),
+                        _buildContactPillCard(isDarkMode, screenWidth),
+                        const SizedBox(height: 12),
                       ],
-                    ),
+                    ],
                   ),
                 ),
 
@@ -1005,62 +1003,32 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final contactOptions = _widgetSettings?.contactOptions;
     final isDesktop = screenWidth > 600;
 
-    // Responsive max-width
-    final maxWidth = screenWidth < 600
-        ? screenWidth - 24 // Mobile: full width - padding
-        : screenWidth < 900
-            ? 600.0 // Tablet
-            : 800.0; // Desktop
-
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: screenWidth < 600 ? 12 : 16,
-          ),
-          child: Column(
-            children: [
-              // Subtitle: "Contact us for booking"
-              Text(
-                'Contact us for booking',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDarkMode
-                      ? MinimalistColorsDark.textSecondary
-                      : MinimalistColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-
-              // Pill container
-              Container(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? MinimalistColorsDark.backgroundSecondary
-                      : MinimalistColors.backgroundSecondary,
-                  borderRadius: BorderRadius.circular(12), // Pill style
-                  border: Border.all(
-                    color: isDarkMode
-                        ? MinimalistColorsDark.borderDefault
-                        : MinimalistColors.borderDefault,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: isDesktop
-                    ? _buildDesktopContactRow(contactOptions, isDarkMode)
-                    : _buildMobileContactColumn(contactOptions, isDarkMode),
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isDarkMode
+                ? MinimalistColorsDark.backgroundSecondary
+                : MinimalistColors.backgroundSecondary,
+            borderRadius: BorderRadius.circular(12), // Pill style
+            border: Border.all(
+              color: isDarkMode
+                  ? MinimalistColorsDark.borderDefault
+                  : MinimalistColors.borderDefault,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
+          child: isDesktop
+              ? _buildDesktopContactRow(contactOptions, isDarkMode)
+              : _buildMobileContactColumn(contactOptions, isDarkMode),
         ),
       ),
     );

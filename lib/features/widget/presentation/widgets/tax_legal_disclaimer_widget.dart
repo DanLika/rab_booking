@@ -54,7 +54,7 @@ class _TaxLegalDisclaimerWidgetState
         return _buildDisclaimerUI(context, taxConfig, isDarkMode, getColor);
       },
       loading: () => const SizedBox.shrink(), // Don't show while loading
-      error: (_, __) => const SizedBox.shrink(), // Don't show on error
+      error: (error, stackTrace) => const SizedBox.shrink(), // Don't show on error
     );
   }
 

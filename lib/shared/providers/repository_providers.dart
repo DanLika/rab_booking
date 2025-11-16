@@ -8,12 +8,10 @@ import '../repositories/booking_repository.dart';
 import '../repositories/daily_price_repository.dart';
 import '../repositories/property_repository.dart';
 import '../repositories/unit_repository.dart';
-import '../repositories/additional_service_repository.dart';
 import '../repositories/firebase/firebase_booking_repository.dart';
 import '../../features/widget/data/repositories/firebase_daily_price_repository.dart';
 import '../repositories/firebase/firebase_property_repository.dart';
 import '../repositories/firebase/firebase_unit_repository.dart';
-import '../repositories/firebase/firebase_additional_service_repository.dart';
 // Owner Dashboard imports
 import '../../features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart';
 import '../../features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart';
@@ -64,12 +62,6 @@ final bookingRepositoryProvider = Provider<BookingRepository>((ref) {
 final dailyPriceRepositoryProvider = Provider<DailyPriceRepository>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return FirebaseDailyPriceRepository(firestore);
-});
-
-/// Additional Service repository provider
-final additionalServiceRepositoryProvider = Provider<AdditionalServiceRepository>((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  return FirebaseAdditionalServiceRepository(firestore);
 });
 
 // ========== Owner Dashboard Repositories ==========

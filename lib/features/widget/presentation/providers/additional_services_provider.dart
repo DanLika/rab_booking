@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/models/additional_service_model.dart';
+import '../../../../shared/repositories/firebase/firebase_additional_services_repository.dart';
 
 /// Provider for additional services for a unit
 final unitAdditionalServicesProvider = FutureProvider.family<List<AdditionalServiceModel>, String>((ref, unitId) async {
   final unitRepo = ref.watch(unitRepositoryProvider);
   final propertyRepo = ref.watch(propertyRepositoryProvider);
-  final serviceRepo = ref.watch(additionalServiceRepositoryProvider);
+  final serviceRepo = ref.watch(additionalServicesRepositoryProvider);
 
   // Get unit to find property
   final unit = await unitRepo.fetchUnitById(unitId);
@@ -20,8 +21,12 @@ final unitAdditionalServicesProvider = FutureProvider.family<List<AdditionalServ
     return [];
   }
 
-  // Get available services for this owner
-  final services = await serviceRepo.fetchAvailableServices(property.ownerId);
+  // Get all services for this owner (includes soft delete check + sort order)
+  final allServices = await serviceRepo.fetchByOwner(property.ownerId);
+
+  // Filter to only show available services (client-side filter)
+  final services = allServices.where((s) => s.isAvailable).toList();
+
   return services;
 });
 

@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../domain/models/analytics_summary.dart';
 import '../providers/analytics_provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -14,6 +15,8 @@ class AnalyticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final dateRange = ref.watch(dateRangeNotifierProvider);
     final analyticsAsync = ref.watch(
       analyticsNotifierProvider(dateRange: dateRange),
@@ -26,25 +29,44 @@ class AnalyticsScreen extends ConsumerWidget {
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
-      body: Column(
-        children: [
-          _DateRangeSelector(dateRange: dateRange),
-          Expanded(
-            child: analyticsAsync.when(
-              data: (analytics) => _AnalyticsContent(
-                analytics: analytics,
-                dateRange: dateRange,
-              ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => ErrorStateWidget(
-                message: 'Failed to load analytics',
-                onRetry: () {
-                  ref.invalidate(analyticsNotifierProvider);
-                },
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [
+                    theme.colorScheme.veryDarkGray,
+                    theme.colorScheme.mediumDarkGray,
+                  ]
+                : [theme.colorScheme.veryLightGray, Colors.white],
+            stops: const [0.0, 0.3],
+          ),
+        ),
+        child: Column(
+          children: [
+            _DateRangeSelector(dateRange: dateRange),
+            Expanded(
+              child: analyticsAsync.when(
+                data: (analytics) => _AnalyticsContent(
+                  analytics: analytics,
+                  dateRange: dateRange,
+                ),
+                loading: () => Center(
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                error: (error, stack) => ErrorStateWidget(
+                  message: 'Failed to load analytics',
+                  onRetry: () {
+                    ref.invalidate(analyticsNotifierProvider);
+                  },
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -59,12 +81,13 @@ class _DateRangeSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: AppColors.surface,
+      color: Colors.transparent,
       child: Row(
         children: [
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               child: Row(
                 children: [
                   _FilterChip(
@@ -150,13 +173,17 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return FilterChip(
       label: Text(label),
       selected: selected,
       onSelected: (_) => onSelected(),
-      selectedColor: AppColors.authPrimary,
+      selectedColor: theme.colorScheme.primaryContainer,
+      backgroundColor: theme.colorScheme.surface,
       labelStyle: TextStyle(
-        color: selected ? Colors.white : AppColors.textPrimary,
+        color: selected
+            ? theme.colorScheme.onPrimaryContainer
+            : theme.colorScheme.onSurface,
       ),
     );
   }
@@ -173,49 +200,50 @@ class _AnalyticsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Metric Cards
-          _MetricCardsGrid(
-            analytics: analytics,
-            dateRange: dateRange,
-          ),
-          const SizedBox(height: 32),
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
-          // Revenue Chart
-          const _SectionTitle(title: 'Revenue Over Time'),
-          const SizedBox(height: 16),
-          _RevenueChart(data: analytics.revenueHistory),
-          const SizedBox(height: 32),
+    return ListView(
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
+      children: [
+        // Metric Cards
+        _MetricCardsGrid(
+          analytics: analytics,
+          dateRange: dateRange,
+        ),
+        SizedBox(height: isMobile ? 24 : 32),
 
-          // Bookings Chart
-          const _SectionTitle(title: 'Bookings Over Time'),
-          const SizedBox(height: 16),
-          _BookingsChart(data: analytics.bookingHistory),
-          const SizedBox(height: 32),
+        // Revenue Chart
+        const _SectionTitle(title: 'Revenue Over Time'),
+        const SizedBox(height: 16),
+        _RevenueChart(data: analytics.revenueHistory),
+        SizedBox(height: isMobile ? 24 : 32),
 
-          // Top Performing Properties
-          const _SectionTitle(title: 'Top Performing Properties'),
-          const SizedBox(height: 16),
-          _TopPropertiesList(properties: analytics.topPerformingProperties),
-          const SizedBox(height: 32),
+        // Bookings Chart
+        const _SectionTitle(title: 'Bookings Over Time'),
+        const SizedBox(height: 16),
+        _BookingsChart(data: analytics.bookingHistory),
+        SizedBox(height: isMobile ? 24 : 32),
 
-          // Widget Analytics
-          const _SectionTitle(title: 'Widget Performance'),
-          const SizedBox(height: 16),
-          _WidgetAnalyticsCard(
-            widgetBookings: analytics.widgetBookings,
-            totalBookings: analytics.totalBookings,
-            widgetRevenue: analytics.widgetRevenue,
-            totalRevenue: analytics.totalRevenue,
-          ),
-          const SizedBox(height: 16),
-          _BookingsBySourceChart(bookingsBySource: analytics.bookingsBySource),
-        ],
-      ),
+        // Top Performing Properties
+        const _SectionTitle(title: 'Top Performing Properties'),
+        const SizedBox(height: 16),
+        _TopPropertiesList(properties: analytics.topPerformingProperties),
+        SizedBox(height: isMobile ? 24 : 32),
+
+        // Widget Analytics
+        const _SectionTitle(title: 'Widget Performance'),
+        const SizedBox(height: 16),
+        _WidgetAnalyticsCard(
+          widgetBookings: analytics.widgetBookings,
+          totalBookings: analytics.totalBookings,
+          widgetRevenue: analytics.widgetRevenue,
+          totalRevenue: analytics.totalRevenue,
+        ),
+        const SizedBox(height: 16),
+        _BookingsBySourceChart(bookingsBySource: analytics.bookingsBySource),
+        SizedBox(height: isMobile ? 16 : 24),
+      ],
     );
   }
 }
@@ -227,9 +255,10 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Text(
       title,
-      style: AppTypography.h2.copyWith(color: AppColors.textPrimary),
+      style: AppTypography.h2.copyWith(color: theme.colorScheme.onSurface),
     );
   }
 }
@@ -262,10 +291,10 @@ class _MetricCardsGrid extends StatelessWidget {
 
         // Responsive aspect ratio based on screen width
         final aspectRatio = constraints.maxWidth > 900
-            ? 1.8 // Desktop - wider cards
+            ? 1.4 // Desktop - taller cards to fit content
             : constraints.maxWidth > 600
-            ? 1.6 // Tablet - medium cards
-            : 1.3; // Mobile - taller cards for more content
+            ? 1.2 // Tablet - taller cards
+            : 1.0; // Mobile - taller cards to prevent overflow
 
         return GridView.count(
           shrinkWrap: true,
@@ -280,31 +309,31 @@ class _MetricCardsGrid extends StatelessWidget {
               value: '\$${analytics.totalRevenue.toStringAsFixed(2)}',
               subtitle:
                   '${_getRecentPeriodLabel()}: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
-              icon: Icons.attach_money,
-              color: AppColors.success,
+              icon: Icons.euro_rounded,
+              gradientColors: const [AppColors.info, AppColors.infoDark],
             ),
             _MetricCard(
               title: 'Total Bookings',
               value: '${analytics.totalBookings}',
               subtitle: '${_getRecentPeriodLabel()}: ${analytics.monthlyBookings}',
-              icon: Icons.book,
-              color: AppColors.info,
+              icon: Icons.calendar_today_rounded,
+              gradientColors: const [AppColors.primary, AppColors.primaryDark],
             ),
             _MetricCard(
               title: 'Occupancy Rate',
               value: '${analytics.occupancyRate.toStringAsFixed(1)}%',
               subtitle:
                   '${analytics.activeProperties}/${analytics.totalProperties} properties active',
-              icon: Icons.home,
-              color: AppColors.warning,
+              icon: Icons.analytics_rounded,
+              gradientColors: const [AppColors.primaryLight, AppColors.primary],
             ),
             _MetricCard(
               title: 'Avg. Nightly Rate',
               value: '\$${analytics.averageNightlyRate.toStringAsFixed(2)}',
               subtitle:
                   'Cancellation: ${analytics.cancellationRate.toStringAsFixed(1)}%',
-              icon: Icons.night_shelter,
-              color: AppColors.secondary,
+              icon: Icons.trending_up_rounded,
+              gradientColors: const [AppColors.textSecondary, AppColors.textDisabled],
             ),
           ],
         );
@@ -318,55 +347,113 @@ class _MetricCard extends StatelessWidget {
   final String value;
   final String subtitle;
   final IconData icon;
-  final Color color;
+  final List<Color> gradientColors;
 
   const _MetricCard({
     required this.title,
     required this.value,
     required this.subtitle,
     required this.icon,
-    required this.color,
+    required this.gradientColors,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: color, size: 24),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+    final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // Extract primary color from gradient for shadow
+    final primaryColor = gradientColors.isNotEmpty
+        ? gradientColors.first
+        : theme.colorScheme.primary;
+
+    // Create theme-aware gradient
+    final gradient = _createThemeGradient(context, gradientColors);
+
+    // Theme-aware text and icon colors - white on gradient
+    const textColor = Colors.white;
+    const iconColor = Colors.white;
+    final iconBgColor = Colors.white.withAlpha((0.2 * 255).toInt());
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withAlpha((0.12 * 255).toInt()),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: EdgeInsets.all(isMobile ? 12 : 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Icon container
+              Container(
+                padding: EdgeInsets.all(isMobile ? 8 : 10),
+                decoration: BoxDecoration(
+                  color: iconBgColor,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ),
-            Text(
-              value,
-              style: AppTypography.h2.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+                child: Icon(icon, color: iconColor, size: isMobile ? 20 : 22),
               ),
-            ),
-            Text(
-              subtitle,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+              SizedBox(height: isMobile ? 6 : 8),
+
+              // Value
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  value,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                    height: 1.0,
+                    letterSpacing: -0.5,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                ),
               ),
-            ),
-          ],
+              SizedBox(height: isMobile ? 3 : 4),
+
+              // Title
+              Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: textColor,
+                  fontWeight: FontWeight.w500,
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: isMobile ? 3 : 4),
+
+              // Subtitle
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: textColor.withAlpha((0.9 * 255).toInt()),
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -380,16 +467,43 @@ class _RevenueChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     if (data.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text('No data available')),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.insert_chart_outlined_rounded,
+                size: 48,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Nema podataka za odabrani period',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
-    return SizedBox(
-      height: 300,
-      child: Card(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final chartHeight = constraints.maxWidth > 900
+            ? 300.0  // Desktop
+            : constraints.maxWidth > 600
+                ? 250.0  // Tablet
+                : 200.0; // Mobile
+
+        return SizedBox(
+          height: chartHeight,
+          child: Card(
         elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -445,6 +559,8 @@ class _RevenueChart extends StatelessWidget {
           ),
         ),
       ),
+        );
+      },
     );
   }
 }
@@ -456,16 +572,43 @@ class _BookingsChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     if (data.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text('No data available')),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.event_busy_rounded,
+                size: 48,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Nema podataka za odabrani period',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
-    return SizedBox(
-      height: 300,
-      child: Card(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final chartHeight = constraints.maxWidth > 900
+            ? 300.0  // Desktop
+            : constraints.maxWidth > 600
+                ? 250.0  // Tablet
+                : 200.0; // Mobile
+
+        return SizedBox(
+          height: chartHeight,
+          child: Card(
         elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -520,6 +663,8 @@ class _BookingsChart extends StatelessWidget {
           ),
         ),
       ),
+        );
+      },
     );
   }
 }
@@ -531,11 +676,29 @@ class _TopPropertiesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     if (properties.isEmpty) {
-      return const Card(
+      return Card(
         child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('No data available'),
+          padding: const EdgeInsets.all(32),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(
+                  Icons.home_work_outlined,
+                  size: 48,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Nema podataka za odabrani period',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
@@ -568,31 +731,42 @@ class _TopPropertiesList extends StatelessWidget {
             ),
             subtitle: Text(
               '${property.bookings} bookings • ${property.occupancyRate.toStringAsFixed(1)}% occupancy',
-              style: AppTypography.bodySmall,
+              style: AppTypography.bodySmall.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '\$${property.revenue.toStringAsFixed(2)}',
-                  style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.success,
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.star, size: 14, color: AppColors.star),
-                    const SizedBox(width: 2),
-                    Text(
-                      property.rating.toStringAsFixed(1),
-                      style: AppTypography.bodySmall,
+            trailing: SizedBox(
+              width: 120,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '\$${property.revenue.toStringAsFixed(2)}',
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.success,
                     ),
-                  ],
-                ),
-              ],
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.star, size: 14, color: AppColors.star),
+                      const SizedBox(width: 2),
+                      Text(
+                        property.rating.toStringAsFixed(1),
+                        style: AppTypography.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -643,11 +817,13 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                       Text(
                         'Widget Bookings',
                         style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
                             '$widgetBookings',
@@ -656,11 +832,10 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: 8),
                           Text(
                             '($widgetBookingsPercent% of total)',
                             style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -674,7 +849,9 @@ class _WidgetAnalyticsCard extends StatelessWidget {
             // Progress bar for bookings
             LinearProgressIndicator(
               value: totalBookings > 0 ? widgetBookings / totalBookings : 0,
-              backgroundColor: AppColors.surface,
+              backgroundColor: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.borderDark
+                  : AppColors.borderLight,
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.info),
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
@@ -686,31 +863,38 @@ class _WidgetAnalyticsCard extends StatelessWidget {
               children: [
                 const Icon(Icons.attach_money, color: AppColors.success, size: 24),
                 const SizedBox(width: 12),
-                Expanded(
+                Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Widget Revenue',
                         style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Text(
-                            '\$${widgetRevenue.toStringAsFixed(2)}',
-                            style: AppTypography.h2.copyWith(
-                              color: AppColors.success,
-                              fontWeight: FontWeight.bold,
+                          Flexible(
+                            child: Text(
+                              '\$${widgetRevenue.toStringAsFixed(2)}',
+                              style: AppTypography.h2.copyWith(
+                                color: AppColors.success,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            '($widgetRevenuePercent% of total)',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                          Flexible(
+                            child: Text(
+                              '($widgetRevenuePercent% of total)',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -724,7 +908,9 @@ class _WidgetAnalyticsCard extends StatelessWidget {
             // Progress bar for revenue
             LinearProgressIndicator(
               value: totalRevenue > 0 ? widgetRevenue / totalRevenue : 0,
-              backgroundColor: AppColors.surface,
+              backgroundColor: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.borderDark
+                  : AppColors.borderLight,
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
@@ -784,10 +970,29 @@ class _BookingsBySourceChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     if (bookingsBySource.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text('No source data available')),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.source_outlined,
+                size: 48,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Nema podataka o izvorima',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -828,22 +1033,28 @@ class _BookingsBySourceChart extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
+                        Flexible(
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _getSourceDisplayName(source),
-                              style: AppTypography.bodyMedium,
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  _getSourceDisplayName(source),
+                                  style: AppTypography.bodyMedium,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         Text(
                           '$count ($percentage%)',
@@ -856,7 +1067,9 @@ class _BookingsBySourceChart extends StatelessWidget {
                     const SizedBox(height: 8),
                     LinearProgressIndicator(
                       value: totalCount > 0 ? count / totalCount : 0,
-                      backgroundColor: AppColors.surface,
+                      backgroundColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.borderDark
+                          : AppColors.borderLight,
                       valueColor: AlwaysStoppedAnimation<Color>(color),
                       minHeight: 8,
                       borderRadius: BorderRadius.circular(4),
@@ -868,6 +1081,34 @@ class _BookingsBySourceChart extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Helper function to create theme-aware gradients
+/// In dark mode, darkens the colors by 30% for better contrast
+Gradient _createThemeGradient(BuildContext context, List<Color> lightColors) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+
+  if (isDark) {
+    // In dark mode, use slightly darker versions but keep full opacity
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: lightColors.map((color) {
+        // Darken the color but keep full opacity
+        final hsl = HSLColor.fromColor(color);
+        return hsl
+            .withLightness((hsl.lightness * 0.7).clamp(0.0, 1.0))
+            .toColor();
+      }).toList(),
+    );
+  } else {
+    // In light mode, use the original colors
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: lightColors,
     );
   }
 }

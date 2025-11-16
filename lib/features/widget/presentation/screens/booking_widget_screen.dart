@@ -1326,14 +1326,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         if (_showGuestForm && !isWideScreen) ...[
           const SizedBox(height: 12),
           _buildGuestInfoForm(calculation, showButton: false),
-          const SizedBox(height: SpacingTokens.m),
-          // Additional Services section
-          AdditionalServicesWidget(
-            unitId: _unitId,
-            nights: _checkOut!.difference(_checkIn!).inDays,
-            guests: _adults + _children,
+          // Additional Services section - only show if services exist
+          Consumer(
+            builder: (context, ref, _) {
+              final servicesAsync = ref.watch(
+                unitAdditionalServicesProvider(_unitId),
+              );
+              return servicesAsync.when(
+                data: (services) {
+                  if (services.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Column(
+                    children: [
+                      const SizedBox(height: SpacingTokens.m),
+                      AdditionalServicesWidget(
+                        unitId: _unitId,
+                        nights: _checkOut!.difference(_checkIn!).inDays,
+                        guests: _adults + _children,
+                      ),
+                      const SizedBox(height: SpacingTokens.m),
+                    ],
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, stackTrace) => const SizedBox.shrink(),
+              );
+            },
           ),
-          const SizedBox(height: SpacingTokens.m),
           // Tax/Legal Disclaimer section
           TaxLegalDisclaimerWidget(
             propertyId: _propertyId ?? '',

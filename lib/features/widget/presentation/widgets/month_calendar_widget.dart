@@ -53,17 +53,18 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final isDarkMode = ref.watch(themeProvider);
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
-    return Stack(
+    return Column(
       children: [
-        Column(
-          children: [
-            // Combined header for all screen sizes - OUTSIDE GestureDetector
-            _buildCombinedHeader(context, colors, isDarkMode),
-            const SizedBox(height: SpacingTokens.xs),
+        // Combined header - explicitly outside any GestureDetector
+        _buildCombinedHeader(context, colors, isDarkMode),
+        const SizedBox(height: SpacingTokens.xs),
 
-            // Calendar wrapped in GestureDetector for deselection
-            Expanded(
-              child: GestureDetector(
+        // Calendar and tooltip in Stack for overlay positioning
+        Expanded(
+          child: Stack(
+            children: [
+              // Calendar with GestureDetector for deselection
+              GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () {
                   // Deselect dates when clicking outside the calendar
@@ -75,26 +76,34 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                     widget.onRangeSelected?.call(null, null);
                   }
                 },
-                child: calendarData.when(
-                  data: (data) => _buildMonthView(data, colors),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => Center(child: Text('Error: $error')),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: calendarData.when(
+                        data: (data) => _buildMonthView(data, colors),
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (error, stack) => Center(child: Text('Error: $error')),
+                      ),
+                    ),
+                    // Compact legend/info banner below calendar
+                    if (minNights > 1)
+                      _buildCompactLegend(minNights, colors, isDarkMode),
+                  ],
                 ),
               ),
-            ),
-            // Compact legend/info banner below calendar
-            if (minNights > 1)
-              _buildCompactLegend(minNights, colors, isDarkMode),
-          ],
-        ),
-        // Hover tooltip overlay (desktop) - highest z-index
-        if (_hoveredDate != null)
-          calendarData.when(
-            data: (data) => _buildHoverTooltip(data, colors),
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+              // Hover tooltip overlay (desktop) - highest z-index
+              if (_hoveredDate != null)
+                IgnorePointer(
+                  child: calendarData.when(
+                    data: (data) => _buildHoverTooltip(data, colors),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, stackTrace) => const SizedBox.shrink(),
+                  ),
+                ),
+            ],
           ),
+        ),
       ],
     );
   }

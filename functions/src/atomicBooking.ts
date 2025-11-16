@@ -5,7 +5,10 @@ import {
   generateBookingAccessToken,
   calculateTokenExpiration,
 } from "./bookingAccessToken";
-import {sendBookingConfirmationEmail} from "./emailService";
+import {
+  sendBookingConfirmationEmail,
+  sendPendingBookingRequestEmail,
+} from "./emailService";
 
 /**
  * Cloud Function: Create Booking with Atomic Availability Check
@@ -270,7 +273,7 @@ export const createBookingAtomic = onCall(async (request) => {
     // Transaction successful - booking created
     logSuccess("[AtomicBooking] Transaction completed successfully", result);
 
-    // Send confirmation email with access token (only for bank transfer)
+    // Send email based on approval requirement (only for bank transfer)
     if (paymentMethod === "bank_transfer") {
       try {
         // Fetch property and unit data for email
@@ -281,27 +284,46 @@ export const createBookingAtomic = onCall(async (request) => {
         const propertyData = propertyDoc.data();
         const unitData = unitDoc.data();
 
-        await sendBookingConfirmationEmail(
-          guestEmail,
-          guestName,
-          result.bookingReference,
-          checkInDate.toDate(),
-          checkOutDate.toDate(),
-          totalPrice,
-          depositAmount,
-          unitData?.name || "Unit",
-          propertyData?.name || "Property",
-          result.accessToken, // Plaintext token for email link
-          propertyData?.contact_email
-        );
+        if (requireOwnerApproval) {
+          // Manual approval flow - send "Booking Request Received" email
+          await sendPendingBookingRequestEmail(
+            guestEmail,
+            guestName,
+            result.bookingReference,
+            checkInDate.toDate(),
+            checkOutDate.toDate(),
+            totalPrice,
+            unitData?.name || "Unit",
+            propertyData?.name || "Property"
+          );
 
-        logSuccess("[AtomicBooking] Confirmation email sent", {
-          email: guestEmail,
-        });
+          logSuccess("[AtomicBooking] Pending booking request email sent", {
+            email: guestEmail,
+          });
+        } else {
+          // Auto approval flow - send "Booking Confirmed" email
+          await sendBookingConfirmationEmail(
+            guestEmail,
+            guestName,
+            result.bookingReference,
+            checkInDate.toDate(),
+            checkOutDate.toDate(),
+            totalPrice,
+            depositAmount,
+            unitData?.name || "Unit",
+            propertyData?.name || "Property",
+            result.accessToken, // Plaintext token for email link
+            propertyData?.contact_email
+          );
+
+          logSuccess("[AtomicBooking] Confirmation email sent", {
+            email: guestEmail,
+          });
+        }
       } catch (emailError) {
         // Log error but don't fail the booking
         logError(
-          "[AtomicBooking] Failed to send confirmation email",
+          "[AtomicBooking] Failed to send email",
           emailError
         );
       }

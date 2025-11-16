@@ -189,10 +189,27 @@ class _NotificationSettingsScreenState
                     ),
                   ],
                 ),
-                child: SwitchListTile(
-                  value: masterEnabled,
-                  onChanged: _isSaving ? null : _toggleMasterSwitch,
-                  title: Text(
+                child: Theme(
+                  data: theme.copyWith(
+                    switchTheme: SwitchThemeData(
+                      thumbColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return isDark ? Colors.black : Colors.white;
+                        }
+                        return isDark ? Colors.black : Colors.white;
+                      }),
+                      trackColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return theme.colorScheme.primary;
+                        }
+                        return theme.colorScheme.outline;
+                      }),
+                    ),
+                  ),
+                  child: SwitchListTile(
+                    value: masterEnabled,
+                    onChanged: _isSaving ? null : _toggleMasterSwitch,
+                    title: Text(
                     'Enable All Notifications',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -241,9 +258,10 @@ class _NotificationSettingsScreenState
                       size: 26,
                     ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ),
@@ -582,12 +600,31 @@ class _NotificationSettingsScreenState
     required bool enabled,
     bool isLast = false,
   }) {
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       children: [
-        SwitchListTile(
-          value: value,
-          onChanged: onChanged,
-          title: Text(
+        Theme(
+          data: theme.copyWith(
+            switchTheme: SwitchThemeData(
+              thumbColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return isDark ? Colors.black : Colors.white;
+                }
+                return isDark ? Colors.black : Colors.white;
+              }),
+              trackColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return iconColor;
+                }
+                return theme.colorScheme.outline;
+              }),
+            ),
+          ),
+          child: SwitchListTile(
+            value: value,
+            onChanged: onChanged,
+            title: Text(
             title,
             style: TextStyle(
               fontWeight: FontWeight.w600,
@@ -620,9 +657,10 @@ class _NotificationSettingsScreenState
               size: 22,
             ),
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 4,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 4,
+            ),
           ),
         ),
         if (!isLast)

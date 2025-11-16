@@ -37,6 +37,12 @@ service cloud.firestore {
         allow read: if isAuthenticated();
         allow write: if isOwner(userId);
       }
+
+      // Security events subcollection - user's security audit log
+      match /securityEvents/{eventId} {
+        allow read: if isOwner(userId); // User can read their own security events
+        allow write: if isOwner(userId); // User can write their own security events
+      }
     }
 
     // User Profiles - authenticated users only (legacy, kept for backwards compatibility)

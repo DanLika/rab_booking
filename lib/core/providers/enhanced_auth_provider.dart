@@ -107,7 +107,69 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           'User profile found in Firestore',
           tag: 'ENHANCED_AUTH',
         );
-        final userModel = UserModel.fromJson({...doc.data()!, 'id': doc.id});
+
+        final data = doc.data()!;
+
+        // Print ALL field types to console for debugging
+        print('=== FIRESTORE USER DATA DEBUG ===');
+        print('Total fields: ${data.length}');
+        data.forEach((key, value) {
+          print('Field: $key | Type: ${value.runtimeType} | Value: ${value.toString().length > 100 ? value.toString().substring(0, 100) + '...' : value}');
+        });
+        print('=== END DEBUG ===');
+
+        UserModel userModel;
+        try {
+          // Try parsing the user model
+          userModel = UserModel.fromJson({...data, 'id': doc.id});
+        } catch (parseError, stackTrace) {
+          // Log detailed error information
+          LoggingService.log(
+            'Failed to parse UserModel. Error: $parseError',
+            tag: 'ENHANCED_AUTH_ERROR',
+          );
+          LoggingService.log(
+            'Stack trace: $stackTrace',
+            tag: 'ENHANCED_AUTH_ERROR',
+          );
+
+          // Log all field types to help identify the problem
+          LoggingService.log(
+            'Firestore fields (${data.length}):',
+            tag: 'ENHANCED_AUTH_ERROR',
+          );
+          data.forEach((key, value) {
+            LoggingService.log(
+              '  $key: ${value.runtimeType} = ${value.toString().length > 50 ? '${value.toString().substring(0, 50)}...' : value}',
+              tag: 'ENHANCED_AUTH_ERROR',
+            );
+          });
+
+          // Create fallback UserModel instead of crashing
+          print('=== CREATING FALLBACK USER MODEL ===');
+          try {
+            userModel = UserModel(
+              id: doc.id,
+              email: data['email'] as String? ?? firebaseUser.email ?? 'unknown@email.com',
+              firstName: data['first_name'] as String? ?? '',
+              lastName: data['last_name'] as String? ?? '',
+              role: UserRole.values.firstWhere(
+                (r) => r.name == (data['role'] as String?),
+                orElse: () => UserRole.owner,
+              ),
+              emailVerified: data['emailVerified'] as bool? ?? false,
+              onboardingCompleted: data['onboardingCompleted'] as bool? ?? false,
+              displayName: data['displayName'] as String?,
+              phone: data['phone'] as String?,
+              avatarUrl: data['avatar_url'] as String?,
+              createdAt: DateTime.now(), // Fallback
+            );
+            print('Fallback UserModel created successfully for ${userModel.email}');
+          } catch (fallbackError) {
+            print('Fallback also failed: $fallbackError');
+            rethrow;
+          }
+        }
 
         // Check email verification status
         final requiresVerification =
@@ -205,6 +267,14 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         'Firebase sign in successful for ${credential.user?.uid}',
         tag: 'ENHANCED_AUTH',
       );
+
+      // Explicitly load user profile immediately
+      // (Don't rely solely on auth state listener which may not trigger)
+      LoggingService.log(
+        'Explicitly loading user profile...',
+        tag: 'ENHANCED_AUTH',
+      );
+      await _loadUserProfile(credential.user!);
 
       // Reset rate limit on success
       await _rateLimit.resetAttempts(email);

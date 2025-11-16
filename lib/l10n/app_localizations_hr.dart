@@ -476,6 +476,45 @@ class AppLocalizationsHr extends AppLocalizations {
   String get newPassword => 'Nova Lozinka';
 
   @override
+  String get confirmNewPassword => 'Potvrdite Novu Lozinku';
+
+  @override
+  String get passwordChangedSuccessfully => 'Lozinka uspešno promenjena';
+
+  @override
+  String get enterCurrentAndNewPassword => 'Unesite trenutnu i novu lozinku';
+
+  @override
+  String get currentPasswordIncorrect => 'Trenutna lozinka nije ispravna';
+
+  @override
+  String get weakPassword => 'Slaba';
+
+  @override
+  String get mediumPassword => 'Srednja';
+
+  @override
+  String get strongPassword => 'Jaka';
+
+  @override
+  String get recentLoginRequired =>
+      'Molimo odjavite se i ponovno se prijavite pre promene lozinke';
+
+  @override
+  String get passwordChangeError => 'Greška pri promeni lozinke';
+
+  @override
+  String get passwordsMustBeDifferent =>
+      'Nova lozinka mora biti različita od trenutne';
+
+  @override
+  String get pleaseEnterCurrentPassword => 'Molimo unesite trenutnu lozinku';
+
+  @override
+  String get youWillStayLoggedIn =>
+      'Ostaćete prijavljeni nakon promene lozinke';
+
+  @override
   String get personalInfo => 'Lične Informacije';
 
   @override

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../auth/presentation/widgets/auth_background.dart';
@@ -10,7 +11,7 @@ import '../../../auth/presentation/widgets/premium_input_field.dart';
 import '../../../auth/presentation/widgets/gradient_auth_button.dart';
 import '../../../../core/theme/app_colors.dart';
 
-/// Change Password Screen with Auth Style
+/// Change Password Screen
 class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
 
@@ -61,6 +62,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    final l10n = AppLocalizations.of(context);
+
     setState(() => _isLoading = true);
 
     try {
@@ -80,7 +83,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          'Password changed successfully',
+          l10n.passwordChangedSuccessfully,
         );
 
         context.pop();
@@ -90,17 +93,16 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       switch (e.code) {
         case 'wrong-password':
         case 'invalid-credential':
-          message = 'Trenutna lozinka nije ispravna';
+          message = l10n.currentPasswordIncorrect;
           break;
         case 'weak-password':
-          message = 'Nova lozinka je preslaba';
+          message = l10n.invalidPassword;
           break;
         case 'requires-recent-login':
-          message =
-              'Molimo odjavite se i ponovno se prijavite prije promjene lozinke';
+          message = l10n.recentLoginRequired;
           break;
         default:
-          message = 'Greška pri promjeni lozinke: ${e.message}';
+          message = '${l10n.passwordChangeError}: ${e.message}';
       }
 
       if (mounted) {
@@ -115,7 +117,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           e,
-          userMessage: 'Greška pri promjeni lozinke',
+          userMessage: l10n.passwordChangeError,
         );
       }
     }
@@ -123,6 +125,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: AuthBackground(
@@ -148,7 +152,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           child: IconButton(
                             onPressed: () => context.pop(),
                             icon: const Icon(Icons.arrow_back),
-                            tooltip: 'Back',
+                            tooltip: l10n.back,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -183,12 +187,12 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
                         // Title
                         Text(
-                          'Change Password',
+                          l10n.changePassword,
                           style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 28,
-                                color: AppColors.textPrimary,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                           textAlign: TextAlign.center,
                         ),
@@ -196,10 +200,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
                         // Subtitle
                         Text(
-                          'Enter your current password and choose a new one',
+                          l10n.enterCurrentAndNewPassword,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
-                                color: AppColors.textSecondary,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 fontSize: 15,
                               ),
                           textAlign: TextAlign.center,
@@ -209,7 +213,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         // Current Password
                         PremiumInputField(
                           controller: _currentPasswordController,
-                          labelText: 'Current Password',
+                          labelText: l10n.currentPassword,
                           prefixIcon: Icons.lock_outline,
                           obscureText: _obscureCurrentPassword,
                           suffixIcon: IconButton(
@@ -227,7 +231,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your current password';
+                              return l10n.pleaseEnterCurrentPassword;
                             }
                             return null;
                           },
@@ -237,7 +241,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         // New Password
                         PremiumInputField(
                           controller: _newPasswordController,
-                          labelText: 'New Password',
+                          labelText: l10n.newPassword,
                           prefixIcon: Icons.lock,
                           obscureText: _obscureNewPassword,
                           suffixIcon: IconButton(
@@ -254,7 +258,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           ),
                           validator: (value) {
                             if (value == _currentPasswordController.text) {
-                              return 'New password must be different from current password';
+                              return l10n.passwordsMustBeDifferent;
                             }
                             return PasswordValidator.validateSimple(value);
                           },
@@ -280,7 +284,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                                                   PasswordStrength.medium
                                             ? 0.66
                                             : 1.0,
-                                        backgroundColor: AppColors.borderLight,
+                                        backgroundColor: Theme.of(context).brightness == Brightness.dark
+                                            ? AppColors.borderDark
+                                            : AppColors.borderLight,
                                         color:
                                             _passwordStrength ==
                                                 PasswordStrength.weak
@@ -313,11 +319,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                                     ),
                                     child: Text(
                                       _passwordStrength == PasswordStrength.weak
-                                          ? 'Weak'
+                                          ? l10n.weakPassword
                                           : _passwordStrength ==
                                                 PasswordStrength.medium
-                                          ? 'Medium'
-                                          : 'Strong',
+                                          ? l10n.mediumPassword
+                                          : l10n.strongPassword,
                                       style: TextStyle(
                                         color:
                                             _passwordStrength ==
@@ -366,7 +372,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         // Confirm Password
                         PremiumInputField(
                           controller: _confirmPasswordController,
-                          labelText: 'Confirm New Password',
+                          labelText: l10n.confirmNewPassword,
                           prefixIcon: Icons.lock_open,
                           obscureText: _obscureConfirmPassword,
                           suffixIcon: IconButton(
@@ -389,11 +395,43 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                             );
                           },
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 12),
+
+                        // Info message
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: AppColors.primary.withAlpha((0.3 * 255).toInt()),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.info_outline,
+                                size: 18,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  l10n.youWillStayLoggedIn,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
 
                         // Change Password Button
                         GradientAuthButton(
-                          text: 'Change Password',
+                          text: l10n.changePassword,
                           onPressed: _isLoading ? null : _changePassword,
                           isLoading: _isLoading,
                           icon: Icons.check_circle_outline,
@@ -403,11 +441,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         // Cancel Button
                         TextButton(
                           onPressed: () => context.pop(),
-                          child: const Text(
-                            'Cancel',
+                          child: Text(
+                            l10n.cancel,
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppColors.textSecondary,
+                              color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

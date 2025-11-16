@@ -1022,6 +1022,78 @@ abstract class AppLocalizations {
   /// **'New Password'**
   String get newPassword;
 
+  /// No description provided for @confirmNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm New Password'**
+  String get confirmNewPassword;
+
+  /// No description provided for @passwordChangedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed successfully'**
+  String get passwordChangedSuccessfully;
+
+  /// No description provided for @enterCurrentAndNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current password and choose a new one'**
+  String get enterCurrentAndNewPassword;
+
+  /// No description provided for @currentPasswordIncorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password is incorrect'**
+  String get currentPasswordIncorrect;
+
+  /// No description provided for @weakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get weakPassword;
+
+  /// No description provided for @mediumPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get mediumPassword;
+
+  /// No description provided for @strongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get strongPassword;
+
+  /// No description provided for @recentLoginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign out and sign in again before changing password'**
+  String get recentLoginRequired;
+
+  /// No description provided for @passwordChangeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error changing password'**
+  String get passwordChangeError;
+
+  /// No description provided for @passwordsMustBeDifferent.
+  ///
+  /// In en, this message translates to:
+  /// **'New password must be different from current password'**
+  String get passwordsMustBeDifferent;
+
+  /// No description provided for @pleaseEnterCurrentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your current password'**
+  String get pleaseEnterCurrentPassword;
+
+  /// No description provided for @youWillStayLoggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'You will stay logged in after changing your password'**
+  String get youWillStayLoggedIn;
+
   /// No description provided for @personalInfo.
   ///
   /// In en, this message translates to:

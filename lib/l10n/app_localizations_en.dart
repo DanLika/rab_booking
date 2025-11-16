@@ -475,6 +475,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newPassword => 'New Password';
 
   @override
+  String get confirmNewPassword => 'Confirm New Password';
+
+  @override
+  String get passwordChangedSuccessfully => 'Password changed successfully';
+
+  @override
+  String get enterCurrentAndNewPassword =>
+      'Enter your current password and choose a new one';
+
+  @override
+  String get currentPasswordIncorrect => 'Current password is incorrect';
+
+  @override
+  String get weakPassword => 'Weak';
+
+  @override
+  String get mediumPassword => 'Medium';
+
+  @override
+  String get strongPassword => 'Strong';
+
+  @override
+  String get recentLoginRequired =>
+      'Please sign out and sign in again before changing password';
+
+  @override
+  String get passwordChangeError => 'Error changing password';
+
+  @override
+  String get passwordsMustBeDifferent =>
+      'New password must be different from current password';
+
+  @override
+  String get pleaseEnterCurrentPassword => 'Please enter your current password';
+
+  @override
+  String get youWillStayLoggedIn =>
+      'You will stay logged in after changing your password';
+
+  @override
   String get personalInfo => 'Personal Information';
 
   @override

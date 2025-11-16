@@ -7,6 +7,7 @@ import '../providers/theme_provider.dart';
 import 'split_day_calendar_painter.dart';
 import 'year_view_preloader.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../utils/snackbar_helper.dart';
 
 /// Year-view grid calendar widget inspired by BedBooking
 /// Shows 12 months × 31 days in a grid with diagonal splits for check-in/check-out
@@ -526,15 +527,11 @@ class _YearGridCalendarWidgetState
           // Show error message
           if (mounted) {
             final isDarkMode = ref.read(themeProvider);
-            final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Minimum stay is ${widget.minStayNights} ${widget.minStayNights == 1 ? 'night' : 'nights'}. You selected $nights ${nights == 1 ? 'night' : 'nights'}.',
-                ),
-                backgroundColor: colors.error,
-                duration: AnimationTokens.notification,
-              ),
+            SnackBarHelper.showError(
+              context: context,
+              message: 'Minimum stay is ${widget.minStayNights} ${widget.minStayNights == 1 ? 'night' : 'nights'}. You selected $nights ${nights == 1 ? 'night' : 'nights'}.',
+              isDarkMode: isDarkMode,
+              duration: AnimationTokens.notification,
             );
           }
           // Reset selection
@@ -601,15 +598,11 @@ class _YearGridCalendarWidgetState
         if (nights < widget.minStayNights) {
           if (mounted) {
             final isDarkMode = ref.read(themeProvider);
-            final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Minimum stay is ${widget.minStayNights} ${widget.minStayNights == 1 ? 'night' : 'nights'}.',
-                ),
-                backgroundColor: colors.error,
-                duration: AnimationTokens.fast,
-              ),
+            SnackBarHelper.showError(
+              context: context,
+              message: 'Minimum stay is ${widget.minStayNights} ${widget.minStayNights == 1 ? 'night' : 'nights'}.',
+              isDarkMode: isDarkMode,
+              duration: AnimationTokens.fast,
             );
           }
           _rangeStart = null;

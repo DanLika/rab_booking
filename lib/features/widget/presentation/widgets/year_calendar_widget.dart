@@ -12,6 +12,7 @@ import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/theme/custom_icons_tablericons.dart';
 import 'calendar_hover_tooltip.dart';
+import '../utils/snackbar_helper.dart';
 
 class YearCalendarWidget extends ConsumerStatefulWidget {
   final String propertyId;
@@ -693,17 +694,14 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     WidgetColorScheme colors,
   ) {
+    final isDarkMode = ref.read(themeProvider);
     // Block past dates
     if (dateInfo.status == DateStatus.disabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Cannot select past dates.',
-            style: TextStyle(color: colors.textPrimary),
-          ),
-          backgroundColor: colors.statusBookedBackground,
-          duration: const Duration(seconds: 3),
-        ),
+      SnackBarHelper.showError(
+        context: context,
+        message: 'Cannot select past dates.',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 3),
       );
       return;
     }
@@ -722,15 +720,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       // Check minDaysAdvance
       if (dateInfo.minDaysAdvance != null &&
           daysInAdvance < dateInfo.minDaysAdvance!) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'This date requires booking at least ${dateInfo.minDaysAdvance} days in advance.',
-              style: TextStyle(color: colors.textPrimary),
-            ),
-            backgroundColor: colors.statusBookedBackground,
-            duration: const Duration(seconds: 3),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'This date requires booking at least ${dateInfo.minDaysAdvance} days in advance.',
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 3),
         );
         return;
       }
@@ -738,15 +732,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       // Check maxDaysAdvance
       if (dateInfo.maxDaysAdvance != null &&
           daysInAdvance > dateInfo.maxDaysAdvance!) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'This date can only be booked up to ${dateInfo.maxDaysAdvance} days in advance.',
-              style: TextStyle(color: colors.textPrimary),
-            ),
-            backgroundColor: colors.statusBookedBackground,
-            duration: const Duration(seconds: 3),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'This date can only be booked up to ${dateInfo.maxDaysAdvance} days in advance.',
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 3),
         );
         return;
       }
@@ -754,29 +744,21 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
     // Check blockCheckIn/blockCheckOut restrictions
     if (isSelectingCheckIn && dateInfo.blockCheckIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Check-in is not allowed on this date.',
-            style: TextStyle(color: colors.textPrimary),
-          ),
-          backgroundColor: colors.statusBookedBackground,
-          duration: const Duration(seconds: 3),
-        ),
+      SnackBarHelper.showError(
+        context: context,
+        message: 'Check-in is not allowed on this date.',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 3),
       );
       return;
     }
 
     if (isSelectingCheckOut && dateInfo.blockCheckOut) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Check-out is not allowed on this date.',
-            style: TextStyle(color: colors.textPrimary),
-          ),
-          backgroundColor: colors.statusBookedBackground,
-          duration: const Duration(seconds: 3),
-        ),
+      SnackBarHelper.showError(
+        context: context,
+        message: 'Check-out is not allowed on this date.',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 3),
       );
       return;
     }
@@ -830,15 +812,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           _rangeEnd = null;
 
           // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Minimum stay is $minNights ${minNights == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-                style: TextStyle(color: colors.textPrimary),
-              ),
-              backgroundColor: colors.statusBookedBackground,
-              duration: const Duration(seconds: 3),
-            ),
+          SnackBarHelper.showError(
+            context: context,
+            message: 'Minimum stay is $minNights ${minNights == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
+            isDarkMode: isDarkMode,
+            duration: const Duration(seconds: 3),
           );
           return;
         }
@@ -850,14 +828,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           _rangeEnd = null;
 
           // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'This selection would leave a gap smaller than the $minNights-night minimum stay. Please choose different dates or extend your stay.',
-                style: TextStyle(color: colors.textPrimary),
-              ),
-              backgroundColor: colors.statusBookedBackground,
-            ),
+          SnackBarHelper.showError(
+            context: context,
+            message: 'This selection would leave a gap smaller than the $minNights-night minimum stay. Please choose different dates or extend your stay.',
+            isDarkMode: isDarkMode,
           );
           return;
         }
@@ -869,15 +843,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           _rangeEnd = null;
 
           // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Cannot select dates. There are already booked dates in this range.',
-                style: TextStyle(color: colors.textPrimary),
-              ),
-              backgroundColor: colors.statusBookedBackground,
-              duration: const Duration(seconds: 3),
-            ),
+          SnackBarHelper.showError(
+            context: context,
+            message: 'Cannot select dates. There are already booked dates in this range.',
+            isDarkMode: isDarkMode,
+            duration: const Duration(seconds: 3),
           );
           return;
         }

@@ -47,14 +47,8 @@ class _CalendarViewSwitcherState extends ConsumerState<CalendarViewSwitcher> {
     // Bug #68 Fix: Initialize auto-refresh to watch booking status changes
     ref.watch(calendarAutoRefreshProvider(widget.unitId));
 
-    return Column(
-      children: [
-        // Tab bar removed - view switching now handled by external controls
-        Expanded(
-          child: _buildCalendarView(currentView),
-        ),
-      ],
-    );
+    // No longer use Column with Expanded - parent now controls height via SizedBox
+    return _buildCalendarView(currentView);
   }
 
   Widget _buildCalendarView(CalendarViewType viewType) {

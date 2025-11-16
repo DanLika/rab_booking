@@ -2149,18 +2149,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 child: TextFormField(
                   controller: _firstNameController,
                   maxLength: 50, // Bug #60: Maximum field length validation
-                  style: const TextStyle(
-                    color: Color(0xFF000000),
+                  style: TextStyle(
+                    color: getColor(
+                      MinimalistColors.textPrimary,
+                      MinimalistColorsDark.textPrimary,
+                    ),
                   ),
                   decoration: InputDecoration(
                     counterText: '', // Hide character counter
                     labelText: 'First Name *',
                     hintText: 'John',
-                    labelStyle: const TextStyle(
-                      color: Color(0xFF000000),
+                    labelStyle: TextStyle(
+                      color: getColor(
+                        MinimalistColors.textPrimary,
+                        MinimalistColorsDark.textPrimary,
+                      ),
                     ),
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF808080),
+                    hintStyle: TextStyle(
+                      color: getColor(
+                        MinimalistColors.textSecondary,
+                        MinimalistColorsDark.textSecondary,
+                      ),
                     ),
                     filled: true,
                     fillColor: getColor(
@@ -2174,15 +2183,31 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     isDense: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(color: Color(0xFF000000)),
+                      borderSide: BorderSide(
+                        color: getColor(
+                          MinimalistColors.textPrimary,
+                          MinimalistColorsDark.textPrimary,
+                        ),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(color: Color(0xFF000000)),
+                      borderSide: BorderSide(
+                        color: getColor(
+                          MinimalistColors.textSecondary,
+                          MinimalistColorsDark.textSecondary,
+                        ),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(color: Color(0xFF000000), width: 2),
+                      borderSide: BorderSide(
+                        color: getColor(
+                          MinimalistColors.textPrimary,
+                          MinimalistColorsDark.textPrimary,
+                        ),
+                        width: 2,
+                      ),
                     ),
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
@@ -2198,9 +2223,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       height: 1.0,
                     ),
                     errorMaxLines: 1,
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.person_outline,
-                      color: Color(0xFF000000),
+                      color: getColor(
+                        MinimalistColors.textPrimary,
+                        MinimalistColorsDark.textPrimary,
+                      ),
                     ),
                   ),
                   // Real-time validation
@@ -2214,18 +2242,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 child: TextFormField(
                   controller: _lastNameController,
                   maxLength: 50, // Bug #60: Maximum field length validation
-                  style: const TextStyle(
-                    color: Color(0xFF000000),
+                  style: TextStyle(
+                    color: getColor(
+                      MinimalistColors.textPrimary,
+                      MinimalistColorsDark.textPrimary,
+                    ),
                   ),
                   decoration: InputDecoration(
                     counterText: '', // Hide character counter
                     labelText: 'Last Name *',
                     hintText: 'Doe',
-                    labelStyle: const TextStyle(
-                      color: Color(0xFF000000),
+                    labelStyle: TextStyle(
+                      color: getColor(
+                        MinimalistColors.textPrimary,
+                        MinimalistColorsDark.textPrimary,
+                      ),
                     ),
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF808080),
+                    hintStyle: TextStyle(
+                      color: getColor(
+                        MinimalistColors.textSecondary,
+                        MinimalistColorsDark.textSecondary,
+                      ),
                     ),
                     filled: true,
                     fillColor: getColor(
@@ -2239,15 +2276,31 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     isDense: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(color: Color(0xFF000000)),
+                      borderSide: BorderSide(
+                        color: getColor(
+                          MinimalistColors.textPrimary,
+                          MinimalistColorsDark.textPrimary,
+                        ),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(color: Color(0xFF000000)),
+                      borderSide: BorderSide(
+                        color: getColor(
+                          MinimalistColors.textSecondary,
+                          MinimalistColorsDark.textSecondary,
+                        ),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(color: Color(0xFF000000), width: 2),
+                      borderSide: BorderSide(
+                        color: getColor(
+                          MinimalistColors.textPrimary,
+                          MinimalistColorsDark.textPrimary,
+                        ),
+                        width: 2,
+                      ),
                     ),
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderTokens.circularMedium,
@@ -3835,18 +3888,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         controller: _emailController,
         maxLength: 100, // Bug #60: Maximum field length validation
         keyboardType: TextInputType.emailAddress,
-        style: const TextStyle(
-          color: Color(0xFF000000),
+        style: TextStyle(
+          color: getColor(
+            MinimalistColors.textPrimary,
+            MinimalistColorsDark.textPrimary,
+          ),
         ),
         decoration: InputDecoration(
           counterText: '', // Hide character counter
           labelText: 'Email *',
           hintText: 'john@example.com',
-          labelStyle: const TextStyle(
-            color: Color(0xFF000000),
+          labelStyle: TextStyle(
+            color: getColor(
+              MinimalistColors.textPrimary,
+              MinimalistColorsDark.textPrimary,
+            ),
           ),
-          hintStyle: const TextStyle(
-            color: Color(0xFF808080),
+          hintStyle: TextStyle(
+            color: getColor(
+              MinimalistColors.textSecondary,
+              MinimalistColorsDark.textSecondary,
+            ),
           ),
           filled: true,
           fillColor: getColor(
@@ -3860,15 +3922,31 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           isDense: true,
           border: OutlineInputBorder(
             borderRadius: BorderTokens.circularMedium,
-            borderSide: const BorderSide(color: Color(0xFF000000)),
+            borderSide: BorderSide(
+              color: getColor(
+                MinimalistColors.textSecondary,
+                MinimalistColorsDark.textSecondary,
+              ),
+            ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderTokens.circularMedium,
-            borderSide: const BorderSide(color: Color(0xFF000000)),
+            borderSide: BorderSide(
+              color: getColor(
+                MinimalistColors.textSecondary,
+                MinimalistColorsDark.textSecondary,
+              ),
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderTokens.circularMedium,
-            borderSide: const BorderSide(color: Color(0xFF000000), width: 2),
+            borderSide: BorderSide(
+              color: getColor(
+                MinimalistColors.textPrimary,
+                MinimalistColorsDark.textPrimary,
+              ),
+              width: 2,
+            ),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderTokens.circularMedium,
@@ -3884,9 +3962,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             height: 1.0,
           ),
           errorMaxLines: 1,
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.email_outlined,
-            color: Color(0xFF000000),
+            color: getColor(
+              MinimalistColors.textPrimary,
+              MinimalistColorsDark.textPrimary,
+            ),
           ),
         ),
         autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -3911,18 +3992,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             controller: _emailController,
             maxLength: 100, // Bug #60: Maximum field length validation
             keyboardType: TextInputType.emailAddress,
-            style: const TextStyle(
-              color: Color(0xFF000000),
+            style: TextStyle(
+              color: getColor(
+                MinimalistColors.textPrimary,
+                MinimalistColorsDark.textPrimary,
+              ),
             ),
             decoration: InputDecoration(
               counterText: '', // Hide character counter
               labelText: 'Email *',
               hintText: 'john@example.com',
-              labelStyle: const TextStyle(
-                color: Color(0xFF000000),
+              labelStyle: TextStyle(
+                color: getColor(
+                  MinimalistColors.textPrimary,
+                  MinimalistColorsDark.textPrimary,
+                ),
               ),
-              hintStyle: const TextStyle(
-                color: Color(0xFF808080),
+              hintStyle: TextStyle(
+                color: getColor(
+                  MinimalistColors.textSecondary,
+                  MinimalistColorsDark.textSecondary,
+                ),
               ),
               filled: true,
               fillColor: getColor(
@@ -3936,15 +4026,31 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               isDense: true,
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(color: Color(0xFF000000)),
+                borderSide: BorderSide(
+                  color: getColor(
+                    MinimalistColors.textSecondary,
+                    MinimalistColorsDark.textSecondary,
+                  ),
+                ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(color: Color(0xFF000000)),
+                borderSide: BorderSide(
+                  color: getColor(
+                    MinimalistColors.textSecondary,
+                    MinimalistColorsDark.textSecondary,
+                  ),
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(color: Color(0xFF000000), width: 2),
+                borderSide: BorderSide(
+                  color: getColor(
+                    MinimalistColors.textPrimary,
+                    MinimalistColorsDark.textPrimary,
+                  ),
+                  width: 2,
+                ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
@@ -3960,9 +4066,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 height: 1.0,
               ),
               errorMaxLines: 1,
-              prefixIcon: const Icon(
+              prefixIcon: Icon(
                 Icons.email_outlined,
-                color: Color(0xFF000000),
+                color: getColor(
+                  MinimalistColors.textPrimary,
+                  MinimalistColorsDark.textPrimary,
+                ),
               ),
             ),
             autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -3998,8 +4107,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           )
         else
           SizedBox(
-            width: 49,
-            height: 49,
+            width: 100,
+            height: 44,
             child: ElevatedButton(
               onPressed: () {
                 final email = _emailController.text.trim();
@@ -4014,8 +4123,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 _openVerificationDialog();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF000000),
-                foregroundColor: Colors.white,
+                backgroundColor: getColor(
+                  MinimalistColors.textPrimary,
+                  MinimalistColorsDark.textPrimary,
+                ),
+                foregroundColor: getColor(
+                  MinimalistColors.backgroundPrimary,
+                  MinimalistColorsDark.backgroundPrimary,
+                ),
                 padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderTokens.circularMedium,

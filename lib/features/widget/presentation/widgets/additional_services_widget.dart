@@ -5,6 +5,7 @@ import '../providers/additional_services_provider.dart';
 import '../providers/theme_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../utils/snackbar_helper.dart';
 
 class AdditionalServicesWidget extends ConsumerWidget {
   final String unitId;
@@ -305,13 +306,11 @@ class AdditionalServicesWidget extends ConsumerWidget {
                       // Check max quantity
                       if (service.maxQuantity != null &&
                           quantity >= service.maxQuantity!) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Maximum quantity: ${service.maxQuantity}',
-                            ),
-                            duration: const Duration(seconds: 2),
-                          ),
+                        SnackBarHelper.showWarning(
+                          context: context,
+                          message: 'Maximum quantity: ${service.maxQuantity}',
+                          isDarkMode: isDarkMode,
+                          duration: const Duration(seconds: 2),
                         );
                         return;
                       }

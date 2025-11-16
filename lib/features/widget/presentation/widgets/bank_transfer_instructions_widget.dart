@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../utils/snackbar_helper.dart';
 
 /// Widget that displays bank transfer payment instructions
 /// Shows account details and payment deadline
@@ -281,11 +282,11 @@ class BankTransferInstructionsWidget extends StatelessWidget {
             icon: const Icon(Icons.copy, size: 20),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: value));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('$label kopiran: $value'),
-                  duration: const Duration(seconds: 2),
-                ),
+              SnackBarHelper.showSuccess(
+                context: context,
+                message: '$label kopiran: $value',
+                isDarkMode: false,
+                duration: const Duration(seconds: 2),
               );
             },
             tooltip: 'Kopiraj',

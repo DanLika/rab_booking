@@ -10,7 +10,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import '../providers/theme_provider.dart';
-import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/services/email_notification_service.dart';
 import '../../../../core/services/ical_generator.dart';
@@ -98,11 +97,6 @@ class _BookingConfirmationScreenState
     super.dispose();
   }
 
-  Color getColor(Color light, Color dark) {
-    final isDarkMode = ref.watch(themeProvider);
-    return isDarkMode ? dark : light;
-  }
-
   String _getConfirmationMessage() {
     switch (widget.paymentMethod) {
       case 'stripe':
@@ -118,18 +112,21 @@ class _BookingConfirmationScreenState
     }
   }
 
-  Icon _getConfirmationIcon() {
+  Widget _getConfirmationIcon() {
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     switch (widget.paymentMethod) {
       case 'stripe':
-        return const Icon(Icons.check_circle, size: 80, color: Colors.green);
+        return Icon(Icons.check_circle, size: 80, color: colors.textPrimary);
       case 'bank_transfer':
-        return Icon(Icons.schedule, size: 80, color: Colors.orange.shade700);
+        return Icon(Icons.schedule, size: 80, color: colors.textSecondary);
       case 'pay_on_arrival':
-        return const Icon(Icons.hotel, size: 80, color: Colors.blue);
+        return Icon(Icons.hotel, size: 80, color: colors.textPrimary);
       case 'pending':
-        return Icon(Icons.pending, size: 80, color: Colors.orange.shade700);
+        return Icon(Icons.pending, size: 80, color: colors.textSecondary);
       default:
-        return const Icon(Icons.check_circle, size: 80, color: Colors.green);
+        return Icon(Icons.check_circle, size: 80, color: colors.textPrimary);
     }
   }
 
@@ -303,50 +300,67 @@ class _BookingConfirmationScreenState
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     return Scaffold(
-      backgroundColor: getColor(
-        MinimalistColors.backgroundPrimary,
-        MinimalistColorsDark.backgroundPrimary,
-      ),
-      appBar: AppBar(
-        title: Text(
-          'Booking Confirmation',
-          style: TextStyle(
-            color: getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
-          ),
-        ),
-        backgroundColor: getColor(
-          MinimalistColors.backgroundPrimary,
-          MinimalistColorsDark.backgroundPrimary,
-        ),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.close,
-            color: getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
-          ),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ),
+      backgroundColor: colors.backgroundPrimary,
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(SpacingTokens.l),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Custom header with centered title and back button
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingTokens.m,
+                  vertical: SpacingTokens.s,
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Centered title
+                    Text(
+                      'Booking Confirmation',
+                      style: TextStyle(
+                        fontSize: TypographyTokens.fontSizeXL,
+                        fontWeight: TypographyTokens.bold,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    // Back button (positioned on the left)
+                    Positioned(
+                      left: 0,
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: colors.textPrimary,
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Divider
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: colors.borderDefault,
+              ),
+              // Content
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(SpacingTokens.l),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                   // Custom logo display (if configured)
                   if (widget.widgetSettings?.themeOptions?.customLogoUrl !=
                           null &&
@@ -383,10 +397,7 @@ class _BookingConfirmationScreenState
                     style: TextStyle(
                       fontSize: TypographyTokens.fontSizeXL,
                       fontWeight: TypographyTokens.bold,
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
+                      color: colors.textPrimary,
                     ),
                   ),
 
@@ -400,16 +411,10 @@ class _BookingConfirmationScreenState
                     Container(
                       padding: const EdgeInsets.all(SpacingTokens.m),
                       decoration: BoxDecoration(
-                        color: getColor(
-                          MinimalistColors.statusPendingBackground,
-                          MinimalistColorsDark.statusPendingBackground,
-                        ),
+                        color: colors.backgroundSecondary,
                         borderRadius: BorderTokens.circularMedium,
                         border: Border.all(
-                          color: getColor(
-                            MinimalistColors.statusPendingBorder,
-                            MinimalistColorsDark.statusPendingBorder,
-                          ),
+                          color: colors.borderDefault,
                         ),
                       ),
                       child: Row(
@@ -417,10 +422,7 @@ class _BookingConfirmationScreenState
                         children: [
                           Icon(
                             Icons.info_outline,
-                            color: getColor(
-                              MinimalistColors.statusPendingText,
-                              MinimalistColorsDark.statusPendingText,
-                            ),
+                            color: colors.textSecondary,
                             size: 24,
                           ),
                           const SizedBox(width: SpacingTokens.s),
@@ -433,10 +435,7 @@ class _BookingConfirmationScreenState
                                   style: TextStyle(
                                     fontSize: TypographyTokens.fontSizeM,
                                     fontWeight: TypographyTokens.bold,
-                                    color: getColor(
-                                      MinimalistColors.statusPendingText,
-                                      MinimalistColorsDark.statusPendingText,
-                                    ),
+                                    color: colors.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: SpacingTokens.xs),
@@ -444,10 +443,7 @@ class _BookingConfirmationScreenState
                                   'Your payment was successful, but we\'re still verifying it with the payment provider. You will receive a confirmation email within a few minutes. If you don\'t receive it, please contact the property owner.',
                                   style: TextStyle(
                                     fontSize: TypographyTokens.fontSizeS,
-                                    color: getColor(
-                                      MinimalistColors.statusPendingText,
-                                      MinimalistColorsDark.statusPendingText,
-                                    ),
+                                    color: colors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -463,16 +459,10 @@ class _BookingConfirmationScreenState
                   Container(
                     padding: const EdgeInsets.all(SpacingTokens.m),
                     decoration: BoxDecoration(
-                      color: getColor(
-                        MinimalistColors.backgroundSecondary,
-                        MinimalistColorsDark.backgroundSecondary,
-                      ),
+                      color: colors.backgroundSecondary,
                       borderRadius: BorderTokens.circularMedium,
                       border: Border.all(
-                        color: getColor(
-                          MinimalistColors.borderDefault,
-                          MinimalistColorsDark.borderDefault,
-                        ),
+                        color: colors.borderDefault,
                       ),
                     ),
                     child: Column(
@@ -481,10 +471,7 @@ class _BookingConfirmationScreenState
                           'Booking Reference',
                           style: TextStyle(
                             fontSize: TypographyTokens.fontSizeS,
-                            color: getColor(
-                              MinimalistColors.textSecondary,
-                              MinimalistColorsDark.textSecondary,
-                            ),
+                            color: colors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: SpacingTokens.xs),
@@ -497,20 +484,14 @@ class _BookingConfirmationScreenState
                                 fontSize: TypographyTokens.fontSizeXL,
                                 fontWeight: TypographyTokens.bold,
                                 letterSpacing: 2,
-                                color: getColor(
-                                  MinimalistColors.textPrimary,
-                                  MinimalistColorsDark.textPrimary,
-                                ),
+                                color: colors.textPrimary,
                               ),
                             ),
                             const SizedBox(width: SpacingTokens.s),
                             IconButton(
                               icon: Icon(
                                 Icons.copy,
-                                color: getColor(
-                                  MinimalistColors.textSecondary,
-                                  MinimalistColorsDark.textSecondary,
-                                ),
+                                color: colors.textSecondary,
                               ),
                               onPressed: _copyToClipboard,
                               tooltip: 'Copy reference',
@@ -527,16 +508,10 @@ class _BookingConfirmationScreenState
                   Container(
                     padding: const EdgeInsets.all(SpacingTokens.m),
                     decoration: BoxDecoration(
-                      color: getColor(
-                        MinimalistColors.statusAvailableBackground,
-                        MinimalistColorsDark.statusAvailableBackground,
-                      ),
+                      color: colors.backgroundSecondary,
                       borderRadius: BorderTokens.circularMedium,
                       border: Border.all(
-                        color: getColor(
-                          MinimalistColors.statusAvailableBorder,
-                          MinimalistColorsDark.statusAvailableBorder,
-                        ),
+                        color: colors.borderDefault,
                       ),
                     ),
                     child: Row(
@@ -544,10 +519,7 @@ class _BookingConfirmationScreenState
                       children: [
                         Icon(
                           Icons.mail_outline,
-                          color: getColor(
-                            MinimalistColors.statusAvailableText,
-                            MinimalistColorsDark.statusAvailableText,
-                          ),
+                          color: colors.textSecondary,
                           size: 20,
                         ),
                         const SizedBox(width: SpacingTokens.s),
@@ -560,10 +532,7 @@ class _BookingConfirmationScreenState
                                 style: TextStyle(
                                   fontSize: TypographyTokens.fontSizeM,
                                   fontWeight: TypographyTokens.semiBold,
-                                  color: getColor(
-                                    MinimalistColors.statusAvailableText,
-                                    MinimalistColorsDark.statusAvailableText,
-                                  ),
+                                  color: colors.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: SpacingTokens.xxs),
@@ -571,10 +540,7 @@ class _BookingConfirmationScreenState
                                 'Check your inbox for booking confirmation. If you don\'t see it within a few minutes, please check your spam or junk folder.',
                                 style: TextStyle(
                                   fontSize: TypographyTokens.fontSizeS,
-                                  color: getColor(
-                                    MinimalistColors.statusAvailableText,
-                                    MinimalistColorsDark.statusAvailableText,
-                                  ),
+                                  color: colors.textSecondary,
                                 ),
                               ),
                             ],
@@ -590,16 +556,10 @@ class _BookingConfirmationScreenState
                   Container(
                     padding: const EdgeInsets.all(SpacingTokens.m),
                     decoration: BoxDecoration(
-                      color: getColor(
-                        MinimalistColors.backgroundSecondary,
-                        MinimalistColorsDark.backgroundSecondary,
-                      ),
+                      color: colors.backgroundSecondary,
                       borderRadius: BorderTokens.circularMedium,
                       border: Border.all(
-                        color: getColor(
-                          MinimalistColors.borderDefault,
-                          MinimalistColorsDark.borderDefault,
-                        ),
+                        color: colors.borderDefault,
                       ),
                     ),
                     child: Column(
@@ -610,10 +570,7 @@ class _BookingConfirmationScreenState
                           style: TextStyle(
                             fontSize: TypographyTokens.fontSizeL,
                             fontWeight: TypographyTokens.bold,
-                            color: getColor(
-                              MinimalistColors.textPrimary,
-                              MinimalistColorsDark.textPrimary,
-                            ),
+                            color: colors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: SpacingTokens.m),
@@ -676,14 +633,8 @@ class _BookingConfirmationScreenState
                               : 'Add to My Calendar',
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: getColor(
-                            MinimalistColors.statusAvailableBorder,
-                            MinimalistColorsDark.statusAvailableBorder,
-                          ),
-                          foregroundColor: getColor(
-                            MinimalistColors.backgroundPrimary,
-                            MinimalistColorsDark.backgroundPrimary,
-                          ),
+                          backgroundColor: colors.backgroundSecondary,
+                          foregroundColor: colors.textPrimary,
                           minimumSize: const Size(double.infinity, 48),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
@@ -705,16 +656,10 @@ class _BookingConfirmationScreenState
                       margin: const EdgeInsets.only(bottom: SpacingTokens.l),
                       padding: const EdgeInsets.all(SpacingTokens.m),
                       decoration: BoxDecoration(
-                        color: getColor(
-                          MinimalistColors.statusPendingBackground,
-                          MinimalistColorsDark.statusPendingBackground,
-                        ),
+                        color: colors.backgroundSecondary,
                         borderRadius: BorderTokens.circularMedium,
                         border: Border.all(
-                          color: getColor(
-                            MinimalistColors.statusPendingBorder,
-                            MinimalistColorsDark.statusPendingBorder,
-                          ),
+                          color: colors.borderDefault,
                           width: 2,
                         ),
                       ),
@@ -725,10 +670,7 @@ class _BookingConfirmationScreenState
                             children: [
                               Icon(
                                 Icons.account_balance,
-                                color: getColor(
-                                  MinimalistColors.statusPendingText,
-                                  MinimalistColorsDark.statusPendingText,
-                                ),
+                                color: colors.textSecondary,
                                 size: 24,
                               ),
                               const SizedBox(width: SpacingTokens.s),
@@ -737,10 +679,7 @@ class _BookingConfirmationScreenState
                                 style: TextStyle(
                                   fontSize: TypographyTokens.fontSizeL,
                                   fontWeight: TypographyTokens.bold,
-                                  color: getColor(
-                                    MinimalistColors.textPrimary,
-                                    MinimalistColorsDark.textPrimary,
-                                  ),
+                                  color: colors.textPrimary,
                                 ),
                               ),
                             ],
@@ -805,10 +744,7 @@ class _BookingConfirmationScreenState
                           Container(
                             padding: const EdgeInsets.all(SpacingTokens.s),
                             decoration: BoxDecoration(
-                              color: getColor(
-                                MinimalistColors.statusAvailableBackground,
-                                MinimalistColorsDark.statusAvailableBackground,
-                              ),
+                              color: colors.backgroundSecondary,
                               borderRadius: BorderTokens.circularSmall,
                             ),
                             child: Row(
@@ -816,10 +752,7 @@ class _BookingConfirmationScreenState
                                 Icon(
                                   Icons.info_outline,
                                   size: 16,
-                                  color: getColor(
-                                    MinimalistColors.statusAvailableText,
-                                    MinimalistColorsDark.statusAvailableText,
-                                  ),
+                                  color: colors.textSecondary,
                                 ),
                                 const SizedBox(width: SpacingTokens.xs),
                                 Expanded(
@@ -827,11 +760,7 @@ class _BookingConfirmationScreenState
                                     'Please complete the transfer within 3 days and include the reference number.',
                                     style: TextStyle(
                                       fontSize: TypographyTokens.fontSizeS,
-                                      color: getColor(
-                                        MinimalistColors.statusAvailableText,
-                                        MinimalistColorsDark
-                                            .statusAvailableText,
-                                      ),
+                                      color: colors.textSecondary,
                                     ),
                                   ),
                                 ),
@@ -846,26 +775,17 @@ class _BookingConfirmationScreenState
                   Container(
                     padding: const EdgeInsets.all(SpacingTokens.m),
                     decoration: BoxDecoration(
-                      color: getColor(
-                        Colors.blue.shade50,
-                        Colors.blue.shade900.withValues(alpha: 0.2),
-                      ),
+                      color: colors.backgroundSecondary,
                       borderRadius: BorderTokens.circularMedium,
                       border: Border.all(
-                        color: getColor(
-                          Colors.blue.shade200,
-                          Colors.blue.shade700,
-                        ),
+                        color: colors.borderDefault,
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.email_outlined,
-                          color: getColor(
-                            Colors.blue.shade700,
-                            Colors.blue.shade300,
-                          ),
+                          color: colors.textPrimary,
                         ),
                         const SizedBox(width: SpacingTokens.s),
                         Expanded(
@@ -877,10 +797,7 @@ class _BookingConfirmationScreenState
                                 style: TextStyle(
                                   fontSize: TypographyTokens.fontSizeM,
                                   fontWeight: TypographyTokens.semiBold,
-                                  color: getColor(
-                                    Colors.blue.shade900,
-                                    Colors.blue.shade100,
-                                  ),
+                                  color: colors.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: SpacingTokens.xxs),
@@ -888,10 +805,7 @@ class _BookingConfirmationScreenState
                                 'Check your email at ${widget.guestEmail} for booking details.',
                                 style: TextStyle(
                                   fontSize: TypographyTokens.fontSizeS,
-                                  color: getColor(
-                                    Colors.blue.shade800,
-                                    Colors.blue.shade200,
-                                  ),
+                                  color: colors.textSecondary,
                                 ),
                               ),
                               if (widget.emailConfig != null &&
@@ -953,14 +867,8 @@ class _BookingConfirmationScreenState
                         Navigator.of(context).pop();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: getColor(
-                          MinimalistColors.buttonPrimary,
-                          MinimalistColorsDark.buttonPrimary,
-                        ),
-                        foregroundColor: getColor(
-                          MinimalistColors.buttonPrimaryText,
-                          MinimalistColorsDark.buttonPrimaryText,
-                        ),
+                        backgroundColor: colors.buttonPrimary,
+                        foregroundColor: colors.buttonPrimaryText,
                         padding: const EdgeInsets.symmetric(
                           vertical: SpacingTokens.m,
                         ),
@@ -986,15 +894,16 @@ class _BookingConfirmationScreenState
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: TypographyTokens.fontSizeS,
-                      color: getColor(
-                        MinimalistColors.textSecondary,
-                        MinimalistColorsDark.textSecondary,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                        ],
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -1006,6 +915,9 @@ class _BookingConfirmationScreenState
     String value, {
     bool isHighlighted = false,
   }) {
+    final isDarkMode = ref.read(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xxs),
       child: Row(
@@ -1015,10 +927,7 @@ class _BookingConfirmationScreenState
             label,
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeM,
-              color: getColor(
-                MinimalistColors.textSecondary,
-                MinimalistColorsDark.textSecondary,
-              ),
+              color: colors.textSecondary,
             ),
           ),
           Text(
@@ -1029,14 +938,8 @@ class _BookingConfirmationScreenState
                   ? TypographyTokens.bold
                   : TypographyTokens.regular,
               color: isHighlighted
-                  ? getColor(
-                      MinimalistColors.buttonPrimary,
-                      MinimalistColorsDark.buttonPrimary,
-                    )
-                  : getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
+                  ? colors.buttonPrimary
+                  : colors.textPrimary,
             ),
           ),
         ],
@@ -1046,6 +949,8 @@ class _BookingConfirmationScreenState
 
   /// Build cancellation policy widget
   Widget _buildCancellationPolicy() {
+    final isDarkMode = ref.read(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
     final deadlineHours = widget.widgetSettings!.cancellationDeadlineHours!;
 
     return Padding(
@@ -1053,16 +958,10 @@ class _BookingConfirmationScreenState
       child: Container(
         padding: const EdgeInsets.all(SpacingTokens.m),
         decoration: BoxDecoration(
-          color: getColor(
-            MinimalistColors.statusAvailableBackground,
-            MinimalistColorsDark.statusAvailableBackground,
-          ),
+          color: colors.backgroundSecondary,
           borderRadius: BorderTokens.circularMedium,
           border: Border.all(
-            color: getColor(
-              MinimalistColors.statusAvailableBorder,
-              MinimalistColorsDark.statusAvailableBorder,
-            ),
+            color: colors.borderDefault,
           ),
         ),
         child: Column(
@@ -1072,10 +971,7 @@ class _BookingConfirmationScreenState
               children: [
                 Icon(
                   Icons.event_available,
-                  color: getColor(
-                    MinimalistColors.success,
-                    MinimalistColorsDark.success,
-                  ),
+                  color: colors.textPrimary,
                   size: 24,
                 ),
                 const SizedBox(width: SpacingTokens.s),
@@ -1084,10 +980,7 @@ class _BookingConfirmationScreenState
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeL,
                     fontWeight: TypographyTokens.bold,
-                    color: getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
+                    color: colors.textPrimary,
                   ),
                 ),
               ],
@@ -1098,10 +991,7 @@ class _BookingConfirmationScreenState
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeM,
                 fontWeight: TypographyTokens.semiBold,
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: SpacingTokens.xs),
@@ -1109,10 +999,7 @@ class _BookingConfirmationScreenState
               'To cancel your booking:',
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeM,
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
+                color: colors.textSecondary,
               ),
             ),
             const SizedBox(height: SpacingTokens.xs),
@@ -1131,6 +1018,9 @@ class _BookingConfirmationScreenState
   }
 
   Widget _buildCancellationStep(String text) {
+    final isDarkMode = ref.read(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     return Padding(
       padding: const EdgeInsets.only(
         left: SpacingTokens.m,
@@ -1143,10 +1033,7 @@ class _BookingConfirmationScreenState
             '• ',
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeM,
-              color: getColor(
-                MinimalistColors.textSecondary,
-                MinimalistColorsDark.textSecondary,
-              ),
+              color: colors.textSecondary,
             ),
           ),
           Expanded(
@@ -1154,10 +1041,7 @@ class _BookingConfirmationScreenState
               text,
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeM,
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
+                color: colors.textSecondary,
               ),
             ),
           ),
@@ -1168,6 +1052,8 @@ class _BookingConfirmationScreenState
 
   /// Build next steps section based on payment method
   Widget _buildNextSteps() {
+    final isDarkMode = ref.read(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
     final List<Map<String, dynamic>> steps;
 
     switch (widget.paymentMethod) {
@@ -1264,16 +1150,10 @@ class _BookingConfirmationScreenState
       child: Container(
         padding: const EdgeInsets.all(SpacingTokens.m),
         decoration: BoxDecoration(
-          color: getColor(
-            MinimalistColors.backgroundSecondary,
-            MinimalistColorsDark.backgroundSecondary,
-          ),
+          color: colors.backgroundSecondary,
           borderRadius: BorderTokens.circularMedium,
           border: Border.all(
-            color: getColor(
-              MinimalistColors.borderDefault,
-              MinimalistColorsDark.borderDefault,
-            ),
+            color: colors.borderDefault,
           ),
         ),
         child: Column(
@@ -1284,10 +1164,7 @@ class _BookingConfirmationScreenState
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeL,
                 fontWeight: TypographyTokens.bold,
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: SpacingTokens.m),
@@ -1305,19 +1182,13 @@ class _BookingConfirmationScreenState
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: getColor(
-                            MinimalistColors.success,
-                            MinimalistColorsDark.success,
-                          ),
+                          color: colors.textPrimary,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
                           child: Icon(
                             step['icon'] as IconData,
-                            color: getColor(
-                              MinimalistColors.backgroundPrimary,
-                              MinimalistColorsDark.backgroundPrimary,
-                            ),
+                            color: colors.backgroundPrimary,
                             size: 20,
                           ),
                         ),
@@ -1332,10 +1203,7 @@ class _BookingConfirmationScreenState
                               style: TextStyle(
                                 fontSize: TypographyTokens.fontSizeM,
                                 fontWeight: TypographyTokens.semiBold,
-                                color: getColor(
-                                  MinimalistColors.textPrimary,
-                                  MinimalistColorsDark.textPrimary,
-                                ),
+                                color: colors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: SpacingTokens.xxs),
@@ -1343,10 +1211,7 @@ class _BookingConfirmationScreenState
                               step['description'] as String,
                               style: TextStyle(
                                 fontSize: TypographyTokens.fontSizeS,
-                                color: getColor(
-                                  MinimalistColors.textSecondary,
-                                  MinimalistColorsDark.textSecondary,
-                                ),
+                                color: colors.textSecondary,
                               ),
                             ),
                           ],
@@ -1360,10 +1225,7 @@ class _BookingConfirmationScreenState
                       margin: const EdgeInsets.only(left: 20),
                       width: 2,
                       height: 24,
-                      color: getColor(
-                        MinimalistColors.success,
-                        MinimalistColorsDark.success,
-                      ).withValues(alpha: 0.3),
+                      color: colors.textPrimary.withValues(alpha: 0.3),
                     ),
                     const SizedBox(height: SpacingTokens.m),
                   ],
@@ -1383,6 +1245,9 @@ class _BookingConfirmationScreenState
     bool copyable = false,
     bool highlight = false,
   }) {
+    final isDarkMode = ref.read(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1393,10 +1258,7 @@ class _BookingConfirmationScreenState
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeS,
               fontWeight: TypographyTokens.semiBold,
-              color: getColor(
-                MinimalistColors.textSecondary,
-                MinimalistColorsDark.textSecondary,
-              ),
+              color: colors.textSecondary,
             ),
           ),
         ),
@@ -1415,16 +1277,10 @@ class _BookingConfirmationScreenState
                       : null,
                   decoration: highlight
                       ? BoxDecoration(
-                          color: getColor(
-                            MinimalistColors.statusAvailableBackground,
-                            MinimalistColorsDark.statusAvailableBackground,
-                          ),
+                          color: colors.backgroundSecondary,
                           borderRadius: BorderTokens.circularSmall,
                           border: Border.all(
-                            color: getColor(
-                              MinimalistColors.statusAvailableBorder,
-                              MinimalistColorsDark.statusAvailableBorder,
-                            ),
+                            color: colors.borderDefault,
                           ),
                         )
                       : null,
@@ -1436,14 +1292,8 @@ class _BookingConfirmationScreenState
                           ? TypographyTokens.bold
                           : TypographyTokens.medium,
                       color: highlight
-                          ? getColor(
-                              MinimalistColors.statusAvailableText,
-                              MinimalistColorsDark.statusAvailableText,
-                            )
-                          : getColor(
-                              MinimalistColors.textPrimary,
-                              MinimalistColorsDark.textPrimary,
-                            ),
+                          ? colors.textPrimary
+                          : colors.textPrimary,
                       fontFamily: 'monospace',
                     ),
                   ),
@@ -1455,10 +1305,7 @@ class _BookingConfirmationScreenState
                   icon: Icon(
                     Icons.copy,
                     size: 16,
-                    color: getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
+                    color: colors.textSecondary,
                   ),
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: value));

@@ -64,20 +64,14 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('sendEmailVerificationCode');
 
-      await callable.call({
-        'email': widget.email,
-      });
+      await callable.call({'email': widget.email});
 
-      LoggingService.logSuccess(
-        '[EmailVerification] Code sent successfully',
-      );
+      LoggingService.logSuccess('[EmailVerification] Code sent successfully');
 
       if (mounted) {
         SnackBarHelper.showSuccess(
           context: context,
           message: 'Verification code sent! Check your inbox.',
-          isDarkMode: false,
-          duration: const Duration(seconds: 3),
         );
 
         // Start 60-second cooldown
@@ -100,10 +94,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
         });
       }
     } on FirebaseFunctionsException catch (e) {
-      await LoggingService.logError(
-        '[EmailVerification] Functions error',
-        e,
-      );
+      await LoggingService.logError('[EmailVerification] Functions error', e);
 
       if (mounted) {
         setState(() {
@@ -111,10 +102,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
         });
       }
     } catch (e) {
-      await LoggingService.logError(
-        '[EmailVerification] Unexpected error',
-        e,
-      );
+      await LoggingService.logError('[EmailVerification] Unexpected error', e);
 
       if (mounted) {
         setState(() {
@@ -173,10 +161,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
         });
       }
     } catch (e) {
-      await LoggingService.logError(
-        '[EmailVerification] Unexpected error',
-        e,
-      );
+      await LoggingService.logError('[EmailVerification] Unexpected error', e);
 
       if (mounted) {
         setState(() {
@@ -196,9 +181,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: widget.colors.backgroundCard,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 450),
         padding: const EdgeInsets.all(32),
@@ -228,10 +211,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: widget.colors.textSecondary,
-                    ),
+                    icon: Icon(Icons.close, color: widget.colors.textSecondary),
                     onPressed: () => Navigator.of(context).pop(false),
                   ),
                 ],
@@ -406,7 +386,10 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: widget.colors.primary,
                     foregroundColor: widget.colors.backgroundCard,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 35), // Increased horizontal padding for wider button
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 35,
+                    ), // Increased horizontal padding for wider button
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -419,7 +402,9 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : Text(
@@ -435,8 +420,9 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
 
               // Resend button
               TextButton(
-                onPressed:
-                    _resendCooldown > 0 || _isResending ? null : _sendVerificationCode,
+                onPressed: _resendCooldown > 0 || _isResending
+                    ? null
+                    : _sendVerificationCode,
                 child: _isResending
                     ? Row(
                         mainAxisAlignment: MainAxisAlignment.center,

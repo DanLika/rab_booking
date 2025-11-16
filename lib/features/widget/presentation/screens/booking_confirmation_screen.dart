@@ -163,7 +163,8 @@ class _BookingConfirmationScreenState
         widget.emailConfig!.isConfigured != true) {
       SnackBarHelper.showWarning(
         context: context,
-        message: 'Email service is not enabled or configured. Please contact the property owner.',
+        message:
+            'Email service is not enabled or configured. Please contact the property owner.',
         isDarkMode: isDarkMode,
         duration: const Duration(seconds: 4),
       );
@@ -200,7 +201,6 @@ class _BookingConfirmationScreenState
           context: context,
           message: 'Confirmation email sent successfully!',
           isDarkMode: isDarkMode,
-          duration: const Duration(seconds: 3),
         );
       }
     } catch (e) {
@@ -249,7 +249,6 @@ class _BookingConfirmationScreenState
           context: context,
           message: 'Calendar event downloaded! Check your downloads folder.',
           isDarkMode: isDarkMode,
-          duration: const Duration(seconds: 3),
         );
       }
     } catch (e) {

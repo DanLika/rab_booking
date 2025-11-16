@@ -10,10 +10,7 @@ import '../utils/snackbar_helper.dart';
 class EmbedCalendarScreen extends ConsumerStatefulWidget {
   final String unitId;
 
-  const EmbedCalendarScreen({
-    super.key,
-    required this.unitId,
-  });
+  const EmbedCalendarScreen({super.key, required this.unitId});
 
   @override
   ConsumerState<EmbedCalendarScreen> createState() =>
@@ -272,13 +269,15 @@ class _EmbedCalendarScreenState extends ConsumerState<EmbedCalendarScreen> {
                 SnackBarHelper.showInfo(
                   context: context,
                   message: 'Redirecting to booking flow...',
-                  isDarkMode: false,
                   duration: const Duration(seconds: 2),
                 );
                 // NOTE: Implement navigation to /booking route with selected dates
               },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 32,
+                ),
                 backgroundColor: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(

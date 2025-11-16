@@ -261,10 +261,7 @@ class BankTransferInstructionsWidget extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -285,7 +282,6 @@ class BankTransferInstructionsWidget extends StatelessWidget {
               SnackBarHelper.showSuccess(
                 context: context,
                 message: '$label kopiran: $value',
-                isDarkMode: false,
                 duration: const Duration(seconds: 2),
               );
             },
@@ -434,10 +430,7 @@ class BankTransferOptionCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '⏱️ Rok za uplatu: 3 radna dana',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
             ),
           ],
         ),

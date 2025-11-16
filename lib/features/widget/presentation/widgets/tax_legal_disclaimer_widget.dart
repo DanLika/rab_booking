@@ -176,7 +176,7 @@ class _TaxLegalDisclaimerWidgetState
               setState(() => _isAccepted = val ?? false);
               widget.onAcceptedChanged(_isAccepted);
             },
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             title: Text(
               'I understand and accept the tax and legal obligations',
               style: TextStyle(

@@ -234,7 +234,10 @@ class FirebaseOwnerPropertiesRepository {
   /// Delete property
   Future<void> deleteProperty(String propertyId) async {
     try {
+      print('[REPO] deleteProperty called for: $propertyId');
+
       // Check if property has units in NEW subcollection
+      print('[REPO] Checking NEW subcollection units...');
       final unitsInSubcollection = await _firestore
           .collection('properties')
           .doc(propertyId)
@@ -242,6 +245,7 @@ class FirebaseOwnerPropertiesRepository {
           .limit(1)
           .get();
 
+      print('[REPO] NEW subcollection check: ${unitsInSubcollection.docs.length} units found');
       if (unitsInSubcollection.docs.isNotEmpty) {
         throw Exception(
           'Cannot delete property with existing units. Please delete all units first.',
@@ -249,20 +253,25 @@ class FirebaseOwnerPropertiesRepository {
       }
 
       // ALSO check OLD top-level units collection (for backwards compatibility)
+      print('[REPO] Checking OLD top-level units collection...');
       final unitsInOldCollection = await _firestore
           .collection('units')
           .where('property_id', isEqualTo: propertyId)
           .limit(1)
           .get();
 
+      print('[REPO] OLD collection check: ${unitsInOldCollection.docs.length} units found');
       if (unitsInOldCollection.docs.isNotEmpty) {
         throw Exception(
           'Cannot delete property with existing units in old location. Please delete all units first.',
         );
       }
 
+      print('[REPO] No units found, proceeding with delete...');
       await _firestore.collection('properties').doc(propertyId).delete();
+      print('[REPO] Property deleted from Firestore');
     } catch (e) {
+      print('[REPO] Error in deleteProperty: $e');
       rethrow;
     }
   }

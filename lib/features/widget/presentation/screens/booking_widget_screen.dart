@@ -623,6 +623,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             // Add iCal warning if present (will be checked later)
             reservedHeight += 16; // Buffer for potential warning banner
 
+            // Add contact pill card height for calendar-only mode
+            if (widgetMode == WidgetMode.calendarOnly) {
+              reservedHeight += 180; // Contact pill card height (header + subtitle + pill + spacing)
+            }
+
             // Calendar gets remaining height (ensure minimum of 400px)
             final calendarHeight = (screenHeight - reservedHeight).clamp(
               400.0,
@@ -716,6 +721,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                   },
                           ),
                         ),
+
+                        // Contact pill card (calendar only mode - inline, below calendar)
+                        if (widgetMode == WidgetMode.calendarOnly) ...[
+                          const SizedBox(height: 16),
+                          _buildContactPillCard(isDarkMode, screenWidth),
+                        ],
                       ],
                     ),
                   ),
@@ -734,15 +745,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         color: Colors.black.withValues(alpha: 0.5),
                       ),
                     ),
-                  ),
-
-                // Contact info bar (calendar only mode - no booking) - positioned at bottom
-                if (widgetMode == WidgetMode.calendarOnly)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: _buildContactInfoBar(isDarkMode),
                   ),
 
                 // Floating draggable booking summary bar (booking modes - shown when dates selected)
@@ -996,6 +998,205 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
+  }
+
+  /// Build contact pill card for calendar-only mode (inline, below calendar)
+  Widget _buildContactPillCard(bool isDarkMode, double screenWidth) {
+    final contactOptions = _widgetSettings?.contactOptions;
+    final isDesktop = screenWidth > 600;
+
+    // Responsive max-width
+    final maxWidth = screenWidth < 600
+        ? screenWidth - 24 // Mobile: full width - padding
+        : screenWidth < 900
+            ? 600.0 // Tablet
+            : 800.0; // Desktop
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth < 600 ? 12 : 16,
+          ),
+          child: Column(
+            children: [
+              // Subtitle: "Contact us for booking"
+              Text(
+                'Contact us for booking',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDarkMode
+                      ? MinimalistColorsDark.textSecondary
+                      : MinimalistColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+
+              // Pill container
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? MinimalistColorsDark.backgroundSecondary
+                      : MinimalistColors.backgroundSecondary,
+                  borderRadius: BorderRadius.circular(12), // Pill style
+                  border: Border.all(
+                    color: isDarkMode
+                        ? MinimalistColorsDark.borderDefault
+                        : MinimalistColors.borderDefault,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: isDesktop
+                    ? _buildDesktopContactRow(contactOptions, isDarkMode)
+                    : _buildMobileContactColumn(contactOptions, isDarkMode),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Desktop layout: email + phone in same row with divider
+  Widget _buildDesktopContactRow(
+    ContactOptions? contactOptions,
+    bool isDarkMode,
+  ) {
+    final hasEmail = contactOptions?.showEmail == true &&
+        contactOptions?.emailAddress != null &&
+        contactOptions!.emailAddress!.isNotEmpty;
+
+    final hasPhone = contactOptions?.showPhone == true &&
+        contactOptions?.phoneNumber != null &&
+        contactOptions!.phoneNumber!.isNotEmpty;
+
+    return Row(
+      children: [
+        // Email
+        if (hasEmail)
+          Expanded(
+            child: _buildContactItem(
+              icon: Icons.email,
+              value: contactOptions.emailAddress!,
+              onTap: () => _launchUrl('mailto:${contactOptions.emailAddress}'),
+              isDarkMode: isDarkMode,
+            ),
+          ),
+
+        // Vertical divider
+        if (hasEmail && hasPhone)
+          Container(
+            height: 40,
+            width: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            color: isDarkMode
+                ? MinimalistColorsDark.borderDefault
+                : MinimalistColors.borderDefault,
+          ),
+
+        // Phone
+        if (hasPhone)
+          Expanded(
+            child: _buildContactItem(
+              icon: Icons.phone,
+              value: contactOptions.phoneNumber!,
+              onTap: () => _launchUrl('tel:${contactOptions.phoneNumber}'),
+              isDarkMode: isDarkMode,
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Mobile layout: email and phone stacked vertically
+  Widget _buildMobileContactColumn(
+    ContactOptions? contactOptions,
+    bool isDarkMode,
+  ) {
+    final hasEmail = contactOptions?.showEmail == true &&
+        contactOptions?.emailAddress != null &&
+        contactOptions!.emailAddress!.isNotEmpty;
+
+    final hasPhone = contactOptions?.showPhone == true &&
+        contactOptions?.phoneNumber != null &&
+        contactOptions!.phoneNumber!.isNotEmpty;
+
+    return Column(
+      children: [
+        // Email
+        if (hasEmail)
+          _buildContactItem(
+            icon: Icons.email,
+            value: contactOptions.emailAddress!,
+            onTap: () => _launchUrl('mailto:${contactOptions.emailAddress}'),
+            isDarkMode: isDarkMode,
+          ),
+
+        // Spacing
+        if (hasEmail && hasPhone) const SizedBox(height: 12),
+
+        // Phone
+        if (hasPhone)
+          _buildContactItem(
+            icon: Icons.phone,
+            value: contactOptions.phoneNumber!,
+            onTap: () => _launchUrl('tel:${contactOptions.phoneNumber}'),
+            isDarkMode: isDarkMode,
+          ),
+      ],
+    );
+  }
+
+  /// Contact item widget (clickable with icon and value)
+  Widget _buildContactItem({
+    required IconData icon,
+    required String value,
+    required VoidCallback onTap,
+    required bool isDarkMode,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isDarkMode
+                  ? MinimalistColorsDark.buttonPrimary
+                  : MinimalistColors.buttonPrimary,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                value,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDarkMode
+                      ? MinimalistColorsDark.textPrimary
+                      : MinimalistColors.textPrimary,
+                  decoration: TextDecoration.underline,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// Build floating draggable pill bar that overlays the calendar

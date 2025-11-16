@@ -292,43 +292,85 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          widget.property.isActive ? 'Objavljeno' : 'Skriveno',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: widget.property.isActive
-                                    ? theme.colorScheme.tertiary
-                                    : theme.colorScheme.error.withAlpha(
-                                        (0.8 * 255).toInt(),
-                                      ),
+                  // Published toggle with styled switch
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: widget.property.isActive
+                            ? [
+                                theme.colorScheme.tertiary.withAlpha(
+                                  (0.1 * 255).toInt(),
+                                ),
+                                theme.colorScheme.tertiary.withAlpha(
+                                  (0.05 * 255).toInt(),
+                                ),
+                              ]
+                            : [
+                                theme.colorScheme.error.withAlpha(
+                                  (0.1 * 255).toInt(),
+                                ),
+                                theme.colorScheme.error.withAlpha(
+                                  (0.05 * 255).toInt(),
+                                ),
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: widget.property.isActive
+                            ? theme.colorScheme.tertiary.withAlpha(
+                                (0.3 * 255).toInt(),
+                              )
+                            : theme.colorScheme.error.withAlpha(
+                                (0.3 * 255).toInt(),
                               ),
-                          overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            widget.property.isActive
+                                ? 'Objavljeno'
+                                : 'Skriveno',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: widget.property.isActive
+                                  ? theme.colorScheme.tertiary
+                                  : theme.colorScheme.error,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      Switch(
-                        value: widget.property.isActive,
-                        onChanged: widget.onTogglePublished,
-                      ),
-                    ],
+                        Switch(
+                          value: widget.property.isActive,
+                          onChanged: widget.onTogglePublished,
+                          activeTrackColor: theme.colorScheme.tertiary,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      IconButton(
+                      // Edit button
+                      _StyledIconButton(
                         onPressed: widget.onEdit,
-                        icon: const Icon(Icons.edit_outlined),
+                        icon: Icons.edit_outlined,
                         tooltip: 'Uredi',
+                        color: theme.colorScheme.primary,
                       ),
-                      IconButton(
+                      const SizedBox(width: 8),
+                      // Delete button
+                      _StyledIconButton(
                         onPressed: widget.onDelete,
-                        icon: const Icon(Icons.delete_outline),
-                        color: context.errorColor,
+                        icon: Icons.delete_outline,
                         tooltip: 'Obriši',
+                        color: theme.colorScheme.error,
                       ),
                     ],
                   ),
@@ -337,47 +379,90 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
             }
             return Row(
               children: [
-                // Published toggle
+                // Published toggle with styled switch
                 Flexible(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          widget.property.isActive ? 'Objavljeno' : 'Skriveno',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: widget.property.isActive
-                                    ? theme.colorScheme.tertiary
-                                    : theme.colorScheme.error.withAlpha(
-                                        (0.8 * 255).toInt(),
-                                      ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: widget.property.isActive
+                            ? [
+                                theme.colorScheme.tertiary.withAlpha(
+                                  (0.1 * 255).toInt(),
+                                ),
+                                theme.colorScheme.tertiary.withAlpha(
+                                  (0.05 * 255).toInt(),
+                                ),
+                              ]
+                            : [
+                                theme.colorScheme.error.withAlpha(
+                                  (0.1 * 255).toInt(),
+                                ),
+                                theme.colorScheme.error.withAlpha(
+                                  (0.05 * 255).toInt(),
+                                ),
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: widget.property.isActive
+                            ? theme.colorScheme.tertiary.withAlpha(
+                                (0.3 * 255).toInt(),
+                              )
+                            : theme.colorScheme.error.withAlpha(
+                                (0.3 * 255).toInt(),
                               ),
-                          overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            widget.property.isActive
+                                ? 'Objavljeno'
+                                : 'Skriveno',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: widget.property.isActive
+                                  ? theme.colorScheme.tertiary
+                                  : theme.colorScheme.error,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Switch(
-                        value: widget.property.isActive,
-                        onChanged: widget.onTogglePublished,
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Switch(
+                          value: widget.property.isActive,
+                          onChanged: widget.onTogglePublished,
+                          activeTrackColor: theme.colorScheme.tertiary,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
+                const SizedBox(width: 12),
+
                 // Edit button
-                IconButton(
+                _StyledIconButton(
                   onPressed: widget.onEdit,
-                  icon: const Icon(Icons.edit_outlined),
+                  icon: Icons.edit_outlined,
                   tooltip: 'Uredi',
+                  color: theme.colorScheme.primary,
                 ),
 
+                const SizedBox(width: 8),
+
                 // Delete button
-                IconButton(
+                _StyledIconButton(
                   onPressed: widget.onDelete,
-                  icon: const Icon(Icons.delete_outline),
-                  color: context.errorColor,
+                  icon: Icons.delete_outline,
                   tooltip: 'Obriši',
+                  color: theme.colorScheme.error,
                 ),
               ],
             );
@@ -391,17 +476,23 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
     // Use higher aspect ratio (wider/shorter) to save vertical space
     final aspectRatio = isSmallMobile ? 2.2 : (isMobile ? 2.0 : 1.95);
 
-    return AspectRatio(
-      aspectRatio: aspectRatio,
-      child: widget.property.primaryImage != null
-          ? Image.network(
-              widget.property.primaryImage!,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return _buildPlaceholder(isSmallMobile);
-              },
-            )
-          : _buildPlaceholder(isSmallMobile),
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(16),
+        topRight: Radius.circular(16),
+      ),
+      child: AspectRatio(
+        aspectRatio: aspectRatio,
+        child: widget.property.primaryImage != null
+            ? Image.network(
+                widget.property.primaryImage!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return _buildPlaceholder(isSmallMobile);
+                },
+              )
+            : _buildPlaceholder(isSmallMobile),
+      ),
     );
   }
 
@@ -468,6 +559,55 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Styled icon button with gradient background
+class _StyledIconButton extends StatelessWidget {
+  const _StyledIconButton({
+    required this.onPressed,
+    required this.icon,
+    required this.tooltip,
+    required this.color,
+  });
+
+  final VoidCallback onPressed;
+  final IconData icon;
+  final String tooltip;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  color.withAlpha((0.15 * 255).toInt()),
+                  color.withAlpha((0.08 * 255).toInt()),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: color.withAlpha((0.3 * 255).toInt()),
+              ),
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: color,
+            ),
+          ),
+        ),
       ),
     );
   }

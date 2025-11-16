@@ -68,7 +68,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             // Refresh bookings data
             ref.invalidate(ownerBookingsProvider);
           },
-          color: AppColors.primary,
+          color: theme.colorScheme.primary,
           child: ListView(
             children: [
               // Filters section
@@ -132,10 +132,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.error_outline,
                             size: AppDimensions.iconSizeXL,
-                            color: AppColors.error,
+                            color: theme.colorScheme.error,
                           ),
                           const SizedBox(height: AppDimensions.spaceS),
                           Text(
@@ -177,7 +177,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
     return Card(
       elevation: 2,
-      shadowColor: AppColors.primary.withAlpha((0.08 * 255).toInt()),
+      shadowColor: theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
@@ -476,28 +476,26 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         rows.add(
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _BookingCard(
+                    key: ValueKey(leftBooking.booking.id),
+                    ownerBooking: leftBooking,
+                  ),
+                ),
+                if (rightBooking != null) ...[
+                  const SizedBox(width: 16),
                   Expanded(
                     child: _BookingCard(
-                      key: ValueKey(leftBooking.booking.id),
-                      ownerBooking: leftBooking,
+                      key: ValueKey(rightBooking.booking.id),
+                      ownerBooking: rightBooking,
                     ),
                   ),
-                  if (rightBooking != null) ...[
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _BookingCard(
-                        key: ValueKey(rightBooking.booking.id),
-                        ownerBooking: rightBooking,
-                      ),
-                    ),
-                  ] else
-                    const Spacer(),
-                ],
-              ),
+                ] else
+                  const Spacer(),
+              ],
             ),
           ),
         );
@@ -541,12 +539,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                  color: Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).toInt()),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.event_available_outlined,
                   size: 70,
-                  color: AppColors.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(height: AppDimensions.spaceL),
@@ -894,7 +892,7 @@ class _BookingCard extends ConsumerWidget {
                               value: booking.formattedTotalPrice,
                               valueStyle: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
+                                color: theme.colorScheme.primary,
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -937,7 +935,7 @@ class _BookingCard extends ConsumerWidget {
                               value: booking.formattedTotalPrice,
                               valueStyle: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
+                                color: theme.colorScheme.primary,
                               ),
                             ),
                           ),
@@ -976,7 +974,7 @@ class _BookingCard extends ConsumerWidget {
                     valueColor: AlwaysStoppedAnimation<Color>(
                       booking.isFullyPaid
                           ? AppColors.success
-                          : AppColors.primary,
+                          : theme.colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -1096,7 +1094,7 @@ class _BookingCard extends ConsumerWidget {
                         icon: const Icon(Icons.cancel_outlined, size: 17),
                         label: const Text('Odbij'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.error,
+                          foregroundColor: theme.colorScheme.error,
                           padding: EdgeInsets.symmetric(
                             horizontal: isActionMobile ? 14 : 16,
                             vertical: isActionMobile ? 11 : 13,
@@ -1105,7 +1103,7 @@ class _BookingCard extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           side: BorderSide(
-                            color: AppColors.error.withAlpha(
+                            color: theme.colorScheme.error.withAlpha(
                               (0.4 * 255).toInt(),
                             ),
                           ),
@@ -1144,7 +1142,7 @@ class _BookingCard extends ConsumerWidget {
                         icon: const Icon(Icons.close, size: 17),
                         label: const Text('Otkaži'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.error,
+                          foregroundColor: theme.colorScheme.error,
                           padding: EdgeInsets.symmetric(
                             horizontal: isActionMobile ? 14 : 16,
                             vertical: isActionMobile ? 11 : 13,
@@ -1153,7 +1151,7 @@ class _BookingCard extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           side: BorderSide(
-                            color: AppColors.error.withAlpha(
+                            color: theme.colorScheme.error.withAlpha(
                               (0.4 * 255).toInt(),
                             ),
                           ),
@@ -1182,17 +1180,11 @@ class _BookingCard extends ConsumerWidget {
                     );
                   } else {
                     // Wrap layout for desktop (handles multiple buttons gracefully)
+                    // Flexible width - buttons wrap to next line if needed
                     return Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: actionButtons
-                          .map(
-                            (button) => SizedBox(
-                              width: (constraints.maxWidth - 24) / 3,
-                              child: button,
-                            ),
-                          )
-                          .toList(),
+                      children: actionButtons,
                     );
                   }
                 },
@@ -1375,8 +1367,8 @@ class _BookingCard extends ConsumerWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.error.withAlpha((0.85 * 255).toInt()),
-                      AppColors.error,
+                      Theme.of(context).colorScheme.error.withAlpha((0.85 * 255).toInt()),
+                      Theme.of(context).colorScheme.error,
                     ],
                   ),
                 ),
@@ -1452,7 +1444,7 @@ class _BookingCard extends ConsumerWidget {
                         FilledButton(
                           onPressed: () => Navigator.of(context).pop(true),
                           style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.error,
+                            backgroundColor: Theme.of(context).colorScheme.error,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
@@ -1754,7 +1746,7 @@ class _BookingCard extends ConsumerWidget {
                         FilledButton(
                           onPressed: () => Navigator.of(context).pop(true),
                           style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.error,
+                            backgroundColor: Theme.of(context).colorScheme.error,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,

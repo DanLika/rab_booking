@@ -50,7 +50,8 @@ class BookingsFilters {
 class BookingsFiltersNotifier extends _$BookingsFiltersNotifier {
   @override
   BookingsFilters build() {
-    return const BookingsFilters();
+    // Default to showing Pending bookings on initial load
+    return const BookingsFilters(status: BookingStatus.pending);
   }
 
   void setStatus(BookingStatus? status) {

@@ -30,7 +30,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _isDirty = false;
   bool _isSaving = false;
 
-  // Controllers
+  // Controllers - Personal Info
   final _displayNameController = TextEditingController();
   final _emailContactController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -38,6 +38,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _cityController = TextEditingController();
   final _streetController = TextEditingController();
   final _postalCodeController = TextEditingController();
+
+  // Controllers - Social & Business
+  final _websiteController = TextEditingController();
+  final _facebookController = TextEditingController();
+  final _propertyTypeController = TextEditingController();
+
+  // Controllers - Company Details
+  final _companyNameController = TextEditingController();
+  final _taxIdController = TextEditingController();
+  final _vatIdController = TextEditingController();
+  final _ibanController = TextEditingController();
+  final _swiftController = TextEditingController();
+  final _companyCountryController = TextEditingController();
+  final _companyCityController = TextEditingController();
+  final _companyStreetController = TextEditingController();
+  final _companyPostalCodeController = TextEditingController();
 
   // Profile image
   Uint8List? _profileImageBytes;
@@ -48,6 +64,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   void dispose() {
+    // Personal Info
     _displayNameController.dispose();
     _emailContactController.dispose();
     _phoneController.dispose();
@@ -55,6 +72,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _cityController.dispose();
     _streetController.dispose();
     _postalCodeController.dispose();
+
+    // Social & Business
+    _websiteController.dispose();
+    _facebookController.dispose();
+    _propertyTypeController.dispose();
+
+    // Company Details
+    _companyNameController.dispose();
+    _taxIdController.dispose();
+    _vatIdController.dispose();
+    _ibanController.dispose();
+    _swiftController.dispose();
+    _companyCountryController.dispose();
+    _companyCityController.dispose();
+    _companyStreetController.dispose();
+    _companyPostalCodeController.dispose();
+
     super.dispose();
   }
 
@@ -63,7 +97,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     _originalProfile = userData.profile;
     final profile = userData.profile;
+    final company = userData.company;
 
+    // Personal Info
     _displayNameController.text = profile.displayName;
     _emailContactController.text = profile.emailContact;
     _phoneController.text = profile.phoneE164;
@@ -71,6 +107,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _cityController.text = profile.address.city;
     _streetController.text = profile.address.street;
     _postalCodeController.text = profile.address.postalCode;
+
+    // Social & Business
+    _websiteController.text = profile.social.website;
+    _facebookController.text = profile.social.facebook;
+    _propertyTypeController.text = profile.propertyType;
+
+    // Company Details
+    _companyNameController.text = company.companyName;
+    _taxIdController.text = company.taxId;
+    _vatIdController.text = company.vatId;
+    _ibanController.text = company.bankAccountIban;
+    _swiftController.text = company.swift;
+    _companyCountryController.text = company.address.country;
+    _companyCityController.text = company.address.city;
+    _companyStreetController.text = company.address.street;
+    _companyPostalCodeController.text = company.address.postalCode;
 
     // Add listeners after loading
     _displayNameController.addListener(_markDirty);
@@ -80,6 +132,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _cityController.addListener(_markDirty);
     _streetController.addListener(_markDirty);
     _postalCodeController.addListener(_markDirty);
+
+    _websiteController.addListener(_markDirty);
+    _facebookController.addListener(_markDirty);
+    _propertyTypeController.addListener(_markDirty);
+
+    _companyNameController.addListener(_markDirty);
+    _taxIdController.addListener(_markDirty);
+    _vatIdController.addListener(_markDirty);
+    _ibanController.addListener(_markDirty);
+    _swiftController.addListener(_markDirty);
+    _companyCountryController.addListener(_markDirty);
+    _companyCityController.addListener(_markDirty);
+    _companyStreetController.addListener(_markDirty);
+    _companyPostalCodeController.addListener(_markDirty);
 
     setState(() => _isDirty = false);
   }
@@ -131,15 +197,38 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           street: _streetController.text.trim(),
           postalCode: _postalCodeController.text.trim(),
         ),
-        social: _originalProfile?.social ?? const SocialLinks(),
-        propertyType: _originalProfile?.propertyType ?? '',
+        social: SocialLinks(
+          website: _websiteController.text.trim(),
+          facebook: _facebookController.text.trim(),
+        ),
+        propertyType: _propertyTypeController.text.trim(),
         logoUrl: _originalProfile?.logoUrl ?? '',
       );
 
-      // Save to Firestore
+      // Create updated company details
+      final updatedCompany = CompanyDetails(
+        companyName: _companyNameController.text.trim(),
+        taxId: _taxIdController.text.trim(),
+        vatId: _vatIdController.text.trim(),
+        bankAccountIban: _ibanController.text.trim(),
+        swift: _swiftController.text.trim(),
+        address: Address(
+          country: _companyCountryController.text.trim(),
+          city: _companyCityController.text.trim(),
+          street: _companyStreetController.text.trim(),
+          postalCode: _companyPostalCodeController.text.trim(),
+        ),
+      );
+
+      // Save profile to Firestore
       await ref
           .read(userProfileNotifierProvider.notifier)
           .updateProfile(updatedProfile);
+
+      // Save company details to Firestore
+      await ref
+          .read(userProfileNotifierProvider.notifier)
+          .updateCompany(userId, updatedCompany);
 
       if (mounted) {
         setState(() {
@@ -270,7 +359,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 28,
-                                    color: AppColors.textPrimaryLight,
+                                    color: Theme.of(context).colorScheme.onSurface,
                                   ),
                               textAlign: TextAlign.center,
                             ),
@@ -281,7 +370,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               'Update your personal information',
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
-                                    color: AppColors.textTertiaryLight,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                                     fontSize: 15,
                                   ),
                               textAlign: TextAlign.center,
@@ -315,6 +404,32 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               keyboardType: TextInputType.phone,
                               validator: ProfileValidators.validatePhone,
                             ),
+                            const SizedBox(height: 20),
+
+                            // Website
+                            PremiumInputField(
+                              controller: _websiteController,
+                              labelText: 'Website',
+                              prefixIcon: Icons.language_outlined,
+                              keyboardType: TextInputType.url,
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Facebook
+                            PremiumInputField(
+                              controller: _facebookController,
+                              labelText: 'Facebook Page',
+                              prefixIcon: Icons.facebook,
+                              keyboardType: TextInputType.url,
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Property Type
+                            PremiumInputField(
+                              controller: _propertyTypeController,
+                              labelText: 'Property Type',
+                              prefixIcon: Icons.business_outlined,
+                            ),
                             const SizedBox(height: 28),
 
                             // Address Section Header
@@ -336,12 +451,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                const Text(
+                                Text(
                                   'Address',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimaryLight,
+                                    color: Theme.of(context).colorScheme.onSurface,
                                   ),
                                 ),
                               ],
@@ -403,6 +518,155 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             ),
                             const SizedBox(height: 32),
 
+                            // Company Details Section
+                            Theme(
+                              data: Theme.of(context).copyWith(
+                                dividerColor: Colors.transparent,
+                              ),
+                              child: ExpansionTile(
+                                tilePadding: EdgeInsets.zero,
+                                childrenPadding: const EdgeInsets.only(top: 20),
+                                title: Row(
+                                  children: [
+                                    Container(
+                                      width: 4,
+                                      height: 20,
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            AppColors.primary,
+                                            AppColors.authSecondary,
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(2),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Company Details',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).colorScheme.onSurface,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                children: [
+                                  // Company Name
+                                  PremiumInputField(
+                                    controller: _companyNameController,
+                                    labelText: 'Company Name',
+                                    prefixIcon: Icons.business,
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // Tax ID
+                                  PremiumInputField(
+                                    controller: _taxIdController,
+                                    labelText: 'Tax ID',
+                                    prefixIcon: Icons.receipt_long,
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // VAT ID
+                                  PremiumInputField(
+                                    controller: _vatIdController,
+                                    labelText: 'VAT ID',
+                                    prefixIcon: Icons.account_balance,
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // IBAN
+                                  PremiumInputField(
+                                    controller: _ibanController,
+                                    labelText: 'IBAN',
+                                    prefixIcon: Icons.credit_card,
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // SWIFT
+                                  PremiumInputField(
+                                    controller: _swiftController,
+                                    labelText: 'SWIFT/BIC',
+                                    prefixIcon: Icons.code,
+                                  ),
+                                  const SizedBox(height: 28),
+
+                                  // Company Address Header
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 4,
+                                        height: 20,
+                                        decoration: const BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              AppColors.primary,
+                                              AppColors.authSecondary,
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(2),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'Company Address',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // Company Country
+                                  PremiumInputField(
+                                    controller: _companyCountryController,
+                                    labelText: 'Country',
+                                    prefixIcon: Icons.public,
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // Company Street
+                                  PremiumInputField(
+                                    controller: _companyStreetController,
+                                    labelText: 'Street',
+                                    prefixIcon: Icons.location_on_outlined,
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // Company City & Postal Code Row
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: PremiumInputField(
+                                          controller: _companyCityController,
+                                          labelText: 'City',
+                                          prefixIcon: Icons.location_city,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: PremiumInputField(
+                                          controller: _companyPostalCodeController,
+                                          labelText: 'Postal Code',
+                                          prefixIcon: Icons.markunread_mailbox,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+
                             // Save Button
                             GradientAuthButton(
                               text: 'Save Changes',
@@ -417,11 +681,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             // Cancel Button
                             TextButton(
                               onPressed: () => context.pop(),
-                              child: const Text(
+                              child: Text(
                                 'Cancel',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: AppColors.textTertiaryLight,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),

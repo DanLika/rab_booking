@@ -77,3 +77,4 @@ firebase-service-account-key.json
 *.stackdump
 build_output.txt
 supabase/supabase/
+coverage/

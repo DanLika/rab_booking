@@ -114,7 +114,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         print('=== FIRESTORE USER DATA DEBUG ===');
         print('Total fields: ${data.length}');
         data.forEach((key, value) {
-          print('Field: $key | Type: ${value.runtimeType} | Value: ${value.toString().length > 100 ? value.toString().substring(0, 100) + '...' : value}');
+          print(
+            'Field: $key | Type: ${value.runtimeType} | Value: ${value.toString().length > 100 ? '${value.toString().substring(0, 100)}...' : value}',
+          );
         });
         print('=== END DEBUG ===');
 
@@ -150,7 +152,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           try {
             userModel = UserModel(
               id: doc.id,
-              email: data['email'] as String? ?? firebaseUser.email ?? 'unknown@email.com',
+              email:
+                  data['email'] as String? ??
+                  firebaseUser.email ??
+                  'unknown@email.com',
               firstName: data['first_name'] as String? ?? '',
               lastName: data['last_name'] as String? ?? '',
               role: UserRole.values.firstWhere(
@@ -158,13 +163,16 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
                 orElse: () => UserRole.owner,
               ),
               emailVerified: data['emailVerified'] as bool? ?? false,
-              onboardingCompleted: data['onboardingCompleted'] as bool? ?? false,
+              onboardingCompleted:
+                  data['onboardingCompleted'] as bool? ?? false,
               displayName: data['displayName'] as String?,
               phone: data['phone'] as String?,
               avatarUrl: data['avatar_url'] as String?,
               createdAt: DateTime.now(), // Fallback
             );
-            print('Fallback UserModel created successfully for ${userModel.email}');
+            print(
+              'Fallback UserModel created successfully for ${userModel.email}',
+            );
           } catch (fallbackError) {
             print('Fallback also failed: $fallbackError');
             rethrow;

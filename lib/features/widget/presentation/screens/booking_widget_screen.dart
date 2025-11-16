@@ -2233,7 +2233,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   ),
                   // Real-time validation
                   autovalidateMode: AutovalidateMode.onUserInteraction,
-                  validator: NameValidator.validate,
+                  validator: FirstNameValidator.validate,
                 ),
               ),
               const SizedBox(width: SpacingTokens.m),
@@ -2322,7 +2322,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   ),
                   // Real-time validation
                   autovalidateMode: AutovalidateMode.onUserInteraction,
-                  validator: NameValidator.validate,
+                  validator: LastNameValidator.validate,
                 ),
               ),
             ],

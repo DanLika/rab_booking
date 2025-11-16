@@ -3,7 +3,58 @@ import 'package:flutter/services.dart';
 /// Form validation utilities for guest booking form
 /// Includes name, email, and phone validation with real-time feedback
 
-/// Name validator
+/// First Name validator
+/// - Requires at least one word
+/// - Allows special characters: apostrophes (O'Brien), hyphens (Jean-Claude), umlauts (Müller)
+/// - Allows letters and common diacritics (no spaces needed for first name)
+class FirstNameValidator {
+  /// Validates first name field
+  /// Returns error message if invalid, null if valid
+  static String? validate(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your first name';
+    }
+
+    final trimmed = value.trim();
+
+    // Allow letters (including Unicode), apostrophes, hyphens, and common diacritics
+    // Pattern: Letters (any Unicode letter), apostrophes, hyphens
+    final namePattern = RegExp(r"^[\p{L}'\-]+$", unicode: true);
+    if (!namePattern.hasMatch(trimmed)) {
+      return 'First name can only contain letters, apostrophes, and hyphens';
+    }
+
+    return null; // Valid
+  }
+}
+
+/// Last Name validator
+/// - Requires at least one word
+/// - Allows special characters: apostrophes (O'Brien), hyphens (Jean-Claude), umlauts (Müller)
+/// - Allows spaces for compound last names (e.g., "van der Berg", "de la Cruz")
+/// - Allows letters and common diacritics
+class LastNameValidator {
+  /// Validates last name field
+  /// Returns error message if invalid, null if valid
+  static String? validate(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your last name';
+    }
+
+    final trimmed = value.trim();
+
+    // Allow letters (including Unicode), spaces, apostrophes, hyphens, and common diacritics
+    // Pattern: Letters (any Unicode letter), spaces, apostrophes, hyphens
+    final namePattern = RegExp(r"^[\p{L}\s'\-]+$", unicode: true);
+    if (!namePattern.hasMatch(trimmed)) {
+      return 'Last name can only contain letters, spaces, apostrophes, and hyphens';
+    }
+
+    return null; // Valid
+  }
+}
+
+/// Full Name validator (DEPRECATED - use FirstNameValidator and LastNameValidator instead)
 /// - Requires at least first and last name (minimum 2 words)
 /// - Allows special characters: apostrophes (O'Brien), hyphens (Jean-Claude), umlauts (Müller)
 /// - Allows spaces, letters, and common diacritics

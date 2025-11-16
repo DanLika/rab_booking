@@ -29,7 +29,7 @@ class SnackBarHelper {
     );
   }
 
-  /// Show an error SnackBar with theme-aware colors
+  /// Show an error SnackBar with theme-aware colors (using booked color scheme)
   /// Automatically dismisses any previous snackbar before showing the new one
   static void showError({
     required BuildContext context,
@@ -41,9 +41,11 @@ class SnackBarHelper {
       context: context,
       message: message,
       backgroundColor: isDarkMode
-          ? MinimalistColorsDark.error
-          : MinimalistColors.error,
-      textColor: Colors.white,
+          ? MinimalistColorsDark.statusBookedBackground  // #ef4444 (red) for dark mode
+          : MinimalistColors.statusBookedBackground,      // #fba9aa (light pink/red) for light mode
+      textColor: isDarkMode
+          ? MinimalistColorsDark.textPrimary              // White text for dark mode
+          : MinimalistColors.textPrimary,                 // Black text for light mode
       icon: Icons.error_outline,
       duration: duration,
     );
@@ -103,42 +105,58 @@ class SnackBarHelper {
     required IconData icon,
     required Duration duration,
   }) {
-    // Dismiss any existing snackbar first
-    _currentSnackBar?.close();
+    try {
+      // Dismiss any existing snackbar first
+      _currentSnackBar?.close();
 
-    // Show new snackbar
-    _currentSnackBar = ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              icon,
-              color: textColor,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+      // Get root ScaffoldMessenger safely (using root navigator to avoid dialog context issues)
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      if (messenger == null) {
+        // If no ScaffoldMessenger available, print to console as fallback
+        // ignore: avoid_print
+        print('SnackBar message: $message');
+        return;
+      }
+
+      // Show new snackbar
+      _currentSnackBar = messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                icon,
+                color: textColor,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
+          backgroundColor: backgroundColor,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          margin: const EdgeInsets.all(16),
+          duration: duration,
+          elevation: 4,
         ),
-        backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        margin: const EdgeInsets.all(16),
-        duration: duration,
-        elevation: 4,
-      ),
-    );
+      );
+    } catch (e) {
+      // Gracefully handle snackbar display errors (e.g., empty scaffold queue in dialogs)
+      // This prevents "Bad state: No element" crashes when showing snackbars in dialog contexts
+      // ignore: avoid_print
+      print('SnackBar error: $e - Message was: $message');
+    }
   }
 
   /// Manually dismiss current snackbar if needed

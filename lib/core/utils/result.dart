@@ -1,4 +1,4 @@
-import '../exceptions/app_exceptions.dart';
+import '../errors/app_exceptions.dart';
 
 /// Result type for functional error handling
 /// Represents either a successful result with data or a failure with an exception
@@ -56,7 +56,7 @@ extension ResultExtension<T> on Result<T> {
         if (e is AppException) {
           return Failure(e);
         }
-        return const Failure(DatabaseException('Unexpected error during transformation'));
+        return const Failure(DatabaseException(message: 'Unexpected error during transformation'));
       }
     }
     return Failure((this as Failure<T>).exception);
@@ -72,7 +72,7 @@ extension ResultExtension<T> on Result<T> {
         if (e is AppException) {
           return Failure(e);
         }
-        return const Failure(DatabaseException('Unexpected error during async transformation'));
+        return const Failure(DatabaseException(message: 'Unexpected error during async transformation'));
       }
     }
     return Failure((this as Failure<T>).exception);

@@ -4289,58 +4289,60 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           ),
         ),
         const SizedBox(width: SpacingTokens.m),
-        // Verification status/button
-        if (_emailVerified)
-          Container(
-            width: 49,
-            height: 49,
-            decoration: BoxDecoration(
-              color: MinimalistColors.success.withValues(alpha: 0.1),
-              borderRadius: BorderTokens.circularMedium,
-              border: Border.all(color: MinimalistColors.success, width: 1.5),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.verified,
-                color: MinimalistColors.success,
-                size: 24,
+        // Verification status/button (only shown if required in settings)
+        if (_widgetSettings?.emailConfig.requireEmailVerification ?? false) ...[
+          if (_emailVerified)
+            Container(
+              width: 49,
+              height: 49,
+              decoration: BoxDecoration(
+                color: MinimalistColors.success.withValues(alpha: 0.1),
+                borderRadius: BorderTokens.circularMedium,
+                border: Border.all(color: MinimalistColors.success, width: 1.5),
               ),
-            ),
-          )
-        else
-          SizedBox(
-            width: 100,
-            height: 44,
-            child: ElevatedButton(
-              onPressed: () {
-                final email = _emailController.text.trim();
-                if (email.isEmpty || !email.contains('@')) {
-                  SnackBarHelper.showError(
-                    context: context,
-                    message: 'Please enter a valid email first',
-                    isDarkMode: isDarkMode,
-                  );
-                  return;
-                }
-                _openVerificationDialog();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
-                foregroundColor: getColor(
-                  MinimalistColors.backgroundPrimary,
-                  MinimalistColorsDark.backgroundPrimary,
-                ),
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderTokens.circularMedium,
+              child: const Center(
+                child: Icon(
+                  Icons.verified,
+                  color: MinimalistColors.success,
+                  size: 24,
                 ),
               ),
-              child: const Text('Verify'),
+            )
+          else
+            SizedBox(
+              width: 100,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: () {
+                  final email = _emailController.text.trim();
+                  if (email.isEmpty || !email.contains('@')) {
+                    SnackBarHelper.showError(
+                      context: context,
+                      message: 'Please enter a valid email first',
+                      isDarkMode: isDarkMode,
+                    );
+                    return;
+                  }
+                  _openVerificationDialog();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: getColor(
+                    MinimalistColors.textPrimary,
+                    MinimalistColorsDark.textPrimary,
+                  ),
+                  foregroundColor: getColor(
+                    MinimalistColors.backgroundPrimary,
+                    MinimalistColorsDark.backgroundPrimary,
+                  ),
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderTokens.circularMedium,
+                  ),
+                ),
+                child: const Text('Verify'),
+              ),
             ),
-          ),
+        ],
       ],
     );
   }

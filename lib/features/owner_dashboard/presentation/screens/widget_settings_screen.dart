@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../widget/domain/models/widget_settings.dart';
@@ -52,29 +51,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   bool _requireApproval = true;
   bool _allowCancellation = true;
   int _cancellationHours = 48;
+  int _minNights = 1;
 
   // Contact Options
   bool _showPhone = true;
   final _phoneController = TextEditingController();
   bool _showEmail = true;
   final _emailController = TextEditingController();
-  bool _showWhatsApp = false;
-  final _whatsAppController = TextEditingController();
-  final _customMessageController = TextEditingController();
-
-  // Theme Options
-  bool _showBranding = true;
-  Color _primaryColor = AppColors.primary;
-  String _themeMode = 'system'; // 'light', 'dark', 'system'
-
-  // Blur/Glassmorphism Options
-  bool _blurEnabled = true;
-  String _blurIntensity =
-      'medium'; // 'subtle', 'light', 'medium', 'strong', 'extra_strong'
-  bool _enableCardBlur = true;
-  bool _enableAppBarBlur = true;
-  bool _enableModalBlur = true;
-  bool _enableOverlayBlur = true;
 
   // External Calendar Sync Options
   bool _externalCalendarEnabled = false;
@@ -156,31 +139,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       _requireApproval = settings.requireOwnerApproval;
       _allowCancellation = settings.allowGuestCancellation;
       _cancellationHours = settings.cancellationDeadlineHours ?? 48;
+      _minNights = settings.minNights;
 
       // Contact Options
       _showPhone = settings.contactOptions.showPhone;
       _phoneController.text = settings.contactOptions.phoneNumber ?? '';
       _showEmail = settings.contactOptions.showEmail;
       _emailController.text = settings.contactOptions.emailAddress ?? '';
-      _showWhatsApp = settings.contactOptions.showWhatsApp;
-      _whatsAppController.text = settings.contactOptions.whatsAppNumber ?? '';
-      _customMessageController.text =
-          settings.contactOptions.customMessage ?? '';
-
-      // Theme Options
-      _showBranding = settings.themeOptions?.showBranding ?? true;
-      _themeMode = settings.themeOptions?.themeMode ?? 'system';
-      if (settings.themeOptions?.primaryColor != null) {
-        _primaryColor = _parseColor(settings.themeOptions!.primaryColor!);
-      }
-
-      // Blur Options
-      _blurEnabled = settings.blurConfig?.enabled ?? true;
-      _blurIntensity = settings.blurConfig?.intensity ?? 'medium';
-      _enableCardBlur = settings.blurConfig?.enableCardBlur ?? true;
-      _enableAppBarBlur = settings.blurConfig?.enableAppBarBlur ?? true;
-      _enableModalBlur = settings.blurConfig?.enableModalBlur ?? true;
-      _enableOverlayBlur = settings.blurConfig?.enableOverlayBlur ?? true;
 
       // External Calendar Sync Options
       _externalCalendarEnabled =
@@ -199,23 +164,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       _syncIntervalMinutes =
           settings.externalCalendarConfig?.syncIntervalMinutes ?? 60;
     });
-  }
-
-  Color _parseColor(String hexColor) {
-    try {
-      return Color(int.parse(hexColor.replaceFirst('#', '0xFF')));
-    } catch (e) {
-      return AppColors.primary;
-    }
-  }
-
-  String _colorToHex(Color color) {
-    // Extract ARGB components without using deprecated .value
-    final r = color.r.toInt();
-    final g = color.g.toInt();
-    final b = color.b.toInt();
-    return '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'
-        .toUpperCase();
   }
 
   Future<void> _saveSettings() async {
@@ -279,6 +227,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         requireOwnerApproval: _requireApproval,
         allowGuestCancellation: _allowCancellation,
         cancellationDeadlineHours: _cancellationHours,
+        minNights: _minNights,
         contactOptions: ContactOptions(
           showPhone: _showPhone,
           phoneNumber: _phoneController.text.isEmpty
@@ -288,13 +237,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           emailAddress: _emailController.text.isEmpty
               ? null
               : _emailController.text,
-          showWhatsApp: _showWhatsApp,
-          whatsAppNumber: _whatsAppController.text.isEmpty
-              ? null
-              : _whatsAppController.text,
-          customMessage: _customMessageController.text.isEmpty
-              ? null
-              : _customMessageController.text,
+          showWhatsApp: false, // WhatsApp removed from UI
+          whatsAppNumber: null, // WhatsApp removed from UI
+          customMessage: null, // Custom message removed from UI
         ),
         emailConfig: _existingSettings?.emailConfig ??
             const EmailNotificationConfig(),
@@ -321,19 +266,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             : null,
         taxLegalConfig: _existingSettings?.taxLegalConfig ??
             const TaxLegalConfig(enabled: false),
-        themeOptions: ThemeOptions(
-          primaryColor: _colorToHex(_primaryColor),
-          showBranding: _showBranding,
-          themeMode: _themeMode,
-        ),
-        blurConfig: BlurConfig(
-          enabled: _blurEnabled,
-          intensity: _blurIntensity,
-          enableCardBlur: _enableCardBlur,
-          enableAppBarBlur: _enableAppBarBlur,
-          enableModalBlur: _enableModalBlur,
-          enableOverlayBlur: _enableOverlayBlur,
-        ),
+        themeOptions: _existingSettings?.themeOptions,
+        blurConfig: _existingSettings?.blurConfig,
         createdAt: _existingSettings?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -368,8 +302,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     _accountHolderController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
-    _whatsAppController.dispose();
-    _customMessageController.dispose();
     _bookingComAccountIdController.dispose();
     _bookingComAccessTokenController.dispose();
     _airbnbAccountIdController.dispose();
@@ -416,11 +348,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
                   const SizedBox(height: 24),
 
-                  _buildSectionTitle('Eksterni Kalendari', Icons.sync),
-                  _buildExternalCalendarSection(),
-
-                  const SizedBox(height: 24),
-
                   _buildSectionTitle('Napredne Postavke', Icons.settings_applications),
                   Card(
                     child: ListTile(
@@ -441,11 +368,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       },
                     ),
                   ),
-
-                  const SizedBox(height: 24),
-
-                  _buildSectionTitle('Tema', Icons.palette),
-                  _buildThemeSection(),
 
                   const SizedBox(height: 32),
 
@@ -1149,6 +1071,52 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 ),
               ),
             ],
+
+            // Minimum nights slider (always shown)
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.hotel,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Minimalni broj noćenja: $_minNights ${_minNights == 1 ? 'noć' : _minNights >= 2 && _minNights <= 4 ? 'noći' : 'noći'}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Slider(
+                    value: _minNights.toDouble(),
+                    min: 1,
+                    max: 14,
+                    divisions: 13,
+                    label: '$_minNights ${_minNights == 1 ? 'noć' : 'noći'}',
+                    onChanged: (value) {
+                      setState(() => _minNights = value.round());
+                    },
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -1269,16 +1237,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           onChanged: (val) => setState(() => _showEmail = val),
                         ),
                       ),
-                      // Row 2
-                      SizedBox(
-                        width: (constraints.maxWidth - 12) / 2,
-                        child: _buildContactSwitchCard(
-                          icon: Icons.message,
-                          label: 'WhatsApp',
-                          value: _showWhatsApp,
-                          onChanged: (val) => setState(() => _showWhatsApp = val),
-                        ),
-                      ),
                     ],
                   );
                 } else {
@@ -1297,13 +1255,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         label: 'Email',
                         value: _showEmail,
                         onChanged: (val) => setState(() => _showEmail = val),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildContactSwitchCard(
-                        icon: Icons.message,
-                        label: 'WhatsApp',
-                        value: _showWhatsApp,
-                        onChanged: (val) => setState(() => _showWhatsApp = val),
                       ),
                     ],
                   );
@@ -1341,32 +1292,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               ),
               const SizedBox(height: 12),
             ],
-
-            if (_showWhatsApp) ...[
-              TextFormField(
-                controller: _whatsAppController,
-                decoration: const InputDecoration(
-                  labelText: 'WhatsApp broj',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                  prefixIcon: Icon(Icons.message),
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 12),
-            ],
-
-            // Custom Message
-            TextFormField(
-              controller: _customMessageController,
-              decoration: const InputDecoration(
-                labelText: 'Prilagođena Poruka',
-                hintText: 'Kontaktirajte nas za rezervaciju!',
-                border: OutlineInputBorder(),
-                helperText: 'Poruka koja će biti prikazana gostima',
-              ),
-              maxLines: 3,
-            ),
           ],
         ),
       ),
@@ -1426,887 +1351,4 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   }
 
   // Helper: Theme Mode Selection Card
-  Widget _buildThemeModeCard({
-    required IconData icon,
-    required String label,
-    required String subtitle,
-    required String value,
-  }) {
-    final isSelected = _themeMode == value;
-
-    return InkWell(
-      onTap: () => setState(() => _themeMode = value),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
-              : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-              size: 32,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                fontSize: 15,
-                color: isSelected
-                    ? Theme.of(context).colorScheme.onSurface
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant
-                    .withAlpha((0.7 * 255).toInt()),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Helper: Blur Intensity Selection Card
-  Widget _buildBlurIntensityCard({
-    required String label,
-    required String subtitle,
-    required String value,
-  }) {
-    final isSelected = _blurIntensity == value;
-
-    return InkWell(
-      onTap: () => setState(() => _blurIntensity = value),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.5 * 255).toInt())
-              : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                fontSize: 13,
-                color: isSelected
-                    ? Theme.of(context).colorScheme.onSurface
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant
-                    .withAlpha((0.6 * 255).toInt()),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Helper: Blur Location Switch Card
-  Widget _buildBlurLocationCard({
-    required IconData icon,
-    required String label,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: value
-            ? Theme.of(context).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
-            : Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: value
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-          width: value ? 2 : 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: value
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: value ? FontWeight.w600 : FontWeight.normal,
-                    fontSize: 13,
-                    color: value
-                        ? Theme.of(context).colorScheme.onSurface
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withAlpha((0.7 * 255).toInt()),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExternalCalendarSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Sinhronizujte rezervacije sa eksternim platformama:',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Master Enable Toggle
-            SwitchListTile(
-              value: _externalCalendarEnabled,
-              onChanged: (value) =>
-                  setState(() => _externalCalendarEnabled = value),
-              title: const Text('Omogući Eksternu Sinhronizaciju'),
-              subtitle: const Text('Uvezi rezervacije sa Booking.com i Airbnb'),
-              contentPadding: EdgeInsets.zero,
-            ),
-
-            if (_externalCalendarEnabled) ...[
-              const Divider(height: 32),
-
-              // Booking.com Section
-              const Text(
-                'Booking.com:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-
-              SwitchListTile(
-                value: _syncBookingCom,
-                onChanged: (value) => setState(() => _syncBookingCom = value),
-                title: const Text('Sinhronizuj sa Booking.com'),
-                contentPadding: EdgeInsets.zero,
-              ),
-
-              if (_syncBookingCom) ...[
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _bookingComAccountIdController,
-                  decoration: const InputDecoration(
-                    labelText: 'Booking.com ID Objekta',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.home),
-                    helperText: 'ID vašeg objekta na Booking.com',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _bookingComAccessTokenController,
-                  decoration: const InputDecoration(
-                    labelText: 'Booking.com Access Token',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.vpn_key),
-                    helperText: 'OAuth token za pristup',
-                  ),
-                  obscureText: true,
-                ),
-              ],
-
-              const Divider(height: 32),
-
-              // Airbnb Section
-              const Text(
-                'Airbnb:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-
-              SwitchListTile(
-                value: _syncAirbnb,
-                onChanged: (value) => setState(() => _syncAirbnb = value),
-                title: const Text('Sinhronizuj sa Airbnb'),
-                contentPadding: EdgeInsets.zero,
-              ),
-
-              if (_syncAirbnb) ...[
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _airbnbAccountIdController,
-                  decoration: const InputDecoration(
-                    labelText: 'Airbnb Listing ID',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.home),
-                    helperText: 'ID vašeg smještaja na Airbnb',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _airbnbAccessTokenController,
-                  decoration: const InputDecoration(
-                    labelText: 'Airbnb Access Token',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.vpn_key),
-                    helperText: 'OAuth token za pristup',
-                  ),
-                  obscureText: true,
-                ),
-              ],
-
-              const Divider(height: 32),
-
-              // Sync Interval
-              const Text(
-                'Interval Sinhronizacije:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<int>(
-                initialValue: _syncIntervalMinutes,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                  prefixIcon: Icon(Icons.schedule),
-                  helperText: 'Koliko često provjeravati nove rezervacije',
-                ),
-                items: const [
-                  DropdownMenuItem(value: 15, child: Text('Svakih 15 minuta')),
-                  DropdownMenuItem(value: 30, child: Text('Svakih 30 minuta')),
-                  DropdownMenuItem(
-                    value: 60,
-                    child: Text('Svakih 60 minuta (1 sat)'),
-                  ),
-                  DropdownMenuItem(
-                    value: 120,
-                    child: Text('Svakih 120 minuta (2 sata)'),
-                  ),
-                  DropdownMenuItem(value: 360, child: Text('Svakih 6 sati')),
-                  DropdownMenuItem(value: 1440, child: Text('Jednom dnevno')),
-                ],
-                onChanged: (value) =>
-                    setState(() => _syncIntervalMinutes = value!),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildThemeSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Prilagodite izgled widgeta:',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Theme Mode Selector - Responsive Grid
-            const Text(
-              'Tema:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 12),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isDesktop = constraints.maxWidth >= 600;
-
-                if (isDesktop) {
-                  // Desktop: 3 columns
-                  return Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      SizedBox(
-                        width: (constraints.maxWidth - 24) / 3,
-                        child: _buildThemeModeCard(
-                          icon: Icons.light_mode,
-                          label: 'Svijetla',
-                          subtitle: 'Light mode',
-                          value: 'light',
-                        ),
-                      ),
-                      SizedBox(
-                        width: (constraints.maxWidth - 24) / 3,
-                        child: _buildThemeModeCard(
-                          icon: Icons.dark_mode,
-                          label: 'Tamna',
-                          subtitle: 'OLED optimized',
-                          value: 'dark',
-                        ),
-                      ),
-                      SizedBox(
-                        width: (constraints.maxWidth - 24) / 3,
-                        child: _buildThemeModeCard(
-                          icon: Icons.settings_brightness,
-                          label: 'Sistem',
-                          subtitle: 'Auto',
-                          value: 'system',
-                        ),
-                      ),
-                    ],
-                  );
-                } else {
-                  // Mobile: Vertical
-                  return Column(
-                    children: [
-                      _buildThemeModeCard(
-                        icon: Icons.light_mode,
-                        label: 'Svijetla',
-                        subtitle: 'Light mode',
-                        value: 'light',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildThemeModeCard(
-                        icon: Icons.dark_mode,
-                        label: 'Tamna',
-                        subtitle: 'OLED optimized',
-                        value: 'dark',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildThemeModeCard(
-                        icon: Icons.settings_brightness,
-                        label: 'Sistem',
-                        subtitle: 'Auto',
-                        value: 'system',
-                      ),
-                    ],
-                  );
-                }
-              },
-            ),
-
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 16),
-
-            // Glassmorphism / Blur Effects Section
-            const Text(
-              'Glassmorphism Efekti:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Frosted glass efekti za moderan izgled',
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Enable/Disable Blur - Compact Card
-            _buildCompactSwitchCard(
-              icon: Icons.blur_on,
-              label: 'Omogući Blur Efekte',
-              subtitle: 'Glassmorphism za kartice, modale i app bar',
-              value: _blurEnabled,
-              onChanged: (value) => setState(() => _blurEnabled = value),
-            ),
-
-            // Blur Intensity Selector
-            if (_blurEnabled) ...[
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest
-                      .withAlpha((0.3 * 255).toInt()),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withAlpha((0.3 * 255).toInt()),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.tune,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Intenzitet Blur-a:',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Blur intensity options - Responsive Grid
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isDesktop = constraints.maxWidth >= 600;
-
-                        final intensities = [
-                          {
-                            'value': 'subtle',
-                            'label': 'Suptilan',
-                            'desc': 'Barely visible'
-                          },
-                          {
-                            'value': 'light',
-                            'label': 'Lagan',
-                            'desc': 'Light frosted'
-                          },
-                          {
-                            'value': 'medium',
-                            'label': 'Srednji',
-                            'desc': 'Standard glass'
-                          },
-                          {
-                            'value': 'strong',
-                            'label': 'Jak',
-                            'desc': 'Prominent glass'
-                          },
-                          {
-                            'value': 'extra_strong',
-                            'label': 'Ekstra Jak',
-                            'desc': 'Maximum blur'
-                          },
-                        ];
-
-                        if (isDesktop) {
-                          // Desktop: 3 columns
-                          return Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: intensities
-                                .map(
-                                  (intensity) => SizedBox(
-                                    width: (constraints.maxWidth - 16) / 3,
-                                    child: _buildBlurIntensityCard(
-                                      label: intensity['label']!,
-                                      subtitle: intensity['desc']!,
-                                      value: intensity['value']!,
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                          );
-                        } else {
-                          // Mobile: Vertical
-                          return Column(
-                            children: intensities
-                                .map(
-                                  (intensity) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    child: _buildBlurIntensityCard(
-                                      label: intensity['label']!,
-                                      subtitle: intensity['desc']!,
-                                      value: intensity['value']!,
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Blur Location Switches - Responsive Grid
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest
-                      .withAlpha((0.3 * 255).toInt()),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withAlpha((0.3 * 255).toInt()),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.layers,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Gdje primijeniti blur:',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isDesktop = constraints.maxWidth >= 600;
-
-                        if (isDesktop) {
-                          // Desktop: 2x2 grid
-                          return Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildBlurLocationCard(
-                                      icon: Icons.credit_card,
-                                      label: 'Kartice',
-                                      subtitle: 'Info kartice',
-                                      value: _enableCardBlur,
-                                      onChanged: (val) => setState(
-                                        () => _enableCardBlur = val,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _buildBlurLocationCard(
-                                      icon: Icons.view_agenda,
-                                      label: 'App Bar',
-                                      subtitle: 'Navigation bar',
-                                      value: _enableAppBarBlur,
-                                      onChanged: (val) => setState(
-                                        () => _enableAppBarBlur = val,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildBlurLocationCard(
-                                      icon: Icons.chat_bubble,
-                                      label: 'Modale',
-                                      subtitle: 'Pop-up prozori',
-                                      value: _enableModalBlur,
-                                      onChanged: (val) => setState(
-                                        () => _enableModalBlur = val,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _buildBlurLocationCard(
-                                      icon: Icons.fullscreen,
-                                      label: 'Overlay',
-                                      subtitle: 'Pozadine',
-                                      value: _enableOverlayBlur,
-                                      onChanged: (val) => setState(
-                                        () => _enableOverlayBlur = val,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        } else {
-                          // Mobile: Vertical
-                          return Column(
-                            children: [
-                              _buildBlurLocationCard(
-                                icon: Icons.credit_card,
-                                label: 'Kartice',
-                                subtitle: 'Info kartice',
-                                value: _enableCardBlur,
-                                onChanged: (val) =>
-                                    setState(() => _enableCardBlur = val),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildBlurLocationCard(
-                                icon: Icons.view_agenda,
-                                label: 'App Bar',
-                                subtitle: 'Navigation bar',
-                                value: _enableAppBarBlur,
-                                onChanged: (val) =>
-                                    setState(() => _enableAppBarBlur = val),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildBlurLocationCard(
-                                icon: Icons.chat_bubble,
-                                label: 'Modale',
-                                subtitle: 'Pop-up prozori',
-                                value: _enableModalBlur,
-                                onChanged: (val) =>
-                                    setState(() => _enableModalBlur = val),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildBlurLocationCard(
-                                icon: Icons.fullscreen,
-                                label: 'Overlay',
-                                subtitle: 'Pozadine',
-                                value: _enableOverlayBlur,
-                                onChanged: (val) =>
-                                    setState(() => _enableOverlayBlur = val),
-                              ),
-                            ],
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 20),
-            const Divider(),
-            const SizedBox(height: 16),
-
-            // Color Picker Card
-            GestureDetector(
-              onTap: _showColorPicker,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest
-                      .withAlpha((0.3 * 255).toInt()),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withAlpha((0.3 * 255).toInt()),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.palette,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Primarna Boja',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Kliknite za promjenu boje',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: _primaryColor,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withAlpha((0.5 * 255).toInt()),
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.edit,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withAlpha((0.5 * 255).toInt()),
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 16),
-
-            // Branding Switch - Compact Card
-            _buildCompactSwitchCard(
-              icon: Icons.branding_watermark,
-              label: 'Prikaži Branding',
-              subtitle: '"Powered by BedBooking" badge',
-              value: _showBranding,
-              onChanged: (value) => setState(() => _showBranding = value),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showColorPicker() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Odaberite Boju'),
-        content: SingleChildScrollView(
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children:
-                [
-                      Colors.blue,
-                      Colors.red,
-                      Colors.green,
-                      Colors.orange,
-                      Colors.purple,
-                      Colors.teal,
-                      Colors.indigo,
-                      Colors.pink,
-                      Colors.amber,
-                      Colors.cyan,
-                    ]
-                    .map(
-                      (color) => GestureDetector(
-                        onTap: () {
-                          setState(() => _primaryColor = color);
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _primaryColor == color
-                                  ? Theme.of(context).colorScheme.onSurface
-                                  : Theme.of(context).colorScheme.onSurface
-                                        .withAlpha((0.3 * 255).toInt()),
-                              width: _primaryColor == color ? 3 : 1,
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Zatvori'),
-          ),
-        ],
-      ),
-    );
-  }
 }

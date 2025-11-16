@@ -42,7 +42,6 @@ import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.da
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
 import '../../features/widget/presentation/screens/embed_calendar_screen.dart';
 import '../../features/widget/presentation/screens/booking_widget_screen.dart';
-import '../../features/widget/presentation/screens/booking_lookup_screen.dart';
 import '../../features/widget/presentation/screens/booking_view_screen.dart';
 import '../../features/widget/presentation/screens/booking_details_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';

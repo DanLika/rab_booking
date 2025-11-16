@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/config/router.dart';
+import 'core/config/router_owner.dart';
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'features/widget/presentation/providers/blur_config_provider.dart';
@@ -44,7 +44,7 @@ class BookingWidgetApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Use minimal widget router (NO auth, NO owner dashboard routes)
-    final router = ref.watch(routerProvider);
+    final router = ref.watch(ownerRouterProvider);
 
     // Get widget config from URL parameters
     final widgetConfig = ref.watch(widgetConfigProvider);

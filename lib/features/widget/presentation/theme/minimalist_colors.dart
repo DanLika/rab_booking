@@ -71,11 +71,11 @@ class MinimalistColors {
   /// Booked date - pink/red background
   static const Color statusBookedBackground = Color(0xFFfba9aa); // #fba9aa
 
-  /// Booked date - blue border
-  static const Color statusBookedBorder = Color(0xFF2596be); // #2596be
+  /// Booked date - red border
+  static const Color statusBookedBorder = Color(0xFFef4444); // #ef4444
 
-  /// Booked date - blue text
-  static const Color statusBookedText = Color(0xFF2596be); // #2596be
+  /// Booked date - red text
+  static const Color statusBookedText = Color(0xFFef4444); // #ef4444
 
   /// Past booked date - light pink background
   static const Color statusPastReservationBackground = Color(0xFFebdae2); // #ebdae2

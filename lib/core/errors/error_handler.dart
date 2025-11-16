@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import '../exceptions/app_exceptions.dart';
+import 'app_exceptions.dart';
 import '../services/logging_service.dart';
 
 /// Utility class for handling errors and converting them to user-friendly messages

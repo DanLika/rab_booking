@@ -30,14 +30,7 @@ class _WidgetAdvancedSettingsScreenState
   final _formKey = GlobalKey<FormState>();
 
   // Email Config
-  bool _emailEnabled = false;
-  bool _sendBookingConfirmation = true;
-  bool _sendPaymentReceipt = true;
-  bool _sendOwnerNotification = true;
   bool _requireEmailVerification = false;
-  final _resendApiKeyController = TextEditingController();
-  final _fromEmailController = TextEditingController();
-  final _fromNameController = TextEditingController();
 
   // Tax/Legal Config
   bool _taxLegalEnabled = true;
@@ -48,12 +41,10 @@ class _WidgetAdvancedSettingsScreenState
   bool _icalExportEnabled = false;
 
   bool _isSaving = false;
+  bool _hasLoadedInitialData = false;
 
   @override
   void dispose() {
-    _resendApiKeyController.dispose();
-    _fromEmailController.dispose();
-    _fromNameController.dispose();
     _customDisclaimerController.dispose();
     super.dispose();
   }
@@ -63,23 +54,19 @@ class _WidgetAdvancedSettingsScreenState
     final taxConfig = settings.taxLegalConfig;
 
     setState(() {
-      // Email
-      _emailEnabled = emailConfig.enabled ?? false;
-      _sendBookingConfirmation = emailConfig.sendBookingConfirmation ?? true;
-      _sendPaymentReceipt = emailConfig.sendPaymentReceipt ?? true;
-      _sendOwnerNotification = emailConfig.sendOwnerNotification ?? true;
-      _requireEmailVerification = emailConfig.requireEmailVerification ?? false;
-      _resendApiKeyController.text = emailConfig.resendApiKey ?? '';
-      _fromEmailController.text = emailConfig.fromEmail ?? '';
-      _fromNameController.text = emailConfig.fromName ?? '';
+      // Email - Only load verification setting
+      _requireEmailVerification = emailConfig.requireEmailVerification;
 
       // Tax/Legal
-      _taxLegalEnabled = taxConfig.enabled ?? true;
-      _useDefaultText = taxConfig.useDefaultText ?? true;
+      _taxLegalEnabled = taxConfig.enabled;
+      _useDefaultText = taxConfig.useDefaultText;
       _customDisclaimerController.text = taxConfig.customText ?? '';
 
       // iCal Export
       _icalExportEnabled = settings.icalExportEnabled;
+
+      // Mark as loaded
+      _hasLoadedInitialData = true;
     });
   }
 
@@ -91,20 +78,8 @@ class _WidgetAdvancedSettingsScreenState
     try {
       final updatedSettings = currentSettings.copyWith(
         emailConfig: EmailNotificationConfig(
-          enabled: _emailEnabled,
-          sendBookingConfirmation: _sendBookingConfirmation,
-          sendPaymentReceipt: _sendPaymentReceipt,
-          sendOwnerNotification: _sendOwnerNotification,
-          requireEmailVerification: _requireEmailVerification,
-          resendApiKey: _resendApiKeyController.text.trim().isEmpty
-              ? null
-              : _resendApiKeyController.text.trim(),
-          fromEmail: _fromEmailController.text.trim().isEmpty
-              ? null
-              : _fromEmailController.text.trim(),
-          fromName: _fromNameController.text.trim().isEmpty
-              ? null
-              : _fromNameController.text.trim(),
+          requireEmailVerification: _requireEmailVerification, // User setting
+          // All other email settings use defaults (always enabled)
         ),
         taxLegalConfig: TaxLegalConfig(
           enabled: _taxLegalEnabled,
@@ -177,10 +152,12 @@ class _WidgetAdvancedSettingsScreenState
           );
         }
 
-        // Load settings once
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!_isSaving) _loadSettings(settings);
-        });
+        // Load settings once (only first time)
+        if (!_hasLoadedInitialData && !_isSaving) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _loadSettings(settings);
+          });
+        }
 
         return Scaffold(
           appBar: AppBar(
@@ -270,126 +247,105 @@ class _WidgetAdvancedSettingsScreenState
 
   Widget _buildEmailNotificationsSection(ThemeData theme) {
     return Card(
-      child: ExpansionTile(
-        initiallyExpanded: _emailEnabled,
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primary.withAlpha((0.15 * 255).toInt()),
-                AppColors.secondary.withAlpha((0.08 * 255).toInt()),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Section header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withAlpha((0.15 * 255).toInt()),
+                        AppColors.secondary.withAlpha((0.08 * 255).toInt()),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.verified_user,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Email Verification',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Configure guest email verification',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(Icons.email, color: AppColors.primary, size: 20),
-        ),
-        title: const Text(
-          'Email Notifications',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          _emailEnabled ? 'Enabled' : 'Disabled',
-          style: TextStyle(
-            fontSize: 13,
-            color: _emailEnabled ? AppColors.success : AppColors.textSecondary,
-          ),
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Master toggle
-                SwitchListTile(
-                  value: _emailEnabled,
-                  onChanged: (val) => setState(() => _emailEnabled = val),
-                  title: const Text('Enable Email Notifications'),
-                  subtitle: const Text('Master toggle for all email features'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-                if (_emailEnabled) ...[
-                  const Divider(height: 24),
-                  const Text(
-                    'Configuration',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            const SizedBox(height: 16),
+            const Divider(),
+            // Verification toggle
+            SwitchListTile(
+              value: _requireEmailVerification,
+              onChanged: (val) => setState(
+                () => _requireEmailVerification = val,
+              ),
+              title: const Text('Require Email Verification'),
+              subtitle: const Text(
+                'Guest must verify their email address before completing booking',
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
+            // Info message
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(top: 12),
+              decoration: BoxDecoration(
+                color: AppColors.info.withAlpha((0.1 * 255).toInt()),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: AppColors.info,
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _resendApiKeyController,
-                    decoration: const InputDecoration(
-                      labelText: 'Resend API Key (optional)',
-                      border: OutlineInputBorder(),
-                      hintText: 'Leave empty to use default',
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _requireEmailVerification
+                          ? 'Verification button will be shown in Step 2 of the booking flow. Guests cannot proceed without verifying their email.'
+                          : 'Email verification is disabled. Guests can complete bookings without verifying their email address.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurface.withAlpha(
+                          (0.7 * 255).toInt(),
+                        ),
+                      ),
                     ),
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _fromEmailController,
-                    decoration: const InputDecoration(
-                      labelText: 'From Email (optional)',
-                      border: OutlineInputBorder(),
-                      hintText: 'noreply@example.com',
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _fromNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'From Name (optional)',
-                      border: OutlineInputBorder(),
-                      hintText: 'Your Property Name',
-                    ),
-                  ),
-                  const Divider(height: 24),
-                  const Text(
-                    'Email Types',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-                  CheckboxListTile(
-                    value: _sendBookingConfirmation,
-                    onChanged: (val) =>
-                        setState(() => _sendBookingConfirmation = val ?? true),
-                    title: const Text('Booking Confirmation'),
-                    subtitle: const Text('Send to guest after booking'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  CheckboxListTile(
-                    value: _sendPaymentReceipt,
-                    onChanged: (val) =>
-                        setState(() => _sendPaymentReceipt = val ?? true),
-                    title: const Text('Payment Receipt'),
-                    subtitle: const Text('Send to guest after payment'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  CheckboxListTile(
-                    value: _sendOwnerNotification,
-                    onChanged: (val) =>
-                        setState(() => _sendOwnerNotification = val ?? true),
-                    title: const Text('Owner Notification'),
-                    subtitle: const Text('Notify you of new bookings'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  CheckboxListTile(
-                    value: _requireEmailVerification,
-                    onChanged: (val) => setState(
-                      () => _requireEmailVerification = val ?? false,
-                    ),
-                    title: const Text('Require Email Verification'),
-                    subtitle: const Text(
-                      'Guest must verify email before booking',
-                    ),
-                    contentPadding: EdgeInsets.zero,
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

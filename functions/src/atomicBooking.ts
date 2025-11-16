@@ -8,6 +8,8 @@ import {
 import {
   sendBookingConfirmationEmail,
   sendPendingBookingRequestEmail,
+  sendOwnerNotificationEmail,
+  sendPendingBookingOwnerNotification,
 } from "./emailService";
 
 /**
@@ -160,15 +162,21 @@ export const createBookingAtomic = onCall(async (request) => {
     let status: string;
     let paymentStatus: string;
 
-    if (requireOwnerApproval || paymentMethod === "none") {
+    if (requireOwnerApproval) {
+      // Requires manual owner approval - always pending
       status = "pending";
-      paymentStatus = "not_required";
-    } else if (paymentMethod === "bank_transfer") {
-      status = "pending";
-      paymentStatus = "pending";
+      paymentStatus = paymentMethod === "none" ? "not_required" : "pending";
     } else {
-      status = "pending"; // Stripe payment pending
-      paymentStatus = "pending";
+      // Auto-confirmed (no approval needed)
+      status = "confirmed";
+
+      if (paymentMethod === "bank_transfer") {
+        paymentStatus = "pending"; // Awaiting bank transfer
+      } else if (paymentMethod === "stripe") {
+        paymentStatus = "pending"; // Stripe will update via webhook
+      } else {
+        paymentStatus = "not_required"; // Pay on arrival
+      }
     }
 
     // ====================================================================
@@ -273,60 +281,104 @@ export const createBookingAtomic = onCall(async (request) => {
     // Transaction successful - booking created
     logSuccess("[AtomicBooking] Transaction completed successfully", result);
 
-    // Send email based on approval requirement (only for bank transfer)
-    if (paymentMethod === "bank_transfer") {
-      try {
-        // Fetch property and unit data for email
-        const propertyDoc =
-          await db.collection("properties").doc(propertyId).get();
-        const unitDoc =
-          await db.collection("units").doc(unitId).get();
-        const propertyData = propertyDoc.data();
-        const unitData = unitDoc.data();
+    // Send emails for ALL payment methods (not just bank_transfer)
+    try {
+      // Fetch property and unit data for email
+      const propertyDoc =
+        await db.collection("properties").doc(propertyId).get();
+      const unitDoc =
+        await db.collection("units").doc(unitId).get();
+      const propertyData = propertyDoc.data();
+      const unitData = unitDoc.data();
 
-        if (requireOwnerApproval) {
-          // Manual approval flow - send "Booking Request Received" email
-          await sendPendingBookingRequestEmail(
-            guestEmail,
+      if (requireOwnerApproval) {
+        // Manual approval flow - send "Booking Request Received" email to guest
+        await sendPendingBookingRequestEmail(
+          guestEmail,
+          guestName,
+          result.bookingReference,
+          checkInDate.toDate(),
+          checkOutDate.toDate(),
+          totalPrice,
+          unitData?.name || "Unit",
+          propertyData?.name || "Property"
+        );
+
+        logSuccess("[AtomicBooking] Pending booking request email sent to guest", {
+          email: guestEmail,
+        });
+
+        // Send "New Booking Needs Approval" email to owner
+        const ownerDoc = await db.collection("users").doc(ownerId).get();
+        const ownerData = ownerDoc.data();
+        if (ownerData?.email) {
+          await sendPendingBookingOwnerNotification(
+            ownerData.email,
+            ownerData.displayName || "Owner",
             guestName,
+            guestEmail,
+            guestPhone || "",
             result.bookingReference,
             checkInDate.toDate(),
             checkOutDate.toDate(),
             totalPrice,
             unitData?.name || "Unit",
-            propertyData?.name || "Property"
+            guestCount,
+            notes
           );
 
-          logSuccess("[AtomicBooking] Pending booking request email sent", {
-            email: guestEmail,
+          logSuccess("[AtomicBooking] Pending booking owner notification sent", {
+            email: ownerData.email,
           });
-        } else {
-          // Auto approval flow - send "Booking Confirmed" email
-          await sendBookingConfirmationEmail(
-            guestEmail,
+        }
+      } else {
+        // Auto-confirmed flow - send "Booking Confirmed" email to guest
+        await sendBookingConfirmationEmail(
+          guestEmail,
+          guestName,
+          result.bookingReference,
+          checkInDate.toDate(),
+          checkOutDate.toDate(),
+          totalPrice,
+          depositAmount,
+          unitData?.name || "Unit",
+          propertyData?.name || "Property",
+          result.accessToken, // Plaintext token for email link
+          propertyData?.contact_email
+        );
+
+        logSuccess("[AtomicBooking] Booking confirmation email sent to guest", {
+          email: guestEmail,
+        });
+
+        // Send "New Booking Received" email to owner
+        const ownerDoc = await db.collection("users").doc(ownerId).get();
+        const ownerData = ownerDoc.data();
+        if (ownerData?.email) {
+          await sendOwnerNotificationEmail(
+            ownerData.email,
+            ownerData.displayName || "Owner",
             guestName,
+            guestEmail,
             result.bookingReference,
             checkInDate.toDate(),
             checkOutDate.toDate(),
             totalPrice,
             depositAmount,
-            unitData?.name || "Unit",
-            propertyData?.name || "Property",
-            result.accessToken, // Plaintext token for email link
-            propertyData?.contact_email
+            unitData?.name || "Unit"
           );
 
-          logSuccess("[AtomicBooking] Confirmation email sent", {
-            email: guestEmail,
+          logSuccess("[AtomicBooking] Owner notification email sent", {
+            email: ownerData.email,
           });
         }
-      } catch (emailError) {
-        // Log error but don't fail the booking
-        logError(
-          "[AtomicBooking] Failed to send email",
-          emailError
-        );
       }
+    } catch (emailError) {
+      // Log error but don't fail the booking
+      logError(
+        "[AtomicBooking] Failed to send email",
+        emailError
+      );
     }
 
     return {

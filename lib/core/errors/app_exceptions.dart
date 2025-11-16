@@ -240,9 +240,39 @@ class UnknownException extends AppException {
   });
 }
 
+/// Exception for authorization/permission errors
+class AuthorizationException extends AppException {
+  const AuthorizationException({
+    super.message = 'Permission denied',
+    super.userMessage = 'You do not have permission to perform this action',
+    super.originalError,
+    super.stackTrace,
+  });
+}
+
+/// Exception for resource conflicts (e.g., duplicate booking)
+class ConflictException extends AppException {
+  const ConflictException({
+    super.message = 'Resource conflict occurred',
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+}
+
 // ============================================================================
 // BOOKING EXCEPTIONS
 // ============================================================================
+
+/// Exception for booking-related errors
+class BookingException extends AppException {
+  const BookingException({
+    super.message = 'Booking error occurred',
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+}
 
 /// Exception for dates that are no longer available (Bug #73 Fix)
 /// Thrown when price calculation or booking attempt is made for dates

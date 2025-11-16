@@ -316,31 +316,33 @@ class _BookingConfirmationScreenState
                   horizontal: SpacingTokens.m,
                   vertical: SpacingTokens.s,
                 ),
-                child: Stack(
-                  alignment: Alignment.center,
+                child: Row(
                   children: [
-                    // Centered title
-                    Text(
-                      'Booking Confirmation',
-                      style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeXL,
-                        fontWeight: TypographyTokens.bold,
+                    // Back button (aligned to the left)
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
                         color: colors.textPrimary,
                       ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
                     ),
-                    // Back button (positioned on the left)
-                    Positioned(
-                      left: 0,
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.arrow_back,
-                          color: colors.textPrimary,
+                    // Centered title with Expanded to take remaining space
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          'Booking Confirmation',
+                          style: TextStyle(
+                            fontSize: TypographyTokens.fontSizeXL,
+                            fontWeight: TypographyTokens.bold,
+                            color: colors.textPrimary,
+                          ),
                         ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
                       ),
                     ),
+                    // Invisible spacer to balance the back button width
+                    const SizedBox(width: 48),
                   ],
                 ),
               ),

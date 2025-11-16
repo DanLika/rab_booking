@@ -41,6 +41,7 @@ import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_
 import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
 import '../../features/widget/presentation/screens/embed_calendar_screen.dart';
+import '../../features/widget/presentation/screens/booking_widget_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../shared/providers/repository_providers.dart';
 import '../../shared/models/unit_model.dart';
@@ -130,7 +131,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(enhancedAuthProvider);
 
   return GoRouter(
-    initialLocation: OwnerRoutes.login,
+    // No initialLocation - let GoRouter read from URL (important for /calendar widget)
     debugLogDiagnostics: true,
     refreshListenable: GoRouterRefreshStream(ref.watch(firebaseAuthProvider).authStateChanges()),
     redirect: (context, state) {
@@ -149,9 +150,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       LoggingService.log('  - userModel: ${authState.userModel?.id}', tag: 'ROUTER');
       LoggingService.log('  - isLoading: ${authState.isLoading}', tag: 'ROUTER');
 
-      // Allow public access to embed and booking routes (no auth required)
+      // Allow public access to embed, booking, and calendar routes (no auth required)
       final isPublicRoute = state.matchedLocation.startsWith('/embed/') ||
-          state.matchedLocation.startsWith('/booking');
+          state.matchedLocation.startsWith('/booking') ||
+          state.matchedLocation == '/calendar';
       if (isPublicRoute) {
         LoggingService.log('  → Allowing public route', tag: 'ROUTER');
         return null; // Allow access
@@ -210,6 +212,13 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           final unitId = state.pathParameters['id'] ?? '';
           return EmbedCalendarScreen(unitId: unitId);
         },
+      ),
+
+      // Public booking widget (for iframe embedding)
+      // URL: /?property=PROPERTY_ID&unit=UNIT_ID#/calendar
+      GoRoute(
+        path: '/calendar',
+        builder: (context, state) => const BookingWidgetScreen(),
       ),
 
       // Onboarding routes (public - shown BEFORE auth)

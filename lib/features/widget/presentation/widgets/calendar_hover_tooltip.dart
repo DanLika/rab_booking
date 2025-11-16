@@ -41,6 +41,7 @@ class CalendarHoverTooltip extends StatelessWidget {
         borderRadius: BorderTokens.circularSmall,
         color: Colors.transparent,
         child: Container(
+          constraints: const BoxConstraints(maxWidth: 180),
           padding: const EdgeInsets.all(SpacingTokens.s),
           decoration: BoxDecoration(
             color: colors.backgroundPrimary,
@@ -200,7 +201,7 @@ class CalendarHoverTooltip extends StatelessWidget {
       case DateStatus.disabled:
         return colors.textPrimary; // Changed from textSecondary for better visibility
       case DateStatus.pastReservation:
-        return colors.statusPastReservationBorder;
+        return colors.textPrimary; // Theme-aware: black for light, white for dark
     }
   }
 }

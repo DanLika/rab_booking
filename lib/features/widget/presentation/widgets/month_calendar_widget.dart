@@ -14,6 +14,7 @@ import '../theme/responsive_helper.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/theme/custom_icons_tablericons.dart';
+import '../utils/snackbar_helper.dart';
 
 class MonthCalendarWidget extends ConsumerStatefulWidget {
   final String propertyId;
@@ -61,47 +62,48 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
         // Calendar and tooltip in Stack for overlay positioning
         Expanded(
-          child: Stack(
-            children: [
-              // Calendar with GestureDetector for deselection
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  // Deselect dates when clicking outside the calendar
-                  if (_rangeStart != null || _rangeEnd != null) {
-                    setState(() {
-                      _rangeStart = null;
-                      _rangeEnd = null;
-                    });
-                    widget.onRangeSelected?.call(null, null);
-                  }
-                },
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: calendarData.when(
-                        data: (data) => _buildMonthView(data, colors),
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (error, stack) => Center(child: Text('Error: $error')),
+          child: MouseRegion(
+            onHover: (event) => setState(() => _mousePosition = event.localPosition),
+            child: Stack(
+              children: [
+                // Calendar with GestureDetector for deselection
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    // Deselect dates when clicking outside the calendar
+                    if (_rangeStart != null || _rangeEnd != null) {
+                      setState(() {
+                        _rangeStart = null;
+                        _rangeEnd = null;
+                      });
+                      widget.onRangeSelected?.call(null, null);
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: calendarData.when(
+                          data: (data) => _buildMonthView(data, colors),
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (error, stack) => Center(child: Text('Error: $error')),
+                        ),
                       ),
-                    ),
-                    // Compact legend/info banner below calendar
-                    if (minNights > 1)
-                      _buildCompactLegend(minNights, colors, isDarkMode),
-                  ],
+                      // Compact legend/info banner below calendar
+                      if (minNights > 1)
+                        _buildCompactLegend(minNights, colors, isDarkMode),
+                    ],
+                  ),
                 ),
-              ),
-              // Hover tooltip overlay (desktop) - highest z-index
-              if (_hoveredDate != null)
-                IgnorePointer(
-                  child: calendarData.when(
+                // Hover tooltip overlay (desktop) - highest z-index
+                if (_hoveredDate != null)
+                  calendarData.when(
                     data: (data) => _buildHoverTooltip(data, colors),
                     loading: () => const SizedBox.shrink(),
                     error: (_, stackTrace) => const SizedBox.shrink(),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -551,15 +553,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final isToday = _isSameDay(date, today);
     final isPast = date.isBefore(todayNormalized);
 
-    // Get price text for display
-    final priceText = dateInfo.formattedPrice;
-
     final isHovered = _hoveredDate != null && _isSameDay(date, _hoveredDate!);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hoveredDate = date),
       onExit: (_) => setState(() => _hoveredDate = null),
-      onHover: (event) => setState(() => _mousePosition = event.position),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         // Disable tap in calendar_only mode (when onRangeSelected is null)
@@ -587,7 +585,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
           child: Stack(
             children: [
-              // Background with diagonal split and price
+              // Background with diagonal split
               ClipRRect(
                 borderRadius: BorderTokens.calendarCell,
                 child: CustomPaint(
@@ -600,7 +598,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                         ? DateStatus.available
                         : dateInfo.status,
                     borderColor: dateInfo.status.getBorderColor(colors),
-                    priceText: priceText,
                     colors: colors,
                     isInRange: isInRange,
                   ),
@@ -708,12 +705,14 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     return Positioned(
       left: xPosition,
       top: yPosition,
-      child: CalendarHoverTooltip(
-        date: _hoveredDate!,
-        price: dateInfo.price,
-        status: dateInfo.status,
-        position: Offset(xPosition, yPosition),
-        colors: colors,
+      child: IgnorePointer(
+        child: CalendarHoverTooltip(
+          date: _hoveredDate!,
+          price: dateInfo.price,
+          status: dateInfo.status,
+          position: Offset(xPosition, yPosition),
+          colors: colors,
+        ),
       ),
     );
   }
@@ -724,17 +723,14 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     WidgetColorScheme colors,
   ) {
+    final isDarkMode = ref.read(themeProvider);
     // Block past dates
     if (dateInfo.status == DateStatus.disabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Cannot select past dates.',
-            style: TextStyle(color: colors.textPrimary),
-          ),
-          backgroundColor: colors.statusBookedBackground,
-          duration: const Duration(seconds: 3),
-        ),
+      SnackBarHelper.showError(
+        context: context,
+        message: 'Cannot select past dates.',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 3),
       );
       return;
     }
@@ -753,15 +749,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       // Check minDaysAdvance
       if (dateInfo.minDaysAdvance != null &&
           daysInAdvance < dateInfo.minDaysAdvance!) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'This date requires booking at least ${dateInfo.minDaysAdvance} days in advance.',
-              style: TextStyle(color: colors.textPrimary),
-            ),
-            backgroundColor: colors.statusBookedBackground,
-            duration: const Duration(seconds: 3),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'This date requires booking at least ${dateInfo.minDaysAdvance} days in advance.',
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 3),
         );
         return;
       }
@@ -769,15 +761,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       // Check maxDaysAdvance
       if (dateInfo.maxDaysAdvance != null &&
           daysInAdvance > dateInfo.maxDaysAdvance!) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'This date can only be booked up to ${dateInfo.maxDaysAdvance} days in advance.',
-              style: TextStyle(color: colors.textPrimary),
-            ),
-            backgroundColor: colors.statusBookedBackground,
-            duration: const Duration(seconds: 3),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'This date can only be booked up to ${dateInfo.maxDaysAdvance} days in advance.',
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 3),
         );
         return;
       }
@@ -785,29 +773,21 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
     // Check blockCheckIn/blockCheckOut restrictions
     if (isSelectingCheckIn && dateInfo.blockCheckIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Check-in is not allowed on this date.',
-            style: TextStyle(color: colors.textPrimary),
-          ),
-          backgroundColor: colors.statusBookedBackground,
-          duration: const Duration(seconds: 3),
-        ),
+      SnackBarHelper.showError(
+        context: context,
+        message: 'Check-in is not allowed on this date.',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 3),
       );
       return;
     }
 
     if (isSelectingCheckOut && dateInfo.blockCheckOut) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Check-out is not allowed on this date.',
-            style: TextStyle(color: colors.textPrimary),
-          ),
-          backgroundColor: colors.statusBookedBackground,
-          duration: const Duration(seconds: 3),
-        ),
+      SnackBarHelper.showError(
+        context: context,
+        message: 'Check-out is not allowed on this date.',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 3),
       );
       return;
     }
@@ -861,15 +841,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           _rangeEnd = null;
 
           // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Minimum stay is $minNights ${minNights == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-                style: TextStyle(color: colors.textPrimary),
-              ),
-              backgroundColor: colors.statusBookedBackground,
-              duration: const Duration(seconds: 3),
-            ),
+          SnackBarHelper.showError(
+            context: context,
+            message: 'Minimum stay is $minNights ${minNights == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
+            isDarkMode: isDarkMode,
+            duration: const Duration(seconds: 3),
           );
           return;
         }
@@ -888,6 +864,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     DateTime end,
     WidgetColorScheme colors,
   ) async {
+    final isDarkMode = ref.read(themeProvider);
     // Check availability using backend (works across all months)
     final isAvailable = await ref.read(
       checkDateAvailabilityProvider(
@@ -906,15 +883,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         _rangeEnd = null;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Cannot select dates. There are already booked dates in this range.',
-            style: TextStyle(color: colors.textPrimary),
-          ),
-          backgroundColor: colors.statusBookedBackground,
-          duration: const Duration(seconds: 3),
-        ),
+      SnackBarHelper.showError(
+        context: context,
+        message: 'Cannot select dates. There are already booked dates in this range.',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 3),
       );
       return;
     }

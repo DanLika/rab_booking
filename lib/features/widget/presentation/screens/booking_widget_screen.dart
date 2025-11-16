@@ -34,6 +34,7 @@ import 'booking_confirmation_screen.dart';
 import '../widgets/country_code_dropdown.dart';
 import '../widgets/email_verification_dialog.dart';
 import '../utils/form_validators.dart';
+import '../utils/snackbar_helper.dart';
 import '../../../../core/errors/app_exceptions.dart';
 
 /// Main booking widget screen that shows responsive calendar
@@ -461,25 +462,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
                 // Show user-friendly error message
                 if (mounted) {
-                  ScaffoldMessenger.of(context).clearSnackBars();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        error.getUserMessage(),
-                        style: TextStyle(
-                          color: getColor(
-                            MinimalistColors.textPrimary,
-                            MinimalistColorsDark.textPrimary,
-                          ),
-                        ),
-                      ),
-                      backgroundColor: getColor(
-                        MinimalistColors.error,
-                        MinimalistColorsDark.error,
-                      ),
-                      duration: const Duration(seconds: 5),
-                      behavior: SnackBarBehavior.floating,
-                    ),
+                  SnackBarHelper.showError(
+                    context: context,
+                    message: error.getUserMessage(),
+                    isDarkMode: isDarkMode,
+                    duration: const Duration(seconds: 5),
                   );
                 }
               }
@@ -620,114 +607,136 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
             final topPadding = 0.0; // Minimal padding for maximum content space
 
+            // Calculate available height for calendar
+            // Subtract space for logo, title, and padding
+            final screenHeight = constraints.maxHeight;
+            double reservedHeight = topPadding;
+
+            // Add logo height if present
+            if (_widgetSettings?.themeOptions?.customLogoUrl != null &&
+                _widgetSettings!.themeOptions!.customLogoUrl!.isNotEmpty) {
+              reservedHeight += 48; // 40px logo + 8px spacing
+            }
+
+            // Add title height if present
+            if (_unit?.name != null && _unit!.name.isNotEmpty) {
+              reservedHeight += 60; // Approx title height (24px font + padding)
+            }
+
+            // Add iCal warning if present (will be checked later)
+            reservedHeight += 16; // Buffer for potential warning banner
+
+            // Calendar gets remaining height (ensure minimum of 400px)
+            final calendarHeight = (screenHeight - reservedHeight).clamp(400.0, double.infinity);
+
             return Stack(
               children: [
-                // Calendar - full screen
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: horizontalPadding,
-                    right: horizontalPadding,
-                    top: topPadding,
-                    bottom: 0.0, // Minimal bottom padding
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Calendar
-                      Expanded(
-                        child: CalendarViewSwitcher(
-                          propertyId: _propertyId ?? '',
-                          unitId: unitId,
-                          forceMonthView: forceMonthView,
-                          // Disable date selection in calendar_only mode
-                          onRangeSelected: widgetMode == WidgetMode.calendarOnly
-                              ? null
-                              : (start, end) {
-                                  // Validate minimum nights requirement
-                                  if (start != null && end != null) {
-                                    final minNights =
-                                        _widgetSettings?.minNights ?? 1;
-                                    final selectedNights = end
-                                        .difference(start)
-                                        .inDays;
+                // Scrollable content
+                SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      left: horizontalPadding,
+                      right: horizontalPadding,
+                      top: topPadding + 8,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Custom logo display (if configured)
+                        if (_widgetSettings?.themeOptions?.customLogoUrl != null &&
+                            _widgetSettings!.themeOptions!.customLogoUrl!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: CachedNetworkImage(
+                              imageUrl: _widgetSettings!.themeOptions!.customLogoUrl!,
+                              height: 40,
+                              fit: BoxFit.contain,
+                              placeholder: (context, url) =>
+                                  const SizedBox(height: 40, width: 40),
+                              errorWidget: (context, url, error) =>
+                                  const SizedBox.shrink(),
+                            ),
+                          ),
 
-                                    if (selectedNights < minNights) {
-                                      // Show error message
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Minimum $minNights ${minNights == 1 ? 'night' : 'nights'} required. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
+                        // Property/Unit title header
+                        if (_unit?.name != null && _unit!.name.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Text(
+                              _unit!.name,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: isDarkMode
+                                    ? MinimalistColorsDark.textPrimary
+                                    : MinimalistColors.textPrimary,
+                                fontFamily: 'Manrope',
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+
+                        // Bug #67 Fix: iCal sync warning banner
+                        _buildIcalSyncWarningInline(unitId, isDarkMode),
+
+                        // Calendar with calculated height
+                        SizedBox(
+                          height: calendarHeight,
+                          child: CalendarViewSwitcher(
+                            propertyId: _propertyId ?? '',
+                            unitId: unitId,
+                            forceMonthView: forceMonthView,
+                            // Disable date selection in calendar_only mode
+                            onRangeSelected: widgetMode == WidgetMode.calendarOnly
+                                ? null
+                                : (start, end) {
+                                    // Validate minimum nights requirement
+                                    if (start != null && end != null) {
+                                      final minNights =
+                                          _widgetSettings?.minNights ?? 1;
+                                      final selectedNights = end
+                                          .difference(start)
+                                          .inDays;
+
+                                      if (selectedNights < minNights) {
+                                        // Show error message
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Minimum $minNights ${minNights == 1 ? 'night' : 'nights'} required. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
+                                            ),
+                                            backgroundColor:
+                                                MinimalistColors.error,
+                                            duration: const Duration(seconds: 3),
                                           ),
-                                          backgroundColor:
-                                              MinimalistColors.error,
-                                          duration: const Duration(seconds: 3),
-                                        ),
-                                      );
-                                      return;
+                                        );
+                                        return;
+                                      }
                                     }
-                                  }
 
-                                  setState(() {
-                                    _checkIn = start;
-                                    _checkOut = end;
-                                    _pillBarPosition =
-                                        null; // Reset position when new dates selected
-                                  });
+                                    setState(() {
+                                      _checkIn = start;
+                                      _checkOut = end;
+                                      _pillBarPosition =
+                                          null; // Reset position when new dates selected
+                                    });
 
-                                  // Bug #53: Save form data after date selection
-                                  _saveFormData();
-                                },
+                                    // Bug #53: Save form data after date selection
+                                    _saveFormData();
+                                  },
+                          ),
                         ),
-                      ),
-                    ],
+
+                        // Add spacing at bottom for contact info bar or pill bar
+                        SizedBox(height: widgetMode == WidgetMode.calendarOnly ? 80 : 120),
+                      ],
+                    ),
                   ),
                 ),
-
-                // Custom logo display (if configured)
-                if (_widgetSettings?.themeOptions?.customLogoUrl != null &&
-                    _widgetSettings!.themeOptions!.customLogoUrl!.isNotEmpty)
-                  Positioned(
-                    top: topPadding + 8,
-                    left: horizontalPadding + 8,
-                    child: CachedNetworkImage(
-                      imageUrl: _widgetSettings!.themeOptions!.customLogoUrl!,
-                      height: 40,
-                      fit: BoxFit.contain,
-                      placeholder: (context, url) =>
-                          const SizedBox(height: 40, width: 40),
-                      errorWidget: (context, url, error) =>
-                          const SizedBox.shrink(),
-                    ),
-                  ),
-
-                // Property/Unit title header
-                if (_unit?.name != null && _unit!.name.isNotEmpty)
-                  Positioned(
-                    top: (_widgetSettings?.themeOptions?.customLogoUrl != null &&
-                            _widgetSettings!.themeOptions!.customLogoUrl!.isNotEmpty)
-                        ? topPadding + 56 // Below logo if logo exists
-                        : topPadding + 8, // Top if no logo
-                    left: horizontalPadding + 8,
-                    right: horizontalPadding + 8,
-                    child: Text(
-                      _unit!.name,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode
-                            ? MinimalistColorsDark.textPrimary
-                            : MinimalistColors.textPrimary,
-                        fontFamily: 'Manrope',
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-
-                // Bug #67 Fix: iCal sync warning banner - shows when external calendars are stale
-                _buildIcalSyncWarning(unitId, isDarkMode),
 
                 // Full-screen backdrop overlay when guest form is shown
                 if (_showGuestForm)
@@ -774,9 +783,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     );
   }
 
-  /// Bug #67 Fix: Build iCal sync warning banner
+  /// Bug #67 Fix: Build iCal sync warning banner (inline version for scrollable layout)
   /// Shows warning when external calendars (Airbnb/Booking.com) haven't been synced recently
-  Widget _buildIcalSyncWarning(String unitId, bool isDarkMode) {
+  Widget _buildIcalSyncWarningInline(String unitId, bool isDarkMode) {
     final syncStatus = ref.watch(icalSyncStatusProvider(unitId));
 
     return syncStatus.when(
@@ -786,10 +795,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           return const SizedBox.shrink();
         }
 
-        return Positioned(
-          top: 8,
-          left: 8,
-          right: 8,
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
           child: Material(
             elevation: 4,
             borderRadius: BorderRadius.circular(8),
@@ -1084,7 +1091,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           } else {
             pillBarWidth = 400.0; // Desktop/Tablet: fixed 400px
           }
-          maxHeight = 270.0; // Fixed height for compact view (updated from 160px)
+          maxHeight = 282.0; // Fixed height for compact view (increased by 12px)
         }
 
         // Center booking flow on screen (not calendar)
@@ -2083,14 +2090,19 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       ),
                     ),
                   )
-                : Text(
-                    _getConfirmButtonText(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: getColor(
-                        MinimalistColors.buttonPrimaryText,
-                        MinimalistColorsDark.buttonPrimaryText,
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: AutoSizeText(
+                      _getConfirmButtonText(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: getColor(
+                          MinimalistColors.buttonPrimaryText,
+                          MinimalistColorsDark.buttonPrimaryText,
+                        ),
                       ),
                     ),
                   ),
@@ -2410,7 +2422,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   MinimalistColorsDark.textSecondary,
                 ),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7), // Reduced by 10px total (5px top + 5px bottom)
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
@@ -2595,8 +2607,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  AutoSizeText(
                     title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -2648,7 +2662,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     BookingPriceCalculation calculation,
   ) async {
     final isDarkMode = ref.watch(themeProvider);
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
 
     // Validate form
     if (!_formKey.currentState!.validate()) {
@@ -2659,16 +2672,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final requireEmailVerification =
         _widgetSettings?.emailConfig.requireEmailVerification ?? false;
     if (requireEmailVerification && !_emailVerified) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please verify your email before booking'),
-          backgroundColor: getColor(
-            MinimalistColors.error,
-            MinimalistColorsDark.error,
-          ),
-          duration: const Duration(seconds: 3),
-        ),
+      SnackBarHelper.showError(
+        context: context,
+        message: 'Please verify your email before booking',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 3),
       );
       return;
     }
@@ -2676,16 +2684,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Bug #68: Validate Tax/Legal disclaimer acceptance if required
     final taxConfig = _widgetSettings?.taxLegalConfig;
     if (taxConfig != null && taxConfig.enabled && !_taxLegalAccepted) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please accept the tax and legal obligations before booking'),
-          backgroundColor: getColor(
-            MinimalistColors.error,
-            MinimalistColorsDark.error,
-          ),
-          duration: const Duration(seconds: 5),
-        ),
+      SnackBarHelper.showError(
+        context: context,
+        message: 'Please accept the tax and legal obligations before booking',
+        isDarkMode: isDarkMode,
+        duration: const Duration(seconds: 5),
       );
       return;
     }
@@ -2757,15 +2760,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // CRITICAL: Validate dates (check-in must be before check-out)
     if (_checkIn == null || _checkOut == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Please select check-in and check-out dates.'),
-            backgroundColor: getColor(
-              Colors.red,
-              Colors.red,
-            ),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Please select check-in and check-out dates.',
+          isDarkMode: isDarkMode,
         );
       }
       return;
@@ -2774,15 +2772,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     if (_checkOut!.isBefore(_checkIn!) ||
         _checkOut!.isAtSameMomentAs(_checkIn!)) {
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Check-out must be after check-in date.'),
-            backgroundColor: getColor(
-              Colors.red,
-              Colors.red,
-            ),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Check-out must be after check-in date.',
+          isDarkMode: isDarkMode,
         );
       }
       return;
@@ -2806,26 +2799,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // If current time is after check-in time, show warning
       if (now.hour >= checkInTimeHour) {
         if (mounted) {
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Same-day check-in: Property check-in time is $checkInTimeHour:00. '
+          SnackBarHelper.showWarning(
+            context: context,
+            message: 'Same-day check-in: Property check-in time is $checkInTimeHour:00. '
                 'Please note that you may not be able to check in until tomorrow.',
-              ),
-              backgroundColor: getColor(
-                Colors.orange,
-                Colors.orange,
-              ),
-              duration: const Duration(seconds: 7),
-              action: SnackBarAction(
-                label: 'Continue',
-                textColor: Colors.white,
-                onPressed: () {
-                  // User acknowledges and wants to continue
-                },
-              ),
-            ),
+            isDarkMode: isDarkMode,
+            duration: const Duration(seconds: 7),
           );
         }
         // Don't block the booking, just show warning
@@ -2836,17 +2815,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Validate that we have propertyId and ownerId (should already be fetched in initState)
     if (_propertyId == null || _ownerId == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Property information not loaded. Please refresh the page.',
-            ),
-            backgroundColor: getColor(
-              Colors.red,
-              Colors.red,
-            ),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Property information not loaded. Please refresh the page.',
+          isDarkMode: isDarkMode,
         );
       }
       return;
@@ -2863,18 +2835,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Check if at least one payment method is enabled
       if (!isStripeEnabled && !isBankTransferEnabled && !isPayOnArrivalEnabled) {
         if (mounted) {
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'No payment methods are currently available. Please contact the property owner.',
-              ),
-              backgroundColor: getColor(
-                Colors.red,
-                Colors.red,
-              ),
-              duration: const Duration(seconds: 5),
-            ),
+          SnackBarHelper.showError(
+            context: context,
+            message: 'No payment methods are currently available. Please contact the property owner.',
+            isDarkMode: isDarkMode,
+            duration: const Duration(seconds: 5),
           );
         }
         return;
@@ -2883,18 +2848,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Check if selected payment method is valid
       if (_selectedPaymentMethod == 'stripe' && !isStripeEnabled) {
         if (mounted) {
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Stripe payment is not available. Please select another payment method.',
-              ),
-              backgroundColor: getColor(
-                Colors.red,
-                Colors.red,
-              ),
-              duration: const Duration(seconds: 5),
-            ),
+          SnackBarHelper.showError(
+            context: context,
+            message: 'Stripe payment is not available. Please select another payment method.',
+            isDarkMode: isDarkMode,
+            duration: const Duration(seconds: 5),
           );
         }
         return;
@@ -2902,18 +2860,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       if (_selectedPaymentMethod == 'bank_transfer' && !isBankTransferEnabled) {
         if (mounted) {
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Bank transfer is not available. Please select another payment method.',
-              ),
-              backgroundColor: getColor(
-                Colors.red,
-                Colors.red,
-              ),
-              duration: const Duration(seconds: 5),
-            ),
+          SnackBarHelper.showError(
+            context: context,
+            message: 'Bank transfer is not available. Please select another payment method.',
+            isDarkMode: isDarkMode,
+            duration: const Duration(seconds: 5),
           );
         }
         return;
@@ -2922,18 +2873,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       if (_selectedPaymentMethod == 'pay_on_arrival' &&
           !(_widgetSettings?.allowPayOnArrival ?? false)) {
         if (mounted) {
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Pay on arrival is not available. Please select another payment method.',
-              ),
-              backgroundColor: getColor(
-                Colors.red,
-                Colors.red,
-              ),
-              duration: const Duration(seconds: 5),
-            ),
+          SnackBarHelper.showError(
+            context: context,
+            message: 'Pay on arrival is not available. Please select another payment method.',
+            isDarkMode: isDarkMode,
+            duration: const Duration(seconds: 5),
           );
         }
         return;
@@ -2945,18 +2889,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final maxGuests = _unit?.maxGuests ?? 10;
     if (totalGuests > maxGuests) {
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Maximum $maxGuests ${maxGuests == 1 ? 'guest' : 'guests'} allowed for this property. You selected $totalGuests ${totalGuests == 1 ? 'guest' : 'guests'}.',
-            ),
-            backgroundColor: getColor(
-              MinimalistColors.error,
-              MinimalistColorsDark.error,
-            ),
-            duration: const Duration(seconds: 5),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Maximum $maxGuests ${maxGuests == 1 ? 'guest' : 'guests'} allowed for this property. You selected $totalGuests ${totalGuests == 1 ? 'guest' : 'guests'}.',
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 5),
         );
       }
       return;
@@ -2965,16 +2902,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Validate minimum 1 adult required
     if (_adults == 0) {
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('At least 1 adult is required for booking.'),
-            backgroundColor: getColor(
-              Colors.red,
-              Colors.red,
-            ),
-            duration: const Duration(seconds: 5),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'At least 1 adult is required for booking.',
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 5),
         );
       }
       return;
@@ -3303,16 +3235,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     } on BookingConflictException catch (e) {
       // Race condition - dates were booked by another user
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: getColor(
-              MinimalistColors.error,
-              MinimalistColorsDark.error,
-            ),
-            duration: const Duration(seconds: 7),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: e.message,
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 7),
         );
 
         // Reset selection so user can pick new dates
@@ -3324,15 +3251,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error creating booking: $e'),
-            backgroundColor: getColor(
-              Colors.red,
-              Colors.red,
-            ),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Error creating booking: $e',
+          isDarkMode: isDarkMode,
         );
       }
     } finally {
@@ -3350,7 +3272,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final totalGuests = _adults + _children;
     final isAtCapacity = totalGuests >= maxGuests;
     final isDarkMode = ref.watch(themeProvider);
-    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
     // Helper function to get theme-aware colors
     Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
@@ -3393,10 +3314,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
+                    color: isAtCapacity
+                        ? getColor(
+                            MinimalistColors.error,
+                            MinimalistColorsDark.error,
+                          )
+                        : getColor(
+                            MinimalistColors.textSecondary,
+                            MinimalistColorsDark.textSecondary,
+                          ),
                   ),
                 ),
             ],
@@ -3578,53 +3504,50 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           ),
 
           // Total guests display with capacity warning
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isAtCapacity
-                  ? colors.statusBookedBackground.withValues(alpha: 0.1)
-                  : getColor(
-                      MinimalistColors.backgroundSecondary,
-                      MinimalistColorsDark.backgroundSecondary,
-                    ),
-              borderRadius: BorderRadius.circular(8),
-              border: isAtCapacity
-                  ? Border.all(color: colors.statusBookedBackground)
-                  : null,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  isAtCapacity ? Icons.warning : Icons.groups,
-                  color: isAtCapacity
-                      ? colors.statusBookedBackground
-                      : getColor(
-                          MinimalistColors.textPrimary,
-                          MinimalistColorsDark.textPrimary,
-                        ),
-                  size: 14,
+          if (isAtCapacity) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: getColor(
+                  MinimalistColors.error.withValues(alpha: 0.1),
+                  MinimalistColorsDark.error.withValues(alpha: 0.1),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  isAtCapacity
-                      ? 'Max capacity: $maxGuests guests'
-                      : 'Total: $totalGuests guest${totalGuests != 1 ? 's' : ''}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isAtCapacity
-                        ? colors.statusBookedBackground
-                        : getColor(
-                            MinimalistColors.textPrimary,
-                            MinimalistColorsDark.textPrimary,
-                          ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: getColor(
+                    MinimalistColors.error,
+                    MinimalistColorsDark.error,
                   ),
                 ),
-              ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.warning,
+                    color: getColor(
+                      MinimalistColors.error,
+                      MinimalistColorsDark.error,
+                    ),
+                    size: 14,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Max capacity: $maxGuests guests',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: getColor(
+                        MinimalistColors.error,
+                        MinimalistColorsDark.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -3636,7 +3559,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     required String guestEmail,
   }) async {
     final isDarkMode = ref.watch(themeProvider);
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
 
     try {
       final stripeService = ref.read(stripeServiceProvider);
@@ -3672,15 +3594,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error launching Stripe: $e'),
-            backgroundColor: getColor(
-              Colors.red,
-              Colors.red,
-            ),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Error launching Stripe: $e',
+          isDarkMode: isDarkMode,
         );
       }
     }
@@ -3694,7 +3611,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     String bookingId,
   ) async {
     final isDarkMode = ref.watch(themeProvider);
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
 
     try {
       // Fetch booking from Firestore using booking ID
@@ -3703,18 +3619,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       if (booking == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Booking not found. Please check your email for confirmation.',
-              ),
-              backgroundColor: getColor(
-                Colors.orange,
-                Colors.orange,
-              ),
-              duration: const Duration(seconds: 5),
-            ),
+          SnackBarHelper.showWarning(
+            context: context,
+            message: 'Booking not found. Please check your email for confirmation.',
+            isDarkMode: isDarkMode,
+            duration: const Duration(seconds: 5),
           );
         }
         return;
@@ -3802,16 +3711,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading booking: $e'),
-            backgroundColor: getColor(
-              Colors.red,
-              Colors.red,
-            ),
-            duration: const Duration(seconds: 5),
-          ),
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Error loading booking: $e',
+          isDarkMode: isDarkMode,
+          duration: const Duration(seconds: 5),
         );
       }
     }
@@ -3842,10 +3746,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Build rotate device overlay - prompts user to rotate to landscape
   Widget _buildRotateDeviceOverlay(WidgetColorScheme colors) {
     final isDarkMode = ref.watch(themeProvider);
+    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
 
     return Positioned.fill(
       child: Container(
-        color: colors.backgroundPrimary.withValues(alpha: 0.95),
+        color: getColor(
+          MinimalistColors.backgroundPrimary,
+          MinimalistColorsDark.backgroundPrimary,
+        ).withValues(alpha: 0.95),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(SpacingTokens.xl),
@@ -4096,15 +4004,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               onPressed: () {
                 final email = _emailController.text.trim();
                 if (email.isEmpty || !email.contains('@')) {
-                  ScaffoldMessenger.of(context).clearSnackBars();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Please enter a valid email first'),
-                      backgroundColor: getColor(
-                        MinimalistColors.error,
-                        MinimalistColorsDark.error,
-                      ),
-                    ),
+                  SnackBarHelper.showError(
+                    context: context,
+                    message: 'Please enter a valid email first',
+                    isDarkMode: isDarkMode,
                   );
                   return;
                 }

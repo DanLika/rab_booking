@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/services/logging_service.dart';
+import '../utils/snackbar_helper.dart';
 
 /// Email Verification Dialog
 ///
@@ -72,16 +73,11 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Verification code sent! Check your inbox.'),
-            backgroundColor: widget.colors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            duration: const Duration(seconds: 3),
-          ),
+        SnackBarHelper.showSuccess(
+          context: context,
+          message: 'Verification code sent! Check your inbox.',
+          isDarkMode: false,
+          duration: const Duration(seconds: 3),
         );
 
         // Start 60-second cooldown
@@ -373,10 +369,10 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: widget.colors.error.withOpacity(0.1),
+                    color: widget.colors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: widget.colors.error.withOpacity(0.3),
+                      color: widget.colors.error.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -403,33 +399,37 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
               if (_errorMessage != null) const SizedBox(height: 16),
 
               // Verify button
-              ElevatedButton(
-                onPressed: _isVerifying ? null : _verifyCode,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.colors.primary,
-                  foregroundColor: widget.colors.backgroundCard,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              SizedBox(
+                height: 42, // Reduced by 3px from 45px
+                child: ElevatedButton(
+                  onPressed: _isVerifying ? null : _verifyCode,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.colors.primary,
+                    foregroundColor: widget.colors.backgroundCard,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 35), // Increased horizontal padding for wider button
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                    minimumSize: const Size(double.infinity, 42),
                   ),
-                  elevation: 0,
+                  child: _isVerifying
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          'Verify Email',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
-                child: _isVerifying
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Text(
-                        'Verify Email',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
               ),
               const SizedBox(height: 16),
 
@@ -481,7 +481,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: widget.colors.primary.withOpacity(0.1),
+                  color: widget.colors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(

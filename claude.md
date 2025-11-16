@@ -4,6 +4,57 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🎨 Booked Status Tooltip Color Fix
+
+**Datum: 2025-11-16**
+**Status: ✅ ZAVRŠENO - Light theme tooltip boja ispravljena**
+
+#### 📋 Problem
+U light theme-u, hover tooltip za booked dane prikazivao je tekst "Booked" u plavoj boji (#2596be) umjesto crvene (#ef4444). Ovo nije bilo konzistentno sa:
+- Crvenom bojom booked dana u kalendaru
+- Dark theme-om koji već koristi crvenu boju za "Booked" status
+
+#### 🔧 Rješenje
+
+**Fajl:** `lib/features/widget/presentation/theme/minimalist_colors.dart`
+
+**Linija 75-78:**
+```dart
+// PRIJE (❌ - PLAVA):
+static const Color statusBookedBorder = Color(0xFF2596be); // #2596be
+static const Color statusBookedText = Color(0xFF2596be); // #2596be
+
+// POSLIJE (✅ - CRVENA):
+static const Color statusBookedBorder = Color(0xFFef4444); // #ef4444
+static const Color statusBookedText = Color(0xFFef4444); // #ef4444
+```
+
+**Gdje se koristi:**
+- `calendar_hover_tooltip.dart` linija 191: `return colors.statusBookedBorder;`
+- `calendar_hover_tooltip.dart` linija 200: `return colors.statusBookedBorder;` (turnover day)
+
+#### ✅ Rezultat
+
+**Light theme:**
+- Tooltip text "Booked": plava (#2596be) → **crvena (#ef4444)** ✅
+- Status dot color: plava → **crvena** ✅
+- Konzistentno sa kalendar bojem
+
+**Dark theme:**
+- Bez promjena - već koristio crvenu (#ef4444) ✅
+
+#### 📊 Uticaj
+
+- **0 analyzer errors** - čist kod
+- **Konzistentnost** - light i dark theme sada isti
+- **UX improvement** - boja odgovara vizualnom stanju u kalendaru
+
+---
+
+**Commit:** `b380509` - fix: change booked status tooltip color from blue to red in light theme
+
+---
+
 ## 🧹 Widget Feature Cleanup
 
 **Datum: 2025-11-16**

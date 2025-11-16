@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../widgets/calendar_view_switcher.dart';
@@ -606,21 +605,18 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 ? 16.0 // Tablet
                 : 24.0; // Desktop
 
+            final verticalPadding = horizontalPadding / 2; // Half of horizontal padding
+
             final topPadding = 0.0; // Minimal padding for maximum content space
 
             // Calculate available height for calendar
             // Subtract space for logo, title, and padding
             final screenHeight = constraints.maxHeight;
-            double reservedHeight = topPadding;
-
-            // Add logo height if present
-            if (_widgetSettings?.themeOptions?.customLogoUrl != null &&
-                _widgetSettings!.themeOptions!.customLogoUrl!.isNotEmpty) {
-              reservedHeight += 48; // 40px logo + 8px spacing
-            }
+            double reservedHeight = topPadding + (verticalPadding * 2); // Include top + bottom padding
 
             // Add title height if present
-            if (_unit?.name != null && _unit!.name.isNotEmpty) {
+            if (_widgetSettings?.themeOptions?.customTitle != null &&
+                _widgetSettings!.themeOptions!.customTitle!.isNotEmpty) {
               reservedHeight += 60; // Approx title height (24px font + padding)
             }
 
@@ -638,36 +634,19 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 // Scrollable content
                 SingleChildScrollView(
                   child: Padding(
-                    padding: EdgeInsets.all(horizontalPadding),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: verticalPadding,
+                    ),
                     child: Column(
                       children: [
-                        // Custom logo display (if configured)
-                        if (_widgetSettings?.themeOptions?.customLogoUrl !=
-                                null &&
-                            _widgetSettings!
-                                .themeOptions!
-                                .customLogoUrl!
-                                .isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: CachedNetworkImage(
-                              imageUrl:
-                                  _widgetSettings!.themeOptions!.customLogoUrl!,
-                              height: 40,
-                              fit: BoxFit.contain,
-                              placeholder: (context, url) =>
-                                  const SizedBox(height: 40, width: 40),
-                              errorWidget: (context, url, error) =>
-                                  const SizedBox.shrink(),
-                            ),
-                          ),
-
-                        // Property/Unit title header
-                        if (_unit?.name != null && _unit!.name.isNotEmpty)
+                        // Custom title header (if configured)
+                        if (_widgetSettings?.themeOptions?.customTitle != null &&
+                            _widgetSettings!.themeOptions!.customTitle!.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: Text(
-                              _unit!.name,
+                              _widgetSettings!.themeOptions!.customTitle!,
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,

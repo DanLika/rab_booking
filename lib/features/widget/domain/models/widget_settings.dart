@@ -450,6 +450,7 @@ class ThemeOptions {
   final String? primaryColor; // Hex color
   final String? accentColor;
   final bool showBranding; // Show "Powered by Rab Booking" badge
+  final String? customTitle; // Custom title text to display above calendar
   final String? customLogoUrl;
   final String? themeMode; // 'light', 'dark', 'system' (default: 'system')
 
@@ -457,6 +458,7 @@ class ThemeOptions {
     this.primaryColor,
     this.accentColor,
     this.showBranding = true,
+    this.customTitle,
     this.customLogoUrl,
     this.themeMode = 'system',
   });
@@ -466,6 +468,7 @@ class ThemeOptions {
       primaryColor: map['primary_color'],
       accentColor: map['accent_color'],
       showBranding: map['show_branding'] ?? true,
+      customTitle: map['custom_title'],
       customLogoUrl: map['custom_logo_url'],
       themeMode: map['theme_mode'] ?? 'system',
     );
@@ -476,6 +479,7 @@ class ThemeOptions {
       'primary_color': primaryColor,
       'accent_color': accentColor,
       'show_branding': showBranding,
+      'custom_title': customTitle,
       'custom_logo_url': customLogoUrl,
       'theme_mode': themeMode,
     };
@@ -485,6 +489,7 @@ class ThemeOptions {
     String? primaryColor,
     String? accentColor,
     bool? showBranding,
+    String? customTitle,
     String? customLogoUrl,
     String? themeMode,
   }) {
@@ -492,6 +497,7 @@ class ThemeOptions {
       primaryColor: primaryColor ?? this.primaryColor,
       accentColor: accentColor ?? this.accentColor,
       showBranding: showBranding ?? this.showBranding,
+      customTitle: customTitle ?? this.customTitle,
       customLogoUrl: customLogoUrl ?? this.customLogoUrl,
       themeMode: themeMode ?? this.themeMode,
     );

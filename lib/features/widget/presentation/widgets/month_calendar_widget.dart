@@ -53,28 +53,28 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final isDarkMode = ref.watch(themeProvider);
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        // Deselect dates when clicking outside the calendar
-        if (_rangeStart != null || _rangeEnd != null) {
-          setState(() {
-            _rangeStart = null;
-            _rangeEnd = null;
-          });
-          widget.onRangeSelected?.call(null, null);
-        }
-      },
-      child: Stack(
-        children: [
-          Column(
-            children: [
-              // Combined header for all screen sizes
-              _buildCombinedHeader(context, colors, isDarkMode),
-              const SizedBox(height: SpacingTokens.xs),
+    return Stack(
+      children: [
+        Column(
+          children: [
+            // Combined header for all screen sizes - OUTSIDE GestureDetector
+            _buildCombinedHeader(context, colors, isDarkMode),
+            const SizedBox(height: SpacingTokens.xs),
 
-              // Calendar with LayoutBuilder for proper sizing
-              Expanded(
+            // Calendar wrapped in GestureDetector for deselection
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  // Deselect dates when clicking outside the calendar
+                  if (_rangeStart != null || _rangeEnd != null) {
+                    setState(() {
+                      _rangeStart = null;
+                      _rangeEnd = null;
+                    });
+                    widget.onRangeSelected?.call(null, null);
+                  }
+                },
                 child: calendarData.when(
                   data: (data) => _buildMonthView(data, colors),
                   loading: () =>
@@ -82,20 +82,20 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                   error: (error, stack) => Center(child: Text('Error: $error')),
                 ),
               ),
-              // Compact legend/info banner below calendar
-              if (minNights > 1)
-                _buildCompactLegend(minNights, colors, isDarkMode),
-            ],
-          ),
-          // Hover tooltip overlay (desktop) - highest z-index
-          if (_hoveredDate != null)
-            calendarData.when(
-              data: (data) => _buildHoverTooltip(data, colors),
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
             ),
-        ],
-      ),
+            // Compact legend/info banner below calendar
+            if (minNights > 1)
+              _buildCompactLegend(minNights, colors, isDarkMode),
+          ],
+        ),
+        // Hover tooltip overlay (desktop) - highest z-index
+        if (_hoveredDate != null)
+          calendarData.when(
+            data: (data) => _buildHoverTooltip(data, colors),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+      ],
     );
   }
 

@@ -19,6 +19,9 @@ class MinimalistColors {
   /// White with shadow - elevated cards
   static const Color backgroundCard = Color(0xFFFFFFFF);
 
+  /// Day header background - light grey (same as tertiary for consistency)
+  static const Color backgroundDayHeader = Color(0xFFF5F5F5); // #f5f5f5
+
   // ==================== TEXT COLORS ====================
 
   /// Pure black - primary text, headings, emphasis
@@ -60,10 +63,10 @@ class MinimalistColors {
   static const Color statusAvailableBackground = Color(0xFF83e6bf); // #83e6bf
 
   /// Available date - mint green border
-  static const Color statusAvailableBorder = Color(0xFF5CD4B4); // Mint green
+  static const Color statusAvailableBorder = Color(0xFF83e6bf); // #83e6bf
 
   /// Available date - teal text
-  static const Color statusAvailableText = Color(0xFF0D9488); // Teal 600
+  static const Color statusAvailableText = Color(0xFF83e6bf); // #83e6bf
 
   /// Booked date - blue background
   static const Color statusBookedBackground = Color(0xFF2596be); // #2596be
@@ -175,8 +178,8 @@ class MinimalistColorsDark {
   /// Off-black - secondary background for subtle contrast
   static const Color backgroundSecondary = Color(0xFF0A0A0A);
 
-  /// Pure black - tertiary background (same as primary for clean dark theme)
-  static const Color backgroundTertiary = Color(0xFF000000);
+  /// Dark grey - tertiary background (past days not booked)
+  static const Color backgroundTertiary = Color(0xFF1f2937); // #1f2937
 
   /// Black with shadow - elevated cards
   static const Color backgroundCard = Color(0xFF000000);
@@ -242,8 +245,8 @@ class MinimalistColorsDark {
   /// Past booked date - border
   static const Color statusPastReservationBorder = Color(0xFF180710); // #180710
 
-  /// Day header background - pure black for clean dark theme
-  static const Color backgroundDayHeader = Color(0xFF000000);
+  /// Day header background - slate gray
+  static const Color backgroundDayHeader = Color(0xFF334255); // #334255
 
   /// Pending date - amber background (brighter for visibility)
   static const Color statusPendingBackground = Color(0xFF6B5A2D);

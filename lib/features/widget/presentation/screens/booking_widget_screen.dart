@@ -1003,9 +1003,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final contactOptions = _widgetSettings?.contactOptions;
     final isDesktop = screenWidth > 600;
 
+    // Dynamic max width: 400px for desktop, 170px for mobile
+    final maxWidth = isDesktop ? 400.0 : 170.0;
+
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 400),
+        constraints: BoxConstraints(maxWidth: maxWidth),
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
@@ -1109,8 +1112,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             isDarkMode: isDarkMode,
           ),
 
-        // Spacing
-        if (hasEmail && hasPhone) const SizedBox(height: 12),
+        // Horizontal divider between email and phone
+        if (hasEmail && hasPhone)
+          Divider(
+            color: isDarkMode
+                ? MinimalistColorsDark.borderDefault
+                : MinimalistColors.borderDefault,
+            height: 12,
+            thickness: 1,
+          ),
 
         // Phone
         if (hasPhone)

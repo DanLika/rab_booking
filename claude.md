@@ -2881,6 +2881,299 @@ lib/features/widget/presentation/screens/booking_widget_screen.dart
 
 ---
 
+## Property Deletion Fix & UI Improvements
+
+**Datum: 2025-11-16**
+**Status: ✅ ZAVRŠENO - Property deletion funkcionalan, property card UI poboljšan**
+
+#### 📋 Svrha
+Popravljen broken property deletion flow koji nije stvarno brisao nekretnine iz Firestore-a, i poboljšan UI property card-a sa stilizovanim publish toggle-om i action dugmićima.
+
+---
+
+#### 🔧 Ključne Izmjene
+
+**1. Property Deletion Fix**
+```
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart
+```
+**Dodano debug logovanje:**
+- Line 237-252: Kompletno logovanje kroz cijeli deletion flow
+- Poruke: `[REPO] deleteProperty called`, `[REPO] Checking units`, `[REPO] No units found`, itd.
+- Error handling sa detaljnim logging-om
+
+**Problem koji je bio:**
+- Dialog bi se pojavio i korisnik bi kliknuo "Obriši"
+- Dialog bi se zatvorio
+- NIŠTA se nije desilo - property ostaje u listi
+- Repository metoda se NIJE pozivala
+
+**Rješenje:**
+```
+lib/features/owner_dashboard/presentation/screens/properties_screen.dart
+```
+**Line 283-372: Kompletno refaktorisan `_confirmDelete()` metod:**
+
+```dart
+// PRIJE (❌ - broken):
+if (confirmed == true && context.mounted) {
+  try {
+    ref.invalidate(ownerPropertiesProvider);  // Invalidacija BEZ brisanja!
+    // ... snackbar
+  }
+}
+
+// POSLIJE (✅ - fixed):
+if (confirmed == true && context.mounted) {
+  try {
+    // 1. PRVO obriši iz Firestore
+    await ref
+        .read(ownerPropertiesRepositoryProvider)
+        .deleteProperty(propertyId);
+
+    // 2. PA ONDA invaliduj provider
+    ref.invalidate(ownerPropertiesProvider);
+
+    // 3. Prikaži success
+    ErrorDisplayUtils.showSuccessSnackBar(...);
+  }
+}
+```
+
+**Ključna greška:**
+- `ref.invalidate()` SAMO osvježava listu iz Firestore-a
+- NE briše podatke - samo triggeruje re-fetch
+- Missing: `await repository.deleteProperty(propertyId)`
+
+**Debug logovanje dodato u screen-u:**
+- `🚀 [DELETE] _confirmDelete called for property: $propertyId`
+- `ℹ️ [DELETE] User clicked Odustani`
+- `✅ [DELETE] User clicked Obriši`
+- `▶️ [DELETE] Proceeding with deletion`
+- `🗑️ [DELETE] Calling repository.deleteProperty()`
+- `✅ [DELETE] Property deleted successfully from Firestore`
+- `❌ [DELETE] Error deleting property: $e`
+
+---
+
+**2. Property Card UI Improvements**
+```
+lib/features/owner_dashboard/presentation/widgets/property_card_owner.dart
+```
+
+**Publish Toggle Redesign (Line 295-363):**
+
+**PRIJE (❌ - plain row):**
+```dart
+Row(
+  children: [
+    Text(property.isActive ? 'Objavljeno' : 'Skriveno'),
+    Switch(value: property.isActive, onChanged: onTogglePublished),
+  ],
+)
+```
+
+**POSLIJE (✅ - styled container):**
+```dart
+Container(
+  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  decoration: BoxDecoration(
+    gradient: LinearGradient(
+      colors: property.isActive
+        ? [tertiary.withAlpha(0.1), tertiary.withAlpha(0.05)]  // Green gradient
+        : [error.withAlpha(0.1), error.withAlpha(0.05)],       // Red gradient
+    ),
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(
+      color: property.isActive
+        ? tertiary.withAlpha(0.3)  // Green border
+        : error.withAlpha(0.3),     // Red border
+    ),
+  ),
+  child: Row(
+    children: [
+      Text('Objavljeno' / 'Skriveno', style: bold + colored),
+      Switch(
+        value: property.isActive,
+        onChanged: onTogglePublished,
+        activeTrackColor: theme.colorScheme.tertiary,  // Green track
+      ),
+    ],
+  ),
+)
+```
+
+**Rezultat:**
+- Published: zeleni gradient + zelena border + bold tekst ✅
+- Hidden: crveni gradient + crvena border + bold tekst ✅
+- BorderRadius 12px za smooth izgled
+- Padding 12x8 za bolji spacing
+
+---
+
+**Action Buttons Redesign (Line 328-382):**
+
+**PRIJE (❌ - plain IconButton-i):**
+```dart
+IconButton(
+  onPressed: onEdit,
+  icon: Icon(Icons.edit_outlined),
+  tooltip: 'Uredi',
+)
+IconButton(
+  onPressed: onDelete,
+  icon: Icon(Icons.delete_outline),
+  color: errorColor,
+  tooltip: 'Obriši',
+)
+```
+
+**POSLIJE (✅ - styled _StyledIconButton):**
+```dart
+_StyledIconButton(
+  onPressed: onEdit,
+  icon: Icons.edit_outlined,
+  tooltip: 'Uredi',
+  color: theme.colorScheme.primary,  // Purple gradient
+)
+
+_StyledIconButton(
+  onPressed: onDelete,
+  icon: Icons.delete_outline,
+  tooltip: 'Obriši',
+  color: theme.colorScheme.error,    // Red gradient
+)
+```
+
+**_StyledIconButton Widget (Line 566-613):**
+```dart
+class _StyledIconButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  color.withAlpha(0.15),  // 15% opacity start
+                  color.withAlpha(0.08),  // 8% opacity end
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: color.withAlpha(0.3),  // 30% border
+              ),
+            ),
+            child: Icon(icon, size: 20, color: color),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+**Rezultat:**
+- Edit button: purple gradient + purple border + purple ikona ✅
+- Delete button: red gradient + red border + red ikona ✅
+- InkWell ripple efekat za touch feedback
+- BorderRadius 12px konzistentan sa publish toggle-om
+- Icon size 20px (manja, kompaktnija)
+
+---
+
+**Image Corner Radius Fix (Line 479-496):**
+
+**PRIJE (❌ - oštre ivice):**
+```dart
+AspectRatio(
+  aspectRatio: aspectRatio,
+  child: Image.network(...),
+)
+```
+
+**POSLIJE (✅ - zaobljene gornje ivice):**
+```dart
+ClipRRect(
+  borderRadius: BorderRadius.only(
+    topLeft: Radius.circular(16),
+    topRight: Radius.circular(16),
+  ),
+  child: AspectRatio(
+    aspectRatio: aspectRatio,
+    child: Image.network(...),
+  ),
+)
+```
+
+**Rezultat:**
+- Property image sada ima zaobljene gornje ivice (16px radius)
+- Konzistentno sa BorderRadius card-a
+- Profesionalniji izgled
+
+---
+
+#### 🗑️ Cleanup
+
+**Obrisan nekorišten fajl:**
+```
+❌ lib/features/widget/validators/booking_validators.dart (66 linija)
+```
+- Sadržavao validatore za booking form (name, email, phone)
+- Nije se koristio nigdje u kodu
+- Booking widget koristi druge validatore
+
+---
+
+#### 📊 Statistike
+
+**Izmjene:**
+- 5 fajlova promenjeno
+- +486 linija dodato
+- -158 linija obrisano
+- +328 net change
+
+**Fajlovi:**
+1. `firebase_owner_properties_repository.dart` - Debug logging + error handling
+2. `properties_screen.dart` - Fixed deletion flow + debug logging
+3. `property_card_owner.dart` - UI improvements (publish toggle, action buttons, image radius)
+4. `booking_widget_screen.dart` - Contact pill card moved from bottom bar to inline
+5. `booking_validators.dart` - ❌ Deleted (unused)
+
+---
+
+#### ⚠️ Važne Napomene
+
+1. **Property Deletion:**
+   - Debug logovi su SADA aktivni - vidjet ćeš ih u konzoli
+   - Repository poziva se PRIJE invalidacije providera
+   - Soft delete check radi (NEW subcollection + OLD top-level)
+   - Error handling sa detaljnim porukama
+
+2. **Property Card UI:**
+   - Gradient boje su theme-aware (koriste `theme.colorScheme.*`)
+   - Published = tertiary (zelena), Hidden = error (crvena)
+   - Edit button = primary (purple), Delete = error (red)
+   - BorderRadius 12px svugdje za konzistentnost
+
+3. **Contact Pill Card (Booking Widget):**
+   - Premješten sa bottom bar-a na inline position (ispod kalendara)
+   - Calendar-only mode sada ima kontakt info UNUTAR scroll area-a
+   - Responsive design (mobile/tablet/desktop max-width)
+
+---
+
+**Commit:** `1723600` - fix: enable property deletion and improve property card UI
+
+---
+
 ## Budući TODO
 
 _Ovdje dodaj dokumentaciju za druge kritične dijelove projekta..._

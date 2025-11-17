@@ -4,6 +4,323 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🐛 Widget Settings - Deposit Slider & Payment Methods Fixes
+
+**Datum: 2025-11-17**
+**Status: ✅ ZAVRŠENO - Zajednički deposit slider i sakrivene payment metode u bookingPending modu**
+
+#### 📋 Problem
+
+**Bug 1 - Deposit Slider Konfuzija:**
+- Stripe i Bank Transfer imali odvojene slidere za deposit percentage
+- Widget **UVIJEK** koristio 20% deposit, ignorisao settings
+- Gost odabere Bank Transfer → widget računa deposit sa Stripe settings-a ❌
+- Zbunjujuće za ownere - različiti depositi po payment metodi nema smisla
+
+**Bug 2 - "No Payment" Mod Prikazuje Payment Metode:**
+- Kada je odabran `bookingPending` mod ("Rezervacija bez plaćanja")
+- Payment Methods sekcija (Stripe, Bank Transfer) se i dalje prikazuje ❌
+- Te opcije NE RADE u widgetu - samo zbunjuju
+- Owner konfigurira payment metode koje nikad neće biti korištene
+
+---
+
+#### 🔧 Rješenje
+
+**Bug 1 - Zajednički Deposit Slider:**
+
+**1. Model changes (`widget_settings.dart`):**
+```dart
+// Dodato novo top-level polje
+final int globalDepositPercentage; // Global deposit % (applies to all payment methods)
+
+// Constructor
+this.globalDepositPercentage = 20, // Default 20% deposit
+
+// Migration u fromFirestore()
+globalDepositPercentage: data['global_deposit_percentage'] ??
+    (data['stripe_config'] != null
+        ? (data['stripe_config']['deposit_percentage'] ?? 20)
+        : 20),
+
+// toFirestore()
+'global_deposit_percentage': globalDepositPercentage,
+```
+
+**Migracija:**
+- Ako `global_deposit_percentage` ne postoji u Firestore → uzima iz `stripe_config.deposit_percentage`
+- Ako ni Stripe config ne postoji → default 20%
+- **Backward compatible** - postojeći settings-i automatski migriraju ✅
+
+**2. UI changes (`widget_settings_screen.dart`):**
+
+**PRIJE (2 odvojena slidera):**
+```dart
+// Stripe expansion tile
+Slider(
+  value: _stripeDepositPercentage.toDouble(),
+  onChanged: (value) => setState(() => _stripeDepositPercentage = value.round()),
+)
+
+// Bank Transfer expansion tile
+Slider(
+  value: _bankDepositPercentage.toDouble(),
+  onChanged: (value) => setState(() => _bankDepositPercentage = value.round()),
+)
+```
+
+**POSLIJE (1 zajednički slider):**
+```dart
+// Prije payment metoda - zajednički slider
+Container(
+  padding: EdgeInsets.all(16),
+  decoration: BoxDecoration(
+    color: surfaceContainerHighest,
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(color: outline.withAlpha(0.3)),
+  ),
+  child: Column(
+    children: [
+      Row([
+        Icon(Icons.percent, color: primary),
+        Text('Iznos Avansa: $_globalDepositPercentage%'),
+      ]),
+      Text('Ovaj procenat se primjenjuje na sve metode plaćanja'),
+      Slider(
+        value: _globalDepositPercentage.toDouble(),
+        max: 100,
+        divisions: 20,
+        onChanged: (value) => setState(() => _globalDepositPercentage = value.round()),
+      ),
+      Row([
+        Text('0% (Puna uplata)'),
+        Text('100% (Puna uplata)'),
+      ]),
+    ],
+  ),
+)
+
+// Stripe - bez deposit slidera
+_buildPaymentMethodExpansionTile(
+  child: const SizedBox.shrink(), // No additional settings
+)
+
+// Bank Transfer - bez deposit slidera
+_buildPaymentMethodExpansionTile(
+  child: Column([
+    // Bank details fields (bankName, IBAN, SWIFT, etc.)
+    // NO deposit slider!
+  ]),
+)
+```
+
+**Rezultat:**
+- Premium UI sa gradient background, border, info tekst
+- Jasno objašnjenje: "Ovaj procenat se primjenjuje na SVE metode plaćanja"
+- Labels za oba ekstrema (0% i 100% = Puna uplata)
+
+**3. Widget changes (`booking_widget_screen.dart`):**
+
+**PRIJE (line 1187-1188):**
+```dart
+final depositPercentage = _widgetSettings?.stripeConfig?.depositPercentage ?? 20;
+```
+
+**POSLIJE:**
+```dart
+// Watch price calculation with global deposit percentage (applies to all payment methods)
+final depositPercentage = _widgetSettings?.globalDepositPercentage ?? 20;
+```
+
+**Rezultat:**
+- Widget koristi `globalDepositPercentage` za SVE payment metode ✅
+- Stripe payment → global deposit ✅
+- Bank Transfer payment → global deposit ✅
+- Pay on Arrival → global deposit (ako treba) ✅
+
+---
+
+**Bug 2 - Sakrivanje Payment Metoda u "No Payment" Modu:**
+
+**UI changes (`widget_settings_screen.dart`):**
+
+**PRIJE (line 335):**
+```dart
+if (_selectedMode != WidgetMode.calendarOnly) ...[
+  _buildSectionTitle('Metode Plaćanja', Icons.payment),
+  _buildPaymentMethodsSection(),
+  _buildSectionTitle('Ponašanje Rezervacije', Icons.settings),
+  _buildBookingBehaviorSection(),
+],
+```
+
+**POSLIJE:**
+```dart
+// Payment Methods - ONLY for bookingInstant mode
+if (_selectedMode == WidgetMode.bookingInstant) ...[
+  _buildSectionTitle('Metode Plaćanja', Icons.payment),
+  _buildPaymentMethodsSection(),
+  _buildSectionTitle('Ponašanje Rezervacije', Icons.settings),
+  _buildBookingBehaviorSection(),
+],
+
+// Info card - ONLY for bookingPending mode
+if (_selectedMode == WidgetMode.bookingPending) ...[
+  _buildInfoCard(
+    icon: Icons.info_outline,
+    title: 'Rezervacija bez plaćanja',
+    message:
+      'U ovom modu gosti mogu kreirati rezervaciju, ali NE mogu platiti online. '
+      'Plaćanje dogovarate privatno nakon što potvrdite rezervaciju.',
+    color: Theme.of(context).colorScheme.tertiary, // Green
+  ),
+  _buildSectionTitle('Ponašanje Rezervacije', Icons.settings),
+  _buildBookingBehaviorSection(),
+],
+```
+
+**Dodana nova helper metoda:**
+```dart
+Widget _buildInfoCard({
+  required IconData icon,
+  required String title,
+  required String message,
+  required Color color,
+}) {
+  return Card(
+    child: Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient([
+          color.withAlpha(0.1),
+          color.withAlpha(0.05),
+        ]),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withAlpha(0.3)),
+      ),
+      child: Row([
+        Icon(icon, color: color, size: 28),
+        Expanded(Column([
+          Text(title, style: bold + colored),
+          Text(message, style: secondary),
+        ])),
+      ]),
+    ),
+  );
+}
+```
+
+**Validation update (line 173-174):**
+```dart
+// Validation: At least one payment method must be enabled in bookingInstant mode
+// (No validation needed for bookingPending - payment methods are hidden)
+if (_selectedMode == WidgetMode.bookingInstant) {
+  final hasPaymentMethod = _stripeEnabled || _bankTransferEnabled || _payOnArrivalEnabled;
+  if (!hasPaymentMethod) {
+    ErrorDisplayUtils.showErrorSnackBar(...);
+    return;
+  }
+}
+```
+
+**Rezultat:**
+- `calendarOnly` → Nema payment metoda, nema info card ✅
+- `bookingPending` → **Info card** (zeleni) umjesto payment metoda ✅
+- `bookingInstant` → Payment metoda sekcija (kao prije) ✅
+
+---
+
+#### ✅ Rezultat
+
+**Bug 1 - Deposit:**
+- ✅ Owner vidi **JEDAN** slider koji važi za SVE payment metode
+- ✅ Jasna info poruka da je globalni
+- ✅ Widget koristi `globalDepositPercentage` umjesto `stripeConfig.depositPercentage`
+- ✅ Stripe i Bank Transfer koriste isti deposit percentage
+- ✅ Automatska migracija postojećih settings-a (fallback na Stripe deposit)
+
+**Bug 2 - Payment Methods:**
+- ✅ `bookingPending` mod NE prikazuje payment metode
+- ✅ Umjesto toga: Zeleni info card sa objašnjenjem
+- ✅ Validacija radi SAMO za `bookingInstant` mod
+- ✅ Nema konfuzije - owner zna šta se dešava
+
+**Testing:**
+- ✅ `flutter analyze` - 0 errors
+- ✅ Backward compatible - postojeći settings migriraju automatski
+- ✅ Hot reload primjenjuje izmjene
+
+---
+
+#### ⚠️ Šta Claude Code Treba Znati
+
+**1. globalDepositPercentage je top-level field:**
+- **NE** unutar `StripePaymentConfig` ili `BankTransferConfig`
+- **JE** direktno u `WidgetSettings` class
+- Koristi se za SVE payment metode
+
+**2. Migracija MORA raditi:**
+```dart
+// ✅ TAČNO:
+globalDepositPercentage: data['global_deposit_percentage'] ??
+    (data['stripe_config']?['deposit_percentage'] ?? 20)
+
+// ❌ POGREŠNO:
+globalDepositPercentage: data['global_deposit_percentage'] ?? 20
+// Neće migrirati postojeće Stripe settings!
+```
+
+**3. Widget koristi globalDepositPercentage:**
+```dart
+// ✅ TAČNO:
+final depositPercentage = _widgetSettings?.globalDepositPercentage ?? 20;
+
+// ❌ POGREŠNO (stari kod):
+final depositPercentage = _widgetSettings?.stripeConfig?.depositPercentage ?? 20;
+// Ignoriše global deposit!
+```
+
+**4. Payment Methods conditional rendering:**
+```dart
+// ✅ TAČNO - SAMO za bookingInstant:
+if (_selectedMode == WidgetMode.bookingInstant) ...[
+  _buildPaymentMethodsSection(),
+]
+
+// ❌ POGREŠNO (stari kod):
+if (_selectedMode != WidgetMode.calendarOnly) ...[
+  _buildPaymentMethodsSection(), // Prikazuje i za bookingPending!
+]
+```
+
+**5. StripePaymentConfig i BankTransferConfig i dalje postoje:**
+- `depositPercentage` field OSTAJE u njima (za backward compatibility)
+- Ali settings screen ga **ne koristi** - koristi `globalDepositPercentage`
+- Pri save-u, global deposit se **kopira** u oba config-a:
+```dart
+stripeConfig: StripePaymentConfig(
+  enabled: true,
+  depositPercentage: _globalDepositPercentage, // Copy global
+)
+bankTransferConfig: BankTransferConfig(
+  enabled: true,
+  depositPercentage: _globalDepositPercentage, // Copy global
+)
+```
+
+**6. Ako korisnik prijavi bug "deposit ne radi":**
+- Provjeri da widget koristi `globalDepositPercentage` ✅
+- Provjeri da settings screen čuva `globalDepositPercentage` ✅
+- Provjeri Firestore: `properties/{propertyId}/widget_settings/{unitId}`
+  - Polje `global_deposit_percentage` mora postojati
+  - Ako ne postoji → migracija nije radila!
+
+---
+
+**Commit:** `1bc0122` - fix: unified deposit percentage and hidden payment methods in bookingPending mode
+
+---
+
 ## 🐛 Widget Advanced Settings - Email & Tax Disclaimer Not Persisting (Bug Fix)
 
 **Datum: 2025-11-17**

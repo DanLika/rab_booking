@@ -41,6 +41,7 @@ class _WidgetAdvancedSettingsScreenState
   bool _icalExportEnabled = false;
 
   bool _isSaving = false;
+  bool _isInitialized = false;
 
   @override
   void dispose() {
@@ -151,23 +152,14 @@ class _WidgetAdvancedSettingsScreenState
           );
         }
 
-        // Always reload settings from Firestore (unless currently saving)
-        // This ensures toggles reflect latest saved state when returning to screen
-        if (!_isSaving) {
-          // Check if Firestore data differs from local state
-          final needsReload =
-            settings.emailConfig.requireEmailVerification != _requireEmailVerification ||
-            settings.taxLegalConfig.enabled != _taxLegalEnabled ||
-            settings.taxLegalConfig.useDefaultText != _useDefaultText ||
-            settings.icalExportEnabled != _icalExportEnabled;
-
-          if (needsReload) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                _loadSettings(settings);
-              }
-            });
-          }
+        // Load settings once when screen opens (prevent reload loop during user edits)
+        if (!_isInitialized && !_isSaving) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _loadSettings(settings);
+              setState(() => _isInitialized = true);
+            }
+          });
         }
 
         return Scaffold(

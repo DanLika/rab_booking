@@ -41,7 +41,6 @@ class _WidgetAdvancedSettingsScreenState
   bool _icalExportEnabled = false;
 
   bool _isSaving = false;
-  bool _hasLoadedInitialData = false;
 
   @override
   void dispose() {
@@ -64,9 +63,6 @@ class _WidgetAdvancedSettingsScreenState
 
       // iCal Export
       _icalExportEnabled = settings.icalExportEnabled;
-
-      // Mark as loaded
-      _hasLoadedInitialData = true;
     });
   }
 
@@ -77,11 +73,10 @@ class _WidgetAdvancedSettingsScreenState
 
     try {
       final updatedSettings = currentSettings.copyWith(
-        emailConfig: EmailNotificationConfig(
-          requireEmailVerification: _requireEmailVerification, // User setting
-          // All other email settings use defaults (always enabled)
+        emailConfig: currentSettings.emailConfig.copyWith(
+          requireEmailVerification: _requireEmailVerification,
         ),
-        taxLegalConfig: TaxLegalConfig(
+        taxLegalConfig: currentSettings.taxLegalConfig.copyWith(
           enabled: _taxLegalEnabled,
           useDefaultText: _useDefaultText,
           customText: _customDisclaimerController.text.trim().isEmpty
@@ -97,6 +92,10 @@ class _WidgetAdvancedSettingsScreenState
 
       if (mounted) {
         setState(() => _isSaving = false);
+
+        // Invalidate provider so Widget Settings screen re-fetches fresh data
+        ref.invalidate(widgetSettingsProvider);
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Advanced settings saved successfully')),
         );
@@ -152,11 +151,23 @@ class _WidgetAdvancedSettingsScreenState
           );
         }
 
-        // Load settings once (only first time)
-        if (!_hasLoadedInitialData && !_isSaving) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _loadSettings(settings);
-          });
+        // Always reload settings from Firestore (unless currently saving)
+        // This ensures toggles reflect latest saved state when returning to screen
+        if (!_isSaving) {
+          // Check if Firestore data differs from local state
+          final needsReload =
+            settings.emailConfig.requireEmailVerification != _requireEmailVerification ||
+            settings.taxLegalConfig.enabled != _taxLegalEnabled ||
+            settings.taxLegalConfig.useDefaultText != _useDefaultText ||
+            settings.icalExportEnabled != _icalExportEnabled;
+
+          if (needsReload) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _loadSettings(settings);
+              }
+            });
+          }
         }
 
         return Scaffold(

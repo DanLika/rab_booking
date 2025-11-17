@@ -1183,9 +1183,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     BoxConstraints constraints,
     bool isDarkMode,
   ) {
-    // Watch price calculation with dynamic deposit percentage
+    // Watch price calculation with global deposit percentage (applies to all payment methods)
     final depositPercentage =
-        _widgetSettings?.stripeConfig?.depositPercentage ?? 20;
+        _widgetSettings?.globalDepositPercentage ?? 20;
     final priceCalc = ref.watch(
       bookingPriceProvider(
         unitId: unitId,

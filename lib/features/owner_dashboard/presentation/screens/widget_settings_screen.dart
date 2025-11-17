@@ -32,11 +32,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   WidgetMode _selectedMode = WidgetMode.calendarOnly;
 
   // Payment Methods
+  int _globalDepositPercentage = 20; // Global deposit % for all payment methods
+
   bool _stripeEnabled = false;
-  int _stripeDepositPercentage = 20;
 
   bool _bankTransferEnabled = false;
-  int _bankDepositPercentage = 20;
   final _bankNameController = TextEditingController();
   final _ibanController = TextEditingController();
   final _swiftController = TextEditingController();
@@ -112,14 +112,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       // Widget Mode
       _selectedMode = settings.widgetMode;
 
+      // Global deposit percentage
+      _globalDepositPercentage = settings.globalDepositPercentage;
+
       // Payment Methods - Stripe
       _stripeEnabled = settings.stripeConfig?.enabled ?? false;
-      _stripeDepositPercentage = settings.stripeConfig?.depositPercentage ?? 20;
 
       // Payment Methods - Bank Transfer
       _bankTransferEnabled = settings.bankTransferConfig?.enabled ?? false;
-      _bankDepositPercentage =
-          settings.bankTransferConfig?.depositPercentage ?? 20;
       _bankNameController.text = settings.bankTransferConfig?.bankName ?? '';
       _ibanController.text = settings.bankTransferConfig?.iban ?? '';
       _swiftController.text = settings.bankTransferConfig?.swift ?? '';
@@ -171,6 +171,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     // Validation: At least one payment method must be enabled in bookingInstant mode
+    // (No validation needed for bookingPending - payment methods are hidden)
     if (_selectedMode == WidgetMode.bookingInstant) {
       final hasPaymentMethod =
           _stripeEnabled || _bankTransferEnabled || _payOnArrivalEnabled;
@@ -196,16 +197,17 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         id: widget.unitId,
         propertyId: widget.propertyId,
         widgetMode: _selectedMode,
+        globalDepositPercentage: _globalDepositPercentage,
         stripeConfig: _stripeEnabled
             ? StripePaymentConfig(
                 enabled: true,
-                depositPercentage: _stripeDepositPercentage,
+                depositPercentage: _globalDepositPercentage, // Use global deposit
               )
             : null,
         bankTransferConfig: _bankTransferEnabled
             ? BankTransferConfig(
                 enabled: true,
-                depositPercentage: _bankDepositPercentage,
+                depositPercentage: _globalDepositPercentage, // Use global deposit
                 bankName: _bankNameController.text.isEmpty
                     ? null
                     : _bankNameController.text,
@@ -331,9 +333,27 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
                   const SizedBox(height: 24),
 
-                  if (_selectedMode != WidgetMode.calendarOnly) ...[
+                  // Payment Methods - ONLY for bookingInstant mode
+                  if (_selectedMode == WidgetMode.bookingInstant) ...[
                     _buildSectionTitle('Metode Plaćanja', Icons.payment),
                     _buildPaymentMethodsSection(),
+                    const SizedBox(height: 24),
+
+                    _buildSectionTitle('Ponašanje Rezervacije', Icons.settings),
+                    _buildBookingBehaviorSection(),
+                    const SizedBox(height: 24),
+                  ],
+
+                  // Info card - ONLY for bookingPending mode
+                  if (_selectedMode == WidgetMode.bookingPending) ...[
+                    _buildInfoCard(
+                      icon: Icons.info_outline,
+                      title: 'Rezervacija bez plaćanja',
+                      message:
+                          'U ovom modu gosti mogu kreirati rezervaciju, ali NE mogu platiti online. '
+                          'Plaćanje dogovarate privatno nakon što potvrdite rezervaciju.',
+                      color: Theme.of(context).colorScheme.tertiary,
+                    ),
                     const SizedBox(height: 24),
 
                     _buildSectionTitle('Ponašanje Rezervacije', Icons.settings),
@@ -375,7 +395,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         // to ensure Widget Settings has fresh data from Firestore
                         if (mounted) {
                           ref.invalidate(widget_provider.widgetSettingsProvider);
-                          _loadSettings(); // Re-fetch and apply fresh settings
+                          await _loadSettings(); // Re-fetch and apply fresh settings
                         }
                       },
                     ),
@@ -528,47 +548,91 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Stripe Payment - Collapsible
+            // Global Deposit Percentage Slider (applies to all payment methods)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.percent,
+                        size: 22,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Iznos Avansa: $_globalDepositPercentage%',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Ovaj procenat se primjenjuje na sve metode plaćanja (Stripe, Bankovna uplata)',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Slider(
+                    value: _globalDepositPercentage.toDouble(),
+                    max: 100,
+                    divisions: 20,
+                    label: '$_globalDepositPercentage%',
+                    onChanged: (value) {
+                      setState(() => _globalDepositPercentage = value.round());
+                    },
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '0% (Puna uplata)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                        ),
+                      ),
+                      Text(
+                        '100% (Puna uplata)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Stripe Payment - Collapsible (no deposit slider)
             _buildPaymentMethodExpansionTile(
               icon: Icons.credit_card,
               title: 'Stripe Plaćanje',
               subtitle: 'Plaćanje karticom',
               enabled: _stripeEnabled,
               onToggle: (val) => setState(() => _stripeEnabled = val),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.percent,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Depozit: $_stripeDepositPercentage%',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  Slider(
-                    value: _stripeDepositPercentage.toDouble(),
-                    max: 100,
-                    divisions: 20,
-                    label: '$_stripeDepositPercentage%',
-                    onChanged: (value) {
-                      setState(() => _stripeDepositPercentage = value.round());
-                    },
-                  ),
-                ],
-              ),
+              child: const SizedBox.shrink(), // No additional settings needed
             ),
 
             const SizedBox(height: 12),
 
-            // Bank Transfer - Collapsible
+            // Bank Transfer - Collapsible (no deposit slider)
             _buildPaymentMethodExpansionTile(
               icon: Icons.account_balance,
               title: 'Bankovna Uplata',
@@ -579,32 +643,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 12),
-
-                  // Deposit percentage
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.percent,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Depozit: $_bankDepositPercentage%',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  Slider(
-                    value: _bankDepositPercentage.toDouble(),
-                    max: 100,
-                    divisions: 20,
-                    label: '$_bankDepositPercentage%',
-                    onChanged: (value) {
-                      setState(() => _bankDepositPercentage = value.round());
-                    },
-                  ),
-                  const SizedBox(height: 16),
 
                   // Bank details in responsive grid
                   LayoutBuilder(
@@ -1428,5 +1466,64 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     );
   }
 
-  // Helper: Theme Mode Selection Card
+  /// Build info card (used for bookingPending mode warning)
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String title,
+    required String message,
+    required Color color,
+  }) {
+    return Card(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              color.withAlpha((0.1 * 255).toInt()),
+              color.withAlpha((0.05 * 255).toInt()),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withAlpha((0.3 * 255).toInt()),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    message,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withAlpha((0.7 * 255).toInt()),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

@@ -11,6 +11,7 @@ class WidgetSettings {
   final WidgetMode widgetMode;
 
   // Payment Methods Configuration
+  final int globalDepositPercentage; // Global deposit % (applies to all payment methods)
   final StripePaymentConfig? stripeConfig;
   final BankTransferConfig? bankTransferConfig;
   final bool allowPayOnArrival;
@@ -52,6 +53,7 @@ class WidgetSettings {
     required this.id,
     required this.propertyId,
     this.widgetMode = WidgetMode.bookingInstant,
+    this.globalDepositPercentage = 20, // Default 20% deposit
     this.stripeConfig,
     this.bankTransferConfig,
     this.allowPayOnArrival = false,
@@ -80,6 +82,11 @@ class WidgetSettings {
       id: doc.id,
       propertyId: data['property_id'] ?? '',
       widgetMode: WidgetMode.fromString(data['widget_mode'] ?? 'booking_instant'),
+      // Migration: If global_deposit_percentage doesn't exist, use stripe deposit or 20
+      globalDepositPercentage: data['global_deposit_percentage'] ??
+          (data['stripe_config'] != null
+              ? (data['stripe_config']['deposit_percentage'] ?? 20)
+              : 20),
       stripeConfig: data['stripe_config'] != null
           ? StripePaymentConfig.fromMap(data['stripe_config'])
           : null,
@@ -116,6 +123,7 @@ class WidgetSettings {
     return {
       'property_id': propertyId,
       'widget_mode': widgetMode.toStringValue(),
+      'global_deposit_percentage': globalDepositPercentage,
       'stripe_config': stripeConfig?.toMap(),
       'bank_transfer_config': bankTransferConfig?.toMap(),
       'allow_pay_on_arrival': allowPayOnArrival,
@@ -159,6 +167,7 @@ class WidgetSettings {
     String? id,
     String? propertyId,
     WidgetMode? widgetMode,
+    int? globalDepositPercentage,
     StripePaymentConfig? stripeConfig,
     BankTransferConfig? bankTransferConfig,
     bool? allowPayOnArrival,
@@ -182,6 +191,7 @@ class WidgetSettings {
       id: id ?? this.id,
       propertyId: propertyId ?? this.propertyId,
       widgetMode: widgetMode ?? this.widgetMode,
+      globalDepositPercentage: globalDepositPercentage ?? this.globalDepositPercentage,
       stripeConfig: stripeConfig ?? this.stripeConfig,
       bankTransferConfig: bankTransferConfig ?? this.bankTransferConfig,
       allowPayOnArrival: allowPayOnArrival ?? this.allowPayOnArrival,

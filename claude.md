@@ -4,6 +4,240 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🐛 Widget Advanced Settings - Email & Tax Disclaimer Not Persisting (Bug Fix)
+
+**Datum: 2025-11-17**
+**Status: ✅ ZAVRŠENO - Settings se sada ispravno čuvaju u Firestore**
+
+#### 📋 Problem
+Korisnici nisu mogli da isključe Email Verification i Tax Disclaimer u Advanced Settings screen-u. Promjene su se **prikazivale kao sačuvane**, ali nisu se **perzistirale u Firestore-u**:
+
+**Simptomi:**
+1. Korisnik otvori Advanced Settings → Isključi Email Verification toggle → Save ✅
+2. Success SnackBar se prikaže → Vrati se na Widget Settings ✅
+3. **Problem 1:** Re-otvori Advanced Settings → Toggle opet ON ❌
+4. **Problem 2:** Klikni "Sačuvaj postavke" na Widget Settings → Firestore se vrati na stare podatke ❌
+5. Booking widget i dalje prikazuje verify button i tax checkbox ❌
+
+**Ključni simptom:** Ručna izmjena u Firebase Console (postavljanje `require_email_verification: false`) je **RADILA** - widget bi prestao prikazivati verify button. To je potvrdilo da problem nije u widgetu, već u **save logici Advanced Settings screen-a**.
+
+#### 🔍 Root Cause Analysis
+
+**Problem A - Linija 80-90 (`widget_advanced_settings_screen.dart`):**
+```dart
+// ❌ LOŠE - Kreira NOVI config sa samo jednim poljem, gubi sve ostalo!
+final updatedSettings = currentSettings.copyWith(
+  emailConfig: EmailNotificationConfig(
+    requireEmailVerification: _requireEmailVerification, // Samo ovo!
+    // enabled, sendBookingConfirmation, sendPaymentReceipt, itd → DEFAULTI!
+  ),
+  taxLegalConfig: TaxLegalConfig(
+    enabled: _taxLegalEnabled,
+    useDefaultText: _useDefaultText,
+    customText: ...,
+    // Svi ostali parametri → DEFAULTI!
+  ),
+);
+```
+
+**Šta se dešavalo:**
+- `EmailNotificationConfig()` konstruktor postavlja **DEFAULT vrednosti** za SVA polja
+- Default za `requireEmailVerification` je `false`, ali default za `enabled` je `false`!
+- Firestore dobija config sa `enabled: false` → Email sistem se gasi potpuno!
+- Pri sljedećem fetch-u, provider vraća `enabled: false` → Screen se renderuje pogrešno
+
+**Problem B - Linija 159 (`widget_advanced_settings_screen.dart`):**
+```dart
+// ❌ LOŠE - Screen učitava podatke SAMO JEDNOM!
+if (!_hasLoadedInitialData && !_isSaving) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _loadSettings(settings);
+  });
+}
+```
+
+**Šta se dešavalo:**
+- Kada otvoriš screen prvi put → `_hasLoadedInitialData` postaje `true`
+- Kada se vratiš u screen ponovo → `_hasLoadedInitialData` JOŠ UVEK `true`
+- `_loadSettings()` se NE POZIVA → Toggles ostaju u **local state-u** (stari podaci)
+- Screen prikazuje šta je bilo u memoriji, ne šta je u Firestore-u
+
+**Problem C - Linija 243-268 (`widget_settings_screen.dart`):**
+```dart
+// ❌ LOŠE - Widget Settings koristi CACHED podatke iz memorije!
+final settings = WidgetSettings(
+  // ... sva polja ...
+  emailConfig: _existingSettings?.emailConfig ?? const EmailNotificationConfig(),
+  taxLegalConfig: _existingSettings?.taxLegalConfig ?? const TaxLegalConfig(enabled: false),
+  // ... ostala polja ...
+);
+```
+
+**Šta se dešavalo:**
+1. Otvoriš Widget Settings → fetch-uje se settings → `_existingSettings` cached u memoriji
+2. Odeš u Advanced Settings → Promeniš toggles → Save
+3. Vratiš se → `_existingSettings` JOŠ UVEK IMA STARE PODATKE iz koraka 1!
+4. Klikneš "Sačuvaj postavke" → Piše u Firestore sa starim podacima → **OVERWRITE** ❌
+
+---
+
+#### 🔧 Rješenje
+
+**Fix A - widget_advanced_settings_screen.dart (Linija 80-90):**
+```dart
+// ✅ DOBRO - Koristi copyWith() da SAČUVA postojeće podatke!
+final updatedSettings = currentSettings.copyWith(
+  emailConfig: currentSettings.emailConfig.copyWith(
+    requireEmailVerification: _requireEmailVerification,
+    // enabled, sendBookingConfirmation, itd → OSTAJU NEPROMENJENI ✅
+  ),
+  taxLegalConfig: currentSettings.taxLegalConfig.copyWith(
+    enabled: _taxLegalEnabled,
+    useDefaultText: _useDefaultText,
+    customText: _customDisclaimerController.text.trim().isEmpty
+        ? null
+        : _customDisclaimerController.text.trim(),
+    // Ostala polja → OSTAJU NEPROMENJENA ✅
+  ),
+  icalExportEnabled: _icalExportEnabled,
+);
+```
+
+**Fix B - widget_advanced_settings_screen.dart (Linija 158-171):**
+```dart
+// ✅ DOBRO - Smart reload: Uvijek reload-uj ako se Firestore razlikuje od local state!
+if (!_isSaving) {
+  final needsReload =
+    settings.emailConfig.requireEmailVerification != _requireEmailVerification ||
+    settings.taxLegalConfig.enabled != _taxLegalEnabled ||
+    settings.taxLegalConfig.useDefaultText != _useDefaultText ||
+    settings.icalExportEnabled != _icalExportEnabled;
+
+  if (needsReload) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadSettings(settings);
+      }
+    });
+  }
+}
+```
+
+**Obrisano:**
+- `bool _hasLoadedInitialData = false;` flag ❌
+- Check `if (!_hasLoadedInitialData && !_isSaving)` ❌
+
+**Fix C - widget_advanced_settings_screen.dart (Linija 100-101):**
+```dart
+// ✅ DOBRO - Invaliduj provider nakon save-a da forsira re-fetch!
+if (mounted) {
+  setState(() => _isSaving = false);
+
+  // Invalidate provider so Widget Settings screen re-fetches fresh data
+  ref.invalidate(widgetSettingsProvider);
+
+  ScaffoldMessenger.of(context).showSnackBar(...);
+  Navigator.pop(context);
+}
+```
+
+**Fix D - widget_settings_screen.dart (Linija 373-378):**
+```dart
+// ✅ DOBRO - Reload settings nakon povratka iz Advanced Settings!
+onTap: () async {
+  await Navigator.push(context, MaterialPageRoute(...));
+
+  // After returning from Advanced Settings, reload settings
+  // to ensure Widget Settings has fresh data from Firestore
+  if (mounted) {
+    ref.invalidate(widget_provider.widgetSettingsProvider);
+    _loadSettings(); // Re-fetch and apply fresh settings
+  }
+},
+```
+
+**Dodato:**
+- `import '../../../widget/presentation/providers/widget_settings_provider.dart' as widget_provider;`
+- Alias zbog konflikta sa `repository_providers.dart` koji također ima `widgetSettingsRepositoryProvider`
+
+---
+
+#### ✅ Rezultat
+
+**Prije:**
+- Advanced Settings Save → Firestore NIJE update-ovan ❌
+- Toggles se resetuju na ON kada se vrati u screen ❌
+- Widget Settings overwrite-uje promjene ❌
+- Booking widget ignoriše postavke ❌
+
+**Poslije:**
+- Advanced Settings Save → Firestore ISPRAVNO update-ovan ✅
+- Toggles prikazuju TAČNO stanje iz Firestore-a ✅
+- Widget Settings koristi FRESH podatke iz Firestore-a ✅
+- Booking widget respektuje postavke (email verification, tax disclaimer) ✅
+
+**Test scenario (100% radi):**
+1. Otvori Widget Settings → Advanced Settings
+2. Isključi Email Verification i Tax Disclaimer → Save
+3. Vrati se → Klikni "Sačuvaj postavke" na Widget Settings
+4. Firestore: `email_config.require_email_verification: false` ✅
+5. Firestore: `tax_legal_config.enabled: false` ✅
+6. Re-otvori Advanced Settings → Toggles su OFF ✅
+7. Booking widget: Verify button NEMA ✅
+8. Booking widget: Tax checkbox NEMA ✅
+9. Kreiranje rezervacije bez email verifikacije → Radi ✅
+
+---
+
+#### ⚠️ Šta Claude Code Treba Znati
+
+**1. UVIJEK koristi `.copyWith()` za nested config objekte!**
+- ❌ NIKADA: `emailConfig: EmailNotificationConfig(...)`
+- ✅ UVIJEK: `emailConfig: currentSettings.emailConfig.copyWith(...)`
+- Razlog: Konstruktor postavlja **DEFAULT vrednosti** za SVA polja koja ne navedete!
+
+**2. Provider invalidation je KRITIČNA!**
+- Kada saveš podatke → invaliduj provider!
+- Kada se vratiš sa child screen-a → invaliduj provider!
+- FutureProvider **NE RE-FETCHE-UJE** automatski bez invalidacije!
+
+**3. StreamProvider vs FutureProvider:**
+- `widgetSettingsProvider` = FutureProvider (one-time fetch)
+- `widgetSettingsStreamProvider` = StreamProvider (real-time updates)
+- Advanced Settings koristi **FutureProvider** → Mora ručno invalidirati!
+
+**4. Cached state u StatefulWidget-ima:**
+- `_existingSettings` u Widget Settings = CACHE u memoriji
+- Ako child screen mijenja podatke → MORA re-fetch-ovati nakon povratka!
+- `_loadSettings()` poziv je OBAVEZAN nakon navigation-a
+
+**5. Smart reload pattern:**
+```dart
+// Proveri da li se Firestore razlikuje od local state
+final needsReload = firestoreValue != localStateValue;
+if (needsReload) {
+  _loadSettings(settings);
+}
+```
+
+**6. Provider alias za duplicate names:**
+```dart
+// ❌ GREŠKA:
+import '../../../widget/presentation/providers/widget_settings_provider.dart';
+import '../../../../shared/providers/repository_providers.dart';
+// Oba imaju widgetSettingsRepositoryProvider → KONFLIKT!
+
+// ✅ RJEŠENJE:
+import '../../../widget/presentation/providers/widget_settings_provider.dart' as widget_provider;
+ref.invalidate(widget_provider.widgetSettingsProvider);
+```
+
+---
+
+**Commit:** `22a485d` - fix: widget advanced settings not persisting changes to Firestore
+
+---
+
 ## 🎨 Booked Status Tooltip Color Fix
 
 **Datum: 2025-11-16**

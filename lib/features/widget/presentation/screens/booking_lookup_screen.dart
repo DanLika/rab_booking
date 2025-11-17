@@ -7,6 +7,7 @@ import '../providers/theme_provider.dart';
 import '../providers/booking_lookup_provider.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../theme/responsive_helper.dart';
+import '../../../../shared/providers/repository_providers.dart';
 
 /// Booking Lookup Screen
 /// Allows guests to find their booking using booking reference + email
@@ -50,8 +51,27 @@ class _BookingLookupScreenState extends ConsumerState<BookingLookupScreen> {
       );
 
       if (mounted) {
-        // Navigate to booking details screen
-        unawaited(context.push('/view', extra: booking));
+        // Fetch widget settings for cancellation policy
+        try {
+          final widgetSettings = await ref
+              .read(widgetSettingsRepositoryProvider)
+              .getWidgetSettings(
+                propertyId: booking.propertyId ?? '',
+                unitId: booking.unitId ?? '',
+              );
+
+          // Navigate to booking details screen with both booking and settings
+          unawaited(context.push('/view/details', extra: {
+            'booking': booking,
+            'widgetSettings': widgetSettings,
+          }));
+        } catch (e) {
+          // If widget settings fail to load, still show booking details
+          unawaited(context.push('/view/details', extra: {
+            'booking': booking,
+            'widgetSettings': null,
+          }));
+        }
       }
     } catch (e) {
       setState(() {

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/theme_provider.dart';
 import '../providers/booking_lookup_provider.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../shared/providers/repository_providers.dart';
 
 /// Booking View Screen (Auto-lookup from URL params)
 /// Automatically fetches booking using ref, email, token from query params
@@ -54,8 +55,27 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
       );
 
       if (mounted) {
-        // Navigate to booking details screen
-        context.go('/view/details', extra: booking);
+        // Fetch widget settings for cancellation policy
+        try {
+          final widgetSettings = await ref
+              .read(widgetSettingsRepositoryProvider)
+              .getWidgetSettings(
+                propertyId: booking.propertyId ?? '',
+                unitId: booking.unitId ?? '',
+              );
+
+          // Navigate to booking details screen with both booking and settings
+          context.go('/view/details', extra: {
+            'booking': booking,
+            'widgetSettings': widgetSettings,
+          });
+        } catch (e) {
+          // If widget settings fail to load, still show booking details
+          context.go('/view/details', extra: {
+            'booking': booking,
+            'widgetSettings': null,
+          });
+        }
       }
     } catch (e) {
       setState(() {

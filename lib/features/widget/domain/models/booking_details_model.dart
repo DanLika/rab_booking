@@ -22,6 +22,8 @@ class BookingDetailsModel with _$BookingDetailsModel {
   const factory BookingDetailsModel({
     required String bookingId,
     required String bookingReference,
+    String? propertyId, // Property ID for fetching widget settings
+    String? unitId, // Unit ID for fetching widget settings
     required String propertyName,
     required String unitName,
     required String guestName,

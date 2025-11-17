@@ -243,11 +243,30 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'details',
             builder: (context, state) {
-              final booking = state.extra;
-              if (booking == null) {
+              final extra = state.extra;
+              if (extra == null) {
                 return const NotFoundScreen();
               }
-              return BookingDetailsScreen(booking: booking as dynamic);
+
+              // Support both old and new format for backwards compatibility
+              if (extra is Map<String, dynamic>) {
+                // New format: {booking: BookingDetailsModel, widgetSettings: WidgetSettings?}
+                final booking = extra['booking'];
+                final widgetSettings = extra['widgetSettings'];
+                if (booking == null) {
+                  return const NotFoundScreen();
+                }
+                return BookingDetailsScreen(
+                  booking: booking as dynamic,
+                  widgetSettings: widgetSettings as dynamic,
+                );
+              } else {
+                // Old format: BookingDetailsModel directly
+                return BookingDetailsScreen(
+                  booking: extra as dynamic,
+                  widgetSettings: null,
+                );
+              }
             },
           ),
         ],

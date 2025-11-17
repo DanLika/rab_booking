@@ -40,3 +40,6 @@ export * from "./emailVerification";
 
 // Export widget configuration setup function
 export * from "./setupWidgetConfig";
+
+// Export guest booking cancellation function
+export * from "./guestCancelBooking";

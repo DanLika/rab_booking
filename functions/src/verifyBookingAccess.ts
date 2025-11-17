@@ -133,6 +133,8 @@ export const verifyBookingAccess = onCall(async (request) => {
     const bookingDetails = {
       bookingId: bookingDoc.id,
       bookingReference: booking.booking_reference,
+      propertyId: booking.property_id || null,
+      unitId: booking.unit_id || null,
       propertyName: property?.name || "Property",
       unitName: unit?.name || "Unit",
       guestName: booking.guest_name,

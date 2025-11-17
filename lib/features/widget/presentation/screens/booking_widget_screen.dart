@@ -445,7 +445,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           checkIn: _checkIn,
           checkOut: _checkOut,
           depositPercentage:
-              _widgetSettings?.stripeConfig?.depositPercentage ?? 20,
+              _widgetSettings?.globalDepositPercentage ?? 20,
         ),
         (previous, next) {
           next.whenOrNull(

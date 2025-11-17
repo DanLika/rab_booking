@@ -125,14 +125,13 @@ export const guestCancelBooking = onCall(async (request) => {
       const emailConfig = widgetSettings.email_config || {};
 
       if (emailConfig.enabled && emailConfig.is_configured) {
-        await sendBookingCancellationEmail({
-          booking: {...booking, id: bookingId, status: "cancelled"},
-          emailConfig,
-          propertyName: widgetSettings.property_name || "Property",
+        const guestName = booking.guest_details?.name || booking.guest_name || "Guest";
+        await sendBookingCancellationEmail(
+          guestEmail,
+          guestName,
           bookingReference,
-          cancellationReason: "Guest cancellation",
-          cancelledBy: "guest",
-        });
+          "Guest cancellation"
+        );
         logSuccess(`Cancellation email sent to guest: ${guestEmail}`);
       }
     } catch (emailError) {

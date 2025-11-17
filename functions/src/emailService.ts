@@ -43,7 +43,7 @@ export async function sendBookingConfirmationEmail(
   accessToken: string,
   ownerEmail?: string
 ): Promise<void> {
-  const subject = `[BedBooking] Potvrda rezervacije - ${bookingReference}`;
+  const subject = `[RabBooking] Potvrda rezervacije - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
@@ -175,7 +175,7 @@ export async function sendBookingApprovedEmail(
   propertyName: string,
   ownerEmail?: string
 ): Promise<void> {
-  const subject = `[BedBooking] Potvrda plaćanja - ${bookingReference}`;
+  const subject = `[RabBooking] Potvrda plaćanja - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
@@ -342,7 +342,7 @@ export async function sendBookingCancellationEmail(
   reason: string,
   ownerEmail?: string
 ): Promise<void> {
-  const subject = `[BedBooking] Otkazana rezervacija - ${bookingReference}`;
+  const subject = `[RabBooking] Otkazana rezervacija - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
@@ -466,7 +466,7 @@ export async function sendSuspiciousActivityEmail(
   location: string | undefined,
   reason: string
 ): Promise<void> {
-  const subject = "[BedBooking] 🔒 Sigurnosno upozorenje - Nova prijava detektovana";
+  const subject = "[RabBooking] 🔒 Sigurnosno upozorenje - Nova prijava detektovana";
 
   const html = `
 <!DOCTYPE html>
@@ -553,7 +553,7 @@ export async function sendPendingBookingRequestEmail(
   unitName: string,
   propertyName: string
 ): Promise<void> {
-  const subject = `[BedBooking] Zahtjev za rezervaciju primljen - ${bookingReference}`;
+  const subject = `[RabBooking] Zahtjev za rezervaciju primljen - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
@@ -753,7 +753,7 @@ export async function sendBookingRejectedEmail(
   propertyName: string,
   reason?: string
 ): Promise<void> {
-  const subject = `[BedBooking] Zahtjev za rezervaciju odbijen - ${bookingReference}`;
+  const subject = `[RabBooking] Zahtjev za rezervaciju odbijen - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>

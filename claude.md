@@ -4,6 +4,317 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🐛 Email Service Fixes - Branding & Widget URL
+
+**Datum: 2025-11-17**
+**Status: ✅ ZAVRŠENO - Email branding ispravljen, linkovi rade**
+
+#### 📋 Problem
+
+**Bug 1 - Email Subject sa Pogrešnim Brendom:**
+- Svi email-ovi imali subject sa `[BedBooking]` umjesto `[RabBooking]`
+- 6 email template-a sa pogrešnim branding-om
+- Korisnici dobijali email-ove sa starim imenom
+
+**Bug 2 - Email Linkovi Vode na Pogrešan Site:**
+- Email link: "View My Booking" vodio na `https://rab-booking-248fc.web.app/view?...`
+- Taj site je **default Firebase site** - nema `/view` route!
+- Rezultat: "Missing unit parameter in URL" greška
+- Korisnici nisu mogli pristupiti svojoj rezervaciji
+
+---
+
+#### 🔧 Rješenje
+
+**Bug 1 - Email Branding Fix:**
+
+**Fajl:** `functions/src/emailService.ts`
+
+Promenjeno **6 email subject linija** sa `[BedBooking]` → `[RabBooking]`:
+```typescript
+// Line 46: Booking confirmation
+const subject = `[RabBooking] Potvrda rezervacije - ${bookingReference}`;
+
+// Line 178: Payment confirmation
+const subject = `[RabBooking] Potvrda plaćanja - ${bookingReference}`;
+
+// Line 345: Cancellation email
+const subject = `[RabBooking] Otkazana rezervacija - ${bookingReference}`;
+
+// Line 469: Security alert
+const subject = "[RabBooking] 🔒 Sigurnosno upozorenje - Nova prijava detektovana";
+
+// Line 556: Pending booking request
+const subject = `[RabBooking] Zahtjev za rezervaciju primljen - ${bookingReference}`;
+
+// Line 756: Booking rejection
+const subject = `[RabBooking] Zahtjev za rezervaciju odbijen - ${bookingReference}`;
+```
+
+---
+
+**Bug 2 - Widget URL Fix:**
+
+**Problem - Tri Firebase Hosting Sites:**
+```
+1. rab-booking-248fc    → https://rab-booking-248fc.web.app (default - PRAZAN)
+2. rab-booking-owner    → https://rab-booking-owner.web.app (owner dashboard)
+3. rab-booking-widget   → https://rab-booking-widget.web.app (booking widget) ← OVAJ TREBA!
+```
+
+**Fajl:** `functions/.env` (nije u git-u!)
+
+```bash
+# PRIJE (❌ - pogrešan site):
+WIDGET_URL=https://rab-booking-248fc.web.app
+
+# POSLIJE (✅ - ispravan widget site):
+WIDGET_URL=https://rab-booking-widget.web.app
+```
+
+**Objašnjenje:**
+- Default site (`rab-booking-248fc`) nema `/view` route
+- Widget site (`rab-booking-widget`) ima `/view` route koji prihvata `?ref=...&email=...&token=...`
+- Router u `lib/core/config/router_owner.dart` označava `/view` kao PUBLIC route (line 156-163)
+- `BookingViewScreen` automatski fetch-uje booking sa `verifyBookingAccess` Cloud Function-om
+
+**Email Link Flow (poslije fix-a):**
+```
+1. Korisnik klikne "View My Booking" u email-u
+   ↓
+2. Otvara: https://rab-booking-widget.web.app/view?ref=X&email=Y&token=Z
+   ↓
+3. BookingViewScreen (public route, bez auth)
+   ↓
+4. Poziva verifyBookingAccess(ref, email, token)
+   ↓
+5. Dobija booking sa propertyId i unitId
+   ↓
+6. Fetch-uje widgetSettings
+   ↓
+7. Navigira na /view/details sa booking podacima
+   ↓
+8. BookingDetailsScreen prikazuje rezervaciju ✅
+```
+
+---
+
+**Bonus Fix - guestCancelBooking TypeScript Error:**
+
+**Fajl:** `functions/src/guestCancelBooking.ts` (Line 128-134)
+
+**Problem:** Funkcija `sendBookingCancellationEmail` primala pogrešne parametre
+
+```typescript
+// PRIJE (❌ - object sa properties):
+await sendBookingCancellationEmail({
+  booking: {...booking, id: bookingId, status: "cancelled"},
+  emailConfig,
+  propertyName: widgetSettings.property_name || "Property",
+  bookingReference,
+  cancellationReason: "Guest cancellation",
+  cancelledBy: "guest",
+});
+
+// POSLIJE (✅ - individualni parametri):
+const guestName = booking.guest_details?.name || booking.guest_name || "Guest";
+await sendBookingCancellationEmail(
+  guestEmail,
+  guestName,
+  bookingReference,
+  "Guest cancellation"
+);
+```
+
+**Razlog:** Email funkcija prima 4 parametra (email, name, reference, reason), ne object
+
+---
+
+#### ✅ Rezultat
+
+**Email Branding:**
+- ✅ Svi email-ovi sada prikazuju `[RabBooking]` u subject-u
+- ✅ Konzistentno branding kroz svih 6 email template-a
+- ✅ Profesionalniji izgled za korisnike
+
+**Email Linkovi:**
+- ✅ Linkovi vode na `https://rab-booking-widget.web.app/view?...`
+- ✅ `/view` route radi bez "Missing unit parameter" greške
+- ✅ Korisnici mogu pristupiti svojoj rezervaciji iz email-a
+- ✅ Cancellation emails sada šalju se ispravno
+
+**Deployment:**
+- ✅ Firebase Functions deploy-ovane uspješno (25 funkcija)
+- ✅ `guestCancelBooking` funkcija kreirana (nova)
+- ✅ Email service update-ovan sa svim fix-evima
+
+---
+
+#### ⚠️ VAŽNO - .env Fajl
+
+**Fajl:** `functions/.env` **NIJE** u git-u (zbog `.gitignore`)
+
+**Production deployment:**
+```bash
+# Ako deploy-uješ na production, update-uj .env ručno:
+cd functions
+echo "WIDGET_URL=https://rab-booking-widget.web.app" >> .env
+
+# ILI koristi Firebase Environment Variables:
+firebase functions:config:set widget.url="https://rab-booking-widget.web.app"
+```
+
+**Lokalna vrednost (već ispravljena):**
+```bash
+WIDGET_URL=https://rab-booking-widget.web.app
+```
+
+---
+
+**Commit:** `8e385d8` - fix: correct email branding and widget URL configuration
+
+---
+
+## 🧹 Owner Dashboard Dead Code Cleanup
+
+**Datum: 2025-11-17**
+**Status: ✅ ZAVRŠENO - Obrisano 3,345 linija nekorištenog koda**
+
+#### 📋 Problem
+
+Pronađeno **14 fajlova** u `lib/features/owner_dashboard/presentation/` koji se **NIGDJE NE KORISTE**:
+- 0 importa u codebase-u
+- 0 router route-ova
+- 0 drawer menu item-a
+- 0 referenci u bilo kom drugom fajlu
+
+**Razlog za brisanje:**
+- Dead code povećava bundle size
+- Otežava održavanje (treba čitati i razumeti kod koji se ne koristi)
+- Zbunjuje developere (šta se koristi, šta ne?)
+- Nepotreban technical debt
+
+---
+
+#### 🗑️ Obrisani Fajlovi
+
+**1. Screens (1 fajl - 1,070 linija):**
+```
+❌ additional_services_screen.dart
+```
+- **Opis:** Admin panel za CRUD operacije nad dodatnim servisima (parking, doručak, itd.)
+- **Razlog:** Funkcionalnost uklonjena ili premještena drugdje
+- **Dokumentacija:** Zastarjela (claude.md imao sekciju o ovom fajlu, ali nije bio aktivan)
+
+---
+
+**2. Providers (2 fajla + 2 .g.dart - 187 linija):**
+```
+❌ performance_metrics_provider.dart (93 linije)
+❌ performance_metrics_provider.g.dart (generated)
+❌ revenue_analytics_provider.dart (94 linije)
+❌ revenue_analytics_provider.g.dart (generated)
+```
+- **Opis:** Riverpod provideri za performance metrike i revenue analytics
+- **Razlog:** Funkcionalnost vjerovatno integrirana u analytics_screen.dart ili nikad završena
+
+---
+
+**3. Widgets (11 fajlova - 2,088 linija):**
+
+**App Bar (1 fajl - 94 linije):**
+```
+❌ owner_standard_app_bar.dart
+```
+- **Opis:** Custom app bar za owner dashboard
+- **Razlog:** CommonAppBar se koristi umjesto ovog
+
+**Calendar Widgets (10 fajlova - 1,994 linije):**
+```
+❌ owner_month_calendar_widget.dart (185 linija)
+❌ calendar_legend_widget.dart (361 linija)
+❌ calendar/calendar_filter_panel.dart (416 linija)
+❌ calendar/bulk_operations_toolbar.dart (149 linija)
+❌ calendar/calendar_empty_state.dart (142 linije)
+❌ calendar/bulk_booking_actions.dart (315 linija)
+❌ calendar/triangle_cap_booking_painter.dart (200 linija)
+❌ calendar/resizable_booking_block.dart (226 linija)
+```
+- **Opis:** Napredni calendar komponente sa bulk operacijama, drag-and-drop, custom painting
+- **Razlog:** Funkcionalnost nikad implementirana ili uklonjena u korist simplijih calendar-a
+
+---
+
+#### ✅ Verifikacija
+
+**Provera prije brisanja:**
+```bash
+# Svi fajlovi provjereni sa grep:
+grep -r "AdditionalServicesScreen" lib --include="*.dart"
+# Output: Samo sam fajl (0 referenci)
+
+grep -r "PerformanceMetricsProvider" lib --include="*.dart"
+# Output: Samo sam fajl (0 referenci)
+
+# ... i tako za svih 14 fajlova
+```
+
+**Flutter analyze nakon brisanja:**
+```
+✅ 0 errors - kod kompajlira bez problema!
+⚠️ 1 warning - _buildErrorState unused (u drugom fajlu, nije povezano)
+ℹ️ 17 info - print statements (debug logging, nije breaking)
+```
+
+---
+
+#### 📊 Impact
+
+**Statistike:**
+- ✅ **3,345 linija** koda obrisano
+- ✅ **14 fajlova** eliminisano (12 tracked + 2 generated)
+- ✅ **0 breaking changes** - sve radi kako treba
+- ✅ **Manji bundle size** - lakši app za download
+- ✅ **Čistiji codebase** - lakše održavanje
+
+**Git commit:**
+```
+Commit: be40903
+Files: 12 deleted
+Lines: 3,345 deletions
+Message: chore: remove unused owner dashboard components
+```
+
+---
+
+#### ⚠️ Šta Claude Code Treba Znati
+
+**1. Ako korisnik traži "additional services":**
+- Taj feature je **UKLONJEN** (2025-11-17)
+- Screen je bio **dead code** - nije bio povezan sa navigation-om
+- Ako treba dodati ponovo, radi od nule (nemoj restore-ovati stari screen)
+
+**2. Ako korisnik traži "performance metrics" ili "revenue analytics":**
+- Ti provideri su **OBRISANI** (2025-11-17)
+- Funkcionalnost možda postoji u `analytics_screen.dart`
+- Provjeri analytics_screen prije nego što praviš nove providere
+
+**3. Ako korisnik traži "bulk booking operations" ili "resizable calendar":**
+- Te calendar funkcionalnosti su **UKLONJENE** (2025-11-17)
+- Trenutno se koristi simpliji calendar (owner_week_calendar_screen, owner_timeline_calendar_screen)
+- Ako treba dodati, dizajniraj od nule (nemoj restore-ovati stare widgete)
+
+**4. CommonAppBar vs OwnerStandardAppBar:**
+- `owner_standard_app_bar.dart` je **OBRISAN** (2025-11-17)
+- Koristi se `shared/widgets/common_app_bar.dart` za sve screen-ove
+- Ne vraćaj stari app bar!
+
+---
+
+**Commit:** `be40903` - chore: remove unused owner dashboard components (3,345+ lines)
+
+---
+
 ## 🐛 Widget Settings - Deposit Slider & Payment Methods Fixes
 
 **Datum: 2025-11-17**

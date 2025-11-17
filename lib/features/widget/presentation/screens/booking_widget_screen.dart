@@ -444,8 +444,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           unitId: _unitId,
           checkIn: _checkIn,
           checkOut: _checkOut,
-          depositPercentage:
-              _widgetSettings?.globalDepositPercentage ?? 20,
+          depositPercentage: _widgetSettings?.globalDepositPercentage ?? 20,
         ),
         (previous, next) {
           next.whenOrNull(
@@ -605,14 +604,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 ? 16.0 // Tablet
                 : 24.0; // Desktop
 
-            final verticalPadding = horizontalPadding / 2; // Half of horizontal padding
+            final verticalPadding =
+                horizontalPadding / 2; // Half of horizontal padding
 
             final topPadding = 0.0; // Minimal padding for maximum content space
 
             // Calculate available height for calendar
             // Subtract space for logo, title, and padding
             final screenHeight = constraints.maxHeight;
-            double reservedHeight = topPadding + (verticalPadding * 2); // Include top + bottom padding
+            double reservedHeight =
+                topPadding +
+                (verticalPadding * 2); // Include top + bottom padding
 
             // Add title height if present
             if (_widgetSettings?.themeOptions?.customTitle != null &&
@@ -625,7 +627,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
             // Add contact pill card height for calendar-only mode
             if (widgetMode == WidgetMode.calendarOnly) {
-              reservedHeight += 180; // Contact pill card height (header + subtitle + pill + spacing)
+              reservedHeight +=
+                  180; // Contact pill card height (header + subtitle + pill + spacing)
             }
 
             // Calendar gets remaining height (ensure minimum of 400px)
@@ -646,7 +649,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     children: [
                       // Custom title header (if configured)
                       if (_widgetSettings?.themeOptions?.customTitle != null &&
-                          _widgetSettings!.themeOptions!.customTitle!.isNotEmpty)
+                          _widgetSettings!
+                              .themeOptions!
+                              .customTitle!
+                              .isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: Text(
@@ -675,8 +681,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                           unitId: unitId,
                           forceMonthView: forceMonthView,
                           // Disable date selection in calendar_only mode
-                          onRangeSelected:
-                              widgetMode == WidgetMode.calendarOnly
+                          onRangeSelected: widgetMode == WidgetMode.calendarOnly
                               ? null
                               : (start, end) {
                                   // Validate minimum nights requirement
@@ -698,9 +703,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                           ),
                                           backgroundColor:
                                               MinimalistColors.error,
-                                          duration: const Duration(
-                                            seconds: 3,
-                                          ),
+                                          duration: const Duration(seconds: 3),
                                         ),
                                       );
                                       return;
@@ -1042,11 +1045,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     ContactOptions? contactOptions,
     bool isDarkMode,
   ) {
-    final hasEmail = contactOptions?.showEmail == true &&
+    final hasEmail =
+        contactOptions?.showEmail == true &&
         contactOptions?.emailAddress != null &&
         contactOptions!.emailAddress!.isNotEmpty;
 
-    final hasPhone = contactOptions?.showPhone == true &&
+    final hasPhone =
+        contactOptions?.showPhone == true &&
         contactOptions?.phoneNumber != null &&
         contactOptions!.phoneNumber!.isNotEmpty;
 
@@ -1093,11 +1098,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     ContactOptions? contactOptions,
     bool isDarkMode,
   ) {
-    final hasEmail = contactOptions?.showEmail == true &&
+    final hasEmail =
+        contactOptions?.showEmail == true &&
         contactOptions?.emailAddress != null &&
         contactOptions!.emailAddress!.isNotEmpty;
 
-    final hasPhone = contactOptions?.showPhone == true &&
+    final hasPhone =
+        contactOptions?.showPhone == true &&
         contactOptions?.phoneNumber != null &&
         contactOptions!.phoneNumber!.isNotEmpty;
 
@@ -1184,8 +1191,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     bool isDarkMode,
   ) {
     // Watch price calculation with global deposit percentage (applies to all payment methods)
-    final depositPercentage =
-        _widgetSettings?.globalDepositPercentage ?? 20;
+    final depositPercentage = _widgetSettings?.globalDepositPercentage ?? 20;
     final priceCalc = ref.watch(
       bookingPriceProvider(
         unitId: unitId,

@@ -45,7 +45,10 @@ class WidgetSettingsListScreen extends ConsumerWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: isDark
-                ? [theme.colorScheme.veryDarkGray, theme.colorScheme.mediumDarkGray]
+                ? [
+                    theme.colorScheme.veryDarkGray,
+                    theme.colorScheme.mediumDarkGray,
+                  ]
                 : [theme.colorScheme.veryLightGray, Colors.white],
             stops: const [0.0, 0.3],
           ),
@@ -75,15 +78,24 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: isDark
-                                    ? [theme.colorScheme.darkGray, theme.colorScheme.mediumDarkGray]
-                                    : [theme.colorScheme.primary, theme.colorScheme.secondary],
+                                    ? [
+                                        theme.colorScheme.darkGray,
+                                        theme.colorScheme.mediumDarkGray,
+                                      ]
+                                    : [
+                                        theme.colorScheme.primary,
+                                        theme.colorScheme.secondary,
+                                      ],
                               ),
-                              borderRadius: BorderRadius.circular(_kCardBorderRadius),
+                              borderRadius: BorderRadius.circular(
+                                _kCardBorderRadius,
+                              ),
                               boxShadow: isDark
                                   ? null
                                   : [
                                       BoxShadow(
-                                        color: theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+                                        color: theme.colorScheme.primary
+                                            .withAlpha((0.2 * 255).toInt()),
                                         blurRadius: 20,
                                         offset: const Offset(0, 8),
                                       ),
@@ -97,7 +109,8 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                     Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: context.onGradientColor.withValues(alpha: 0.2),
+                                        color: context.onGradientColor
+                                            .withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Icon(
@@ -109,7 +122,8 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                     const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Widget Podešavanja',
@@ -124,7 +138,8 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                             'Prilagodite izgled booking widget-a za svaku jedinicu',
                                             style: TextStyle(
                                               fontSize: 14,
-                                              color: context.onGradientColor.withValues(alpha: 0.9),
+                                              color: context.onGradientColor
+                                                  .withValues(alpha: 0.9),
                                             ),
                                           ),
                                         ],
@@ -136,19 +151,26 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: context.onGradientColor.withValues(alpha: 0.15),
+                                    color: context.onGradientColor.withValues(
+                                      alpha: 0.15,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.info_outline, color: context.onGradientIconColor, size: 20),
+                                      Icon(
+                                        Icons.info_outline,
+                                        color: context.onGradientIconColor,
+                                        size: 20,
+                                      ),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Text(
                                           'Kliknite na jedinicu da podesite boje, branding i generišete embed kod',
                                           style: TextStyle(
                                             fontSize: 13,
-                                            color: context.onGradientColor.withValues(alpha: 0.95),
+                                            color: context.onGradientColor
+                                                .withValues(alpha: 0.95),
                                           ),
                                         ),
                                       ),
@@ -166,7 +188,9 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                               color: theme.colorScheme.surface,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+                                color: theme.colorScheme.onSurface.withAlpha(
+                                  (0.1 * 255).toInt(),
+                                ),
                               ),
                             ),
                             child: Column(
@@ -182,13 +206,16 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                                 Container(
                                   height: 1,
                                   width: double.infinity,
-                                  color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+                                  color: theme.colorScheme.onSurface.withAlpha(
+                                    (0.1 * 255).toInt(),
+                                  ),
                                 ),
                                 const SizedBox(height: 16),
                                 _StatItem(
                                   icon: Icons.check_circle_outline,
                                   label: 'Dostupne',
-                                  value: '${units.where((u) => u.isAvailable).length}',
+                                  value:
+                                      '${units.where((u) => u.isAvailable).length}',
                                   color: theme.colorScheme.success,
                                 ),
                               ],
@@ -200,14 +227,9 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  flex: 2,
-                                  child: headerCard,
-                                ),
+                                Expanded(flex: 2, child: headerCard),
                                 const SizedBox(width: 16),
-                                Expanded(
-                                  child: statsCard,
-                                ),
+                                Expanded(child: statsCard),
                               ],
                             );
                           }
@@ -298,7 +320,7 @@ class WidgetSettingsListScreen extends ConsumerWidget {
                     6, // Show 6 skeleton cards
                     (index) => SizedBox(
                       width: cardWidth,
-                      child: _SkeletonUnitCard(),
+                      child: const _SkeletonUnitCard(),
                     ),
                   ),
                 );
@@ -383,7 +405,9 @@ class WidgetSettingsListScreen extends ConsumerWidget {
             Text(
               'Prvo kreirajte smještajnu jedinicu da biste mogli podesiti widget',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (0.6 * 255).toInt(),
+                ),
               ),
               textAlign: TextAlign.center,
             ),
@@ -394,7 +418,10 @@ class WidgetSettingsListScreen extends ConsumerWidget {
               label: const Text('Dodaj jedinicu'),
               style: FilledButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
               ),
             ),
           ],
@@ -478,24 +505,31 @@ class _UnitWidgetCard extends ConsumerWidget {
         children: [
           // Header with image
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(_kCardBorderRadius)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(_kCardBorderRadius),
+            ),
             child: unit.images.isNotEmpty
                 ? Image.network(
                     unit.images.first,
                     height: _kUnitImageHeight,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    cacheHeight: (_kUnitImageHeight * MediaQuery.of(context).devicePixelRatio).round(),
+                    cacheHeight:
+                        (_kUnitImageHeight *
+                                MediaQuery.of(context).devicePixelRatio)
+                            .round(),
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
                       return Container(
                         height: _kUnitImageHeight,
-                        color: theme.colorScheme.primary.withAlpha((0.05 * 255).toInt()),
+                        color: theme.colorScheme.primary.withAlpha(
+                          (0.05 * 255).toInt(),
+                        ),
                         child: Center(
                           child: CircularProgressIndicator(
                             value: loadingProgress.expectedTotalBytes != null
                                 ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
+                                      loadingProgress.expectedTotalBytes!
                                 : null,
                             color: theme.colorScheme.primary,
                             strokeWidth: 2,
@@ -506,22 +540,30 @@ class _UnitWidgetCard extends ConsumerWidget {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         height: _kUnitImageHeight,
-                        color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                        color: theme.colorScheme.primary.withAlpha(
+                          (0.1 * 255).toInt(),
+                        ),
                         child: Icon(
                           Icons.apartment,
                           size: 48,
-                          color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                          color: theme.colorScheme.onSurface.withAlpha(
+                            (0.3 * 255).toInt(),
+                          ),
                         ),
                       );
                     },
                   )
                 : Container(
                     height: _kUnitImageHeight,
-                    color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.1 * 255).toInt(),
+                    ),
                     child: Icon(
                       Icons.apartment,
                       size: 48,
-                      color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (0.3 * 255).toInt(),
+                      ),
                     ),
                   ),
           ),
@@ -553,10 +595,12 @@ class _UnitWidgetCard extends ConsumerWidget {
                             unit.id.isEmpty
                                 ? 'ID: N/A'
                                 : (unit.id.length > 8
-                                    ? 'ID: ${unit.id.substring(0, 8)}...'
-                                    : 'ID: ${unit.id}'),
+                                      ? 'ID: ${unit.id.substring(0, 8)}...'
+                                      : 'ID: ${unit.id}'),
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                              color: theme.colorScheme.onSurface.withAlpha(
+                                (0.5 * 255).toInt(),
+                              ),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -565,11 +609,18 @@ class _UnitWidgetCard extends ConsumerWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: unit.isAvailable
-                            ? theme.colorScheme.success.withAlpha((0.1 * 255).toInt())
-                            : theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
+                            ? theme.colorScheme.success.withAlpha(
+                                (0.1 * 255).toInt(),
+                              )
+                            : theme.colorScheme.onSurface.withAlpha(
+                                (0.1 * 255).toInt(),
+                              ),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -579,7 +630,9 @@ class _UnitWidgetCard extends ConsumerWidget {
                           fontWeight: FontWeight.w600,
                           color: unit.isAvailable
                               ? theme.colorScheme.success
-                              : theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                              : theme.colorScheme.onSurface.withAlpha(
+                                  (0.5 * 255).toInt(),
+                                ),
                         ),
                       ),
                     ),
@@ -605,7 +658,8 @@ class _UnitWidgetCard extends ConsumerWidget {
                         ),
                         _InfoChip(
                           icon: Icons.euro,
-                          label: '${unit.pricePerNight.toStringAsFixed(0)} €/noć',
+                          label:
+                              '${unit.pricePerNight.toStringAsFixed(0)} €/noć',
                         ),
                       ],
                     );
@@ -632,12 +686,16 @@ class _UnitWidgetCard extends ConsumerWidget {
                           }
 
                           // Generate widget URL (same logic as embed_code_generator_dialog)
-                          const widgetBaseUrl = 'https://rab-booking-widget.web.app';
+                          const widgetBaseUrl =
+                              'https://rab-booking-widget.web.app';
                           String embedUrl;
 
                           if (unit.slug != null && unit.slug!.isNotEmpty) {
                             // Use hybrid slug URL (SEO-friendly)
-                            final hybridSlug = generateHybridSlug(unit.slug!, unit.id);
+                            final hybridSlug = generateHybridSlug(
+                              unit.slug!,
+                              unit.id,
+                            );
                             embedUrl = '$widgetBaseUrl/booking/$hybridSlug';
                           } else {
                             // Fallback to query param URL
@@ -668,13 +726,19 @@ class _UnitWidgetCard extends ConsumerWidget {
                       child: FilledButton.icon(
                         onPressed: () {
                           context.push(
-                            OwnerRoutes.unitWidgetSettings.replaceAll(':id', unit.id),
+                            OwnerRoutes.unitWidgetSettings.replaceAll(
+                              ':id',
+                              unit.id,
+                            ),
                           );
                         },
                         icon: const Icon(Icons.tune, size: 20),
                         label: const Text('Podesi Widget'),
                         style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                           minimumSize: const Size(0, 48),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -698,10 +762,7 @@ class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _InfoChip({
-    required this.icon,
-    required this.label,
-  });
+  const _InfoChip({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -753,12 +814,14 @@ class _SkeletonUnitCard extends StatelessWidget {
                 ),
               ],
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Image skeleton
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(_kCardBorderRadius)),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(_kCardBorderRadius),
+            ),
             child: SkeletonLoader(
               height: _kUnitImageHeight,
               width: double.infinity,
@@ -766,7 +829,7 @@ class _SkeletonUnitCard extends StatelessWidget {
           ),
           // Content skeleton
           Padding(
-            padding: const EdgeInsets.all(_kHeaderCardPadding),
+            padding: EdgeInsets.all(_kHeaderCardPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -777,56 +840,33 @@ class _SkeletonUnitCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SkeletonLoader(
-                            height: 20,
-                            width: double.infinity,
-                          ),
-                          const SizedBox(height: 8),
-                          SkeletonLoader(
-                            height: 12,
-                            width: 100,
-                          ),
+                          SkeletonLoader(height: 20, width: double.infinity),
+                          SizedBox(height: 8),
+                          SkeletonLoader(height: 12, width: 100),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    SkeletonLoader(
-                      height: 24,
-                      width: 80,
-                      borderRadius: 20,
-                    ),
+                    SizedBox(width: 12),
+                    SkeletonLoader(height: 24, width: 80, borderRadius: 20),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 // Info chips skeleton
                 Row(
                   children: [
-                    SkeletonLoader(
-                      height: 20,
-                      width: 80,
-                    ),
-                    const SizedBox(width: 16),
-                    SkeletonLoader(
-                      height: 20,
-                      width: 90,
-                    ),
-                    const SizedBox(width: 16),
-                    SkeletonLoader(
-                      height: 20,
-                      width: 70,
-                    ),
+                    SkeletonLoader(height: 20, width: 80),
+                    SizedBox(width: 16),
+                    SkeletonLoader(height: 20, width: 90),
+                    SizedBox(width: 16),
+                    SkeletonLoader(height: 20, width: 70),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 // Buttons skeleton
                 Row(
                   children: [
-                    SkeletonLoader(
-                      height: 48,
-                      width: 48,
-                      borderRadius: 12,
-                    ),
-                    const SizedBox(width: 12),
+                    SkeletonLoader(height: 48, width: 48, borderRadius: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: SkeletonLoader(
                         height: 48,

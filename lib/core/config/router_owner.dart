@@ -23,6 +23,7 @@ import '../../features/owner_dashboard/presentation/screens/unit_pricing_screen.
 import '../../features/owner_dashboard/presentation/screens/units_management_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/widget_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/widget_settings_list_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/notifications_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/profile_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/edit_profile_screen.dart';
@@ -100,6 +101,7 @@ class OwnerRoutes {
   static const String unitEdit = '/owner/units/:id/edit';
   static const String unitPricing = '/owner/units/:id/pricing';
   static const String unitWidgetSettings = '/owner/units/:id/widget-settings';
+  static const String unitHub = '/owner/unit-hub';
   static const String notifications = '/owner/notifications';
   static const String profile = '/owner/profile';
   static const String profileEdit = '/owner/profile/edit';
@@ -427,6 +429,19 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final unitId = state.pathParameters['id'] ?? '';
           return WidgetSettingsLoader(unitId: unitId);
+        },
+      ),
+
+      // Unified Unit Hub route (Master-Detail with Tabs)
+      GoRoute(
+        path: OwnerRoutes.unitHub,
+        builder: (context, state) {
+          final unitId = state.uri.queryParameters['unitId'];
+          final tabIndex = int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+          return UnifiedUnitHubScreen(
+            initialUnitId: unitId,
+            initialTabIndex: tabIndex,
+          );
         },
       ),
 

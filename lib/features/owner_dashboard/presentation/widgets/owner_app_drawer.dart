@@ -111,6 +111,16 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
+            // Smještajne Jedinice
+            _DrawerItem(
+              icon: Icons.home_work_outlined,
+              title: 'Smještajne Jedinice',
+              isSelected: currentRoute == 'unit-hub',
+              onTap: () => context.go(OwnerRoutes.unitHub),
+            ),
+
+            const SizedBox(height: 4),
+
             // iCal Integracija Expansion
             _PremiumExpansionTile(
               icon: Icons.sync,
@@ -136,25 +146,15 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            // Podešavanja Expansion (Widget, Integracije, Konfiguracija)
+            // Podešavanja Expansion (Integracije, Konfiguracija)
             _PremiumExpansionTile(
               icon: Icons.settings_outlined,
               title: 'Podešavanja',
               isExpanded:
                   currentRoute.startsWith('properties') ||
                   currentRoute.startsWith('units') ||
-                  currentRoute == 'widget-settings' ||
                   currentRoute.startsWith('integrations'),
               children: [
-                // Widget Settings (top item)
-                _DrawerSubItem(
-                  title: 'Widget Settings',
-                  subtitle: 'Embed kod i dizajn',
-                  icon: Icons.widgets,
-                  isSelected: currentRoute == 'widget-settings',
-                  onTap: () => context.go(OwnerRoutes.widgetSettings),
-                ),
-
                 // INTEGRACIJE Section
                 const _DrawerSectionDivider(label: 'INTEGRACIJE'),
                 _DrawerSubItem(

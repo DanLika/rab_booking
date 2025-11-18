@@ -30,6 +30,13 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if all selected bookings are pending
+    final selectedBookings = widget.bookings
+        .where((b) => _selectedBookingIds.contains(b.booking.id))
+        .toList();
+    final allSelectedArePending = selectedBookings.isNotEmpty &&
+        selectedBookings.every((b) => b.booking.status == BookingStatus.pending);
+
     return Card(
       elevation: 2,
       child: Column(
@@ -49,6 +56,33 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(width: 16),
+                    // Bulk confirm - only show if all selected are pending
+                    if (allSelectedArePending) ...[
+                      TextButton.icon(
+                        onPressed: _confirmSelectedBookings,
+                        icon: const Icon(
+                          Icons.check_circle_outline,
+                          color: AppColors.success,
+                        ),
+                        label: const Text(
+                          'Potvrdi odabrane',
+                          style: TextStyle(color: AppColors.success),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton.icon(
+                        onPressed: _rejectSelectedBookings,
+                        icon: const Icon(
+                          Icons.cancel_outlined,
+                          color: AppColors.error,
+                        ),
+                        label: const Text(
+                          'Odbij odabrane',
+                          style: TextStyle(color: AppColors.error),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     TextButton.icon(
                       onPressed: _deleteSelectedBookings,
                       icon: const Icon(
@@ -78,14 +112,19 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             ),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: Container(
-                constraints: BoxConstraints(
-                  minWidth: MediaQuery.of(context).size.width - 48,
-                ),
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(
-                    AppColors.surfaceVariantLight,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Container(
+                  constraints: BoxConstraints(
+                    minWidth: MediaQuery.of(context).size.width - 48,
                   ),
+                  child: DataTable(
+                  headingRowColor: WidgetStateProperty.resolveWith((states) {
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                    return isDark
+                        ? Theme.of(context).colorScheme.surfaceContainerHighest
+                        : Theme.of(context).colorScheme.surfaceContainerHigh;
+                  }),
                   columns: const [
                     DataColumn(label: Text('Gost')),
                     DataColumn(label: Text('Objekt / Jedinica')),
@@ -99,6 +138,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                     DataColumn(label: Text('Akcije')),
                   ],
                   rows: widget.bookings.map(_buildTableRow).toList(),
+                  ),
                 ),
               ),
             ),
@@ -662,6 +702,147 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           );
         }
       }
+    }
+  }
+
+  Future<void> _confirmSelectedBookings() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Potvrdi odabrane rezervacije'),
+        content: Text(
+          'Jeste li sigurni da želite potvrditi ${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervaciju' : 'rezervacija'}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Odustani'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.success),
+            child: const Text('Potvrdi sve'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final repository = ref.read(ownerBookingsRepositoryProvider);
+
+        // Confirm all selected bookings
+        for (final bookingId in _selectedBookingIds) {
+          await repository.confirmBooking(bookingId);
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervacija je potvrđena' : 'rezervacija su potvrđene'}',
+              ),
+              backgroundColor: AppColors.success,
+            ),
+          );
+
+          setState(_selectedBookingIds.clear);
+
+          ref.invalidate(ownerBookingsProvider);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Greška: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _rejectSelectedBookings() async {
+    final reasonController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Odbij odabrane rezervacije'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Jeste li sigurni da želite odbiti ${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervaciju' : 'rezervacija'}?',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Razlog odbijanja (opcionalno)',
+                border: OutlineInputBorder(),
+                hintText: 'Unesite razlog...',
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Odustani'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Odbij sve'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final repository = ref.read(ownerBookingsRepositoryProvider);
+        final reason = reasonController.text.trim().isEmpty
+            ? null
+            : reasonController.text.trim();
+
+        // Reject all selected bookings
+        for (final bookingId in _selectedBookingIds) {
+          await repository.rejectBooking(bookingId, reason: reason);
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${_selectedBookingIds.length} ${_selectedBookingIds.length == 1 ? 'rezervacija je odbijena' : 'rezervacija su odbijene'}',
+              ),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+
+          setState(_selectedBookingIds.clear);
+
+          ref.invalidate(ownerBookingsProvider);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Greška: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      } finally {
+        reasonController.dispose();
+      }
+    } else {
+      reasonController.dispose();
     }
   }
 

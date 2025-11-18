@@ -28,6 +28,41 @@ class OwnerBookingsScreen extends ConsumerStatefulWidget {
 }
 
 class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.8) {
+      // User scrolled to 80% of the list, load more
+      final hasMore = ref.read(hasMoreBookingsProvider).valueOrNull ?? false;
+      final pagination = ref.read(bookingsPaginationNotifierProvider);
+
+      if (hasMore && !pagination.isLoadingMore) {
+        ref.read(bookingsPaginationNotifierProvider.notifier).setLoadingMore(true);
+        ref.read(bookingsPaginationNotifierProvider.notifier).loadMore();
+        // Reset loading flag after a delay (UI will update when new data arrives)
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            ref.read(bookingsPaginationNotifierProvider.notifier).setLoadingMore(false);
+          }
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bookingsAsync = ref.watch(ownerBookingsProvider);
@@ -67,9 +102,12 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           onRefresh: () async {
             // Refresh bookings data
             ref.invalidate(ownerBookingsProvider);
+            ref.invalidate(allOwnerBookingsProvider);
+            ref.read(bookingsPaginationNotifierProvider.notifier).reset();
           },
           color: theme.colorScheme.primary,
           child: ListView(
+            controller: _scrollController,
             children: [
               // Filters section
               Padding(
@@ -153,6 +191,46 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                           ),
                         ],
                       ),
+                    ),
+                  );
+                },
+              ),
+
+              // Load more indicator
+              Consumer(
+                builder: (context, ref, child) {
+                  final hasMore = ref.watch(hasMoreBookingsProvider).valueOrNull ?? false;
+                  final pagination = ref.watch(bookingsPaginationNotifierProvider);
+                  final localTheme = Theme.of(context);
+
+                  if (!hasMore) {
+                    return const SizedBox(height: 24);
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: pagination.isLoadingMore
+                          ? Column(
+                              children: [
+                                CircularProgressIndicator(
+                                  color: localTheme.colorScheme.primary,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Učitavam još rezervacija...',
+                                  style: localTheme.textTheme.bodySmall?.copyWith(
+                                    color: localTheme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              'Skrolujte da učitate više',
+                              style: localTheme.textTheme.bodySmall?.copyWith(
+                                color: localTheme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
                     ),
                   );
                 },
@@ -502,13 +580,23 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       }
 
       return Padding(
-        padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+        padding: EdgeInsets.fromLTRB(
+          context.horizontalPadding,
+          0,
+          context.horizontalPadding,
+          24, // Extra bottom padding for last row visibility
+        ),
         child: Column(children: rows),
       );
     } else {
       // Mobile/Tablet: Single column list
       return Padding(
-        padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+        padding: EdgeInsets.fromLTRB(
+          context.horizontalPadding,
+          0,
+          context.horizontalPadding,
+          24, // Extra bottom padding for last card visibility
+        ),
         child: Column(
           children: bookings.map((ownerBooking) {
             return Padding(

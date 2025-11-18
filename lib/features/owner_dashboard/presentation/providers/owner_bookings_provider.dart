@@ -45,13 +45,42 @@ class BookingsFilters {
       status != null || propertyId != null || startDate != null || endDate != null;
 }
 
+/// Pagination state for bookings
+class BookingsPagination {
+  final int displayLimit; // How many bookings to display
+  final int pageSize; // How many to load per "load more"
+  final bool isLoadingMore;
+
+  const BookingsPagination({
+    this.displayLimit = 20,
+    this.pageSize = 20,
+    this.isLoadingMore = false,
+  });
+
+  BookingsPagination copyWith({
+    int? displayLimit,
+    int? pageSize,
+    bool? isLoadingMore,
+  }) {
+    return BookingsPagination(
+      displayLimit: displayLimit ?? this.displayLimit,
+      pageSize: pageSize ?? this.pageSize,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
+
+  BookingsPagination loadMore() {
+    return copyWith(displayLimit: displayLimit + pageSize);
+  }
+}
+
 /// Bookings filters notifier
 @riverpod
 class BookingsFiltersNotifier extends _$BookingsFiltersNotifier {
   @override
   BookingsFilters build() {
-    // Default to showing Pending bookings on initial load
-    return const BookingsFilters(status: BookingStatus.pending);
+    // Default to showing ALL bookings on initial load (sorted by status priority + creation date)
+    return const BookingsFilters();
   }
 
   void setStatus(BookingStatus? status) {
@@ -76,9 +105,30 @@ class BookingsFiltersNotifier extends _$BookingsFiltersNotifier {
   }
 }
 
-/// Owner bookings provider
+/// Pagination notifier
 @riverpod
-Future<List<OwnerBooking>> ownerBookings(Ref ref) async {
+class BookingsPaginationNotifier extends _$BookingsPaginationNotifier {
+  @override
+  BookingsPagination build() {
+    return const BookingsPagination();
+  }
+
+  void loadMore() {
+    state = state.loadMore();
+  }
+
+  void reset() {
+    state = const BookingsPagination();
+  }
+
+  void setLoadingMore(bool loading) {
+    state = state.copyWith(isLoadingMore: loading);
+  }
+}
+
+/// All owner bookings (full list, cached)
+@riverpod
+Future<List<OwnerBooking>> allOwnerBookings(Ref ref) async {
   final repository = ref.watch(ownerBookingsRepositoryProvider);
   final filters = ref.watch(bookingsFiltersNotifierProvider);
   final auth = FirebaseAuth.instance;
@@ -88,13 +138,59 @@ Future<List<OwnerBooking>> ownerBookings(Ref ref) async {
     throw Exception('User not authenticated');
   }
 
-  return repository.getOwnerBookings(
+  final bookings = await repository.getOwnerBookings(
     ownerId: userId,
     propertyId: filters.propertyId,
     status: filters.status,
     startDate: filters.startDate,
     endDate: filters.endDate,
   );
+
+  // Sort bookings by status priority (pending > confirmed > cancelled/completed)
+  // then by creation date descending (newest first)
+  final sortedBookings = List<OwnerBooking>.from(bookings)
+    ..sort((a, b) {
+      // Priority order: pending (3), confirmed (2), cancelled/completed (1)
+      final aPriority = a.booking.status == BookingStatus.pending
+          ? 3
+          : a.booking.status == BookingStatus.confirmed
+              ? 2
+              : 1;
+      final bPriority = b.booking.status == BookingStatus.pending
+          ? 3
+          : b.booking.status == BookingStatus.confirmed
+              ? 2
+              : 1;
+
+      // First sort by status priority (descending)
+      if (aPriority != bPriority) {
+        return bPriority.compareTo(aPriority);
+      }
+
+      // Then sort by creation date descending (newest first)
+      return b.booking.createdAt.compareTo(a.booking.createdAt);
+    });
+
+  return sortedBookings;
+}
+
+/// Owner bookings provider with pagination (displays limited subset)
+@riverpod
+Future<List<OwnerBooking>> ownerBookings(Ref ref) async {
+  final allBookings = await ref.watch(allOwnerBookingsProvider.future);
+  final pagination = ref.watch(bookingsPaginationNotifierProvider);
+
+  // Return only the limited subset for display
+  return allBookings.take(pagination.displayLimit).toList();
+}
+
+/// Check if there are more bookings to load
+@riverpod
+Future<bool> hasMoreBookings(Ref ref) async {
+  final allBookings = await ref.watch(allOwnerBookingsProvider.future);
+  final pagination = ref.watch(bookingsPaginationNotifierProvider);
+
+  return allBookings.length > pagination.displayLimit;
 }
 
 /// Recent owner bookings provider (for dashboard activity)

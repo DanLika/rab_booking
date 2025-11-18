@@ -866,6 +866,171 @@ ref.invalidate(widget_provider.widgetSettingsProvider);
 
 ---
 
+## 🐛 Widget Advanced Settings - Switch Toggles Not Working (Reload Loop Bug)
+
+**Datum: 2025-11-17**
+**Status: ✅ ZAVRŠENO - Switch toggles sada rade normalno**
+
+#### 📋 Problem
+Korisnici nisu mogli da toggle-uju switch-eve u Advanced Settings screen-u. Switch-evi su se VIZUELNO mijenjali tokom klika, ali su se odmah vraćali na prethodnu vrijednost čim korisnik pusti klik.
+
+**Simptomi:**
+1. Korisnik klikne Email Verification switch → Switch se toggle-uje tokom držanja klika ✅
+2. Korisnik pusti klik → Switch se ODMAH vrati na prethodnu vrijednost ❌
+3. Isti problem sa Tax/Legal Disclaimer switch-em ❌
+4. Isti problem sa iCal Export switch-em ❌
+5. Save button RADI (prikazuje success snackbar) ✅
+6. Firestore SE UPDATE-UJE sa novim vrijednostima ✅
+7. Problem je SAMO u UI-u - korisnik ne može da toggle-uje switch-eve ❌
+
+**Ključni simptom:** "Mogu da zadržim i povučem mišem, ali čim pustim klik, vrati se."
+
+#### 🔍 Root Cause Analysis
+
+**Problem - Smart Reload Loop (Linija 154-171):**
+```dart
+// ❌ LOŠE - Reload se triggeruje NAKON SVAKOG klika!
+if (!_isSaving) {
+  // Check if Firestore data differs from local state
+  final needsReload =
+    settings.emailConfig.requireEmailVerification != _requireEmailVerification ||
+    settings.taxLegalConfig.enabled != _taxLegalEnabled ||
+    settings.taxLegalConfig.useDefaultText != _useDefaultText ||
+    settings.icalExportEnabled != _icalExportEnabled;
+
+  if (needsReload) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadSettings(settings); // ← Poziva se NAKON SVAKOG klika!
+      }
+    });
+  }
+}
+```
+
+**Šta se dešavalo:**
+1. Korisnik klikne switch → `setState(() => _requireEmailVerification = true)`
+2. `build()` metod se poziva → `ref.watch(widgetSettingsProvider)` vraća staru vrijednost (`false`) iz Firestore-a
+3. Smart reload detektuje razliku (`false != true`) → poziva `_loadSettings(settings)`
+4. `_loadSettings()` poziva `setState(() => _requireEmailVerification = false)` → **VRATI SWITCH NATRAG!** ❌
+5. Korisnik vidi switch kako se vraća na OFF poziciju
+
+**Zašto je smart reload postojao:**
+- Bio je namjenjen da reload-uje settings kada se korisnik vrati na screen NAKON save-a
+- Ideja: Ako Firestore ima drugačije podatke od local state-a → reload
+- **ALI:** Smart reload se triggerovao TOKOM user edit-a, ne samo nakon povratka!
+
+---
+
+#### 🔧 Rješenje
+
+**Zamijenjen smart reload sa single initialization:**
+
+**PRIJE (❌ - reload loop):**
+```dart
+// Linija 154-171
+if (!_isSaving) {
+  final needsReload = settings.emailConfig.requireEmailVerification != _requireEmailVerification ...;
+  if (needsReload) {
+    _loadSettings(settings); // Poziva se SVAKI PUT kad build() detektuje razliku!
+  }
+}
+```
+
+**POSLIJE (✅ - single load):**
+```dart
+// Dodato polje:
+bool _isInitialized = false; // Line 44
+
+// Linija 155-163 (refaktorisano):
+// Load settings once when screen opens (prevent reload loop during user edits)
+if (!_isInitialized && !_isSaving) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (mounted) {
+      _loadSettings(settings);
+      setState(() => _isInitialized = true);
+    }
+  });
+}
+```
+
+**Rezultat:**
+- ✅ Settings se učitavaju SAMO JEDNOM kada se screen otvori
+- ✅ NE reload-uju se tokom user edit-a (switch klikovi sada rade!)
+- ✅ Save invalidira provider kako treba (postojeća logika ostaje)
+- ✅ Novi screen instance = fresh load (flag se resetuje)
+
+---
+
+#### ✅ Rezultat
+
+**Prije:**
+- Switch se toggle-uje tokom držanja klika ✅
+- Switch se VRAĆA natrag čim se pusti klik ❌
+- Korisnik ne može da promijeni settings ❌
+
+**Poslije:**
+- Switch se toggle-uje i OSTAJE u novoj poziciji ✅
+- Email Verification toggle RADI ✅
+- Tax/Legal Disclaimer toggle RADI ✅
+- iCal Export toggle RADI ✅
+- Save normalno čuva u Firestore ✅
+
+**Test scenario (100% radi):**
+1. Otvori Advanced Settings
+2. Klikni Email Verification switch → Ostane ON ✅
+3. Klikni ponovo → Ostane OFF ✅
+4. Klikni Tax/Legal switch → Ostane ON/OFF ✅
+5. Klikni iCal Export switch → Ostane ON/OFF ✅
+6. Pritisni Save → Success snackbar ✅
+7. Vrati se na Widget Settings → Reload radi normalno ✅
+
+---
+
+#### ⚠️ Šta Claude Code Treba Znati
+
+**1. NIKADA NE VRAĆAJ smart reload loop pattern!**
+- ❌ LOŠE: `if (firestoreValue != localState) { _loadSettings() }`
+- ✅ DOBRO: `if (!_isInitialized) { _loadSettings(); _isInitialized = true }`
+- Razlog: Smart reload se triggeruje TOKOM user edit-a, ne samo nakon povratka!
+
+**2. Initialization flag pattern:**
+- Koristi `_isInitialized` flag za single load
+- Load se poziva SAMO JEDNOM kada screen otvoriš prvi put
+- Flag se NE resetuje unutar screen lifecycle-a
+- Novi screen instance = novi flag = fresh load
+
+**3. Provider invalidation i dalje radi:**
+- `ref.invalidate(widgetSettingsProvider)` nakon save-a (linija 97)
+- Widget Settings screen invalidira nakon povratka (postojeća logika)
+- Ova izmjena NE utiče na provider invalidation flow
+
+**4. Ako korisnik prijavi "switch se ne mijenja":**
+- NE dodavaj smart reload logiku natrag!
+- Problem je VJEROVATNO negdje drugdje (npr. provider cache)
+- Provjeri sa debug logging-om prije nego što mijenjaj ovaj pattern
+
+**5. Build metod flow:**
+```dart
+build() → ref.watch() → settings iz Firestore-a
+  ↓
+if (!_isInitialized) → _loadSettings() → setState() → _isInitialized = true
+  ↓
+Switch renders sa _requireEmailVerification (local state)
+  ↓
+Korisnik klikne switch → setState() → _requireEmailVerification mijenja se
+  ↓
+build() ponovo → ref.watch() → settings JOŠ UVEK IMA STARU vrijednost
+  ↓
+ALI _isInitialized = true → NE poziva _loadSettings() → Switch ostaje kako jeste! ✅
+```
+
+---
+
+**Commit:** `4ed5aa5` - fix: prevent reload loop in advanced settings that blocked switch toggles
+
+---
+
 ## 🎨 Booked Status Tooltip Color Fix
 
 **Datum: 2025-11-16**

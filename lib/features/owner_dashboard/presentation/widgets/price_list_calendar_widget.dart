@@ -10,10 +10,18 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/price_list_provider.dart';
+import '../state/price_calendar_state.dart';
+import 'calendar/calendar_day_cell.dart';
 
 /// BedBooking-style Price List Calendar
 /// Displays one month at a time with dropdown selector
 /// Shows pricing, availability, and all BedBooking features
+/// 
+/// Now with:
+/// - Optimistic updates for instant UI feedback
+/// - Local state cache for better performance
+/// - Undo/Redo functionality
+/// - Extracted components for better maintainability
 class PriceListCalendarWidget extends ConsumerStatefulWidget {
   final UnitModel unit;
 
@@ -29,6 +37,10 @@ class _PriceListCalendarWidgetState
   late DateTime _selectedMonth;
   final Set<DateTime> _selectedDays = {};
   bool _bulkEditMode = false;
+  bool _isLoadingMonthChange = false;
+
+  // Local state cache with optimistic updates and undo/redo
+  final PriceCalendarState _localState = PriceCalendarState();
 
   // Cached month list to avoid regenerating on every build
   late final List<DateTime> _cachedMonthList;
@@ -39,6 +51,23 @@ class _PriceListCalendarWidgetState
     _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
     // Generate month list once during initialization
     _cachedMonthList = _generateMonthList();
+    
+    // Listen to local state changes
+    _localState.addListener(_onLocalStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _localState.removeListener(_onLocalStateChanged);
+    _localState.dispose();
+    super.dispose();
+  }
+
+  void _onLocalStateChanged() {
+    // Rebuild when local state changes (optimistic updates, undo/redo)
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -55,6 +84,13 @@ class _PriceListCalendarWidgetState
           _buildHeader(isMobile),
 
           const SizedBox(height: 16),
+
+          // Undo/Redo bar
+          if (_localState.canUndo || _localState.canRedo)
+            _buildUndoRedoBar(),
+
+          if (_localState.canUndo || _localState.canRedo)
+            const SizedBox(height: 12),
 
           // Selected days counter (in bulk edit mode)
           if (_bulkEditMode && _selectedDays.isNotEmpty) ...[
@@ -78,6 +114,139 @@ class _PriceListCalendarWidgetState
             _buildBulkEditActions(isMobile),
         ],
       ),
+    );
+  }
+
+  Widget _buildUndoRedoBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.borderColor.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.history,
+            size: 18,
+            color: context.textColorSecondary,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _localState.lastActionDescription ?? 'Historija akcija',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.textColorSecondary,
+                  ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.undo, size: 20),
+            onPressed: _localState.canUndo ? () => _localState.undo() : null,
+            tooltip: 'Poništi (Ctrl+Z)',
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: const Icon(Icons.redo, size: 20),
+            onPressed: _localState.canRedo ? () => _localState.redo() : null,
+            tooltip: 'Ponovi (Ctrl+Shift+Z)',
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBulkEditActions(bool isMobile) {
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ElevatedButton.icon(
+            onPressed: _showBulkPriceDialog,
+            icon: const Icon(Icons.euro),
+            label: const Text('Postavi cijenu'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: context.primaryColor,
+              foregroundColor: Colors.white,
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _showBulkAvailabilityDialog,
+            icon: const Icon(Icons.block),
+            label: const Text('Dostupnost'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: _showBulkPriceDialog,
+            icon: const Icon(Icons.euro),
+            label: const Text('Postavi cijenu'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: context.primaryColor,
+              foregroundColor: Colors.white,
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _showBulkAvailabilityDialog,
+            icon: const Icon(Icons.block),
+            label: const Text('Dostupnost'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -139,10 +308,17 @@ class _PriceListCalendarWidgetState
                         );
                       }).toList(),
                       onChanged: (value) {
-                        if (value != null) {
+                        if (value != null && value != _selectedMonth) {
                           setState(() {
+                            _isLoadingMonthChange = true;
                             _selectedMonth = value;
                             _selectedDays.clear();
+                          });
+                          // Reset loading state after month data loads
+                          Future.microtask(() {
+                            if (mounted) {
+                              setState(() => _isLoadingMonthChange = false);
+                            }
                           });
                         }
                       },
@@ -167,10 +343,7 @@ class _PriceListCalendarWidgetState
                             ? context.primaryColor
                             : null,
                         side: _bulkEditMode
-                            ? BorderSide(
-                                color: context.primaryColor,
-                                width: 2,
-                              )
+                            ? BorderSide(color: context.primaryColor, width: 2)
                             : null,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -201,10 +374,17 @@ class _PriceListCalendarWidgetState
                           );
                         }).toList(),
                         onChanged: (value) {
-                          if (value != null) {
+                          if (value != null && value != _selectedMonth) {
                             setState(() {
+                              _isLoadingMonthChange = true;
                               _selectedMonth = value;
                               _selectedDays.clear();
+                            });
+                            // Reset loading state after month data loads
+                            Future.microtask(() {
+                              if (mounted) {
+                                setState(() => _isLoadingMonthChange = false);
+                              }
                             });
                           }
                         },
@@ -232,10 +412,7 @@ class _PriceListCalendarWidgetState
                             ? context.primaryColor
                             : null,
                         side: _bulkEditMode
-                            ? BorderSide(
-                                color: context.primaryColor,
-                                width: 2,
-                              )
+                            ? BorderSide(color: context.primaryColor, width: 2)
                             : null,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
@@ -345,10 +522,7 @@ class _PriceListCalendarWidgetState
             label: const Text('Deselektuj sve'),
             style: OutlinedButton.styleFrom(
               foregroundColor: context.textColorSecondary,
-              side: BorderSide(
-                color: context.borderColor,
-                width: 1.5,
-              ),
+              side: BorderSide(color: context.borderColor, width: 1.5),
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -431,80 +605,101 @@ class _PriceListCalendarWidgetState
                   const SizedBox(height: 8),
 
                   // Calendar grid with dynamic height
-                  pricesAsync.when(
+                  _isLoadingMonthChange
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        )
+                      : pricesAsync.when(
                     data: (priceMap) {
+                      // Update local cache with server data
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _localState.setMonthPrices(_selectedMonth, priceMap);
+                      });
+
+                      // Use local cache for display (supports optimistic updates)
+                      final displayMap = _localState.getMonthPrices(_selectedMonth) ?? priceMap;
+
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 7,
-                              mainAxisSpacing: 8,
-                              crossAxisSpacing: 8,
-                              childAspectRatio:
-                                  aspectRatio, // Dynamic aspect ratio
-                            ),
-                        itemCount: firstDayOfWeek - 1 + daysInMonth,
-                          itemBuilder: (context, index) {
-                            if (index < firstDayOfWeek - 1) {
-                              // Empty cell before first day
-                              return const SizedBox.shrink();
-                            }
-
-                            final day = index - (firstDayOfWeek - 1) + 1;
-                            final date = DateTime(
-                              _selectedMonth.year,
-                              _selectedMonth.month,
-                              day,
-                            );
-
-                            return _buildDayCell(
-                              date,
-                              priceMap,
-                              isMobile,
-                              isSmallMobile,
-                            );
-                          },
-                        );
-                      },
-                      loading: () => Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            context.primaryColor,
-                          ),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 7,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                          childAspectRatio: aspectRatio,
                         ),
-                      ),
-                      error: (error, stack) => Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 48,
-                                color: context.errorColor,
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Greška pri učitavanju cijena',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: context.errorColor,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                error.toString(),
-                                style: const TextStyle(fontSize: 12),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
+                        itemCount: firstDayOfWeek - 1 + daysInMonth,
+                        itemBuilder: (context, index) {
+                          if (index < firstDayOfWeek - 1) {
+                            return const SizedBox.shrink();
+                          }
+
+                          final day = index - (firstDayOfWeek - 1) + 1;
+                          final date = DateTime(
+                            _selectedMonth.year,
+                            _selectedMonth.month,
+                            day,
+                          );
+
+                          // Use extracted CalendarDayCell component
+                          return CalendarDayCell(
+                            date: date,
+                            priceData: displayMap[DateTime(date.year, date.month, date.day)],
+                            basePrice: widget.unit.pricePerNight,
+                            isSelected: _selectedDays.contains(date),
+                            isBulkEditMode: _bulkEditMode,
+                            onTap: () => _onDayCellTap(date),
+                            isMobile: isMobile,
+                            isSmallMobile: isSmallMobile,
+                          );
+                        },
+                      );
+                    },
+                    loading: () => Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ),
+                    error: (error, stack) => Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Greška pri učitavanju cijena',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              error.toString(),
+                              style: const TextStyle(fontSize: 12),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -534,294 +729,19 @@ class _PriceListCalendarWidgetState
     );
   }
 
-  Widget _buildDayCell(
-    DateTime date,
-    Map<DateTime, DailyPriceModel> priceMap,
-    bool isMobile,
-    bool isSmallMobile,
-  ) {
-    final isSelected = _selectedDays.contains(date);
-    final isToday =
-        DateTime.now().year == date.year &&
-        DateTime.now().month == date.month &&
-        DateTime.now().day == date.day;
-    final isWeekend =
-        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
-
-    // Get price data from Firestore or use base price
-    final dateKey = DateTime(date.year, date.month, date.day);
-    final priceData = priceMap[dateKey];
-    final hasPrice = priceData != null;
-    final isAvailable = priceData?.available ?? true;
-
-    // Extract prices safely without null assertions
-    final weekendPrice = priceData?.weekendPrice;
-    final regularPrice = priceData?.price;
-
-    // IMPORTANT: Use weekend price on weekends if it's set, otherwise use base price
-    // Use safe null-aware operators instead of dangerous double assertion (!!)
-    final price = (isWeekend && weekendPrice != null)
-        ? weekendPrice
-        : (regularPrice ?? widget.unit.pricePerNight);
-
-    final hasWeekendPrice = weekendPrice != null;
-
-    final blockCheckIn = priceData?.blockCheckIn ?? false;
-    final blockCheckOut = priceData?.blockCheckOut ?? false;
-    final notes = priceData?.notes;
-    final hasRestrictions =
-        blockCheckIn ||
-        blockCheckOut ||
-        (priceData?.minNightsOnArrival != null);
-
-    return InkWell(
-      onTap: () {
-        if (_bulkEditMode) {
-          setState(() {
-            if (isSelected) {
-              _selectedDays.remove(date);
-            } else {
-              _selectedDays.add(date);
-            }
-          });
+  // Handle day cell tap - bulk edit or single edit
+  void _onDayCellTap(DateTime date) {
+    if (_bulkEditMode) {
+      setState(() {
+        if (_selectedDays.contains(date)) {
+          _selectedDays.remove(date);
         } else {
-          _showPriceEditDialog(date);
+          _selectedDays.add(date);
         }
-      },
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isSelected
-              ? context.primaryColor.withValues(alpha: 0.2)
-              : !isAvailable
-              ? context.surfaceVariantColor.withValues(alpha: 0.5) // Nedostupno
-              : hasWeekendPrice && isWeekend
-              ? context.secondaryColor.withValues(alpha: 0.1) // Vikend cijena
-              : hasPrice
-              ? context.primaryColor.withValues(alpha: 0.08) // Custom cijena
-              : hasRestrictions
-              ? context.warningColor.withValues(alpha: 0.1) // Restrikcije
-              : null, // Base price
-          border: Border.all(
-            color: isSelected
-                ? context.primaryColor
-                : isToday
-                ? context.primaryColor.withValues(alpha: 0.5)
-                : hasRestrictions
-                ? context.warningColor.withValues(alpha: 0.6)
-                : context.borderColor,
-            width: isSelected || hasRestrictions ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: EdgeInsets.all(isSmallMobile ? 2 : (isMobile ? 3 : 4)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Day number
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      '${date.day}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: isToday
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontSize: isSmallMobile ? 9 : (isMobile ? 10 : null),
-                        color: !isAvailable ? context.textColorTertiary : null,
-                      ),
-                    ),
-                  ),
-                ),
-                if (_bulkEditMode && isSelected)
-                  Icon(
-                    Icons.check_circle,
-                    size: isSmallMobile ? 12 : (isMobile ? 14 : 16),
-                    color: context.primaryColor,
-                  ),
-              ],
-            ),
-
-            // Price
-            Flexible(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      '€${price.toStringAsFixed(0)}',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: isSmallMobile ? 11 : (isMobile ? 12 : null),
-                        color: !isAvailable
-                            ? context.textColorTertiary
-                            : hasWeekendPrice && isWeekend
-                            ? context.secondaryColor
-                            : hasPrice
-                            ? context.primaryColor
-                            : context.textColorSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  // Hide "base" label on very small screens to save space
-                  if (!hasPrice && isAvailable && !isSmallMobile)
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'base',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: isMobile ? 7 : 8,
-                          color: context.textColorTertiary,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-            // Status indicators - make more compact on mobile
-            if (blockCheckIn || blockCheckOut || notes != null)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (blockCheckIn)
-                    Icon(
-                      Icons.login,
-                      size: isSmallMobile ? 10 : (isMobile ? 11 : 12),
-                      color: context.errorColor,
-                    ),
-                  if (blockCheckIn && blockCheckOut)
-                    SizedBox(width: isSmallMobile ? 1 : 2),
-                  if (blockCheckOut)
-                    Icon(
-                      Icons.logout,
-                      size: isSmallMobile ? 10 : (isMobile ? 11 : 12),
-                      color: context.errorColor,
-                    ),
-                  if ((blockCheckIn || blockCheckOut) &&
-                      notes != null &&
-                      notes.isNotEmpty)
-                    SizedBox(width: isSmallMobile ? 1 : 2),
-                  if (notes case final notesText?)
-                    GestureDetector(
-                      onTap: () => _showNotesDialog(context, date, notesText),
-                      child: Tooltip(
-                        message: notesText.length > 50
-                            ? '${notesText.substring(0, 47)}...'
-                            : notesText,
-                        preferBelow: false,
-                        child: Icon(
-                          Icons.notes,
-                          size: isSmallMobile ? 10 : (isMobile ? 11 : 12),
-                          color: context.warningColor,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBulkEditActions(bool isMobile) {
-    if (isMobile) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ElevatedButton.icon(
-            onPressed: _showBulkPriceDialog,
-            icon: const Icon(Icons.euro),
-            label: const Text('Postavi cijenu'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: context.primaryColor,
-              foregroundColor: Colors.white,
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: _showBulkAvailabilityDialog,
-            icon: const Icon(Icons.block),
-            label: const Text('Dostupnost'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-        ],
-      );
+      });
+    } else {
+      _showPriceEditDialog(date);
     }
-
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _showBulkPriceDialog,
-            icon: const Icon(Icons.euro),
-            label: const Text('Postavi cijenu'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: context.primaryColor,
-              foregroundColor: Colors.white,
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: _showBulkAvailabilityDialog,
-            icon: const Icon(Icons.block),
-            label: const Text('Dostupnost'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
   }
 
   void _showPriceEditDialog(DateTime date) async {
@@ -870,6 +790,7 @@ class _PriceListCalendarWidgetState
 
     // Processing state to prevent duplicate button clicks
     bool isProcessing = false;
+    DateTime? lastClickTime;
 
     // Show dialog and dispose controllers when it closes
     unawaited(
@@ -889,9 +810,7 @@ class _PriceListCalendarWidgetState
                 isMobile ? 12 : 20,
               ),
               content: SizedBox(
-                height: isMobile
-                    ? screenHeight * 0.65
-                    : screenHeight * 0.7,
+                height: isMobile ? screenHeight * 0.72 : screenHeight * 0.7,
                 width: isMobile ? screenWidth * 0.9 : 600,
                 child: SingleChildScrollView(
                   child: Column(
@@ -1101,85 +1020,85 @@ class _PriceListCalendarWidgetState
                     onPressed: isProcessing
                         ? null
                         : () async {
-                      final navigator = Navigator.of(context);
-                      final messenger = ScaffoldMessenger.of(context);
+                            final navigator = Navigator.of(context);
+                            final messenger = ScaffoldMessenger.of(context);
 
-                      // Show confirmation dialog before deleting
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Potvrda brisanja'),
-                          content: const Text(
-                            'Da li ste sigurni da želite obrisati custom cijenu? '
-                            'Datum će biti vraćen na osnovnu cijenu.',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Odustani'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              style: TextButton.styleFrom(
-                                foregroundColor: AppColors.error,
+                            // Show confirmation dialog before deleting
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Potvrda brisanja'),
+                                content: const Text(
+                                  'Da li ste sigurni da želite obrisati custom cijenu? '
+                                  'Datum će biti vraćen na osnovnu cijenu.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(false),
+                                    child: const Text('Odustani'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AppColors.error,
+                                    ),
+                                    child: const Text('Obriši'),
+                                  ),
+                                ],
                               ),
-                              child: const Text('Obriši'),
-                            ),
-                          ],
-                        ),
-                      );
+                            );
 
-                      if (confirmed != true) return;
+                            if (confirmed != true) return;
 
-                      setState(() => isProcessing = true);
+                            setState(() => isProcessing = true);
 
-                      // Delete custom price (revert to base price)
-                      try {
-                        final repository = ref.read(
-                          dailyPriceRepositoryProvider,
-                        );
-                        await repository.deletePriceForDate(
-                          unitId: widget.unit.id,
-                          date: date,
-                        );
+                            // Delete custom price (revert to base price)
+                            try {
+                              final repository = ref.read(
+                                dailyPriceRepositoryProvider,
+                              );
+                              await repository.deletePriceForDate(
+                                unitId: widget.unit.id,
+                                date: date,
+                              );
 
-                        // Wait for Firestore to propagate changes to prevent race condition
-                        // This small delay ensures data is available when provider refetches
-                        await Future.delayed(const Duration(milliseconds: 100));
+                              // This small delay ensures data is available when provider refetches
 
-                        // Invalidate provider to trigger reload with fresh data
-                        ref.invalidate(
-                          monthlyPricesProvider(
-                            MonthlyPricesParams(
-                              unitId: widget.unit.id,
-                              month: DateTime(date.year, date.month),
-                            ),
-                          ),
-                        );
+                              // Invalidate provider to trigger reload with fresh data
+                              ref.invalidate(
+                                monthlyPricesProvider(
+                                  MonthlyPricesParams(
+                                    unitId: widget.unit.id,
+                                    month: DateTime(date.year, date.month),
+                                  ),
+                                ),
+                              );
 
-                        if (mounted) {
-                          navigator.pop();
-                          messenger.showSnackBar(
-                            const SnackBar(
-                              content: Text('Vraćeno na osnovnu cijenu'),
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text('Greška: $e'),
-                              backgroundColor: AppColors.error,
-                            ),
-                          );
-                        }
-                      } finally {
-                        if (mounted) {
-                          setState(() => isProcessing = false);
-                        }
-                      }
-                    },
+                              if (mounted) {
+                                navigator.pop();
+                                messenger.showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Vraćeno na osnovnu cijenu'),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text('Greška: $e'),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() => isProcessing = false);
+                              }
+                            }
+                          },
                     child: const Text('Obriši'),
                   ),
                 TextButton(
@@ -1192,146 +1111,201 @@ class _PriceListCalendarWidgetState
                   onPressed: isProcessing
                       ? null
                       : () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    final navigator = Navigator.of(context);
+                          // Debounce: prevent duplicate clicks within 2 seconds
+                          final now = DateTime.now();
+                          if (lastClickTime != null &&
+                              now.difference(lastClickTime!).inSeconds < 2) {
+                            return;
+                          }
+                          lastClickTime = now;
 
-                    // Save price data
-                    final priceText = priceController.text.trim();
-                    if (priceText.isEmpty) {
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text('Unesite cijenu')),
-                      );
-                      return;
-                    }
+                          final messenger = ScaffoldMessenger.of(context);
+                          final navigator = Navigator.of(context);
 
-                    final price = double.tryParse(priceText);
-                    if (price == null || price <= 0) {
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('Cijena mora biti veća od 0'),
-                        ),
-                      );
-                      return;
-                    }
+                          // Save price data
+                          final priceText = priceController.text.trim();
+                          if (priceText.isEmpty) {
+                            messenger.showSnackBar(
+                              const SnackBar(content: Text('Unesite cijenu')),
+                            );
+                            return;
+                          }
 
-                    // Validate optional fields for consistency
-                    final weekendPriceText = weekendPriceController.text.trim();
-                    if (weekendPriceText.isNotEmpty) {
-                      final weekendPrice = double.tryParse(weekendPriceText);
-                      if (weekendPrice == null || weekendPrice <= 0) {
-                        messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('Vikend cijena mora biti veća od 0'),
-                          ),
-                        );
-                        return;
-                      }
-                    }
+                          final price = double.tryParse(priceText);
+                          if (price == null || price <= 0) {
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text('Cijena mora biti veća od 0'),
+                              ),
+                            );
+                            return;
+                          }
 
-                    final minNightsText = minNightsController.text.trim();
-                    if (minNightsText.isNotEmpty) {
-                      final minNights = int.tryParse(minNightsText);
-                      if (minNights == null || minNights <= 0) {
-                        messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('Min. noći mora biti veće od 0'),
-                          ),
-                        );
-                        return;
-                      }
-                    }
+                          // Validate optional fields for consistency
+                          final weekendPriceText = weekendPriceController.text
+                              .trim();
+                          if (weekendPriceText.isNotEmpty) {
+                            final weekendPrice = double.tryParse(
+                              weekendPriceText,
+                            );
+                            if (weekendPrice == null || weekendPrice <= 0) {
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Vikend cijena mora biti veća od 0',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                          }
 
-                    final maxNightsText = maxNightsController.text.trim();
-                    if (maxNightsText.isNotEmpty) {
-                      final maxNights = int.tryParse(maxNightsText);
-                      if (maxNights == null || maxNights <= 0) {
-                        messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('Max. noći mora biti veće od 0'),
-                          ),
-                        );
-                        return;
-                      }
-                    }
+                          final minNightsText = minNightsController.text.trim();
+                          if (minNightsText.isNotEmpty) {
+                            final minNights = int.tryParse(minNightsText);
+                            if (minNights == null || minNights <= 0) {
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Min. noći mora biti veće od 0',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                          }
 
-                    setState(() => isProcessing = true);
+                          final maxNightsText = maxNightsController.text.trim();
+                          if (maxNightsText.isNotEmpty) {
+                            final maxNights = int.tryParse(maxNightsText);
+                            if (maxNights == null || maxNights <= 0) {
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Max. noći mora biti veće od 0',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                          }
 
-                    try {
-                      final repository = ref.read(dailyPriceRepositoryProvider);
+                          setState(() => isProcessing = true);
 
-                      // Parse optional fields after validation
-                      final weekendPrice = weekendPriceText.isEmpty
-                          ? null
-                          : double.tryParse(weekendPriceText);
-                      final minNights = minNightsText.isEmpty
-                          ? null
-                          : int.tryParse(minNightsText);
-                      final maxNights = maxNightsText.isEmpty
-                          ? null
-                          : int.tryParse(maxNightsText);
+                          try {
+                            final repository = ref.read(
+                              dailyPriceRepositoryProvider,
+                            );
 
-                      // Create price model with all fields
-                      final priceModel = DailyPriceModel(
-                        id: existingPrice?.id ?? '',
-                        unitId: widget.unit.id,
-                        date: date,
-                        price: price,
-                        available: available,
-                        blockCheckIn: blockCheckIn,
-                        blockCheckOut: blockCheckOut,
-                        weekendPrice: weekendPrice,
-                        minNightsOnArrival: minNights,
-                        maxNightsOnArrival: maxNights,
-                        isImportant: isImportant,
-                        notes: notesController.text.trim().isEmpty
-                            ? null
-                            : notesController.text.trim(),
-                        createdAt: existingPrice?.createdAt ?? DateTime.now(),
-                        updatedAt: DateTime.now(),
-                      );
+                            // Parse optional fields after validation
+                            final weekendPrice = weekendPriceText.isEmpty
+                                ? null
+                                : double.tryParse(weekendPriceText);
+                            final minNights = minNightsText.isEmpty
+                                ? null
+                                : int.tryParse(minNightsText);
+                            final maxNights = maxNightsText.isEmpty
+                                ? null
+                                : int.tryParse(maxNightsText);
 
-                      // Save the full price model with all BedBooking fields
-                      await repository.setPriceForDate(
-                        unitId: widget.unit.id,
-                        date: date,
-                        price: price,
-                        priceModel: priceModel,
-                      );
+                            // Create price model with all fields
+                            final priceModel = DailyPriceModel(
+                              id: existingPrice?.id ?? '',
+                              unitId: widget.unit.id,
+                              date: date,
+                              price: price,
+                              available: available,
+                              blockCheckIn: blockCheckIn,
+                              blockCheckOut: blockCheckOut,
+                              weekendPrice: weekendPrice,
+                              minNightsOnArrival: minNights,
+                              maxNightsOnArrival: maxNights,
+                              isImportant: isImportant,
+                              notes: notesController.text.trim().isEmpty
+                                  ? null
+                                  : notesController.text.trim(),
+                              createdAt:
+                                  existingPrice?.createdAt ?? DateTime.now(),
+                              updatedAt: DateTime.now(),
+                            );
 
-                      // Wait for Firestore to propagate changes to prevent race condition
-                      await Future.delayed(const Duration(milliseconds: 100));
+                            // OPTIMISTIC UPDATE: Update local cache immediately
+                            final dateKey = DateTime(date.year, date.month, date.day);
+                            _localState.updateDateOptimistically(
+                              _selectedMonth,
+                              date,
+                              priceModel,
+                              existingPrice,
+                            );
 
-                      // Invalidate provider to trigger reload with fresh data
-                      ref.invalidate(
-                        monthlyPricesProvider(
-                          MonthlyPricesParams(
-                            unitId: widget.unit.id,
-                            month: DateTime(date.year, date.month),
-                          ),
-                        ),
-                      );
+                            // Close dialog and show feedback immediately
+                            if (mounted) {
+                              navigator.pop();
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text('Cijena spremljena'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
 
-                      if (mounted) {
-                        navigator.pop();
-                        messenger.showSnackBar(
-                          const SnackBar(content: Text('Cijena spremljena')),
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text('Greška: $e'),
-                            backgroundColor: context.errorColor,
-                          ),
-                        );
-                      }
-                    } finally {
-                      if (mounted) {
-                        setState(() => isProcessing = false);
-                      }
-                    }
-                  },
+                            // Save to server in background
+                            try {
+                              await repository.setPriceForDate(
+                                unitId: widget.unit.id,
+                                date: date,
+                                price: price,
+                                priceModel: priceModel,
+                              );
+
+                              // Refresh from server to ensure consistency
+                              ref.invalidate(
+                                monthlyPricesProvider(
+                                  MonthlyPricesParams(
+                                    unitId: widget.unit.id,
+                                    month: DateTime(date.year, date.month),
+                                  ),
+                                ),
+                              );
+                            } catch (e) {
+                              // ROLLBACK on error
+                              if (existingPrice != null) {
+                                _localState.updateDateOptimistically(
+                                  _selectedMonth,
+                                  date,
+                                  existingPrice,
+                                  priceModel,
+                                );
+                              }
+
+                              if (mounted) {
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text('Greška pri spremanju: $e'),
+                                    backgroundColor: context.errorColor,
+                                    action: SnackBarAction(
+                                      label: 'Poništi',
+                                      onPressed: () => _localState.undo(),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text('Greška validacije: $e'),
+                                  backgroundColor: context.errorColor,
+                                ),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() => isProcessing = false);
+                            }
+                          }
+                        },
                   child: isProcessing
                       ? const SizedBox(
                           width: 16,
@@ -1358,6 +1332,7 @@ class _PriceListCalendarWidgetState
   void _showBulkPriceDialog() {
     final priceController = TextEditingController();
     bool isProcessing = false;
+    DateTime? lastClickTime;
 
     showDialog(
       context: context,
@@ -1382,9 +1357,9 @@ class _PriceListCalendarWidgetState
                 const SizedBox(height: 16),
                 Text(
                   'Postavit će se cijena za sve odabrane datume',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.textColorSecondary,
+                  ),
                 ),
               ],
             ),
@@ -1399,6 +1374,13 @@ class _PriceListCalendarWidgetState
                 onPressed: isProcessing
                     ? null
                     : () async {
+                        // Debounce: prevent duplicate clicks within 2 seconds
+                        final now = DateTime.now();
+                        if (lastClickTime != null &&
+                            now.difference(lastClickTime!).inSeconds < 2) {
+                          return;
+                        }
+                        lastClickTime = now;
                         final messenger = ScaffoldMessenger.of(context);
                         final navigator = Navigator.of(context);
 
@@ -1420,30 +1402,98 @@ class _PriceListCalendarWidgetState
                           return;
                         }
 
+                        // Show confirmation dialog before bulk update
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Potvrda'),
+                            content: Text(
+                              'Jeste li sigurni da želite postaviti cijenu €${price.toStringAsFixed(0)} za ${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan' : 'dana'}?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('Otkaži'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                ),
+                                child: const Text('Potvrdi'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirmed != true) return;
+
                         setState(() => isProcessing = true);
 
+                        // Get current prices for rollback
+                        final currentPrices = <DateTime, DailyPriceModel>{};
+                        final newPrices = <DateTime, DailyPriceModel>{};
+                        final cachedMonth = _localState.getMonthPrices(_selectedMonth);
+
+                        for (final date in _selectedDays) {
+                          final dateKey = DateTime(date.year, date.month, date.day);
+                          final existing = cachedMonth?[dateKey];
+                          
+                          if (existing != null) {
+                            currentPrices[dateKey] = existing;
+                            newPrices[dateKey] = existing.copyWith(price: price);
+                          } else {
+                            // Create new price entry
+                            newPrices[dateKey] = DailyPriceModel(
+                              id: '',
+                              unitId: widget.unit.id,
+                              date: date,
+                              price: price,
+                              available: true,
+                              createdAt: DateTime.now(),
+                              updatedAt: DateTime.now(),
+                            );
+                          }
+                        }
+
+                        // OPTIMISTIC UPDATE: Update UI immediately
+                        _localState.updateDatesOptimistically(
+                          _selectedMonth,
+                          _selectedDays.toList(),
+                          currentPrices,
+                          newPrices,
+                        );
+
+                        final count = _selectedDays.length;
+
+                        // Close dialog and clear selection immediately
+                        if (mounted) {
+                          navigator.pop();
+                          _selectedDays.clear();
+                          this.setState(() => isProcessing = false);
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text('Ažurirano $count cijena'),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+
+                        // Save to server in background
                         try {
                           final repository = ref.read(
                             dailyPriceRepositoryProvider,
                           );
 
-                          // Use BATCH operation for efficiency (1 API call vs N calls)
-                          // Only update 'price' field, preserve other data
                           await repository.bulkPartialUpdate(
                             unitId: widget.unit.id,
                             dates: _selectedDays.toList(),
-                            partialData: {
-                              'price': price,
-                            },
+                            partialData: {'price': price},
                           );
 
-                          // Save count before clearing for snackbar message
-                          final count = _selectedDays.length;
-
-                          // Wait for Firestore to propagate changes to prevent race condition
-                          await Future.delayed(const Duration(milliseconds: 150));
-
-                          // Invalidate provider to trigger reload with fresh data
+                          // Refresh from server
                           ref.invalidate(
                             monthlyPricesProvider(
                               MonthlyPricesParams(
@@ -1452,33 +1502,21 @@ class _PriceListCalendarWidgetState
                               ),
                             ),
                           );
-
-                          if (mounted) {
-                            navigator.pop();
-                            // Clear selection AFTER dialog closes
-                            _selectedDays.clear();
-                            // Trigger parent widget rebuild
-                            this.setState(() {});
-                            messenger.showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Uspješno ažurirano $count cijena',
-                                ),
-                              ),
-                            );
-                          }
                         } catch (e) {
+                          // ROLLBACK on error
+                          _localState.rollbackUpdate(_selectedMonth, currentPrices);
+
                           if (mounted) {
                             messenger.showSnackBar(
                               SnackBar(
                                 content: Text('Greška: $e'),
                                 backgroundColor: AppColors.error,
+                                action: SnackBarAction(
+                                  label: 'Poništi',
+                                  onPressed: () => _localState.undo(),
+                                ),
                               ),
                             );
-                          }
-                        } finally {
-                          if (mounted) {
-                            setState(() => isProcessing = false);
                           }
                         }
                       },
@@ -1537,16 +1575,11 @@ class _PriceListCalendarWidgetState
                             await repository.bulkPartialUpdate(
                               unitId: widget.unit.id,
                               dates: _selectedDays.toList(),
-                              partialData: {
-                                'available': true,
-                              },
+                              partialData: {'available': true},
                             );
 
                             // Save count before clearing for snackbar message
                             final count = _selectedDays.length;
-
-                            // Wait for Firestore to propagate changes to prevent race condition
-                            await Future.delayed(const Duration(milliseconds: 150));
 
                             // Invalidate provider to trigger reload with fresh data
                             ref.invalidate(
@@ -1606,6 +1639,36 @@ class _PriceListCalendarWidgetState
                   onPressed: isProcessing
                       ? null
                       : () async {
+                          // Show confirmation dialog before blocking dates
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Potvrda'),
+                              content: Text(
+                                'Jeste li sigurni da želite blokirati ${_selectedDays.length} ${_selectedDays.length == 1 ? 'dan' : 'dana'}?\n\n'
+                                'Ovi datumi će biti označeni kao nedostupni.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
+                                  child: const Text('Otkaži'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: context.errorColor,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: const Text('Blokiraj'),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirmed != true) return;
+
                           final navigator = Navigator.of(context);
                           final messenger = ScaffoldMessenger.of(context);
 
@@ -1628,9 +1691,6 @@ class _PriceListCalendarWidgetState
 
                             // Save count before clearing for snackbar message
                             final count = _selectedDays.length;
-
-                            // Wait for Firestore to propagate changes to prevent race condition
-                            await Future.delayed(const Duration(milliseconds: 150));
 
                             // Invalidate provider to trigger reload with fresh data
                             ref.invalidate(
@@ -1710,9 +1770,6 @@ class _PriceListCalendarWidgetState
                               },
                             );
 
-                            // Wait for Firestore to propagate changes to prevent race condition
-                            await Future.delayed(const Duration(milliseconds: 150));
-
                             // Invalidate provider to trigger reload with fresh data
                             ref.invalidate(
                               monthlyPricesProvider(
@@ -1782,9 +1839,6 @@ class _PriceListCalendarWidgetState
                                 'block_checkout': true, // Block check-out
                               },
                             );
-
-                            // Wait for Firestore to propagate changes to prevent race condition
-                            await Future.delayed(const Duration(milliseconds: 150));
 
                             // Invalidate provider to trigger reload with fresh data
                             ref.invalidate(

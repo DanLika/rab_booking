@@ -275,6 +275,7 @@ export const createBookingAtomic = onCall(async (request) => {
         paymentStatus,
         accessToken, // Include plaintext token for email
         icalExportEnabled, // For widget to show "Add to Calendar" button
+        booking: bookingData, // Include full booking data for confirmation screen
       };
     });
 

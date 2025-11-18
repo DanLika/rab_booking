@@ -638,10 +638,24 @@ class FirebaseBookingCalendarRepository {
         try {
           final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
 
-          // Overlap logic: bookings overlap if:
-          // (bookingCheckOut > checkIn) AND (bookingCheckIn < checkOut)
-          if (booking.checkOut.isAfter(checkIn) &&
-              booking.checkIn.isBefore(checkOut)) {
+          // Normalize booking dates to midnight (remove time component)
+          // to match turnover day logic: checkOut day can be checkIn for next booking
+          final bookingCheckIn = DateTime(
+            booking.checkIn.year,
+            booking.checkIn.month,
+            booking.checkIn.day,
+          );
+          final bookingCheckOut = DateTime(
+            booking.checkOut.year,
+            booking.checkOut.month,
+            booking.checkOut.day,
+          );
+
+          // Overlap logic with turnover day support:
+          // Conflict exists if: (bookingCheckOut > checkIn) AND (bookingCheckIn < checkOut)
+          // Using > (not >=) allows same-day turnover (checkOut = checkIn is OK)
+          if (bookingCheckOut.isAfter(checkIn) &&
+              bookingCheckIn.isBefore(checkOut)) {
             LoggingService.log(
               '❌ Booking conflict found: ${booking.id}',
               tag: 'AVAILABILITY_CHECK',
@@ -665,11 +679,25 @@ class FirebaseBookingCalendarRepository {
       for (final doc in icalEventsSnapshot.docs) {
         try {
           final data = doc.data();
-          final eventStartDate = (data['start_date'] as Timestamp).toDate();
-          final eventEndDate = (data['end_date'] as Timestamp).toDate();
+          final eventStartDateRaw = (data['start_date'] as Timestamp).toDate();
+          final eventEndDateRaw = (data['end_date'] as Timestamp).toDate();
+
+          // Normalize iCal event dates to midnight (remove time component)
+          // to match turnover day logic: checkOut day can be checkIn for next booking
+          final eventStartDate = DateTime(
+            eventStartDateRaw.year,
+            eventStartDateRaw.month,
+            eventStartDateRaw.day,
+          );
+          final eventEndDate = DateTime(
+            eventEndDateRaw.year,
+            eventEndDateRaw.month,
+            eventEndDateRaw.day,
+          );
 
           // Client-side filtering: Check if events overlap with the date range
-          // Overlap logic: (eventEndDate > checkIn) AND (eventStartDate < checkOut)
+          // Overlap logic with turnover day support:
+          // Using > (not >=) allows same-day turnover (checkOut = checkIn is OK)
           if (eventEndDate.isAfter(checkIn) &&
               eventStartDate.isBefore(checkOut)) {
             LoggingService.log(

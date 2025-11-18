@@ -109,17 +109,20 @@ class OwnerRoutes {
   // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
   // iCal routes (NEW structure - organized under /ical/)
-  static const String icalImport = '/owner/integrations/ical/import';   // iCal Sync Settings (Import)
-  static const String icalExportList = '/owner/integrations/ical/export-list'; // iCal Export List (select unit)
-  static const String icalExport = '/owner/integrations/ical/export';   // iCal Export (Debug)
-  static const String icalGuide = '/owner/guides/ical';                 // iCal Guide
+  static const String icalImport =
+      '/owner/integrations/ical/import'; // iCal Sync Settings (Import)
+  static const String icalExportList =
+      '/owner/integrations/ical/export-list'; // iCal Export List (select unit)
+  static const String icalExport =
+      '/owner/integrations/ical/export'; // iCal Export (Debug)
+  static const String icalGuide = '/owner/guides/ical'; // iCal Guide
   // DEPRECATED routes - will be removed in future versions
   @Deprecated('Use icalImport instead')
   static const String icalIntegration = '/owner/integrations/ical';
   @Deprecated('Use icalExport instead')
   static const String icalDebug = '/owner/debug/ical';
   @Deprecated('Use icalGuide instead')
-  static const String guideIcal = '/owner/guides/ical';  // Same path as icalGuide
+  static const String guideIcal = '/owner/guides/ical'; // Same path as icalGuide
   // Guides
   static const String guideStripe = '/owner/guides/stripe';
   static const String guideEmbedWidget = '/owner/guides/embed-widget';
@@ -135,25 +138,47 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     // No initialLocation - let GoRouter read from URL (important for /calendar widget)
     debugLogDiagnostics: true,
-    refreshListenable: GoRouterRefreshStream(ref.watch(firebaseAuthProvider).authStateChanges()),
+    refreshListenable: GoRouterRefreshStream(
+      ref.watch(firebaseAuthProvider).authStateChanges(),
+    ),
     redirect: (context, state) {
       // Use the watched authState from above
       final isAuthenticated = authState.isAuthenticated;
       final requiresOnboarding = authState.requiresOnboarding;
-      final isLoggingIn = state.matchedLocation == OwnerRoutes.login ||
+      final isLoggingIn =
+          state.matchedLocation == OwnerRoutes.login ||
           state.matchedLocation == OwnerRoutes.register ||
           state.matchedLocation == OwnerRoutes.forgotPassword;
 
       LoggingService.log('redirect called:', tag: 'ROUTER');
-      LoggingService.log('  - matchedLocation: ${state.matchedLocation}', tag: 'ROUTER');
-      LoggingService.log('  - isAuthenticated: $isAuthenticated', tag: 'ROUTER');
-      LoggingService.log('  - requiresOnboarding: $requiresOnboarding', tag: 'ROUTER');
-      LoggingService.log('  - firebaseUser: ${authState.firebaseUser?.uid}', tag: 'ROUTER');
-      LoggingService.log('  - userModel: ${authState.userModel?.id}', tag: 'ROUTER');
-      LoggingService.log('  - isLoading: ${authState.isLoading}', tag: 'ROUTER');
+      LoggingService.log(
+        '  - matchedLocation: ${state.matchedLocation}',
+        tag: 'ROUTER',
+      );
+      LoggingService.log(
+        '  - isAuthenticated: $isAuthenticated',
+        tag: 'ROUTER',
+      );
+      LoggingService.log(
+        '  - requiresOnboarding: $requiresOnboarding',
+        tag: 'ROUTER',
+      );
+      LoggingService.log(
+        '  - firebaseUser: ${authState.firebaseUser?.uid}',
+        tag: 'ROUTER',
+      );
+      LoggingService.log(
+        '  - userModel: ${authState.userModel?.id}',
+        tag: 'ROUTER',
+      );
+      LoggingService.log(
+        '  - isLoading: ${authState.isLoading}',
+        tag: 'ROUTER',
+      );
 
       // Allow public access to embed, booking, calendar, and view routes (no auth required)
-      final isPublicRoute = state.matchedLocation.startsWith('/embed/') ||
+      final isPublicRoute =
+          state.matchedLocation.startsWith('/embed/') ||
           state.matchedLocation.startsWith('/booking') ||
           state.matchedLocation == '/calendar' ||
           state.matchedLocation.startsWith('/view');
@@ -163,9 +188,13 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       }
 
       // Allow access to onboarding welcome screen (public - shown before auth)
-      final isOnboardingWelcome = state.matchedLocation == OwnerRoutes.onboardingWelcome;
+      final isOnboardingWelcome =
+          state.matchedLocation == OwnerRoutes.onboardingWelcome;
       if (isOnboardingWelcome) {
-        LoggingService.log('  → Allowing onboarding welcome (public)', tag: 'ROUTER');
+        LoggingService.log(
+          '  → Allowing onboarding welcome (public)',
+          tag: 'ROUTER',
+        );
         return null; // Allow access
       }
 
@@ -173,34 +202,53 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       if (state.matchedLocation == '/') {
         if (isAuthenticated) {
           if (requiresOnboarding) {
-            LoggingService.log('  → Redirecting / to onboarding wizard (authenticated, needs onboarding)', tag: 'ROUTER');
+            LoggingService.log(
+              '  → Redirecting / to onboarding wizard (authenticated, needs onboarding)',
+              tag: 'ROUTER',
+            );
             return OwnerRoutes.onboardingWizard;
           }
-          LoggingService.log('  → Redirecting / to overview (authenticated)', tag: 'ROUTER');
+          LoggingService.log(
+            '  → Redirecting / to overview (authenticated)',
+            tag: 'ROUTER',
+          );
           return OwnerRoutes.overview;
         } else {
-          LoggingService.log('  → Redirecting / to login (not authenticated)', tag: 'ROUTER');
+          LoggingService.log(
+            '  → Redirecting / to login (not authenticated)',
+            tag: 'ROUTER',
+          );
           return OwnerRoutes.login;
         }
       }
 
       // If authenticated and requires onboarding, redirect to wizard (except if already on wizard/success)
-      final isOnboardingRoute = state.matchedLocation == OwnerRoutes.onboardingWizard ||
+      final isOnboardingRoute =
+          state.matchedLocation == OwnerRoutes.onboardingWizard ||
           state.matchedLocation == OwnerRoutes.onboardingSuccess;
       if (isAuthenticated && requiresOnboarding && !isOnboardingRoute) {
-        LoggingService.log('  → Redirecting to onboarding wizard (needs onboarding)', tag: 'ROUTER');
+        LoggingService.log(
+          '  → Redirecting to onboarding wizard (needs onboarding)',
+          tag: 'ROUTER',
+        );
         return OwnerRoutes.onboardingWizard;
       }
 
       // Redirect to login if not authenticated and trying to access protected routes
       if (!isAuthenticated && !isLoggingIn && !isOnboardingWelcome) {
-        LoggingService.log('  → Redirecting to login (not authenticated)', tag: 'ROUTER');
+        LoggingService.log(
+          '  → Redirecting to login (not authenticated)',
+          tag: 'ROUTER',
+        );
         return OwnerRoutes.login;
       }
 
       // Redirect to overview if authenticated, doesn't need onboarding, and trying to access login
       if (isAuthenticated && !requiresOnboarding && isLoggingIn) {
-        LoggingService.log('  → Redirecting to overview (authenticated, was on login)', tag: 'ROUTER');
+        LoggingService.log(
+          '  → Redirecting to overview (authenticated, was on login)',
+          tag: 'ROUTER',
+        );
         return OwnerRoutes.overview;
       }
 
@@ -232,11 +280,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           final ref = state.uri.queryParameters['ref'];
           final email = state.uri.queryParameters['email'];
           final token = state.uri.queryParameters['token'];
-          return BookingViewScreen(
-            bookingRef: ref,
-            email: email,
-            token: token,
-          );
+          return BookingViewScreen(bookingRef: ref, email: email, token: token);
         },
         routes: [
           // Booking details sub-route
@@ -262,10 +306,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
                 );
               } else {
                 // Old format: BookingDetailsModel directly
-                return BookingDetailsScreen(
-                  booking: extra as dynamic,
-                  widgetSettings: null,
-                );
+                return BookingDetailsScreen(booking: extra as dynamic);
               }
             },
           ),
@@ -463,10 +504,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
             return const NotFoundScreen();
           }
 
-          return IcalExportScreen(
-            unit: unit,
-            propertyId: propertyId,
-          );
+          return IcalExportScreen(unit: unit, propertyId: propertyId);
         },
       ),
 
@@ -522,14 +560,10 @@ class PropertyEditLoader extends ConsumerWidget {
         }
         return PropertyFormScreen(property: property);
       },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Scaffold(
-        body: Center(
-          child: Text('Error loading property: $error'),
-        ),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, stack) =>
+          Scaffold(body: Center(child: Text('Error loading property: $error'))),
     );
   }
 }
@@ -551,14 +585,10 @@ class UnitEditLoader extends ConsumerWidget {
         }
         return UnitFormScreen(propertyId: unit.propertyId, unit: unit);
       },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Scaffold(
-        body: Center(
-          child: Text('Error loading unit: $error'),
-        ),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, stack) =>
+          Scaffold(body: Center(child: Text('Error loading unit: $error'))),
     );
   }
 }
@@ -580,14 +610,10 @@ class UnitPricingLoader extends ConsumerWidget {
         }
         return UnitPricingScreen(unit: unit);
       },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Scaffold(
-        body: Center(
-          child: Text('Error loading unit: $error'),
-        ),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, stack) =>
+          Scaffold(body: Center(child: Text('Error loading unit: $error'))),
     );
   }
 }
@@ -612,14 +638,10 @@ class WidgetSettingsLoader extends ConsumerWidget {
           unitId: unitId,
         );
       },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Scaffold(
-        body: Center(
-          child: Text('Error loading unit: $error'),
-        ),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, stack) =>
+          Scaffold(body: Center(child: Text('Error loading unit: $error'))),
     );
   }
 }

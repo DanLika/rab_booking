@@ -352,12 +352,28 @@ export const createBookingAtomic = onCall(async (request) => {
         });
 
         // Send "New Booking Received" email to owner
+        logInfo("[AtomicBooking] Attempting to send owner notification", {
+          ownerId,
+        });
+        
         const ownerDoc = await db.collection("users").doc(ownerId).get();
         const ownerData = ownerDoc.data();
-        if (ownerData?.email) {
+        
+        if (!ownerDoc.exists) {
+          logError("[AtomicBooking] Owner document not found", {ownerId});
+        } else if (!ownerData?.email) {
+          logError("[AtomicBooking] Owner email not found in document", {
+            ownerId,
+            ownerData: ownerData ? Object.keys(ownerData) : "null",
+          });
+        } else {
+          logInfo("[AtomicBooking] Sending owner notification to", {
+            email: ownerData.email,
+          });
+          
           await sendOwnerNotificationEmail(
             ownerData.email,
-            ownerData.displayName || "Owner",
+            ownerData.displayName || ownerData.first_name || "Owner",
             guestName,
             guestEmail,
             result.bookingReference,
@@ -376,7 +392,7 @@ export const createBookingAtomic = onCall(async (request) => {
     } catch (emailError) {
       // Log error but don't fail the booking
       logError(
-        "[AtomicBooking] Failed to send email",
+        "[AtomicBooking] Failed to send email (guest or owner)",
         emailError
       );
     }

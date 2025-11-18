@@ -4,6 +4,244 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🐛 Booking Widget - Auto-Open Pill Bar Fix
+
+**Datum: 2025-11-18**
+**Status: ✅ ZAVRŠENO - Pill bar više se ne otvara automatski nakon refresh-a**
+
+#### 📋 Problem
+
+Korisnici su prijavili da se booking flow (pill bar) automatski otvara nakon refresh-a stranice, čak i kada su ga prethodno zatvorili (kliknuli X button). Ovo je frustrirajuće UX jer korisnik očekuje da se UI ne mijenja nakon refresh-a.
+
+**Simptomi:**
+1. User selektuje datume u kalendaru → pill bar se pojavi ✅
+2. User zatvori pill bar (klik na X) → pill bar nestane ✅
+3. User refresh-uje stranicu → pill bar se PONOVO pojavi ❌
+4. **Problem:** Pill bar se otvara iako je user pokazao da ga ne želi
+
+**Root Cause:**
+- Form data persistence (`_loadFormData`) restore-uje `_checkIn` i `_checkOut` datume iz localStorage
+- Pill bar display logic: `if (_checkIn != null && _checkOut != null) → show pill bar`
+- **Missing:** Flag koji tracka da li je user zatvorio pill bar (dismissed state)
+
+---
+
+#### 🔧 Rješenje
+
+Implementiran dismissed state tracking sistem sa localStorage persistence.
+
+**Novi State Fields:**
+```dart
+bool _pillBarDismissed = false;              // Track if user clicked X button
+bool _hasInteractedWithBookingFlow = false;   // Track if user clicked Reserve
+```
+
+**Display Logic (Before):**
+```dart
+// ❌ LOŠE - prikazuje pill bar čim datumi postoje
+if (_checkIn != null && _checkOut != null)
+  _buildFloatingDraggablePillBar(...);
+```
+
+**Display Logic (After):**
+```dart
+// ✅ DOBRO - prikazuje samo ako user pokazao interes I nije dismissed
+if (_checkIn != null &&
+    _checkOut != null &&
+    _hasInteractedWithBookingFlow &&  // User kliknuo Reserve
+    !_pillBarDismissed)                // User nije kliknuo X
+  _buildFloatingDraggablePillBar(...);
+```
+
+---
+
+#### 📁 Ključne Izmjene
+
+**1. State Management (`booking_widget_screen.dart` Lines 92-94)**
+```dart
+// Bug Fix: Pill bar dismissed state (auto-open fix)
+bool _pillBarDismissed = false;
+bool _hasInteractedWithBookingFlow = false;
+```
+
+**2. Form Data Persistence (`_saveFormData()` Lines 310-311)**
+```dart
+'pillBarDismissed': _pillBarDismissed,
+'hasInteractedWithBookingFlow': _hasInteractedWithBookingFlow,
+```
+
+**3. Form Data Loading (`_loadFormData()` Lines 381-382)**
+```dart
+_pillBarDismissed = formData['pillBarDismissed'] as bool? ?? false;
+_hasInteractedWithBookingFlow = formData['hasInteractedWithBookingFlow'] as bool? ?? false;
+```
+
+**4. Reserve Button (`_buildCompactPillSummary()` Lines 1697-1701)**
+```dart
+setState(() {
+  _showGuestForm = true;
+  _hasInteractedWithBookingFlow = true; // Set interaction flag
+  _lockedPriceCalculation = calculation.copyWithLock();
+});
+_saveFormData(); // Save state immediately
+```
+
+**5. Close Button - 2 Locations (Wide Screen: Lines 1417-1424, Compact: Lines 1584-1591)**
+```dart
+onTap: () {
+  // Set dismissed flag instead of clearing dates
+  setState(() {
+    _pillBarDismissed = true;
+    _showGuestForm = false;
+    _pillBarPosition = null;
+  });
+  _saveFormData(); // Save dismissed state
+},
+```
+
+**Prije (❌):**
+```dart
+// Brisalo datume - gubila se selekcija u kalendaru
+setState(() {
+  _checkIn = null;
+  _checkOut = null;
+  _showGuestForm = false;
+});
+```
+
+**Poslije (✅):**
+```dart
+// Samo set dismissed flag - datumi ostaju selektovani
+setState(() {
+  _pillBarDismissed = true;
+  _showGuestForm = false;
+});
+_saveFormData();
+```
+
+---
+
+#### 🎯 Behaviour Matrix
+
+| Scenario | Before Fix | After Fix |
+|----------|-----------|-----------|
+| User selektuje datume → refresh | Pill bar se pojavi ❌ | Pill bar se NE pojavi ✅ |
+| User klikne Reserve → refresh | Pill bar se pojavi ✅ | Pill bar se pojavi ✅ |
+| User ispuni form → refresh | Pill bar se pojavi ✅ | Pill bar se pojavi ✅ |
+| User zatvori pill bar → refresh | Pill bar se ponovo pojavi ❌ | Pill bar ostaje zatvoren ✅ |
+| User zatvori pill bar | Datumi se brišu ❌ | Datumi ostaju u kalendaru ✅ |
+
+---
+
+#### ⚠️ Kritični Detalji
+
+**1. INTERACTION FLAG JE KLJUČAN:**
+- `_hasInteractedWithBookingFlow` se postavlja SAMO kada user klikne Reserve button
+- Samo selekcija datuma NE postavlja ovaj flag
+- Razlog: User možda samo browsuje datume, nije pokazao interes za rezervaciju
+
+**2. DISMISSED FLAG PERSISTENCE:**
+- Dismissed flag se čuva u localStorage sa 24h TTL
+- Kada user selektuje NOVE datume, dismissed flag se NE resetuje automatski
+- Razlog: User možda želi da vidi različite datume bez pill bar-a
+
+**3. CLOSE BUTTON NE BRIŠE DATUME:**
+- **PRIJE:** Close button → `_checkIn = null` + `_checkOut = null`
+- **POSLIJE:** Close button → `_pillBarDismissed = true`
+- Datumi ostaju selektovani u kalendaru - korisnik može nastaviti browsing
+
+**4. RESERVE BUTTON:**
+- Kada user klikne Reserve → `_hasInteractedWithBookingFlow = true`
+- Odmah poziva `_saveFormData()` da sacuva state
+- Pill bar će se prikazati nakon refresh-a (user pokazao interes)
+
+**5. FORM DATA TTL:**
+- Svi form podaci imaju 24h TTL (`_loadFormData` line 331)
+- Nakon 24h, data se automatski briše sa `_clearFormData()`
+- Dismissed i interaction flags također imaju isti TTL
+
+---
+
+#### 🧪 Testiranje
+
+**Test Case 1: Selektuj datume bez Reserve**
+```
+1. Otvori widget → selektuj check-in i check-out datume
+2. Provjeri: Pill bar se NE pojavljuje ✅
+3. Refresh stranicu
+4. Provjeri: Pill bar se NE pojavljuje ✅
+5. Provjeri: Datumi OSTAJU selektovani u kalendaru ✅
+```
+
+**Test Case 2: Reserve button flow**
+```
+1. Selektuj datume → pill bar se NE pojavljuje
+2. Klikni Reserve button → pill bar se pojavljuje ✅
+3. Refresh stranicu
+4. Provjeri: Pill bar se ponovo pojavljuje (sa istim datumima) ✅
+5. Provjeri: Guest form JE ZATVOREN (samo pill bar visible) ✅
+```
+
+**Test Case 3: Close button flow**
+```
+1. Selektuj datume → klikni Reserve → pill bar se pojavi
+2. Klikni X (close button) → pill bar nestaje
+3. Provjeri: Datumi OSTAJU selektovani u kalendaru ✅
+4. Refresh stranicu
+5. Provjeri: Pill bar se NE pojavljuje ✅
+6. Provjeri: Datumi OSTAJU selektovani ✅
+```
+
+**Test Case 4: Form data persistence**
+```
+1. Selektuj datume → klikni Reserve
+2. Ispuni neki od form fields (ime, email, itd.)
+3. Refresh stranicu
+4. Provjeri: Pill bar se pojavljuje sa Reserve button ✅
+5. Klikni Reserve → provjeri da su form fields popunjeni ✅
+```
+
+---
+
+#### 📊 Bonus Improvement - Deposit Font Size
+
+**Problem:** Deposit tekst je bio premali (10px) i teško se čitao.
+
+**Rješenje:**
+```dart
+// Line 1804
+Text(
+  'Deposit: ${calculation.formattedDeposit} ($depositPercentage%)',
+  style: TextStyle(
+    fontSize: TypographyTokens.fontSizeS, // 12px (was 10px)
+    // ... other styles
+  ),
+),
+```
+
+**Rezultat:** Deposit tekst sada veći za 2px (10px → 12px) ✅
+
+---
+
+#### 🎯 TL;DR - Najvažnije
+
+1. **NE MIJENJAJ DISPLAY LOGIC** - Pill bar se prikazuje SAMO ako `_hasInteractedWithBookingFlow && !_pillBarDismissed` ✅
+2. **CLOSE BUTTON NE BRIŠE DATUME** - Samo postavlja dismissed flag ✅
+3. **RESERVE BUTTON POSTAVLJA INTERACTION FLAG** - I odmah save-uje state ✅
+4. **DATUMI OSTAJU U KALENDARU** - Čak i nakon zatvaranja pill bar-a ✅
+5. **24H TTL** - Form data i flags automatski expiraju nakon 24h ✅
+
+**Ako korisnik prijavi "pill bar se otvara sam":**
+- Provjeri da li se poziva `_hasInteractedWithBookingFlow = true` na Reserve button
+- Provjeri da display logic ima SVA 4 uslova (null checks + interaction + dismissed)
+- Provjeri localStorage: `booking_widget_form_data_${unitId}`
+
+---
+
+**Commit:** `925accb` - fix: timeline calendar bugs and booking widget auto-open issue
+
+---
+
 ## 🎯 iCal Export Feature - Add to Calendar Button
 
 **Datum: 2025-11-18**

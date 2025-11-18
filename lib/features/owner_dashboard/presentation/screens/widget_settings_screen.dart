@@ -4,7 +4,8 @@ import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/domain/models/widget_mode.dart';
-import '../../../widget/presentation/providers/widget_settings_provider.dart' as widget_provider;
+import '../../../widget/presentation/providers/widget_settings_provider.dart'
+    as widget_provider;
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import 'widget_advanced_settings_screen.dart';
@@ -201,13 +202,15 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         stripeConfig: _stripeEnabled
             ? StripePaymentConfig(
                 enabled: true,
-                depositPercentage: _globalDepositPercentage, // Use global deposit
+                depositPercentage:
+                    _globalDepositPercentage, // Use global deposit
               )
             : null,
         bankTransferConfig: _bankTransferEnabled
             ? BankTransferConfig(
                 enabled: true,
-                depositPercentage: _globalDepositPercentage, // Use global deposit
+                depositPercentage:
+                    _globalDepositPercentage, // Use global deposit
                 bankName: _bankNameController.text.isEmpty
                     ? null
                     : _bankNameController.text,
@@ -397,7 +400,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         // After returning from Advanced Settings, reload settings
                         // to ensure Widget Settings has fresh data from Firestore
                         if (mounted) {
-                          ref.invalidate(widget_provider.widgetSettingsProvider);
+                          ref.invalidate(
+                            widget_provider.widgetSettingsProvider,
+                          );
                           await _loadSettings(); // Re-fetch and apply fresh settings
                         }
                       },
@@ -558,7 +563,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
                 ),
               ),
               child: Column(
@@ -586,7 +593,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     'Ovaj procenat se primjenjuje na sve metode plaćanja (Stripe, Bankovna uplata)',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -606,14 +615,16 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                         '0% (Puna uplata)',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                          color: Theme.of(context).colorScheme.onSurface
+                              .withAlpha((0.5 * 255).toInt()),
                         ),
                       ),
                       Text(
                         '100% (Puna uplata)',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                          color: Theme.of(context).colorScheme.onSurface
+                              .withAlpha((0.5 * 255).toInt()),
                         ),
                       ),
                     ],
@@ -1489,9 +1500,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withAlpha((0.3 * 255).toInt()),
-          ),
+          border: Border.all(color: color.withAlpha((0.3 * 255).toInt())),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1515,10 +1524,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     message,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withAlpha((0.7 * 255).toInt()),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
                     ),
                   ),
                 ],

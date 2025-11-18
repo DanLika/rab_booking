@@ -16,7 +16,7 @@ import 'calendar/calendar_day_cell.dart';
 /// BedBooking-style Price List Calendar
 /// Displays one month at a time with dropdown selector
 /// Shows pricing, availability, and all BedBooking features
-/// 
+///
 /// Now with:
 /// - Optimistic updates for instant UI feedback
 /// - Local state cache for better performance
@@ -51,7 +51,7 @@ class _PriceListCalendarWidgetState
     _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
     // Generate month list once during initialization
     _cachedMonthList = _generateMonthList();
-    
+
     // Listen to local state changes
     _localState.addListener(_onLocalStateChanged);
   }
@@ -86,8 +86,7 @@ class _PriceListCalendarWidgetState
           const SizedBox(height: 16),
 
           // Undo/Redo bar
-          if (_localState.canUndo || _localState.canRedo)
-            _buildUndoRedoBar(),
+          if (_localState.canUndo || _localState.canRedo) _buildUndoRedoBar(),
 
           if (_localState.canUndo || _localState.canRedo)
             const SizedBox(height: 12),
@@ -121,26 +120,22 @@ class _PriceListCalendarWidgetState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.5),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceVariant.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: context.borderColor.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: context.borderColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.history,
-            size: 18,
-            color: context.textColorSecondary,
-          ),
+          Icon(Icons.history, size: 18, color: context.textColorSecondary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               _localState.lastActionDescription ?? 'Historija akcija',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.textColorSecondary,
-                  ),
+                color: context.textColorSecondary,
+              ),
             ),
           ),
           IconButton(
@@ -617,89 +612,102 @@ class _PriceListCalendarWidgetState
                           ),
                         )
                       : pricesAsync.when(
-                    data: (priceMap) {
-                      // Update local cache with server data
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        _localState.setMonthPrices(_selectedMonth, priceMap);
-                      });
+                          data: (priceMap) {
+                            // Update local cache with server data
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              _localState.setMonthPrices(
+                                _selectedMonth,
+                                priceMap,
+                              );
+                            });
 
-                      // Use local cache for display (supports optimistic updates)
-                      final displayMap = _localState.getMonthPrices(_selectedMonth) ?? priceMap;
+                            // Use local cache for display (supports optimistic updates)
+                            final displayMap =
+                                _localState.getMonthPrices(_selectedMonth) ??
+                                priceMap;
 
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 7,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                          childAspectRatio: aspectRatio,
-                        ),
-                        itemCount: firstDayOfWeek - 1 + daysInMonth,
-                        itemBuilder: (context, index) {
-                          if (index < firstDayOfWeek - 1) {
-                            return const SizedBox.shrink();
-                          }
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 7,
+                                    mainAxisSpacing: 8,
+                                    crossAxisSpacing: 8,
+                                    childAspectRatio: aspectRatio,
+                                  ),
+                              itemCount: firstDayOfWeek - 1 + daysInMonth,
+                              itemBuilder: (context, index) {
+                                if (index < firstDayOfWeek - 1) {
+                                  return const SizedBox.shrink();
+                                }
 
-                          final day = index - (firstDayOfWeek - 1) + 1;
-                          final date = DateTime(
-                            _selectedMonth.year,
-                            _selectedMonth.month,
-                            day,
-                          );
+                                final day = index - (firstDayOfWeek - 1) + 1;
+                                final date = DateTime(
+                                  _selectedMonth.year,
+                                  _selectedMonth.month,
+                                  day,
+                                );
 
-                          // Use extracted CalendarDayCell component
-                          return CalendarDayCell(
-                            date: date,
-                            priceData: displayMap[DateTime(date.year, date.month, date.day)],
-                            basePrice: widget.unit.pricePerNight,
-                            isSelected: _selectedDays.contains(date),
-                            isBulkEditMode: _bulkEditMode,
-                            onTap: () => _onDayCellTap(date),
-                            isMobile: isMobile,
-                            isSmallMobile: isSmallMobile,
-                          );
-                        },
-                      );
-                    },
-                    loading: () => Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                    error: (error, stack) => Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              size: 48,
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Greška pri učitavanju cijena',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.error,
+                                // Use extracted CalendarDayCell component
+                                return CalendarDayCell(
+                                  date: date,
+                                  priceData:
+                                      displayMap[DateTime(
+                                        date.year,
+                                        date.month,
+                                        date.day,
+                                      )],
+                                  basePrice: widget.unit.pricePerNight,
+                                  isSelected: _selectedDays.contains(date),
+                                  isBulkEditMode: _bulkEditMode,
+                                  onTap: () => _onDayCellTap(date),
+                                  isMobile: isMobile,
+                                  isSmallMobile: isSmallMobile,
+                                );
+                              },
+                            );
+                          },
+                          loading: () => Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).colorScheme.primary,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              error.toString(),
-                              style: const TextStyle(fontSize: 12),
-                              textAlign: TextAlign.center,
+                          ),
+                          error: (error, stack) => Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    size: 48,
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Greška pri učitavanju cijena',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    error.toString(),
+                                    style: const TextStyle(fontSize: 12),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -1230,7 +1238,11 @@ class _PriceListCalendarWidgetState
                             );
 
                             // OPTIMISTIC UPDATE: Update local cache immediately
-                            final dateKey = DateTime(date.year, date.month, date.day);
+                            final dateKey = DateTime(
+                              date.year,
+                              date.month,
+                              date.day,
+                            );
                             _localState.updateDateOptimistically(
                               _selectedMonth,
                               date,
@@ -1420,7 +1432,9 @@ class _PriceListCalendarWidgetState
                                 onPressed: () =>
                                     Navigator.of(context).pop(true),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
                                 ),
                                 child: const Text('Potvrdi'),
                               ),
@@ -1435,15 +1449,23 @@ class _PriceListCalendarWidgetState
                         // Get current prices for rollback
                         final currentPrices = <DateTime, DailyPriceModel>{};
                         final newPrices = <DateTime, DailyPriceModel>{};
-                        final cachedMonth = _localState.getMonthPrices(_selectedMonth);
+                        final cachedMonth = _localState.getMonthPrices(
+                          _selectedMonth,
+                        );
 
                         for (final date in _selectedDays) {
-                          final dateKey = DateTime(date.year, date.month, date.day);
+                          final dateKey = DateTime(
+                            date.year,
+                            date.month,
+                            date.day,
+                          );
                           final existing = cachedMonth?[dateKey];
-                          
+
                           if (existing != null) {
                             currentPrices[dateKey] = existing;
-                            newPrices[dateKey] = existing.copyWith(price: price);
+                            newPrices[dateKey] = existing.copyWith(
+                              price: price,
+                            );
                           } else {
                             // Create new price entry
                             newPrices[dateKey] = DailyPriceModel(
@@ -1504,7 +1526,10 @@ class _PriceListCalendarWidgetState
                           );
                         } catch (e) {
                           // ROLLBACK on error
-                          _localState.rollbackUpdate(_selectedMonth, currentPrices);
+                          _localState.rollbackUpdate(
+                            _selectedMonth,
+                            currentPrices,
+                          );
 
                           if (mounted) {
                             messenger.showSnackBar(

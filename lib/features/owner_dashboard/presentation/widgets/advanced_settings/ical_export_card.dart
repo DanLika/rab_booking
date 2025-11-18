@@ -105,11 +105,7 @@ class IcalExportCard extends ConsumerWidget {
         ),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(
-        Icons.calendar_today,
-        color: AppColors.info,
-        size: 20,
-      ),
+      child: const Icon(Icons.calendar_today, color: AppColors.info, size: 20),
     );
   }
 
@@ -119,7 +115,7 @@ class IcalExportCard extends ConsumerWidget {
       onChanged: (value) async {
         // Call parent's onEnabledChanged first
         onEnabledChanged(value);
-        
+
         // If enabling, generate URL and token
         if (value && settings.icalExportUrl == null) {
           await _generateIcalUrl();
@@ -137,12 +133,9 @@ class IcalExportCard extends ConsumerWidget {
     try {
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('generateIcalExportUrl');
-      
-      await callable.call({
-        'propertyId': propertyId,
-        'unitId': unitId,
-      });
-      
+
+      await callable.call({'propertyId': propertyId, 'unitId': unitId});
+
       // Success - URL will be loaded on next widget refresh
     } catch (e) {
       debugPrint('Error generating iCal URL: $e');
@@ -159,9 +152,7 @@ class IcalExportCard extends ConsumerWidget {
             color: theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: theme.colorScheme.outline.withAlpha(
-                (0.2 * 255).toInt(),
-              ),
+              color: theme.colorScheme.outline.withAlpha((0.2 * 255).toInt()),
             ),
           ),
           child: Column(
@@ -169,18 +160,11 @@ class IcalExportCard extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.link,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(Icons.link, size: 16, color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
                   const Text(
                     'Export URL',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                   ),
                 ],
               ),
@@ -213,9 +197,7 @@ class IcalExportCard extends ConsumerWidget {
             Icon(
               Icons.update,
               size: 16,
-              color: theme.colorScheme.onSurface.withAlpha(
-                (0.6 * 255).toInt(),
-              ),
+              color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
             ),
             const SizedBox(width: 8),
             Text(
@@ -244,17 +226,12 @@ class IcalExportCard extends ConsumerWidget {
               final units = await ref
                   .read(repos.unitRepositoryProvider)
                   .fetchUnitsByProperty(propertyId);
-              final unit = units
-                  .where((u) => u.id == unitId)
-                  .firstOrNull;
+              final unit = units.where((u) => u.id == unitId).firstOrNull;
 
               if (unit != null && context.mounted) {
                 await context.push(
                   OwnerRoutes.icalExport,
-                  extra: {
-                    'unit': unit,
-                    'propertyId': propertyId,
-                  },
+                  extra: {'unit': unit, 'propertyId': propertyId},
                 );
               }
             } catch (e) {
@@ -270,10 +247,7 @@ class IcalExportCard extends ConsumerWidget {
           icon: const Icon(Icons.bug_report, size: 18),
           label: const Text('Test iCal Export'),
           style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(
-              vertical: 12,
-              horizontal: 16,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           ),
         ),
         const SizedBox(height: 16),
@@ -291,11 +265,7 @@ class IcalExportCard extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.info_outline,
-            size: 16,
-            color: AppColors.info,
-          ),
+          const Icon(Icons.info_outline, size: 16, color: AppColors.info),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

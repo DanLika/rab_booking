@@ -11,7 +11,8 @@ class WidgetSettings {
   final WidgetMode widgetMode;
 
   // Payment Methods Configuration
-  final int globalDepositPercentage; // Global deposit % (applies to all payment methods)
+  final int
+  globalDepositPercentage; // Global deposit % (applies to all payment methods)
   final StripePaymentConfig? stripeConfig;
   final BankTransferConfig? bankTransferConfig;
   final bool allowPayOnArrival;
@@ -83,9 +84,12 @@ class WidgetSettings {
     return WidgetSettings(
       id: doc.id,
       propertyId: data['property_id'] ?? '',
-      widgetMode: WidgetMode.fromString(data['widget_mode'] ?? 'booking_instant'),
+      widgetMode: WidgetMode.fromString(
+        data['widget_mode'] ?? 'booking_instant',
+      ),
       // Migration: If global_deposit_percentage doesn't exist, use stripe deposit or 20
-      globalDepositPercentage: data['global_deposit_percentage'] ??
+      globalDepositPercentage:
+          data['global_deposit_percentage'] ??
           (data['stripe_config'] != null
               ? (data['stripe_config']['deposit_percentage'] ?? 20)
               : 20),
@@ -108,7 +112,8 @@ class WidgetSettings {
       icalExportEnabled: data['ical_export_enabled'] ?? false,
       icalExportUrl: data['ical_export_url'],
       icalExportToken: data['ical_export_token'],
-      icalExportLastGenerated: (data['ical_export_last_generated'] as Timestamp?)?.toDate(),
+      icalExportLastGenerated:
+          (data['ical_export_last_generated'] as Timestamp?)?.toDate(),
       taxLegalConfig: TaxLegalConfig.fromMap(data['tax_legal_config'] ?? {}),
       themeOptions: data['theme_options'] != null
           ? ThemeOptions.fromMap(data['theme_options'])
@@ -154,8 +159,8 @@ class WidgetSettings {
   /// Check if any payment method is enabled
   bool get hasPaymentMethods {
     return (stripeConfig?.enabled ?? false) ||
-           (bankTransferConfig?.enabled ?? false) ||
-           allowPayOnArrival;
+        (bankTransferConfig?.enabled ?? false) ||
+        allowPayOnArrival;
   }
 
   /// Get enabled payment method count
@@ -196,21 +201,26 @@ class WidgetSettings {
       id: id ?? this.id,
       propertyId: propertyId ?? this.propertyId,
       widgetMode: widgetMode ?? this.widgetMode,
-      globalDepositPercentage: globalDepositPercentage ?? this.globalDepositPercentage,
+      globalDepositPercentage:
+          globalDepositPercentage ?? this.globalDepositPercentage,
       stripeConfig: stripeConfig ?? this.stripeConfig,
       bankTransferConfig: bankTransferConfig ?? this.bankTransferConfig,
       allowPayOnArrival: allowPayOnArrival ?? this.allowPayOnArrival,
       requireOwnerApproval: requireOwnerApproval ?? this.requireOwnerApproval,
-      allowGuestCancellation: allowGuestCancellation ?? this.allowGuestCancellation,
-      cancellationDeadlineHours: cancellationDeadlineHours ?? this.cancellationDeadlineHours,
+      allowGuestCancellation:
+          allowGuestCancellation ?? this.allowGuestCancellation,
+      cancellationDeadlineHours:
+          cancellationDeadlineHours ?? this.cancellationDeadlineHours,
       minNights: minNights ?? this.minNights,
       contactOptions: contactOptions ?? this.contactOptions,
       emailConfig: emailConfig ?? this.emailConfig,
-      externalCalendarConfig: externalCalendarConfig ?? this.externalCalendarConfig,
+      externalCalendarConfig:
+          externalCalendarConfig ?? this.externalCalendarConfig,
       icalExportEnabled: icalExportEnabled ?? this.icalExportEnabled,
       icalExportUrl: icalExportUrl ?? this.icalExportUrl,
       icalExportToken: icalExportToken ?? this.icalExportToken,
-      icalExportLastGenerated: icalExportLastGenerated ?? this.icalExportLastGenerated,
+      icalExportLastGenerated:
+          icalExportLastGenerated ?? this.icalExportLastGenerated,
       taxLegalConfig: taxLegalConfig ?? this.taxLegalConfig,
       themeOptions: themeOptions ?? this.themeOptions,
       blurConfig: blurConfig ?? this.blurConfig,
@@ -223,7 +233,8 @@ class WidgetSettings {
 /// Stripe payment configuration
 class StripePaymentConfig {
   final bool enabled;
-  final int depositPercentage; // 0-100 (0 = full payment, 100 = full payment as deposit)
+  final int
+  depositPercentage; // 0-100 (0 = full payment, 100 = full payment as deposit)
   final String? stripeAccountId; // Stripe Connect account ID
 
   const StripePaymentConfig({
@@ -286,10 +297,12 @@ class BankTransferConfig {
   final String? iban;
   final String? swift;
   final String? accountHolder;
-  final int paymentDeadlineDays; // Days until payment deadline (1-14, default: 3)
+  final int
+  paymentDeadlineDays; // Days until payment deadline (1-14, default: 3)
   final bool enableQrCode; // Show EPC QR code for bank transfer
   final String? customNotes; // Custom notes from owner (max 500 chars)
-  final bool useCustomNotes; // If true, show customNotes; if false, show default legal notes
+  final bool
+  useCustomNotes; // If true, show customNotes; if false, show default legal notes
 
   const BankTransferConfig({
     this.enabled = false,
@@ -340,8 +353,8 @@ class BankTransferConfig {
   /// Check if bank details are complete
   bool get hasCompleteDetails {
     return bankName != null &&
-           accountHolder != null &&
-           (iban != null || accountNumber != null);
+        accountHolder != null &&
+        (iban != null || accountNumber != null);
   }
 
   /// Calculate deposit amount
@@ -436,8 +449,8 @@ class ContactOptions {
   /// Check if at least one contact method is available
   bool get hasContactMethod {
     return (showPhone && phoneNumber != null && phoneNumber!.isNotEmpty) ||
-           (showEmail && emailAddress != null && emailAddress!.isNotEmpty) ||
-           (showWhatsApp && whatsAppNumber != null && whatsAppNumber!.isNotEmpty);
+        (showEmail && emailAddress != null && emailAddress!.isNotEmpty) ||
+        (showWhatsApp && whatsAppNumber != null && whatsAppNumber!.isNotEmpty);
   }
 
   ContactOptions copyWith({
@@ -523,7 +536,8 @@ class ThemeOptions {
 /// Glassmorphism & Blur Effects configuration
 class BlurConfig {
   final bool enabled; // Enable/disable all blur effects
-  final String intensity; // 'subtle', 'light', 'medium', 'strong', 'extra_strong'
+  final String
+  intensity; // 'subtle', 'light', 'medium', 'strong', 'extra_strong'
   final bool enableCardBlur; // Blur for cards
   final bool enableAppBarBlur; // Blur for app bar
   final bool enableModalBlur; // Blur for modals/dialogs
@@ -581,7 +595,11 @@ class BlurConfig {
 
   /// Check if any blur is enabled
   bool get hasAnyBlurEnabled {
-    return enabled && (enableCardBlur || enableAppBarBlur || enableModalBlur || enableOverlayBlur);
+    return enabled &&
+        (enableCardBlur ||
+            enableAppBarBlur ||
+            enableModalBlur ||
+            enableOverlayBlur);
   }
 
   BlurConfig copyWith({
@@ -609,7 +627,8 @@ class EmailNotificationConfig {
   final bool sendBookingConfirmation; // Send confirmation email after booking
   final bool sendPaymentReceipt; // Send receipt email after payment
   final bool sendOwnerNotification; // Notify owner when new booking is created
-  final bool requireEmailVerification; // Require email verification before booking
+  final bool
+  requireEmailVerification; // Require email verification before booking
   final String? resendApiKey; // Resend API key for sending emails
   final String? fromEmail; // From email address (e.g., "noreply@example.com")
   final String? fromName; // From name (e.g., "Property Name")
@@ -668,10 +687,13 @@ class EmailNotificationConfig {
   }) {
     return EmailNotificationConfig(
       enabled: enabled ?? this.enabled,
-      sendBookingConfirmation: sendBookingConfirmation ?? this.sendBookingConfirmation,
+      sendBookingConfirmation:
+          sendBookingConfirmation ?? this.sendBookingConfirmation,
       sendPaymentReceipt: sendPaymentReceipt ?? this.sendPaymentReceipt,
-      sendOwnerNotification: sendOwnerNotification ?? this.sendOwnerNotification,
-      requireEmailVerification: requireEmailVerification ?? this.requireEmailVerification,
+      sendOwnerNotification:
+          sendOwnerNotification ?? this.sendOwnerNotification,
+      requireEmailVerification:
+          requireEmailVerification ?? this.requireEmailVerification,
       resendApiKey: resendApiKey ?? this.resendApiKey,
       fromEmail: fromEmail ?? this.fromEmail,
       fromName: fromName ?? this.fromName,
@@ -735,8 +757,9 @@ class ExternalCalendarConfig {
 
   /// Check if any external calendar is connected
   bool get hasConnectedCalendar {
-    return enabled && ((syncBookingCom && bookingComAccessToken != null) ||
-        (syncAirbnb && airbnbAccessToken != null));
+    return enabled &&
+        ((syncBookingCom && bookingComAccessToken != null) ||
+            (syncAirbnb && airbnbAccessToken != null));
   }
 
   /// Check if sync is due (based on interval)
@@ -761,7 +784,8 @@ class ExternalCalendarConfig {
       enabled: enabled ?? this.enabled,
       syncBookingCom: syncBookingCom ?? this.syncBookingCom,
       bookingComAccountId: bookingComAccountId ?? this.bookingComAccountId,
-      bookingComAccessToken: bookingComAccessToken ?? this.bookingComAccessToken,
+      bookingComAccessToken:
+          bookingComAccessToken ?? this.bookingComAccessToken,
       syncAirbnb: syncAirbnb ?? this.syncAirbnb,
       airbnbAccountId: airbnbAccountId ?? this.airbnbAccountId,
       airbnbAccessToken: airbnbAccessToken ?? this.airbnbAccessToken,

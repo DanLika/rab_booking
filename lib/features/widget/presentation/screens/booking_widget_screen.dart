@@ -370,13 +370,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               _selectedPaymentMethod = savedPayment;
             }
 
-            // Show guest form if data was entered
-            if (_checkIn != null && _checkOut != null) {
-              _showGuestForm =
-                  _firstNameController.text.isNotEmpty ||
-                  _lastNameController.text.isNotEmpty ||
-                  _emailController.text.isNotEmpty;
-            }
+            // Bug Fix: Don't auto-show guest form from cache
+            // User should explicitly select dates or click to open booking flow
+            // Cached data is available but form stays hidden until user action
           }
         });
 

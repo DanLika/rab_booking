@@ -29,6 +29,12 @@ export * from "./securityEmail";
 // Note: Scheduled function removed, only manual sync available
 export * from "./icalSync";
 
+// Export iCal export function (Public calendar feed)
+export * from "./icalExport";
+
+// Export iCal export management (Generate/revoke URLs)
+export * from "./icalExportManagement";
+
 // Export cleanup functions for abandoned Stripe bookings
 export * from "./cleanupAbandonedBookings";
 

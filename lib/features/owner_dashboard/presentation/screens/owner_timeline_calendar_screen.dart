@@ -140,6 +140,7 @@ class _OwnerTimelineCalendarScreenState
           Expanded(
             child: TimelineCalendarWidget(
               key: ValueKey(_currentRange.startDate), // Rebuild on date change
+              initialScrollToDate: _currentRange.startDate, // Scroll to selected date
               showSummary: _showSummary,
               onCellLongPress: (date, unit) => _showCreateBookingDialog(
                 initialCheckIn: date,

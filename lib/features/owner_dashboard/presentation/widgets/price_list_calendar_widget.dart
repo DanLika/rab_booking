@@ -122,7 +122,7 @@ class _PriceListCalendarWidgetState
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceVariant.withValues(alpha: 0.5),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: context.borderColor.withValues(alpha: 0.3)),
       ),
@@ -140,14 +140,14 @@ class _PriceListCalendarWidgetState
           ),
           IconButton(
             icon: const Icon(Icons.undo, size: 20),
-            onPressed: _localState.canUndo ? () => _localState.undo() : null,
+            onPressed: _localState.canUndo ? _localState.undo : null,
             tooltip: 'Poništi (Ctrl+Z)',
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 4),
           IconButton(
             icon: const Icon(Icons.redo, size: 20),
-            onPressed: _localState.canRedo ? () => _localState.redo() : null,
+            onPressed: _localState.canRedo ? _localState.redo : null,
             tooltip: 'Ponovi (Ctrl+Shift+Z)',
             color: Theme.of(context).colorScheme.primary,
           ),
@@ -1297,7 +1297,7 @@ class _PriceListCalendarWidgetState
                                     backgroundColor: context.errorColor,
                                     action: SnackBarAction(
                                       label: 'Poništi',
-                                      onPressed: () => _localState.undo(),
+                                      onPressed: _localState.undo,
                                     ),
                                   ),
                                 );
@@ -1473,7 +1473,6 @@ class _PriceListCalendarWidgetState
                               unitId: widget.unit.id,
                               date: date,
                               price: price,
-                              available: true,
                               createdAt: DateTime.now(),
                               updatedAt: DateTime.now(),
                             );
@@ -1538,7 +1537,7 @@ class _PriceListCalendarWidgetState
                                 backgroundColor: AppColors.error,
                                 action: SnackBarAction(
                                   label: 'Poništi',
-                                  onPressed: () => _localState.undo(),
+                                  onPressed: _localState.undo,
                                 ),
                               ),
                             );

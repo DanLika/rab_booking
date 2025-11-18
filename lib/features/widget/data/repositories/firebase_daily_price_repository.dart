@@ -319,14 +319,14 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
         .where('unit_id', isEqualTo: unitId)
         .where(
           'date',
-          whereIn: normalizedDates.map((d) => Timestamp.fromDate(d)).toList(),
+          whereIn: normalizedDates.map(Timestamp.fromDate).toList(),
         )
         .get();
 
     // Create a map of existing docs by date for fast lookup
     final existingDocsByDate = <DateTime, QueryDocumentSnapshot>{};
     for (final doc in existingDocsQuery.docs) {
-      final data = doc.data() as Map<String, dynamic>;
+      final data = doc.data();
       final timestamp = data['date'] as Timestamp;
       final date = DateTime(
         timestamp.toDate().year,

@@ -89,6 +89,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // Draggable pill bar state
   Offset? _pillBarPosition; // null = default bottom center position
 
+  // Bug Fix: Pill bar dismissed state (auto-open fix)
+  bool _pillBarDismissed = false; // Track if user clicked X to close pill bar
+  bool _hasInteractedWithBookingFlow = false; // Track if user clicked Reserve button
+
   @override
   void initState() {
     super.initState();
@@ -302,6 +306,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         'notes': _notesController.text,
         'paymentMethod': _selectedPaymentMethod,
         'timestamp': DateTime.now().toIso8601String(),
+        // Bug Fix: Auto-open fix - track dismissed and interaction state
+        'pillBarDismissed': _pillBarDismissed,
+        'hasInteractedWithBookingFlow': _hasInteractedWithBookingFlow,
       };
 
       await prefs.setString('${_formDataKey}_$_unitId', jsonEncode(formData));
@@ -370,6 +377,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               _selectedPaymentMethod = savedPayment;
             }
 
+            // Bug Fix: Restore dismissed and interaction state
+            _pillBarDismissed = formData['pillBarDismissed'] as bool? ?? false;
+            _hasInteractedWithBookingFlow = formData['hasInteractedWithBookingFlow'] as bool? ?? false;
+
             // Bug Fix: Don't auto-show guest form from cache
             // User should explicitly select dates or click to open booking flow
             // Cached data is available but form stays hidden until user action
@@ -377,7 +388,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         });
 
         LoggingService.log(
-          '✅ Form data restored from cache',
+          '✅ Form data restored from cache (dismissed: $_pillBarDismissed, interacted: $_hasInteractedWithBookingFlow)',
           tag: 'FORM_PERSISTENCE',
         );
       }
@@ -745,9 +756,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   ),
 
                 // Floating draggable booking summary bar (booking modes - shown when dates selected)
+                // Bug Fix: Only show pill bar if user interacted with booking flow (clicked Reserve)
+                // AND pill bar wasn't dismissed (user clicked X button)
                 if (widgetMode != WidgetMode.calendarOnly &&
                     _checkIn != null &&
-                    _checkOut != null)
+                    _checkOut != null &&
+                    _hasInteractedWithBookingFlow &&
+                    !_pillBarDismissed)
                   _buildFloatingDraggablePillBar(
                     unitId,
                     constraints,
@@ -1399,12 +1414,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               // Close button (right)
               InkWell(
                 onTap: () {
+                  // Bug Fix: Set dismissed flag instead of clearing dates
+                  // This way dates stay selected in calendar but pill bar doesn't auto-open on refresh
                   setState(() {
-                    _checkIn = null;
-                    _checkOut = null;
+                    _pillBarDismissed = true;
                     _showGuestForm = false;
                     _pillBarPosition = null;
                   });
+                  _saveFormData(); // Save dismissed state
                 },
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
@@ -1564,12 +1581,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           children: [
             InkWell(
               onTap: () {
+                // Bug Fix: Set dismissed flag instead of clearing dates
+                // This way dates stay selected in calendar but pill bar doesn't auto-open on refresh
                 setState(() {
-                  _checkIn = null;
-                  _checkOut = null;
+                  _pillBarDismissed = true;
                   _showGuestForm = false;
                   _pillBarPosition = null;
                 });
+                _saveFormData(); // Save dismissed state
               },
               borderRadius: BorderRadius.circular(16),
               child: Container(
@@ -1677,10 +1696,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           InkWell(
             onTap: () {
               // Bug #64: Lock price when user starts booking process
+              // Bug Fix: Set interaction flag so pill bar shows after refresh
               setState(() {
                 _showGuestForm = true;
+                _hasInteractedWithBookingFlow = true; // User clicked Reserve
                 _lockedPriceCalculation = calculation.copyWithLock();
               });
+              _saveFormData(); // Save state immediately
             },
             borderRadius: BorderRadius.circular(20),
             child: Container(
@@ -1779,7 +1801,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           Text(
             'Deposit: ${calculation.formattedDeposit} ($depositPercentage%)',
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeXS,
+              fontSize: TypographyTokens.fontSizeS, // Increased from fontSizeXS (10px) to fontSizeS (12px) for better visibility
               color: getColor(
                 MinimalistColors.textSecondary,
                 MinimalistColorsDark.textSecondary,

@@ -29,11 +29,13 @@ import 'calendar/check_in_out_diagonal_indicator.dart';
 class TimelineCalendarWidget extends ConsumerStatefulWidget {
   final bool showSummary;
   final Function(DateTime date, UnitModel unit)? onCellLongPress;
+  final DateTime? initialScrollToDate; // Date to scroll to on init (null = today)
 
   const TimelineCalendarWidget({
     super.key,
     this.showSummary = false,
     this.onCellLongPress,
+    this.initialScrollToDate,
   });
 
   @override
@@ -121,11 +123,13 @@ class _TimelineCalendarWidgetState
     _summaryScrollController = ScrollController();
     _transformationController = TransformationController();
 
-    // Initialize visible range to show today (90 days before to maintain buffer)
-    final todayIndex = DateTime.now().difference(_getStartDate()).inDays;
-    _visibleStartIndex = (todayIndex - 60)
+    // Initialize visible range to show initial scroll date (or today if not provided)
+    // FIXED: Use initialScrollToDate to initialize windowing (Bug #5 fix)
+    final initialDate = widget.initialScrollToDate ?? DateTime.now();
+    final initialDateIndex = initialDate.difference(_getStartDate()).inDays;
+    _visibleStartIndex = (initialDateIndex - 60)
         .clamp(0, double.infinity)
-        .toInt(); // Start 60 days before today
+        .toInt(); // Start 60 days before initial date
     _visibleDayCount = 120; // Show 120 days initially (60 before + 60 after)
 
     // Create optimized scroll sync listener
@@ -170,9 +174,10 @@ class _TimelineCalendarWidgetState
     // Listen to zoom changes from InteractiveViewer
     _transformationController.addListener(_onTransformChanged);
 
-    // Scroll to today on init
+    // Scroll to today on init with retry logic
+    // FIXED: Wait for scroll controller to be ready before scrolling
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToToday();
+      _scrollToTodayWithRetry();
     });
   }
 
@@ -235,28 +240,57 @@ class _TimelineCalendarWidgetState
     super.dispose();
   }
 
+  /// Scroll to today with retry logic
+  /// FIXED: Wait for scroll controller to have clients before scrolling
+  void _scrollToTodayWithRetry({int retryCount = 0}) {
+    // Max 10 retries (100ms each = 1 second total)
+    if (retryCount >= 10) {
+      print('[TIMELINE] Failed to scroll to today after 10 retries');
+      return;
+    }
+
+    // Check if scroll controller is ready
+    if (!_horizontalScrollController.hasClients) {
+      // Retry after 100ms
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _scrollToTodayWithRetry(retryCount: retryCount + 1);
+        }
+      });
+      return;
+    }
+
+    // Controller is ready - scroll to today
+    print('[TIMELINE] Scrolling to today (retry count: $retryCount)');
+    _scrollToToday();
+  }
+
   void _scrollToToday() {
     // Check if scroll controller is attached to a scroll view
     if (!_horizontalScrollController.hasClients) {
       return;
     }
 
-    // Calculate position of today
-    final now = DateTime.now();
+    // Calculate position of target date (use initialScrollToDate if provided, otherwise today)
+    final targetDate = widget.initialScrollToDate ?? DateTime.now();
     final startDate = _getStartDate();
-    final daysSinceStart = now.difference(startDate).inDays;
+    final daysSinceStart = targetDate.difference(startDate).inDays;
     final dayWidth = _getDayWidth(context);
     final scrollPosition = daysSinceStart * dayWidth;
 
-    // Scroll to today (centered in viewport) with smooth animation
+    print('[TIMELINE] _scrollToToday: startDate=$startDate, targetDate=$targetDate, daysSinceStart=$daysSinceStart');
+
+    // Scroll to target date (centered in viewport) with smooth animation
     final maxScroll = _horizontalScrollController.position.maxScrollExtent;
     final unitColumnWidth = _getUnitColumnWidth(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final visibleWidth = screenWidth - unitColumnWidth;
 
-    // Center today in the visible area
+    // Center target date in the visible area
     final targetScroll = (scrollPosition - (visibleWidth / 2) + (dayWidth / 2))
         .clamp(0.0, maxScroll);
+
+    print('[TIMELINE] Scrolling to position: $targetScroll (max: $maxScroll)');
 
     _horizontalScrollController.animateTo(
       targetScroll,
@@ -370,7 +404,18 @@ class _TimelineCalendarWidgetState
                     data: (bookingsByUnit) {
                       // Always show timeline view, even if no bookings exist
                       // (empty calendar grid is better UX than empty state)
+                      final totalBookings = bookingsByUnit.values.fold<int>(0, (sum, list) => sum + list.length);
                       print('[TIMELINE] Building timeline with ${units.length} units and ${bookingsByUnit.length} booking groups');
+                      print('[TIMELINE] Total bookings across all groups: $totalBookings');
+
+                      // Debug each unit's bookings
+                      bookingsByUnit.forEach((unitId, bookings) {
+                        print('[TIMELINE] Unit $unitId has ${bookings.length} bookings');
+                        for (final booking in bookings) {
+                          print('[TIMELINE]   - Booking ${booking.id}: checkIn=${booking.checkIn}, checkOut=${booking.checkOut}');
+                        }
+                      });
+
                       return _buildTimelineView(units, bookingsByUnit);
                     },
                     loading: () => const CalendarSkeletonLoader(
@@ -640,7 +685,7 @@ class _TimelineCalendarWidgetState
           bottom: BorderSide(color: theme.dividerColor, width: 1.5),
         ),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), // FIXED: Increased from 4 to 8 for desktop view
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
@@ -962,6 +1007,8 @@ class _TimelineCalendarWidgetState
     final dayWidth = _getDayWidth(context);
     final List<Widget> blocks = [];
 
+    print('[TIMELINE RENDER] _buildReservationBlocks called with ${bookings.length} bookings, visible dates: ${dates.first} to ${dates.last}');
+
     for (final booking in bookings) {
       // Calculate position and width
       final checkIn = booking.checkIn;
@@ -969,7 +1016,12 @@ class _TimelineCalendarWidgetState
 
       // Find index of check-in date in visible range
       final startIndex = dates.indexWhere((d) => _isSameDay(d, checkIn));
-      if (startIndex == -1) continue; // Booking not in visible range
+      if (startIndex == -1) {
+        print('[TIMELINE RENDER] Skipping booking ${booking.id}: checkIn=${checkIn} not in visible range');
+        continue; // Booking not in visible range
+      }
+
+      print('[TIMELINE RENDER] Rendering booking ${booking.id}: checkIn=${checkIn}, startIndex=$startIndex, nights=$nights');
 
       // Calculate left position (including offset for windowing)
       final left = offsetWidth + (startIndex * dayWidth);

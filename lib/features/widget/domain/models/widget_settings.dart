@@ -34,6 +34,7 @@ class WidgetSettings {
   // iCal Export Configuration
   final bool icalExportEnabled; // Master toggle for iCal export feature
   final String? icalExportUrl; // Generated iCal URL (if enabled)
+  final String? icalExportToken; // Security token for public feed
   final DateTime? icalExportLastGenerated; // Last time iCal was generated
 
   // Tax/Legal Disclaimer
@@ -66,6 +67,7 @@ class WidgetSettings {
     this.externalCalendarConfig,
     this.icalExportEnabled = false,
     this.icalExportUrl,
+    this.icalExportToken,
     this.icalExportLastGenerated,
     required this.taxLegalConfig,
     this.themeOptions,
@@ -105,6 +107,7 @@ class WidgetSettings {
           : null,
       icalExportEnabled: data['ical_export_enabled'] ?? false,
       icalExportUrl: data['ical_export_url'],
+      icalExportToken: data['ical_export_token'],
       icalExportLastGenerated: (data['ical_export_last_generated'] as Timestamp?)?.toDate(),
       taxLegalConfig: TaxLegalConfig.fromMap(data['tax_legal_config'] ?? {}),
       themeOptions: data['theme_options'] != null
@@ -136,6 +139,7 @@ class WidgetSettings {
       'external_calendar_config': externalCalendarConfig?.toMap(),
       'ical_export_enabled': icalExportEnabled,
       'ical_export_url': icalExportUrl,
+      'ical_export_token': icalExportToken,
       'ical_export_last_generated': icalExportLastGenerated != null
           ? Timestamp.fromDate(icalExportLastGenerated!)
           : null,
@@ -180,6 +184,7 @@ class WidgetSettings {
     ExternalCalendarConfig? externalCalendarConfig,
     bool? icalExportEnabled,
     String? icalExportUrl,
+    String? icalExportToken,
     DateTime? icalExportLastGenerated,
     TaxLegalConfig? taxLegalConfig,
     ThemeOptions? themeOptions,
@@ -204,6 +209,7 @@ class WidgetSettings {
       externalCalendarConfig: externalCalendarConfig ?? this.externalCalendarConfig,
       icalExportEnabled: icalExportEnabled ?? this.icalExportEnabled,
       icalExportUrl: icalExportUrl ?? this.icalExportUrl,
+      icalExportToken: icalExportToken ?? this.icalExportToken,
       icalExportLastGenerated: icalExportLastGenerated ?? this.icalExportLastGenerated,
       taxLegalConfig: taxLegalConfig ?? this.taxLegalConfig,
       themeOptions: themeOptions ?? this.themeOptions,

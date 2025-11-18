@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/config/router_owner.dart';
@@ -115,13 +116,38 @@ class IcalExportCard extends ConsumerWidget {
   Widget _buildMasterToggle() {
     return SwitchListTile(
       value: icalExportEnabled,
-      onChanged: onEnabledChanged,
+      onChanged: (value) async {
+        // Call parent's onEnabledChanged first
+        onEnabledChanged(value);
+        
+        // If enabling, generate URL and token
+        if (value && settings.icalExportUrl == null) {
+          await _generateIcalUrl();
+        }
+      },
       title: const Text('Enable iCal Export'),
       subtitle: const Text(
         'Generate public iCal URL for external calendar sync',
       ),
       contentPadding: EdgeInsets.zero,
     );
+  }
+
+  Future<void> _generateIcalUrl() async {
+    try {
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('generateIcalExportUrl');
+      
+      await callable.call({
+        'propertyId': propertyId,
+        'unitId': unitId,
+      });
+      
+      // Success - URL will be loaded on next widget refresh
+    } catch (e) {
+      debugPrint('Error generating iCal URL: $e');
+      // Error handling - parent widget will handle via stream
+    }
   }
 
   Widget _buildExportUrlDisplay(ThemeData theme) {

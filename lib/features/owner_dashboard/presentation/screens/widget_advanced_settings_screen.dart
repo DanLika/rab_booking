@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../widget/domain/models/widget_settings.dart';
@@ -91,6 +92,23 @@ class _WidgetAdvancedSettingsScreenState
           .read(widgetSettingsRepositoryProvider)
           .updateWidgetSettings(updatedSettings);
 
+      // Generate or revoke iCal export URL if iCalExportEnabled changed
+      if (_icalExportEnabled != currentSettings.icalExportEnabled) {
+        if (_icalExportEnabled) {
+          // Generate new iCal export URL and token
+          await _generateIcalExportUrl(
+            currentSettings.propertyId,
+            currentSettings.id, // unitId is stored as 'id' field
+          );
+        } else {
+          // Revoke existing iCal export URL
+          await _revokeIcalExportUrl(
+            currentSettings.propertyId,
+            currentSettings.id, // unitId is stored as 'id' field
+          );
+        }
+      }
+
       if (mounted) {
         setState(() => _isSaving = false);
 
@@ -134,6 +152,32 @@ class _WidgetAdvancedSettingsScreenState
         ],
       ),
     );
+  }
+
+  Future<void> _generateIcalExportUrl(String propertyId, String unitId) async {
+    try {
+      final callable = FirebaseFunctions.instance.httpsCallable('generateIcalExportUrl');
+      await callable.call({
+        'propertyId': propertyId,
+        'unitId': unitId,
+      });
+    } catch (e) {
+      debugPrint('Error generating iCal export URL: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _revokeIcalExportUrl(String propertyId, String unitId) async {
+    try {
+      final callable = FirebaseFunctions.instance.httpsCallable('revokeIcalExportUrl');
+      await callable.call({
+        'propertyId': propertyId,
+        'unitId': unitId,
+      });
+    } catch (e) {
+      debugPrint('Error revoking iCal export URL: $e');
+      rethrow;
+    }
   }
 
   @override

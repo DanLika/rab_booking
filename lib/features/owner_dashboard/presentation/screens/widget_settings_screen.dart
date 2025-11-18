@@ -277,6 +277,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
       await repository.updateWidgetSettings(settings);
 
+      // Invalidate provider cache to force refresh
+      ref.invalidate(widget_provider.widgetSettingsStreamProvider);
+
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(
           context,

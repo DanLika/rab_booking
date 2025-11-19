@@ -77,10 +77,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     theme.colorScheme.surface,
                     theme.colorScheme.surface.withOpacity(0.95),
                   ]
-                : [
-                    const Color(0xFFFAF8F3),
-                    Colors.white,
-                  ],
+                : [const Color(0xFFFAF8F3), Colors.white],
             stops: const [0.0, 0.3],
           ),
         ),
@@ -105,7 +102,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             border: Border(
               right: BorderSide(
                 color: theme.colorScheme.outline.withOpacity(0.2),
-                width: 1,
               ),
             ),
           ),
@@ -113,9 +109,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ),
 
         // Detail panel (right) - Tab content
-        Expanded(
-          child: _buildDetailPanel(theme, isDark),
-        ),
+        Expanded(child: _buildDetailPanel(theme, isDark)),
       ],
     );
   }
@@ -128,9 +122,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         if (_selectedUnit != null) _buildSelectedUnitHeader(theme, isDark),
 
         // Tab navigation
-        Expanded(
-          child: _buildDetailPanel(theme, isDark),
-        ),
+        Expanded(child: _buildDetailPanel(theme, isDark)),
       ],
     );
   }
@@ -151,10 +143,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           ),
           child: Row(
             children: [
-              Icon(
-                Icons.home_work_outlined,
-                color: theme.colorScheme.primary,
-              ),
+              Icon(Icons.home_work_outlined, color: theme.colorScheme.primary),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -176,9 +165,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ),
 
         // Units list
-        Expanded(
-          child: _buildUnitsListView(theme, isDark),
-        ),
+        Expanded(child: _buildUnitsListView(theme, isDark)),
       ],
     );
   }
@@ -246,7 +233,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   Text(
                     'Dodajte prvu jedinicu da biste počeli',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                      color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                        0.7,
+                      ),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -310,7 +299,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       child: InkWell(
         onTap: () async {
           // Fetch property details for selected unit
-          final property = await ref.read(propertyByIdProvider(unit.propertyId).future);
+          final property = await ref.read(
+            propertyByIdProvider(unit.propertyId).future,
+          );
           if (mounted) {
             setState(() {
               _selectedUnit = unit;
@@ -355,7 +346,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     child: Text(
                       unit.isAvailable ? 'Dostupan' : 'Nedostupan',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: unit.isAvailable ? AppColors.success : AppColors.error,
+                        color: unit.isAvailable
+                            ? AppColors.success
+                            : AppColors.error,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -392,7 +385,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     '${unit.maxGuests}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isSelected
-                          ? theme.colorScheme.onPrimaryContainer.withOpacity(0.7)
+                          ? theme.colorScheme.onPrimaryContainer.withOpacity(
+                              0.7,
+                            )
                           : theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -409,7 +404,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     '${unit.pricePerNight.toStringAsFixed(0)}/noć',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isSelected
-                          ? theme.colorScheme.onPrimaryContainer.withOpacity(0.7)
+                          ? theme.colorScheme.onPrimaryContainer.withOpacity(
+                              0.7,
+                            )
                           : theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),
@@ -430,9 +427,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       decoration: BoxDecoration(
         color: theme.colorScheme.primaryContainer,
         border: Border(
-          bottom: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
-          ),
+          bottom: BorderSide(color: theme.colorScheme.outline.withOpacity(0.2)),
         ),
       ),
       child: Row(
@@ -460,7 +455,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   Text(
                     _selectedProperty!.name,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onPrimaryContainer.withOpacity(0.7),
+                      color: theme.colorScheme.onPrimaryContainer.withOpacity(
+                        0.7,
+                      ),
                     ),
                   ),
               ],

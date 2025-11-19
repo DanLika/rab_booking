@@ -29,7 +29,8 @@ import 'calendar/check_in_out_diagonal_indicator.dart';
 class TimelineCalendarWidget extends ConsumerStatefulWidget {
   final bool showSummary;
   final Function(DateTime date, UnitModel unit)? onCellLongPress;
-  final DateTime? initialScrollToDate; // Date to scroll to on init (null = today)
+  final DateTime?
+  initialScrollToDate; // Date to scroll to on init (null = today)
 
   const TimelineCalendarWidget({
     super.key,
@@ -278,7 +279,9 @@ class _TimelineCalendarWidgetState
     final dayWidth = _getDayWidth(context);
     final scrollPosition = daysSinceStart * dayWidth;
 
-    print('[TIMELINE] _scrollToToday: startDate=$startDate, targetDate=$targetDate, daysSinceStart=$daysSinceStart');
+    print(
+      '[TIMELINE] _scrollToToday: startDate=$startDate, targetDate=$targetDate, daysSinceStart=$daysSinceStart',
+    );
 
     // Scroll to target date (centered in viewport) with smooth animation
     final maxScroll = _horizontalScrollController.position.maxScrollExtent;
@@ -404,15 +407,26 @@ class _TimelineCalendarWidgetState
                     data: (bookingsByUnit) {
                       // Always show timeline view, even if no bookings exist
                       // (empty calendar grid is better UX than empty state)
-                      final totalBookings = bookingsByUnit.values.fold<int>(0, (sum, list) => sum + list.length);
-                      print('[TIMELINE] Building timeline with ${units.length} units and ${bookingsByUnit.length} booking groups');
-                      print('[TIMELINE] Total bookings across all groups: $totalBookings');
+                      final totalBookings = bookingsByUnit.values.fold<int>(
+                        0,
+                        (sum, list) => sum + list.length,
+                      );
+                      print(
+                        '[TIMELINE] Building timeline with ${units.length} units and ${bookingsByUnit.length} booking groups',
+                      );
+                      print(
+                        '[TIMELINE] Total bookings across all groups: $totalBookings',
+                      );
 
                       // Debug each unit's bookings
                       bookingsByUnit.forEach((unitId, bookings) {
-                        print('[TIMELINE] Unit $unitId has ${bookings.length} bookings');
+                        print(
+                          '[TIMELINE] Unit $unitId has ${bookings.length} bookings',
+                        );
                         for (final booking in bookings) {
-                          print('[TIMELINE]   - Booking ${booking.id}: checkIn=${booking.checkIn}, checkOut=${booking.checkOut}');
+                          print(
+                            '[TIMELINE]   - Booking ${booking.id}: checkIn=${booking.checkIn}, checkOut=${booking.checkOut}',
+                          );
                         }
                       });
 
@@ -685,7 +699,10 @@ class _TimelineCalendarWidgetState
           bottom: BorderSide(color: theme.dividerColor, width: 1.5),
         ),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8), // FIXED: Increased from 4 to 8 for desktop view
+      padding: const EdgeInsets.symmetric(
+        vertical: 6,
+        horizontal: 8,
+      ), // FIXED: Increased from 4 to 8 for desktop view
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
@@ -1007,7 +1024,9 @@ class _TimelineCalendarWidgetState
     final dayWidth = _getDayWidth(context);
     final List<Widget> blocks = [];
 
-    print('[TIMELINE RENDER] _buildReservationBlocks called with ${bookings.length} bookings, visible dates: ${dates.first} to ${dates.last}');
+    print(
+      '[TIMELINE RENDER] _buildReservationBlocks called with ${bookings.length} bookings, visible dates: ${dates.first} to ${dates.last}',
+    );
 
     for (final booking in bookings) {
       // Calculate position and width
@@ -1017,11 +1036,15 @@ class _TimelineCalendarWidgetState
       // Find index of check-in date in visible range
       final startIndex = dates.indexWhere((d) => _isSameDay(d, checkIn));
       if (startIndex == -1) {
-        print('[TIMELINE RENDER] Skipping booking ${booking.id}: checkIn=${checkIn} not in visible range');
+        print(
+          '[TIMELINE RENDER] Skipping booking ${booking.id}: checkIn=$checkIn not in visible range',
+        );
         continue; // Booking not in visible range
       }
 
-      print('[TIMELINE RENDER] Rendering booking ${booking.id}: checkIn=${checkIn}, startIndex=$startIndex, nights=$nights');
+      print(
+        '[TIMELINE RENDER] Rendering booking ${booking.id}: checkIn=$checkIn, startIndex=$startIndex, nights=$nights',
+      );
 
       // Calculate left position (including offset for windowing)
       final left = offsetWidth + (startIndex * dayWidth);
@@ -1234,10 +1257,7 @@ class _TimelineCalendarWidgetState
           children: BookingStatus.values.map((status) {
             return ListTile(
               title: Text(status.displayName),
-              leading: Icon(
-                Icons.circle,
-                color: status.color,
-              ),
+              leading: Icon(Icons.circle, color: status.color),
               onTap: () => Navigator.of(context).pop(status),
             );
           }).toList(),

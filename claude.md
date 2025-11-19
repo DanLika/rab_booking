@@ -4,10 +4,57 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
-## 🐛 Booking Widget - Auto-Open Pill Bar Fix
+## 🐛 Booking Widget - Pill Bar Fix (Chicken-and-Egg Bug)
+
+**Datum: 2025-11-19**
+**Status: ✅ FIXED - Pill bar sada prikazuje nakon selekcije datuma**
+
+#### 📋 Problem
+
+**KRITIČAN BUG:** Pill bar se NIJE prikazivao nakon što korisnik selektuje datume! Korisnici nisu mogli da naprave rezervaciju.
+
+**Root Cause - Chicken-and-Egg Logic:**
+```dart
+// Display logic (BROKEN):
+if (_checkIn != null &&
+    _checkOut != null &&
+    _hasInteractedWithBookingFlow &&  // ← Set SAMO kada klikne Reserve button
+    !_pillBarDismissed)
+```
+
+Problem: `_hasInteractedWithBookingFlow` se postavljao tek kada korisnik klikne **Reserve button**, ali Reserve button je UNUTAR pill bar-a! Ako pill bar nije vidljiv, korisnik ne može kliknuti Reserve → chicken-and-egg!
+
+---
+
+#### 🔧 Rješenje
+
+**Selekcija datuma JE interakcija sa booking flow-om!** Kada korisnik selektuje datume, to pokazuje interes za rezervaciju.
+
+**Fix - Date Selection Handler (`booking_widget_screen.dart` Lines 725-728):**
+```dart
+setState(() {
+  _checkIn = start;
+  _checkOut = end;
+  _pillBarPosition = null;
+  // Bug Fix: Date selection IS interaction - show booking flow
+  _hasInteractedWithBookingFlow = true;
+  _pillBarDismissed = false; // Reset dismissed flag for new date selection
+});
+_saveFormData();
+```
+
+**Logika:**
+- Korisnik selektuje datume → `_hasInteractedWithBookingFlow = true` → pill bar se prikaže ✅
+- Korisnik klikne X (dismiss) → pill bar se sakriva ✅
+- Korisnik selektuje NOVE datume → `_pillBarDismissed = false` → pill bar se ponovo prikaže ✅
+- Korisnik refresh-uje stranicu → čuva se dismissed state iz localStorage ✅
+
+---
+
+## 🐛 Booking Widget - Auto-Open Pill Bar Fix (Original)
 
 **Datum: 2025-11-18**
-**Status: ✅ ZAVRŠENO - Pill bar više se ne otvara automatski nakon refresh-a**
+**Status: ⚠️ DELIMIČNO - Pravio chicken-and-egg bug (fixed 2025-11-19)**
 
 #### 📋 Problem
 

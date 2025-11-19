@@ -722,6 +722,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                     _checkOut = end;
                                     _pillBarPosition =
                                         null; // Reset position when new dates selected
+                                    // Bug Fix: Date selection IS interaction - show booking flow
+                                    _hasInteractedWithBookingFlow = true;
+                                    _pillBarDismissed =
+                                        false; // Reset dismissed flag for new date selection
                                   });
 
                                   // Bug #53: Save form data after date selection

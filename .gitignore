@@ -78,3 +78,4 @@ firebase-service-account-key.json
 build_output.txt
 supabase/supabase/
 coverage/
+.firebase/hosting.*.cache

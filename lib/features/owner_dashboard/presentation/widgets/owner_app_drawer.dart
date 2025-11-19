@@ -168,9 +168,17 @@ class OwnerAppDrawer extends ConsumerWidget {
                 // KONFIGURACIJA Section
                 const _DrawerSectionDivider(label: 'KONFIGURACIJA'),
                 _DrawerSubItem(
-                  title: 'Smještajne jedinice',
+                  title: 'Moji Objekti',
+                  subtitle: 'Properties management',
                   isSelected: currentRoute == 'properties',
                   onTap: () => context.go(OwnerRoutes.properties),
+                ),
+                _DrawerSubItem(
+                  title: 'Widget Podešavanja',
+                  subtitle: 'Boje, jezik, prikaz',
+                  icon: Icons.widgets,
+                  isSelected: currentRoute == 'widget-settings',
+                  onTap: () => context.go(OwnerRoutes.unitHub),
                 ),
               ],
             ),

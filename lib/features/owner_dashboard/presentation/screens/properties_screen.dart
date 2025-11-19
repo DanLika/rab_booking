@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/config/router_owner.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/property_card_owner.dart';
 import '../providers/owner_properties_provider.dart';
-import 'property_form_screen.dart';
-import 'units_management_screen.dart';
+
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/widgets/gradient_button.dart';
@@ -256,11 +257,8 @@ class PropertiesScreen extends ConsumerWidget {
   }
 
   void _navigateToUnitsManagement(BuildContext context, String propertyId) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => UnitsManagementScreen(propertyId: propertyId),
-      ),
-    );
+    // Navigate to Unified Unit Hub with property filter
+    context.push('${OwnerRoutes.unitHub}?propertyId=$propertyId');
   }
 
   Future<void> _togglePublished(

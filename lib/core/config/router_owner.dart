@@ -20,9 +20,7 @@ import '../../features/owner_dashboard/presentation/screens/owner_bookings_scree
 import '../../features/owner_dashboard/presentation/screens/property_form_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/unit_form_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/unit_pricing_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/units_management_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/widget_settings_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/widget_settings_list_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/notifications_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/profile_screen.dart';
@@ -432,15 +430,13 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Unified Unit Hub route (Master-Detail with Tabs)
+      // Unified Unit Hub route
       GoRoute(
         path: OwnerRoutes.unitHub,
         builder: (context, state) {
-          final unitId = state.uri.queryParameters['unitId'];
-          final tabIndex = int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+          final propertyId = state.uri.queryParameters['propertyId'];
           return UnifiedUnitHubScreen(
-            initialUnitId: unitId,
-            initialTabIndex: tabIndex,
+            initialPropertyFilter: propertyId,
           );
         },
       ),
@@ -469,11 +465,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const NotificationSettingsScreen(),
       ),
 
-      // Widget Settings List route
-      GoRoute(
-        path: OwnerRoutes.widgetSettings,
-        builder: (context, state) => const WidgetSettingsListScreen(),
-      ),
+
 
       // Integrations routes
       GoRoute(

@@ -1,22 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/config/router_owner.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/property_model.dart';
 import '../providers/owner_properties_provider.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import 'unit_pricing_screen.dart';
+import 'widget_settings_screen.dart';
+import 'widget_advanced_settings_screen.dart';
+
 
 /// Unified Unit Hub - Centralno mjesto za sve unit operacije
 /// Master-Detail layout sa tab navigacijom
 class UnifiedUnitHubScreen extends ConsumerStatefulWidget {
   final String? initialUnitId;
+  final String? initialPropertyId;
   final int initialTabIndex;
+  final String? initialPropertyFilter;
 
   const UnifiedUnitHubScreen({
     super.key,
     this.initialUnitId,
+    this.initialPropertyId,
     this.initialTabIndex = 0,
+    this.initialPropertyFilter,
   });
 
   @override
@@ -29,6 +39,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   UnitModel? _selectedUnit;
   PropertyModel? _selectedProperty;
   late TabController _tabController;
+  
+  // Search and filter state
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  String? _selectedPropertyFilter; // null = all properties
 
   final List<Tab> _tabs = const [
     Tab(text: 'Osnovni Podaci', icon: Icon(Icons.info_outline)),
@@ -45,11 +60,22 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       vsync: this,
       initialIndex: widget.initialTabIndex,
     );
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
+    
+    // Initialize property filter from parameter
+    if (widget.initialPropertyFilter != null) {
+      _selectedPropertyFilter = widget.initialPropertyFilter;
+    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -129,6 +155,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
   /// Master panel - Units list (all properties)
   Widget _buildMasterPanel(ThemeData theme, bool isDark) {
+    final propertiesAsync = ref.watch(ownerPropertiesProvider);
+
     return Column(
       children: [
         // Header
@@ -141,24 +169,103 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               ),
             ),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.home_work_outlined, color: theme.colorScheme.primary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Sve Jedinice',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+              Row(
+                children: [
+                  Icon(Icons.home_work_outlined, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Sve Jedinice',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.add_circle_outline),
+                    onPressed: () {
+                      context.push(OwnerRoutes.unitNew);
+                    },
+                    tooltip: 'Dodaj novu jedinicu',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              
+              // Search bar
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Pretraži jedinice...',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 20),
+                          onPressed: () {
+                            _searchController.clear();
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerHighest,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  isDense: true,
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline),
-                onPressed: () {
-                  // TODO: Navigate to create new unit
+              const SizedBox(height: 8),
+              
+              // Property filter dropdown
+              propertiesAsync.when(
+                data: (properties) {
+                  if (properties.isEmpty) return const SizedBox.shrink();
+                  
+                  return DropdownButtonFormField<String?>(
+                    value: _selectedPropertyFilter,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.filter_list, size: 20),
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceContainerHighest,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      isDense: true,
+                    ),
+                    items: [
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('Svi objekti'),
+                      ),
+                      ...properties.map((property) {
+                        return DropdownMenuItem<String?>(
+                          value: property.id,
+                          child: Text(property.name),
+                        );
+                      }),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedPropertyFilter = value;
+                      });
+                    },
+                  );
                 },
-                tooltip: 'Dodaj novu jedinicu',
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
               ),
             ],
           ),
@@ -210,7 +317,24 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ),
       ),
       data: (units) {
-        if (units.isEmpty) {
+        // Apply filters
+        var filteredUnits = units.where((unit) {
+          // Search filter
+          if (_searchQuery.isNotEmpty) {
+            final matchesSearch = unit.name.toLowerCase().contains(_searchQuery) ||
+                (unit.description?.toLowerCase().contains(_searchQuery) ?? false);
+            if (!matchesSearch) return false;
+          }
+          
+          // Property filter
+          if (_selectedPropertyFilter != null) {
+            if (unit.propertyId != _selectedPropertyFilter) return false;
+          }
+          
+          return true;
+        }).toList();
+
+        if (filteredUnits.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(32.0),
@@ -218,20 +342,26 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.home_work_outlined,
+                    _searchQuery.isNotEmpty || _selectedPropertyFilter != null
+                        ? Icons.search_off
+                        : Icons.home_work_outlined,
                     size: 64,
                     color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Nema smještajnih jedinica',
+                    _searchQuery.isNotEmpty || _selectedPropertyFilter != null
+                        ? 'Nema rezultata'
+                        : 'Nema smještajnih jedinica',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Dodajte prvu jedinicu da biste počeli',
+                    _searchQuery.isNotEmpty || _selectedPropertyFilter != null
+                        ? 'Pokušajte promijeniti filter'
+                        : 'Dodajte prvu jedinicu da biste počeli',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant.withOpacity(
                         0.7,
@@ -255,9 +385,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
         return ListView.builder(
           padding: const EdgeInsets.all(8),
-          itemCount: units.length,
+          itemCount: filteredUnits.length,
           itemBuilder: (context, index) {
-            final unit = units[index];
+            final unit = filteredUnits[index];
             final property = propertiesMap[unit.propertyId];
             final isSelected = _selectedUnit?.id == unit.id;
 
@@ -546,41 +676,270 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
   // Tab content builders
   Widget _buildTab1_BasicInfo(ThemeData theme, bool isDark) {
-    return Center(
-      child: Text(
-        'Tab 1: Osnovni Podaci\n(Unit Form Screen)',
-        style: theme.textTheme.titleMedium,
-        textAlign: TextAlign.center,
-      ),
+    if (_selectedUnit == null) return const SizedBox.shrink();
+
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        // Header with Edit Button
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Osnovni Podaci',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            FilledButton.icon(
+              onPressed: () {
+                context.push(
+                  OwnerRoutes.unitEdit.replaceAll(':id', _selectedUnit!.id),
+                );
+              },
+              icon: const Icon(Icons.edit, size: 18),
+              label: const Text('Uredi'),
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+
+        // Unit Details Cards
+        _buildInfoCard(
+          theme,
+          title: 'Informacije',
+          icon: Icons.info_outline,
+          children: [
+            _buildDetailRow(theme, 'Naziv', _selectedUnit!.name),
+            _buildDetailRow(theme, 'Slug', _selectedUnit!.slug ?? 'N/A'),
+            if (_selectedUnit!.description != null)
+              _buildDetailRow(theme, 'Opis', _selectedUnit!.description!),
+            _buildDetailRow(
+              theme,
+              'Status',
+              _selectedUnit!.isAvailable ? 'Dostupan' : 'Nedostupan',
+              valueColor: _selectedUnit!.isAvailable
+                  ? AppColors.success
+                  : AppColors.error,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        _buildInfoCard(
+          theme,
+          title: 'Kapacitet',
+          icon: Icons.people_outline,
+          children: [
+            _buildDetailRow(
+              theme,
+              'Spavaće sobe',
+              '${_selectedUnit!.bedrooms}',
+            ),
+            _buildDetailRow(
+              theme,
+              'Kupaonice',
+              '${_selectedUnit!.bathrooms}',
+            ),
+            _buildDetailRow(
+              theme,
+              'Max gostiju',
+              '${_selectedUnit!.maxGuests}',
+            ),
+            if (_selectedUnit!.areaSqm != null)
+              _buildDetailRow(
+                theme,
+                'Površina',
+                '${_selectedUnit!.areaSqm!.toStringAsFixed(0)} m²',
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        _buildInfoCard(
+          theme,
+          title: 'Cijena',
+          icon: Icons.euro_outlined,
+          children: [
+            _buildDetailRow(
+              theme,
+              'Cijena po noći',
+              '€${_selectedUnit!.pricePerNight.toStringAsFixed(0)}',
+              valueColor: theme.colorScheme.primary,
+            ),
+            _buildDetailRow(
+              theme,
+              'Min noći',
+              '${_selectedUnit!.minStayNights}',
+            ),
+          ],
+        ),
+
+        // Images Section
+        if (_selectedUnit!.images.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _buildInfoCard(
+            theme,
+            title: 'Fotografije',
+            icon: Icons.photo_library_outlined,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _selectedUnit!.images.take(6).map((imageUrl) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      imageUrl,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 100,
+                          height: 100,
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          child: Icon(
+                            Icons.broken_image,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+              if (_selectedUnit!.images.length > 6)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '+${_selectedUnit!.images.length - 6} više',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 
   Widget _buildTab2_Pricing(ThemeData theme, bool isDark) {
-    return Center(
-      child: Text(
-        'Tab 2: Cjenovnik\n(Price Calendar)',
-        style: theme.textTheme.titleMedium,
-        textAlign: TextAlign.center,
-      ),
-    );
+    if (_selectedUnit == null) return const SizedBox.shrink();
+
+    // Embed UnitPricingScreen content
+    return UnitPricingScreen(unit: _selectedUnit!);
   }
 
   Widget _buildTab3_Widget(ThemeData theme, bool isDark) {
-    return Center(
-      child: Text(
-        'Tab 3: Widget Settings',
-        style: theme.textTheme.titleMedium,
-        textAlign: TextAlign.center,
-      ),
+    if (_selectedUnit == null || _selectedProperty == null) {
+      return const SizedBox.shrink();
+    }
+
+    // Embed WidgetSettingsScreen content
+    return WidgetSettingsScreen(
+      propertyId: _selectedProperty!.id,
+      unitId: _selectedUnit!.id,
     );
   }
 
   Widget _buildTab4_Advanced(ThemeData theme, bool isDark) {
-    return Center(
-      child: Text(
-        'Tab 4: Napredne Postavke',
-        style: theme.textTheme.titleMedium,
-        textAlign: TextAlign.center,
+    if (_selectedUnit == null || _selectedProperty == null) {
+      return const SizedBox.shrink();
+    }
+
+    // Embed WidgetAdvancedSettingsScreen content
+    return WidgetAdvancedSettingsScreen(
+      propertyId: _selectedProperty!.id,
+      unitId: _selectedUnit!.id,
+    );
+  }
+
+  // Helper methods for Tab 1
+  Widget _buildInfoCard(
+    ThemeData theme, {
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.authSecondary],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(
+    ThemeData theme,
+    String label,
+    String value, {
+    Color? valueColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: valueColor ?? theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

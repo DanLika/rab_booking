@@ -154,7 +154,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }
 
   /// Master panel - Units list (all properties)
-  Widget _buildMasterPanel(ThemeData theme, bool isDark) {
+  Widget _buildMasterPanel(
+    ThemeData theme,
+    bool isDark, {
+    VoidCallback? onUnitSelected,
+  }) {
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
 
     return Column(
@@ -272,13 +276,23 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ),
 
         // Units list
-        Expanded(child: _buildUnitsListView(theme, isDark)),
+      Expanded(
+        child: _buildUnitsListView(
+          theme,
+          isDark,
+          onUnitSelected: onUnitSelected,
+        ),
+      ),
       ],
     );
   }
 
   /// Units list view - fetches and displays all units
-  Widget _buildUnitsListView(ThemeData theme, bool isDark) {
+  Widget _buildUnitsListView(
+    ThemeData theme,
+    bool isDark, {
+    VoidCallback? onUnitSelected,
+  }) {
     final unitsAsync = ref.watch(ownerUnitsProvider);
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
 
@@ -392,12 +406,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             final isSelected = _selectedUnit?.id == unit.id;
 
             return _buildUnitListTile(
-              theme,
-              isDark,
-              unit: unit,
-              propertyName: property?.name ?? 'Unknown Property',
-              isSelected: isSelected,
-            );
+            theme,
+            isDark,
+            unit: unit,
+            propertyName: property?.name ?? 'Unknown Property',
+            isSelected: isSelected,
+            onUnitSelected: onUnitSelected,
+          );
           },
         );
       },
@@ -411,6 +426,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     required UnitModel unit,
     required String propertyName,
     required bool isSelected,
+    VoidCallback? onUnitSelected,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -435,9 +451,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           if (mounted) {
             setState(() {
               _selectedUnit = unit;
-              _selectedProperty = property;
-            });
-          }
+            _selectedProperty = property;
+          });
+          onUnitSelected?.call();
+        }
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -564,9 +581,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         children: [
           IconButton(
             icon: const Icon(Icons.list),
-            onPressed: () {
-              // TODO: Show units list modal
-            },
+            onPressed: () => _showUnitsListModal(context, theme, isDark),
             tooltip: 'Prikaži sve jedinice',
           ),
           const SizedBox(width: 8),
@@ -940,6 +955,51 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showUnitsListModal(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: BoxDecoration(
+          color: isDark
+              ? theme.colorScheme.surface
+              : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Master panel content
+            Expanded(
+              child: _buildMasterPanel(
+                theme,
+                isDark,
+                onUnitSelected: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

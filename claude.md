@@ -4,6 +4,58 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🏢 Unified Unit Hub - Centralized Unit Management
+
+**Datum: 2025-11-19**
+**Status: ✅ COMPLETED - Full implementation**
+
+### 📋 Overview
+
+Implementiran je centralizovani "Unified Unit Hub" koji zamjenjuje fragmentirane ekrane za upravljanje smještajnim jedinicama. Novi hub koristi Master-Detail pattern za efikasnije upravljanje.
+
+### 🔧 Key Features
+
+#### 1. Master-Detail Layout
+- **Desktop**: Split view (Master panel lijevo, Details panel desno)
+- **Mobile**: Full screen sa tabovima
+- **Master Panel**: Lista svih jedinica sa search i filter opcijama
+- **Details Panel**: Tabovi za različite aspekte jedinice
+
+#### 2. Tabbed Interface
+- **Osnovni Podaci**: Pregled i editovanje informacija o jedinici
+- **Cjenovnik**: Upravljanje cijenama i sezonama
+- **Widget**: Podešavanje izgleda widgeta
+- **Napredne Postavke**: iCal, email verifikacija, itd.
+
+#### 3. Search & Filter
+- Pretraga po nazivu i opisu jedinice
+- Filtriranje po objektu (Property)
+- Status indikatori (Dostupan/Nedostupan)
+
+### 📁 Modified Files
+
+1. `lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart`
+   - Glavni screen sa Master-Detail logikom
+   - Implementacija svih tabova
+
+2. `lib/core/config/router_owner.dart`
+   - Dodan route `unitHub`
+   - Uklonjeni routes za `widgetSettings` i `units` (stari screens)
+
+3. `lib/features/owner_dashboard/presentation/widgets/owner_app_drawer.dart`
+   - Ažurirana navigacija da vodi na Unit Hub
+   - "Widget Podešavanja" sada vodi direktno na Unit Hub (Tab 3)
+
+4. `lib/features/owner_dashboard/presentation/screens/properties_screen.dart`
+   - "Prikaži Jedinice" sada vodi na Unit Hub sa pre-selektovanim filterom
+
+### 🗑️ Deleted Files (Cleanup)
+
+- `lib/features/owner_dashboard/presentation/screens/widget_settings_list_screen.dart` (Obsolete)
+- `lib/features/owner_dashboard/presentation/screens/units_management_screen.dart` (Obsolete)
+
+---
+
 ## 🎨 Owner Bookings - UI/UX Improvements & Bug Fixes
 
 **Datum: 2025-11-19**

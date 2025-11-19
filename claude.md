@@ -32,15 +32,21 @@ Implementiran je centralizovani "Unified Unit Hub" koji zamjenjuje fragmentirane
 - Filtriranje po objektu (Property)
 - Status indikatori (Dostupan/Nedostupan)
 
+#### 4. Mobile Optimization
+- **Units List Modal**: Bottom sheet za brzi odabir jedinice na mobilnim uređajima
+- Full-screen tab navigacija
+
 ### 📁 Modified Files
 
 1. `lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart`
    - Glavni screen sa Master-Detail logikom
    - Implementacija svih tabova
+   - **Mobile Modal**: Implementiran `_showUnitsListModal` za navigaciju na malim ekranima
 
 2. `lib/core/config/router_owner.dart`
    - Dodan route `unitHub`
-   - Uklonjeni routes za `widgetSettings` i `units` (stari screens)
+   - Uklonjeni routes za `widgetSettings`
+   - **Fix**: Route `units` preusmjeren na `unitHub` radi backward compatibility-a
 
 3. `lib/features/owner_dashboard/presentation/widgets/owner_app_drawer.dart`
    - Ažurirana navigacija da vodi na Unit Hub

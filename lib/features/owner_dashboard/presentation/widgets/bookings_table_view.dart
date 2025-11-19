@@ -46,7 +46,12 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           if (_selectedBookingIds.isNotEmpty)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: AppColors.authPrimary.withValues(alpha: 0.1),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: 0.3)
+                  : AppColors.authPrimary.withValues(alpha: 0.1),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -251,7 +256,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
             booking.formattedTotalPrice,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).primaryColor,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : Theme.of(context).primaryColor,
             ),
           ),
         ),
@@ -487,6 +494,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               backgroundColor: AppColors.success,
             ),
           );
+          ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
 
           // Auto-regenerate iCal if enabled
@@ -538,6 +546,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               backgroundColor: AppColors.success,
             ),
           );
+          ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
 
           // Auto-regenerate iCal if enabled
@@ -627,6 +636,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               backgroundColor: AppColors.warning,
             ),
           );
+          ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
 
           // Auto-regenerate iCal if enabled
@@ -690,6 +700,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
               backgroundColor: AppColors.error,
             ),
           );
+          ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {
@@ -748,6 +759,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
           setState(_selectedBookingIds.clear);
 
+          ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {
@@ -827,6 +839,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
           setState(_selectedBookingIds.clear);
 
+          ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {
@@ -889,6 +902,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
 
           setState(_selectedBookingIds.clear);
 
+          ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {

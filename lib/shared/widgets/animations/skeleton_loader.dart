@@ -339,7 +339,7 @@ class ReviewCardSkeleton extends StatelessWidget {
   }
 }
 
-/// Booking card skeleton loader
+/// Booking card skeleton loader - improved to match real card layout
 class BookingCardSkeleton extends StatelessWidget {
   const BookingCardSkeleton({super.key});
 
@@ -347,55 +347,360 @@ class BookingCardSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.spaceS),
-      decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.surface : Colors.white,
-        borderRadius: BorderRadius.circular(
-          AppDimensions.radiusM,
-        ), // 20px modern radius (matches real card)
-        border: Border.all(
+    return Card(
+      elevation: 0.5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
           color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
         ),
       ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header Section
+            Container(
+              padding: EdgeInsets.all(isMobile ? 12 : 16),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.grey[800]!.withAlpha((0.3 * 255).toInt())
+                    : Colors.grey[100]!,
+                border: Border(
+                  bottom: BorderSide(
+                    color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Status badge skeleton
+                  SkeletonLoader(
+                    width: 100,
+                    height: 34,
+                    borderRadius: 8,
+                  ),
+                  const Spacer(),
+                  // Booking ID skeleton
+                  SkeletonLoader(width: 80, height: 16),
+                ],
+              ),
+            ),
+
+            // Card Body
+            Padding(
+              padding: EdgeInsets.all(isMobile ? 12 : 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Guest info
+                  Row(
+                    children: [
+                      // Avatar skeleton
+                      const SkeletonLoader(
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            SkeletonLoader(width: 150, height: 16),
+                            SizedBox(height: 6),
+                            SkeletonLoader(width: 180, height: 14),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: isMobile ? 12 : 16),
+
+                  // Property/Unit info
+                  Row(
+                    children: const [
+                      SkeletonLoader(width: 20, height: 20, borderRadius: 10),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SkeletonLoader(width: 140, height: 14),
+                            SizedBox(height: 4),
+                            SkeletonLoader(width: 100, height: 12),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: isMobile ? 12 : 16),
+
+                  // Date range
+                  Row(
+                    children: const [
+                      SkeletonLoader(width: 20, height: 20, borderRadius: 10),
+                      SizedBox(width: 8),
+                      SkeletonLoader(width: 200, height: 14),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Nights and guests
+                  Row(
+                    children: const [
+                      SkeletonLoader(width: 100, height: 14),
+                      SizedBox(width: 16),
+                      SkeletonLoader(width: 80, height: 14),
+                    ],
+                  ),
+                  SizedBox(height: isMobile ? 12 : 16),
+
+                  // Payment info
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            SkeletonLoader(width: 60, height: 12),
+                            SizedBox(height: 4),
+                            SkeletonLoader(width: 80, height: 20),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            SkeletonLoader(width: 60, height: 12),
+                            SizedBox(height: 4),
+                            SkeletonLoader(width: 70, height: 18),
+                          ],
+                        ),
+                      ),
+                      if (!isMobile)
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              SkeletonLoader(width: 70, height: 12),
+                              SizedBox(height: 4),
+                              SkeletonLoader(width: 70, height: 18),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Payment progress bar
+                  const SkeletonLoader(
+                    width: double.infinity,
+                    height: 4,
+                    borderRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: isMobile ? 12 : 16),
+
+            // Action buttons skeleton (2x2 grid)
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                isMobile ? 12 : 16,
+                0,
+                isMobile ? 12 : 16,
+                isMobile ? 12 : 16,
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: const [
+                      Expanded(
+                        child: SkeletonLoader(height: 40, borderRadius: 8),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: SkeletonLoader(height: 40, borderRadius: 8),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: const [
+                      Expanded(
+                        child: SkeletonLoader(height: 40, borderRadius: 8),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: SkeletonLoader(height: 40, borderRadius: 8),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Booking table skeleton loader - mimics BookingsTableView structure
+class BookingTableSkeleton extends StatelessWidget {
+  const BookingTableSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Card(
+      elevation: 2,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Property info
-          Row(
-            children: [
-              SkeletonLoader(width: 100, height: 100, borderRadius: 12),
-              SizedBox(width: AppDimensions.spaceS),
-              Expanded(
+          // Table container
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Container(
+                constraints: BoxConstraints(
+                  minWidth: MediaQuery.of(context).size.width - 48,
+                ),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SkeletonLoader(width: double.infinity, height: 16),
-                    SizedBox(height: AppDimensions.spaceXS),
-                    SkeletonLoader(width: 150, height: 14),
+                    // Header row
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? theme.colorScheme.surfaceContainerHighest
+                            : theme.colorScheme.surfaceContainerHigh,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(8),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const SkeletonLoader(width: 80, height: 14),
+                          const SizedBox(width: 24),
+                          const SkeletonLoader(width: 120, height: 14),
+                          const SizedBox(width: 24),
+                          const SkeletonLoader(width: 80, height: 14),
+                          const SizedBox(width: 24),
+                          const SkeletonLoader(width: 80, height: 14),
+                          const SizedBox(width: 24),
+                          const SkeletonLoader(width: 50, height: 14),
+                          const SizedBox(width: 24),
+                          const SkeletonLoader(width: 60, height: 14),
+                          const SizedBox(width: 24),
+                          const SkeletonLoader(width: 70, height: 14),
+                          const SizedBox(width: 24),
+                          const SkeletonLoader(width: 80, height: 14),
+                          const SizedBox(width: 24),
+                          const SkeletonLoader(width: 60, height: 14),
+                          const SizedBox(width: 24),
+                          const SkeletonLoader(width: 70, height: 14),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Data rows (5 rows)
+                    ...List.generate(
+                      5,
+                      (index) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _buildTableRowSkeleton(context, isDark),
+                      ),
+                    ),
                   ],
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableRowSkeleton(BuildContext context, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Guest (name + email)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              SkeletonLoader(width: 100, height: 14),
+              SizedBox(height: 4),
+              SkeletonLoader(width: 120, height: 12),
             ],
           ),
-          SizedBox(height: AppDimensions.spaceS),
-
-          // Booking details
-          SkeletonLoader(width: 180, height: 14),
-          SizedBox(height: AppDimensions.spaceXS),
-          SkeletonLoader(width: 140, height: 14),
-          SizedBox(height: AppDimensions.spaceXS),
-          SkeletonLoader(width: 100, height: 14),
-          SizedBox(height: AppDimensions.spaceS),
-
+          const SizedBox(width: 24),
+          // Property/Unit
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              SkeletonLoader(width: 110, height: 14),
+              SizedBox(height: 4),
+              SkeletonLoader(width: 90, height: 12),
+            ],
+          ),
+          const SizedBox(width: 24),
+          // Check-in
+          const SkeletonLoader(width: 80, height: 14),
+          const SizedBox(width: 24),
+          // Check-out
+          const SkeletonLoader(width: 80, height: 14),
+          const SizedBox(width: 24),
+          // Nights
+          const SkeletonLoader(width: 30, height: 14),
+          const SizedBox(width: 24),
+          // Guests
+          const SkeletonLoader(width: 30, height: 14),
+          const SizedBox(width: 24),
           // Status badge
-          SkeletonLoader(width: 100, height: 32, borderRadius: 16),
+          const SkeletonLoader(width: 80, height: 28, borderRadius: 8),
+          const SizedBox(width: 24),
+          // Price
+          const SkeletonLoader(width: 70, height: 14),
+          const SizedBox(width: 24),
+          // Source
+          const SkeletonLoader(width: 60, height: 14),
+          const SizedBox(width: 24),
+          // Actions (menu icon)
+          const SkeletonLoader(width: 40, height: 40, borderRadius: 20),
         ],
       ),
     );
   }
 }
+
 
 /// Grid skeleton loader
 class SkeletonGrid extends StatelessWidget {

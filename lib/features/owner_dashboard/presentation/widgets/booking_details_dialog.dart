@@ -6,6 +6,7 @@ import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
+import '../providers/owner_bookings_provider.dart';
 import 'edit_booking_dialog.dart';
 import 'send_email_dialog.dart';
 
@@ -122,7 +123,9 @@ class BookingDetailsDialog extends ConsumerWidget {
               _DetailRow(
                 label: 'Ukupna cijena',
                 value: booking.formattedTotalPrice,
-                valueColor: Theme.of(context).primaryColor,
+                valueColor: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : Theme.of(context).primaryColor,
               ),
               _DetailRow(
                 label: 'Plaćeno',
@@ -187,40 +190,47 @@ class BookingDetailsDialog extends ConsumerWidget {
           ),
         ),
       ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
-        // Edit button - only for non-cancelled bookings
-        if (booking.status != BookingStatus.cancelled)
-          TextButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop();
-              showEditBookingDialog(context, ref, booking);
-            },
-            icon: const Icon(Icons.edit_outlined),
-            label: const Text('Uredi'),
-          ),
-
-        // Email button
-        TextButton.icon(
-          onPressed: () {
-            showSendEmailDialog(context, ref, booking);
-          },
-          icon: const Icon(Icons.email_outlined),
-          label: const Text('Email'),
+        // Left side - Edit and Email
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (booking.status != BookingStatus.cancelled)
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  showEditBookingDialog(context, ref, booking);
+                },
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Uredi'),
+              ),
+            TextButton.icon(
+              onPressed: () {
+                showSendEmailDialog(context, ref, booking);
+              },
+              icon: const Icon(Icons.email_outlined, size: 18),
+              label: const Text('Email'),
+            ),
+          ],
         ),
 
-        // Cancel button - only for pending/confirmed bookings
-        if (booking.status == BookingStatus.pending ||
-            booking.status == BookingStatus.confirmed)
-          TextButton.icon(
-            onPressed: () => _confirmCancellation(context, ref),
-            icon: const Icon(Icons.cancel_outlined, color: AppColors.error),
-            label: const Text('Otkaži', style: TextStyle(color: AppColors.error)),
-          ),
-
-        // Close button
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Zatvori'),
+        // Right side - Cancel and Close
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (booking.status == BookingStatus.pending ||
+                booking.status == BookingStatus.confirmed)
+              TextButton.icon(
+                onPressed: () => _confirmCancellation(context, ref),
+                icon: const Icon(Icons.cancel_outlined, color: AppColors.error, size: 18),
+                label: const Text('Otkaži', style: TextStyle(color: AppColors.error)),
+              ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Zatvori'),
+            ),
+          ],
         ),
       ],
     );
@@ -305,6 +315,10 @@ class BookingDetailsDialog extends ConsumerWidget {
           context,
           'Rezervacija uspješno otkazana',
         );
+
+        // Invalidate providers to refresh the list
+        ref.invalidate(allOwnerBookingsProvider);
+        ref.invalidate(ownerBookingsProvider);
 
         // Auto-regenerate iCal if enabled
         _triggerIcalRegeneration(ref);
@@ -392,28 +406,35 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.textColorSecondary,
-                  ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: valueColor,
-                  ),
-            ),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 400;
+          final labelWidth = isMobile ? 100.0 : 140.0;
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: labelWidth,
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.textColorSecondary,
+                      ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  value,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: valueColor,
+                      ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -15,6 +15,7 @@ import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/bookings_table_view.dart';
+import '../widgets/booking_details_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 
@@ -138,20 +139,31 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     );
                   }
                 },
-                loading: () => Column(
-                  children: List.generate(
-                    3,
-                    (index) => Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        context.horizontalPadding,
-                        0,
-                        context.horizontalPadding,
-                        16,
+                loading: () {
+                  if (viewMode == BookingsViewMode.table) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.horizontalPadding,
                       ),
-                      child: const BookingCardSkeleton(),
-                    ),
-                  ),
-                ),
+                      child: const BookingTableSkeleton(),
+                    );
+                  } else {
+                    return Column(
+                      children: List.generate(
+                        5, // Show 5 card skeletons
+                        (index) => Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            context.horizontalPadding,
+                            0,
+                            context.horizontalPadding,
+                            16,
+                          ),
+                          child: const BookingCardSkeleton(),
+                        ),
+                      ),
+                    );
+                  }
+                },
                 error: (error, stack) {
                   // Check if error is about no results or actual error
                   final errorMsg = error.toString().toLowerCase();
@@ -434,7 +446,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       initialValue: filters.status,
       items: [
         const DropdownMenuItem(child: Text('Svi statusi')),
-        ...BookingStatus.values.where((s) => s != BookingStatus.blocked).map((
+        ...BookingStatus.values.where((s) {
+          // Only show statuses that are actively used
+          return s == BookingStatus.pending ||
+              s == BookingStatus.confirmed ||
+              s == BookingStatus.cancelled ||
+              s == BookingStatus.completed;
+        }).map((
           status,
         ) {
           return DropdownMenuItem(
@@ -680,7 +698,16 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             ? DateTimeRange(start: filters.startDate!, end: filters.endDate!)
             : null,
         builder: (context, child) {
-          return Theme(data: Theme.of(context), child: child!);
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: Theme.of(context).colorScheme.copyWith(
+                primary: AppColors.primary,
+                onPrimary: Colors.white,
+                surface: Theme.of(context).scaffoldBackgroundColor,
+              ),
+            ),
+            child: child!,
+          );
         },
       );
 
@@ -1126,155 +1153,216 @@ class _BookingCard extends ConsumerWidget {
                 builder: (context, constraints) {
                   final isActionMobile = constraints.maxWidth < 600;
 
-                  // Build list of action buttons - Minimalist Design
-                  final actionButtons = <Widget>[
-                    // View Details button
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        _showBookingDetails(context, ref, ownerBooking);
-                      },
-                      icon: const Icon(Icons.visibility_outlined, size: 17),
-                      label: const Text('Detalji'),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isActionMobile ? 14 : 16,
-                          vertical: isActionMobile ? 11 : 13,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        side: BorderSide(
-                          color: theme.colorScheme.outline.withAlpha(
-                            (0.3 * 255).toInt(),
-                          ),
-                        ),
+                  // Define buttons
+                  final detailsBtn = OutlinedButton.icon(
+                    onPressed: () {
+                      _showBookingDetails(context, ref, ownerBooking);
+                    },
+                    icon: Icon(
+                      Icons.visibility_outlined,
+                      size: 17,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.grey[300]
+                          : Colors.grey[700],
+                    ),
+                    label: Text(
+                      'Detalji',
+                      style: TextStyle(
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.grey[300]
+                            : Colors.grey[700],
                       ),
                     ),
-
-                    // Approve button (only for pending)
-                    if (booking.status == BookingStatus.pending)
-                      FilledButton.icon(
-                        onPressed: () {
-                          _approveBooking(context, ref, booking.id);
-                        },
-                        icon: const Icon(Icons.check_circle_outline, size: 17),
-                        label: const Text('Odobri'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.success,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isActionMobile ? 14 : 16,
-                            vertical: isActionMobile ? 11 : 13,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                        ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: theme.brightness == Brightness.dark
+                          ? Colors.grey[850]
+                          : Colors.grey[50],
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isActionMobile ? 14 : 16,
+                        vertical: isActionMobile ? 11 : 13,
                       ),
-
-                    // Reject button (only for pending)
-                    if (booking.status == BookingStatus.pending)
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          _rejectBooking(context, ref, booking.id);
-                        },
-                        icon: const Icon(Icons.cancel_outlined, size: 17),
-                        label: const Text('Odbij'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: theme.colorScheme.error,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isActionMobile ? 14 : 16,
-                            vertical: isActionMobile ? 11 : 13,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          side: BorderSide(
-                            color: theme.colorScheme.error.withAlpha(
-                              (0.4 * 255).toInt(),
-                            ),
-                          ),
-                        ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-
-                    // Mark as Completed button (only for confirmed and past check-out)
-                    if (booking.status == BookingStatus.confirmed &&
-                        booking.isPast)
-                      FilledButton.icon(
-                        onPressed: () {
-                          _completeBooking(context, ref, booking.id);
-                        },
-                        icon: const Icon(Icons.done_all_outlined, size: 17),
-                        label: const Text('Završi'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isActionMobile ? 14 : 16,
-                            vertical: isActionMobile ? 11 : 13,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                        ),
+                      side: BorderSide(
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.grey[700]!
+                            : Colors.grey[300]!,
                       ),
+                    ),
+                  );
 
-                    // Cancel button (only for pending/confirmed)
-                    if (booking.canBeCancelled)
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          _cancelBooking(context, ref, booking.id);
-                        },
-                        icon: const Icon(Icons.close, size: 17),
-                        label: const Text('Otkaži'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: theme.colorScheme.error,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isActionMobile ? 14 : 16,
-                            vertical: isActionMobile ? 11 : 13,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          side: BorderSide(
-                            color: theme.colorScheme.error.withAlpha(
-                              (0.4 * 255).toInt(),
-                            ),
-                          ),
-                        ),
+                  final approveBtn = FilledButton.icon(
+                    onPressed: () {
+                      _approveBooking(context, ref, booking.id);
+                    },
+                    icon: const Icon(Icons.check_circle_outline, size: 17),
+                    label: const Text('Odobri'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF66BB6A), // Confirmed badge color
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isActionMobile ? 14 : 16,
+                        vertical: isActionMobile ? 11 : 13,
                       ),
-                  ];
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                  );
 
-                  if (isActionMobile) {
-                    // Column layout for mobile (full-width buttons) with compact spacing
+                  final rejectBtn = FilledButton.icon(
+                    onPressed: () {
+                      _rejectBooking(context, ref, booking.id);
+                    },
+                    icon: const Icon(Icons.cancel_outlined, size: 17),
+                    label: const Text('Odbij'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF5350), // Cancelled badge color
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isActionMobile ? 14 : 16,
+                        vertical: isActionMobile ? 11 : 13,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                  );
+
+                  final completeBtn = FilledButton.icon(
+                    onPressed: () {
+                      _completeBooking(context, ref, booking.id);
+                    },
+                    icon: const Icon(Icons.done_all_outlined, size: 17),
+                    label: const Text('Završi'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isActionMobile ? 14 : 16,
+                        vertical: isActionMobile ? 11 : 13,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                  );
+
+                  final cancelBtn = OutlinedButton.icon(
+                    onPressed: () {
+                      _cancelBooking(context, ref, booking.id);
+                    },
+                    icon: Icon(
+                      Icons.close,
+                      size: 17,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.grey[300]
+                          : Colors.grey[700],
+                    ),
+                    label: Text(
+                      'Otkaži',
+                      style: TextStyle(
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.grey[300]
+                            : Colors.grey[700],
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: theme.brightness == Brightness.dark
+                          ? Colors.grey[850]
+                          : Colors.grey[50],
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isActionMobile ? 14 : 16,
+                        vertical: isActionMobile ? 11 : 13,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      side: BorderSide(
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.grey[700]!
+                            : Colors.grey[300]!,
+                      ),
+                    ),
+                  );
+
+                  // Custom layout for Pending status (2x2 grid)
+                  if (booking.status == BookingStatus.pending) {
                     return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: actionButtons
-                          .asMap()
-                          .entries
-                          .map(
-                            (entry) => Padding(
-                              padding: EdgeInsets.only(
-                                bottom: entry.key < actionButtons.length - 1
-                                    ? 6
-                                    : 0,
-                              ),
-                              child: entry.value,
-                            ),
-                          )
-                          .toList(),
-                    );
-                  } else {
-                    // Wrap layout for desktop (handles multiple buttons gracefully)
-                    // Flexible width - buttons wrap to next line if needed
-                    return Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: actionButtons,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(child: approveBtn),
+                            const SizedBox(width: 8),
+                            Expanded(child: rejectBtn),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(child: detailsBtn),
+                            const SizedBox(width: 8),
+                            Expanded(child: cancelBtn),
+                          ],
+                        ),
+                      ],
                     );
                   }
+
+                  // Default layout for other statuses
+                  final actionButtons = <Widget>[];
+                  
+                  // Always show details
+                  actionButtons.add(detailsBtn);
+
+                  // Mark as Completed button (only for confirmed and past check-out)
+                  if (booking.status == BookingStatus.confirmed &&
+                      booking.isPast) {
+                    actionButtons.add(completeBtn);
+                  }
+
+                  // Cancel button (only if cancellable and not pending - pending handled above)
+                  if (booking.canBeCancelled &&
+                      booking.status != BookingStatus.pending) {
+                    actionButtons.add(cancelBtn);
+                  }
+
+                  if (actionButtons.isEmpty) return const SizedBox.shrink();
+
+                  // Responsive layout:
+                  // 1 button: Full width
+                  // 2 buttons: Row with Expanded
+                  // >2 buttons: Column (fallback)
+                  if (actionButtons.length == 1) {
+                    return SizedBox(
+                      width: double.infinity,
+                      child: actionButtons.first,
+                    );
+                  }
+
+                  if (actionButtons.length == 2) {
+                    return Row(
+                      children: [
+                        Expanded(child: actionButtons[0]),
+                        const SizedBox(width: 8),
+                        Expanded(child: actionButtons[1]),
+                      ],
+                    );
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: actionButtons
+                        .map((btn) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: btn,
+                            ))
+                        .toList(),
+                  );
                 },
               ),
             ),
@@ -1291,7 +1379,7 @@ class _BookingCard extends ConsumerWidget {
   ) {
     showDialog(
       context: context,
-      builder: (context) => _BookingDetailsDialog(ownerBooking: ownerBooking),
+      builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
     );
   }
 
@@ -1417,6 +1505,7 @@ class _BookingCard extends ConsumerWidget {
             context,
             'Rezervacija je uspješno odobrena',
           );
+          ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {
@@ -1571,6 +1660,7 @@ class _BookingCard extends ConsumerWidget {
             context,
             'Rezervacija je odbijena',
           );
+          ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {
@@ -1705,6 +1795,7 @@ class _BookingCard extends ConsumerWidget {
             context,
             'Rezervacija je označena kao završena',
           );
+          ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {
@@ -1874,6 +1965,7 @@ class _BookingCard extends ConsumerWidget {
             context,
             'Rezervacija je otkazana',
           );
+          ref.invalidate(allOwnerBookingsProvider);
           ref.invalidate(ownerBookingsProvider);
         }
       } catch (e) {
@@ -1907,283 +1999,7 @@ class _BookingCard extends ConsumerWidget {
   }
 }
 
-/// Booking details dialog
-class _BookingDetailsDialog extends StatelessWidget {
-  const _BookingDetailsDialog({required this.ownerBooking});
 
-  final OwnerBooking ownerBooking;
-
-  @override
-  Widget build(BuildContext context) {
-    final booking = ownerBooking.booking;
-    final property = ownerBooking.property;
-    final unit = ownerBooking.unit;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final dialogWidth = screenWidth > 600 ? 500.0 : screenWidth * 0.9;
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      clipBehavior: Clip.antiAlias,
-      child: SizedBox(
-        width: dialogWidth,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Gradient Header
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.primary, AppColors.authSecondary],
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.receipt_long,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Text(
-                      'Detalji rezervacije',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    tooltip: 'Zatvori',
-                  ),
-                ],
-              ),
-            ),
-
-            // Content
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Booking ID and Status
-                    _DetailRow(label: 'ID rezervacije', value: booking.id),
-                    _DetailRow(
-                      label: 'Status',
-                      value: booking.status.displayName,
-                      valueColor: booking.status.color,
-                    ),
-
-                    const Divider(height: 24),
-
-                    // Guest Information
-                    Text(
-                      'Informacije o gostu',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _DetailRow(label: 'Ime', value: ownerBooking.guestName),
-                    _DetailRow(label: 'Email', value: ownerBooking.guestEmail),
-                    if (ownerBooking.guestPhone != null)
-                      _DetailRow(
-                        label: 'Telefon',
-                        value: ownerBooking.guestPhone!,
-                      ),
-
-                    const Divider(height: 24),
-
-                    // Property Information
-                    Text(
-                      'Informacije o objektu',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _DetailRow(label: 'Objekt', value: property.name),
-                    _DetailRow(label: 'Jedinica', value: unit.name),
-                    _DetailRow(label: 'Lokacija', value: property.location),
-
-                    const Divider(height: 24),
-
-                    // Booking Details
-                    Text(
-                      'Detalji boravka',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _DetailRow(
-                      label: 'Prijava',
-                      value:
-                          '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
-                    ),
-                    _DetailRow(
-                      label: 'Odjava',
-                      value:
-                          '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
-                    ),
-                    _DetailRow(
-                      label: 'Broj noći',
-                      value: '${booking.numberOfNights}',
-                    ),
-                    _DetailRow(
-                      label: 'Broj gostiju',
-                      value: '${booking.guestCount}',
-                    ),
-
-                    const Divider(height: 24),
-
-                    // Payment Information
-                    Text(
-                      'Informacije o plaćanju',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _DetailRow(
-                      label: 'Ukupna cijena',
-                      value: booking.formattedTotalPrice,
-                      valueColor: Theme.of(context).primaryColor,
-                    ),
-                    _DetailRow(
-                      label: 'Plaćeno',
-                      value: booking.formattedPaidAmount,
-                    ),
-                    _DetailRow(
-                      label: 'Preostalo',
-                      value: booking.formattedRemainingBalance,
-                      valueColor: booking.isFullyPaid
-                          ? AppColors.success
-                          : AppColors.warning,
-                    ),
-                    if (booking.paymentIntentId != null)
-                      _DetailRow(
-                        label: 'Payment Intent ID',
-                        value: booking.paymentIntentId!,
-                      ),
-
-                    if (booking.notes != null && booking.notes!.isNotEmpty) ...[
-                      const Divider(height: 24),
-                      Text(
-                        'Napomene',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(booking.notes!),
-                    ],
-
-                    if (booking.status == BookingStatus.cancelled) ...[
-                      const Divider(height: 24),
-                      Text(
-                        'Informacije o otkazivanju',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 12),
-                      if (booking.cancelledAt != null)
-                        _DetailRow(
-                          label: 'Otkazano',
-                          value:
-                              '${booking.cancelledAt!.day}.${booking.cancelledAt!.month}.${booking.cancelledAt!.year}.',
-                        ),
-                      if (booking.cancellationReason != null)
-                        _DetailRow(
-                          label: 'Razlog',
-                          value: booking.cancellationReason!,
-                        ),
-                    ],
-
-                    const Divider(height: 24),
-
-                    // Timestamps
-                    _DetailRow(
-                      label: 'Kreirano',
-                      value:
-                          '${booking.createdAt.day}.${booking.createdAt.month}.${booking.createdAt.year}. ${booking.createdAt.hour}:${booking.createdAt.minute.toString().padLeft(2, '0')}',
-                    ),
-                    if (booking.updatedAt != null)
-                      _DetailRow(
-                        label: 'Ažurirano',
-                        value:
-                            '${booking.updatedAt!.day}.${booking.updatedAt!.month}.${booking.updatedAt!.year}. ${booking.updatedAt!.hour}:${booking.updatedAt!.minute.toString().padLeft(2, '0')}',
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Detail row widget
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value, this.valueColor});
-
-  final String label;
-  final String value;
-  final Color? valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 400;
-          final labelWidth = isMobile ? 100.0 : 140.0;
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: labelWidth,
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.textColorSecondary,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  value,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: valueColor,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
 
 /// Info row widget with icon container (premium style)
 class _InfoRow extends StatelessWidget {

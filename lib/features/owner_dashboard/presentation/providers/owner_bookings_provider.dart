@@ -52,8 +52,8 @@ class BookingsPagination {
   final bool isLoadingMore;
 
   const BookingsPagination({
-    this.displayLimit = 20,
-    this.pageSize = 20,
+    this.displayLimit = 10,
+    this.pageSize = 10,
     this.isLoadingMore = false,
   });
 

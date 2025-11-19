@@ -4,6 +4,458 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🎨 Owner Bookings - UI/UX Improvements & Bug Fixes
+
+**Datum: 2025-11-19**
+**Status: ✅ COMPLETED - Major UI/UX improvements and bug fixes**
+
+### 📋 Overview
+
+Kompletna revizija Owner Bookings stranice sa fokusom na:
+- Button layouts i stilove
+- Skeleton loaders
+- Dialog UI
+- Dark mode support
+- Status filtering
+- Provider invalidation za instant UI refresh
+
+---
+
+### 🔧 Key Changes
+
+#### 1. Card View Button Layouts
+
+**Problem:** Dugmad su bila vertikalno raspoređena i nisu imala konzistentan stil.
+
+**Rešenje:**
+- **Pending bookings**: 2x2 grid layout
+  - Red 1: Odobri | Odbij
+  - Red 2: Detalji | Otkaži
+- **Other statuses**: Responsive Row layout
+  - Dugmad jedno pored drugog (Details | Cancel/Complete)
+  - Koristi `Expanded` za ravnomerno raspoređivanje
+
+**File:** `lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart` (Lines 1135-1308)
+
+```dart
+// Pending bookings - 2x2 grid
+if (booking.status == BookingStatus.pending) {
+  return Column(
+    children: [
+      Row(
+        children: [
+          Expanded(child: approveBtn),
+          const SizedBox(width: 8),
+          Expanded(child: rejectBtn),
+        ],
+      ),
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Expanded(child: detailsBtn),
+          const SizedBox(width: 8),
+          Expanded(child: cancelBtn),
+        ],
+      ),
+    ],
+  );
+}
+
+// Other statuses - Responsive row
+if (buttons.length == 2) {
+  return Row(
+    children: [
+      Expanded(child: buttons[0]),
+      const SizedBox(width: 8),
+      Expanded(child: buttons[1]),
+    ],
+  );
+}
+```
+
+---
+
+#### 2. Button Styles - Badge Color Matching
+
+**Problem:** Dugmad nisu vizuelno odgovarala badge bojama.
+
+**Rešenje:**
+- **Odobri (Approve)**: Zelena boja (`#66BB6A`) kao Confirmed badge - FilledButton
+- **Odbij (Reject)**: Crvena boja (`#EF5350`) kao Cancelled badge - FilledButton
+- **Detalji i Otkaži**: Minimalistički stil sa sivim tonovima
+  - Light mode: `grey[50]` background, `grey[700]` text, `grey[300]` border
+  - Dark mode: `grey[850]` background, `grey[300]` text, `grey[700]` border
+
+**File:** `lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart` (Lines 1151-1270)
+
+```dart
+// Approve button - matches Confirmed badge
+final approveBtn = FilledButton.icon(
+  style: FilledButton.styleFrom(
+    backgroundColor: const Color(0xFF66BB6A), // Confirmed badge color
+    foregroundColor: Colors.white,
+  ),
+);
+
+// Reject button - matches Cancelled badge
+final rejectBtn = FilledButton.icon(
+  style: FilledButton.styleFrom(
+    backgroundColor: const Color(0xFFEF5350), // Cancelled badge color
+    foregroundColor: Colors.white,
+  ),
+);
+
+// Details button - minimalist style
+final detailsBtn = OutlinedButton.icon(
+  icon: Icon(
+    Icons.visibility_outlined,
+    color: theme.brightness == Brightness.dark
+        ? Colors.grey[300]
+        : Colors.grey[700],
+  ),
+  style: OutlinedButton.styleFrom(
+    backgroundColor: theme.brightness == Brightness.dark
+        ? Colors.grey[850]
+        : Colors.grey[50],
+    side: BorderSide(
+      color: theme.brightness == Brightness.dark
+          ? Colors.grey[700]!
+          : Colors.grey[300]!,
+    ),
+  ),
+);
+```
+
+---
+
+#### 3. Skeleton Loaders - Separate for Card and Table Views
+
+**Problem:** Isti skeleton se koristio za Card i Table view, što nije odgovaralo stvarnom sadržaju.
+
+**Rešenje:**
+- **BookingTableSkeleton**: Imitira DataTable strukturu (header + 5 redova)
+- **BookingCardSkeleton**: Poboljšan da odgovara pravom card layoutu
+- Loading state proverava `viewMode` i prikazuje odgovarajući skeleton
+
+**Files:**
+- `lib/shared/widgets/animations/skeleton_loader.dart` (Lines 342-550)
+- `lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart` (Lines 142-165)
+
+**BookingTableSkeleton:**
+```dart
+class BookingTableSkeleton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        children: [
+          // Header row (10 columns)
+          Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? theme.colorScheme.surfaceContainerHighest
+                  : theme.colorScheme.surfaceContainerHigh,
+            ),
+            child: Row(
+              children: [
+                SkeletonLoader(width: 80, height: 14), // Guest
+                SkeletonLoader(width: 120, height: 14), // Property
+                // ... other columns
+              ],
+            ),
+          ),
+          // 5 data rows
+          ...List.generate(5, (index) => _buildTableRowSkeleton()),
+        ],
+      ),
+    );
+  }
+}
+```
+
+**BookingCardSkeleton:**
+```dart
+class BookingCardSkeleton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        children: [
+          // Header (status badge + booking ID)
+          Container(...),
+          // Guest info (avatar + name + email)
+          Row(...),
+          // Property/Unit info
+          Row(...),
+          // Date range
+          Row(...),
+          // Payment info (3 columns)
+          Row(...),
+          // Action buttons (2x2 grid)
+          Column(
+            children: [
+              Row([button, button]),
+              Row([button, button]),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+**Loading State Logic:**
+```dart
+loading: () {
+  if (viewMode == BookingsViewMode.table) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+      child: const BookingTableSkeleton(),
+    );
+  } else {
+    return Column(
+      children: List.generate(
+        5, // Show 5 card skeletons
+        (index) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            context.horizontalPadding,
+            0,
+            context.horizontalPadding,
+            16,
+          ),
+          child: const BookingCardSkeleton(),
+        ),
+      ),
+    );
+  }
+},
+```
+
+---
+
+#### 4. Dialog Action Buttons - Better Layout
+
+**Problem:** Dugmad u dialogu su bila jedno ispod drugog ili zbijeni.
+
+**Rešenje:**
+- Koristi `actionsAlignment: MainAxisAlignment.spaceBetween`
+- Levo: Uredi i Email (glavne akcije)
+- Desno: Otkaži (crveno) i Zatvori
+
+**File:** `lib/features/owner_dashboard/presentation/widgets/booking_details_dialog.dart` (Lines 193-236)
+
+```dart
+AlertDialog(
+  actionsAlignment: MainAxisAlignment.spaceBetween,
+  actions: [
+    // Left side - Edit and Email
+    Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (booking.status != BookingStatus.cancelled)
+          TextButton.icon(
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            label: const Text('Uredi'),
+          ),
+        TextButton.icon(
+          icon: const Icon(Icons.email_outlined, size: 18),
+          label: const Text('Email'),
+        ),
+      ],
+    ),
+
+    // Right side - Cancel and Close
+    Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (booking.status == BookingStatus.pending ||
+            booking.status == BookingStatus.confirmed)
+          TextButton.icon(
+            icon: const Icon(Icons.cancel_outlined, color: AppColors.error, size: 18),
+            label: const Text('Otkaži', style: TextStyle(color: AppColors.error)),
+          ),
+        TextButton(
+          child: const Text('Zatvori'),
+        ),
+      ],
+    ),
+  ],
+)
+```
+
+---
+
+#### 5. Status Filter - Only Active Statuses
+
+**Problem:** Filter je prikazivao sve statuse, uključujući i nekorišćene.
+
+**Rešenje:**
+- Filtrira dropdown da prikazuje samo: `pending`, `confirmed`, `cancelled`, `completed`
+- Uklanja: `checkedIn`, `checkedOut`, `inProgress`, `blocked`
+
+**File:** `lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart` (Lines 447-476)
+
+```dart
+items: [
+  const DropdownMenuItem(child: Text('Svi statusi')),
+  ...BookingStatus.values.where((s) {
+    // Only show statuses that are actively used
+    return s == BookingStatus.pending ||
+        s == BookingStatus.confirmed ||
+        s == BookingStatus.cancelled ||
+        s == BookingStatus.completed;
+  }).map((status) {
+    return DropdownMenuItem(
+      value: status,
+      child: Row(
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: status.color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(status.displayName),
+        ],
+      ),
+    );
+  }),
+],
+```
+
+---
+
+#### 6. Provider Invalidation - Instant UI Refresh
+
+**Problem:** Nakon akcija (confirm, reject, cancel), UI se nije odmah osvežavao.
+
+**Rešenje:**
+- Dodato `ref.invalidate(allOwnerBookingsProvider)` pre `ref.invalidate(ownerBookingsProvider)`
+- Primenjeno na sve akcije u oba view-a (Card i Table)
+
+**Files:**
+- `lib/features/owner_dashboard/presentation/widgets/bookings_table_view.dart`
+- `lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart`
+- `lib/features/owner_dashboard/presentation/widgets/booking_details_dialog.dart`
+
+```dart
+// Example: Confirm booking
+Future<void> _confirmBooking(String bookingId) async {
+  await repository.confirmBooking(bookingId);
+  
+  // Instant UI refresh
+  ref.invalidate(allOwnerBookingsProvider);
+  ref.invalidate(ownerBookingsProvider);
+}
+```
+
+---
+
+#### 7. Dark Mode Improvements
+
+**Fixes:**
+- **Price column**: Koristi `primaryContainer` umesto `primaryColor` u dark mode
+- **Selection bar**: Koristi `primaryContainer.withAlpha(0.3)` za bolju vidljivost
+- **Dialog price**: Koristi `primaryContainer` u dark mode
+- **Detail rows**: Responsive label width (100px na mobilnom, 140px na desktop-u)
+
+**Files:**
+- `lib/features/owner_dashboard/presentation/widgets/bookings_table_view.dart`
+- `lib/features/owner_dashboard/presentation/widgets/booking_details_dialog.dart`
+
+---
+
+#### 8. Pagination Batch Size
+
+**Change:** Smanjeno sa 20 na 10 items per load.
+
+**File:** `lib/features/owner_dashboard/presentation/providers/owner_bookings_provider.dart` (Lines 55-56)
+
+```dart
+class BookingsPagination {
+  final int displayLimit;
+  final int pageSize;
+
+  const BookingsPagination({
+    this.displayLimit = 10, // Changed from 20
+    this.pageSize = 10,     // Changed from 20
+  });
+}
+```
+
+---
+
+### 📁 Modified Files
+
+1. `lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart`
+   - Button layouts (2x2 grid, responsive row)
+   - Button styles (badge color matching, minimalist)
+   - Loading state logic (separate skeletons)
+   - Status filter (only active statuses)
+   - Provider invalidation
+
+2. `lib/shared/widgets/animations/skeleton_loader.dart`
+   - New `BookingTableSkeleton` class
+   - Improved `BookingCardSkeleton` class
+
+3. `lib/features/owner_dashboard/presentation/widgets/booking_details_dialog.dart`
+   - Dialog action buttons layout
+   - Provider invalidation on cancel
+   - Responsive detail rows
+   - Dark mode price color
+
+4. `lib/features/owner_dashboard/presentation/widgets/bookings_table_view.dart`
+   - Provider invalidation on all actions
+   - Dark mode price color
+   - Dark mode selection bar color
+
+5. `lib/features/owner_dashboard/presentation/providers/owner_bookings_provider.dart`
+   - Pagination batch size (20 → 10)
+
+---
+
+### ✅ Verification Checklist
+
+- [x] Card View: Pending bookings show 2x2 button grid
+- [x] Card View: Other bookings show buttons in row
+- [x] Button colors match badge colors (Approve=green, Reject=red)
+- [x] Details and Cancel buttons have minimalist style
+- [x] Table View shows BookingTableSkeleton when loading
+- [x] Card View shows 5 BookingCardSkeleton when loading
+- [x] Dialog buttons properly spaced (left/right groups)
+- [x] Status filter shows only 4 active statuses
+- [x] All actions refresh UI instantly
+- [x] Dark mode colors are visible and consistent
+- [x] Dialog detail rows responsive on mobile
+- [x] Pagination loads 10 items at a time
+
+---
+
+### 🎯 Important Notes
+
+**DO NOT:**
+- Change button layout logic (2x2 grid for pending is intentional)
+- Remove provider invalidation calls (needed for instant refresh)
+- Add back unused statuses to filter (only 4 are used)
+- Change skeleton loading logic (view mode check is critical)
+
+**IF USER REPORTS:**
+- "Buttons are vertical": Check if `viewMode` logic is intact
+- "UI doesn't refresh": Check provider invalidation calls
+- "Wrong skeleton": Check `viewMode == BookingsViewMode.table` condition
+- "Too many statuses": Check status filter `.where()` clause
+
+---
+
+**Commit:** `31938c9` - feat(owner-bookings): UI/UX improvements and bug fixes
+
+---
+
+
 ## 🐛 Booking Widget - Pill Bar Fix (Chicken-and-Egg Bug)
 
 **Datum: 2025-11-19**

@@ -147,39 +147,18 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            // Podešavanja Expansion (Integracije, Konfiguracija)
+            // Integracije Expansion
             _PremiumExpansionTile(
               icon: Icons.settings_outlined,
-              title: 'Podešavanja',
-              isExpanded:
-                  currentRoute.startsWith('properties') ||
-                  currentRoute.startsWith('units') ||
-                  currentRoute.startsWith('integrations'),
+              title: 'Integracije',
+              isExpanded: currentRoute.startsWith('integrations/stripe'),
               children: [
-                // INTEGRACIJE Section
-                const _DrawerSectionDivider(label: 'INTEGRACIJE'),
                 _DrawerSubItem(
                   title: 'Stripe Plaćanja',
                   subtitle: 'Obrada kartica',
                   icon: Icons.payment,
                   isSelected: currentRoute == 'integrations/stripe',
                   onTap: () => context.go(OwnerRoutes.stripeIntegration),
-                ),
-
-                // KONFIGURACIJA Section
-                const _DrawerSectionDivider(label: 'KONFIGURACIJA'),
-                _DrawerSubItem(
-                  title: 'Moji Objekti',
-                  subtitle: 'Properties management',
-                  isSelected: currentRoute == 'properties',
-                  onTap: () => context.go(OwnerRoutes.properties),
-                ),
-                _DrawerSubItem(
-                  title: 'Widget Podešavanja',
-                  subtitle: 'Boje, jezik, prikaz',
-                  icon: Icons.widgets,
-                  isSelected: currentRoute == 'widget-settings',
-                  onTap: () => context.go(OwnerRoutes.widgetSettings),
                 ),
               ],
             ),
@@ -658,48 +637,3 @@ class _LogoutButtonState extends State<_LogoutButton> {
   }
 }
 
-/// Section Divider with Label
-class _DrawerSectionDivider extends StatelessWidget {
-  final String label;
-
-  const _DrawerSectionDivider({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 24, right: 12, top: 12, bottom: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              height: 1,
-              color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2,
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.4 * 255).toInt(),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              height: 1,
-              color: theme.colorScheme.onSurface.withAlpha((0.1 * 255).toInt()),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

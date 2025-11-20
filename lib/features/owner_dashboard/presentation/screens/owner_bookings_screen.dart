@@ -87,7 +87,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             if (mounted) {
               showDialog(
                 context: context,
-                builder: (context) => BookingDetailsDialog(booking: booking),
+                builder: (context) => BookingDetailsDialog(ownerBooking: booking),
               );
             }
           });

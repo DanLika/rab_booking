@@ -6,6 +6,7 @@ import '../../../../core/config/router_owner.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/property_card_owner.dart';
 import '../providers/owner_properties_provider.dart';
+import 'property_form_screen.dart';
 
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/constants/app_dimensions.dart';

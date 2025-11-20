@@ -4,6 +4,50 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🎨 Design System Refactor & Standardization
+
+**Datum: 2025-11-20**
+**Status: ✅ COMPLETED - Design tokens updated and UI components standardized**
+
+### 📋 Overview
+
+Comprehensive refactor of the design system to enforce consistency across the application. Updated core design tokens (colors, glassmorphism, opacity) and the main app theme. Standardized UI components in all features to use these new tokens, ensuring a unified look and feel.
+
+### 🔧 Key Changes
+
+#### 1. Core Design System
+- **Tokens:** Refactored `color_tokens.dart`, `glassmorphism_tokens.dart`, and `opacity_tokens.dart`.
+- **Theme:** Updated `app_theme.dart`, `app_colors.dart`, `app_typography.dart`, and `theme_extensions.dart`.
+
+#### 2. Component Standardization
+- **Shared Widgets:** Updated animations, cards, buttons, and inputs in `lib/shared/widgets` to use the new tokens.
+- **Feature Widgets:** Applied standardized styling to widgets in Auth, Owner Dashboard, and Widget features.
+
+#### 3. Screen Updates
+- **Auth:** Updated policies and terms screens.
+- **Owner Dashboard:** Updated analytics, calendar, profile, and settings screens.
+- **Widget:** Updated booking widget, confirmation, and lookup screens.
+
+### 📁 Modified Files
+
+**Core:**
+- `lib/core/design_tokens/*`
+- `lib/core/theme/*`
+
+**Features:**
+- `lib/features/auth/presentation/*`
+- `lib/features/owner_dashboard/presentation/*`
+- `lib/features/widget/presentation/*`
+
+**Shared:**
+- `lib/shared/widgets/*`
+
+---
+
+**Commit:** `f771474` - Refactor: Update design tokens, theme, and standardize UI components across features
+
+---
+
 ## 🔔 Notification Settings - Save Fix & Email Integration
 
 **Datum: 2025-11-20**

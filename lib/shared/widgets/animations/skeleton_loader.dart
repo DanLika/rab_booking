@@ -581,25 +581,25 @@ class BookingTableSkeleton extends StatelessWidget {
                       ),
                       child: const Row(
                         children: [
-                          SkeletonLoader(width: 80, height: 14),
-                          SizedBox(width: 24),
-                          SkeletonLoader(width: 120, height: 14),
-                          SizedBox(width: 24),
-                          SkeletonLoader(width: 80, height: 14),
-                          SizedBox(width: 24),
-                          SkeletonLoader(width: 80, height: 14),
-                          SizedBox(width: 24),
+                          SkeletonLoader(width: 60, height: 14),
+                          SizedBox(width: 16),
+                          SkeletonLoader(width: 90, height: 14),
+                          SizedBox(width: 16),
+                          SkeletonLoader(width: 70, height: 14),
+                          SizedBox(width: 16),
+                          SkeletonLoader(width: 70, height: 14),
+                          SizedBox(width: 16),
+                          SkeletonLoader(width: 40, height: 14),
+                          SizedBox(width: 16),
                           SkeletonLoader(width: 50, height: 14),
-                          SizedBox(width: 24),
+                          SizedBox(width: 16),
                           SkeletonLoader(width: 60, height: 14),
-                          SizedBox(width: 24),
+                          SizedBox(width: 16),
                           SkeletonLoader(width: 70, height: 14),
-                          SizedBox(width: 24),
-                          SkeletonLoader(width: 80, height: 14),
-                          SizedBox(width: 24),
+                          SizedBox(width: 16),
+                          SkeletonLoader(width: 50, height: 14),
+                          SizedBox(width: 16),
                           SkeletonLoader(width: 60, height: 14),
-                          SizedBox(width: 24),
-                          SkeletonLoader(width: 70, height: 14),
                         ],
                       ),
                     ),
@@ -634,49 +634,49 @@ class BookingTableSkeleton extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          // Guest (name + email)
+          // Guest (name + email) - smaller
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SkeletonLoader(width: 100, height: 14),
+              SkeletonLoader(width: 70, height: 14),
               SizedBox(height: 4),
-              SkeletonLoader(width: 120, height: 12),
+              SkeletonLoader(width: 85, height: 12),
             ],
           ),
-          SizedBox(width: 24),
-          // Property/Unit
+          SizedBox(width: 16),
+          // Property/Unit - smaller
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SkeletonLoader(width: 110, height: 14),
+              SkeletonLoader(width: 80, height: 14),
               SizedBox(height: 4),
-              SkeletonLoader(width: 90, height: 12),
+              SkeletonLoader(width: 70, height: 12),
             ],
           ),
-          SizedBox(width: 24),
-          // Check-in
-          SkeletonLoader(width: 80, height: 14),
-          SizedBox(width: 24),
-          // Check-out
-          SkeletonLoader(width: 80, height: 14),
-          SizedBox(width: 24),
+          SizedBox(width: 16),
+          // Check-in - smaller
+          SkeletonLoader(width: 70, height: 14),
+          SizedBox(width: 16),
+          // Check-out - smaller
+          SkeletonLoader(width: 70, height: 14),
+          SizedBox(width: 16),
           // Nights
           SkeletonLoader(width: 30, height: 14),
-          SizedBox(width: 24),
+          SizedBox(width: 16),
           // Guests
-          SkeletonLoader(width: 30, height: 14),
-          SizedBox(width: 24),
+          SkeletonLoader(width: 35, height: 14),
+          SizedBox(width: 16),
           // Status badge
-          SkeletonLoader(width: 80, height: 28),
-          SizedBox(width: 24),
-          // Price
-          SkeletonLoader(width: 70, height: 14),
-          SizedBox(width: 24),
-          // Source
+          SkeletonLoader(width: 70, height: 28),
+          SizedBox(width: 16),
+          // Price - smaller
           SkeletonLoader(width: 60, height: 14),
-          SizedBox(width: 24),
+          SizedBox(width: 16),
+          // Source
+          SkeletonLoader(width: 50, height: 14),
+          SizedBox(width: 16),
           // Actions (menu icon)
-          SkeletonLoader(width: 40, height: 40, borderRadius: 20),
+          SkeletonLoader(width: 36, height: 36, borderRadius: 18),
         ],
       ),
     );

@@ -593,60 +593,69 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final isDesktop = screenWidth >= 900;
 
     if (isDesktop) {
-      // Desktop: 2-column layout using rows
-      final rows = <Widget>[];
-      for (var i = 0; i < bookings.length; i += 2) {
-        final leftBooking = bookings[i];
-        final rightBooking = i + 1 < bookings.length ? bookings[i + 1] : null;
+      // Desktop: 2-column layout using ListView.builder for lazy loading
+      final rowCount = (bookings.length / 2).ceil();
 
-        rows.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _BookingCard(
-                    key: ValueKey(leftBooking.booking.id),
-                    ownerBooking: leftBooking,
-                  ),
-                ),
-                if (rightBooking != null) ...[
-                  const SizedBox(width: 16),
+      return Padding(
+        padding: EdgeInsets.fromLTRB(
+          context.horizontalPadding,
+          0,
+          context.horizontalPadding,
+          24,
+        ),
+        child: ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: rowCount,
+          itemBuilder: (context, rowIndex) {
+            final leftIndex = rowIndex * 2;
+            final rightIndex = leftIndex + 1;
+
+            final leftBooking = bookings[leftIndex];
+            final rightBooking = rightIndex < bookings.length ? bookings[rightIndex] : null;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Expanded(
                     child: _BookingCard(
-                      key: ValueKey(rightBooking.booking.id),
-                      ownerBooking: rightBooking,
+                      key: ValueKey(leftBooking.booking.id),
+                      ownerBooking: leftBooking,
                     ),
                   ),
-                ] else
-                  const Spacer(),
-              ],
-            ),
-          ),
-        );
-      }
-
-      return Padding(
-        padding: EdgeInsets.fromLTRB(
-          context.horizontalPadding,
-          0,
-          context.horizontalPadding,
-          24, // Extra bottom padding for last row visibility
+                  if (rightBooking != null) ...[
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _BookingCard(
+                        key: ValueKey(rightBooking.booking.id),
+                        ownerBooking: rightBooking,
+                      ),
+                    ),
+                  ] else
+                    const Spacer(),
+                ],
+              ),
+            );
+          },
         ),
-        child: Column(children: rows),
       );
     } else {
-      // Mobile/Tablet: Single column list
+      // Mobile/Tablet: Single column with lazy loading
       return Padding(
         padding: EdgeInsets.fromLTRB(
           context.horizontalPadding,
           0,
           context.horizontalPadding,
-          24, // Extra bottom padding for last card visibility
+          24,
         ),
-        child: Column(
-          children: bookings.map((ownerBooking) {
+        child: ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: bookings.length,
+          itemBuilder: (context, index) {
+            final ownerBooking = bookings[index];
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: _BookingCard(
@@ -654,7 +663,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 ownerBooking: ownerBooking,
               ),
             );
-          }).toList(),
+          },
         ),
       );
     }

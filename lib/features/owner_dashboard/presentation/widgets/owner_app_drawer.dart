@@ -178,7 +178,7 @@ class OwnerAppDrawer extends ConsumerWidget {
                   subtitle: 'Boje, jezik, prikaz',
                   icon: Icons.widgets,
                   isSelected: currentRoute == 'widget-settings',
-                  onTap: () => context.go(OwnerRoutes.unitHub),
+                  onTap: () => context.go(OwnerRoutes.widgetSettings),
                 ),
               ],
             ),
@@ -191,13 +191,6 @@ class OwnerAppDrawer extends ConsumerWidget {
               title: 'Uputstva',
               isExpanded: currentRoute.startsWith('guides'),
               children: [
-                _DrawerSubItem(
-                  title: 'iCal Sinhronizacija',
-                  subtitle: 'Import/Export uputstvo',
-                  icon: Icons.sync,
-                  isSelected: currentRoute == 'guides/ical',
-                  onTap: () => context.go(OwnerRoutes.icalGuide),
-                ),
                 _DrawerSubItem(
                   title: 'Embed Widget',
                   subtitle: 'Dodavanje na sajt',

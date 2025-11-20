@@ -837,6 +837,7 @@ class _BookingConfirmationScreenState
                                         : 'Didn\'t receive? Resend email',
                                   ),
                                   style: TextButton.styleFrom(
+                                    foregroundColor: colors.textPrimary,
                                     padding: EdgeInsets.zero,
                                     minimumSize: Size.zero,
                                     tapTargetSize:

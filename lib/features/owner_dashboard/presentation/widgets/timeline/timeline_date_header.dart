@@ -94,54 +94,31 @@ class TimelineDayHeader extends StatelessWidget {
         ),
       ),
       padding: const EdgeInsets.symmetric(
-        vertical: 6,
+        vertical: 12,
         horizontal: 8,
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Day of week
-          Flexible(
-            child: Text(
-              DateFormat('EEE', 'hr_HR').format(date).toUpperCase(),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isWeekend
-                    ? theme.colorScheme.error
-                    : (isToday ? theme.colorScheme.primary : null),
-                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                fontSize: 11,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+      child: Center(
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: isToday
+              ? BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  shape: BoxShape.circle,
+                )
+              : null,
+          alignment: Alignment.center,
+          child: Text(
+            '${date.day}',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: isToday
+                  ? theme.colorScheme.onPrimary
+                  : (isWeekend ? theme.colorScheme.error : null),
             ),
           ),
-
-          const SizedBox(height: 2),
-
-          // Day number
-          Flexible(
-            child: Container(
-              width: 26,
-              height: 26,
-              decoration: isToday
-                  ? BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      shape: BoxShape.circle,
-                    )
-                  : null,
-              alignment: Alignment.center,
-              child: Text(
-                '${date.day}',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: isToday ? theme.colorScheme.onPrimary : null,
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

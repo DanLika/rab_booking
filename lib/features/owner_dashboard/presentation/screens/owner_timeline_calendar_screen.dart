@@ -350,6 +350,20 @@ class _OwnerTimelineCalendarScreenState
       ]);
     }
   }
+
+  /// Override refresh to also reset date range to today
+  /// Bug Fix: Refresh button was showing August instead of current month (November)
+  /// because _currentRange was not being reset to today
+  @override
+  Future<void> refreshCalendarData() async {
+    // First, reset to today (this will rebuild widget with new key)
+    setState(() {
+      _currentRange = DateRangeSelection.days(DateTime.now(), _visibleDays);
+    });
+
+    // Then, refresh providers
+    await super.refreshCalendarData();
+  }
 }
 
 // Keyboard shortcut intents

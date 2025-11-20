@@ -64,12 +64,18 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
                 unitId: booking.unitId ?? '',
               );
 
+          // Bug Fix: Check mounted after async operation before navigation
+          if (!mounted) return;
+
           // Navigate to booking details screen with both booking and settings
           context.go('/view/details', extra: {
             'booking': booking,
             'widgetSettings': widgetSettings,
           });
         } catch (e) {
+          // Bug Fix: Check mounted after async operation before navigation
+          if (!mounted) return;
+
           // If widget settings fail to load, still show booking details
           context.go('/view/details', extra: {
             'booking': booking,

@@ -60,12 +60,18 @@ class _BookingLookupScreenState extends ConsumerState<BookingLookupScreen> {
                 unitId: booking.unitId ?? '',
               );
 
+          // Bug Fix: Check mounted after async operation before navigation
+          if (!mounted) return;
+
           // Navigate to booking details screen with both booking and settings
           unawaited(context.push('/view/details', extra: {
             'booking': booking,
             'widgetSettings': widgetSettings,
           }));
         } catch (e) {
+          // Bug Fix: Check mounted after async operation before navigation
+          if (!mounted) return;
+
           // If widget settings fail to load, still show booking details
           unawaited(context.push('/view/details', extra: {
             'booking': booking,

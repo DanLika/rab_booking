@@ -421,12 +421,20 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           ),
           selected: isSelected,
           onSelected: (selected) {
+            print('🎯 [AMENITY] Chip tapped: ${amenity.displayName}');
+            print('📊 [AMENITY] Selected: $selected (was: $isSelected)');
+            print('📋 [AMENITY] Current set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}');
+
             setState(() {
+              // Force create new Set to trigger rebuild
               if (selected) {
-                _selectedAmenities.add(amenity);
+                _selectedAmenities = {..._selectedAmenities, amenity};
+                print('✅ [AMENITY] Added ${amenity.displayName}');
               } else {
-                _selectedAmenities.remove(amenity);
+                _selectedAmenities = Set.from(_selectedAmenities)..remove(amenity);
+                print('❌ [AMENITY] Removed ${amenity.displayName}');
               }
+              print('📊 [AMENITY] New set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}');
             });
           },
           avatar: Icon(
@@ -627,11 +635,25 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
 
     final totalImages = _existingImages.length + _selectedImages.length;
     if (!_isEditing && totalImages < 3) {
-      ErrorDisplayUtils.showWarningSnackBar(
-        context,
-        'Morate dodati najmanje 3 fotografije',
+      // Soft warning - allow save without blocking
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.info_outline, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: const Text(
+                  'Preporuka: Dodajte najmanje 3 fotografije za bolju vidljivost',
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 3),
+        ),
       );
-      return;
+      // Continue with save (no return)
     }
 
     setState(() => _isLoading = true);
@@ -649,20 +671,29 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
       // Upload new images to Firebase Storage
       final List<String> uploadedImageUrls = [];
       if (_selectedImages.isNotEmpty) {
+        print('🔍 [UPLOAD] Starting upload for ${_selectedImages.length} images');
+
         try {
           final propertyId = _isEditing
               ? widget.property!.id
               : 'temp-${DateTime.now().millisecondsSinceEpoch}';
 
+          print('📦 [UPLOAD] PropertyId: $propertyId');
+
           for (int i = 0; i < _selectedImages.length; i++) {
             final image = _selectedImages[i];
-            final bytes = await image.readAsBytes();
+            print('📸 [UPLOAD] Image ${i + 1}/${_selectedImages.length} - Path: ${image.path}');
 
+            final bytes = await image.readAsBytes();
+            print('✅ [UPLOAD] Read ${bytes.length} bytes');
+
+            print('☁️ [UPLOAD] Calling uploadPropertyImage...');
             final imageUrl = await repository.uploadPropertyImage(
               propertyId: propertyId,
               filePath: image.path,
               bytes: bytes,
             );
+            print('✅ [UPLOAD] Success! URL: $imageUrl');
 
             uploadedImageUrls.add(imageUrl);
 
@@ -674,8 +705,30 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
               );
             }
           }
-        } catch (e) {
+
+          print('🎉 [UPLOAD] All images uploaded successfully!');
+        } catch (e, stackTrace) {
+          print('❌ [UPLOAD ERROR] $e');
+          print('📚 [STACK TRACE] $stackTrace');
+
           if (mounted) {
+            // Direct SnackBar for guaranteed visibility
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Greška pri uploadu: ${e.toString()}'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 5),
+                action: SnackBarAction(
+                  label: 'Detalji',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    print('💥 [FULL ERROR] $e\n$stackTrace');
+                  },
+                ),
+              ),
+            );
+
+            // Also try original method
             ErrorDisplayUtils.showErrorSnackBar(
               context,
               e,

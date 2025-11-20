@@ -7,21 +7,17 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/utils/platform_utils.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../providers/calendar_drag_drop_provider.dart';
 import '../providers/calendar_filters_provider.dart';
-import '../../utils/booking_overlap_detector.dart';
 import '../../utils/calendar_grid_calculator.dart';
 import 'calendar/booking_inline_edit_dialog.dart';
 import 'calendar/booking_drop_zone.dart';
-import 'calendar/skewed_booking_painter.dart';
 import 'calendar/calendar_skeleton_loader.dart';
 import 'calendar/calendar_error_state.dart';
 import 'calendar/booking_action_menu.dart';
-import 'calendar/smart_booking_tooltip.dart';
 import 'calendar/shared/calendar_booking_actions.dart';
-import 'calendar/check_in_out_diagonal_indicator.dart';
+import 'timeline/timeline_booking_block.dart';
 
 /// BedBooking-style Timeline Calendar
 /// Gantt/Timeline layout: Units vertical, Dates horizontal
@@ -1031,7 +1027,10 @@ class _TimelineCalendarWidgetState
     for (final booking in bookings) {
       // Calculate position and width
       final checkIn = booking.checkIn;
-      final nights = _calculateNights(booking.checkIn, booking.checkOut);
+      final nights = TimelineBookingBlock.calculateNights(
+        booking.checkIn,
+        booking.checkOut,
+      );
 
       // Find index of check-in date in visible range
       final startIndex = dates.indexWhere((d) => _isSameDay(d, checkIn));
@@ -1059,138 +1058,19 @@ class _TimelineCalendarWidgetState
         Positioned(
           left: left,
           top: 8,
-          child: _buildReservationBlock(booking, width, allBookingsByUnit),
+          child: TimelineBookingBlock(
+            booking: booking,
+            width: width,
+            unitRowHeight: _getUnitRowHeight(context),
+            allBookingsByUnit: allBookingsByUnit,
+            onTap: () => _showBookingActionMenu(booking),
+            onLongPress: () => _showMoveToUnitMenu(booking),
+          ),
         ),
       );
     }
 
     return blocks;
-  }
-
-  Widget _buildReservationBlock(
-    BookingModel booking,
-    double width,
-    Map<String, List<BookingModel>> allBookingsByUnit,
-  ) {
-    final unitRowHeight = _getUnitRowHeight(context);
-    final blockHeight = unitRowHeight - 16;
-    final nights = _calculateNights(booking.checkIn, booking.checkOut);
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Get responsive dimensions from CalendarGridCalculator
-    final guestNameFontSize =
-        CalendarGridCalculator.getBookingGuestNameFontSize(screenWidth);
-    final metadataFontSize = CalendarGridCalculator.getBookingMetadataFontSize(
-      screenWidth,
-    );
-    final bookingPadding = CalendarGridCalculator.getBookingPadding(
-      screenWidth,
-    );
-
-    // ENHANCED: Detect conflicts with other bookings in the same unit
-    final hasConflict = _hasBookingConflict(booking, allBookingsByUnit);
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: PlatformUtils.supportsHover
-          ? (event) => SmartBookingTooltip.show(
-              context: context,
-              booking: booking,
-              position: event.position,
-            )
-          : null,
-      onExit: PlatformUtils.supportsHover
-          ? (_) => SmartBookingTooltip.hide()
-          : null,
-      child: GestureDetector(
-        onTap: () => _showBookingActionMenu(booking),
-        onLongPress: () => _showMoveToUnitMenu(booking),
-        child: Container(
-          width: width - 4,
-          height: blockHeight,
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          child: Stack(
-            children: [
-              // Background layer with skewed parallelogram
-              CustomPaint(
-                painter: SkewedBookingPainter(
-                  backgroundColor: booking.status.color,
-                  borderColor: booking.status.color,
-                  hasConflict: hasConflict,
-                ),
-                size: Size(width - 4, blockHeight),
-              ),
-
-              // Content layer - clipped to skewed shape
-              ClipPath(
-                clipper: SkewedBookingClipper(),
-                child: Stack(
-                  children: [
-                    // Check-in diagonal indicator (left edge)
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: CheckInDiagonalIndicator(
-                        height: blockHeight,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-
-                    // Check-out diagonal indicator (right edge)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: CheckOutDiagonalIndicator(
-                        height: blockHeight,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-
-                    // Main content
-                    Padding(
-                      padding: bookingPadding,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              booking.guestName ?? 'Gost',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: guestNameFontSize,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(height: 1),
-                          Flexible(
-                            child: Text(
-                              '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''} • $nights noć${nights > 1 ? 'i' : ''}',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: metadataFontSize,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   void _showReservationDetails(BookingModel booking) async {
@@ -1442,35 +1322,4 @@ class _TimelineCalendarWidgetState
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  /// Calculate nights between two dates with proper normalization
-  /// Normalizes dates to midnight to avoid time-of-day calculation errors
-  int _calculateNights(DateTime checkIn, DateTime checkOut) {
-    final normalizedCheckIn = DateTime(
-      checkIn.year,
-      checkIn.month,
-      checkIn.day,
-    );
-    final normalizedCheckOut = DateTime(
-      checkOut.year,
-      checkOut.month,
-      checkOut.day,
-    );
-    return normalizedCheckOut.difference(normalizedCheckIn).inDays;
-  }
-
-  /// Check if a booking has conflicts with other bookings in the same unit
-  bool _hasBookingConflict(
-    BookingModel booking,
-    Map<String, List<BookingModel>> allBookingsByUnit,
-  ) {
-    final conflicts = BookingOverlapDetector.getConflictingBookings(
-      unitId: booking.unitId,
-      newCheckIn: booking.checkIn,
-      newCheckOut: booking.checkOut,
-      bookingIdToExclude: booking.id,
-      allBookings: allBookingsByUnit,
-    );
-
-    return conflicts.isNotEmpty;
-  }
 }

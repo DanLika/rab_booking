@@ -19,6 +19,7 @@ import 'calendar/shared/calendar_booking_actions.dart';
 import 'timeline/timeline_booking_block.dart';
 import 'timeline/timeline_date_header.dart';
 import 'timeline/timeline_unit_name_cell.dart';
+import 'timeline/timeline_summary_cell.dart';
 
 /// BedBooking-style Timeline Calendar
 /// Gantt/Timeline layout: Units vertical, Dates horizontal
@@ -1033,129 +1034,15 @@ class _TimelineCalendarWidgetState
           children: [
             // Offset padding to maintain scroll position
             if (offsetWidth > 0) SizedBox(width: offsetWidth),
-            ...dates.map((date) => _buildSummaryCell(date, bookingsByUnit)),
+            ...dates.map(
+              (date) => TimelineSummaryCell(
+                date: date,
+                bookingsByUnit: bookingsByUnit,
+                dayWidth: _getDayWidth(context),
+              ),
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCell(
-    DateTime date,
-    Map<String, List<BookingModel>> bookingsByUnit,
-  ) {
-    final theme = Theme.of(context);
-    // Calculate statistics for this date
-    int totalGuests = 0;
-    int checkIns = 0;
-    int checkOuts = 0;
-
-    // Iterate through all bookings
-    for (final bookings in bookingsByUnit.values) {
-      for (final booking in bookings) {
-        // Count guests currently in property (checkIn <= date < checkOut)
-        if (!booking.checkIn.isAfter(date) && booking.checkOut.isAfter(date)) {
-          totalGuests += booking.guestCount;
-        }
-
-        // Count check-ins (checkIn == date)
-        if (_isSameDay(booking.checkIn, date)) {
-          checkIns++;
-        }
-
-        // Count check-outs (checkOut == date)
-        if (_isSameDay(booking.checkOut, date)) {
-          checkOuts++;
-        }
-      }
-    }
-
-    // Calculate meals (2 meals per guest per day)
-    final int meals = totalGuests * 2;
-
-    final dayWidth = _getDayWidth(context);
-    final isToday = _isToday(date);
-    final isWeekend =
-        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
-
-    return Container(
-      width: dayWidth,
-      decoration: BoxDecoration(
-        color: isToday
-            ? AppColors.primary.withOpacity(0.1)
-            : isWeekend
-            ? theme.colorScheme.surfaceContainerHighest.withAlpha(
-                (0.5 * 255).toInt(),
-              )
-            : theme.cardColor,
-        border: Border(
-          left: BorderSide(
-            color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
-          ),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(
-        vertical: AppDimensions.spaceXS,
-        horizontal: AppDimensions.spaceXXS,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // Guests
-          _buildSummaryItem(
-            Icons.people,
-            totalGuests.toString(),
-            Colors.blue,
-            'Gosti',
-          ),
-          // Meals
-          _buildSummaryItem(
-            Icons.restaurant,
-            meals.toString(),
-            Colors.orange,
-            'Obroci',
-          ),
-          // Check-ins
-          _buildSummaryItem(
-            Icons.login,
-            checkIns.toString(),
-            Colors.green,
-            'Dolasci',
-          ),
-          // Check-outs
-          _buildSummaryItem(
-            Icons.logout,
-            checkOuts.toString(),
-            Colors.red,
-            'Odlasci',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryItem(
-    IconData icon,
-    String value,
-    Color color,
-    String tooltip,
-  ) {
-    return Tooltip(
-      message: tooltip,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
       ),
     );
   }

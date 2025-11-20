@@ -27,6 +27,7 @@ import '../../features/owner_dashboard/presentation/screens/profile_screen.dart'
 import '../../features/owner_dashboard/presentation/screens/edit_profile_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/change_password_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/notification_settings_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/about_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/onboarding_welcome_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/onboarding_wizard_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/onboarding_success_screen.dart';
@@ -105,6 +106,7 @@ class OwnerRoutes {
   static const String profileEdit = '/owner/profile/edit';
   static const String profileChangePassword = '/owner/profile/change-password';
   static const String profileNotifications = '/owner/profile/notifications';
+  static const String about = '/owner/about';
   static const String widgetSettings = '/owner/widget-settings';
   // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
@@ -469,7 +471,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.profileNotifications,
         builder: (context, state) => const NotificationSettingsScreen(),
       ),
-
+      GoRoute(
+        path: OwnerRoutes.about,
+        builder: (context, state) => const AboutScreen(),
+      ),
 
 
       // Integrations routes

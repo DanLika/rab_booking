@@ -217,36 +217,6 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            // Pravni Dokumenti Expansion
-            _PremiumExpansionTile(
-              icon: Icons.gavel,
-              title: 'Pravni Dokumenti',
-              isExpanded:
-                  currentRoute.startsWith('privacy') ||
-                  currentRoute.startsWith('terms') ||
-                  currentRoute.startsWith('cookies'),
-              children: [
-                _DrawerSubItem(
-                  title: 'Uslovi Korištenja',
-                  icon: Icons.description,
-                  isSelected: currentRoute == 'terms-conditions',
-                  onTap: () => context.go(OwnerRoutes.termsConditions),
-                ),
-                _DrawerSubItem(
-                  title: 'Politika Privatnosti',
-                  icon: Icons.privacy_tip,
-                  isSelected: currentRoute == 'privacy-policy',
-                  onTap: () => context.go(OwnerRoutes.privacyPolicy),
-                ),
-                _DrawerSubItem(
-                  title: 'Cookies Politika',
-                  icon: Icons.cookie,
-                  isSelected: currentRoute == 'cookies-policy',
-                  onTap: () => context.go(OwnerRoutes.cookiesPolicy),
-                ),
-              ],
-            ),
-
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Divider(height: 1),

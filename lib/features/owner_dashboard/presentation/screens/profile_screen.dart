@@ -384,12 +384,7 @@ class ProfileScreen extends ConsumerWidget {
                               icon: Icons.info_outline,
                               title: 'About',
                               subtitle: 'App information',
-                              onTap: () {
-                                ErrorDisplayUtils.showInfoSnackBar(
-                                  context,
-                                  'About coming soon',
-                                );
-                              },
+                              onTap: () => context.push(OwnerRoutes.about),
                             ),
                             const Divider(height: 1, indent: 72),
                             _LogoutTile(
@@ -401,6 +396,58 @@ class ProfileScreen extends ConsumerWidget {
                                   context.go(OwnerRoutes.login);
                                 }
                               },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Legal Documents - Premium
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.elevation1Dark
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(
+                            isMobile ? 12 : 16,
+                          ),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.borderDark.withValues(alpha: 0.5)
+                                : AppColors.borderLight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.2)
+                                  : Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            _PremiumListTile(
+                              icon: Icons.description,
+                              title: 'Terms & Conditions',
+                              subtitle: 'End User License Agreement',
+                              onTap: () => context.push(OwnerRoutes.termsConditions),
+                            ),
+                            const Divider(height: 1, indent: 72),
+                            _PremiumListTile(
+                              icon: Icons.privacy_tip,
+                              title: 'Privacy Policy',
+                              subtitle: 'How we handle your data',
+                              onTap: () => context.push(OwnerRoutes.privacyPolicy),
+                            ),
+                            const Divider(height: 1, indent: 72),
+                            _PremiumListTile(
+                              icon: Icons.cookie,
+                              title: 'Cookies Policy',
+                              subtitle: 'Cookie usage and preferences',
+                              onTap: () => context.push(OwnerRoutes.cookiesPolicy),
+                              isLast: true,
                             ),
                           ],
                         ),

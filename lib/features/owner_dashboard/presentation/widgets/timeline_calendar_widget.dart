@@ -18,6 +18,7 @@ import 'calendar/booking_action_menu.dart';
 import 'calendar/shared/calendar_booking_actions.dart';
 import 'timeline/timeline_booking_block.dart';
 import 'timeline/timeline_date_header.dart';
+import 'timeline/timeline_unit_name_cell.dart';
 
 /// BedBooking-style Timeline Calendar
 /// Gantt/Timeline layout: Units vertical, Dates horizontal
@@ -664,87 +665,21 @@ class _TimelineCalendarWidgetState
 
   Widget _buildUnitNamesColumn(List<UnitModel> units) {
     final unitColumnWidth = _getUnitColumnWidth(context);
+    final unitRowHeight = _getUnitRowHeight(context);
     final theme = Theme.of(context);
 
     return Container(
       width: unitColumnWidth,
       color: theme.cardColor.withAlpha((0.95 * 255).toInt()),
-      child: Column(children: units.map(_buildUnitNameCell).toList()),
-    );
-  }
-
-  Widget _buildUnitNameCell(UnitModel unit) {
-    final unitRowHeight = _getUnitRowHeight(context);
-    final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < AppDimensions.mobile;
-
-    return Container(
-      height: unitRowHeight,
-      padding: EdgeInsets.all(
-        isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS,
-      ),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Bed icon
-          Container(
-            padding: EdgeInsets.all(isMobile ? 6 : 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.hotel_outlined,
-              size: isMobile ? 18 : 20,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          SizedBox(
-            width: isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS,
-          ),
-          // Unit info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    unit.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Flexible(
-                  child: Text(
-                    '${unit.maxGuests} gostiju',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 11,
-                      color: theme.textTheme.bodySmall?.color?.withAlpha(
-                        (0.7 * 255).toInt(),
-                      ),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      child: Column(
+        children: units
+            .map(
+              (unit) => TimelineUnitNameCell(
+                unit: unit,
+                unitRowHeight: unitRowHeight,
+              ),
+            )
+            .toList(),
       ),
     );
   }

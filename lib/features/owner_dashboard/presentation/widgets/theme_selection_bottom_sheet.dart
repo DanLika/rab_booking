@@ -31,7 +31,10 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: [
-                const Icon(Icons.brightness_6_outlined),
+                Icon(
+                  Icons.brightness_6_outlined,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 const SizedBox(width: 12),
                 Text(
                   'Select Theme',
@@ -117,7 +120,7 @@ class _ThemeOption extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isSelected
-              ? theme.primaryColor.withOpacity(0.1)
+              ? theme.primaryColor.withValues(alpha: 0.1)
               : isDark
                   ? theme.colorScheme.surfaceContainerHighest
                   : Colors.grey[200],
@@ -127,7 +130,7 @@ class _ThemeOption extends StatelessWidget {
           color: isSelected
               ? theme.primaryColor
               : isDark
-                  ? theme.colorScheme.onSurface.withOpacity(0.7)
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
                   : Colors.grey[600],
         ),
       ),

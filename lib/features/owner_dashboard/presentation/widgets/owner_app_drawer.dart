@@ -24,15 +24,16 @@ class OwnerAppDrawer extends ConsumerWidget {
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
-          // Dark mode: subtle gradient, Light mode: beige to white
+          // Dark mode: gradient matching dashboard, Light mode: beige to white
           gradient: isDarkMode
               ? LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    theme.colorScheme.surface,
-                    theme.colorScheme.surface,
+                    theme.colorScheme.veryDarkGray,
+                    theme.colorScheme.mediumDarkGray,
                   ],
+                  stops: const [0.0, 0.3],
                 )
               : LinearGradient(
                   begin: Alignment.topCenter,

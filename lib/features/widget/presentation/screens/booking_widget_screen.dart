@@ -681,8 +681,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       // Bug #67 Fix: iCal sync warning banner
                       _buildIcalSyncWarningInline(unitId, isDarkMode),
 
-                      // Calendar - takes all available space
-                      Expanded(
+                      // Calendar with calculated height (respects minimum 400px constraint)
+                      SizedBox(
+                        height: calendarHeight,
                         child: CalendarViewSwitcher(
                           propertyId: _propertyId ?? '',
                           unitId: unitId,

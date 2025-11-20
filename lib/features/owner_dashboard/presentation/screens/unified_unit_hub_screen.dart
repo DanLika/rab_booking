@@ -12,7 +12,6 @@ import 'unit_pricing_screen.dart';
 import 'widget_settings_screen.dart';
 import 'widget_advanced_settings_screen.dart';
 
-
 /// Unified Unit Hub - Centralno mjesto za sve unit operacije
 /// Master-Detail layout sa tab navigacijom
 class UnifiedUnitHubScreen extends ConsumerStatefulWidget {
@@ -39,7 +38,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   UnitModel? _selectedUnit;
   PropertyModel? _selectedProperty;
   late TabController _tabController;
-  
+
   // Search and filter state
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -65,7 +64,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         _searchQuery = _searchController.text.toLowerCase();
       });
     });
-    
+
     // Initialize property filter from parameter
     if (widget.initialPropertyFilter != null) {
       _selectedPropertyFilter = widget.initialPropertyFilter;
@@ -178,7 +177,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             children: [
               Row(
                 children: [
-                  Icon(Icons.home_work_outlined, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.home_work_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -198,7 +200,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Search bar
               TextField(
                 controller: _searchController,
@@ -208,9 +210,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear, size: 20),
-                          onPressed: () {
-                            _searchController.clear();
-                          },
+                          onPressed: _searchController.clear,
                         )
                       : null,
                   filled: true,
@@ -227,14 +227,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               // Property filter dropdown
               propertiesAsync.when(
                 data: (properties) {
                   if (properties.isEmpty) return const SizedBox.shrink();
-                  
+
                   return DropdownButtonFormField<String?>(
-                    value: _selectedPropertyFilter,
+                    initialValue: _selectedPropertyFilter,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.filter_list, size: 20),
                       filled: true,
@@ -251,7 +251,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     ),
                     items: [
                       const DropdownMenuItem<String?>(
-                        value: null,
                         child: Text('Svi objekti'),
                       ),
                       ...properties.map((property) {
@@ -276,13 +275,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ),
 
         // Units list
-      Expanded(
-        child: _buildUnitsListView(
-          theme,
-          isDark,
-          onUnitSelected: onUnitSelected,
+        Expanded(
+          child: _buildUnitsListView(
+            theme,
+            isDark,
+            onUnitSelected: onUnitSelected,
+          ),
         ),
-      ),
       ],
     );
   }
@@ -332,19 +331,21 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ),
       data: (units) {
         // Apply filters
-        var filteredUnits = units.where((unit) {
+        final filteredUnits = units.where((unit) {
           // Search filter
           if (_searchQuery.isNotEmpty) {
-            final matchesSearch = unit.name.toLowerCase().contains(_searchQuery) ||
-                (unit.description?.toLowerCase().contains(_searchQuery) ?? false);
+            final matchesSearch =
+                unit.name.toLowerCase().contains(_searchQuery) ||
+                (unit.description?.toLowerCase().contains(_searchQuery) ??
+                    false);
             if (!matchesSearch) return false;
           }
-          
+
           // Property filter
           if (_selectedPropertyFilter != null) {
             if (unit.propertyId != _selectedPropertyFilter) return false;
           }
-          
+
           return true;
         }).toList();
 
@@ -406,13 +407,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             final isSelected = _selectedUnit?.id == unit.id;
 
             return _buildUnitListTile(
-            theme,
-            isDark,
-            unit: unit,
-            propertyName: property?.name ?? 'Unknown Property',
-            isSelected: isSelected,
-            onUnitSelected: onUnitSelected,
-          );
+              theme,
+              isDark,
+              unit: unit,
+              propertyName: property?.name ?? 'Unknown Property',
+              isSelected: isSelected,
+              onUnitSelected: onUnitSelected,
+            );
           },
         );
       },
@@ -451,10 +452,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           if (mounted) {
             setState(() {
               _selectedUnit = unit;
-            _selectedProperty = property;
-          });
-          onUnitSelected?.call();
-        }
+              _selectedProperty = property;
+            });
+            onUnitSelected?.call();
+          }
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -754,11 +755,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               'Spavaće sobe',
               '${_selectedUnit!.bedrooms}',
             ),
-            _buildDetailRow(
-              theme,
-              'Kupaonice',
-              '${_selectedUnit!.bathrooms}',
-            ),
+            _buildDetailRow(theme, 'Kupaonice', '${_selectedUnit!.bathrooms}'),
             _buildDetailRow(
               theme,
               'Max gostiju',
@@ -848,7 +845,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     if (_selectedUnit == null) return const SizedBox.shrink();
 
     // Embed UnitPricingScreen content
-    return UnitPricingScreen(unit: _selectedUnit!);
+    return UnitPricingScreen(unit: _selectedUnit);
   }
 
   Widget _buildTab3_Widget(ThemeData theme, bool isDark) {
@@ -886,9 +883,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withOpacity(0.2),
-        ),
+        side: BorderSide(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -959,11 +954,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
   }
 
-  void _showUnitsListModal(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
+  void _showUnitsListModal(BuildContext context, ThemeData theme, bool isDark) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

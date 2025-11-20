@@ -354,9 +354,7 @@ class BookingCardSkeleton extends StatelessWidget {
       elevation: 0.5,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
-        ),
+        side: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -377,15 +375,11 @@ class BookingCardSkeleton extends StatelessWidget {
                   ),
                 ),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   // Status badge skeleton
-                  SkeletonLoader(
-                    width: 100,
-                    height: 34,
-                    borderRadius: 8,
-                  ),
-                  const Spacer(),
+                  SkeletonLoader(width: 100, height: 34),
+                  Spacer(),
                   // Booking ID skeleton
                   SkeletonLoader(width: 80, height: 16),
                 ],
@@ -400,19 +394,15 @@ class BookingCardSkeleton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Guest info
-                  Row(
+                  const Row(
                     children: [
                       // Avatar skeleton
-                      const SkeletonLoader(
-                        width: 36,
-                        height: 36,
-                        borderRadius: 18,
-                      ),
-                      const SizedBox(width: 12),
+                      SkeletonLoader(width: 36, height: 36, borderRadius: 18),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             SkeletonLoader(width: 150, height: 16),
                             SizedBox(height: 6),
                             SkeletonLoader(width: 180, height: 14),
@@ -424,8 +414,8 @@ class BookingCardSkeleton extends StatelessWidget {
                   SizedBox(height: isMobile ? 12 : 16),
 
                   // Property/Unit info
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       SkeletonLoader(width: 20, height: 20, borderRadius: 10),
                       SizedBox(width: 8),
                       Expanded(
@@ -443,8 +433,8 @@ class BookingCardSkeleton extends StatelessWidget {
                   SizedBox(height: isMobile ? 12 : 16),
 
                   // Date range
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       SkeletonLoader(width: 20, height: 20, borderRadius: 10),
                       SizedBox(width: 8),
                       SkeletonLoader(width: 200, height: 14),
@@ -453,8 +443,8 @@ class BookingCardSkeleton extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Nights and guests
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       SkeletonLoader(width: 100, height: 14),
                       SizedBox(width: 16),
                       SkeletonLoader(width: 80, height: 14),
@@ -465,20 +455,20 @@ class BookingCardSkeleton extends StatelessWidget {
                   // Payment info
                   Row(
                     children: [
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             SkeletonLoader(width: 60, height: 12),
                             SizedBox(height: 4),
                             SkeletonLoader(width: 80, height: 20),
                           ],
                         ),
                       ),
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             SkeletonLoader(width: 60, height: 12),
                             SizedBox(height: 4),
                             SkeletonLoader(width: 70, height: 18),
@@ -486,10 +476,10 @@ class BookingCardSkeleton extends StatelessWidget {
                         ),
                       ),
                       if (!isMobile)
-                        Expanded(
+                        const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
+                            children: [
                               SkeletonLoader(width: 70, height: 12),
                               SizedBox(height: 4),
                               SkeletonLoader(width: 70, height: 18),
@@ -519,29 +509,21 @@ class BookingCardSkeleton extends StatelessWidget {
                 isMobile ? 12 : 16,
                 isMobile ? 12 : 16,
               ),
-              child: Column(
+              child: const Column(
                 children: [
                   Row(
-                    children: const [
-                      Expanded(
-                        child: SkeletonLoader(height: 40, borderRadius: 8),
-                      ),
+                    children: [
+                      Expanded(child: SkeletonLoader(height: 40)),
                       SizedBox(width: 8),
-                      Expanded(
-                        child: SkeletonLoader(height: 40, borderRadius: 8),
-                      ),
+                      Expanded(child: SkeletonLoader(height: 40)),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
-                    children: const [
-                      Expanded(
-                        child: SkeletonLoader(height: 40, borderRadius: 8),
-                      ),
+                    children: [
+                      Expanded(child: SkeletonLoader(height: 40)),
                       SizedBox(width: 8),
-                      Expanded(
-                        child: SkeletonLoader(height: 40, borderRadius: 8),
-                      ),
+                      Expanded(child: SkeletonLoader(height: 40)),
                     ],
                   ),
                 ],
@@ -597,27 +579,27 @@ class BookingTableSkeleton extends StatelessWidget {
                           top: Radius.circular(8),
                         ),
                       ),
-                      child: Row(
+                      child: const Row(
                         children: [
-                          const SkeletonLoader(width: 80, height: 14),
-                          const SizedBox(width: 24),
-                          const SkeletonLoader(width: 120, height: 14),
-                          const SizedBox(width: 24),
-                          const SkeletonLoader(width: 80, height: 14),
-                          const SizedBox(width: 24),
-                          const SkeletonLoader(width: 80, height: 14),
-                          const SizedBox(width: 24),
-                          const SkeletonLoader(width: 50, height: 14),
-                          const SizedBox(width: 24),
-                          const SkeletonLoader(width: 60, height: 14),
-                          const SizedBox(width: 24),
-                          const SkeletonLoader(width: 70, height: 14),
-                          const SizedBox(width: 24),
-                          const SkeletonLoader(width: 80, height: 14),
-                          const SizedBox(width: 24),
-                          const SkeletonLoader(width: 60, height: 14),
-                          const SizedBox(width: 24),
-                          const SkeletonLoader(width: 70, height: 14),
+                          SkeletonLoader(width: 80, height: 14),
+                          SizedBox(width: 24),
+                          SkeletonLoader(width: 120, height: 14),
+                          SizedBox(width: 24),
+                          SkeletonLoader(width: 80, height: 14),
+                          SizedBox(width: 24),
+                          SkeletonLoader(width: 80, height: 14),
+                          SizedBox(width: 24),
+                          SkeletonLoader(width: 50, height: 14),
+                          SizedBox(width: 24),
+                          SkeletonLoader(width: 60, height: 14),
+                          SizedBox(width: 24),
+                          SkeletonLoader(width: 70, height: 14),
+                          SizedBox(width: 24),
+                          SkeletonLoader(width: 80, height: 14),
+                          SizedBox(width: 24),
+                          SkeletonLoader(width: 60, height: 14),
+                          SizedBox(width: 24),
+                          SkeletonLoader(width: 70, height: 14),
                         ],
                       ),
                     ),
@@ -650,57 +632,56 @@ class BookingTableSkeleton extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
+      child: const Row(
         children: [
           // Guest (name + email)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               SkeletonLoader(width: 100, height: 14),
               SizedBox(height: 4),
               SkeletonLoader(width: 120, height: 12),
             ],
           ),
-          const SizedBox(width: 24),
+          SizedBox(width: 24),
           // Property/Unit
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               SkeletonLoader(width: 110, height: 14),
               SizedBox(height: 4),
               SkeletonLoader(width: 90, height: 12),
             ],
           ),
-          const SizedBox(width: 24),
+          SizedBox(width: 24),
           // Check-in
-          const SkeletonLoader(width: 80, height: 14),
-          const SizedBox(width: 24),
+          SkeletonLoader(width: 80, height: 14),
+          SizedBox(width: 24),
           // Check-out
-          const SkeletonLoader(width: 80, height: 14),
-          const SizedBox(width: 24),
+          SkeletonLoader(width: 80, height: 14),
+          SizedBox(width: 24),
           // Nights
-          const SkeletonLoader(width: 30, height: 14),
-          const SizedBox(width: 24),
+          SkeletonLoader(width: 30, height: 14),
+          SizedBox(width: 24),
           // Guests
-          const SkeletonLoader(width: 30, height: 14),
-          const SizedBox(width: 24),
+          SkeletonLoader(width: 30, height: 14),
+          SizedBox(width: 24),
           // Status badge
-          const SkeletonLoader(width: 80, height: 28, borderRadius: 8),
-          const SizedBox(width: 24),
+          SkeletonLoader(width: 80, height: 28),
+          SizedBox(width: 24),
           // Price
-          const SkeletonLoader(width: 70, height: 14),
-          const SizedBox(width: 24),
+          SkeletonLoader(width: 70, height: 14),
+          SizedBox(width: 24),
           // Source
-          const SkeletonLoader(width: 60, height: 14),
-          const SizedBox(width: 24),
+          SkeletonLoader(width: 60, height: 14),
+          SizedBox(width: 24),
           // Actions (menu icon)
-          const SkeletonLoader(width: 40, height: 40, borderRadius: 20),
+          SkeletonLoader(width: 40, height: 40, borderRadius: 20),
         ],
       ),
     );
   }
 }
-
 
 /// Grid skeleton loader
 class SkeletonGrid extends StatelessWidget {

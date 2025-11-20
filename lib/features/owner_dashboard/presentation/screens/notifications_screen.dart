@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/error_display_utils.dart';
 import '../providers/notifications_provider.dart';
 import '../../domain/models/notification_model.dart';
 import '../widgets/owner_app_drawer.dart';
@@ -218,11 +217,7 @@ class NotificationsScreen extends ConsumerWidget {
           ),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Icon(
-          Icons.delete_outline,
-          color: Colors.white,
-          size: 28,
-        ),
+        child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
       ),
       confirmDismiss: (direction) async {
         return await showDialog<bool>(
@@ -360,7 +355,7 @@ class NotificationsScreen extends ConsumerWidget {
         return Colors.grey;
       default:
         return Colors.grey;
-      }
+    }
   }
 }
 

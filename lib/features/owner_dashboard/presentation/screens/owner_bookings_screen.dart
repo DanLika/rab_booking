@@ -1190,7 +1190,17 @@ class _BookingCard extends ConsumerWidget {
               ),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final isActionMobile = constraints.maxWidth < 600;
+                  // More granular responsive sizing based on available width
+                  final availableWidth = constraints.maxWidth;
+                  final isVeryNarrow = availableWidth < 350;
+                  final isNarrow = availableWidth < 450;
+                  final isActionMobile = availableWidth < 600;
+
+                  // Adjust button padding and size based on available width
+                  final horizontalPadding = isVeryNarrow ? 10.0 : (isNarrow ? 12.0 : (isActionMobile ? 14.0 : 16.0));
+                  final verticalPadding = isVeryNarrow ? 9.0 : (isNarrow ? 10.0 : (isActionMobile ? 11.0 : 13.0));
+                  final iconSize = isVeryNarrow ? 15.0 : 17.0;
+                  final fontSize = isVeryNarrow ? 12.0 : 14.0;
 
                   // Define buttons
                   final detailsBtn = OutlinedButton.icon(
@@ -1199,7 +1209,7 @@ class _BookingCard extends ConsumerWidget {
                     },
                     icon: Icon(
                       Icons.visibility_outlined,
-                      size: 17,
+                      size: iconSize,
                       color: theme.brightness == Brightness.dark
                           ? Colors.grey[300]
                           : Colors.grey[700],
@@ -1210,6 +1220,7 @@ class _BookingCard extends ConsumerWidget {
                         color: theme.brightness == Brightness.dark
                             ? Colors.grey[300]
                             : Colors.grey[700],
+                        fontSize: fontSize,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -1217,8 +1228,8 @@ class _BookingCard extends ConsumerWidget {
                           ? Colors.grey[850]
                           : Colors.grey[50],
                       padding: EdgeInsets.symmetric(
-                        horizontal: isActionMobile ? 14 : 16,
-                        vertical: isActionMobile ? 11 : 13,
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -1235,14 +1246,14 @@ class _BookingCard extends ConsumerWidget {
                     onPressed: () {
                       _approveBooking(context, ref, booking.id);
                     },
-                    icon: const Icon(Icons.check_circle_outline, size: 17),
-                    label: const Text('Odobri'),
+                    icon: Icon(Icons.check_circle_outline, size: iconSize),
+                    label: Text('Odobri', style: TextStyle(fontSize: fontSize)),
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF66BB6A), // Confirmed badge color
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(
-                        horizontal: isActionMobile ? 14 : 16,
-                        vertical: isActionMobile ? 11 : 13,
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -1255,14 +1266,14 @@ class _BookingCard extends ConsumerWidget {
                     onPressed: () {
                       _rejectBooking(context, ref, booking.id);
                     },
-                    icon: const Icon(Icons.cancel_outlined, size: 17),
-                    label: const Text('Odbij'),
+                    icon: Icon(Icons.cancel_outlined, size: iconSize),
+                    label: Text('Odbij', style: TextStyle(fontSize: fontSize)),
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFFEF5350), // Cancelled badge color
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(
-                        horizontal: isActionMobile ? 14 : 16,
-                        vertical: isActionMobile ? 11 : 13,
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -1275,14 +1286,14 @@ class _BookingCard extends ConsumerWidget {
                     onPressed: () {
                       _completeBooking(context, ref, booking.id);
                     },
-                    icon: const Icon(Icons.done_all_outlined, size: 17),
-                    label: const Text('Završi'),
+                    icon: Icon(Icons.done_all_outlined, size: iconSize),
+                    label: Text('Završi', style: TextStyle(fontSize: fontSize)),
                     style: FilledButton.styleFrom(
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(
-                        horizontal: isActionMobile ? 14 : 16,
-                        vertical: isActionMobile ? 11 : 13,
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -1297,7 +1308,7 @@ class _BookingCard extends ConsumerWidget {
                     },
                     icon: Icon(
                       Icons.close,
-                      size: 17,
+                      size: iconSize,
                       color: theme.brightness == Brightness.dark
                           ? Colors.grey[300]
                           : Colors.grey[700],
@@ -1308,6 +1319,7 @@ class _BookingCard extends ConsumerWidget {
                         color: theme.brightness == Brightness.dark
                             ? Colors.grey[300]
                             : Colors.grey[700],
+                        fontSize: fontSize,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -1315,8 +1327,8 @@ class _BookingCard extends ConsumerWidget {
                           ? Colors.grey[850]
                           : Colors.grey[50],
                       padding: EdgeInsets.symmetric(
-                        horizontal: isActionMobile ? 14 : 16,
-                        vertical: isActionMobile ? 11 : 13,
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

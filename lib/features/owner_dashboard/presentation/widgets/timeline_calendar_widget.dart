@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -18,6 +17,7 @@ import 'calendar/calendar_error_state.dart';
 import 'calendar/booking_action_menu.dart';
 import 'calendar/shared/calendar_booking_actions.dart';
 import 'timeline/timeline_booking_block.dart';
+import 'timeline/timeline_date_header.dart';
 
 /// BedBooking-style Timeline Calendar
 /// Gantt/Timeline layout: Units vertical, Dates horizontal
@@ -599,7 +599,12 @@ class _TimelineCalendarWidgetState
                       children: [
                         // Offset padding to maintain scroll position
                         if (offsetWidth > 0) SizedBox(width: offsetWidth),
-                        ...dates.map(_buildDayHeader),
+                        ...dates.map(
+                          (date) => TimelineDayHeader(
+                            date: date,
+                            dayWidth: _getDayWidth(context),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -614,6 +619,7 @@ class _TimelineCalendarWidgetState
 
   List<Widget> _buildMonthHeaders(List<DateTime> dates) {
     final List<Widget> headers = [];
+    final dayWidth = _getDayWidth(context);
     DateTime? currentMonth;
     int dayCount = 0;
 
@@ -625,7 +631,13 @@ class _TimelineCalendarWidgetState
           date.year != currentMonth.year) {
         // New month started, add previous month header if exists
         if (currentMonth != null && dayCount > 0) {
-          headers.add(_buildMonthHeaderCell(currentMonth, dayCount));
+          headers.add(
+            TimelineMonthHeader(
+              date: currentMonth,
+              dayCount: dayCount,
+              dayWidth: dayWidth,
+            ),
+          );
         }
 
         // Start new month
@@ -638,114 +650,16 @@ class _TimelineCalendarWidgetState
 
     // Add last month header
     if (currentMonth != null && dayCount > 0) {
-      headers.add(_buildMonthHeaderCell(currentMonth, dayCount));
+      headers.add(
+        TimelineMonthHeader(
+          date: currentMonth,
+          dayCount: dayCount,
+          dayWidth: dayWidth,
+        ),
+      );
     }
 
     return headers;
-  }
-
-  Widget _buildMonthHeaderCell(DateTime date, int dayCount) {
-    final dayWidth = _getDayWidth(context);
-    final theme = Theme.of(context);
-
-    return Container(
-      width: dayWidth * dayCount,
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        border: Border(
-          bottom: BorderSide(color: theme.dividerColor, width: 1.5),
-          right: BorderSide(
-            color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
-          ),
-        ),
-      ),
-      child: Center(
-        child: Text(
-          DateFormat('MMMM yyyy', 'hr_HR').format(date),
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.primary,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDayHeader(DateTime date) {
-    final dayWidth = _getDayWidth(context);
-    final theme = Theme.of(context);
-    final isToday = _isToday(date);
-    final isWeekend =
-        date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
-    final isFirstDayOfMonth = date.day == 1;
-
-    return Container(
-      width: dayWidth,
-      decoration: BoxDecoration(
-        color: isToday
-            ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt())
-            : theme.cardColor,
-        border: Border(
-          left: BorderSide(
-            color: isFirstDayOfMonth
-                ? theme.colorScheme.primary
-                : theme.dividerColor.withAlpha((0.5 * 255).toInt()),
-            width: isFirstDayOfMonth ? 2 : 1,
-          ),
-          bottom: BorderSide(color: theme.dividerColor, width: 1.5),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(
-        vertical: 6,
-        horizontal: 8,
-      ), // FIXED: Increased from 4 to 8 for desktop view
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Day of week
-          Flexible(
-            child: Text(
-              DateFormat('EEE', 'hr_HR').format(date).toUpperCase(),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isWeekend
-                    ? theme.colorScheme.error
-                    : (isToday ? theme.colorScheme.primary : null),
-                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                fontSize: 11,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-
-          const SizedBox(height: 2),
-
-          // Day number
-          Flexible(
-            child: Container(
-              width: 26,
-              height: 26,
-              decoration: isToday
-                  ? BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      shape: BoxShape.circle,
-                    )
-                  : null,
-              alignment: Alignment.center,
-              child: Text(
-                '${date.day}',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: isToday ? theme.colorScheme.onPrimary : null,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildUnitNamesColumn(List<UnitModel> units) {

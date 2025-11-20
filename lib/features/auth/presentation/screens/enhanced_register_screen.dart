@@ -119,10 +119,8 @@ class _EnhancedRegisterScreenState
             profileImageName: _profileImageName,
           );
 
-      if (mounted) {
-        // Navigate to email verification screen
-        context.go(OwnerRoutes.emailVerification);
-      }
+      // Router will automatically redirect based on auth state
+      // (email verification, onboarding, or dashboard)
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);

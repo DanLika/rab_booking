@@ -48,6 +48,153 @@ Comprehensive refactor of the design system to enforce consistency across the ap
 
 ---
 
+## 🔔 Notifications Screen (Inbox) - Theme Support
+
+**Datum: 2025-11-20**
+**Status: ✅ COMPLETED - Full dark/light theme support added**
+
+### 📋 Overview
+
+Refactored Notifications Screen (inbox with notification list) to use theme-aware colors instead of hardcoded `AppColors`. Replaced 60+ color references for complete dark/light theme adaptation.
+
+### 🔧 Key Changes
+
+**1. Removed AppColors Import:**
+- All `AppColors.*` references replaced with `theme.colorScheme.*`
+- AppColors import removed from file
+
+**2. Notification Type Color Mapping:**
+```dart
+// Theme-aware color function
+Color _getNotificationColor(BuildContext context, String type) {
+  final theme = Theme.of(context);
+
+  switch (type) {
+    case 'booking_created':
+      return theme.colorScheme.tertiary; // Green
+    case 'booking_updated':
+      return theme.colorScheme.error; // Red (was warning)
+    case 'booking_cancelled':
+      return theme.colorScheme.error;
+    case 'payment_received':
+      return theme.colorScheme.primary;
+    case 'system':
+      return theme.colorScheme.onSurfaceVariant; // Grey
+    default:
+      return theme.colorScheme.onSurfaceVariant;
+  }
+}
+```
+
+**3. Text Colors:**
+- `AppColors.textPrimaryDark/Light` → `theme.colorScheme.onSurface`
+- `AppColors.textSecondaryDark/Light` → `theme.colorScheme.onSurfaceVariant`
+
+**4. Surface & Border Colors:**
+- `AppColors.surfaceVariantDark/Light` → `theme.colorScheme.surface`
+- `AppColors.borderDark/Light` → `theme.colorScheme.outline`
+
+**5. Components Updated:**
+- Date headers (gradient with primary + secondary)
+- Notification cards (border, background, shadows)
+- Empty state (icon, text)
+- Error state (icon, text, button)
+- Loading indicator (color)
+- Alert dialog (background, borders, text)
+- Dismissible background (error color)
+
+### 📁 Modified Files
+
+**File:** `lib/features/owner_dashboard/presentation/screens/notifications_screen.dart`
+- Replaced 60+ AppColors references
+- Added theme-aware color mapping function
+- Removed unused `isDark` variable (warning fix)
+- Result: 697 lines, 0 errors, full theme support
+
+### ⚠️ Important Notes
+
+**Color Mapping Decisions:**
+- `booking_updated` uses `error` (red) instead of `warning` (warning not in standard theme)
+- `system` uses `onSurfaceVariant` (grey) for neutral appearance
+- All gradients use `primary` + `secondary` for consistency
+
+---
+
+**Commit:** `6482d03` - refactor: add full dark/light theme support to notifications screen (inbox)
+
+---
+
+## 🗂️ Drawer Navigation Cleanup
+
+**Datum: 2025-11-20**
+**Status: ✅ COMPLETED - Duplicate menu items removed**
+
+### 📋 Overview
+
+Removed duplicate drawer menu items that were accessible through multiple paths. "Moji Objekti" and "Widget Podešavanja" were duplicated in Podešavanja expansion - both are already accessible via centralized Unit Hub.
+
+### 🔧 Key Changes
+
+**1. Removed Duplicate Items:**
+- ❌ "Podešavanja → Moji Objekti" (duplicate of Unit Hub → Properties tab)
+- ❌ "Podešavanja → Widget Podešavanja" (duplicate of Unit Hub → Widget tab)
+
+**2. Renamed Expansion:**
+- "Podešavanja" → **"Integracije"** (only contains Stripe Plaćanja now)
+
+**3. Removed Unused Code:**
+- `_DrawerSectionDivider` class (45 lines) - no longer referenced
+
+### 📊 Drawer Structure (After Cleanup)
+
+```
+📊 Pregled
+📅 Kalendar
+   ├─ Tjedni prikaz
+   └─ Gantt prikaz
+📖 Rezervacije
+   └─ Sve rezervacije
+📈 Analitika
+🏢 Smještajne Jedinice (Unit Hub) ← Centralized access!
+🔄 iCal Integracija
+   ├─ Import Rezervacija
+   └─ Export Kalendara
+⚙️ Integracije (renamed from Podešavanja)
+   └─ Stripe Plaćanja
+📚 Uputstva
+   ├─ Embed Widget
+   └─ Česta Pitanja
+---
+🔔 Obavještenja
+👤 Profil
+```
+
+### 📁 Modified Files
+
+**File:** `lib/features/owner_dashboard/presentation/widgets/owner_app_drawer.dart`
+- Removed "Moji Objekti" sub-item
+- Removed "Widget Podešavanja" sub-item
+- Removed "INTEGRACIJE" and "KONFIGURACIJA" section dividers
+- Removed `_DrawerSectionDivider` class
+- Renamed expansion tile
+- Result: -54 lines, 0 errors
+
+### ⚠️ Important Notes
+
+**Centralized Access via Unit Hub:**
+- **Properties Management** → Unit Hub (displays all units grouped by property)
+- **Widget Settings** → Unit Hub → Select unit → Tab 3 (Widget tab)
+- **Pricing** → Unit Hub → Select unit → Tab 2 (Cjenovnik tab)
+- **Advanced Settings** → Unit Hub → Select unit → Tab 4 (Napredne tab)
+
+**DO NOT add back duplicate menu items!** Everything related to properties/units/widgets is centralized in Unit Hub for better UX.
+
+---
+
+**Commit:** `e0623ac` - refactor: remove duplicate drawer items (Properties & Widget Settings)
+
+---
+
 ## 🔔 Notification Settings - Save Fix & Email Integration
 
 **Datum: 2025-11-20**

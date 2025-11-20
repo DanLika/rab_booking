@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
+import '../../widgets/owner_app_drawer.dart';
 
 class FAQItem {
   final String question;
@@ -239,10 +240,11 @@ class _FAQScreenState extends State<FAQScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      drawer: const OwnerAppDrawer(currentRoute: 'guides/faq'),
       appBar: CommonAppBar(
         title: 'Česta Pitanja (FAQ)',
-        leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       body: SafeArea(
         child: Column(

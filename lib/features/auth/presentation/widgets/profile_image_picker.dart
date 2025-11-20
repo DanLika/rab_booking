@@ -97,7 +97,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
           end: Alignment.bottomRight,
           colors: [
             theme.colorScheme.primary,
-            theme.colorScheme.secondary,
+            theme.colorScheme.primaryContainer,
           ],
         ),
       ),
@@ -180,7 +180,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
                         end: Alignment.bottomRight,
                         colors: [
                           theme.colorScheme.primary,
-                          theme.colorScheme.secondary,
+                          theme.colorScheme.primaryContainer,
                         ],
                       ),
                       border: Border.all(

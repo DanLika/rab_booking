@@ -58,7 +58,7 @@ class EmailVerificationCard extends StatelessWidget {
             gradient: LinearGradient(
               colors: [
                 AppColors.primary.withAlpha((0.15 * 255).toInt()),
-                AppColors.secondary.withAlpha((0.08 * 255).toInt()),
+                AppColors.primary.withAlpha((0.05 * 255).toInt()),
               ],
             ),
             borderRadius: BorderRadius.circular(8),

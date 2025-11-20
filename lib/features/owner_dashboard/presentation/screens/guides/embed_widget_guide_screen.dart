@@ -4,6 +4,8 @@ import '../../../../../core/theme/app_color_extensions.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 
+import '../../widgets/owner_app_drawer.dart';
+
 /// Embed Widget Guide Screen
 /// Complete guide for embedding the booking widget on a website
 class EmbedWidgetGuideScreen extends StatefulWidget {
@@ -33,10 +35,11 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      drawer: const OwnerAppDrawer(currentRoute: 'guides/embed-widget'),
       appBar: CommonAppBar(
         title: 'Embed Widget - Uputstvo',
-        leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       body: SafeArea(
         child: ListView(

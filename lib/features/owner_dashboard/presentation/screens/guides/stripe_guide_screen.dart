@@ -3,6 +3,7 @@ import '../../../../../core/theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
+import '../../widgets/owner_app_drawer.dart';
 
 /// Stripe Integration Guide Screen
 /// Interactive step-by-step guide for connecting Stripe payments
@@ -20,16 +21,11 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      drawer: const OwnerAppDrawer(currentRoute: 'guides/stripe'),
       appBar: CommonAppBar(
         title: 'Stripe Integracija - Uputstvo',
-        leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go(OwnerRoutes.overview);
-          }
-        },
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       body: SafeArea(
         child: ListView(

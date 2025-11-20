@@ -77,7 +77,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      drawer: const OwnerAppDrawer(currentRoute: 'terms'),
+      drawer: const OwnerAppDrawer(currentRoute: 'terms-conditions'),
       appBar: CommonAppBar(
         title: 'Terms & Conditions',
         leadingIcon: Icons.menu,

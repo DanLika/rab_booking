@@ -373,7 +373,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: OwnerRoutes.bookings,
-        builder: (context, state) => const OwnerBookingsScreen(),
+        builder: (context, state) {
+          final bookingId = state.uri.queryParameters['bookingId'];
+          return OwnerBookingsScreen(initialBookingId: bookingId);
+        },
       ),
       GoRoute(
         path: OwnerRoutes.analytics,

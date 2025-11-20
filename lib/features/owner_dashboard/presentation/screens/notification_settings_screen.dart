@@ -36,10 +36,24 @@ class _NotificationSettingsScreenState
           .updateNotificationPreferences(updated);
 
       if (mounted) {
+        // Invalidate provider to force refresh from Firestore
+        ref.invalidate(notificationPreferencesProvider);
+        
         setState(() {
           _currentPreferences = updated;
           _isSaving = false;
         });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              value 
+                ? 'Notifications enabled successfully' 
+                : 'Notifications disabled successfully',
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -101,10 +115,21 @@ class _NotificationSettingsScreenState
           .updateNotificationPreferences(updated);
 
       if (mounted) {
+        // Invalidate provider to force refresh from Firestore
+        ref.invalidate(notificationPreferencesProvider);
+        
         setState(() {
           _currentPreferences = updated;
           _isSaving = false;
         });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$category notification preferences updated'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            duration: const Duration(seconds: 2),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

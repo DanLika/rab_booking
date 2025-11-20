@@ -1,6 +1,6 @@
-import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {admin, db} from "./firebase";
-import {logInfo, logError, logSuccess} from "./logger";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { admin, db } from "./firebase";
+import { logInfo, logError, logSuccess } from "./logger";
 import {
   generateBookingAccessToken,
   calculateTokenExpiration,
@@ -11,6 +11,7 @@ import {
   sendOwnerNotificationEmail,
   sendPendingBookingOwnerNotification,
 } from "./emailService";
+import { shouldSendEmailNotification } from "./notificationPreferences";
 
 /**
  * Cloud Function: Create Booking with Atomic Availability Check
@@ -45,7 +46,7 @@ export const createBookingAtomic = onCall(async (request) => {
 
   // Validate required fields
   if (!unitId || !propertyId || !ownerId || !checkIn || !checkOut ||
-      !guestName || !guestEmail || !totalPrice) {
+    !guestName || !guestEmail || !totalPrice) {
     throw new HttpsError(
       "invalid-argument",
       "Missing required booking fields"
@@ -218,7 +219,7 @@ export const createBookingAtomic = onCall(async (request) => {
 
       // Step 3: No conflict - create booking atomically
       // Generate secure access token for booking lookup
-      const {token: accessToken, hashedToken} = generateBookingAccessToken();
+      const { token: accessToken, hashedToken } = generateBookingAccessToken();
       const tokenExpiration = calculateTokenExpiration(checkOutDate);
 
       const bookingData = {
@@ -356,38 +357,51 @@ export const createBookingAtomic = onCall(async (request) => {
         logInfo("[AtomicBooking] Attempting to send owner notification", {
           ownerId,
         });
-        
+
         const ownerDoc = await db.collection("users").doc(ownerId).get();
         const ownerData = ownerDoc.data();
-        
+
         if (!ownerDoc.exists) {
-          logError("[AtomicBooking] Owner document not found", {ownerId});
+          logError("[AtomicBooking] Owner document not found", { ownerId });
         } else if (!ownerData?.email) {
           logError("[AtomicBooking] Owner email not found in document", {
             ownerId,
             ownerData: ownerData ? Object.keys(ownerData) : "null",
           });
         } else {
-          logInfo("[AtomicBooking] Sending owner notification to", {
-            email: ownerData.email,
-          });
-          
-          await sendOwnerNotificationEmail(
-            ownerData.email,
-            ownerData.displayName || ownerData.first_name || "Owner",
-            guestName,
-            guestEmail,
-            result.bookingReference,
-            checkInDate.toDate(),
-            checkOutDate.toDate(),
-            totalPrice,
-            depositAmount,
-            unitData?.name || "Unit"
+          // Check notification preferences before sending
+          const shouldSend = await shouldSendEmailNotification(
+            ownerId,
+            "bookings"
           );
 
-          logSuccess("[AtomicBooking] Owner notification email sent", {
-            email: ownerData.email,
-          });
+          if (shouldSend) {
+            logInfo("[AtomicBooking] Sending owner notification to", {
+              email: ownerData.email,
+            });
+
+            await sendOwnerNotificationEmail(
+              ownerData.email,
+              ownerData.displayName || ownerData.first_name || "Owner",
+              guestName,
+              guestEmail,
+              result.bookingReference,
+              checkInDate.toDate(),
+              checkOutDate.toDate(),
+              totalPrice,
+              depositAmount,
+              unitData?.name || "Unit"
+            );
+
+            logSuccess("[AtomicBooking] Owner notification email sent", {
+              email: ownerData.email,
+            });
+          } else {
+            logInfo("[AtomicBooking] Owner has disabled booking email notifications", {
+              ownerId,
+              email: ownerData.email,
+            });
+          }
         }
       }
     } catch (emailError) {

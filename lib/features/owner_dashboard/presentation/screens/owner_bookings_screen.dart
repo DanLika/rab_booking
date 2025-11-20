@@ -21,7 +21,8 @@ import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Owner bookings screen with filters and booking management
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
-  const OwnerBookingsScreen({super.key});
+  final String? initialBookingId;
+  const OwnerBookingsScreen({super.key, this.initialBookingId});
 
   @override
   ConsumerState<OwnerBookingsScreen> createState() =>
@@ -30,6 +31,7 @@ class OwnerBookingsScreen extends ConsumerStatefulWidget {
 
 class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   final ScrollController _scrollController = ScrollController();
+  bool _hasHandledInitialBooking = false;
 
   @override
   void initState() {
@@ -67,6 +69,34 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   @override
   Widget build(BuildContext context) {
     final bookingsAsync = ref.watch(ownerBookingsProvider);
+
+    // Listen for data to handle initial booking
+    ref.listen(ownerBookingsProvider, (previous, next) {
+      if (!_hasHandledInitialBooking &&
+          widget.initialBookingId != null &&
+          next.hasValue &&
+          !next.isLoading) {
+        final bookings = next.value!;
+        try {
+          final booking = bookings.firstWhere(
+            (b) => b.booking.id == widget.initialBookingId,
+          );
+          _hasHandledInitialBooking = true;
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              showDialog(
+                context: context,
+                builder: (context) => BookingDetailsDialog(booking: booking),
+              );
+            }
+          });
+        } catch (_) {
+          // Booking not found in current list
+        }
+      }
+    });
+
     final filters = ref.watch(bookingsFiltersNotifierProvider);
     final viewMode = ref.watch(ownerBookingsViewProvider);
     final theme = Theme.of(context);

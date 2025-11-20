@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../providers/notifications_provider.dart';
@@ -247,10 +249,11 @@ class NotificationsScreen extends ConsumerWidget {
 
           // Navigate to booking if bookingId exists
           if (notification.bookingId != null && context.mounted) {
-            // TODO: Navigate to booking details
-            ErrorDisplayUtils.showInfoSnackBar(
-              context,
-              'Navigacija na rezervaciju: ${notification.bookingId}',
+            context.go(
+              Uri(
+                path: OwnerRoutes.bookings,
+                queryParameters: {'bookingId': notification.bookingId},
+              ).toString(),
             );
           }
         },
@@ -357,7 +360,7 @@ class NotificationsScreen extends ConsumerWidget {
         return Colors.grey;
       default:
         return Colors.grey;
-    }
+      }
   }
 }
 

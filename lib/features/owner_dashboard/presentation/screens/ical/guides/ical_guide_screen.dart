@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../../core/config/router_owner.dart';
+import '../../../widgets/owner_app_drawer.dart';
 
 /// iCal Sync Guide Screen
 /// Step-by-step instructions for syncing with Booking.com, Airbnb, etc.
@@ -22,14 +23,15 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       extendBodyBehindAppBar: true,
+      drawer: const OwnerAppDrawer(currentRoute: 'guides/ical'),
       appBar: AppBar(
         title: const Text('iCal Sinhronizacija - Uputstvo'),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: () => Scaffold.of(context).openDrawer(),
         ),
       ),
       body: Container(

@@ -165,7 +165,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [AppColors.primary, AppColors.secondary],
+                              colors: [AppColors.primary, AppColors.primaryDark],
                             ),
                             boxShadow: [
                               BoxShadow(

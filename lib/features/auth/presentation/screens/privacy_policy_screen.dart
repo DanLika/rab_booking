@@ -82,7 +82,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      drawer: const OwnerAppDrawer(currentRoute: 'privacy'),
+      drawer: const OwnerAppDrawer(currentRoute: 'privacy-policy'),
       appBar: CommonAppBar(
         title: 'Privacy Policy',
         leadingIcon: Icons.menu,

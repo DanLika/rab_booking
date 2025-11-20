@@ -107,6 +107,9 @@ class _ThemeOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return ListTile(
       leading: Container(
         width: 40,
@@ -114,14 +117,18 @@ class _ThemeOption extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isSelected
-              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
-              : Colors.grey[200],
+              ? theme.primaryColor.withValues(alpha: 0.1)
+              : isDark
+                  ? theme.colorScheme.surfaceContainerHighest
+                  : Colors.grey[200],
         ),
         child: Icon(
           icon,
           color: isSelected
-              ? Theme.of(context).primaryColor
-              : Colors.grey[600],
+              ? theme.primaryColor
+              : isDark
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                  : Colors.grey[600],
         ),
       ),
       title: Text(

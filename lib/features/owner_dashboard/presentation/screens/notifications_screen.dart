@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../providers/notifications_provider.dart';
 import '../../domain/models/notification_model.dart';
 import '../widgets/owner_app_drawer.dart';
@@ -14,6 +13,7 @@ class NotificationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final notificationsAsync = ref.watch(notificationsStreamProvider);
     final groupedNotifications = ref.watch(groupedNotificationsProvider);
     final actions = ref.watch(notificationActionsProvider);
@@ -31,6 +31,7 @@ class NotificationsScreen extends ConsumerWidget {
           }
 
           return RefreshIndicator(
+            color: theme.colorScheme.primary,
             onRefresh: () async {
               ref.invalidate(notificationsStreamProvider);
             },
@@ -57,10 +58,10 @@ class NotificationsScreen extends ConsumerWidget {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  AppColors.primary.withAlpha(
+                                  theme.colorScheme.primary.withAlpha(
                                     (0.1 * 255).toInt(),
                                   ),
-                                  AppColors.secondary.withAlpha(
+                                  theme.colorScheme.secondary.withAlpha(
                                     (0.05 * 255).toInt(),
                                   ),
                                 ],
@@ -69,10 +70,10 @@ class NotificationsScreen extends ConsumerWidget {
                             ),
                             child: Text(
                               dateKey,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
+                                color: theme.colorScheme.primary,
                               ),
                             ),
                           ),
@@ -83,7 +84,7 @@ class NotificationsScreen extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    AppColors.primary.withAlpha(
+                                    theme.colorScheme.primary.withAlpha(
                                       (0.2 * 255).toInt(),
                                     ),
                                     Colors.transparent,
@@ -110,15 +111,12 @@ class NotificationsScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(
+        loading: () => Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
           ),
         ),
         error: (error, stack) {
-          final theme = Theme.of(context);
-          final isDark = theme.brightness == Brightness.dark;
-
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(32.0),
@@ -133,16 +131,16 @@ class NotificationsScreen extends ConsumerWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          AppColors.error.withAlpha((0.1 * 255).toInt()),
-                          AppColors.error.withAlpha((0.05 * 255).toInt()),
+                          theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
+                          theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
                         ],
                       ),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.error_outline_rounded,
                       size: 50,
-                      color: AppColors.error,
+                      color: theme.colorScheme.error,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -151,18 +149,14 @@ class NotificationsScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isDark
-                          ? AppColors.textPrimaryDark
-                          : AppColors.textPrimaryLight,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     error.toString(),
                     style: TextStyle(
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight,
+                      color: theme.colorScheme.onSurfaceVariant,
                       fontSize: 14,
                     ),
                     textAlign: TextAlign.center,
@@ -177,7 +171,7 @@ class NotificationsScreen extends ConsumerWidget {
                     icon: const Icon(Icons.refresh_rounded),
                     label: const Text('Pokušaj ponovno'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: theme.colorScheme.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -204,6 +198,8 @@ class NotificationsScreen extends ConsumerWidget {
     NotificationModel notification,
     NotificationActions actions,
   ) {
+    final theme = Theme.of(context);
+
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.endToStart,
@@ -212,8 +208,8 @@ class NotificationsScreen extends ConsumerWidget {
         padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.error, AppColors.error],
+          gradient: LinearGradient(
+            colors: [theme.colorScheme.error, theme.colorScheme.error],
           ),
           borderRadius: BorderRadius.circular(16),
         ),
@@ -253,7 +249,7 @@ class NotificationsScreen extends ConsumerWidget {
           }
         },
         iconData: _getNotificationIcon(notification.type),
-        iconColor: _getNotificationColor(notification.type),
+        iconColor: _getNotificationColor(context, notification.type),
       ),
     );
   }
@@ -261,7 +257,6 @@ class NotificationsScreen extends ConsumerWidget {
   /// Build empty state
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Center(
       child: Padding(
@@ -278,20 +273,20 @@ class NotificationsScreen extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    AppColors.primary.withAlpha((0.1 * 255).toInt()),
-                    AppColors.secondary.withAlpha((0.05 * 255).toInt()),
+                    theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                    theme.colorScheme.secondary.withAlpha((0.05 * 255).toInt()),
                   ],
                 ),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.primary.withAlpha((0.2 * 255).toInt()),
+                  color: theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
                   width: 2,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.notifications_none_rounded,
                 size: 70,
-                color: AppColors.primary,
+                color: theme.colorScheme.primary,
               ),
             ),
             const SizedBox(height: 32),
@@ -300,9 +295,7 @@ class NotificationsScreen extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: isDark
-                    ? AppColors.textPrimaryDark
-                    : AppColors.textPrimaryLight,
+                color: theme.colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
@@ -310,9 +303,7 @@ class NotificationsScreen extends ConsumerWidget {
               'Ovdje ćete vidjeti sva vaša obavještenja',
               style: TextStyle(
                 fontSize: 15,
-                color: isDark
-                    ? AppColors.textSecondaryDark
-                    : AppColors.textSecondaryLight,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
@@ -341,20 +332,22 @@ class NotificationsScreen extends ConsumerWidget {
   }
 
   /// Get notification color based on type
-  Color _getNotificationColor(String type) {
+  Color _getNotificationColor(BuildContext context, String type) {
+    final theme = Theme.of(context);
+
     switch (type) {
       case 'booking_created':
-        return AppColors.success;
+        return theme.colorScheme.tertiary; // Green
       case 'booking_updated':
-        return AppColors.warning;
+        return theme.colorScheme.error; // Red (was warning - no warning in theme)
       case 'booking_cancelled':
-        return AppColors.error;
+        return theme.colorScheme.error;
       case 'payment_received':
-        return AppColors.authPrimary;
+        return theme.colorScheme.primary;
       case 'system':
-        return Colors.grey;
+        return theme.colorScheme.onSurfaceVariant; // Grey
       default:
-        return Colors.grey;
+        return theme.colorScheme.onSurfaceVariant;
     }
   }
 }
@@ -384,7 +377,6 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final isUnread = !widget.notification.isRead;
 
     return MouseRegion(
@@ -394,22 +386,20 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceLight,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _isHovered
-                ? AppColors.primary.withAlpha((0.3 * 255).toInt())
+                ? theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())
                 : isUnread
-                ? AppColors.primary.withAlpha((0.15 * 255).toInt())
-                : isDark
-                ? AppColors.borderDark
-                : AppColors.borderLight,
+                ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+                : theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
             width: _isHovered ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
               color: _isHovered
-                  ? AppColors.primary.withAlpha((0.12 * 255).toInt())
+                  ? theme.colorScheme.primary.withAlpha((0.12 * 255).toInt())
                   : Colors.black.withAlpha((0.04 * 255).toInt()),
               blurRadius: _isHovered ? 16 : 8,
               offset: Offset(0, _isHovered ? 6 : 2),
@@ -475,9 +465,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                                   fontWeight: isUnread
                                       ? FontWeight.bold
                                       : FontWeight.w600,
-                                  color: isDark
-                                      ? AppColors.textPrimaryDark
-                                      : AppColors.textPrimaryLight,
+                                  color: theme.colorScheme.onSurface,
                                 ),
                               ),
                             ),
@@ -486,16 +474,16 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                                 width: 10,
                                 height: 10,
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
+                                  gradient: LinearGradient(
                                     colors: [
-                                      AppColors.primary,
-                                      AppColors.authSecondary,
+                                      theme.colorScheme.primary,
+                                      theme.colorScheme.secondary,
                                     ],
                                   ),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.primary.withAlpha(
+                                      color: theme.colorScheme.primary.withAlpha(
                                         (0.4 * 255).toInt(),
                                       ),
                                       blurRadius: 4,
@@ -513,9 +501,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                           widget.notification.message,
                           style: TextStyle(
                             fontSize: 14,
-                            color: isDark
-                                ? AppColors.textSecondaryDark
-                                : AppColors.textSecondaryLight,
+                            color: theme.colorScheme.onSurfaceVariant,
                             height: 1.5,
                           ),
                           maxLines: 2,
@@ -530,7 +516,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                             Icon(
                               Icons.access_time_rounded,
                               size: 14,
-                              color: AppColors.primary.withAlpha(
+                              color: theme.colorScheme.primary.withAlpha(
                                 (0.6 * 255).toInt(),
                               ),
                             ),
@@ -539,7 +525,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
                               widget.notification.getRelativeTime(),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.primary.withAlpha(
+                                color: theme.colorScheme.primary.withAlpha(
                                   (0.7 * 255).toInt(),
                                 ),
                                 fontWeight: FontWeight.w500,
@@ -579,7 +565,6 @@ class _PremiumAlertDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -588,12 +573,12 @@ class _PremiumAlertDialog extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 400),
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceLight,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isDestructive
-                ? AppColors.error.withAlpha((0.2 * 255).toInt())
-                : AppColors.primary.withAlpha((0.2 * 255).toInt()),
+                ? theme.colorScheme.error.withAlpha((0.2 * 255).toInt())
+                : theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
             width: 1.5,
           ),
         ),
@@ -610,12 +595,12 @@ class _PremiumAlertDialog extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: isDestructive
                       ? [
-                          AppColors.error.withAlpha((0.15 * 255).toInt()),
-                          AppColors.error.withAlpha((0.08 * 255).toInt()),
+                          theme.colorScheme.error.withAlpha((0.15 * 255).toInt()),
+                          theme.colorScheme.error.withAlpha((0.08 * 255).toInt()),
                         ]
                       : [
-                          AppColors.primary.withAlpha((0.15 * 255).toInt()),
-                          AppColors.secondary.withAlpha((0.08 * 255).toInt()),
+                          theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
+                          theme.colorScheme.secondary.withAlpha((0.08 * 255).toInt()),
                         ],
                 ),
                 shape: BoxShape.circle,
@@ -624,7 +609,9 @@ class _PremiumAlertDialog extends StatelessWidget {
                 isDestructive
                     ? Icons.warning_amber_rounded
                     : Icons.help_outline_rounded,
-                color: isDestructive ? AppColors.error : AppColors.primary,
+                color: isDestructive
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.primary,
                 size: 32,
               ),
             ),
@@ -637,9 +624,7 @@ class _PremiumAlertDialog extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark
-                    ? AppColors.textPrimaryDark
-                    : AppColors.textPrimaryLight,
+                color: theme.colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
             ),
@@ -651,9 +636,7 @@ class _PremiumAlertDialog extends StatelessWidget {
               content,
               style: TextStyle(
                 fontSize: 14,
-                color: isDark
-                    ? AppColors.textSecondaryDark
-                    : AppColors.textSecondaryLight,
+                color: theme.colorScheme.onSurfaceVariant,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -670,9 +653,9 @@ class _PremiumAlertDialog extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(
-                        color: isDark
-                            ? AppColors.borderDark
-                            : AppColors.borderLight,
+                        color: theme.colorScheme.outline.withAlpha(
+                          (0.5 * 255).toInt(),
+                        ),
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -682,9 +665,7 @@ class _PremiumAlertDialog extends StatelessWidget {
                       cancelText,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.textSecondaryDark
-                            : AppColors.textSecondaryLight,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -695,8 +676,8 @@ class _PremiumAlertDialog extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isDestructive
-                          ? AppColors.error
-                          : AppColors.primary,
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 0,

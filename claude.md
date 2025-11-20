@@ -4,6 +4,249 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🔔 Notification Settings - Save Fix & Email Integration
+
+**Datum: 2025-11-20**
+**Status: ✅ COMPLETED - Notification settings now save properly, email preferences integrated**
+
+### 📋 Overview
+
+Fixed the Notification Settings page which wasn't saving user preferences, and integrated notification preference checking into Cloud Functions email system. Resend email service is fully configured with comprehensive templates.
+
+### 🐛 Problem
+
+**Notification Settings Screen:**
+- Settings were not being saved to Firestore
+- No visual feedback after attempting to save
+- Provider was not refreshing after updates
+
+**Email System:**
+- All emails were being sent regardless of user preferences
+- No integration between notification settings and Cloud Functions
+
+### 🔧 Solution
+
+#### 1. Flutter App - Notification Settings Fix
+
+**Fixed:** `lib/features/owner_dashboard/presentation/screens/notification_settings_screen.dart`
+
+**Changes:**
+```dart
+// Added provider invalidation after save
+ref.invalidate(notificationPreferencesProvider);
+
+// Added user feedback
+ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+    content: Text('Notifications enabled successfully'),
+    backgroundColor: Theme.of(context).colorScheme.primary,
+  ),
+);
+```
+
+**Applied to:**
+- `_toggleMasterSwitch()` - Master enable/disable all notifications
+- `_updateCategory()` - Category-specific channel toggles (email/push/sms)
+
+#### 2. Cloud Functions - Notification Preference Integration
+
+**Created:** `functions/src/notificationPreferences.ts`
+
+Helper functions to check user preferences before sending emails:
+- `getNotificationPreferences(userId)` - Fetch from Firestore
+- `shouldSendEmailNotification(userId, category)` - Check if email should be sent
+- `shouldSendPushNotification(userId, category)` - Check if push should be sent
+- `shouldSendSmsNotification(userId, category)` - Check if SMS should be sent
+
+**Default Behavior:** Opt-out approach - if no preferences found, emails are sent to avoid missing critical notifications.
+
+**Updated:** `functions/src/atomicBooking.ts`
+
+```typescript
+// Check notification preferences before sending
+const shouldSend = await shouldSendEmailNotification(ownerId, "bookings");
+
+if (shouldSend) {
+  await sendOwnerNotificationEmail(...);
+} else {
+  logInfo("[AtomicBooking] Owner has disabled booking email notifications");
+}
+```
+
+### 📧 Resend Email Infrastructure (Already Configured)
+
+**Service:** Resend email API
+**FROM Address:** `onboarding@resend.dev` (test mode - update for production)
+**Configuration:** `functions/src/emailService.ts`
+
+**Email Templates Available:**
+1. Booking Confirmation (`sendBookingConfirmationEmail`)
+2. Booking Approved (`sendBookingApprovedEmail`)
+3. Owner Notification (`sendOwnerNotificationEmail`)
+4. Booking Cancellation (`sendBookingCancellationEmail`)
+5. Pending Booking Request (`sendPendingBookingRequestEmail`)
+6. Pending Booking Owner Notification (`sendPendingBookingOwnerNotification`)
+7. Booking Rejected (`sendBookingRejectedEmail`)
+8. Custom Email (`sendCustomEmailToGuest`)
+9. Suspicious Activity Alert (`sendSuspiciousActivityEmail`)
+
+### 📁 Firestore Structure
+
+**Path:** `users/{userId}/data/preferences`
+
+```json
+{
+  "masterEnabled": true,
+  "categories": {
+    "bookings": {"email": true, "push": true, "sms": false},
+    "payments": {"email": true, "push": true, "sms": false},
+    "calendar": {"email": true, "push": true, "sms": false},
+    "marketing": {"email": false, "push": false, "sms": false}
+  },
+  "updatedAt": Timestamp
+}
+```
+
+**Security Rules:** Already allow users to read/write `users/{userId}/data/{document}`
+
+### 🎯 Next Steps for Full Integration
+
+**Remaining Cloud Functions to update:**
+1. `bookingManagement.ts` - Approval and cancellation emails
+2. `stripePayment.ts` - Payment confirmation emails
+3. `guestCancelBooking.ts` - Guest-initiated cancellation emails
+
+**Pattern:**
+```typescript
+import {shouldSendEmailNotification} from "./notificationPreferences";
+
+const shouldSend = await shouldSendEmailNotification(ownerId, "bookings");
+if (shouldSend) {
+  await sendEmailFunction(...);
+}
+```
+
+**Category Mapping:**
+- `bookings` - New bookings, approvals, cancellations
+- `payments` - Payment confirmations, failures, refunds
+- `calendar` - Availability changes, price updates
+- `marketing` - Promotional offers, platform news
+
+### ⚠️ Production Considerations
+
+> **Resend FROM Address** - Currently using `onboarding@resend.dev` (test mode). Before production:
+> 1. Add and verify custom domain in Resend
+> 2. Update `FROM_EMAIL` in `emailService.ts` line 24
+> 3. Test email delivery to real addresses
+
+> **Environment Variables** - Ensure `RESEND_API_KEY` is set:
+> ```bash
+> firebase functions:config:set resend.api_key="YOUR_API_KEY"
+> ```
+
+### 📁 Modified Files
+
+1. `lib/features/owner_dashboard/presentation/screens/notification_settings_screen.dart`
+   - Added provider invalidation after saves
+   - Added SnackBar feedback
+   
+2. `functions/src/notificationPreferences.ts` (NEW)
+   - Notification preference helper functions
+
+3. `functions/src/atomicBooking.ts`
+   - Integrated notification preference check before sending owner emails
+
+---
+
+**Commit:** `a426351` - feat: Fix notification settings save & integrate with email system
+
+---
+
+## 🎨 Color Scheme Standardization
+
+**Datum: 2025-11-20**
+**Status: ✅ COMPLETED - Pink color variants removed**
+
+### 📋 Overview
+
+Removed pink/coral color variants and gradients from Change Password, Edit Profile, Widget Settings, and Register screens. Replaced with standard primary color variants.
+
+### 🔧 Changes Made
+
+#### 1. Change Password Screen
+**File:** `lib/features/owner_dashboard/presentation/screens/change_password_screen.dart`
+
+Replaced lock icon gradient:
+```dart
+// Before: Purple + Pink
+colors: [AppColors.primary, AppColors.secondary]
+
+// After: Purple + Dark Purple
+colors: [AppColors.primary, AppColors.primaryDark]
+```
+
+#### 2. Profile Image Picker
+**File:** `lib/features/auth/presentation/widgets/profile_image_picker.dart`
+
+Replaced placeholder and edit button gradients:
+```dart
+// Before: Primary + Pink Secondary
+colors: [theme.colorScheme.primary, theme.colorScheme.secondary]
+
+// After: Primary + Primary Container
+colors: [theme.colorScheme.primary, theme.colorScheme.primaryContainer]
+```
+
+**Used in:** Register and Edit Profile screens
+
+#### 3. Email Verification Card
+**File:** `lib/features/owner_dashboard/presentation/widgets/advanced_settings/email_verification_card.dart`
+
+Replaced section header gradient:
+```dart
+// Before: Primary + Pink Secondary
+AppColors.primary.withAlpha((0.15 * 255).toInt()),
+AppColors.secondary.withAlpha((0.08 * 255).toInt()),
+
+// After: Primary + Primary (lighter)
+AppColors.primary.withAlpha((0.15 * 255).toInt()),
+AppColors.primary.withAlpha((0.05 * 255).toInt()),
+```
+
+**Used in:** Widget Advanced Settings screen
+
+### 📁 Affected Screens
+
+1. **Register** - Profile image picker
+2. **Edit Profile** - Profile image picker
+3. **Change Password** - Lock icon gradient
+4. **Widget Advanced Settings** - Email verification section header
+
+### 📊 Color Reference
+
+- `AppColors.primary` - Purple `#6B4CE6`
+- `AppColors.primaryDark` - Darker purple variant
+- `theme.colorScheme.primary` - Theme primary (purple)
+- `theme.colorScheme.primaryContainer` - Theme primary container (light purple)
+- ~~`AppColors.secondary`~~ - Coral Red `#FF6B6B` (removed from these screens)
+
+### 🎯 Important Notes
+
+**DO NOT:**
+- Re-introduce `AppColors.secondary` (coral/pink) in these screens
+- Use `theme.colorScheme.secondary` for gradients on these screens
+
+**IF USER REPORTS:**
+- "I see pink colors": Check for `AppColors.secondary` or `theme.colorScheme.secondary` usage
+- "Gradients look wrong": Verify primary color variants are used
+
+---
+
+**Commit:** `a426351` - feat: Fix notification settings save & integrate with email system (includes color standardization)
+
+---
+
+
 ## 🏢 Unified Unit Hub - Centralized Unit Management
 
 **Datum: 2025-11-19**

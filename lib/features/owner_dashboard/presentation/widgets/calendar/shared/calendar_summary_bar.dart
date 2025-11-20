@@ -91,7 +91,7 @@ class CalendarSummaryBar extends StatelessWidget {
       width: cellWidth,
       decoration: BoxDecoration(
         color: isToday
-            ? AppColors.primary.withValues(alpha: 0.1)
+            ? AppColors.primary.withOpacity(0.1)
             : isWeekend
                 ? theme.colorScheme.surfaceContainerHighest.withAlpha(
                     (0.5 * 255).toInt(),

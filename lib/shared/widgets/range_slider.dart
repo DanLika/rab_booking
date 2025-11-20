@@ -163,7 +163,7 @@ class _PremiumRangeSliderState extends State<PremiumRangeSlider> {
                 ? AppColors.surfaceVariantDark
                 : AppColors.surfaceVariantLight,
             thumbColor: Colors.white,
-            overlayColor: AppColors.authPrimary.withValues(alpha: 0.1),
+            overlayColor: AppColors.authPrimary.withOpacity(0.1),
             valueIndicatorColor: AppColors.authPrimary,
             valueIndicatorTextStyle: AppTypography.small.copyWith(
               color: Colors.white,
@@ -302,7 +302,7 @@ class _PremiumRangeThumbShape extends RangeSliderThumbShape {
       center,
       12,
       Paint()
-        ..color = AppColors.authPrimary.withValues(alpha: 0.3)
+        ..color = AppColors.authPrimary.withOpacity(0.3)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
     );
 

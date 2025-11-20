@@ -124,7 +124,7 @@ class _AnimatedButtonState extends State<AnimatedButton>
           height: widget.height,
           padding: widget.padding,
           decoration: BoxDecoration(
-            color: widget.enabled ? bgColor : bgColor.withValues(alpha: 0.5),
+            color: widget.enabled ? bgColor : bgColor.withOpacity(0.5),
             borderRadius: BorderRadius.circular(widget.borderRadius),
           ),
           child: widget.isLoading
@@ -188,8 +188,8 @@ class RippleButton extends StatelessWidget {
                 onPressed!();
               },
         borderRadius: BorderRadius.circular(borderRadius),
-        splashColor: rippleColor ?? Colors.white.withValues(alpha: 0.3),
-        highlightColor: rippleColor ?? Colors.white.withValues(alpha: 0.1),
+        splashColor: rippleColor ?? Colors.white.withOpacity(0.3),
+        highlightColor: rippleColor ?? Colors.white.withOpacity(0.1),
         child: Container(
           width: width,
           height: height,
@@ -343,7 +343,7 @@ class _PulseButtonState extends State<PulseButton>
                 child: Container(
                   padding: widget.padding,
                   decoration: BoxDecoration(
-                    color: pulseColor.withValues(alpha: _opacityAnimation.value),
+                    color: pulseColor.withOpacity(_opacityAnimation.value),
                     borderRadius: BorderRadius.circular(widget.borderRadius),
                   ),
                   child: Opacity(opacity: 0, child: widget.child),

@@ -92,10 +92,10 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: colors.warning.withValues(alpha: 0.1),
+                color: colors.warning.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: colors.warning.withValues(alpha: 0.3),
+                  color: colors.warning.withOpacity(0.3),
                 ),
               ),
               child: Row(
@@ -269,10 +269,10 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: colors.warning.withValues(alpha: 0.1),
+                          color: colors.warning.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: colors.warning.withValues(alpha: 0.3),
+                            color: colors.warning.withOpacity(0.3),
                           ),
                         ),
                         child: Text(
@@ -327,9 +327,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.1),
+        color: statusColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
       ),
       child: Row(
         children: [
@@ -778,9 +778,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.1),
+        color: statusColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
       ),
       child: Text(
         statusText,
@@ -890,11 +890,11 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: (canCancel ? colors.success : colors.warning)
-                    .withValues(alpha: 0.1),
+                    .withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: (canCancel ? colors.success : colors.warning)
-                      .withValues(alpha: 0.3),
+                      .withOpacity(0.3),
                 ),
               ),
               child: Column(

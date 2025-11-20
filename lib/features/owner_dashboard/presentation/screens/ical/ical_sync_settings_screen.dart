@@ -387,7 +387,7 @@ class _IcalSyncSettingsScreenState
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: statusColor.withValues(alpha: 0.2), width: 1.5),
+        side: BorderSide(color: statusColor.withOpacity(0.2), width: 1.5),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -395,7 +395,7 @@ class _IcalSyncSettingsScreenState
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [statusColor.withValues(alpha: 0.8), statusColor],
+              colors: [statusColor.withOpacity(0.8), statusColor],
             ),
             shape: BoxShape.circle,
           ),
@@ -889,8 +889,8 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        theme.colorScheme.brandPurple.withValues(alpha: 0.1),
-                        theme.colorScheme.brandPurple.withValues(alpha: 0.05),
+                        theme.colorScheme.brandPurple.withOpacity(0.1),
+                        theme.colorScheme.brandPurple.withOpacity(0.05),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),

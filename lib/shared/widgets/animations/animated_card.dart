@@ -101,7 +101,7 @@ class _HoverScaleCardState extends State<HoverScaleCard>
                   borderRadius: BorderRadius.circular(widget.borderRadius),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: _elevationAnimation.value,
                       offset: Offset(0, _elevationAnimation.value / 2),
                     ),
@@ -204,12 +204,12 @@ class _GlowCardState extends State<GlowCard>
                 color: widget.backgroundColor ?? Colors.white,
                 borderRadius: BorderRadius.circular(widget.borderRadius),
                 border: Border.all(
-                  color: glowColor.withValues(alpha: _glowAnimation.value * 0.5),
+                  color: glowColor.withOpacity(_glowAnimation.value * 0.5),
                   width: 1 + (_glowAnimation.value * 1),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: glowColor.withValues(alpha: _glowAnimation.value * 0.3),
+                    color: glowColor.withOpacity(_glowAnimation.value * 0.3),
                     blurRadius: widget.glowIntensity * _glowAnimation.value,
                     spreadRadius: _glowAnimation.value * 2,
                   ),
@@ -573,7 +573,7 @@ class _ShimmerCardState extends State<ShimmerCard>
     final baseColor = widget.baseColor ??
         (isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight);
     final highlightColor = widget.highlightColor ??
-        (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.8));
+        (isDark ? Colors.white.withOpacity(0.1) : Colors.white.withOpacity(0.8));
 
     return AnimatedBuilder(
       animation: _animation,

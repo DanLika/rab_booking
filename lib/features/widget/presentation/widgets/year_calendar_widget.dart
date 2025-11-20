@@ -662,7 +662,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       // Match month calendar: available background + 20% black overlay
       final baseColor = colors.statusAvailableBackground;
       return Color.alphaBlend(
-        colors.buttonPrimary.withValues(alpha: 0.2),
+        colors.buttonPrimary.withOpacity(0.2),
         baseColor,
       );
     }
@@ -670,7 +670,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     if (isHovered && isInteractive) {
       // Lighten the color slightly on hover
       final baseColor = dateInfo.status.getColor(colors);
-      return Color.alphaBlend(Colors.white.withValues(alpha: 0.3), baseColor);
+      return Color.alphaBlend(Colors.white.withOpacity(0.3), baseColor);
     }
 
     return dateInfo.status.getColor(colors);

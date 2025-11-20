@@ -68,9 +68,9 @@ class CalendarDayCell extends StatelessWidget {
             color: isSelected
                 ? context.primaryColor
                 : isToday
-                    ? context.primaryColor.withValues(alpha: 0.5)
+                    ? context.primaryColor.withOpacity(0.5)
                     : hasRestrictions
-                        ? context.warningColor.withValues(alpha: 0.6)
+                        ? context.warningColor.withOpacity(0.6)
                         : Colors.transparent,
             width: isSelected ? 2 : 1,
           ),
@@ -99,19 +99,19 @@ class CalendarDayCell extends StatelessWidget {
     bool hasRestrictions,
   ) {
     if (isSelected) {
-      return context.primaryColor.withValues(alpha: 0.2);
+      return context.primaryColor.withOpacity(0.2);
     }
     if (!isAvailable) {
-      return context.surfaceVariantColor.withValues(alpha: 0.5);
+      return context.surfaceVariantColor.withOpacity(0.5);
     }
     if (hasWeekendPrice && isWeekend) {
-      return context.secondaryColor.withValues(alpha: 0.1);
+      return context.secondaryColor.withOpacity(0.1);
     }
     if (hasPrice) {
-      return context.primaryColor.withValues(alpha: 0.08);
+      return context.primaryColor.withOpacity(0.08);
     }
     if (hasRestrictions) {
-      return context.warningColor.withValues(alpha: 0.1);
+      return context.warningColor.withOpacity(0.1);
     }
     return null;
   }

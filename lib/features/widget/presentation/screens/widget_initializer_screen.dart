@@ -208,7 +208,7 @@ class _WidgetInitializerScreenState
                 'Validating property information',
                 style: TextStyle(
                   fontSize: 14,
-                  color: MinimalistColors.textSecondary.withValues(alpha: 0.7),
+                  color: MinimalistColors.textSecondary.withOpacity(0.7),
                 ),
               ),
             ],

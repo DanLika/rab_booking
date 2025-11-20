@@ -122,9 +122,9 @@ class _PriceListCalendarWidgetState
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.borderColor.withValues(alpha: 0.3)),
+        border: Border.all(color: context.borderColor.withOpacity(0.3)),
       ),
       child: Row(
         children: [
@@ -262,17 +262,17 @@ class _PriceListCalendarWidgetState
               end: Alignment.bottomRight,
               colors: isDark
                   ? [
-                      context.surfaceColor.withValues(alpha: 0.95),
-                      context.surfaceVariantColor.withValues(alpha: 0.90),
+                      context.surfaceColor.withOpacity(0.95),
+                      context.surfaceVariantColor.withOpacity(0.90),
                     ]
                   : [
-                      context.surfaceColor.withValues(alpha: 0.95),
-                      context.surfaceColor.withValues(alpha: 0.90),
+                      context.surfaceColor.withOpacity(0.95),
+                      context.surfaceColor.withOpacity(0.90),
                     ],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: context.borderColor.withValues(alpha: 0.4),
+              color: context.borderColor.withOpacity(0.4),
               width: 1.5,
             ),
           ),
@@ -429,7 +429,7 @@ class _PriceListCalendarWidgetState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.primaryColor.withValues(alpha: 0.1),
+        color: context.primaryColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: context.primaryColor, width: 2),
       ),
@@ -572,17 +572,17 @@ class _PriceListCalendarWidgetState
                   end: Alignment.bottomRight,
                   colors: isDark
                       ? [
-                          context.surfaceColor.withValues(alpha: 0.95),
-                          context.surfaceVariantColor.withValues(alpha: 0.90),
+                          context.surfaceColor.withOpacity(0.95),
+                          context.surfaceVariantColor.withOpacity(0.90),
                         ]
                       : [
-                          context.surfaceColor.withValues(alpha: 0.95),
-                          context.surfaceColor.withValues(alpha: 0.90),
+                          context.surfaceColor.withOpacity(0.95),
+                          context.surfaceColor.withOpacity(0.90),
                         ],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: context.borderColor.withValues(alpha: 0.4),
+                  color: context.borderColor.withOpacity(0.4),
                   width: 1.5,
                 ),
               ),

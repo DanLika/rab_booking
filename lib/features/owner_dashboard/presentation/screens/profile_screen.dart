@@ -86,8 +86,8 @@ class ProfileScreen extends ConsumerWidget {
                           boxShadow: [
                             BoxShadow(
                               color: isDark
-                                  ? Colors.black.withValues(alpha: 0.3)
-                                  : AppColors.primary.withValues(alpha: 0.3),
+                                  ? Colors.black.withOpacity(0.3)
+                                  : AppColors.primary.withOpacity(0.3),
                               blurRadius: isMobile ? 15 : 20,
                               offset: const Offset(0, 8),
                             ),
@@ -220,7 +220,7 @@ class ProfileScreen extends ConsumerWidget {
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: isMobile ? 13 : 15,
-                                    color: Colors.white.withValues(alpha: 0.95),
+                                    color: Colors.white.withOpacity(0.95),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -242,14 +242,14 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           border: Border.all(
                             color: isDark
-                                ? AppColors.borderDark.withValues(alpha: 0.5)
+                                ? AppColors.borderDark.withOpacity(0.5)
                                 : AppColors.borderLight,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: isDark
-                                  ? Colors.black.withValues(alpha: 0.2)
-                                  : Colors.black.withValues(alpha: 0.04),
+                                  ? Colors.black.withOpacity(0.2)
+                                  : Colors.black.withOpacity(0.04),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -304,14 +304,14 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           border: Border.all(
                             color: isDark
-                                ? AppColors.borderDark.withValues(alpha: 0.5)
+                                ? AppColors.borderDark.withOpacity(0.5)
                                 : AppColors.borderLight,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: isDark
-                                  ? Colors.black.withValues(alpha: 0.2)
-                                  : Colors.black.withValues(alpha: 0.04),
+                                  ? Colors.black.withOpacity(0.2)
+                                  : Colors.black.withOpacity(0.04),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -353,14 +353,14 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           border: Border.all(
                             color: isDark
-                                ? AppColors.borderDark.withValues(alpha: 0.5)
+                                ? AppColors.borderDark.withOpacity(0.5)
                                 : AppColors.borderLight,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: isDark
-                                  ? Colors.black.withValues(alpha: 0.2)
-                                  : Colors.black.withValues(alpha: 0.04),
+                                  ? Colors.black.withOpacity(0.2)
+                                  : Colors.black.withOpacity(0.04),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -413,14 +413,14 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           border: Border.all(
                             color: isDark
-                                ? AppColors.borderDark.withValues(alpha: 0.5)
+                                ? AppColors.borderDark.withOpacity(0.5)
                                 : AppColors.borderLight,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: isDark
-                                  ? Colors.black.withValues(alpha: 0.2)
-                                  : Colors.black.withValues(alpha: 0.04),
+                                  ? Colors.black.withOpacity(0.2)
+                                  : Colors.black.withOpacity(0.04),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -578,7 +578,7 @@ class _PremiumListTileState extends State<_PremiumListTile> {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: _isHovered && !isDisabled
-              ? AppColors.primary.withValues(alpha: 0.04)
+              ? AppColors.primary.withOpacity(0.04)
               : Colors.transparent,
           borderRadius: widget.isLast
               ? BorderRadius.only(
@@ -597,7 +597,7 @@ class _PremiumListTileState extends State<_PremiumListTile> {
             leading: Container(
               padding: EdgeInsets.all(isMobile ? 8 : 10),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
+                color: AppColors.primary.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -619,13 +619,13 @@ class _PremiumListTileState extends State<_PremiumListTile> {
                     widget.subtitle as String,
                     style: TextStyle(
                       fontSize: isMobile ? 13 : 14,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
                   )
                 : widget.subtitle as Widget?,
             trailing: Icon(
               Icons.chevron_right_rounded,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              color: theme.colorScheme.onSurface.withOpacity(0.5),
               size: isMobile ? 20 : 24,
             ),
             onTap: widget.onTap,
@@ -662,7 +662,7 @@ class _LogoutTileState extends State<_LogoutTile> {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: _isHovered
-              ? AppColors.error.withValues(alpha: 0.06)
+              ? AppColors.error.withOpacity(0.06)
               : Colors.transparent,
           borderRadius: BorderRadius.only(
             bottomLeft: Radius.circular(isMobile ? 12 : 16),
@@ -677,7 +677,7 @@ class _LogoutTileState extends State<_LogoutTile> {
           leading: Container(
             padding: EdgeInsets.all(isMobile ? 8 : 10),
             decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.1),
+              color: AppColors.error.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -698,7 +698,7 @@ class _LogoutTileState extends State<_LogoutTile> {
             'Sign out of your account',
             style: TextStyle(
               fontSize: isMobile ? 13 : 14,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
           trailing: Icon(

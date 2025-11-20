@@ -137,7 +137,7 @@ class BookingBlockWidget extends StatelessWidget {
                 bottom: 0,
                 child: CheckInDiagonalIndicator(
                   height: height,
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: Colors.white.withOpacity(0.85),
                 ),
               ),
 
@@ -148,7 +148,7 @@ class BookingBlockWidget extends StatelessWidget {
                 bottom: 0,
                 child: CheckOutDiagonalIndicator(
                   height: height,
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: Colors.white.withOpacity(0.85),
                 ),
               ),
 

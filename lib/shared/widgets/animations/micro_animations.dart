@@ -172,7 +172,7 @@ class _AnimatedSuccessCheckmarkState extends State<AnimatedSuccessCheckmark>
             height: widget.size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               border: Border.all(color: color, width: 2),
             ),
             child: CustomPaint(

@@ -302,7 +302,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                   Text(
                     'Last updated: ${DateTime.now().year}',
                     style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
                         ),
                   ),
                 ],
@@ -322,7 +322,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+          color: theme.colorScheme.outline.withOpacity(0.3),
         ),
       ),
       child: Padding(
@@ -381,7 +381,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                 title,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontSize: 14,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                  color: theme.colorScheme.onSurface.withOpacity(0.8),
                 ),
               ),
             ),
@@ -402,7 +402,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
-            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+            color: theme.colorScheme.outline.withOpacity(0.2),
           ),
         ),
         child: Padding(

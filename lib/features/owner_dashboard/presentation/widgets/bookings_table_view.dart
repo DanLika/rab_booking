@@ -50,8 +50,8 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                   ? Theme.of(context)
                       .colorScheme
                       .primaryContainer
-                      .withValues(alpha: 0.3)
-                  : AppColors.authPrimary.withValues(alpha: 0.1),
+                      .withOpacity(0.3)
+                  : AppColors.authPrimary.withOpacity(0.1),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -235,7 +235,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: booking.status.color.withValues(alpha: 0.2),
+              color: booking.status.color.withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: booking.status.color),
             ),

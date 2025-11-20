@@ -143,7 +143,7 @@ class SplitDayCalendarPainter extends CustomPainter {
     if (isInRange) {
       final overlayPaint = Paint()
         ..style = PaintingStyle.fill
-        ..color = colors.buttonPrimary.withValues(alpha: 0.2);
+        ..color = colors.buttonPrimary.withOpacity(0.2);
       canvas.drawRect(
         Rect.fromLTWH(0, 0, size.width, size.height),
         overlayPaint,

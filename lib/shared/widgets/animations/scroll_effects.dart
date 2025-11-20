@@ -60,7 +60,7 @@ class _FadeInAppBarState extends State<FadeInAppBar> {
       title: widget.title,
       actions: widget.actions,
       leading: widget.leading,
-      backgroundColor: bgColor.withValues(alpha: _opacity),
+      backgroundColor: bgColor.withOpacity(_opacity),
       elevation: _opacity > 0 ? 4 : 0,
       scrolledUnderElevation: 4,
     );

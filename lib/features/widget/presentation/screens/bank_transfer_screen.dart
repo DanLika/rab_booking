@@ -316,7 +316,7 @@ class BankTransferScreen extends ConsumerWidget {
               color: getColor(
                 MinimalistColors.success,
                 MinimalistColorsDark.success,
-              ).withValues(alpha: 0.1),
+              ).withOpacity(0.1),
               shape: BoxShape.circle,
               border: Border.all(
                 color: getColor(
@@ -497,7 +497,7 @@ class BankTransferScreen extends ConsumerWidget {
         color: getColor(
           MinimalistColors.warning,
           MinimalistColorsDark.warning,
-        ).withValues(alpha: 0.1),
+        ).withOpacity(0.1),
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
         border: Border.all(
           color: getColor(
@@ -693,7 +693,7 @@ class BankTransferScreen extends ConsumerWidget {
               color: getColor(
                 MinimalistColors.buttonPrimary,
                 MinimalistColorsDark.buttonPrimary,
-              ).withValues(alpha: 0.1),
+              ).withOpacity(0.1),
               borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
               border: Border.all(
                 color: getColor(
@@ -978,7 +978,7 @@ class BankTransferScreen extends ConsumerWidget {
                   color: getColor(
                     MinimalistColors.buttonPrimary,
                     MinimalistColorsDark.buttonPrimary,
-                  ).withValues(alpha: 0.1),
+                  ).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(
                     BorderTokens.radiusSubtle,
                   ),
@@ -1052,13 +1052,13 @@ class BankTransferScreen extends ConsumerWidget {
               color: getColor(
                 MinimalistColors.buttonPrimary,
                 MinimalistColorsDark.buttonPrimary,
-              ).withValues(alpha: 0.1),
+              ).withOpacity(0.1),
               borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
               border: Border.all(
                 color: getColor(
                   MinimalistColors.buttonPrimary,
                   MinimalistColorsDark.buttonPrimary,
-                ).withValues(alpha: 0.3),
+                ).withOpacity(0.3),
               ),
             ),
             child: Row(

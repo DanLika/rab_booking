@@ -1227,7 +1227,7 @@ class _BookingConfirmationScreenState
                       margin: const EdgeInsets.only(left: 20),
                       width: 2,
                       height: 24,
-                      color: colors.textPrimary.withValues(alpha: 0.3),
+                      color: colors.textPrimary.withOpacity(0.3),
                     ),
                     const SizedBox(height: SpacingTokens.m),
                   ],

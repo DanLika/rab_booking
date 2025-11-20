@@ -347,7 +347,7 @@ class _TimelineCalendarWidgetState
               horizontal: AppDimensions.spaceS,
               vertical: AppDimensions.spaceXXS,
             ),
-            color: AppColors.primary.withValues(alpha: 0.1),
+            color: AppColors.primary.withOpacity(0.1),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -1133,7 +1133,7 @@ class _TimelineCalendarWidgetState
                       bottom: 0,
                       child: CheckInDiagonalIndicator(
                         height: blockHeight,
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
 
@@ -1144,7 +1144,7 @@ class _TimelineCalendarWidgetState
                       bottom: 0,
                       child: CheckOutDiagonalIndicator(
                         height: blockHeight,
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
 
@@ -1173,7 +1173,7 @@ class _TimelineCalendarWidgetState
                             child: Text(
                               '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''} • $nights noć${nights > 1 ? 'i' : ''}',
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
+                                color: Colors.white.withOpacity(0.9),
                                 fontSize: metadataFontSize,
                               ),
                               maxLines: 1,
@@ -1353,7 +1353,7 @@ class _TimelineCalendarWidgetState
       width: dayWidth,
       decoration: BoxDecoration(
         color: isToday
-            ? AppColors.primary.withValues(alpha: 0.1)
+            ? AppColors.primary.withOpacity(0.1)
             : isWeekend
             ? theme.colorScheme.surfaceContainerHighest.withAlpha(
                 (0.5 * 255).toInt(),

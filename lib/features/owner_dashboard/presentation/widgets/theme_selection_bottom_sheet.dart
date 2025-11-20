@@ -117,7 +117,7 @@ class _ThemeOption extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isSelected
-              ? theme.primaryColor.withValues(alpha: 0.1)
+              ? theme.primaryColor.withOpacity(0.1)
               : isDark
                   ? theme.colorScheme.surfaceContainerHighest
                   : Colors.grey[200],
@@ -127,7 +127,7 @@ class _ThemeOption extends StatelessWidget {
           color: isSelected
               ? theme.primaryColor
               : isDark
-                  ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                  ? theme.colorScheme.onSurface.withOpacity(0.7)
                   : Colors.grey[600],
         ),
       ),

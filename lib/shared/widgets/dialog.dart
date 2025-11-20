@@ -175,8 +175,8 @@ class _PremiumDialogWidget extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: iconColor?.withValues(alpha: 0.1) ??
-                        AppColors.authPrimary.withValues(alpha: 0.1),
+                    color: iconColor?.withOpacity(0.1) ??
+                        AppColors.authPrimary.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(

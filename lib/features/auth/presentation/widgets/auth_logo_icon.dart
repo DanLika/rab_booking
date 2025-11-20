@@ -197,8 +197,8 @@ class _LogoPainter extends CustomPainter {
 
     final fillPaint = Paint()
       ..color = isWhite
-          ? Colors.white.withValues(alpha: 0.2)
-          : const Color(0xFF6B4CE6).withValues(alpha: 0.2)
+          ? Colors.white.withOpacity(0.2)
+          : const Color(0xFF6B4CE6).withOpacity(0.2)
       ..style = PaintingStyle.fill;
 
     // Apply gradient shader for fill if not white

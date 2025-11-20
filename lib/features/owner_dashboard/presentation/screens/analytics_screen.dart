@@ -478,7 +478,7 @@ class _RevenueChart extends StatelessWidget {
               Icon(
                 Icons.insert_chart_outlined_rounded,
                 size: 48,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -551,7 +551,7 @@ class _RevenueChart extends StatelessWidget {
                   barWidth: 3,
                   belowBarData: BarAreaData(
                     show: true,
-                    color: AppColors.success.withValues(alpha: 0.2),
+                    color: AppColors.success.withOpacity(0.2),
                   ),
                 ),
               ],
@@ -583,7 +583,7 @@ class _BookingsChart extends StatelessWidget {
               Icon(
                 Icons.event_busy_rounded,
                 size: 48,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -687,7 +687,7 @@ class _TopPropertiesList extends StatelessWidget {
                 Icon(
                   Icons.home_work_outlined,
                   size: 48,
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -981,7 +981,7 @@ class _BookingsBySourceChart extends StatelessWidget {
               Icon(
                 Icons.source_outlined,
                 size: 48,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
               ),
               const SizedBox(height: 16),
               Text(

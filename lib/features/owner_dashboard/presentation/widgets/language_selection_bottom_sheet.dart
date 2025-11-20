@@ -98,7 +98,7 @@ class _LanguageOption extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isSelected
-              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+              ? Theme.of(context).primaryColor.withOpacity(0.1)
               : Colors.grey[200],
         ),
         child: Center(

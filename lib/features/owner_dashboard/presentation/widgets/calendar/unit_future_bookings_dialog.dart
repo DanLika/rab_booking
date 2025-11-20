@@ -165,7 +165,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
             // Avatar
             CircleAvatar(
               radius: isMobile ? 20 : 24,
-              backgroundColor: booking.status.color.withValues(alpha: 0.2),
+              backgroundColor: booking.status.color.withOpacity(0.2),
               child: Icon(
                 isInProgress ? Icons.person : Icons.person_outline,
                 color: booking.status.color,
@@ -258,7 +258,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: booking.status.color.withValues(alpha: 0.2),
+                  color: booking.status.color.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(

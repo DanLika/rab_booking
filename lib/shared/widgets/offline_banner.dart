@@ -34,7 +34,7 @@ class OfflineBanner extends ConsumerWidget {
               color: AppColors.error,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -109,7 +109,7 @@ class OfflineBannerWithMessage extends ConsumerWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(AppDimensions.spaceM),
           decoration: BoxDecoration(
-            color: AppColors.error.withValues(alpha: 0.1),
+            color: AppColors.error.withOpacity(0.1),
             border: Border.all(color: AppColors.error),
             borderRadius: BorderRadius.circular(AppDimensions.radiusM),
           ),

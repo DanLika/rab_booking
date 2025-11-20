@@ -754,7 +754,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         });
                       },
                       child: Container(
-                        color: Colors.black.withValues(alpha: 0.5),
+                        color: Colors.black.withOpacity(0.5),
                       ),
                     ),
                   ),
@@ -1041,7 +1041,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -1631,13 +1631,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             color: getColor(
               MinimalistColors.buttonPrimary,
               MinimalistColorsDark.buttonPrimary,
-            ).withValues(alpha: 0.1),
+            ).withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: getColor(
                 MinimalistColors.buttonPrimary,
                 MinimalistColorsDark.buttonPrimary,
-              ).withValues(alpha: 0.3),
+              ).withOpacity(0.3),
             ),
           ),
           child: Row(
@@ -1891,7 +1891,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               color: getColor(
                 MinimalistColors.error,
                 MinimalistColorsDark.error,
-              ).withValues(alpha: 0.1),
+              ).withOpacity(0.1),
               borderRadius: BorderTokens.circularMedium,
               border: Border.all(
                 color: getColor(
@@ -1995,8 +1995,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   padding: const EdgeInsets.all(SpacingTokens.m),
                   decoration: BoxDecoration(
                     color: getColor(
-                      MinimalistColors.error.withValues(alpha: 0.1),
-                      MinimalistColorsDark.error.withValues(alpha: 0.2),
+                      MinimalistColors.error.withOpacity(0.1),
+                      MinimalistColorsDark.error.withOpacity(0.2),
                     ),
                     borderRadius: BorderTokens.circularMedium,
                     border: Border.all(
@@ -2565,7 +2565,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 borderColor: getColor(
                   MinimalistColors.textSecondary,
                   MinimalistColorsDark.textSecondary,
-                ).withValues(alpha: 0.3),
+                ).withOpacity(0.3),
               ),
               const SizedBox(width: SpacingTokens.s),
               // Phone number input
@@ -2597,7 +2597,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       color: getColor(
                         MinimalistColors.textSecondary,
                         MinimalistColorsDark.textSecondary,
-                      ).withValues(alpha: 0.5),
+                      ).withOpacity(0.5),
                     ),
                     filled: true,
                     fillColor: getColor(
@@ -2668,7 +2668,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 color: getColor(
                   MinimalistColors.textSecondary,
                   MinimalistColorsDark.textSecondary,
-                ).withValues(alpha: 0.5),
+                ).withOpacity(0.5),
               ),
               filled: true,
               fillColor: getColor(
@@ -3685,7 +3685,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                           ? getColor(
                               MinimalistColors.textSecondary,
                               MinimalistColorsDark.textSecondary,
-                            ).withValues(alpha: 0.5)
+                            ).withOpacity(0.5)
                           : getColor(
                               MinimalistColors.textPrimary,
                               MinimalistColorsDark.textPrimary,
@@ -3773,7 +3773,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                           ? getColor(
                               MinimalistColors.textSecondary,
                               MinimalistColorsDark.textSecondary,
-                            ).withValues(alpha: 0.5)
+                            ).withOpacity(0.5)
                           : getColor(
                               MinimalistColors.textPrimary,
                               MinimalistColorsDark.textPrimary,
@@ -3792,8 +3792,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: getColor(
-                  MinimalistColors.error.withValues(alpha: 0.1),
-                  MinimalistColorsDark.error.withValues(alpha: 0.1),
+                  MinimalistColors.error.withOpacity(0.1),
+                  MinimalistColorsDark.error.withOpacity(0.1),
                 ),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
@@ -4036,7 +4036,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         color: getColor(
           MinimalistColors.backgroundPrimary,
           MinimalistColorsDark.backgroundPrimary,
-        ).withValues(alpha: 0.95),
+        ).withOpacity(0.95),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(SpacingTokens.xl),
@@ -4324,7 +4324,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               width: 49,
               height: 49,
               decoration: BoxDecoration(
-                color: MinimalistColors.success.withValues(alpha: 0.1),
+                color: MinimalistColors.success.withOpacity(0.1),
                 borderRadius: BorderTokens.circularMedium,
                 border: Border.all(color: MinimalistColors.success, width: 1.5),
               ),

@@ -75,7 +75,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.surfaceLight,
         elevation: 4, // Modern elevated shadow
-        shadowColor: AppColors.primary.withValues(alpha: 0.08),
+        shadowColor: AppColors.primary.withOpacity(0.08),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(
             AppDimensions.radiusM,
@@ -130,7 +130,7 @@ class AppTheme {
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
           foregroundColor: AppColors.textPrimaryLight,
-          highlightColor: AppColors.primary.withValues(alpha: 0.1),
+          highlightColor: AppColors.primary.withOpacity(0.1),
         ),
       ),
 
@@ -311,7 +311,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.surfaceDark,
         elevation: 4, // Modern elevated shadow
-        shadowColor: AppColors.primaryLight.withValues(alpha: 0.12),
+        shadowColor: AppColors.primaryLight.withOpacity(0.12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(
             AppDimensions.radiusM,
@@ -366,7 +366,7 @@ class AppTheme {
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
           foregroundColor: AppColors.textPrimaryDark,
-          highlightColor: AppColors.primaryLight.withValues(alpha: 0.1),
+          highlightColor: AppColors.primaryLight.withOpacity(0.1),
         ),
       ),
 

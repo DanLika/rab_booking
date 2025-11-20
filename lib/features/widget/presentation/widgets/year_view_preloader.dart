@@ -70,8 +70,8 @@ class _YearViewPreloaderState extends State<YearViewPreloader>
                 height: 140,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: Colors.black.withValues(alpha: 0.7),
-                  backgroundColor: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.black.withOpacity(0.7),
+                  backgroundColor: Colors.black.withOpacity(0.1),
                 ),
               ),
 
@@ -127,7 +127,7 @@ class _YearViewPreloaderState extends State<YearViewPreloader>
             'Please wait',
             style: TextStyle(
               fontSize: 13,
-              color: Colors.black.withValues(alpha: 0.5),
+              color: Colors.black.withOpacity(0.5),
               letterSpacing: 0.3,
             ),
           ),
@@ -231,7 +231,7 @@ class _BlackLogoPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     final fillPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.2)
+      ..color = Colors.black.withOpacity(0.2)
       ..style = PaintingStyle.fill;
 
     // Modern geometric villa roof (top third of badge)

@@ -76,7 +76,7 @@ class PriceInputCard extends StatelessWidget {
                 helperText!,
                 style: TextStyle(
                   fontSize: 12,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
             ],
@@ -158,7 +158,7 @@ class PriceInputCard extends StatelessWidget {
                       helperText!,
                       style: TextStyle(
                         fontSize: 12,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                   ],

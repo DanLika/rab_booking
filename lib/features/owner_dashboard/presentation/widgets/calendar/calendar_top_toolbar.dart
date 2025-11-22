@@ -138,8 +138,8 @@ class CalendarTopToolbar extends StatelessWidget {
             padding: EdgeInsets.zero,
           ),
 
-          // Spacing between navigation and actions
-          if (!isCompact) const SizedBox(width: 8),
+          // Spacer - push action buttons to the right
+          const Spacer(),
 
           // Action buttons - FIXED OVERFLOW
           if (isCompact)
@@ -172,9 +172,6 @@ class CalendarTopToolbar extends StatelessWidget {
                     break;
                   case 'analytics':
                     onSummaryToggleChanged?.call(!isSummaryVisible);
-                    break;
-                  case 'multiselect':
-                    onMultiSelectToggle?.call();
                     break;
                 }
               },
@@ -231,7 +228,7 @@ class CalendarTopToolbar extends StatelessWidget {
                     value: 'filter',
                     child: Row(
                       children: [
-                        Icon(Icons.filter_list, size: 20),
+                        Icon(Icons.tune, size: 20, color: Colors.orange),
                         SizedBox(width: 12),
                         Text('Filteri'),
                       ],
@@ -243,31 +240,12 @@ class CalendarTopToolbar extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(
-                          isSummaryVisible ? Icons.analytics : Icons.analytics_outlined,
+                          isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined,
                           size: 20,
-                          color: isSummaryVisible ? theme.colorScheme.primary : null,
+                          color: isSummaryVisible ? theme.colorScheme.primary : Colors.blue,
                         ),
                         const SizedBox(width: 12),
                         Text(isSummaryVisible ? 'Sakrij statistiku' : 'Prikaži statistiku'),
-                      ],
-                    ),
-                  ),
-                if (showMultiSelectToggle && onMultiSelectToggle != null)
-                  PopupMenuItem(
-                    value: 'multiselect',
-                    child: Row(
-                      children: [
-                        Icon(
-                          isMultiSelectActive ? Icons.checklist : Icons.checklist_outlined,
-                          size: 20,
-                          color: isMultiSelectActive ? theme.colorScheme.primary : null,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          isMultiSelectActive
-                              ? 'Isključi višestruku selekciju'
-                              : 'Uključi višestruku selekciju',
-                        ),
                       ],
                     ),
                   ),
@@ -301,9 +279,10 @@ class CalendarTopToolbar extends StatelessWidget {
                   // Filter button (desktop also gets it now)
                   if (onFilterTap != null)
                     IconButton(
-                      icon: const Icon(Icons.filter_list),
+                      icon: const Icon(Icons.tune),
                       onPressed: onFilterTap,
                       tooltip: 'Filteri',
+                      color: Colors.orange,
                       constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     ),
 
@@ -323,30 +302,16 @@ class CalendarTopToolbar extends StatelessWidget {
                     IconButton(
                       icon: Icon(
                         isSummaryVisible
-                            ? Icons.analytics
-                            : Icons.analytics_outlined,
+                            ? Icons.bar_chart
+                            : Icons.bar_chart_outlined,
                       ),
                       onPressed: () => onSummaryToggleChanged?.call(!isSummaryVisible),
                       tooltip: isSummaryVisible
                           ? 'Sakrij statistiku'
                           : 'Prikaži statistiku',
-                      color: isSummaryVisible ? theme.colorScheme.primary : null,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                    ),
-
-                  // Multi-select toggle (DESKTOP MODE - icon only to save space)
-                  if (showMultiSelectToggle && onMultiSelectToggle != null)
-                    IconButton(
-                      icon: Icon(
-                        isMultiSelectActive
-                            ? Icons.checklist
-                            : Icons.checklist_outlined,
-                      ),
-                      onPressed: onMultiSelectToggle,
-                      tooltip: isMultiSelectActive
-                          ? 'Isključi višestruku selekciju'
-                          : 'Uključi višestruku selekciju',
-                      color: isMultiSelectActive ? theme.colorScheme.primary : null,
+                      color: isSummaryVisible
+                          ? theme.colorScheme.primary
+                          : Colors.blue,
                       constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     ),
                 ],
@@ -368,26 +333,29 @@ class CalendarTopToolbar extends StatelessWidget {
           tooltip: 'Idi na danas',
           constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
         ),
-        Positioned(
-          bottom: 10,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(3),
-            ),
-            constraints: const BoxConstraints(
-              minWidth: 16,
-              minHeight: 12,
-            ),
-            child: Text(
-              '${DateTime.now().day}',
-              style: TextStyle(
-                color: theme.colorScheme.onPrimary,
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
+        // IgnorePointer - badge ne blokira klikove na ikonicu
+        IgnorePointer(
+          child: Positioned(
+            bottom: 10,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(3),
               ),
-              textAlign: TextAlign.center,
+              constraints: const BoxConstraints(
+                minWidth: 16,
+                minHeight: 12,
+              ),
+              child: Text(
+                '${DateTime.now().day}',
+                style: TextStyle(
+                  color: theme.colorScheme.onPrimary,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
         ),
@@ -414,20 +382,20 @@ class CalendarTopToolbar extends StatelessWidget {
             right: 8,
             top: 8,
             child: Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(2),
               decoration: const BoxDecoration(
                 color: Colors.red,
                 shape: BoxShape.circle,
               ),
               constraints: const BoxConstraints(
-                minWidth: 18,
-                minHeight: 18,
+                minWidth: 16,
+                minHeight: 16,
               ),
               child: Text(
                 count > 9 ? '9+' : '$count',
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 10,
+                  fontSize: 9,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,

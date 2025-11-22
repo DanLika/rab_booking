@@ -4,7 +4,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/constants/enums.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../../providers/owner_calendar_provider.dart';
 import '../../../utils/calendar_grid_calculator.dart';
 import '../../../utils/booking_overlap_detector.dart';
@@ -62,12 +61,19 @@ class _BookingInlineEditDialogState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
+            // Header with gradient (matching CommonAppBar)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.primaryColor,
-                borderRadius: const BorderRadius.vertical(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF6B4CE6), // Purple
+                    Color(0xFF4A90E2), // Blue
+                  ],
+                ),
+                borderRadius: BorderRadius.vertical(
                   top: Radius.circular(4),
                 ),
               ),
@@ -479,23 +485,7 @@ class _BookingInlineEditDialogState
   }
 
   Color _getStatusColor(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.pending:
-        return Colors.orange.shade400;
-      case BookingStatus.confirmed:
-        return Colors.green.shade400;
-      case BookingStatus.checkedIn:
-        return Colors.purple.shade400;
-      case BookingStatus.checkedOut:
-        return AppColors.authSecondary.withAlpha((0.5 * 255).toInt());
-      case BookingStatus.inProgress:
-        return AppColors.authSecondary.withAlpha((0.7 * 255).toInt());
-      case BookingStatus.completed:
-        return Colors.grey.shade400;
-      case BookingStatus.cancelled:
-        return Colors.red.shade400;
-      case BookingStatus.blocked:
-        return Colors.grey.shade600;
-    }
+    // Use the color defined in the status enum
+    return status.color;
   }
 }

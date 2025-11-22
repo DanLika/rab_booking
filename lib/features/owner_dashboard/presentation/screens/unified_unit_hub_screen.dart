@@ -120,15 +120,19 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 style: const TextStyle(color: Colors.white),
               ),
               centerTitle: false,
-              leading: IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () => Scaffold.of(context).openDrawer(),
+              leading: Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.menu, color: Colors.white),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
               ),
               actions: [
-                IconButton(
-                  icon: const Icon(Icons.list, color: Colors.white),
-                  onPressed: () => Scaffold.of(context).openEndDrawer(),
-                  tooltip: 'Prikaži sve jedinice',
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(Icons.list, color: Colors.white),
+                    onPressed: () => Scaffold.of(context).openEndDrawer(),
+                    tooltip: 'Prikaži sve jedinice',
+                  ),
                 ),
               ],
               flexibleSpace: Container(

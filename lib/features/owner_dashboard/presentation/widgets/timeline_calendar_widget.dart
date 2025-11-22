@@ -117,9 +117,19 @@ class _TimelineCalendarWidgetState
   }
 
   double _getHeaderHeight(BuildContext context) {
-    // Fixed height for timeline: 30px month + 60px day = 90px total
-    // This matches TimelineDayHeader minHeight: 60
-    return 90.0;
+    // Responsive header height based on screen width
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    if (screenWidth < 600) {
+      // Mobile: smaller header
+      return 60.0; // 20px month + 40px day
+    } else if (screenWidth < 900) {
+      // Tablet: medium header
+      return 70.0; // 24px month + 46px day
+    } else {
+      // Desktop: standard header
+      return 80.0; // 28px month + 52px day
+    }
   }
 
   @override
@@ -427,7 +437,7 @@ class _TimelineCalendarWidgetState
           child: Consumer(
             builder: (context, ref, child) {
               final unitsAsync = ref.watch(allOwnerUnitsProvider);
-              final bookingsAsync = ref.watch(filteredCalendarBookingsProvider);
+              final bookingsAsync = ref.watch(timelineCalendarBookingsProvider);
 
               return unitsAsync.when(
                 data: (units) {
@@ -645,6 +655,7 @@ class _TimelineCalendarWidgetState
                           (date) => TimelineDayHeader(
                             date: date,
                             dayWidth: _getDayWidth(context),
+                            screenWidth: MediaQuery.of(context).size.width,
                           ),
                         ),
                       ],
@@ -678,6 +689,7 @@ class _TimelineCalendarWidgetState
               date: currentMonth,
               dayCount: dayCount,
               dayWidth: dayWidth,
+              screenWidth: MediaQuery.of(context).size.width,
             ),
           );
         }
@@ -697,6 +709,7 @@ class _TimelineCalendarWidgetState
           date: currentMonth,
           dayCount: dayCount,
           dayWidth: dayWidth,
+          screenWidth: MediaQuery.of(context).size.width,
         ),
       );
     }
@@ -958,11 +971,12 @@ class _TimelineCalendarWidgetState
       // Calculate left position (including offset for windowing)
       final left = offsetWidth + (startIndex * dayWidth);
 
-      // Calculate width (number of nights * day width)
+      // Calculate width (number of nights * day width + 10px extension)
       // IMPORTANT: Do NOT include check-out day in visualization
       // Check-out happens at 3pm, so that day is available for next booking
       // If check-in is Nov 10 and check-out is Nov 12 (2 nights), we show only 2 cells (10, 11)
-      final width = nights * dayWidth;
+      // Added +10px to extend booking block slightly for better visibility
+      final width = (nights * dayWidth) + 10;
 
       // Get stack level for vertical positioning
       final stackLevel = stackLevels[booking.id] ?? 0;

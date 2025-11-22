@@ -53,9 +53,6 @@ class TimelineSummaryCell extends StatelessWidget {
       }
     }
 
-    // Calculate meals (2 meals per guest per day)
-    final int meals = totalGuests * 2;
-
     final now = DateTime.now();
     final isToday = date.year == now.year &&
         date.month == now.month &&
@@ -93,27 +90,9 @@ class TimelineSummaryCell extends StatelessWidget {
             Colors.blue,
             'Gosti',
           ),
-          // Meals
-          _buildSummaryItem(
-            Icons.restaurant,
-            meals.toString(),
-            Colors.orange,
-            'Obroci',
-          ),
-          // Check-ins
-          _buildSummaryItem(
-            Icons.login,
-            checkIns.toString(),
-            Colors.green,
-            'Dolasci',
-          ),
-          // Check-outs
-          _buildSummaryItem(
-            Icons.logout,
-            checkOuts.toString(),
-            Colors.red,
-            'Odlasci',
-          ),
+          const SizedBox(height: 8),
+          // Check-ins/Check-outs (combined)
+          _buildCombinedCheckInOut(checkIns, checkOuts),
         ],
       ),
     );
@@ -144,6 +123,28 @@ class TimelineSummaryCell extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build combined check-in/check-out item
+  Widget _buildCombinedCheckInOut(int checkIns, int checkOuts) {
+    return Tooltip(
+      message: '$checkIns dolazak • $checkOuts odlazak',
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.swap_vert, size: 14, color: Colors.purple),
+          const SizedBox(width: 4),
+          Text(
+            '$checkIns/$checkOuts',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.purple,
             ),
           ),
         ],

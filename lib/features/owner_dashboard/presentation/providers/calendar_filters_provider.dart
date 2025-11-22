@@ -220,3 +220,58 @@ final filteredCalendarBookingsProvider =
         );
       }
     });
+
+/// Timeline calendar bookings provider
+/// Shows ALL booking statuses (ignores status filter) for proper overlap visualization
+/// Applies other filters (property, unit, date range, search)
+final timelineCalendarBookingsProvider =
+    FutureProvider<Map<String, List<BookingModel>>>((ref) async {
+      final allBookingsAsync = await ref.watch(calendarBookingsProvider.future);
+      final filters = ref.watch(calendarFiltersProvider);
+      final units = await ref.watch(allOwnerUnitsProvider.future);
+
+      // Create filter WITHOUT status filter (timeline shows all statuses)
+      final timelineFilters = filters.copyWith(statuses: []);
+
+      if (!timelineFilters.hasActiveFilters) {
+        return allBookingsAsync;
+      }
+
+      // Count total bookings to decide if compute() is worth the overhead
+      final totalBookings = allBookingsAsync.values.fold<int>(
+        0,
+        (sum, list) => sum + list.length,
+      );
+
+      // PERFORMANCE: Use compute() for large datasets (>100 bookings)
+      if (totalBookings > 100) {
+        try {
+          return await compute(
+            _applyFiltersInBackground,
+            _FilterParams(
+              bookingsMap: allBookingsAsync,
+              filters: timelineFilters,
+              units: units,
+            ),
+          );
+        } catch (e) {
+          // Fallback to synchronous filtering if compute() fails
+          return _applyFiltersInBackground(
+            _FilterParams(
+              bookingsMap: allBookingsAsync,
+              filters: timelineFilters,
+              units: units,
+            ),
+          );
+        }
+      } else {
+        // Small dataset - use synchronous filtering (no compute() overhead)
+        return _applyFiltersInBackground(
+          _FilterParams(
+            bookingsMap: allBookingsAsync,
+            filters: timelineFilters,
+            units: units,
+          ),
+        );
+      }
+    });

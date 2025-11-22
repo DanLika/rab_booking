@@ -39,8 +39,8 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   String? _selectedUnitId;
   late DateTime _checkInDate;
   late DateTime _checkOutDate;
-  BookingStatus _status = BookingStatus.confirmed;
-  String _paymentMethod = 'cash';
+  final BookingStatus _status = BookingStatus.confirmed;
+  final String _paymentMethod = 'cash';
 
   bool _isCalculatingPrice = false;
   bool _isSaving = false;
@@ -267,11 +267,17 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                 TextFormField(
                   controller: _guestPhoneController,
                   decoration: const InputDecoration(
-                    labelText: 'Telefon',
+                    labelText: 'Telefon *',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.phone),
                   ),
                   keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Unesite telefon';
+                    }
+                    return null;
+                  },
                 ),
 
                 const SizedBox(height: 24),
@@ -397,91 +403,45 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                   ),
                 ],
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<BookingStatus>(
-                        initialValue: _status,
-                        decoration: const InputDecoration(
-                          labelText: 'Status',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.info_outline),
-                        ),
-                        items:
-                            [
-                              BookingStatus.confirmed,
-                              BookingStatus.pending,
-                              BookingStatus.blocked,
-                            ].map((status) {
-                              return DropdownMenuItem(
-                                value: status,
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: status.color,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(status.displayName),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _status = value;
-                            });
-                          }
-                        },
-                      ),
+                // Info card - default values
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.3),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _paymentMethod,
-                        decoration: const InputDecoration(
-                          labelText: 'Plaćanje',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.payment),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'cash',
-                            child: Text('Gotovina'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'bank_transfer',
-                            child: Text('Bankovni transfer'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'card',
-                            child: Text('Kartica'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'other',
-                            child: Text('Ostalo'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _paymentMethod = value;
-                            });
-                          }
-                        },
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Status: Potvrđeno • Plaćanje: Gotovina',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // Notes
                 Text(

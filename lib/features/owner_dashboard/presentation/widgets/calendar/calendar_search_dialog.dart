@@ -124,11 +124,18 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
         ),
         child: Column(
           children: [
-            // Header
+            // Header with gradient (matching CommonAppBar)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
-                color: AppColors.authPrimary,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF6B4CE6), // Purple
+                    Color(0xFF4A90E2), // Blue
+                  ],
+                ),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(4),
                   topRight: Radius.circular(4),
@@ -191,7 +198,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                     Text(
                       'Pronađeno ${_searchResults.length} rezultata',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -366,16 +373,16 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.authPrimary.withAlpha(
+                      color: Theme.of(context).colorScheme.primary.withAlpha(
                         (0.1 * 255).toInt(),
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '$nights noć${nights > 1 ? 'i' : ''}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.authPrimary,
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -410,7 +417,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                     '${booking.totalPrice.toStringAsFixed(2)} €',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.success,
+                      color: Theme.of(context).colorScheme.tertiary,
                     ),
                   ),
                 ],

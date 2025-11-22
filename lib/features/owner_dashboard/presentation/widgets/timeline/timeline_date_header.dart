@@ -17,16 +17,24 @@ class TimelineMonthHeader extends StatelessWidget {
   /// Width of a single day cell
   final double dayWidth;
 
+  /// Screen width for responsive sizing (optional)
+  final double? screenWidth;
+
   const TimelineMonthHeader({
     super.key,
     required this.date,
     required this.dayCount,
     required this.dayWidth,
+    this.screenWidth,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // Responsive font size
+    final width = screenWidth ?? MediaQuery.of(context).size.width;
+    final fontSize = width < 600 ? 11.0 : (width < 900 ? 12.0 : 13.0);
 
     return Container(
       width: dayWidth * dayCount,
@@ -44,6 +52,7 @@ class TimelineMonthHeader extends StatelessWidget {
           DateFormat('MMMM yyyy', 'hr_HR').format(date),
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.bold,
+            fontSize: fontSize,
             color: theme.colorScheme.primary,
           ),
         ),
@@ -60,10 +69,14 @@ class TimelineDayHeader extends StatelessWidget {
   /// Width of the day cell
   final double dayWidth;
 
+  /// Screen width for responsive sizing (optional)
+  final double? screenWidth;
+
   const TimelineDayHeader({
     super.key,
     required this.date,
     required this.dayWidth,
+    this.screenWidth,
   });
 
   @override
@@ -77,9 +90,19 @@ class TimelineDayHeader extends StatelessWidget {
         date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
     final isFirstDayOfMonth = date.day == 1;
 
+    // Responsive sizing based on screen width
+    final width = screenWidth ?? MediaQuery.of(context).size.width;
+    final bool isMobile = width < 600;
+    final bool isTablet = width >= 600 && width < 900;
+
+    final minHeight = isMobile ? 40.0 : (isTablet ? 46.0 : 52.0);
+    final verticalPadding = isMobile ? 8.0 : (isTablet ? 10.0 : 12.0);
+    final circleSize = isMobile ? 24.0 : (isTablet ? 28.0 : 32.0);
+    final fontSize = isMobile ? 12.0 : (isTablet ? 14.0 : 15.0);
+
     return Container(
       width: dayWidth,
-      constraints: const BoxConstraints(minHeight: 60),
+      constraints: BoxConstraints(minHeight: minHeight),
       decoration: BoxDecoration(
         color: isToday
             ? theme.colorScheme.primary.withValues(alpha: 0.2)
@@ -94,14 +117,14 @@ class TimelineDayHeader extends StatelessWidget {
           bottom: BorderSide(color: theme.dividerColor, width: 1.5),
         ),
       ),
-      padding: const EdgeInsets.symmetric(
-        vertical: 16,
+      padding: EdgeInsets.symmetric(
+        vertical: verticalPadding,
         horizontal: 8,
       ),
       child: Center(
         child: Container(
-          width: 40,
-          height: 40,
+          width: circleSize,
+          height: circleSize,
           decoration: isToday
               ? BoxDecoration(
                   color: theme.colorScheme.primary,
@@ -113,7 +136,7 @@ class TimelineDayHeader extends StatelessWidget {
             '${date.day}',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: fontSize,
               height: 1.2,
               color: isToday
                   ? theme.colorScheme.onPrimary

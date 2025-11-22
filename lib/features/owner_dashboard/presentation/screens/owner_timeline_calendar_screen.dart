@@ -12,7 +12,6 @@ import '../widgets/calendar/calendar_filter_chips.dart';
 import '../widgets/calendar/multi_select_action_bar.dart';
 import '../widgets/calendar/unit_future_bookings_dialog.dart';
 import '../widgets/booking_create_dialog.dart';
-import '../widgets/booking_quick_create_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../mixins/calendar_common_methods_mixin.dart';
 import '../providers/multi_select_provider.dart';
@@ -185,7 +184,7 @@ class _OwnerTimelineCalendarScreenState
                 }
 
                 return FloatingActionButton(
-                  onPressed: _showBookingOptionsBottomSheet,
+                  onPressed: _showCreateBookingDialog,
                   backgroundColor: AppColors.primary,
                   elevation: 4,
                   child: const Icon(Icons.add, color: Colors.white),
@@ -238,97 +237,6 @@ class _OwnerTimelineCalendarScreenState
     }
   }
 
-  /// Show booking options bottom sheet
-  void _showBookingOptionsBottomSheet() async {
-    final theme = Theme.of(context);
-
-    await showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              // Title
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'Odaberi način kreiranja',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              // Quick booking option
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.flash_on,
-                    color: AppColors.primary,
-                  ),
-                ),
-                title: const Text(
-                  'Brza rezervacija',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: const Text('Samo osnovni podaci - brzo i jednostavno'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showQuickBookingDialog();
-                },
-              ),
-              const Divider(height: 1),
-              // Full booking option
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary.withAlpha((0.1 * 255).toInt()),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.description,
-                    color: AppColors.secondary,
-                  ),
-                ),
-                title: const Text(
-                  'Detaljna rezervacija',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: const Text('Svi detalji i dodatne opcije'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showCreateBookingDialog();
-                },
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   /// Show unit future bookings dialog
   void _showUnitFutureBookings(UnitModel unit) async {
     // Get all bookings from provider
@@ -363,28 +271,6 @@ class _OwnerTimelineCalendarScreenState
     }
   }
 
-  /// Show quick booking dialog
-  void _showQuickBookingDialog({
-    DateTime? initialCheckIn,
-    String? unitId,
-  }) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => BookingQuickCreateDialog(
-        initialCheckIn: initialCheckIn,
-        unitId: unitId,
-      ),
-    );
-
-    // If booking was created successfully, refresh calendar
-    if (result == true && mounted) {
-      await Future.wait([
-        ref.refresh(calendarBookingsProvider.future),
-        ref.refresh(allOwnerUnitsProvider.future),
-      ]);
-    }
-  }
-
   /// Show create booking dialog
   /// ENHANCED: Now accepts optional initialCheckIn date and unitId for auto-fill
   void _showCreateBookingDialog({
@@ -409,13 +295,14 @@ class _OwnerTimelineCalendarScreenState
   }
 
   /// Override refresh to also reset date range to today
-  /// Bug Fix: Refresh button was showing August instead of current month (November)
-  /// because _currentRange was not being reset to today
+  /// Bug Fix: Refresh button was showing wrong date/month
+  /// Solution: Reset range to today + force calendar rebuild with counter
   @override
   Future<void> refreshCalendarData() async {
     // First, reset to today (this will rebuild widget with new key)
     setState(() {
       _currentRange = DateRangeSelection.days(DateTime.now(), _visibleDays);
+      _calendarRebuildCounter++; // Force widget rebuild to trigger scroll to today
     });
 
     // Then, refresh providers

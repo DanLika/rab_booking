@@ -32,14 +32,21 @@ class UnitFutureBookingsDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
+            // Header with gradient (matching CommonAppBar)
             Container(
               padding: EdgeInsets.all(
                 isMobile ? AppDimensions.spaceS : AppDimensions.spaceM,
               ),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                borderRadius: const BorderRadius.vertical(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF6B4CE6), // Purple
+                    Color(0xFF4A90E2), // Blue
+                  ],
+                ),
+                borderRadius: BorderRadius.vertical(
                   top: Radius.circular(4),
                 ),
               ),
@@ -81,7 +88,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                         isMobile ? AppDimensions.spaceS : AppDimensions.spaceM,
                       ),
                       itemCount: bookings.length,
-                      separatorBuilder: (_, __) => const Divider(),
+                      separatorBuilder: (context, index) => const Divider(),
                       itemBuilder: (context, index) {
                         final booking = bookings[index];
                         return _buildBookingTile(context, booking, isMobile);
@@ -117,22 +124,33 @@ class UnitFutureBookingsDialog extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppDimensions.spaceXL),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.event_available, size: 64, color: Colors.grey[400]),
+            Icon(
+              Icons.event_available,
+              size: 64,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: AppDimensions.spaceM),
             Text(
               'Nema nadolazećih rezervacija',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: AppDimensions.spaceXS),
             Text(
               'Sve buduce rezervacije za ${unit.name} ce se prikazati ovdje',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              style: TextStyle(
+                fontSize: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -165,7 +183,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
             // Avatar
             CircleAvatar(
               radius: isMobile ? 20 : 24,
-              backgroundColor: booking.status.color.withOpacity(0.2),
+              backgroundColor: booking.status.color.withValues(alpha: 0.2),
               child: Icon(
                 isInProgress ? Icons.person : Icons.person_outline,
                 color: booking.status.color,
@@ -192,7 +210,11 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                   // Check-in
                   Row(
                     children: [
-                      const Icon(Icons.login, size: 14, color: Colors.green),
+                      Icon(
+                        Icons.login,
+                        size: 14,
+                        color: theme.colorScheme.tertiary,
+                      ),
                       const SizedBox(width: AppDimensions.spaceXXS),
                       Expanded(
                         child: AutoSizeText(
@@ -212,7 +234,11 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                   // Check-out
                   Row(
                     children: [
-                      const Icon(Icons.logout, size: 14, color: Colors.red),
+                      Icon(
+                        Icons.logout,
+                        size: 14,
+                        color: theme.colorScheme.error,
+                      ),
                       const SizedBox(width: AppDimensions.spaceXXS),
                       Expanded(
                         child: AutoSizeText(
@@ -258,7 +284,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: booking.status.color.withOpacity(0.2),
+                  color: booking.status.color.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(

@@ -76,9 +76,9 @@ class TimelineBookingBlock extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
-          width: width - 6,
+          width: width - 2,
           height: blockHeight,
-          margin: const EdgeInsets.symmetric(horizontal: 3),
+          margin: const EdgeInsets.symmetric(horizontal: 1),
           child: Stack(
             children: [
               // Background layer with skewed parallelogram
@@ -88,14 +88,14 @@ class TimelineBookingBlock extends StatelessWidget {
                   borderColor: booking.status.color,
                   hasConflict: hasConflict,
                 ),
-                size: Size(width - 6, blockHeight),
+                size: Size(width - 2, blockHeight),
               ),
 
               // Content layer - clipped to skewed shape
               ClipPath(
                 clipper: SkewedBookingClipper(),
                 child: Padding(
-                  padding: bookingPadding,
+                  padding: bookingPadding.copyWith(left: bookingPadding.left + 2),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -115,7 +115,7 @@ class TimelineBookingBlock extends StatelessWidget {
                       const SizedBox(height: 1),
                       Flexible(
                         child: Text(
-                          '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''} • $nights noć${nights > 1 ? 'i' : ''}',
+                          '👤 ${booking.guestCount} • 🌙 $nights',
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.9),
                             fontSize: metadataFontSize,

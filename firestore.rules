@@ -172,5 +172,14 @@ service cloud.firestore {
       allow read: if isOwnerOrAdmin();
       allow write: if true; // Anyone can write security events
     }
+
+    // Unit drafts - wizard draft state (auto-save)
+    // Format: {userId}_{draftId}
+    match /unit_drafts/{draftId} {
+      // Allow read/write if draftId starts with current user's UID
+      // draftId format: userId_timestamp or userId_unitId
+      allow read, write: if isAuthenticated() &&
+        draftId.matches('^' + request.auth.uid + '_.*');
+    }
   }
 }

@@ -109,18 +109,34 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             );
           }
 
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+
           return Scaffold(
             resizeToAvoidBottomInset: true,
-            backgroundColor: Theme.of(context).colorScheme.surface,
             appBar: CommonAppBar(
               title: 'Cjenovnik',
               leadingIcon: Icons.arrow_back,
               onLeadingIconTap: (context) => Navigator.of(context).pop(),
             ),
-            body: _buildMainContent(
-              isMobile: isMobile,
-              units: units,
-              showUnitSelector: true,
+            body: Container(
+              decoration: BoxDecoration(
+                gradient: isDark
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          const Color(0xFF1E1E1E).withAlpha((0.95 * 255).toInt()), // Inverted: start with lighter
+                          const Color(0xFF121212).withAlpha((0.90 * 255).toInt()), // Inverted: end with darker
+                        ],
+                      )
+                    : null,
+                color: isDark ? null : Theme.of(context).colorScheme.surface,
+              ),
+              child: _buildMainContent(
+                isMobile: isMobile,
+                units: units,
+                showUnitSelector: true,
+              ),
             ),
           );
         },

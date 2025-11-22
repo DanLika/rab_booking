@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
+import '../../../../../core/constants/enums.dart';
 import '../../../../../core/utils/platform_utils.dart';
 import '../../../utils/calendar_grid_calculator.dart';
 import '../../../utils/booking_overlap_detector.dart';
@@ -222,12 +223,12 @@ class TimelineBookingBlock extends StatelessWidget {
       // Check if other booking is active (confirmed/pending)
       if (otherBooking.status == BookingStatus.confirmed ||
           otherBooking.status == BookingStatus.pending) {
-        // Check for date overlap
-        final hasOverlap = BookingOverlapDetector.hasOverlap(
-          booking.checkIn,
-          booking.checkOut,
-          otherBooking.checkIn,
-          otherBooking.checkOut,
+        // Check for date overlap using BookingOverlapDetector
+        final hasOverlap = BookingOverlapDetector.doBookingsOverlap(
+          start1: booking.checkIn,
+          end1: booking.checkOut,
+          start2: otherBooking.checkIn,
+          end2: otherBooking.checkOut,
         );
 
         if (hasOverlap) {

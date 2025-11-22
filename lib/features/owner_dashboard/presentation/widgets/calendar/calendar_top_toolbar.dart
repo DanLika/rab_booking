@@ -63,7 +63,10 @@ class CalendarTopToolbar extends StatelessWidget {
           bottom: BorderSide(color: theme.dividerColor),
         ),
       ),
-      padding: EdgeInsets.symmetric(horizontal: isCompact ? 4 : 16),
+      padding: EdgeInsets.only(
+        left: isCompact ? 4 : 16,
+        right: isCompact ? 4 : 0, // Remove right padding in desktop mode
+      ),
       child: Row(
         children: [
           // Date range with navigation arrows - OVERFLOW FIX: Shrink arrows in compact

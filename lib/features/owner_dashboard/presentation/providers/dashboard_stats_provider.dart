@@ -54,10 +54,7 @@ Future<DashboardStats> dashboardStats(Ref ref) async {
         booking.createdAt.month == now.month &&
         booking.createdAt.year == now.year &&
         (booking.status == BookingStatus.confirmed ||
-            booking.status == BookingStatus.completed ||
-            booking.status == BookingStatus.inProgress ||
-            booking.status == BookingStatus.checkedIn ||
-            booking.status == BookingStatus.checkedOut)) {
+            booking.status == BookingStatus.completed)) {
       monthlyRevenue += booking.totalPrice;
       monthlyBookingsCount++;
     }
@@ -66,10 +63,7 @@ Future<DashboardStats> dashboardStats(Ref ref) async {
     if (booking.createdAt.isAfter(currentYear) &&
         booking.createdAt.year == now.year &&
         (booking.status == BookingStatus.confirmed ||
-            booking.status == BookingStatus.completed ||
-            booking.status == BookingStatus.inProgress ||
-            booking.status == BookingStatus.checkedIn ||
-            booking.status == BookingStatus.checkedOut)) {
+            booking.status == BookingStatus.completed)) {
       yearlyRevenue += booking.totalPrice;
     }
 
@@ -97,10 +91,8 @@ Future<DashboardStats> dashboardStats(Ref ref) async {
     for (final ownerBooking in bookings) {
       final booking = ownerBooking.booking;
 
-      // Only count confirmed/in-progress bookings
+      // Only count confirmed/completed bookings
       if (booking.status == BookingStatus.confirmed ||
-          booking.status == BookingStatus.inProgress ||
-          booking.status == BookingStatus.checkedIn ||
           booking.status == BookingStatus.completed) {
         // Check if booking overlaps with current month
         final monthStart = DateTime(now.year, now.month);

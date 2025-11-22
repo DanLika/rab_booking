@@ -36,11 +36,9 @@ final monthCalendarDataProvider =
       );
 
       // Filter out cancelled bookings - they should NOT block dates or gaps
-      // Only include: pending, confirmed, checked_in, in_progress, blocked
+      // Only include: pending, confirmed, completed
       final bookings = allBookings.where((booking) {
-        return booking.status != BookingStatus.cancelled &&
-            booking.status != BookingStatus.completed &&
-            booking.status != BookingStatus.checkedOut;
+        return booking.status != BookingStatus.cancelled;
       }).toList();
 
       // Load iCal events (external bookings from Booking.com, Airbnb, etc.)

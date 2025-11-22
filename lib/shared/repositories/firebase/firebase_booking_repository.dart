@@ -129,7 +129,7 @@ class FirebaseBookingRepository implements BookingRepository {
         .where('status', whereIn: [
           BookingStatus.pending.value,
           BookingStatus.confirmed.value,
-          BookingStatus.inProgress.value,
+          BookingStatus.completed.value,
         ])
         .get();
 

@@ -95,7 +95,7 @@ class TimelineBookingBlock extends StatelessWidget {
               ClipPath(
                 clipper: SkewedBookingClipper(),
                 child: Padding(
-                  padding: bookingPadding.copyWith(left: bookingPadding.left + 2),
+                  padding: bookingPadding.copyWith(left: bookingPadding.left + 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -114,14 +114,40 @@ class TimelineBookingBlock extends StatelessWidget {
                       ),
                       const SizedBox(height: 1),
                       Flexible(
-                        child: Text(
-                          '👤 ${booking.guestCount} • 🌙 $nights',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: metadataFontSize,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.person,
+                              size: metadataFontSize + 2,
+                              color: Colors.white70,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              '${booking.guestCount}',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: metadataFontSize,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.nights_stay,
+                              size: metadataFontSize + 2,
+                              color: Colors.white70,
+                            ),
+                            const SizedBox(width: 2),
+                            Flexible(
+                              child: Text(
+                                '$nights',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontSize: metadataFontSize,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

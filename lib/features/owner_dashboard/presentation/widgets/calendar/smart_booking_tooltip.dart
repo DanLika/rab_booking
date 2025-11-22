@@ -344,18 +344,10 @@ class _StatusBadge extends StatelessWidget {
         return 'Pending';
       case BookingStatus.confirmed:
         return 'Potvrđeno';
-      case BookingStatus.checkedIn:
-        return 'Checked In';
-      case BookingStatus.checkedOut:
-        return 'Checked Out';
-      case BookingStatus.inProgress:
-        return 'U toku';
       case BookingStatus.completed:
         return 'Završeno';
       case BookingStatus.cancelled:
         return 'Otkazano';
-      case BookingStatus.blocked:
-        return 'Blokirano';
     }
   }
 }

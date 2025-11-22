@@ -121,15 +121,6 @@ class BookingContextMenu extends StatelessWidget {
                       },
                     ),
 
-                  if (booking.status != BookingStatus.inProgress)
-                    _buildStatusMenuItem(
-                      status: BookingStatus.inProgress,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onChangeStatus(BookingStatus.inProgress);
-                      },
-                    ),
-
                   if (booking.status != BookingStatus.completed)
                     _buildStatusMenuItem(
                       status: BookingStatus.completed,

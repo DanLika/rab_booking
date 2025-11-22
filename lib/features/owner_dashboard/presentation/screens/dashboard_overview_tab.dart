@@ -221,34 +221,14 @@ class DashboardOverviewTab extends ConsumerWidget {
         title = 'Rezervacija potvrđena';
         subtitle = '${property.name} - ${unit.name}';
         break;
-      case BookingStatus.checkedIn:
-        type = ActivityType.booking;
-        title = 'Gost check-in';
-        subtitle = '${property.name} - ${unit.name}';
-        break;
-      case BookingStatus.checkedOut:
-        type = ActivityType.booking;
-        title = 'Gost check-out';
-        subtitle = '${property.name} - ${unit.name}';
-        break;
       case BookingStatus.cancelled:
         type = ActivityType.cancellation;
         title = 'Rezervacija otkazana';
         subtitle = '${property.name} - ${unit.name}';
         break;
-      case BookingStatus.inProgress:
-        type = ActivityType.booking;
-        title = 'Gost boravi';
-        subtitle = '${property.name} - ${unit.name}';
-        break;
       case BookingStatus.completed:
         type = ActivityType.booking;
         title = 'Rezervacija završena';
-        subtitle = '${property.name} - ${unit.name}';
-        break;
-      case BookingStatus.blocked:
-        type = ActivityType.cancellation;
-        title = 'Datum blokiran';
         subtitle = '${property.name} - ${unit.name}';
         break;
     }

@@ -181,18 +181,15 @@ class RoomRowHeader extends StatelessWidget {
     // Determine which dots to show (max 3)
     final List<Color> dotColors = [];
 
-    // Priority: pending > confirmed > in_progress > blocked > completed > cancelled
+    // Priority: pending > confirmed > completed > cancelled
     if (statusCounts[BookingStatus.pending] != null && statusCounts[BookingStatus.pending]! > 0) {
       dotColors.add(AppColors.warning); // Orange - waiting approval
     }
     if (statusCounts[BookingStatus.confirmed] != null && statusCounts[BookingStatus.confirmed]! > 0) {
       dotColors.add(AppColors.error); // Red - booked
     }
-    if (statusCounts[BookingStatus.inProgress] != null && statusCounts[BookingStatus.inProgress]! > 0) {
-      dotColors.add(AppColors.info); // Blue - in progress
-    }
-    if (statusCounts[BookingStatus.blocked] != null && statusCounts[BookingStatus.blocked]! > 0) {
-      dotColors.add(AppColors.textSecondary); // Gray - disabled/blocked
+    if (statusCounts[BookingStatus.completed] != null && statusCounts[BookingStatus.completed]! > 0) {
+      dotColors.add(AppColors.success); // Green - completed
     }
 
     // Limit to 3 dots

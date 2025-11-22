@@ -101,10 +101,6 @@ class BookingCardHeader extends StatelessWidget {
         return Icons.cancel;
       case BookingStatus.completed:
         return Icons.task_alt;
-      case BookingStatus.blocked:
-        return Icons.block;
-      default:
-        return Icons.info;
     }
   }
 }

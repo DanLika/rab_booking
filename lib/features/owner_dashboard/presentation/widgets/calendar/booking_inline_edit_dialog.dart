@@ -164,22 +164,44 @@ class _BookingInlineEditDialogState
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Save button (full width on mobile)
-                        ElevatedButton.icon(
-                          onPressed: _isSaving ? null : _saveChanges,
-                          icon: _isSaving
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.save),
-                          label: AutoSizeText(
-                            _isSaving ? 'Saving...' : 'Save Changes',
-                            maxLines: 1,
+                        // Save button (full width on mobile) with gradient
+                        Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFF6B4CE6), // Purple
+                                Color(0xFF4A90E2), // Blue
+                              ],
+                            ),
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: _isSaving ? null : _saveChanges,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            icon: _isSaving
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.save, color: Colors.white),
+                            label: AutoSizeText(
+                              _isSaving ? 'Saving...' : 'Save Changes',
+                              style: const TextStyle(color: Colors.white),
+                              maxLines: 1,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -213,21 +235,43 @@ class _BookingInlineEditDialogState
                         ),
                         const SizedBox(width: 8),
                         Flexible(
-                          child: ElevatedButton.icon(
-                            onPressed: _isSaving ? null : _saveChanges,
-                            icon: _isSaving
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.save),
-                            label: AutoSizeText(
-                              _isSaving ? 'Saving...' : 'Save Changes',
-                              maxLines: 1,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF6B4CE6), // Purple
+                                  Color(0xFF4A90E2), // Blue
+                                ],
+                              ),
+                              borderRadius: BorderRadius.all(Radius.circular(20)),
+                            ),
+                            child: ElevatedButton.icon(
+                              onPressed: _isSaving ? null : _saveChanges,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              icon: _isSaving
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save, color: Colors.white),
+                              label: AutoSizeText(
+                                _isSaving ? 'Saving...' : 'Save Changes',
+                                style: const TextStyle(color: Colors.white),
+                                maxLines: 1,
+                              ),
                             ),
                           ),
                         ),
@@ -307,12 +351,24 @@ class _BookingInlineEditDialogState
           onPressed: _guestCount > 1
               ? () => setState(() => _guestCount--)
               : null,
-          icon: const Icon(Icons.remove),
+          icon: Icon(
+            Icons.remove,
+            color: Theme.of(context).colorScheme.onSecondaryContainer,
+          ),
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+          ),
         ),
         const SizedBox(width: 4),
         IconButton.filledTonal(
           onPressed: () => setState(() => _guestCount++),
-          icon: const Icon(Icons.add),
+          icon: Icon(
+            Icons.add,
+            color: Theme.of(context).colorScheme.onSecondaryContainer,
+          ),
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+          ),
         ),
       ],
     );

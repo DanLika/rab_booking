@@ -306,12 +306,20 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                 return FilterChip(
                   selected: isSelected,
                   label: Text(property.name),
+                  selectedColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Theme.of(context).colorScheme.onSurface,
+                  ),
+                  checkmarkColor: Theme.of(context).colorScheme.onPrimary,
                   avatar: Icon(
                     Icons.home_outlined,
                     size: 18,
                     color: isSelected
                         ? Theme.of(context).colorScheme.onPrimary
-                        : null,
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   onSelected: (selected) {
                     setState(() {
@@ -381,12 +389,20 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                 return FilterChip(
                   selected: isSelected,
                   label: Text(unit.name),
+                  selectedColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Theme.of(context).colorScheme.onSurface,
+                  ),
+                  checkmarkColor: Theme.of(context).colorScheme.onPrimary,
                   avatar: Icon(
                     Icons.meeting_room,
                     size: 18,
                     color: isSelected
                         ? Theme.of(context).colorScheme.onPrimary
-                        : null,
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   onSelected: (selected) {
                     setState(() {
@@ -445,6 +461,14 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             return FilterChip(
               selected: isSelected,
               label: Text(status.displayName),
+              selectedColor: Theme.of(context).colorScheme.primary,
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              labelStyle: TextStyle(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Theme.of(context).colorScheme.onSurface,
+              ),
+              checkmarkColor: Theme.of(context).colorScheme.onPrimary,
               avatar: Container(
                 width: 12,
                 height: 12,
@@ -512,6 +536,14 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             return FilterChip(
               selected: isSelected,
               label: Text(label),
+              selectedColor: Theme.of(context).colorScheme.primary,
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              labelStyle: TextStyle(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Theme.of(context).colorScheme.onSurface,
+              ),
+              checkmarkColor: Theme.of(context).colorScheme.onPrimary,
               avatar: Icon(
                 icon,
                 size: 18,

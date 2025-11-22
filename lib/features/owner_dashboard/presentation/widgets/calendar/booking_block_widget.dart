@@ -422,18 +422,10 @@ class BookingBlockWidget extends StatelessWidget {
         return AppColors.statusPending;
       case BookingStatus.confirmed:
         return AppColors.statusConfirmed;
-      case BookingStatus.checkedIn:
-        return AppColors.primary.withAlpha((0.8 * 255).toInt());
-      case BookingStatus.checkedOut:
-        return AppColors.authSecondary.withAlpha((0.5 * 255).toInt());
-      case BookingStatus.inProgress:
-        return AppColors.authSecondary.withAlpha((0.7 * 255).toInt());
       case BookingStatus.completed:
         return AppColors.statusCompleted;
       case BookingStatus.cancelled:
         return AppColors.statusCancelled;
-      case BookingStatus.blocked:
-        return AppColors.statusCompleted.withAlpha((0.6 * 255).toInt());
     }
   }
 
@@ -459,18 +451,10 @@ class BookingBlockWidget extends StatelessWidget {
         return 'Pending';
       case BookingStatus.confirmed:
         return 'Confirmed';
-      case BookingStatus.checkedIn:
-        return 'Checked In';
-      case BookingStatus.checkedOut:
-        return 'Checked Out';
-      case BookingStatus.inProgress:
-        return 'In Progress';
       case BookingStatus.cancelled:
         return 'Cancelled';
       case BookingStatus.completed:
         return 'Completed';
-      case BookingStatus.blocked:
-        return 'Blocked';
     }
   }
 

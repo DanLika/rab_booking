@@ -364,7 +364,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                             ? _calculatePrice
                             : null,
                         icon: const Icon(Icons.calculate, size: 18),
-                        label: const Text('Auto'),
+                        label: const Text('Izračunaj'),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 20),
                         ),
@@ -392,7 +392,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Kalkulirana cijena: €${_calculatedPrice!.toStringAsFixed(2)}',
+                          'Ukupna cijena: €${_calculatedPrice!.toStringAsFixed(2)}',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.green[700],

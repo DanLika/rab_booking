@@ -94,8 +94,8 @@ extension BookingModelValidator on BookingModel {
       }
     }
 
-    // Validate payment intent exists for non-blocked bookings
-    if (status != BookingStatus.blocked && paidAmount > 0 && paymentIntentId == null) {
+    // Validate payment intent exists for bookings with payment
+    if (paidAmount > 0 && paymentIntentId == null) {
       // Warning only, not an exception (for backward compatibility)
       // In production, you might want to log this as a warning
     }

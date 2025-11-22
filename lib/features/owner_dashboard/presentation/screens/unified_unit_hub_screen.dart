@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/property_model.dart';
@@ -160,14 +161,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: isDark
                 ? [
-                    theme.colorScheme.surface,
-                    theme.colorScheme.surface.withOpacity(0.95),
+                    theme.colorScheme.veryDarkGray,
+                    theme.colorScheme.mediumDarkGray,
                   ]
-                : [const Color(0xFFFAF8F3), Colors.white],
+                : [theme.colorScheme.veryLightGray, Colors.white],
             stops: const [0.0, 0.3],
           ),
         ),
@@ -358,7 +359,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     return unitsAsync.when(
       loading: () => const Padding(
         padding: EdgeInsets.all(16.0),
-        child: PropertyListSkeleton(itemCount: 3),
+        child: PropertyListSkeleton(),
       ),
       error: (error, stack) => Center(
         child: Padding(
@@ -637,7 +638,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         // Tab bar
         Container(
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
+            color: Colors.transparent,
             border: Border(
               bottom: BorderSide(
                 color: theme.colorScheme.outline.withOpacity(0.2),
@@ -722,7 +723,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             FilledButton.icon(
               onPressed: () {
                 context.push(
-                  OwnerRoutes.unitWizardEdit.replaceAll(':id', _selectedUnit!.id),
+                  OwnerRoutes.unitWizardEdit.replaceAll(
+                    ':id',
+                    _selectedUnit!.id,
+                  ),
                 );
               },
               icon: const Icon(Icons.edit, size: 18),
@@ -970,5 +974,4 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ),
     );
   }
-
 }

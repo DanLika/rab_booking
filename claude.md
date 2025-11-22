@@ -4,6 +4,104 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🎨 Unit Hub - Diagonal Gradient Background
+
+**Datum: 2025-11-22**
+**Status: ✅ COMPLETED - Diagonal gradient applied to Unit Hub body**
+
+### 📋 Zahtjev Korisnika
+
+Korisnik je tražio da se primijeni **isti gradient kao na Rezervacije page**, ali sa **dijagonalnom direkcijom** (top-left → bottom-right umjesto vertical top → bottom).
+
+**Specifični zahtjevi:**
+- Gradient treba biti **dijagonalan**: gore lijevo → dolje desno
+- Koristiti **iste boje** kao Rezervacije page: `veryDarkGray` → `mediumDarkGray` (dark mode)
+- Koristiti **iste stops**: `[0.0, 0.3]`
+- Primjeniti na **cijeli Unit Hub body** container tako da SVI tabovi imaju ovaj background
+
+### 🔧 Implementacija
+
+**File:** `lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart`
+
+**Lines 160-177:**
+```dart
+body: Container(
+  decoration: BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topLeft,        // ← DIJAGONALNO (ne topCenter!)
+      end: Alignment.bottomRight,      // ← DIJAGONALNO (ne bottomCenter!)
+      colors: isDark
+          ? [
+              theme.colorScheme.veryDarkGray,      // Početna boja (gore lijevo)
+              theme.colorScheme.mediumDarkGray,    // Krajnja boja (dolje desno)
+            ]
+          : [theme.colorScheme.veryLightGray, Colors.white],
+      stops: const [0.0, 0.3],         // Iste stops kao Rezervacije
+    ),
+  ),
+  child: isDesktop
+      ? _buildDesktopLayout(theme, isDark)
+      : _buildMobileLayout(theme, isDark),
+),
+```
+
+**Line 640 - TabBar Transparent:**
+```dart
+Container(
+  decoration: BoxDecoration(
+    color: Colors.transparent,  // ← TRANSPARENT da se vidi gradient
+    border: Border(...),
+  ),
+  child: TabBar(...),
+)
+```
+
+### 📊 Usporedba: Rezervacije vs Unit Hub
+
+**Rezervacije Page (Vertical Gradient):**
+```dart
+gradient: LinearGradient(
+  begin: Alignment.topCenter,      // ⬇️ VERTICAL
+  end: Alignment.bottomCenter,     // ⬇️ VERTICAL
+  colors: [veryDarkGray, mediumDarkGray],
+  stops: [0.0, 0.3],
+)
+```
+
+**Unit Hub (Diagonal Gradient):**
+```dart
+gradient: LinearGradient(
+  begin: Alignment.topLeft,        // ↘️ DIAGONAL
+  end: Alignment.bottomRight,      // ↘️ DIAGONAL
+  colors: [veryDarkGray, mediumDarkGray],
+  stops: [0.0, 0.3],               // ISTE stops!
+)
+```
+
+### ✅ Rezultat
+
+- ✅ Gradient **dijagonalan** (top-left → bottom-right)
+- ✅ **Iste boje** kao Rezervacije page
+- ✅ **Isti stops** `[0.0, 0.3]`
+- ✅ TabBar **transparent** - gradient se vidi kroz sve tabove
+- ✅ Primjenjeno na **cijeli body** - SVI tabovi (Osnovni Podaci, Cjenovnik, Widget, Napredne) imaju isti background
+
+### ⚠️ Važno za Buduće Sesije
+
+**NE MIJENJAJ:**
+- Gradient direkciju - **MORA** biti `topLeft → bottomRight` (ne vertical!)
+- Boje - **MORA** koristiti `veryDarkGray` i `mediumDarkGray`
+- Stops - **MORA** biti `[0.0, 0.3]`
+- TabBar transparent - **MORA** ostati `Colors.transparent`
+
+**Razlog:** Korisnik je eksplicitno tražio dijagonalan gradient koji se razlikuje od vertikalnog na Rezervacije page. Ovo kreira **vizuelni kontrast** između različitih dijelova aplikacije.
+
+---
+
+**Commit:** [pending] - feat: apply diagonal gradient to Unit Hub background
+
+---
+
 ## 🏗️ Unit Creation Wizard & Navigation Improvements
 
 **Datum: 2025-11-22**

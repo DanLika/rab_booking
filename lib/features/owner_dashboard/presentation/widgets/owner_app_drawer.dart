@@ -61,27 +61,12 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            // Kalendar Expansion
-            _PremiumExpansionTile(
+            // Kalendar
+            _DrawerItem(
               icon: Icons.calendar_view_month,
               title: 'Kalendar',
-              isExpanded: currentRoute.startsWith('calendar'),
-              children: [
-                _DrawerSubItem(
-                  title: 'Tjedni prikaz',
-                  subtitle: '7-dnevni grid',
-                  icon: Icons.view_week,
-                  isSelected: currentRoute == 'calendar/week',
-                  onTap: () => context.go(OwnerRoutes.calendarWeek),
-                ),
-                _DrawerSubItem(
-                  title: 'Gantt prikaz',
-                  subtitle: 'Vremenska linija',
-                  icon: Icons.view_timeline,
-                  isSelected: currentRoute == 'calendar/timeline',
-                  onTap: () => context.go(OwnerRoutes.calendarTimeline),
-                ),
-              ],
+              isSelected: currentRoute.startsWith('calendar'),
+              onTap: () => context.go(OwnerRoutes.calendarTimeline),
             ),
 
             const SizedBox(height: 4),

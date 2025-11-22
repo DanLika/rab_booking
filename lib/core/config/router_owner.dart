@@ -15,7 +15,6 @@ import '../../features/owner_dashboard/presentation/providers/owner_properties_p
 import '../../features/owner_dashboard/presentation/screens/analytics_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/overview_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/properties_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/owner_week_calendar_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_bookings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/property_form_screen.dart';
@@ -92,7 +91,6 @@ class OwnerRoutes {
   // Owner dashboard routes
   static const String overview = '/owner/overview';
   static const String properties = '/owner/properties';
-  static const String calendarWeek = '/owner/calendar/week';
   static const String calendarTimeline = '/owner/calendar/timeline';
   static const String bookings = '/owner/bookings';
   static const String analytics = '/owner/analytics';
@@ -424,11 +422,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.properties,
         builder: (context, state) => const PropertiesScreen(),
       ),
-      // Calendar routes
-      GoRoute(
-        path: OwnerRoutes.calendarWeek,
-        builder: (context, state) => const OwnerWeekCalendarScreen(),
-      ),
+      // Calendar route
       GoRoute(
         path: OwnerRoutes.calendarTimeline,
         builder: (context, state) => const OwnerTimelineCalendarScreen(),

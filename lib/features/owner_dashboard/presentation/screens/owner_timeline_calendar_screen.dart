@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/date_range_selection.dart';
 import '../providers/notifications_provider.dart';
 import '../providers/owner_calendar_provider.dart';
@@ -9,6 +10,7 @@ import '../widgets/timeline_calendar_widget.dart';
 import '../widgets/calendar/calendar_top_toolbar.dart';
 import '../widgets/calendar/calendar_filter_chips.dart';
 import '../widgets/calendar/multi_select_action_bar.dart';
+import '../widgets/calendar/unit_future_bookings_dialog.dart';
 import '../widgets/booking_create_dialog.dart';
 import '../widgets/booking_quick_create_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
@@ -164,6 +166,7 @@ class _OwnerTimelineCalendarScreenState
                 initialCheckIn: date,
                 unitId: unit.id,
               ),
+              onUnitNameTap: _showUnitFutureBookings,
             ),
           ),
 
@@ -324,6 +327,40 @@ class _OwnerTimelineCalendarScreenState
         ),
       ),
     );
+  }
+
+  /// Show unit future bookings dialog
+  void _showUnitFutureBookings(UnitModel unit) async {
+    // Get all bookings from provider
+    final bookingsAsyncValue = ref.read(calendarBookingsProvider);
+
+    // Handle loading/error states
+    if (bookingsAsyncValue.isLoading) {
+      return; // Don't show dialog while loading
+    }
+
+    final bookingsByUnit = bookingsAsyncValue.value ?? {};
+    final unitBookings = bookingsByUnit[unit.id] ?? [];
+
+    // Filter for future bookings only (check-out >= today)
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final futureBookings = unitBookings.where((booking) {
+      return !booking.checkOut.isBefore(today);
+    }).toList()..sort((a, b) => a.checkIn.compareTo(b.checkIn));
+
+    // Show dialog
+    if (mounted) {
+      await showDialog(
+        context: context,
+        builder: (context) => UnitFutureBookingsDialog(
+          unit: unit,
+          bookings: futureBookings,
+          onBookingTap: showBookingDetailsDialog,
+        ),
+      );
+    }
   }
 
   /// Show quick booking dialog

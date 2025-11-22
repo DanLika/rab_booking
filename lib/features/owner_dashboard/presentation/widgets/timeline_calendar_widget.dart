@@ -29,12 +29,14 @@ class TimelineCalendarWidget extends ConsumerStatefulWidget {
   final Function(DateTime date, UnitModel unit)? onCellLongPress;
   final DateTime?
   initialScrollToDate; // Date to scroll to on init (null = today)
+  final Function(UnitModel unit)? onUnitNameTap; // Callback when unit name is tapped (to show future bookings dialog)
 
   const TimelineCalendarWidget({
     super.key,
     this.showSummary = false,
     this.onCellLongPress,
     this.initialScrollToDate,
+    this.onUnitNameTap,
   });
 
   @override
@@ -69,6 +71,7 @@ class _TimelineCalendarWidgetState
   // Infinite scroll - dynamic date range (initially 15+15 days)
   DateTime _dynamicStartDate = DateTime.now().subtract(const Duration(days: 15));
   DateTime _dynamicEndDate = DateTime.now().add(const Duration(days: 15));
+  bool _isInitialScrolling = true; // Prevent infinite scroll during initial scroll to today
 
   // Responsive dimensions based on screen size and accessibility settings
   // Using CalendarGridCalculator for consistency
@@ -228,23 +231,26 @@ class _TimelineCalendarWidgetState
     }
 
     // Infinite scroll: Add more days when near edge (5 days buffer)
-    final edgeThreshold = dayWidth * 5; // 5 days from edge
-    final maxScroll = _horizontalScrollController.position.maxScrollExtent;
+    // Skip edge detection during initial scroll to today to prevent unwanted date range expansion
+    if (!_isInitialScrolling) {
+      final edgeThreshold = dayWidth * 5; // 5 days from edge
+      final maxScroll = _horizontalScrollController.position.maxScrollExtent;
 
-    // Near start edge? Prepend 30 days (max 1 year in past)
-    if (scrollOffset < edgeThreshold &&
-        _dynamicStartDate.isAfter(DateTime.now().subtract(const Duration(days: 365)))) {
-      setState(() {
-        _dynamicStartDate = _dynamicStartDate.subtract(const Duration(days: 30));
-      });
-    }
+      // Near start edge? Prepend 30 days (max 1 year in past)
+      if (scrollOffset < edgeThreshold &&
+          _dynamicStartDate.isAfter(DateTime.now().subtract(const Duration(days: 365)))) {
+        setState(() {
+          _dynamicStartDate = _dynamicStartDate.subtract(const Duration(days: 30));
+        });
+      }
 
-    // Near end edge? Append 30 days (max 1 year in future)
-    if (scrollOffset > maxScroll - edgeThreshold &&
-        _dynamicEndDate.isBefore(DateTime.now().add(const Duration(days: 365)))) {
-      setState(() {
-        _dynamicEndDate = _dynamicEndDate.add(const Duration(days: 30));
-      });
+      // Near end edge? Append 30 days (max 1 year in future)
+      if (scrollOffset > maxScroll - edgeThreshold &&
+          _dynamicEndDate.isBefore(DateTime.now().add(const Duration(days: 365)))) {
+        setState(() {
+          _dynamicEndDate = _dynamicEndDate.add(const Duration(days: 30));
+        });
+      }
     }
   }
 
@@ -322,7 +328,14 @@ class _TimelineCalendarWidgetState
       targetScroll,
       duration: AppDimensions.animationSlow,
       curve: Curves.easeInOut,
-    );
+    ).then((_) {
+      // Reset flag after scroll animation completes to allow infinite scroll for user scrolling
+      if (mounted) {
+        setState(() {
+          _isInitialScrolling = false;
+        });
+      }
+    });
   }
 
   DateTime _getStartDate() {
@@ -704,6 +717,9 @@ class _TimelineCalendarWidgetState
               (unit) => TimelineUnitNameCell(
                 unit: unit,
                 unitRowHeight: unitRowHeight,
+                onTap: widget.onUnitNameTap != null
+                    ? () => widget.onUnitNameTap!(unit)
+                    : null,
               ),
             )
             .toList(),

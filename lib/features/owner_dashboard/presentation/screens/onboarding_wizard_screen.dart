@@ -237,7 +237,7 @@ class OnboardingWizardScreen extends ConsumerWidget {
     if (confirmed == true) {
       await ref.read(onboardingNotifierProvider.notifier).skip();
       if (context.mounted) {
-        context.go(OwnerRoutes.calendarWeek);
+        context.go(OwnerRoutes.calendarTimeline);
       }
     }
   }

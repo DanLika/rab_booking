@@ -125,7 +125,7 @@ class OnboardingSuccessScreen extends ConsumerWidget {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => context.go(OwnerRoutes.calendarWeek),
+                        onPressed: () => context.go(OwnerRoutes.calendarTimeline),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           backgroundColor: AppColors.authPrimary,

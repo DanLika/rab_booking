@@ -178,14 +178,6 @@ class CalendarGridCalculator {
     return rowHeaderWidth + (dayCellWidth * daysInMonth);
   }
 
-  /// Calculate week view dimensions
-  /// Week view shows exactly 7 days (Monday-Sunday)
-  static double getWeekGridWidth(double screenWidth) {
-    final rowHeaderWidth = getRowHeaderWidth(screenWidth);
-    final dayCellWidth = getDayCellWidth(screenWidth, 7);
-    return rowHeaderWidth + (dayCellWidth * 7);
-  }
-
   /// Get screen size category
   static ScreenSizeCategory getScreenSizeCategory(double screenWidth) {
     if (screenWidth < mobileBreakpoint) {

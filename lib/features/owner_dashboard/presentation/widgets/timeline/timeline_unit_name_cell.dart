@@ -13,10 +13,14 @@ class TimelineUnitNameCell extends StatelessWidget {
   /// Height of the unit row
   final double unitRowHeight;
 
+  /// Callback when unit name is tapped (to show future bookings dialog)
+  final VoidCallback? onTap;
+
   const TimelineUnitNameCell({
     super.key,
     required this.unit,
     required this.unitRowHeight,
+    this.onTap,
   });
 
   @override
@@ -25,72 +29,75 @@ class TimelineUnitNameCell extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < AppDimensions.mobile;
 
-    return Container(
-      height: unitRowHeight,
-      padding: EdgeInsets.all(
-        isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS,
-      ),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: theme.dividerColor.withValues(alpha: 0.6),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: unitRowHeight,
+        padding: EdgeInsets.all(
+          isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS,
+        ),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor.withValues(alpha: 0.6),
+            ),
           ),
         ),
-      ),
-      child: Row(
-        children: [
-          // Bed icon
-          Container(
-            padding: EdgeInsets.all(isMobile ? 6 : 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+        child: Row(
+          children: [
+            // Bed icon
+            Container(
+              padding: EdgeInsets.all(isMobile ? 6 : 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.hotel_outlined,
+                size: isMobile ? 18 : 20,
+                color: theme.colorScheme.primary,
+              ),
             ),
-            child: Icon(
-              Icons.hotel_outlined,
-              size: isMobile ? 18 : 20,
-              color: theme.colorScheme.primary,
+            SizedBox(
+              width: isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS,
             ),
-          ),
-          SizedBox(
-            width: isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS,
-          ),
-          // Unit info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    unit.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Flexible(
-                  child: Text(
-                    '${unit.maxGuests} gostiju',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 11,
-                      color: theme.textTheme.bodySmall?.color?.withValues(
-                        alpha: 0.7,
+            // Unit info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      unit.name,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Flexible(
+                    child: Text(
+                      '${unit.maxGuests} gostiju',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: theme.textTheme.bodySmall?.color?.withValues(
+                          alpha: 0.7,
+                        ),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

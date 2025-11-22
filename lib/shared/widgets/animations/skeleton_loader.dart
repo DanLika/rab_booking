@@ -118,7 +118,6 @@ class PropertyCardSkeleton extends StatelessWidget {
       child: const ClipRect(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
             // Image skeleton
             SkeletonLoader(height: 160, borderRadius: 12),
@@ -162,13 +161,11 @@ class PropertyListSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: List.generate(
-        itemCount,
-        (index) => const Padding(
-          padding: EdgeInsets.only(bottom: 16),
-          child: PropertyCardSkeleton(),
-        ),
+    return ListView.builder(
+      itemCount: itemCount,
+      itemBuilder: (context, index) => const Padding(
+        padding: EdgeInsets.only(bottom: 16),
+        child: PropertyCardSkeleton(),
       ),
     );
   }
@@ -585,7 +582,6 @@ class BookingTableSkeleton extends StatelessWidget {
     return Card(
       elevation: 2,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           // Table container
           ConstrainedBox(

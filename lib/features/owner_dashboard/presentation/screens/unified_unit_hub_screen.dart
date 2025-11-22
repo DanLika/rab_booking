@@ -86,13 +86,73 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
 
+    // Auto-select first unit when units are loaded
+    final unitsAsync = ref.watch(ownerUnitsProvider);
+    unitsAsync.whenData((units) {
+      if (units.isNotEmpty && _selectedUnit == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (mounted && _selectedUnit == null) {
+            final firstUnit = units.first;
+            final property = await ref.read(
+              propertyByIdProvider(firstUnit.propertyId).future,
+            );
+            if (mounted) {
+              setState(() {
+                _selectedUnit = firstUnit;
+                _selectedProperty = property;
+              });
+            }
+          }
+        });
+      }
+    });
+
     return Scaffold(
-      appBar: CommonAppBar(
-        title: 'Smještajne Jedinice',
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-      ),
+      appBar: isDesktop
+          ? CommonAppBar(
+              title: 'Smještajne Jedinice',
+              leadingIcon: Icons.menu,
+              onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+            )
+          : AppBar(
+              title: Text(
+                _selectedUnit?.name ?? 'Smještajne Jedinice',
+                style: const TextStyle(color: Colors.white),
+              ),
+              centerTitle: false,
+              leading: IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.list, color: Colors.white),
+                  onPressed: () => Scaffold.of(context).openEndDrawer(),
+                  tooltip: 'Prikaži sve jedinice',
+                ),
+              ],
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.authSecondary],
+                  ),
+                ),
+              ),
+            ),
       drawer: const OwnerAppDrawer(currentRoute: 'units'),
+      // EndDrawer for mobile/tablet - shows master panel
+      endDrawer: !isDesktop
+          ? Drawer(
+              width: 320,
+              child: Builder(
+                builder: (context) => _buildMasterPanel(
+                  theme,
+                  isDark,
+                  onUnitSelected: () => Navigator.of(context).pop(),
+                ),
+              ),
+            )
+          : null,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -115,10 +175,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }
 
   /// Desktop layout - Master-Detail sa split view
+  /// Master panel je DESNO, Detail panel LIJEVO
   Widget _buildDesktopLayout(ThemeData theme, bool isDark) {
     return Row(
       children: [
-        // Master panel (left) - Units list
+        // Detail panel (left) - Tab content
+        Expanded(child: _buildDetailPanel(theme, isDark)),
+
+        // Master panel (right) - Units list
         Container(
           width: 320,
           decoration: BoxDecoration(
@@ -126,31 +190,22 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 ? theme.colorScheme.surface
                 : theme.colorScheme.surfaceContainerHighest,
             border: Border(
-              right: BorderSide(
+              left: BorderSide(
                 color: theme.colorScheme.outline.withOpacity(0.2),
               ),
             ),
           ),
           child: _buildMasterPanel(theme, isDark),
         ),
-
-        // Detail panel (right) - Tab content
-        Expanded(child: _buildDetailPanel(theme, isDark)),
       ],
     );
   }
 
   /// Mobile/Tablet layout - Full screen tabs
+  /// EndDrawer pokazuje master panel sa listom jedinica
   Widget _buildMobileLayout(ThemeData theme, bool isDark) {
-    return Column(
-      children: [
-        // Selected unit header
-        if (_selectedUnit != null) _buildSelectedUnitHeader(theme, isDark),
-
-        // Tab navigation
-        Expanded(child: _buildDetailPanel(theme, isDark)),
-      ],
-    );
+    // Samo prikaži detail panel - master panel je u endDrawer-u
+    return _buildDetailPanel(theme, isDark);
   }
 
   /// Master panel - Units list (all properties)
@@ -567,52 +622,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
   }
 
-  /// Selected unit header (for mobile/tablet)
-  Widget _buildSelectedUnitHeader(ThemeData theme, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
-        border: Border(
-          bottom: BorderSide(color: theme.colorScheme.outline.withOpacity(0.2)),
-        ),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.list),
-            onPressed: () => _showUnitsListModal(context, theme, isDark),
-            tooltip: 'Prikaži sve jedinice',
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _selectedUnit?.name ?? 'Izaberi jedinicu',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
-                ),
-                if (_selectedProperty != null)
-                  Text(
-                    _selectedProperty!.name,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onPrimaryContainer.withOpacity(
-                        0.7,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// Detail panel - Tab navigation + content
   Widget _buildDetailPanel(ThemeData theme, bool isDark) {
     if (_selectedUnit == null) {
@@ -953,44 +962,4 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
   }
 
-  void _showUnitsListModal(BuildContext context, ThemeData theme, bool isDark) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        decoration: BoxDecoration(
-          color: isDark
-              ? theme.colorScheme.surface
-              : theme.colorScheme.surfaceContainerHighest,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            // Drag handle
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            // Master panel content
-            Expanded(
-              child: _buildMasterPanel(
-                theme,
-                isDark,
-                onUnitSelected: () => Navigator.pop(context),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

@@ -194,7 +194,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   IconButton(
                     icon: const Icon(Icons.add_circle_outline),
                     onPressed: () {
-                      context.push(OwnerRoutes.unitNew);
+                      context.push(OwnerRoutes.unitWizard);
                     },
                     tooltip: 'Dodaj novu jedinicu',
                   ),
@@ -709,7 +709,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             FilledButton.icon(
               onPressed: () {
                 context.push(
-                  OwnerRoutes.unitEdit.replaceAll(':id', _selectedUnit!.id),
+                  OwnerRoutes.unitWizardEdit.replaceAll(':id', _selectedUnit!.id),
                 );
               },
               icon: const Icon(Icons.edit, size: 18),

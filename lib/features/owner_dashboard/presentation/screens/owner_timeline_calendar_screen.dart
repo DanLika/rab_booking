@@ -86,8 +86,25 @@ class _OwnerTimelineCalendarScreenState
               onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
             ),
             drawer: const OwnerAppDrawer(currentRoute: 'calendar/timeline'),
-      body: Column(
-        children: [
+            body: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: Theme.of(context).brightness == Brightness.dark
+                      ? [
+                          Theme.of(context).colorScheme.surface,
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                        ]
+                      : [
+                          const Color(0xFFF5F5F5), // veryLightGray
+                          Colors.white,
+                        ],
+                  stops: const [0.0, 0.3],
+                ),
+              ),
+              child: Column(
+                children: [
           // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
           Consumer(
             builder: (context, ref, child) {
@@ -152,8 +169,9 @@ class _OwnerTimelineCalendarScreenState
 
           // Multi-select action bar (bottom)
           const MultiSelectActionBar(),
-        ],
-      ),
+                ],
+              ), // Column
+            ), // Container with gradient background
             floatingActionButton: Consumer(
               builder: (context, ref, child) {
                 final multiSelectState = ref.watch(multiSelectProvider);

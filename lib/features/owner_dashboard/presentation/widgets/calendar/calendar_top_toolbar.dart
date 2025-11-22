@@ -151,6 +151,8 @@ class CalendarTopToolbar extends StatelessWidget {
                 child: const Icon(Icons.more_vert),
               ),
               tooltip: 'Opcije',
+              position: PopupMenuPosition.under, // Dropdown opens below button
+              offset: const Offset(0, 8), // 8px below button
               onSelected: (value) {
                 switch (value) {
                   case 'today':

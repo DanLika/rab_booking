@@ -301,6 +301,23 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      // ROOT ROUTE - Shows loader while redirect logic determines destination
+      GoRoute(
+        path: '/',
+        builder: (context, state) {
+          // Show skeleton loader while redirect determines where to go
+          // (prevents 404 flash during Login → Dashboard transition)
+          return const Scaffold(
+            body: Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: StatsCardsSkeleton(),
+              ),
+            ),
+          );
+        },
+      ),
+
       // PUBLIC ROUTES (No authentication required)
       GoRoute(
         path: '/embed/units/:id',

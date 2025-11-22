@@ -23,6 +23,7 @@ import '../../features/owner_dashboard/presentation/screens/unit_form_screen.dar
 import '../../features/owner_dashboard/presentation/screens/unit_pricing_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/widget_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/notifications_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/profile_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/edit_profile_screen.dart';
@@ -103,6 +104,8 @@ class OwnerRoutes {
   static const String unitPricing = '/owner/units/:id/pricing';
   static const String unitWidgetSettings = '/owner/units/:id/widget-settings';
   static const String unitHub = '/owner/unit-hub';
+  static const String unitWizard = '/owner/units/wizard';
+  static const String unitWizardEdit = '/owner/units/wizard/:id';
   static const String notifications = '/owner/notifications';
   static const String profile = '/owner/profile';
   static const String profileEdit = '/owner/profile/edit';

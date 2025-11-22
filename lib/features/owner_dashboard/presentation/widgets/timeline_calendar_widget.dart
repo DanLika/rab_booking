@@ -66,6 +66,10 @@ class _TimelineCalendarWidgetState
   int _visibleDayCount = 90; // Render 90 days at a time
   static const int _bufferDays = 30; // Extra days before/after visible area
 
+  // Infinite scroll - dynamic date range (initially 15+15 days)
+  DateTime _dynamicStartDate = DateTime.now().subtract(const Duration(days: 15));
+  DateTime _dynamicEndDate = DateTime.now().add(const Duration(days: 15));
+
   // Responsive dimensions based on screen size and accessibility settings
   // Using CalendarGridCalculator for consistency
   double _getDayWidth(BuildContext context) {
@@ -109,8 +113,9 @@ class _TimelineCalendarWidgetState
   }
 
   double _getHeaderHeight(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    return CalendarGridCalculator.getHeaderHeight(screenWidth);
+    // Fixed height for timeline: 30px month + 60px day = 90px total
+    // This matches TimelineDayHeader minHeight: 60
+    return 90.0;
   }
 
   @override
@@ -221,6 +226,26 @@ class _TimelineCalendarWidgetState
         _visibleDayCount = newDayCount;
       });
     }
+
+    // Infinite scroll: Add more days when near edge (5 days buffer)
+    final edgeThreshold = dayWidth * 5; // 5 days from edge
+    final maxScroll = _horizontalScrollController.position.maxScrollExtent;
+
+    // Near start edge? Prepend 30 days (max 1 year in past)
+    if (scrollOffset < edgeThreshold &&
+        _dynamicStartDate.isAfter(DateTime.now().subtract(const Duration(days: 365)))) {
+      setState(() {
+        _dynamicStartDate = _dynamicStartDate.subtract(const Duration(days: 30));
+      });
+    }
+
+    // Near end edge? Append 30 days (max 1 year in future)
+    if (scrollOffset > maxScroll - edgeThreshold &&
+        _dynamicEndDate.isBefore(DateTime.now().add(const Duration(days: 365)))) {
+      setState(() {
+        _dynamicEndDate = _dynamicEndDate.add(const Duration(days: 30));
+      });
+    }
   }
 
   @override
@@ -301,13 +326,13 @@ class _TimelineCalendarWidgetState
   }
 
   DateTime _getStartDate() {
-    // Start from 3 months before today
-    return DateTime.now().subtract(const Duration(days: 90));
+    // Use dynamic start date for infinite scroll
+    return _dynamicStartDate;
   }
 
   DateTime _getEndDate() {
-    // End 12 months after today
-    return DateTime.now().add(const Duration(days: 365));
+    // Use dynamic end date for infinite scroll
+    return _dynamicEndDate;
   }
 
   List<DateTime> _getDateRange() {
@@ -503,6 +528,7 @@ class _TimelineCalendarWidgetState
     final offsetWidth = _visibleStartIndex * dayWidth;
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Column(
         children: [
           // Date headers

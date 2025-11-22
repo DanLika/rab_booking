@@ -804,7 +804,6 @@ class _BookingCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
             // Header Section
             BookingCardHeader(
@@ -817,7 +816,6 @@ class _BookingCard extends ConsumerWidget {
               padding: EdgeInsets.all(isMobile ? 12 : 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Guest info
                   BookingCardGuestInfo(

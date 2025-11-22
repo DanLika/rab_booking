@@ -360,7 +360,6 @@ class BookingCardSkeleton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
             // Header Section
             Container(
@@ -391,7 +390,6 @@ class BookingCardSkeleton extends StatelessWidget {
               padding: EdgeInsets.all(isMobile ? 12 : 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Guest info
                   Row(

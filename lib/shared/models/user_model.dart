@@ -52,7 +52,7 @@ enum SecurityEventType {
 class SecurityEvent with _$SecurityEvent {
   const factory SecurityEvent({
     required SecurityEventType type,
-    required DateTime timestamp,
+    @TimestampConverter() required DateTime timestamp,
     String? deviceId,
     String? ipAddress,
     String? location,

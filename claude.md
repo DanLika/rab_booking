@@ -1394,284 +1394,75 @@ class BookingsPagination {
 ---
 
 
-## 🐛 Booking Widget - Pill Bar Fix (Chicken-and-Egg Bug)
+## 🐛 Booking Widget - Pill Bar Display Logic Fix
 
-**Datum: 2025-11-19**
-**Status: ✅ FIXED - Pill bar sada prikazuje nakon selekcije datuma**
+**Datum: 2025-11-18 to 2025-11-19**
+**Status: ✅ FIXED - Dva povezana bug-a riješena**
 
-#### 📋 Problem
+#### 📋 Dva Povezana Bug-a
 
-**KRITIČAN BUG:** Pill bar se NIJE prikazivao nakon što korisnik selektuje datume! Korisnici nisu mogli da naprave rezervaciju.
+**Bug #1 - Auto-Open Nakon Refresh (2025-11-18):**
+- Pill bar se automatski otvarao nakon refresh-a, čak i kada ga je user zatvorio ❌
+- Root cause: `if (_checkIn != null && _checkOut != null)` → pokazuje pill bar čim datumi postoje
+- Missing: Flag da tracka da li je user zatvorio pill bar
 
-**Root Cause - Chicken-and-Egg Logic:**
-```dart
-// Display logic (BROKEN):
-if (_checkIn != null &&
-    _checkOut != null &&
-    _hasInteractedWithBookingFlow &&  // ← Set SAMO kada klikne Reserve button
-    !_pillBarDismissed)
-```
-
-Problem: `_hasInteractedWithBookingFlow` se postavljao tek kada korisnik klikne **Reserve button**, ali Reserve button je UNUTAR pill bar-a! Ako pill bar nije vidljiv, korisnik ne može kliknuti Reserve → chicken-and-egg!
+**Bug #2 - Chicken-and-Egg (2025-11-19):**
+- Prvi fix je uveo novi bug: Pill bar se NIJE prikazivao nakon selekcije datuma ❌
+- Root cause: `_hasInteractedWithBookingFlow` se postavljao samo na Reserve button klik
+- Problem: Reserve button je UNUTAR pill bar-a → pill bar nije vidljiv → ne može kliknuti Reserve!
 
 ---
 
-#### 🔧 Rješenje
+#### 🔧 Finalno Rješenje
 
-**Selekcija datuma JE interakcija sa booking flow-om!** Kada korisnik selektuje datume, to pokazuje interes za rezervaciju.
+**Implementirana 2 State Flags sa localStorage persistence:**
 
-**Fix - Date Selection Handler (`booking_widget_screen.dart` Lines 725-728):**
+```dart
+bool _pillBarDismissed = false;              // Track if user clicked X
+bool _hasInteractedWithBookingFlow = false;   // Track if user showed interest
+```
+
+**Display Logic:**
+```dart
+if (_checkIn != null &&
+    _checkOut != null &&
+    _hasInteractedWithBookingFlow &&  // User showed interest
+    !_pillBarDismissed)                // User didn't dismiss
+  _buildFloatingDraggablePillBar(...);
+```
+
+**Ključna Izmjena - Date Selection Handler:**
 ```dart
 setState(() {
   _checkIn = start;
   _checkOut = end;
-  _pillBarPosition = null;
-  // Bug Fix: Date selection IS interaction - show booking flow
+  // FIX: Date selection IS interaction - show pill bar
   _hasInteractedWithBookingFlow = true;
-  _pillBarDismissed = false; // Reset dismissed flag for new date selection
+  _pillBarDismissed = false; // Reset dismissed flag
 });
 _saveFormData();
 ```
 
-**Logika:**
-- Korisnik selektuje datume → `_hasInteractedWithBookingFlow = true` → pill bar se prikaže ✅
-- Korisnik klikne X (dismiss) → pill bar se sakriva ✅
-- Korisnik selektuje NOVE datume → `_pillBarDismissed = false` → pill bar se ponovo prikaže ✅
-- Korisnik refresh-uje stranicu → čuva se dismissed state iz localStorage ✅
-
----
-
-## 🐛 Booking Widget - Auto-Open Pill Bar Fix (Original)
-
-**Datum: 2025-11-18**
-**Status: ⚠️ DELIMIČNO - Pravio chicken-and-egg bug (fixed 2025-11-19)**
-
-#### 📋 Problem
-
-Korisnici su prijavili da se booking flow (pill bar) automatski otvara nakon refresh-a stranice, čak i kada su ga prethodno zatvorili (kliknuli X button). Ovo je frustrirajuće UX jer korisnik očekuje da se UI ne mijenja nakon refresh-a.
-
-**Simptomi:**
-1. User selektuje datume u kalendaru → pill bar se pojavi ✅
-2. User zatvori pill bar (klik na X) → pill bar nestane ✅
-3. User refresh-uje stranicu → pill bar se PONOVO pojavi ❌
-4. **Problem:** Pill bar se otvara iako je user pokazao da ga ne želi
-
-**Root Cause:**
-- Form data persistence (`_loadFormData`) restore-uje `_checkIn` i `_checkOut` datume iz localStorage
-- Pill bar display logic: `if (_checkIn != null && _checkOut != null) → show pill bar`
-- **Missing:** Flag koji tracka da li je user zatvorio pill bar (dismissed state)
-
----
-
-#### 🔧 Rješenje
-
-Implementiran dismissed state tracking sistem sa localStorage persistence.
-
-**Novi State Fields:**
-```dart
-bool _pillBarDismissed = false;              // Track if user clicked X button
-bool _hasInteractedWithBookingFlow = false;   // Track if user clicked Reserve
-```
-
-**Display Logic (Before):**
-```dart
-// ❌ LOŠE - prikazuje pill bar čim datumi postoje
-if (_checkIn != null && _checkOut != null)
-  _buildFloatingDraggablePillBar(...);
-```
-
-**Display Logic (After):**
-```dart
-// ✅ DOBRO - prikazuje samo ako user pokazao interes I nije dismissed
-if (_checkIn != null &&
-    _checkOut != null &&
-    _hasInteractedWithBookingFlow &&  // User kliknuo Reserve
-    !_pillBarDismissed)                // User nije kliknuo X
-  _buildFloatingDraggablePillBar(...);
-```
-
----
-
-#### 📁 Ključne Izmjene
-
-**1. State Management (`booking_widget_screen.dart` Lines 92-94)**
-```dart
-// Bug Fix: Pill bar dismissed state (auto-open fix)
-bool _pillBarDismissed = false;
-bool _hasInteractedWithBookingFlow = false;
-```
-
-**2. Form Data Persistence (`_saveFormData()` Lines 310-311)**
-```dart
-'pillBarDismissed': _pillBarDismissed,
-'hasInteractedWithBookingFlow': _hasInteractedWithBookingFlow,
-```
-
-**3. Form Data Loading (`_loadFormData()` Lines 381-382)**
-```dart
-_pillBarDismissed = formData['pillBarDismissed'] as bool? ?? false;
-_hasInteractedWithBookingFlow = formData['hasInteractedWithBookingFlow'] as bool? ?? false;
-```
-
-**4. Reserve Button (`_buildCompactPillSummary()` Lines 1697-1701)**
-```dart
-setState(() {
-  _showGuestForm = true;
-  _hasInteractedWithBookingFlow = true; // Set interaction flag
-  _lockedPriceCalculation = calculation.copyWithLock();
-});
-_saveFormData(); // Save state immediately
-```
-
-**5. Close Button - 2 Locations (Wide Screen: Lines 1417-1424, Compact: Lines 1584-1591)**
+**Close Button:**
 ```dart
 onTap: () {
-  // Set dismissed flag instead of clearing dates
   setState(() {
-    _pillBarDismissed = true;
+    _pillBarDismissed = true;  // Don't clear dates!
     _showGuestForm = false;
-    _pillBarPosition = null;
   });
-  _saveFormData(); // Save dismissed state
-},
-```
-
-**Prije (❌):**
-```dart
-// Brisalo datume - gubila se selekcija u kalendaru
-setState(() {
-  _checkIn = null;
-  _checkOut = null;
-  _showGuestForm = false;
-});
-```
-
-**Poslije (✅):**
-```dart
-// Samo set dismissed flag - datumi ostaju selektovani
-setState(() {
-  _pillBarDismissed = true;
-  _showGuestForm = false;
-});
-_saveFormData();
+  _saveFormData();
+}
 ```
 
 ---
 
-#### 🎯 Behaviour Matrix
+#### ✅ Finalni Behaviour
 
-| Scenario | Before Fix | After Fix |
-|----------|-----------|-----------|
-| User selektuje datume → refresh | Pill bar se pojavi ❌ | Pill bar se NE pojavi ✅ |
-| User klikne Reserve → refresh | Pill bar se pojavi ✅ | Pill bar se pojavi ✅ |
-| User ispuni form → refresh | Pill bar se pojavi ✅ | Pill bar se pojavi ✅ |
-| User zatvori pill bar → refresh | Pill bar se ponovo pojavi ❌ | Pill bar ostaje zatvoren ✅ |
-| User zatvori pill bar | Datumi se brišu ❌ | Datumi ostaju u kalendaru ✅ |
-
----
-
-#### ⚠️ Kritični Detalji
-
-**1. INTERACTION FLAG JE KLJUČAN:**
-- `_hasInteractedWithBookingFlow` se postavlja SAMO kada user klikne Reserve button
-- Samo selekcija datuma NE postavlja ovaj flag
-- Razlog: User možda samo browsuje datume, nije pokazao interes za rezervaciju
-
-**2. DISMISSED FLAG PERSISTENCE:**
-- Dismissed flag se čuva u localStorage sa 24h TTL
-- Kada user selektuje NOVE datume, dismissed flag se NE resetuje automatski
-- Razlog: User možda želi da vidi različite datume bez pill bar-a
-
-**3. CLOSE BUTTON NE BRIŠE DATUME:**
-- **PRIJE:** Close button → `_checkIn = null` + `_checkOut = null`
-- **POSLIJE:** Close button → `_pillBarDismissed = true`
-- Datumi ostaju selektovani u kalendaru - korisnik može nastaviti browsing
-
-**4. RESERVE BUTTON:**
-- Kada user klikne Reserve → `_hasInteractedWithBookingFlow = true`
-- Odmah poziva `_saveFormData()` da sacuva state
-- Pill bar će se prikazati nakon refresh-a (user pokazao interes)
-
-**5. FORM DATA TTL:**
-- Svi form podaci imaju 24h TTL (`_loadFormData` line 331)
-- Nakon 24h, data se automatski briše sa `_clearFormData()`
-- Dismissed i interaction flags također imaju isti TTL
-
----
-
-#### 🧪 Testiranje
-
-**Test Case 1: Selektuj datume bez Reserve**
-```
-1. Otvori widget → selektuj check-in i check-out datume
-2. Provjeri: Pill bar se NE pojavljuje ✅
-3. Refresh stranicu
-4. Provjeri: Pill bar se NE pojavljuje ✅
-5. Provjeri: Datumi OSTAJU selektovani u kalendaru ✅
-```
-
-**Test Case 2: Reserve button flow**
-```
-1. Selektuj datume → pill bar se NE pojavljuje
-2. Klikni Reserve button → pill bar se pojavljuje ✅
-3. Refresh stranicu
-4. Provjeri: Pill bar se ponovo pojavljuje (sa istim datumima) ✅
-5. Provjeri: Guest form JE ZATVOREN (samo pill bar visible) ✅
-```
-
-**Test Case 3: Close button flow**
-```
-1. Selektuj datume → klikni Reserve → pill bar se pojavi
-2. Klikni X (close button) → pill bar nestaje
-3. Provjeri: Datumi OSTAJU selektovani u kalendaru ✅
-4. Refresh stranicu
-5. Provjeri: Pill bar se NE pojavljuje ✅
-6. Provjeri: Datumi OSTAJU selektovani ✅
-```
-
-**Test Case 4: Form data persistence**
-```
-1. Selektuj datume → klikni Reserve
-2. Ispuni neki od form fields (ime, email, itd.)
-3. Refresh stranicu
-4. Provjeri: Pill bar se pojavljuje sa Reserve button ✅
-5. Klikni Reserve → provjeri da su form fields popunjeni ✅
-```
-
----
-
-#### 📊 Bonus Improvement - Deposit Font Size
-
-**Problem:** Deposit tekst je bio premali (10px) i teško se čitao.
-
-**Rješenje:**
-```dart
-// Line 1804
-Text(
-  'Deposit: ${calculation.formattedDeposit} ($depositPercentage%)',
-  style: TextStyle(
-    fontSize: TypographyTokens.fontSizeS, // 12px (was 10px)
-    // ... other styles
-  ),
-),
-```
-
-**Rezultat:** Deposit tekst sada veći za 2px (10px → 12px) ✅
-
----
-
-#### 🎯 TL;DR - Najvažnije
-
-1. **NE MIJENJAJ DISPLAY LOGIC** - Pill bar se prikazuje SAMO ako `_hasInteractedWithBookingFlow && !_pillBarDismissed` ✅
-2. **CLOSE BUTTON NE BRIŠE DATUME** - Samo postavlja dismissed flag ✅
-3. **RESERVE BUTTON POSTAVLJA INTERACTION FLAG** - I odmah save-uje state ✅
-4. **DATUMI OSTAJU U KALENDARU** - Čak i nakon zatvaranja pill bar-a ✅
-5. **24H TTL** - Form data i flags automatski expiraju nakon 24h ✅
-
-**Ako korisnik prijavi "pill bar se otvara sam":**
-- Provjeri da li se poziva `_hasInteractedWithBookingFlow = true` na Reserve button
-- Provjeri da display logic ima SVA 4 uslova (null checks + interaction + dismissed)
-- Provjeri localStorage: `booking_widget_form_data_${unitId}`
+- Selektuj datume → Pill bar se PRIKAŽE ✅
+- Klikni X → Pill bar se SAKRIJE (datumi ostaju) ✅
+- Refresh → Pill bar OSTAJE sakriven ✅
+- Selektuj NOVE datume → Pill bar se PONOVO prikaže ✅
+- Form data TTL: 24h (automatski expires)
 
 ---
 
@@ -2601,143 +2392,49 @@ WIDGET_URL=https://rab-booking-widget.web.app
 
 ---
 
-## 🧹 Owner Dashboard Dead Code Cleanup
+## 🧹 Dead Code Cleanup (3 Major Cleanups)
 
-**Datum: 2025-11-17**
-**Status: ✅ ZAVRŠENO - Obrisano 3,345 linija nekorištenog koda**
+**Datum: 2025-11-16 to 2025-11-17**
+**Status: ✅ ZAVRŠENO - Obrisano 8,361+ linija nekorištenog koda (53 fajla)**
 
-#### 📋 Problem
+#### 📊 Sažetak Brisanja
 
-Pronađeno **14 fajlova** u `lib/features/owner_dashboard/presentation/` koji se **NIGDJE NE KORISTE**:
-- 0 importa u codebase-u
-- 0 router route-ova
-- 0 drawer menu item-a
-- 0 referenci u bilo kom drugom fajlu
+**1. Owner Dashboard Cleanup (be40903):**
+- 14 fajlova (3,345 linija) - screens, provideri, calendar widgeti
 
-**Razlog za brisanje:**
-- Dead code povećava bundle size
-- Otežava održavanje (treba čitati i razumeti kod koji se ne koristi)
-- Zbunjuje developere (šta se koristi, šta ne?)
-- Nepotreban technical debt
+**2. Widget Feature Cleanup (2025-11-16):**
+- 26 fajlova (5,016 linija) - theme-ovi, glassmorphism komponente, nekorišteni widgeti
+
+**3. Core Utils Cleanup:**
+- 23 fajla - zastarjeli utilities, duplicate helperi
 
 ---
 
-#### 🗑️ Obrisani Fajlovi
+#### ⚠️ DO NOT Restore - Šta Claude Code Treba Znati
 
-**1. Screens (1 fajl - 1,070 linija):**
-```
-❌ additional_services_screen.dart
-```
-- **Opis:** Admin panel za CRUD operacije nad dodatnim servisima (parking, doručak, itd.)
-- **Razlog:** Funkcionalnost uklonjena ili premještena drugdje
-- **Dokumentacija:** Zastarjela (claude.md imao sekciju o ovom fajlu, ali nije bio aktivan)
+**Owner Dashboard - OBRISANO:**
+- ❌ `additional_services_screen.dart` - CRUD za dodatne servise (1,070 linija)
+- ❌ `performance_metrics_provider.dart` - Metrike performansi
+- ❌ `revenue_analytics_provider.dart` - Revenue analytics
+- ❌ `owner_standard_app_bar.dart` - Custom app bar (koristi `CommonAppBar`)
+- ❌ Napredni calendar widgeti: bulk operations, drag-and-drop, resizable blocks (1,994 linija)
 
----
+**Widget Feature - OBRISANO:**
+- ❌ `villa_jasko_theme.dart` + `bedbooking_theme.dart` - Samo **Minimalist theme** se koristi!
+- ❌ Glassmorphism komponente iz widget/components: `AdaptiveGlassCard`, `BlurredAppBar`, `GlassModal`
+  - **Napomena:** Glassmorphism JE OK u `auth/` i `owner/` features (koriste `auth/widgets/glass_card.dart`)
+- ❌ 7 nekorištenih widgeta: `bank_transfer_instructions_widget.dart`, `powered_by_badge.dart`, `price_calculator_widget.dart`, itd.
 
-**2. Providers (2 fajla + 2 .g.dart - 187 linija):**
-```
-❌ performance_metrics_provider.dart (93 linije)
-❌ performance_metrics_provider.g.dart (generated)
-❌ revenue_analytics_provider.dart (94 linije)
-❌ revenue_analytics_provider.g.dart (generated)
-```
-- **Opis:** Riverpod provideri za performance metrike i revenue analytics
-- **Razlog:** Funkcionalnost vjerovatno integrirana u analytics_screen.dart ili nikad završena
+**Refaktorisano (ne briši):**
+- ✅ Widget screens koriste `Card` umjesto `AdaptiveGlassCard`
+- ✅ `widget_config_provider.dart` koristi `MinimalistTheme.light/dark`
 
 ---
 
-**3. Widgets (11 fajlova - 2,088 linija):**
-
-**App Bar (1 fajl - 94 linije):**
-```
-❌ owner_standard_app_bar.dart
-```
-- **Opis:** Custom app bar za owner dashboard
-- **Razlog:** CommonAppBar se koristi umjesto ovog
-
-**Calendar Widgets (10 fajlova - 1,994 linije):**
-```
-❌ owner_month_calendar_widget.dart (185 linija)
-❌ calendar_legend_widget.dart (361 linija)
-❌ calendar/calendar_filter_panel.dart (416 linija)
-❌ calendar/bulk_operations_toolbar.dart (149 linija)
-❌ calendar/calendar_empty_state.dart (142 linije)
-❌ calendar/bulk_booking_actions.dart (315 linija)
-❌ calendar/triangle_cap_booking_painter.dart (200 linija)
-❌ calendar/resizable_booking_block.dart (226 linija)
-```
-- **Opis:** Napredni calendar komponente sa bulk operacijama, drag-and-drop, custom painting
-- **Razlog:** Funkcionalnost nikad implementirana ili uklonjena u korist simplijih calendar-a
-
----
-
-#### ✅ Verifikacija
-
-**Provera prije brisanja:**
-```bash
-# Svi fajlovi provjereni sa grep:
-grep -r "AdditionalServicesScreen" lib --include="*.dart"
-# Output: Samo sam fajl (0 referenci)
-
-grep -r "PerformanceMetricsProvider" lib --include="*.dart"
-# Output: Samo sam fajl (0 referenci)
-
-# ... i tako za svih 14 fajlova
-```
-
-**Flutter analyze nakon brisanja:**
-```
-✅ 0 errors - kod kompajlira bez problema!
-⚠️ 1 warning - _buildErrorState unused (u drugom fajlu, nije povezano)
-ℹ️ 17 info - print statements (debug logging, nije breaking)
-```
-
----
-
-#### 📊 Impact
-
-**Statistike:**
-- ✅ **3,345 linija** koda obrisano
-- ✅ **14 fajlova** eliminisano (12 tracked + 2 generated)
-- ✅ **0 breaking changes** - sve radi kako treba
-- ✅ **Manji bundle size** - lakši app za download
-- ✅ **Čistiji codebase** - lakše održavanje
-
-**Git commit:**
-```
-Commit: be40903
-Files: 12 deleted
-Lines: 3,345 deletions
-Message: chore: remove unused owner dashboard components
-```
-
----
-
-#### ⚠️ Šta Claude Code Treba Znati
-
-**1. Ako korisnik traži "additional services":**
-- Taj feature je **UKLONJEN** (2025-11-17)
-- Screen je bio **dead code** - nije bio povezan sa navigation-om
-- Ako treba dodati ponovo, radi od nule (nemoj restore-ovati stari screen)
-
-**2. Ako korisnik traži "performance metrics" ili "revenue analytics":**
-- Ti provideri su **OBRISANI** (2025-11-17)
-- Funkcionalnost možda postoji u `analytics_screen.dart`
-- Provjeri analytics_screen prije nego što praviš nove providere
-
-**3. Ako korisnik traži "bulk booking operations" ili "resizable calendar":**
-- Te calendar funkcionalnosti su **UKLONJENE** (2025-11-17)
-- Trenutno se koristi simpliji calendar (owner_week_calendar_screen, owner_timeline_calendar_screen)
-- Ako treba dodati, dizajniraj od nule (nemoj restore-ovati stare widgete)
-
-**4. CommonAppBar vs OwnerStandardAppBar:**
-- `owner_standard_app_bar.dart` je **OBRISAN** (2025-11-17)
-- Koristi se `shared/widgets/common_app_bar.dart` za sve screen-ove
-- Ne vraćaj stari app bar!
-
----
-
-**Commit:** `be40903` - chore: remove unused owner dashboard components (3,345+ lines)
+**Git Commits:**
+- `be40903` - Owner Dashboard cleanup (3,345 linija)
+- Widget Feature cleanup (5,016 linija)
+- Utils cleanup (23 fajla)
 
 ---
 
@@ -3508,8 +3205,6 @@ static const Color statusBookedText = Color(0xFFef4444); // #ef4444
 
 ---
 
-## 🧹 Widget Feature Cleanup
-
 ## 🔧 Turnover Day Bug Fix (Bug #77)
 
 **Datum: 2025-11-16**
@@ -3627,211 +3322,6 @@ checkOutDate = Timestamp.fromDate(new Date('2025-01-15'))
 
 **Commit:** `0c056e3` - fix: allow same-day turnover bookings (Bug #77)
 **Deployed:** 2025-11-16
-
----
-
-
-**Datum: 2025-11-16**
-**Status: ✅ ZAVRŠENO - Kompletno očišćen widget feature od dead code-a**
-
-#### 📋 Svrha Cleanup-a
-Eliminisanje svih nekorištenih fajlova, duplicate koda i dead theme-ova iz `lib/features/widget/` direktorijuma. Widget feature je guest-facing embedded booking widget i mora biti što lakši i čistiji.
-
----
-
-#### 🗑️ Obrisano (26 Fajlova - 5,016 Linija)
-
-**Theme folder (8 fajlova - 2,724 linije):**
-```
-❌ bedbooking_theme.dart (186 linija)
-❌ bedbooking_theme_data.dart (172 linije)
-❌ villa_jasko_theme.dart (320 linija)
-❌ villa_jasko_theme_data.dart (446 linija)
-❌ villa_jasko_colors.dart (450 linija)
-❌ modern_shadows.dart (309 linija)
-❌ modern_text_styles.dart (263 linija)
-❌ spacing.dart (244 linije)
-```
-**Razlog:** Samo Minimalist theme se koristi, ostali theme-ovi su dead code.
-
-**Components folder (4 fajla - 1,270 linija + folder deleted):**
-```
-❌ blurred_app_bar.dart (329 linija)
-❌ glass_modal.dart (406 linija)
-❌ glass_card.dart (322 linije)
-❌ adaptive_glass_card.dart (213 linija)
-❌ GLASSMORPHISM_USAGE.md (dokumentacija)
-❌ lib/features/widget/presentation/components/ (folder deleted)
-```
-**Razlog:** Glassmorphism components uklonjeni iz widget feature, ostali u auth/owner features.
-
-**Widgets folder (7 fajlova - 1,021 linija):**
-```
-❌ bank_transfer_instructions_widget.dart (440 linija) - Unused
-❌ powered_by_badge.dart (132 linije) - Unused
-❌ price_calculator_widget.dart (207 linija) - Unused
-❌ responsive_calendar_widget.dart (56 linija) - Unused
-❌ validated_input_row.dart (53 linije) - Unused
-❌ room_card.dart (248 linija) - Unused theme widget
-❌ themed_widget_wrapper.dart (63 linije) - Unused theme widget
-```
-**Razlog:** Niti jedan od ovih widgeta nije korišten u widget feature.
-
----
-
-#### ♻️ Refaktorisano (5 Fajlova)
-
-**1. widget_config_provider.dart**
-```dart
-// PRIJE (❌):
-import '../theme/villa_jasko_theme_data.dart';
-ThemeData theme = VillaJaskoTheme.lightTheme;
-ThemeData theme = VillaJaskoTheme.darkTheme;
-
-// POSLIJE (✅):
-import '../theme/minimalist_theme.dart';
-ThemeData theme = MinimalistTheme.light;
-ThemeData theme = MinimalistTheme.dark;
-```
-
-**2. booking_lookup_screen.dart**
-```dart
-// PRIJE (❌):
-import '../components/adaptive_glass_card.dart';
-AdaptiveGlassCard(child: Padding(...))
-
-// POSLIJE (✅):
-Card(
-  elevation: 2,
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(16),
-  ),
-  child: Padding(...),
-)
-```
-
-**3. embed_calendar_screen.dart**
-```dart
-// PRIJE (❌):
-import '../components/adaptive_glass_card.dart';
-appBar: AdaptiveBlurredAppBar(...)
-body: AdaptiveGlassCard(...)
-
-// POSLIJE (✅):
-appBar: AppBar(elevation: 0, centerTitle: true, ...)
-body: Card(elevation: 2, ...)
-```
-
-**4. booking_details_screen.dart**
-- Uklonjeno 6 instanci `AdaptiveGlassCard` komponente
-- Zamenjeno sa `Card` (Material component)
-
-**5. additional_services_widget.dart & tax_legal_disclaimer_widget.dart**
-```dart
-// PRIJE (❌):
-error: (_, __) => const SizedBox.shrink(),
-
-// POSLIJE (✅):
-error: (error, stackTrace) => const SizedBox.shrink(),
-```
-**Razlog:** Fixed unnecessary underscores analyzer warnings.
-
----
-
-#### ✅ Aktivni Widget Files (11 Fajlova)
-
-**Provjereno i potvrđeno kao aktivno korišteni:**
-```
-✅ additional_services_widget.dart - Booking dodatni servisi
-✅ calendar_hover_tooltip.dart - Tooltip na kalendar hover
-✅ calendar_view_switcher.dart - Month/Year view switcher
-✅ country_code_dropdown.dart - Telefonski broj prefix
-✅ email_verification_dialog.dart - Email verifikacija dialog
-✅ month_calendar_widget.dart - Mjesečni kalendar view
-✅ split_day_calendar_painter.dart - Custom painter za split days
-✅ tax_legal_disclaimer_widget.dart - HR tax disclaimer
-✅ year_calendar_widget.dart - Godišnji kalendar view
-✅ year_grid_calendar_widget.dart - Grid layout za year view
-✅ year_view_preloader.dart - Preload future year data
-```
-
----
-
-#### 📊 Finalni Rezultati
-
-**Flutter Analyze:**
-```bash
-flutter analyze
-# Result: No issues found! (ran in 1.0s)
-```
-
-**Statistika:**
-- **Obrisano:** 26 fajlova + 2 foldera
-- **Refaktorisano:** 5 fajlova
-- **Eliminisano:** ~5,016 linija koda
-- **Ostalo aktivno:** 11 widget fajlova + minimalist theme + 16 providera
-
-**Theme Situacija:**
-- ✅ **Widget feature:** Samo Minimalist theme (ultra clean!)
-- ✅ **Auth feature:** Ima svoj glass_card.dart (73 linije)
-- ✅ **Owner feature:** Koristi auth/shared glass components
-- **Jasna separacija:** Widget je guest-facing, nema glassmorphism
-
----
-
-#### ⚠️ Šta Claude Code Treba Znati
-
-**1. NIKADA ne vraćaj obrisane theme-ove:**
-- VillaJasko theme ❌ OBRISAN
-- BedBooking theme ❌ OBRISAN
-- Modern theme helpers ❌ OBRISANI
-- **Samo Minimalist theme** u widget feature! ✅
-
-**2. NIKADA ne vraćaj glassmorphism u widget feature:**
-- `AdaptiveGlassCard` ❌ OBRISAN iz widget/components
-- `BlurredAppBar` ❌ OBRISAN iz widget/components
-- `GlassModal` ❌ OBRISAN iz widget/components
-- Widget koristi plain Material `Card` ✅
-
-**3. Glassmorphism JE OK u auth/owner:**
-- `lib/features/auth/presentation/widgets/glass_card.dart` ✅ EXISTS
-- Owner dashboard screens mogu koristiti auth glass_card ✅
-- Auth screens koriste svoj glass_card ✅
-
-**4. Providers SU SVI aktivni:**
-- Svih 16 providera u widget/presentation/providers/ su korišteni ✅
-- **NE BRIŠI** niti jedan provider bez temeljne analize!
-
-**5. Widget feature architektura:**
-```
-lib/features/widget/
-├── presentation/
-│   ├── providers/ (16 files - SVI aktivni) ✅
-│   ├── screens/ (6 files - refaktorisani sa Card) ✅
-│   ├── theme/ (samo minimalist_* fajlovi) ✅
-│   ├── widgets/ (11 files - SVI aktivni) ✅
-│   └── utils/ (form_validators, snackbar_helper, itd.) ✅
-└── domain/
-    └── models/ (8 models - SVI aktivni) ✅
-```
-
-**6. Ako korisnik traži glassmorphism u widgetu:**
-- Objasni da je NAMJERNO uklonjeno (2025-11-16)
-- Widget je guest-facing i mora biti clean i lightweight
-- Glassmorphism components postoje u auth/owner features
-- **PITAJ korisnika** da li je siguran da želi da vrati
-
----
-
-#### 📝 Commit
-
-**Commit:** `576060a` - refactor: comprehensive widget feature cleanup - remove dead code and unused themes
-- Obrisano 8 theme fajlova (2,724 linije)
-- Obrisano 4 glassmorphism componente (1,270 linija)
-- Obrisano 7 unused widgets (1,021 linija)
-- Refaktorisano 5 fajlova za Material Card
-- Fixed 2 analyzer warnings
-- Total: 26 files, ~5,016 lines removed, 0 errors
 
 ---
 

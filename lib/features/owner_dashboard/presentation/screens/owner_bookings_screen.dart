@@ -26,6 +26,11 @@ import '../widgets/booking_card/booking_card_date_range.dart';
 import '../widgets/booking_card/booking_card_payment_info.dart';
 import '../widgets/booking_card/booking_card_notes.dart';
 import '../widgets/booking_card/booking_card_actions.dart';
+// Booking action dialogs
+import '../widgets/booking_actions/booking_approve_dialog.dart';
+import '../widgets/booking_actions/booking_reject_dialog.dart';
+import '../widgets/booking_actions/booking_cancel_dialog.dart';
+import '../widgets/booking_actions/booking_complete_dialog.dart';
 
 /// Owner bookings screen with filters and booking management
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
@@ -930,108 +935,7 @@ class _BookingCard extends ConsumerWidget {
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        clipBehavior: Clip.antiAlias,
-        child: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Gradient Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.success.withAlpha((0.85 * 255).toInt()),
-                      AppColors.success,
-                    ],
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.check_circle,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'Odobri rezervaciju',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Jeste li sigurni da želite odobriti ovu rezervaciju?\n\n'
-                      'Nakon odobrenja, možete kontaktirati gosta sa detaljima plaćanja.',
-                      style: TextStyle(fontSize: 15),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text('Odustani'),
-                        ),
-                        const SizedBox(width: 12),
-                        FilledButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.success,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text('Odobri'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (context) => const BookingApproveDialog(),
     );
 
     if (confirmed == true && context.mounted) {
@@ -1065,133 +969,17 @@ class _BookingCard extends ConsumerWidget {
     WidgetRef ref,
     String bookingId,
   ) async {
-    final reasonController = TextEditingController();
-
-    final confirmed = await showDialog<bool>(
+    final reason = await showDialog<String?>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        clipBehavior: Clip.antiAlias,
-        child: SizedBox(
-          width: 450,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Gradient Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.error.withAlpha((0.85 * 255).toInt()),
-                      Theme.of(context).colorScheme.error,
-                    ],
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.cancel,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'Odbij rezervaciju',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Jeste li sigurni da želite odbiti ovu rezervaciju?',
-                      style: TextStyle(fontSize: 15),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: reasonController,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        context,
-                        labelText: 'Razlog odbijanja',
-                        hintText: 'Unesite razlog (opcionalno)...',
-                        prefixIcon: const Icon(Icons.edit_note),
-                      ),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text('Odustani'),
-                        ),
-                        const SizedBox(width: 12),
-                        FilledButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.error,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text('Odbij'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (context) => const BookingRejectDialog(),
     );
 
-    if (confirmed == true && context.mounted) {
+    if (reason != null && context.mounted) {
       try {
         final repository = ref.read(ownerBookingsRepositoryProvider);
         await repository.rejectBooking(
           bookingId,
-          reason: reasonController.text.trim().isEmpty
-              ? null
-              : reasonController.text.trim(),
+          reason: reason.isEmpty ? null : reason,
         );
 
         if (context.mounted) {
@@ -1210,8 +998,6 @@ class _BookingCard extends ConsumerWidget {
             userMessage: 'Greška pri odbijanju rezervacije',
           );
         }
-      } finally {
-        reasonController.dispose();
       }
     }
   }
@@ -1223,105 +1009,7 @@ class _BookingCard extends ConsumerWidget {
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        clipBehavior: Clip.antiAlias,
-        child: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Gradient Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primary, // Purple
-                      AppColors.authSecondary, // Blue
-                    ],
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.task_alt,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'Označi kao završeno',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Jeste li sigurni da želite označiti ovu rezervaciju kao završenu?',
-                      style: TextStyle(fontSize: 15),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text('Otkaži'),
-                        ),
-                        const SizedBox(width: 12),
-                        FilledButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text('Završi'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (context) => const BookingCompleteDialog(),
     );
 
     if (confirmed == true && context.mounted) {
@@ -1354,149 +1042,18 @@ class _BookingCard extends ConsumerWidget {
     WidgetRef ref,
     String bookingId,
   ) async {
-    final reasonController = TextEditingController();
-    final sendEmailNotifier = ValueNotifier<bool>(true);
-
-    final confirmed = await showDialog<bool>(
+    final result = await showDialog<Map<String, dynamic>?>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        clipBehavior: Clip.antiAlias,
-        child: SizedBox(
-          width: 450,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Gradient Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.warning.withAlpha((0.85 * 255).toInt()),
-                      AppColors.warning,
-                    ],
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.cancel_outlined,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'Otkaži rezervaciju',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Jeste li sigurni da želite otkazati ovu rezervaciju?',
-                      style: TextStyle(fontSize: 15),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: reasonController,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        context,
-                        labelText: 'Razlog otkazivanja',
-                        hintText: 'Unesite razlog...',
-                        prefixIcon: const Icon(Icons.edit_note),
-                      ),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 16),
-                    ValueListenableBuilder<bool>(
-                      valueListenable: sendEmailNotifier,
-                      builder: (context, sendEmail, _) {
-                        return CheckboxListTile(
-                          title: const Text('Pošalji email gostu'),
-                          value: sendEmail,
-                          onChanged: (value) {
-                            sendEmailNotifier.value = value ?? true;
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text('Odustani'),
-                        ),
-                        const SizedBox(width: 12),
-                        FilledButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.error,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text('Otkaži rezervaciju'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (context) => const BookingCancelDialog(),
     );
 
-    if (confirmed == true && context.mounted) {
+    if (result != null && context.mounted) {
       try {
         final repository = ref.read(ownerBookingsRepositoryProvider);
         await repository.cancelBooking(
           bookingId,
-          reasonController.text.isEmpty
-              ? 'Otkazano od strane vlasnika'
-              : reasonController.text,
-          sendEmail: sendEmailNotifier.value,
+          result['reason'] as String,
+          sendEmail: result['sendEmail'] as bool,
         );
 
         if (context.mounted) {

@@ -4,6 +4,452 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🏗️ Unit Creation Wizard & Navigation Improvements
+
+**Datum: 2025-11-22**
+**Status: ✅ COMPLETED - Multi-step wizard, global loader, and booking card refactor**
+
+### 📋 Overview
+
+Major UX improvements with multi-step unit creation wizard, global navigation loader system, and booking card component extraction. Fixed critical bugs in calendar refresh and registration flow.
+
+---
+
+### 🧙 Unit Creation Wizard (Multi-Step Form)
+
+**7-Step Wizard for Creating/Editing Units:**
+
+**Files Created:**
+```
+lib/features/owner_dashboard/presentation/screens/unit_wizard/
+├── unit_wizard_screen.dart (main wizard orchestrator)
+├── state/
+│   ├── unit_wizard_state.dart (wizard state model)
+│   ├── unit_wizard_provider.dart (Riverpod state management)
+│   └── unit_wizard_provider.g.dart (generated)
+└── steps/
+    ├── unit_basic_info_step.dart (Step 1: Name, Description, Max Guests)
+    ├── unit_pricing_step.dart (Step 2: Price per night, Cleaning fee, Tax)
+    ├── unit_amenities_step.dart (Step 3: Amenities selection)
+    ├── unit_availability_step.dart (Step 4: Booking settings, Min/Max nights)
+    ├── unit_photos_step.dart (Step 5: Photo upload)
+    ├── unit_widget_step.dart (Step 6: Widget customization)
+    └── unit_advanced_step.dart (Step 7: Review & Publish)
+```
+
+**Key Features:**
+- ✅ **Progress Indicator** - Shows current step (1/7) with visual progress bar
+- ✅ **Form Validation** - Each step validates before allowing next
+- ✅ **State Persistence** - Wizard state saved in provider, survives hot reload
+- ✅ **Navigation** - Back/Next buttons, can jump to any completed step
+- ✅ **Publish Logic** - Final step creates unit + widget settings + initial pricing
+- ✅ **Edit Mode** - Can edit existing units (loads current data)
+- ✅ **Responsive** - Works on mobile, tablet, desktop
+
+**Routes:**
+```dart
+/owner/units/wizard        // New unit
+/owner/units/wizard/:id    // Edit existing unit
+```
+
+**Provider Pattern:**
+```dart
+@riverpod
+class UnitWizardNotifier extends _$UnitWizardNotifier {
+  @override
+  UnitWizardState build({String? unitId}) {
+    // Load existing unit if editing
+    if (unitId != null) {
+      _loadExistingUnit(unitId);
+    }
+    return UnitWizardState.initial();
+  }
+
+  // Navigation
+  void nextStep() { ... }
+  void previousStep() { ... }
+  void goToStep(int step) { ... }
+
+  // Form updates
+  void updateBasicInfo(...) { ... }
+  void updatePricing(...) { ... }
+  void updateAmenities(...) { ... }
+
+  // Publish
+  Future<void> publishUnit() async {
+    // 1. Create unit in Firestore
+    // 2. Create widget settings
+    // 3. Set initial pricing
+    // 4. Navigate to unit hub
+  }
+}
+```
+
+**Commit History:**
+- `8f57efe` - Initial wizard structure (Steps 1-4)
+- `979aa53` - Fixed analyzer warnings
+- `4a12bba` - Implemented Steps 5-7 (Photos, Widget, Advanced)
+- `c0b5ca5` - Complete publish logic with Firestore integration
+- `90d24f3` - Updated Unit Hub to use wizard routes
+
+---
+
+### 🔄 Global Navigation Loader
+
+**File:** `lib/shared/widgets/global_navigation_loader.dart`
+
+**Purpose:** Show loading overlay during route transitions to prevent UI freezes.
+
+**Features:**
+- ✅ **300ms Delay** - Prevents flicker on fast navigations
+- ✅ **Minimalist Design** - Purple spinner in white rounded container
+- ✅ **Semi-transparent Overlay** - Black overlay with 50% opacity
+- ✅ **StateNotifier Pattern** - Manages loading state with mounted check
+
+**Implementation:**
+```dart
+class LoadingStateNotifier extends StateNotifier<bool> {
+  Timer? _delayTimer;
+  bool _shouldShow = false;
+
+  void show() {
+    _shouldShow = true;
+    _delayTimer?.cancel();
+    _delayTimer = Timer(const Duration(milliseconds: 300), () {
+      if (_shouldShow && mounted) {
+        state = true;
+      }
+    });
+  }
+
+  void hide() {
+    _shouldShow = false;
+    _delayTimer?.cancel();
+    if (mounted) {
+      state = false;
+    }
+  }
+}
+
+// Provider
+final loadingStateProvider = StateNotifierProvider<LoadingStateNotifier, bool>((ref) {
+  return LoadingStateNotifier();
+});
+
+// Extension for easy access
+extension LoadingStateExtension on WidgetRef {
+  void showLoading() => read(loadingStateProvider.notifier).show();
+  void hideLoading() => read(loadingStateProvider.notifier).hide();
+}
+```
+
+**Integration in main.dart:**
+```dart
+MaterialApp.router(
+  builder: (context, child) {
+    return GlobalNavigationOverlay(child: child!);
+  },
+)
+```
+
+**Commit:** `7ba4ad0`
+
+---
+
+### 📇 Booking Card Refactor (Component Extraction)
+
+**Problem:** `owner_bookings_screen.dart` was 1300+ lines with nested booking card UI.
+
+**Solution:** Extracted into 11 reusable components.
+
+**Files Created:**
+```
+lib/features/owner_dashboard/presentation/widgets/
+├── booking_card/
+│   ├── booking_card_header.dart (status badge + booking ID)
+│   ├── booking_card_guest_info.dart (avatar + name + email)
+│   ├── booking_card_property_info.dart (property + unit + guests)
+│   ├── booking_card_date_range.dart (check-in/out dates)
+│   ├── booking_card_payment_info.dart (total, deposit, balance)
+│   ├── booking_card_notes.dart (guest notes section)
+│   └── booking_card_actions.dart (approve/reject/cancel/details buttons)
+└── booking_actions/
+    ├── booking_approve_dialog.dart (approve confirmation)
+    ├── booking_reject_dialog.dart (rejection with reason)
+    ├── booking_cancel_dialog.dart (cancellation with reason)
+    └── booking_complete_dialog.dart (mark as completed)
+```
+
+**Benefits:**
+- ✅ Reduced main screen from ~1300 to ~670 lines
+- ✅ Reusable components across app
+- ✅ Easier testing and maintenance
+- ✅ Better code organization
+
+**Commit:** `3fb7075`
+
+---
+
+### 🐛 Critical Bug Fixes
+
+**1. Q4 Bug - Register → Login → Dashboard Redirect**
+
+**Problem:** After registration, user was redirected to Login page before Dashboard.
+
+**Root Cause:** Router redirect logic didn't wait for auth state to stabilize.
+
+**Fix in `router_owner.dart` (lines 186-196):**
+```dart
+if (isLoading) {
+  if (kDebugMode) {
+    LoggingService.log(
+      '  → Waiting for auth operation to complete (isLoading=true)',
+      tag: 'ROUTER',
+    );
+  }
+  return null; // Stay on current route until auth completes
+}
+```
+
+**Commit:** `7ba4ad0`
+
+---
+
+**2. Calendar Refresh Bug - Wrong Month Display**
+
+**Problem:** Refresh button showed wrong month after changing date range.
+
+**Fix in `owner_timeline_calendar_screen.dart`:**
+```dart
+// Before: Used cached _lastFetchedRange
+_onRefreshPressed() {
+  ref.invalidate(timelineBookingsProvider(_lastFetchedRange));
+}
+
+// After: Reset to today's range
+_onRefreshPressed() {
+  final today = DateTime.now();
+  final newRange = DateRange(
+    startDate: DateTime(today.year, today.month, 1),
+    endDate: DateTime(today.year, today.month + 1, 0),
+  );
+  setState(() {
+    _startDate = newRange.startDate;
+    _endDate = newRange.endDate;
+  });
+  ref.invalidate(timelineBookingsProvider(newRange));
+}
+```
+
+**Commit:** `8cdb21e`
+
+---
+
+**3. Navigation Widget Errors - Missing Mounted Checks**
+
+**Problem:** Navigation after async operations caused "widget is not mounted" errors.
+
+**Fix:** Added `mounted` checks before `context.push()`:
+```dart
+// booking_lookup_screen.dart
+if (mounted) {
+  context.push(...);
+}
+
+// booking_view_screen.dart
+if (mounted) {
+  context.push(...);
+}
+```
+
+**Commit:** `8cdb21e`
+
+---
+
+**4. Timeline Date Header UI Simplification**
+
+**Problem:** Complex date header with gradient background and multiple text styles.
+
+**Fix:** Simplified to centered day number only:
+```dart
+// Before: Gradient container + multiple text elements
+Container(
+  decoration: BoxDecoration(gradient: ...),
+  child: Column(
+    children: [
+      Text(monthName),
+      Text(dayNumber, style: large),
+      Text(weekday),
+    ],
+  ),
+)
+
+// After: Simple centered day number
+Container(
+  child: Center(
+    child: Text(
+      day.day.toString(),
+      style: TextStyle(
+        fontSize: isSmall ? 14 : 16,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  ),
+)
+```
+
+**Commit:** `8cdb21e`
+
+---
+
+**5. Register Screen UX Improvements**
+
+**Added email verification notice:**
+```dart
+Container(
+  padding: EdgeInsets.all(12),
+  decoration: BoxDecoration(
+    color: theme.colorScheme.primaryContainer.withAlpha(0.3),
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(color: theme.colorScheme.primary.withAlpha(0.3)),
+  ),
+  child: Row(
+    children: [
+      Icon(Icons.info_outline, color: theme.colorScheme.primary),
+      SizedBox(width: 12),
+      Expanded(
+        child: Text(
+          'Verification email will be sent after registration',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+      ),
+    ],
+  ),
+)
+```
+
+**Improved password field spacing:**
+- Password field: 16px bottom spacing
+- Confirm Password: 20px bottom spacing (more visual separation before submit)
+
+**Commit:** `d5e7aa6`
+
+---
+
+**6. Login Screen Checkbox Optimization**
+
+**Problem:** Checkbox had unnecessary nested Center widgets and large tap target.
+
+**Fix:**
+```dart
+// Before: 48x48 container with double centering
+SizedBox(
+  height: 48,
+  width: 48,
+  child: Center(
+    child: SizedBox(
+      height: 24,
+      width: 24,
+      child: Checkbox(...),
+    ),
+  ),
+)
+
+// After: 24x24 compact checkbox
+SizedBox(
+  height: 24,
+  width: 24,
+  child: Checkbox(
+    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    ...
+  ),
+)
+const SizedBox(width: 12), // Added spacing
+```
+
+**Commit:** `b180ec1`
+
+---
+
+**7. SecurityEvent Timestamp Serialization**
+
+**Problem:** Firestore couldn't properly serialize `SecurityEvent.timestamp` field.
+
+**Fix in `user_model.dart`:**
+```dart
+// Before
+required DateTime timestamp,
+
+// After
+@TimestampConverter() required DateTime timestamp,
+```
+
+**Commit:** `57309e2`
+
+---
+
+### 📊 Router Optimizations
+
+**Router Loader Widgets Updated:**
+
+**File:** `lib/core/config/router_owner.dart`
+
+**Changes:**
+1. **PropertyEditLoader** → `PropertyCardSkeleton`
+2. **UnitEditLoader** → `PropertyCardSkeleton`
+3. **UnitPricingLoader** → `CalendarSkeleton`
+4. **WidgetSettingsLoader** → `PropertyCardSkeleton`
+
+**Screen Loading States Updated:**
+1. **properties_screen.dart** → `PropertyListSkeleton(itemCount: 3)`
+2. **unified_unit_hub_screen.dart** → `PropertyListSkeleton(itemCount: 3)`
+
+**Commit:** `7ba4ad0`
+
+---
+
+### ⚠️ Important Notes for Future Sessions
+
+**1. Unit Wizard State:**
+- State is managed by `UnitWizardNotifier`
+- DO NOT modify wizard flow without understanding state transitions
+- Publish logic creates 3 Firestore docs (unit, widget_settings, initial_pricing)
+
+**2. Global Navigation Loader:**
+- 300ms delay is intentional (prevents flicker)
+- DO NOT remove Timer logic
+- Extension methods (`ref.showLoading()`) are preferred over direct provider access
+
+**3. Booking Card Components:**
+- DO NOT merge components back into main screen
+- Each component is self-contained and reusable
+- Action dialogs handle their own provider invalidation
+
+**4. Router isLoading Check:**
+- CRITICAL for preventing redirect bugs
+- DO NOT remove isLoading null check in router_owner.dart
+- This prevents "Register → Login → Dashboard" flash
+
+---
+
+**Commits:**
+- `7ba4ad0` - Global navigation loader + skeleton optimizations
+- `3fb7075` - Booking card component extraction
+- `8f57efe` - Unit wizard initial structure
+- `979aa53` - Wizard analyzer warnings fix
+- `4a12bba` - Wizard Steps 5-7 implementation
+- `c0b5ca5` - Wizard publish logic
+- `659ac5b` - Wizard routes + cleanup
+- `8cdb21e` - Calendar refresh + navigation bugs
+- `d5e7aa6` - Register screen UX improvements
+- `90d24f3` - Unit Hub wizard integration
+- `b180ec1` - Login checkbox optimization
+- `57309e2` - SecurityEvent timestamp fix
+
+---
+
 ## 🎨 Design System Refactor & Standardization
 
 **Datum: 2025-11-20**

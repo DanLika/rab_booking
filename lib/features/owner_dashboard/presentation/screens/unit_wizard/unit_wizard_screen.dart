@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../../shared/models/unit_model.dart';
+import '../../../../../../shared/providers/repository_providers.dart';
 import 'state/unit_wizard_provider.dart';
 import 'widgets/wizard_progress_bar.dart';
 import 'widgets/wizard_navigation_buttons.dart';
@@ -188,25 +190,94 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
 
   /// Publish unit (final step)
   Future<void> _publishUnit() async {
-    // TODO: Implement publish logic in Phase 3
-    // For now, show success message and navigate back
-
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Unit published successfully!'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    try {
+      // Get current draft
+      final draft = ref.read(unitWizardNotifierProvider(widget.unitId)).value;
+      if (draft == null) {
+        throw Exception('Draft not found');
+      }
 
-    // Clear draft
-    await ref.read(unitWizardNotifierProvider(widget.unitId).notifier).clearDraft();
+      // Validate required fields
+      if (draft.name == null ||
+          draft.propertyId == null ||
+          draft.pricePerNight == null ||
+          draft.maxGuests == null) {
+        throw Exception('Missing required fields');
+      }
 
-    // Navigate back
-    if (mounted) {
-      context.pop();
+      // Generate slug from name if not set
+      final slug = draft.slug ??
+          draft.name!
+              .toLowerCase()
+              .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+              .replaceAll(RegExp(r'^-+|-+$'), '');
+
+      // Create or update UnitModel
+      final unit = UnitModel(
+        id: widget.unitId ?? '',
+        propertyId: draft.propertyId!,
+        name: draft.name!,
+        slug: slug,
+        description: draft.description,
+        pricePerNight: draft.pricePerNight!,
+        maxGuests: draft.maxGuests!,
+        bedrooms: draft.bedrooms ?? 1,
+        bathrooms: draft.bathrooms ?? 1,
+        areaSqm: draft.areaSqm,
+        images: draft.images,
+        minStayNights: draft.minStayNights ?? 1,
+        createdAt: draft.createdAt ?? DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      // Save to Firestore
+      final unitRepository = ref.read(unitRepositoryProvider);
+      final savedUnit = widget.unitId == null
+          ? await unitRepository.createUnit(unit)
+          : await unitRepository.updateUnit(unit);
+
+      // Create default widget settings for new units
+      if (widget.unitId == null && mounted) {
+        await ref
+            .read(widgetSettingsRepositoryProvider)
+            .createDefaultSettings(
+              propertyId: draft.propertyId!,
+              unitId: savedUnit.id,
+            );
+      }
+
+      // Clear draft
+      await ref.read(unitWizardNotifierProvider(widget.unitId).notifier).clearDraft();
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(widget.unitId == null
+                ? 'Unit created successfully!'
+                : 'Unit updated successfully!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+
+      // Navigate back to units list
+      if (mounted) {
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to publish unit: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 

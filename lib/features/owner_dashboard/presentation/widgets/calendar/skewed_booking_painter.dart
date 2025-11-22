@@ -9,7 +9,7 @@ class SkewedBookingPainter extends CustomPainter {
   final bool hasConflict;
 
   /// Skew offset in pixels - how much to angle the sides
-  static const double skewOffset = 6.0;
+  static const double skewOffset = 10.0;
 
   SkewedBookingPainter({
     required this.backgroundColor,
@@ -63,7 +63,7 @@ class SkewedBookingPainter extends CustomPainter {
 /// Custom clipper for skewed booking blocks
 /// Ensures content is clipped to the parallelogram shape
 class SkewedBookingClipper extends CustomClipper<Path> {
-  static const double skewOffset = 6.0;
+  static const double skewOffset = 10.0;
 
   @override
   Path getClip(Size size) {

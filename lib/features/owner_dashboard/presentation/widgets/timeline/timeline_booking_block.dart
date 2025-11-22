@@ -4,7 +4,6 @@ import '../../../../../core/utils/platform_utils.dart';
 import '../../../utils/calendar_grid_calculator.dart';
 import '../../../utils/booking_overlap_detector.dart';
 import '../calendar/skewed_booking_painter.dart';
-import '../calendar/check_in_out_diagonal_indicator.dart';
 import '../calendar/smart_booking_tooltip.dart';
 
 /// Timeline booking block widget
@@ -77,9 +76,9 @@ class TimelineBookingBlock extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
-          width: width - 4,
+          width: width - 6,
           height: blockHeight,
-          margin: const EdgeInsets.symmetric(horizontal: 2),
+          margin: const EdgeInsets.symmetric(horizontal: 3),
           child: Stack(
             children: [
               // Background layer with skewed parallelogram
@@ -89,73 +88,44 @@ class TimelineBookingBlock extends StatelessWidget {
                   borderColor: booking.status.color,
                   hasConflict: hasConflict,
                 ),
-                size: Size(width - 4, blockHeight),
+                size: Size(width - 6, blockHeight),
               ),
 
               // Content layer - clipped to skewed shape
               ClipPath(
                 clipper: SkewedBookingClipper(),
-                child: Stack(
-                  children: [
-                    // Check-in diagonal indicator (left edge)
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: CheckInDiagonalIndicator(
-                        height: blockHeight,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-
-                    // Check-out diagonal indicator (right edge)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: CheckOutDiagonalIndicator(
-                        height: blockHeight,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-
-                    // Main content with fixed width constraint
-                    Positioned.fill(
-                      child: Padding(
-                        padding: bookingPadding,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                booking.guestName ?? 'Gost',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: guestNameFontSize,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(height: 1),
-                            Flexible(
-                              child: Text(
-                                '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''} • $nights noć${nights > 1 ? 'i' : ''}',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  fontSize: metadataFontSize,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                child: Padding(
+                  padding: bookingPadding,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          booking.guestName ?? 'Gost',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: guestNameFontSize,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 1),
+                      Flexible(
+                        child: Text(
+                          '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''} • $nights noć${nights > 1 ? 'i' : ''}',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: metadataFontSize,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

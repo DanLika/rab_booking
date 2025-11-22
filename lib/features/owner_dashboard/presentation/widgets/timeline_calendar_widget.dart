@@ -20,6 +20,7 @@ import 'timeline/timeline_booking_block.dart';
 import 'timeline/timeline_date_header.dart';
 import 'timeline/timeline_unit_name_cell.dart';
 import 'timeline/timeline_summary_cell.dart';
+import 'timeline/timeline_booking_stacker.dart';
 
 /// BedBooking-style Timeline Calendar
 /// Gantt/Timeline layout: Units vertical, Dates horizontal
@@ -554,8 +555,8 @@ class _TimelineCalendarWidgetState
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Fixed unit names column
-                _buildUnitNamesColumn(units),
+                // Fixed unit names column (with dynamic heights)
+                _buildUnitNamesColumn(units, bookingsByUnit),
 
                 // Scrollable timeline grid with zoom support
                 Expanded(
@@ -703,26 +704,32 @@ class _TimelineCalendarWidgetState
     return headers;
   }
 
-  Widget _buildUnitNamesColumn(List<UnitModel> units) {
+  Widget _buildUnitNamesColumn(
+    List<UnitModel> units,
+    Map<String, List<BookingModel>> bookingsByUnit,
+  ) {
     final unitColumnWidth = _getUnitColumnWidth(context);
-    final unitRowHeight = _getUnitRowHeight(context);
+    final baseRowHeight = _getUnitRowHeight(context);
     final theme = Theme.of(context);
 
     return Container(
       width: unitColumnWidth,
       color: theme.cardColor.withAlpha((0.95 * 255).toInt()),
       child: Column(
-        children: units
-            .map(
-              (unit) => TimelineUnitNameCell(
-                unit: unit,
-                unitRowHeight: unitRowHeight,
-                onTap: widget.onUnitNameTap != null
-                    ? () => widget.onUnitNameTap!(unit)
-                    : null,
-              ),
-            )
-            .toList(),
+        children: units.map((unit) {
+          // Calculate dynamic height for this unit based on booking stacks
+          final bookings = bookingsByUnit[unit.id] ?? [];
+          final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(bookings);
+          final dynamicHeight = baseRowHeight * maxStackCount;
+
+          return TimelineUnitNameCell(
+            unit: unit,
+            unitRowHeight: dynamicHeight,
+            onTap: widget.onUnitNameTap != null
+                ? () => widget.onUnitNameTap!(unit)
+                : null,
+          );
+        }).toList(),
       ),
     );
   }
@@ -754,8 +761,15 @@ class _TimelineCalendarWidgetState
     double offsetWidth,
     Map<String, List<BookingModel>> allBookingsByUnit,
   ) {
-    final unitRowHeight = _getUnitRowHeight(context);
+    final baseRowHeight = _getUnitRowHeight(context);
     final theme = Theme.of(context);
+
+    // Calculate stack levels for overlapping bookings
+    final stackLevels = TimelineBookingStacker.assignStackLevels(bookings);
+    final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(bookings);
+
+    // Dynamic height: base height × number of stacks
+    final unitRowHeight = baseRowHeight * maxStackCount;
 
     return Container(
       height: unitRowHeight,
@@ -786,6 +800,8 @@ class _TimelineCalendarWidgetState
             dates,
             offsetWidth,
             allBookingsByUnit,
+            stackLevels,
+            baseRowHeight,
           ),
         ],
       ),
@@ -908,6 +924,8 @@ class _TimelineCalendarWidgetState
     List<DateTime> dates,
     double offsetWidth,
     Map<String, List<BookingModel>> allBookingsByUnit,
+    Map<String, int> stackLevels,
+    double baseRowHeight,
   ) {
     final dayWidth = _getDayWidth(context);
     final List<Widget> blocks = [];
@@ -941,15 +959,24 @@ class _TimelineCalendarWidgetState
       final left = offsetWidth + (startIndex * dayWidth);
 
       // Calculate width (number of nights * day width)
-      // FIXED: Add 1 day to include check-out day in visualization
-      // If check-in is Nov 10 and check-out is Nov 12 (2 nights), we need to show 3 cells (10, 11, 12)
-      final width = (nights + 1) * dayWidth;
+      // IMPORTANT: Do NOT include check-out day in visualization
+      // Check-out happens at 3pm, so that day is available for next booking
+      // If check-in is Nov 10 and check-out is Nov 12 (2 nights), we show only 2 cells (10, 11)
+      final width = nights * dayWidth;
+
+      // Get stack level for vertical positioning
+      final stackLevel = stackLevels[booking.id] ?? 0;
+      final topPosition = 8 + (stackLevel * baseRowHeight); // Stack vertically
+
+      print(
+        '[TIMELINE RENDER] Booking ${booking.id} at stack level $stackLevel, top=$topPosition',
+      );
 
       // Create reservation block
       blocks.add(
         Positioned(
           left: left,
-          top: 8,
+          top: topPosition,
           child: TimelineBookingBlock(
             booking: booking,
             width: width,

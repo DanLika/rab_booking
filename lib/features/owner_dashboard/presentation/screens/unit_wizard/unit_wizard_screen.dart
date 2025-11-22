@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'state/unit_wizard_provider.dart';
 import 'widgets/wizard_progress_bar.dart';
 import 'widgets/wizard_navigation_buttons.dart';
-import 'widgets/wizard_step_container.dart';
 import 'steps/step_1_basic_info.dart';
 import 'steps/step_2_capacity.dart';
 import 'steps/step_3_pricing.dart';
 import 'steps/step_4_availability.dart';
+import 'steps/step_5_photos.dart';
+import 'steps/step_6_widget.dart';
+import 'steps/step_7_advanced.dart';
 import 'steps/step_8_review.dart';
 
 /// Unit Wizard Screen - Multi-step wizard for creating/editing units
@@ -276,9 +278,9 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
                   Step2Capacity(unitId: widget.unitId),
                   Step3Pricing(unitId: widget.unitId),
                   Step4Availability(unitId: widget.unitId),
-                  _buildStepPlaceholder(5, 'Photos'),
-                  _buildStepPlaceholder(6, 'Widget Setup'),
-                  _buildStepPlaceholder(7, 'Advanced Options'),
+                  Step5Photos(unitId: widget.unitId),
+                  Step6Widget(unitId: widget.unitId),
+                  Step7Advanced(unitId: widget.unitId),
                   Step8Review(unitId: widget.unitId),
                 ],
               ),
@@ -322,40 +324,6 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  /// Temporary placeholder for steps (Phase 2 will replace these)
-  Widget _buildStepPlaceholder(int stepNumber, String title) {
-    return WizardStepContainer(
-      title: 'Step $stepNumber: $title',
-      subtitle: 'This step will be implemented in Phase 2',
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.construction,
-              size: 64,
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Coming Soon',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Step content will be added in the next phase',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-          ],
         ),
       ),
     );

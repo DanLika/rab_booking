@@ -1,0 +1,343 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../../core/constants/app_dimensions.dart';
+import '../state/unit_wizard_provider.dart';
+import '../widgets/wizard_step_container.dart';
+
+/// Step 6: Widget Setup - Configure booking widget appearance and behavior
+class Step6Widget extends ConsumerWidget {
+  final String? unitId;
+
+  const Step6Widget({super.key, this.unitId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final wizardState = ref.watch(unitWizardNotifierProvider(unitId));
+    final theme = Theme.of(context);
+
+    return wizardState.when(
+      data: (draft) {
+        final widgetMode = draft.widgetMode ?? 'bookingInstant';
+        final widgetTheme = draft.widgetTheme ?? 'minimalist';
+
+        return WizardStepContainer(
+          title: 'Widget Podešavanja',
+          subtitle: 'Konfigurišite izgled i ponašanje booking widgeta',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Widget Mode Section
+              Text(
+                'Widget Mod',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Odaberite kako će gosti koristiti widget',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spaceM),
+
+              // Widget Mode Options
+              _buildModeOption(
+                context,
+                ref,
+                value: 'calendarOnly',
+                currentMode: widgetMode,
+                title: 'Calendar Only',
+                description: 'Samo prikaz kalendara bez mogućnosti rezervacije',
+                icon: Icons.calendar_month,
+              ),
+              const SizedBox(height: 12),
+              _buildModeOption(
+                context,
+                ref,
+                value: 'bookingInstant',
+                currentMode: widgetMode,
+                title: 'Instant Booking',
+                description: 'Gosti mogu odmah kreirati rezervaciju sa plaćanjem',
+                icon: Icons.payment,
+              ),
+              const SizedBox(height: 12),
+              _buildModeOption(
+                context,
+                ref,
+                value: 'bookingPending',
+                currentMode: widgetMode,
+                title: 'Request Booking',
+                description: 'Gosti šalju zahtjev koji vi potvrđujete',
+                icon: Icons.schedule,
+              ),
+
+              const SizedBox(height: AppDimensions.spaceL),
+
+              // Widget Theme Section
+              Text(
+                'Widget Tema',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Odaberite vizuelni stil widgeta',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spaceM),
+
+              // Widget Theme Options
+              _buildThemeOption(
+                context,
+                ref,
+                value: 'minimalist',
+                currentTheme: widgetTheme,
+                title: 'Minimalist',
+                description: 'Čist i jednostavan dizajn',
+                color: const Color(0xFF6B7280),
+              ),
+              const SizedBox(height: 12),
+              _buildThemeOption(
+                context,
+                ref,
+                value: 'modern',
+                currentTheme: widgetTheme,
+                title: 'Modern',
+                description: 'Savremeni dizajn sa gradijentima',
+                color: const Color(0xFF3B82F6),
+              ),
+              const SizedBox(height: 12),
+              _buildThemeOption(
+                context,
+                ref,
+                value: 'luxury',
+                currentTheme: widgetTheme,
+                title: 'Luxury',
+                description: 'Premium dizajn sa zlatnim akcentima',
+                color: const Color(0xFFD97706),
+              ),
+
+              const SizedBox(height: AppDimensions.spaceL),
+
+              // Info card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: theme.colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Ova podešavanja mogu se kasnije promijeniti u Advanced Settings.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text('Error: $error'),
+      ),
+    );
+  }
+
+  /// Build widget mode option card
+  Widget _buildModeOption(
+    BuildContext context,
+    WidgetRef ref, {
+    required String value,
+    required String currentMode,
+    required String title,
+    required String description,
+    required IconData icon,
+  }) {
+    final theme = Theme.of(context);
+    final isSelected = value == currentMode;
+
+    return InkWell(
+      onTap: () {
+        ref
+            .read(unitWizardNotifierProvider(unitId).notifier)
+            .updateField('widgetMode', value);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
+              : theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline.withValues(alpha: 0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: theme.colorScheme.primary,
+                size: 24,
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // Text
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Checkmark
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: theme.colorScheme.primary,
+                size: 24,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build widget theme option card
+  Widget _buildThemeOption(
+    BuildContext context,
+    WidgetRef ref, {
+    required String value,
+    required String currentTheme,
+    required String title,
+    required String description,
+    required Color color,
+  }) {
+    final theme = Theme.of(context);
+    final isSelected = value == currentTheme;
+
+    return InkWell(
+      onTap: () {
+        ref
+            .read(unitWizardNotifierProvider(unitId).notifier)
+            .updateField('widgetTheme', value);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withValues(alpha: 0.1)
+              : theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? color : theme.colorScheme.outline.withValues(alpha: 0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Color indicator
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color, color.withValues(alpha: 0.6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // Text
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? color : theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Checkmark
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: color,
+                size: 24,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

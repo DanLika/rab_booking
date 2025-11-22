@@ -54,9 +54,8 @@ class TimelineSummaryCell extends StatelessWidget {
     }
 
     final now = DateTime.now();
-    final isToday = date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day;
+    final isToday =
+        date.year == now.year && date.month == now.month && date.day == now.day;
     final isWeekend =
         date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
 
@@ -66,14 +65,10 @@ class TimelineSummaryCell extends StatelessWidget {
         color: isToday
             ? AppColors.primary.withValues(alpha: 0.1)
             : isWeekend
-                ? theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
-                  )
-                : theme.cardColor,
+            ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+            : theme.cardColor,
         border: Border(
-          left: BorderSide(
-            color: theme.dividerColor.withValues(alpha: 0.3),
-          ),
+          left: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
         ),
       ),
       padding: const EdgeInsets.symmetric(
@@ -137,7 +132,7 @@ class TimelineSummaryCell extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.swap_vert, size: 14, color: Colors.purple),
+          const Icon(Icons.swap_vert, size: 14, color: Colors.purple),
           const SizedBox(width: 4),
           Text(
             '$checkIns/$checkOuts',

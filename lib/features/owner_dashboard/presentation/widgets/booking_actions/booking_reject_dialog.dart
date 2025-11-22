@@ -99,7 +99,7 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: () => Navigator.of(context).pop(null),
+                        onPressed: () => Navigator.of(context).pop(),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 20,
@@ -115,9 +115,9 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
                       FilledButton(
                         onPressed: () {
                           // Return reason text (empty string if not provided)
-                          Navigator.of(context).pop(
-                            _reasonController.text.trim(),
-                          );
+                          Navigator.of(
+                            context,
+                          ).pop(_reasonController.text.trim());
                         },
                         style: FilledButton.styleFrom(
                           backgroundColor: theme.colorScheme.error,

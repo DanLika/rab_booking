@@ -39,8 +39,9 @@ class LoadingStateNotifier extends StateNotifier<bool> {
 }
 
 /// Global loading state provider
-final loadingStateProvider =
-    StateNotifierProvider<LoadingStateNotifier, bool>((ref) {
+final loadingStateProvider = StateNotifierProvider<LoadingStateNotifier, bool>((
+  ref,
+) {
   return LoadingStateNotifier();
 });
 
@@ -76,10 +77,7 @@ class GlobalNavigationOverlay extends ConsumerWidget {
         child,
 
         // Loading overlay (shown only when isLoading = true)
-        if (isLoading)
-          Positioned.fill(
-            child: _LoadingOverlay(),
-          ),
+        if (isLoading) Positioned.fill(child: _LoadingOverlay()),
       ],
     );
   }
@@ -106,7 +104,7 @@ class _LoadingOverlay extends StatelessWidget {
               ),
             ],
           ),
-          child: Center(
+          child: const Center(
             child: SizedBox(
               width: 40,
               height: 40,

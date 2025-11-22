@@ -61,8 +61,7 @@ class PropertiesScreen extends ConsumerWidget {
                       mainAxisExtent = 540;
                     } else if (constraints.maxWidth >= 600) {
                       crossAxisCount = 2; // Tablet portrait: 2 columns
-                      mainAxisExtent =
-                          540; // Increased to fit card content
+                      mainAxisExtent = 540; // Increased to fit card content
                     } else if (constraints.maxWidth >= 400) {
                       crossAxisCount = 1; // Mobile landscape: 1 column
                       mainAxisExtent = 540;
@@ -161,7 +160,7 @@ class PropertiesScreen extends ConsumerWidget {
             loading: () => const SafeArea(
               child: Padding(
                 padding: EdgeInsets.all(AppDimensions.spaceM),
-                child: PropertyListSkeleton(itemCount: 3),
+                child: PropertyListSkeleton(),
               ),
             ),
             error: (error, stack) => SafeArea(
@@ -302,7 +301,9 @@ class PropertiesScreen extends ConsumerWidget {
 
     // Check context BEFORE proceeding
     if (!context.mounted) {
-      print('❌ [DELETE] ERROR: Context not mounted after dialog! Cannot proceed.');
+      print(
+        '❌ [DELETE] ERROR: Context not mounted after dialog! Cannot proceed.',
+      );
       return;
     }
 

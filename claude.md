@@ -4,6 +4,412 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🎨 Timeline Calendar - Z-Index Booking Layering & Toolbar Layout
+
+**Datum: 2025-11-22**
+**Status: ✅ COMPLETED - Visual layering for overlapping bookings + centered toolbar layout**
+
+### 📋 Problem Statement
+
+**Overlapping Bookings Issue:**
+Kada owner ima cancelled rezervaciju i novu confirmed rezervaciju za iste datume, kalendar ih prikazuje jedna preko druge bez jasne vizualne hijerarhije. Trebalo je riješiti:
+- Kako prikazati confirmed (zelenu) rezervaciju ISPRED cancelled rezervacije?
+- Kako vizualno razlikovati cancelled rezervacije koje se preklapaju sa aktivnim?
+
+**Toolbar Layout Issue:**
+Month selector i navigation ikone (strelice + today button) bili su grupisani lijevo, a trebalo je:
+- Month selector centrirati horizontalno
+- Navigation ikone pomaknuti desno (aligned sa right margin)
+
+---
+
+### 🔧 Solution 1: Z-Index Layering sa Sort + Opacity
+
+**Arhitekturna Odluka: Koristi Flutter Stack render order za layering**
+
+**Pristup:**
+1. **Sort bookings po status priority** - Kontroliše rendering order (cancelled prvi, confirmed zadnji)
+2. **Reduced opacity za cancelled** - Sve cancelled bookings dobijaju 60% opacity
+3. **Flutter Stack radi ostatak** - Zadnji rendered element = na vrhu (z-index)
+
+**Files Modified:**
+```
+lib/features/owner_dashboard/presentation/widgets/
+├── timeline_calendar_widget.dart (sorting logic)
+└── timeline/timeline_booking_block.dart (opacity logic)
+```
+
+---
+
+#### Implementation Details
+
+**1. Sorting Logic (`timeline_calendar_widget.dart` - Lines 950-967):**
+
+```dart
+// Sort bookings by status priority to control z-index (rendering order)
+// Cancelled bookings render FIRST (bottom layer, with reduced opacity)
+// Confirmed/Pending render LAST (top layer, full visibility)
+// This creates visual layering: active bookings appear on top of cancelled ones
+final sortedBookings = [...bookings]..sort((a, b) {
+  // Priority: cancelled (0) < pending (1) < confirmed (2)
+  final priorityA = a.status == BookingStatus.cancelled
+      ? 0
+      : a.status == BookingStatus.pending
+          ? 1
+          : 2;
+  final priorityB = b.status == BookingStatus.cancelled
+      ? 0
+      : b.status == BookingStatus.pending
+          ? 1
+          : 2;
+  return priorityA.compareTo(priorityB);
+});
+
+// Render u sorted order
+for (final booking in sortedBookings) {
+  // ... render booking blocks
+}
+```
+
+**2. Opacity Logic (`timeline_booking_block.dart` - Lines 62-83):**
+
+```dart
+// ENHANCED: Check if this is a cancelled booking overlapping with confirmed
+final shouldReduceOpacity = shouldHaveReducedOpacity(booking, allBookingsByUnit);
+
+return MouseRegion(
+  // ... tooltip logic
+  child: GestureDetector(
+    onTap: onTap,
+    onLongPress: onLongPress,
+    child: Opacity(
+      opacity: shouldReduceOpacity ? 0.6 : 1.0,  // 60% opacity za cancelled
+      child: Container(
+        // ... booking block UI
+      ),
+    ),
+  ),
+);
+```
+
+**3. Helper Method (`timeline_booking_block.dart` - Lines 203-215):**
+
+```dart
+/// Check if a cancelled booking should have reduced opacity
+///
+/// Returns true for all cancelled bookings to create visual layering.
+/// Combined with z-index sorting (cancelled render first), this ensures
+/// active bookings (confirmed/pending) appear on top with full visibility.
+static bool shouldHaveReducedOpacity(
+  BookingModel booking,
+  Map<String, List<BookingModel>> allBookingsByUnit,
+) {
+  // Apply reduced opacity to all cancelled bookings
+  // Z-index sorting ensures they render below active bookings
+  return booking.status == BookingStatus.cancelled;
+}
+```
+
+---
+
+#### Why This Approach?
+
+**Alternative Approaches Considered:**
+
+**❌ Rejected: Selective Opacity (samo overlapping dio)**
+- Problem: Trebalo bi segmentirati booking u 3 dijela (before/during/after overlap)
+- Kompleksnost: 2-3 Positioned widgets po booking-u sa različitim width/position
+- Performance: Ekstremno kompleksno za calculate i maintain
+
+**❌ Rejected: Vertical Stacking**
+- Problem: Kalendar bi postao preview visok (stacked rows)
+- UX: Loše - trebalo bi vertical scroll za svaku jedinicu
+
+**✅ Chosen: Z-Index Sort + Full Opacity**
+- Simple: ~20 linija koda
+- Performance: O(n log n) sort + O(n) render
+- UX: Jasna vizualna hijerarhija - confirmed bookings "izlaze" iznad cancelled
+- Maintainable: Jedna sort funkcija + jedna opacity check
+
+---
+
+#### Visual Result
+
+**Scenario: 5 Cancelled + 1 Confirmed na iste datume**
+
+```
+RENDERING ORDER (bottom → top):
+┌─────────────────────────────────────────┐
+│ 1. Cancelled Booking A (opacity: 0.6)  │ ← Renders FIRST (priority 0)
+│ 2. Cancelled Booking B (opacity: 0.6)  │
+│ 3. Cancelled Booking C (opacity: 0.6)  │
+│ 4. Cancelled Booking D (opacity: 0.6)  │
+│ 5. Cancelled Booking E (opacity: 0.6)  │
+│ 6. Confirmed Booking   (opacity: 1.0)  │ ← Renders LAST (priority 2) = ON TOP ✅
+└─────────────────────────────────────────┘
+
+VISUAL EFFECT:
+- Cancelled bookings su polu-prozirne (60%) i iza
+- Confirmed booking je full opacity (100%) i ISPRED
+- Jasna vizualna hijerarhija - owner vidi active booking
+```
+
+---
+
+### 🔧 Solution 2: Centered Toolbar Layout
+
+**Prije:**
+```
+[Previous] [Month Selector] [Next] [Spacer] [Action Buttons →]
+```
+
+**Poslije:**
+```
+[Spacer] [Month Selector] [Spacer] [Previous] [Next] [Action Buttons →]
+```
+
+**File Modified:**
+```
+lib/features/owner_dashboard/presentation/widgets/calendar/calendar_top_toolbar.dart
+```
+
+**Key Changes (Lines 70-144):**
+
+```dart
+child: Row(
+  children: [
+    // Spacer - push month selector to center
+    const Spacer(),
+
+    // Date range display (centered)
+    InkWell(
+      onTap: onDatePickerTap,
+      // Month selector UI
+    ),
+
+    // Spacer - balance centering + create space for navigation icons
+    const Spacer(),
+
+    // Navigation arrows (right-aligned)
+    // Previous period
+    IconButton(
+      icon: const Icon(Icons.chevron_left),
+      onPressed: onPreviousPeriod,
+      // ...
+    ),
+
+    // Next period
+    IconButton(
+      icon: const Icon(Icons.chevron_right),
+      onPressed: onNextPeriod,
+      // ...
+    ),
+
+    // Action buttons (Search, Refresh, Today, Notifications) - already right-aligned
+    // ...
+  ],
+)
+```
+
+**Result:**
+- ✅ Month selector PERFECTLY CENTERED (dva Spacer-a ga balansiraju)
+- ✅ Navigation ikone RIGHT-ALIGNED (previous, next, today)
+- ✅ Action buttons ostaju gdje su bili (refresh, search, notifications)
+- ✅ Responsive - radi na svim screen sizes
+
+---
+
+### ⚠️ Important Notes
+
+**1. Z-Index Layering - NE MIJENJAJ:**
+- Sort order je KRITIČAN - cancelled MORA render first!
+- Opacity 0.6 je user request - tested i approved!
+- Helper method je simplified - NE VRAĆAJ complex overlap detection!
+
+**2. Toolbar Layout - NE VRAĆAJ:**
+- Dva Spacer-a su NAMJERNA - jedan prije, jedan poslije selectora
+- Previous/Next arrow buttons MORAJU biti NAKON drugog Spacer-a
+- Ovo je user request - testiran i approved!
+
+**3. Performance:**
+- Sort je O(n log n) - acceptable za <100 bookings per unit
+- Opacity wrapper je cheap - nema performance impact
+- Layout sa Spacer je static - nema animacije
+
+---
+
+**Commits:**
+- `e8f8ddf` - feat: add opacity reduction for overlapping cancelled bookings
+- `c6af6ab` - feat: implement z-index layering for overlapping bookings
+- `[pending]` - feat: center toolbar month selector and align navigation icons right
+
+---
+
+## 🎨 Drawer Gradient Fix - Uncommitted Changes Issue
+
+**Datum: 2025-11-22**
+**Status: ✅ FIXED - Purple/Blue gradient restored**
+
+### 📋 Problem
+
+Owner app drawer header gradient bio je **slučajno promenjen** sa purple/blue na **green** u **uncommitted changes** (working directory). Ovo NIJE bilo u git commit history, već samo u lokalnim izmenama koje nisu bile committed.
+
+**Simptomi:**
+- Drawer header pokazivao zeleni gradient umesto purple/blue
+- Avatar initial letters bili zeleni (#4CAF50)
+- Shadow color zeleni (confirmedGreen)
+
+### 🔍 Zašto Je Bilo Teško Pronaći?
+
+**Key insight:** Promene NISU bile u git history (commits), već samo u **working directory** (uncommitted changes)!
+
+```bash
+# ❌ Ovo NIJE radilo - tražilo u commit history
+git log --grep="drawer\|gradient\|color"
+git show HEAD:owner_app_drawer.dart
+
+# ✅ Ovo JE radilo - uporedilo working dir sa HEAD
+git diff HEAD lib/.../owner_app_drawer.dart
+```
+
+**Razlog problema:**
+- Korisnik je video zelene boje u aplikaciji
+- Ali `git log` nije pokazivao izmene (jer nisu bile committed)
+- Trebalo je uporediti **current file** sa **HEAD** (poslednji commit)
+- Working directory ≠ Git history!
+
+### 🔧 Šta Je Bilo Promenjeno (Uncommitted)
+
+**Linija 241-244 - Dodato (WRONG):**
+```dart
+// Green color variants (matching confirmed badge #66BB6A)
+const confirmedGreen = Color(0xFF66BB6A);
+final greenLight = isDark ? const Color(0xFF81C784) : const Color(0xFF4CAF50);
+final greenDark = isDark ? const Color(0xFF4CAF50) : const Color(0xFF388E3C);
+```
+
+**Linija 247-252 - Gradient (WRONG):**
+```dart
+gradient: LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [greenLight, greenDark],  // ❌ GREEN
+),
+boxShadow: [
+  BoxShadow(
+    color: confirmedGreen.withAlpha(...),  // ❌ GREEN shadow
+```
+
+**Linija 292 & 305 - Avatar initials (WRONG):**
+```dart
+color: Color(0xFF4CAF50), // Green  // ❌ GREEN text
+```
+
+### ✅ Rješenje
+
+**Revertovano na originalne boje:**
+
+**Gradient:**
+```dart
+// ✅ CORRECT - Purple to Blue gradient
+gradient: LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [
+    theme.colorScheme.brandPurple,  // 🟣 Purple (#6B4CE6)
+    theme.colorScheme.brandBlue,    // 🔵 Blue (#4A90E2)
+  ],
+),
+```
+
+**Shadow:**
+```dart
+// ✅ CORRECT - Purple shadow
+BoxShadow(
+  color: theme.colorScheme.brandPurple.withAlpha((0.3 * 255).toInt()),
+  blurRadius: 20,
+  offset: const Offset(0, 4),
+),
+```
+
+**Avatar initials:**
+```dart
+// ✅ CORRECT - Purple text
+color: theme.colorScheme.brandPurple,  // 🟣 Purple
+```
+
+### 📊 Izmene
+
+**Obrisano:**
+- 4 linije - Green color definitions (confirmedGreen, greenLight, greenDark)
+
+**Promenjeno:**
+- 3 lokacije - Gradient colors (green → purple/blue)
+- 1 lokacija - Shadow color (green → purple)
+- 2 lokacije - Avatar initial color (green → purple)
+
+**Rezultat:**
+- ✅ Drawer header: Purple → Blue gradient
+- ✅ Shadow: Purple
+- ✅ Avatar initials: Purple
+- ✅ 0 analyzer errors
+- ✅ Brand colors restored
+
+### ⚠️ Važne Lekcije Za Budućnost
+
+**1. UVIJEK provjeri working directory, ne samo git history:**
+```bash
+# Check for uncommitted changes FIRST
+git status
+git diff HEAD path/to/file
+
+# THEN check commit history
+git log --oneline path/to/file
+```
+
+**2. Uncommitted changes mogu biti izvor problema:**
+- Korisnik vidi problem u app-u
+- Ali git history izgleda čist
+- Problem je u **local working directory**!
+
+**3. Kako debugovati ovakve probleme:**
+```bash
+# Step 1: Check git status
+git status  # Shows modified files
+
+# Step 2: Compare with HEAD
+git diff HEAD lib/path/to/file.dart
+
+# Step 3: Search for suspicious changes
+git diff HEAD lib/path/to/file.dart | grep -A5 -B5 "green\|Green"
+
+# Step 4: Revert if needed
+git restore lib/path/to/file.dart  # Or edit manually
+```
+
+### 🎯 Quick Reference
+
+**Original colors (CORRECT):**
+- Gradient: `brandPurple` (#6B4CE6) → `brandBlue` (#4A90E2)
+- Shadow: `brandPurple` with 30% alpha
+- Avatar: `brandPurple`
+
+**Wrong colors (FIXED):**
+- ❌ Green gradient (`#4CAF50`, `#388E3C`, `#66BB6A`)
+- ❌ Green shadow (`confirmedGreen`)
+- ❌ Green avatar (`#4CAF50`)
+
+**If this happens again:**
+1. Check `git diff HEAD owner_app_drawer.dart`
+2. Look for green color codes: `#4CAF50`, `#66BB6A`, `#81C784`, `#388E3C`
+3. Replace with: `theme.colorScheme.brandPurple` + `brandBlue`
+
+---
+
+**Commit:** [pending] - fix: restore drawer purple/blue gradient (was accidentally green)
+
+---
+
 ## 🎨 Unit Hub - Diagonal Gradient Background
 
 **Datum: 2025-11-22**

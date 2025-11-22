@@ -59,18 +59,62 @@ class CalendarTopToolbar extends StatelessWidget {
       height: responsiveHeight,
       decoration: BoxDecoration(
         color: theme.cardColor,
-        border: Border(
-          bottom: BorderSide(color: theme.dividerColor),
-        ),
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
-      padding: EdgeInsets.only(
-        left: isCompact ? 4 : 16,
-        right: 0, // No right padding - icons flush to edge
-      ),
+      padding: EdgeInsets.only(left: isCompact ? 4 : 16),
       child: Row(
         children: [
-          // Date range with navigation arrows - OVERFLOW FIX: Shrink arrows in compact
-          // Previous period (smaller in compact mode)
+          // Spacer - push month selector to center
+          const Spacer(),
+
+          // Date range display (centered)
+          InkWell(
+            onTap: onDatePickerTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              constraints: isCompact
+                  ? const BoxConstraints(maxWidth: 120)
+                  : null,
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 6 : 12,
+                vertical: isCompact ? 6 : 8,
+              ),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    dateRange.toDisplayString(isWeek: isWeekView),
+                    style:
+                        (isCompact
+                                ? theme.textTheme.labelSmall
+                                : theme.textTheme.titleSmall)
+                            ?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                            ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(width: isCompact ? 2 : 4),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    size: isCompact ? 14 : 20,
+                    color: theme.colorScheme.primary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Spacer - balance centering + create space for navigation icons
+          const Spacer(),
+
+          // Navigation arrows (right-aligned)
+          // Previous period
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: onPreviousPeriod,
@@ -83,52 +127,7 @@ class CalendarTopToolbar extends StatelessWidget {
             padding: EdgeInsets.zero,
           ),
 
-          // Date range display (flexible, can shrink)
-          Flexible(
-            child: InkWell(
-              onTap: onDatePickerTap,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                constraints: isCompact
-                    ? const BoxConstraints(maxWidth: 120)
-                    : null,
-                padding: EdgeInsets.symmetric(
-                  horizontal: isCompact ? 6 : 12,
-                  vertical: isCompact ? 6 : 8,
-                ),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        dateRange.toDisplayString(isWeek: isWeekView),
-                        style: (isCompact
-                            ? theme.textTheme.labelSmall
-                            : theme.textTheme.titleSmall)?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.primary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    SizedBox(width: isCompact ? 2 : 4),
-                    Icon(
-                      Icons.arrow_drop_down,
-                      size: isCompact ? 14 : 20,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Next period (smaller in compact mode)
+          // Next period
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: onNextPeriod,
@@ -141,15 +140,14 @@ class CalendarTopToolbar extends StatelessWidget {
             padding: EdgeInsets.zero,
           ),
 
-          // Spacer - push action buttons to the right
-          const Spacer(),
-
           // Action buttons - FIXED OVERFLOW
           if (isCompact)
             // COMPACT MODE: Only overflow menu
             PopupMenuButton<String>(
               icon: Badge(
-                label: (notificationCount ?? 0) > 0 ? Text('$notificationCount') : null,
+                label: (notificationCount ?? 0) > 0
+                    ? Text('$notificationCount')
+                    : null,
                 isLabelVisible: (notificationCount ?? 0) > 0,
                 child: const Icon(Icons.more_vert),
               ),
@@ -195,7 +193,9 @@ class CalendarTopToolbar extends StatelessWidget {
                     child: Row(
                       children: [
                         Badge(
-                          label: (notificationCount ?? 0) > 0 ? Text('$notificationCount') : null,
+                          label: (notificationCount ?? 0) > 0
+                              ? Text('$notificationCount')
+                              : null,
                           isLabelVisible: (notificationCount ?? 0) > 0,
                           child: const Icon(Icons.notifications, size: 20),
                         ),
@@ -243,12 +243,20 @@ class CalendarTopToolbar extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(
-                          isSummaryVisible ? Icons.bar_chart : Icons.bar_chart_outlined,
+                          isSummaryVisible
+                              ? Icons.bar_chart
+                              : Icons.bar_chart_outlined,
                           size: 20,
-                          color: isSummaryVisible ? theme.colorScheme.primary : Colors.blue,
+                          color: isSummaryVisible
+                              ? theme.colorScheme.primary
+                              : Colors.blue,
                         ),
                         const SizedBox(width: 12),
-                        Text(isSummaryVisible ? 'Sakrij statistiku' : 'Prikaži statistiku'),
+                        Text(
+                          isSummaryVisible
+                              ? 'Sakrij statistiku'
+                              : 'Prikaži statistiku',
+                        ),
                       ],
                     ),
                   ),
@@ -266,7 +274,10 @@ class CalendarTopToolbar extends StatelessWidget {
                       icon: const Icon(Icons.search),
                       onPressed: onSearchTap,
                       tooltip: 'Pretraži rezervacije',
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
                     ),
 
                   // Refresh button
@@ -276,7 +287,10 @@ class CalendarTopToolbar extends StatelessWidget {
                       onPressed: onRefresh,
                       tooltip: 'Osvježi',
                       color: Colors.green,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
                     ),
 
                   // Filter button (desktop also gets it now)
@@ -286,7 +300,10 @@ class CalendarTopToolbar extends StatelessWidget {
                       onPressed: onFilterTap,
                       tooltip: 'Filteri',
                       color: Colors.orange,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
                     ),
 
                   // Today button
@@ -308,14 +325,18 @@ class CalendarTopToolbar extends StatelessWidget {
                             ? Icons.bar_chart
                             : Icons.bar_chart_outlined,
                       ),
-                      onPressed: () => onSummaryToggleChanged?.call(!isSummaryVisible),
+                      onPressed: () =>
+                          onSummaryToggleChanged?.call(!isSummaryVisible),
                       tooltip: isSummaryVisible
                           ? 'Sakrij statistiku'
                           : 'Prikaži statistiku',
                       color: isSummaryVisible
                           ? theme.colorScheme.primary
                           : Colors.blue,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
                     ),
                 ],
               ),
@@ -346,10 +367,7 @@ class CalendarTopToolbar extends StatelessWidget {
                 color: theme.colorScheme.primary,
                 borderRadius: BorderRadius.circular(3),
               ),
-              constraints: const BoxConstraints(
-                minWidth: 16,
-                minHeight: 12,
-              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 12),
               child: Text(
                 '${DateTime.now().day}',
                 style: TextStyle(
@@ -390,10 +408,7 @@ class CalendarTopToolbar extends StatelessWidget {
                 color: Colors.red,
                 shape: BoxShape.circle,
               ),
-              constraints: const BoxConstraints(
-                minWidth: 16,
-                minHeight: 16,
-              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
               child: Text(
                 count > 9 ? '9+' : '$count',
                 style: const TextStyle(

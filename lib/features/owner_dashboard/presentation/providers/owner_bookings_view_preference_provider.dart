@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/bookings_view_mode.dart';
-import 'owner_calendar_view_provider.dart';
+import '../../../../shared/providers/repository_providers.dart';
 
 /// Provider for current bookings view mode (card/table)
 /// Automatically defaults to card on mobile, table on desktop

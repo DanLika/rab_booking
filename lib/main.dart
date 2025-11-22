@@ -12,7 +12,7 @@ import 'core/providers/theme_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
-import 'features/owner_dashboard/presentation/providers/owner_calendar_view_provider.dart';
+import 'shared/providers/repository_providers.dart';
 import 'shared/widgets/global_navigation_loader.dart';
 
 void main() async {

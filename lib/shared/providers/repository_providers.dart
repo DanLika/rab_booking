@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../repositories/booking_repository.dart';
 import '../repositories/daily_price_repository.dart';
@@ -38,6 +39,12 @@ final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
 /// Firebase Storage instance provider
 final firebaseStorageProvider = Provider<FirebaseStorage>((ref) {
   return FirebaseStorage.instance;
+});
+
+/// SharedPreferences instance provider
+/// Must be overridden in main.dart with the actual instance
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError('SharedPreferences must be overridden in main.dart');
 });
 
 /// Property repository provider

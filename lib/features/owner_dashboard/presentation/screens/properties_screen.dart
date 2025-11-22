@@ -13,6 +13,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
 
 /// Properties list screen (Moji Objekti)
 class PropertiesScreen extends ConsumerWidget {
@@ -157,34 +158,10 @@ class PropertiesScreen extends ConsumerWidget {
                 ),
               );
             },
-            loading: () => SafeArea(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [AppColors.primary, AppColors.secondary],
-                        ),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Učitavanje...',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+            loading: () => const SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(AppDimensions.spaceM),
+                child: PropertyListSkeleton(itemCount: 3),
               ),
             ),
             error: (error, stack) => SafeArea(

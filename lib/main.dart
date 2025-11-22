@@ -13,6 +13,7 @@ import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 import 'features/owner_dashboard/presentation/providers/owner_calendar_view_provider.dart';
+import 'shared/widgets/global_navigation_loader.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +67,10 @@ class RabBookingApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       routerConfig: router,
+      // Global navigation loader overlay
+      builder: (context, child) {
+        return GlobalNavigationOverlay(child: child!);
+      },
       // Localization configuration
       locale: locale,
       localizationsDelegates: const [

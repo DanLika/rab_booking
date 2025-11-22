@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart'; // for kDebugMode
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -47,6 +48,7 @@ import '../../features/widget/presentation/screens/booking_details_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../shared/providers/repository_providers.dart';
 import '../../shared/models/unit_model.dart';
+import '../../shared/widgets/animations/skeleton_loader.dart';
 import '../providers/enhanced_auth_provider.dart';
 
 /// Helper class to convert Stream to Listenable for GoRouter
@@ -147,36 +149,52 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Use the watched authState from above
       final isAuthenticated = authState.isAuthenticated;
       final requiresOnboarding = authState.requiresOnboarding;
+      final isLoading = authState.isLoading;
       final isLoggingIn =
           state.matchedLocation == OwnerRoutes.login ||
           state.matchedLocation == OwnerRoutes.register ||
           state.matchedLocation == OwnerRoutes.forgotPassword;
 
-      LoggingService.log('redirect called:', tag: 'ROUTER');
-      LoggingService.log(
-        '  - matchedLocation: ${state.matchedLocation}',
-        tag: 'ROUTER',
-      );
-      LoggingService.log(
-        '  - isAuthenticated: $isAuthenticated',
-        tag: 'ROUTER',
-      );
-      LoggingService.log(
-        '  - requiresOnboarding: $requiresOnboarding',
-        tag: 'ROUTER',
-      );
-      LoggingService.log(
-        '  - firebaseUser: ${authState.firebaseUser?.uid}',
-        tag: 'ROUTER',
-      );
-      LoggingService.log(
-        '  - userModel: ${authState.userModel?.id}',
-        tag: 'ROUTER',
-      );
-      LoggingService.log(
-        '  - isLoading: ${authState.isLoading}',
-        tag: 'ROUTER',
-      );
+      // Debug logging (only in debug mode)
+      if (kDebugMode) {
+        LoggingService.log('redirect called:', tag: 'ROUTER');
+        LoggingService.log(
+          '  - matchedLocation: ${state.matchedLocation}',
+          tag: 'ROUTER',
+        );
+        LoggingService.log(
+          '  - isAuthenticated: $isAuthenticated',
+          tag: 'ROUTER',
+        );
+        LoggingService.log(
+          '  - requiresOnboarding: $requiresOnboarding',
+          tag: 'ROUTER',
+        );
+        LoggingService.log(
+          '  - isLoading: $isLoading',
+          tag: 'ROUTER',
+        );
+        LoggingService.log(
+          '  - firebaseUser: ${authState.firebaseUser?.uid}',
+          tag: 'ROUTER',
+        );
+        LoggingService.log(
+          '  - userModel: ${authState.userModel?.id}',
+          tag: 'ROUTER',
+        );
+      }
+
+      // FIX Q4: Don't redirect while auth operation is in progress
+      // (prevents Register → Login flash during async registration)
+      if (isLoading) {
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Waiting for auth operation to complete (isLoading=true)',
+            tag: 'ROUTER',
+          );
+        }
+        return null; // Stay on current route
+      }
 
       // Allow public access to embed, booking, calendar, and view routes (no auth required)
       final isPublicRoute =
@@ -185,7 +203,9 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == '/calendar' ||
           state.matchedLocation.startsWith('/view');
       if (isPublicRoute) {
-        LoggingService.log('  → Allowing public route', tag: 'ROUTER');
+        if (kDebugMode) {
+          LoggingService.log('  → Allowing public route', tag: 'ROUTER');
+        }
         return null; // Allow access
       }
 
@@ -193,35 +213,47 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       final isOnboardingWelcome =
           state.matchedLocation == OwnerRoutes.onboardingWelcome;
       if (isOnboardingWelcome) {
-        LoggingService.log(
-          '  → Allowing onboarding welcome (public)',
-          tag: 'ROUTER',
-        );
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Allowing onboarding welcome (public)',
+            tag: 'ROUTER',
+          );
+        }
         return null; // Allow access
       }
 
       // Redirect root to appropriate page
       if (state.matchedLocation == '/') {
-        if (isAuthenticated) {
-          if (requiresOnboarding) {
+        // Case 1: Authenticated + needs onboarding → wizard
+        if (isAuthenticated && requiresOnboarding) {
+          if (kDebugMode) {
             LoggingService.log(
               '  → Redirecting / to onboarding wizard (authenticated, needs onboarding)',
               tag: 'ROUTER',
             );
-            return OwnerRoutes.onboardingWizard;
           }
-          LoggingService.log(
-            '  → Redirecting / to overview (authenticated)',
-            tag: 'ROUTER',
-          );
+          return OwnerRoutes.onboardingWizard;
+        }
+
+        // Case 2: Authenticated + no onboarding → overview
+        if (isAuthenticated) {
+          if (kDebugMode) {
+            LoggingService.log(
+              '  → Redirecting / to overview (authenticated)',
+              tag: 'ROUTER',
+            );
+          }
           return OwnerRoutes.overview;
-        } else {
+        }
+
+        // Case 3: Not authenticated → login
+        if (kDebugMode) {
           LoggingService.log(
             '  → Redirecting / to login (not authenticated)',
             tag: 'ROUTER',
           );
-          return OwnerRoutes.login;
         }
+        return OwnerRoutes.login;
       }
 
       // If authenticated and requires onboarding, redirect to wizard (except if already on wizard/success)
@@ -229,32 +261,40 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == OwnerRoutes.onboardingWizard ||
           state.matchedLocation == OwnerRoutes.onboardingSuccess;
       if (isAuthenticated && requiresOnboarding && !isOnboardingRoute) {
-        LoggingService.log(
-          '  → Redirecting to onboarding wizard (needs onboarding)',
-          tag: 'ROUTER',
-        );
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Redirecting to onboarding wizard (needs onboarding)',
+            tag: 'ROUTER',
+          );
+        }
         return OwnerRoutes.onboardingWizard;
       }
 
       // Redirect to login if not authenticated and trying to access protected routes
       if (!isAuthenticated && !isLoggingIn && !isOnboardingWelcome) {
-        LoggingService.log(
-          '  → Redirecting to login (not authenticated)',
-          tag: 'ROUTER',
-        );
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Redirecting to login (not authenticated)',
+            tag: 'ROUTER',
+          );
+        }
         return OwnerRoutes.login;
       }
 
       // Redirect to overview if authenticated, doesn't need onboarding, and trying to access login
       if (isAuthenticated && !requiresOnboarding && isLoggingIn) {
-        LoggingService.log(
-          '  → Redirecting to overview (authenticated, was on login)',
-          tag: 'ROUTER',
-        );
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Redirecting to overview (authenticated, was on login)',
+            tag: 'ROUTER',
+          );
+        }
         return OwnerRoutes.overview;
       }
 
-      LoggingService.log('  → No redirect needed', tag: 'ROUTER');
+      if (kDebugMode) {
+        LoggingService.log('  → No redirect needed', tag: 'ROUTER');
+      }
       return null;
     },
     routes: [
@@ -577,8 +617,12 @@ class PropertyEditLoader extends ConsumerWidget {
         }
         return PropertyFormScreen(property: property);
       },
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(
+        body: Padding(
+          padding: EdgeInsets.all(16),
+          child: PropertyCardSkeleton(),
+        ),
+      ),
       error: (error, stack) =>
           Scaffold(body: Center(child: Text('Error loading property: $error'))),
     );
@@ -602,8 +646,12 @@ class UnitEditLoader extends ConsumerWidget {
         }
         return UnitFormScreen(propertyId: unit.propertyId, unit: unit);
       },
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(
+        body: Padding(
+          padding: EdgeInsets.all(16),
+          child: PropertyCardSkeleton(),
+        ),
+      ),
       error: (error, stack) =>
           Scaffold(body: Center(child: Text('Error loading unit: $error'))),
     );
@@ -627,8 +675,12 @@ class UnitPricingLoader extends ConsumerWidget {
         }
         return UnitPricingScreen(unit: unit);
       },
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(
+        body: Padding(
+          padding: EdgeInsets.all(16),
+          child: CalendarSkeleton(),
+        ),
+      ),
       error: (error, stack) =>
           Scaffold(body: Center(child: Text('Error loading unit: $error'))),
     );
@@ -655,8 +707,12 @@ class WidgetSettingsLoader extends ConsumerWidget {
           unitId: unitId,
         );
       },
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(
+        body: Padding(
+          padding: EdgeInsets.all(16),
+          child: PropertyCardSkeleton(),
+        ),
+      ),
       error: (error, stack) =>
           Scaffold(body: Center(child: Text('Error loading unit: $error'))),
     );

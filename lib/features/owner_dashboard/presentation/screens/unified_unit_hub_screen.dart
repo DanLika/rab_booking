@@ -8,6 +8,7 @@ import '../../../../shared/models/property_model.dart';
 import '../providers/owner_properties_provider.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import 'unit_pricing_screen.dart';
 import 'widget_settings_screen.dart';
 import 'widget_advanced_settings_screen.dart';
@@ -296,11 +297,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
 
     return unitsAsync.when(
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(32.0),
-          child: CircularProgressIndicator(),
-        ),
+      loading: () => const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: PropertyListSkeleton(itemCount: 3),
       ),
       error: (error, stack) => Center(
         child: Padding(

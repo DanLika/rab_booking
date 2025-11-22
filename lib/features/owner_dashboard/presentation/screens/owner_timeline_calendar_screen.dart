@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/date_range_selection.dart';
 import '../providers/notifications_provider.dart';
@@ -17,6 +16,7 @@ import '../mixins/calendar_common_methods_mixin.dart';
 import '../providers/multi_select_provider.dart';
 import '../../utils/calendar_grid_calculator.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../core/theme/app_color_extensions.dart';
 
 /// Owner Timeline Calendar Screen
 /// Shows BedBooking-style Gantt chart with booking blocks spanning dates
@@ -82,7 +82,7 @@ class _OwnerTimelineCalendarScreenState
           autofocus: true,
           child: Scaffold(
             appBar: CommonAppBar(
-              title: 'Kalendar - Gantt prikaz',
+              title: 'Kalendar',
               leadingIcon: Icons.menu,
               onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
             ),
@@ -94,8 +94,8 @@ class _OwnerTimelineCalendarScreenState
                   end: Alignment.bottomCenter,
                   colors: Theme.of(context).brightness == Brightness.dark
                       ? [
-                          Theme.of(context).colorScheme.surface,
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                          Theme.of(context).colorScheme.veryDarkGray,
+                          Theme.of(context).colorScheme.mediumDarkGray,
                         ]
                       : [
                           const Color(0xFFF5F5F5), // veryLightGray
@@ -183,11 +183,28 @@ class _OwnerTimelineCalendarScreenState
                   return const SizedBox.shrink();
                 }
 
-                return FloatingActionButton(
-                  onPressed: _showCreateBookingDialog,
-                  backgroundColor: AppColors.primary,
-                  elevation: 4,
-                  child: const Icon(Icons.add, color: Colors.white),
+                return Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF6B4CE6), // Purple
+                        Color(0xFF4A90E2), // Blue
+                      ],
+                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                  ),
+                  child: FloatingActionButton.extended(
+                    onPressed: _showCreateBookingDialog,
+                    backgroundColor: Colors.transparent,
+                    elevation: 4,
+                    label: const Text(
+                      'Nova Rezervacija',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                  ),
                 );
               },
             ),

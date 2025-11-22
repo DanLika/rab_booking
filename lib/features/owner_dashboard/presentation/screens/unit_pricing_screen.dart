@@ -120,17 +120,21 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             ),
             body: Container(
               decoration: BoxDecoration(
-                gradient: isDark
-                    ? LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          const Color(0xFF1E1E1E).withAlpha((0.95 * 255).toInt()), // Inverted: start with lighter
-                          const Color(0xFF121212).withAlpha((0.90 * 255).toInt()), // Inverted: end with darker
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [
+                          // Dark mode: Inverted gradient (lighter → darker)
+                          const Color(0xFF1E1E1E).withAlpha((0.95 * 255).toInt()),
+                          const Color(0xFF121212).withAlpha((0.90 * 255).toInt()),
+                        ]
+                      : [
+                          // Light mode: Inverted gradient (same color, different opacity)
+                          Theme.of(context).colorScheme.surface.withAlpha((0.90 * 255).toInt()),
+                          Theme.of(context).colorScheme.surface.withAlpha((0.95 * 255).toInt()),
                         ],
-                      )
-                    : null,
-                color: isDark ? null : Theme.of(context).colorScheme.surface,
+                ),
               ),
               child: _buildMainContent(
                 isMobile: isMobile,
@@ -155,18 +159,38 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: CommonAppBar(
         title: 'Cjenovnik',
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      body: _buildMainContent(
-        isMobile: isMobile,
-        units: null,
-        showUnitSelector: false,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    // Dark mode: Inverted gradient (lighter → darker)
+                    const Color(0xFF1E1E1E).withAlpha((0.95 * 255).toInt()),
+                    const Color(0xFF121212).withAlpha((0.90 * 255).toInt()),
+                  ]
+                : [
+                    // Light mode: Inverted gradient (same color, different opacity)
+                    Theme.of(context).colorScheme.surface.withAlpha((0.90 * 255).toInt()),
+                    Theme.of(context).colorScheme.surface.withAlpha((0.95 * 255).toInt()),
+                  ],
+          ),
+        ),
+        child: _buildMainContent(
+          isMobile: isMobile,
+          units: null,
+          showUnitSelector: false,
+        ),
       ),
     );
   }

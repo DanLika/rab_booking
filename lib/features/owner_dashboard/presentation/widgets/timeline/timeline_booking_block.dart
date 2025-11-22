@@ -202,41 +202,15 @@ class TimelineBookingBlock extends StatelessWidget {
 
   /// Check if a cancelled booking should have reduced opacity
   ///
-  /// Returns true if this is a cancelled booking overlapping with confirmed/pending bookings.
-  /// This creates a visual layering effect where active bookings appear on top.
+  /// Returns true for all cancelled bookings to create visual layering.
+  /// Combined with z-index sorting (cancelled render first), this ensures
+  /// active bookings (confirmed/pending) appear on top with full visibility.
   static bool shouldHaveReducedOpacity(
     BookingModel booking,
     Map<String, List<BookingModel>> allBookingsByUnit,
   ) {
-    // Only apply to cancelled bookings
-    if (booking.status != BookingStatus.cancelled) {
-      return false;
-    }
-
-    // Check if any confirmed/pending bookings overlap with this cancelled one
-    final unitBookings = allBookingsByUnit[booking.unitId] ?? [];
-
-    for (final otherBooking in unitBookings) {
-      // Skip self
-      if (otherBooking.id == booking.id) continue;
-
-      // Check if other booking is active (confirmed/pending)
-      if (otherBooking.status == BookingStatus.confirmed ||
-          otherBooking.status == BookingStatus.pending) {
-        // Check for date overlap using BookingOverlapDetector
-        final hasOverlap = BookingOverlapDetector.doBookingsOverlap(
-          start1: booking.checkIn,
-          end1: booking.checkOut,
-          start2: otherBooking.checkIn,
-          end2: otherBooking.checkOut,
-        );
-
-        if (hasOverlap) {
-          return true; // Found overlap with active booking
-        }
-      }
-    }
-
-    return false; // No overlap with active bookings
+    // Apply reduced opacity to all cancelled bookings
+    // Z-index sorting ensures they render below active bookings
+    return booking.status == BookingStatus.cancelled;
   }
 }

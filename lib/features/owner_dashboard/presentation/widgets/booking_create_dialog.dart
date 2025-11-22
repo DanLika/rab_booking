@@ -10,7 +10,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../providers/owner_properties_provider.dart';
-import '../providers/price_list_provider.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../../utils/booking_overlap_detector.dart';
 
@@ -41,10 +40,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   late DateTime _checkOutDate;
   final BookingStatus _status = BookingStatus.confirmed;
   final String _paymentMethod = 'cash';
-
-  bool _isCalculatingPrice = false;
   bool _isSaving = false;
-  double? _calculatedPrice;
 
   @override
   void initState() {
@@ -59,13 +55,6 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     _selectedUnitId = widget.unitId;
     _checkInDate = widget.initialCheckIn ?? DateTime.now();
     _checkOutDate = _checkInDate.add(const Duration(days: 1));
-
-    // Auto-calculate price if unit is pre-selected
-    if (_selectedUnitId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _calculatePrice();
-      });
-    }
   }
 
   @override
@@ -84,21 +73,12 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     final unitsAsync = ref.watch(ownerUnitsProvider);
 
     return AlertDialog(
-      title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Nova rezervacija',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                Icon(
-                  Icons.add_circle,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ],
-            ),
+      title: const Text(
+        'Nova rezervacija',
+        style: TextStyle(
+          color: Colors.white,
+        ),
+      ),
       content: SizedBox(
         width: double.maxFinite,
         child: Form(
@@ -140,9 +120,6 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                         setState(() {
                           _selectedUnitId = value;
                         });
-                        if (value != null) {
-                          _calculatePrice();
-                        }
                       },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -321,95 +298,34 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                 ),
                 const SizedBox(height: 12),
 
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: TextFormField(
-                        controller: _totalPriceController,
-                        decoration: InputDecoration(
-                          labelText: 'Ukupna cijena (€) *',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.euro),
-                          suffixIcon: _isCalculatingPrice
-                              ? const Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                )
-                              : null,
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Unesite cijenu';
-                          }
-                          final price = double.tryParse(value.trim());
-                          if (price == null) {
-                            return 'Unesite validnu cijenu';
-                          }
-                          if (price < 0) {
-                            return 'Cijena ne može biti negativna';
-                          }
-                          if (price == 0) {
-                            return 'Cijena mora biti veća od 0';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _selectedUnitId != null
-                            ? _calculatePrice
-                            : null,
-                        icon: const Icon(Icons.calculate, size: 18),
-                        label: const Text('Izračunaj'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                if (_calculatedPrice != null) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.green[200]!),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 14,
-                          color: Colors.green[700],
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Ukupna cijena: €${_calculatedPrice!.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.green[700],
-                          ),
-                        ),
-                      ],
-                    ),
+                // Total Price Input (manual entry only)
+                TextFormField(
+                  controller: _totalPriceController,
+                  decoration: const InputDecoration(
+                    labelText: 'Ukupna cijena (€) *',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.euro),
                   ),
-                ],
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Unesite cijenu';
+                    }
+                    final price = double.tryParse(value.trim());
+                    if (price == null) {
+                      return 'Unesite validnu cijenu';
+                    }
+                    if (price < 0) {
+                      return 'Cijena ne može biti negativna';
+                    }
+                    if (price == 0) {
+                      return 'Cijena mora biti veća od 0';
+                    }
+                    return null;
+                  },
+                ),
 
                 const SizedBox(height: 16),
 
@@ -557,11 +473,6 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
           _checkOutDate = _checkInDate.add(const Duration(days: 1));
         }
       });
-
-      // Recalculate price if unit is selected
-      if (_selectedUnitId != null) {
-        unawaited(_calculatePrice());
-      }
     }
   }
 
@@ -579,67 +490,6 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     if (selectedDate != null) {
       setState(() {
         _checkOutDate = selectedDate;
-      });
-
-      // Recalculate price if unit is selected
-      if (_selectedUnitId != null) {
-        unawaited(_calculatePrice());
-      }
-    }
-  }
-
-  Future<void> _calculatePrice() async {
-    if (_selectedUnitId == null) return;
-
-    setState(() {
-      _isCalculatingPrice = true;
-      _calculatedPrice = null;
-    });
-
-    try {
-      double totalPrice = 0.0;
-      DateTime currentDate = _checkInDate;
-
-      // Fetch prices for each night
-      while (currentDate.isBefore(_checkOutDate)) {
-        final monthStart = DateTime(currentDate.year, currentDate.month);
-
-        // Fetch prices for the month
-        final monthlyPrices = await ref.read(
-          monthlyPricesProvider(
-            MonthlyPricesParams(unitId: _selectedUnitId!, month: monthStart),
-          ).future,
-        );
-
-        final dateKey = DateTime(
-          currentDate.year,
-          currentDate.month,
-          currentDate.day,
-        );
-        final priceData = monthlyPrices[dateKey];
-
-        // Get unit base price
-        final unitsAsync = await ref.read(ownerUnitsProvider.future);
-        final unit = unitsAsync.firstWhere((u) => u.id == _selectedUnitId);
-
-        // Use daily price or base price
-        final nightPrice = priceData?.price ?? unit.pricePerNight;
-        totalPrice += nightPrice;
-
-        currentDate = currentDate.add(const Duration(days: 1));
-      }
-
-      setState(() {
-        _calculatedPrice = totalPrice;
-        _totalPriceController.text = totalPrice.toStringAsFixed(2);
-      });
-    } catch (e) {
-      if (mounted) {
-        _showError('Greška pri kalkulaciji cijene: $e');
-      }
-    } finally {
-      setState(() {
-        _isCalculatingPrice = false;
       });
     }
   }

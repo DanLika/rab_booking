@@ -60,6 +60,9 @@ class TimelineBookingBlock extends StatelessWidget {
     // ENHANCED: Detect conflicts with other bookings in the same unit
     final hasConflict = hasBookingConflict(booking, allBookingsByUnit);
 
+    // ENHANCED: Check if this is a cancelled booking overlapping with confirmed
+    final shouldReduceOpacity = shouldHaveReducedOpacity(booking, allBookingsByUnit);
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: PlatformUtils.supportsHover
@@ -75,11 +78,13 @@ class TimelineBookingBlock extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         onLongPress: onLongPress,
-        child: Container(
-          width: width - 2,
-          height: blockHeight,
-          margin: const EdgeInsets.symmetric(horizontal: 1),
-          child: Stack(
+        child: Opacity(
+          opacity: shouldReduceOpacity ? 0.6 : 1.0,
+          child: Container(
+            width: width - 2,
+            height: blockHeight,
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            child: Stack(
             children: [
               // Background layer with skewed parallelogram
               CustomPaint(
@@ -152,6 +157,7 @@ class TimelineBookingBlock extends StatelessWidget {
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),
@@ -191,5 +197,45 @@ class TimelineBookingBlock extends StatelessWidget {
     );
 
     return conflicts.isNotEmpty;
+  }
+
+  /// Check if a cancelled booking should have reduced opacity
+  ///
+  /// Returns true if this is a cancelled booking overlapping with confirmed/pending bookings.
+  /// This creates a visual layering effect where active bookings appear on top.
+  static bool shouldHaveReducedOpacity(
+    BookingModel booking,
+    Map<String, List<BookingModel>> allBookingsByUnit,
+  ) {
+    // Only apply to cancelled bookings
+    if (booking.status != BookingStatus.cancelled) {
+      return false;
+    }
+
+    // Check if any confirmed/pending bookings overlap with this cancelled one
+    final unitBookings = allBookingsByUnit[booking.unitId] ?? [];
+
+    for (final otherBooking in unitBookings) {
+      // Skip self
+      if (otherBooking.id == booking.id) continue;
+
+      // Check if other booking is active (confirmed/pending)
+      if (otherBooking.status == BookingStatus.confirmed ||
+          otherBooking.status == BookingStatus.pending) {
+        // Check for date overlap
+        final hasOverlap = BookingOverlapDetector.hasOverlap(
+          booking.checkIn,
+          booking.checkOut,
+          otherBooking.checkIn,
+          otherBooking.checkOut,
+        );
+
+        if (hasOverlap) {
+          return true; // Found overlap with active booking
+        }
+      }
+    }
+
+    return false; // No overlap with active bookings
   }
 }

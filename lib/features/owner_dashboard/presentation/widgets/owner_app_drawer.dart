@@ -238,17 +238,22 @@ class OwnerAppDrawer extends ConsumerWidget {
     final email = user?.email ?? '';
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
 
+    // Green color variants (matching confirmed badge #66BB6A)
+    const confirmedGreen = Color(0xFF66BB6A);
+    final greenLight = isDark ? const Color(0xFF81C784) : const Color(0xFF4CAF50);
+    final greenDark = isDark ? const Color(0xFF4CAF50) : const Color(0xFF388E3C);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [theme.colorScheme.brandPurple, theme.colorScheme.brandBlue],
+          colors: [greenLight, greenDark],
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.brandPurple.withAlpha((0.3 * 255).toInt()),
+            color: confirmedGreen.withAlpha((0.3 * 255).toInt()),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -286,10 +291,10 @@ class OwnerAppDrawer extends ConsumerWidget {
                             return Center(
                               child: Text(
                                 initial,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.brandPurple,
+                                  color: Color(0xFF4CAF50), // Green
                                 ),
                               ),
                             );
@@ -299,10 +304,10 @@ class OwnerAppDrawer extends ConsumerWidget {
                     : Center(
                         child: Text(
                           initial,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.brandPurple,
+                            color: Color(0xFF4CAF50), // Green
                           ),
                         ),
                       ),

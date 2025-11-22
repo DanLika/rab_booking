@@ -60,21 +60,12 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
     final nights = _checkOut.difference(_checkIn).inDays;
 
     return AlertDialog(
-      title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Edit Booking',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                Icon(
-                  Icons.edit,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ],
-            ),
+      title: const Text(
+        'Edit Booking',
+        style: TextStyle(
+          color: Colors.white,
+        ),
+      ),
       content: SizedBox(
         width: 500,
         child: SingleChildScrollView(
@@ -146,17 +137,35 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.remove,
+                    // Minus button
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
                         color: _guestCount > 1
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).disabledColor,
+                            ? (Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : Colors.black)
+                            : Colors.grey[400],
+                        shape: BoxShape.circle,
                       ),
-                      onPressed: _guestCount > 1
-                          ? () => setState(() => _guestCount--)
-                          : null,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          Icons.remove,
+                          size: 16,
+                          color: _guestCount > 1
+                              ? (Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.black
+                                  : Colors.white)
+                              : Colors.grey[600],
+                        ),
+                        onPressed: _guestCount > 1
+                            ? () => setState(() => _guestCount--)
+                            : null,
+                      ),
                     ),
+                    const SizedBox(width: 12),
                     Text(
                       _guestCount.toString(),
                       style: const TextStyle(
@@ -164,12 +173,28 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.add,
-                        color: Theme.of(context).colorScheme.primary,
+                    const SizedBox(width: 12),
+                    // Plus button
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                        shape: BoxShape.circle,
                       ),
-                      onPressed: () => setState(() => _guestCount++),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          Icons.add,
+                          size: 16,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.black
+                              : Colors.white,
+                        ),
+                        onPressed: () => setState(() => _guestCount++),
+                      ),
                     ),
                   ],
                 ),

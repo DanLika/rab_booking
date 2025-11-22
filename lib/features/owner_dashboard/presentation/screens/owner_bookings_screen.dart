@@ -145,51 +145,57 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             ref.read(bookingsPaginationNotifierProvider.notifier).reset();
           },
           color: theme.colorScheme.primary,
-          child: ListView(
+          child: CustomScrollView(
             controller: _scrollController,
-            children: [
+            slivers: [
               // Filters section
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  context.horizontalPadding,
-                  isMobile ? 16 : 20,
-                  context.horizontalPadding,
-                  isMobile ? 8 : 12,
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    context.horizontalPadding,
+                    isMobile ? 16 : 20,
+                    context.horizontalPadding,
+                    isMobile ? 8 : 12,
+                  ),
+                  child: _buildFiltersSection(filters, isMobile, theme, viewMode),
                 ),
-                child: _buildFiltersSection(filters, isMobile, theme, viewMode),
               ),
 
               // Bookings content
               bookingsAsync.when(
                 data: (bookings) {
                   if (bookings.isEmpty) {
-                    return _buildEmptyState();
+                    return SliverToBoxAdapter(child: _buildEmptyState());
                   }
 
                   if (viewMode == BookingsViewMode.card) {
-                    return _buildBookingsList(bookings, isMobile);
+                    return _buildBookingsSliverList(bookings, isMobile);
                   } else {
-                    return Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: context.horizontalPadding,
+                    return SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.horizontalPadding,
+                        ),
+                        child: BookingsTableView(bookings: bookings),
                       ),
-                      child: BookingsTableView(bookings: bookings),
                     );
                   }
                 },
                 loading: () {
                   if (viewMode == BookingsViewMode.table) {
-                    return Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: context.horizontalPadding,
+                    return SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.horizontalPadding,
+                        ),
+                        child: const BookingTableSkeleton(),
                       ),
-                      child: const BookingTableSkeleton(),
                     );
                   } else {
-                    return Column(
-                      children: List.generate(
-                        5, // Show 5 card skeletons
-                        (index) => Padding(
+                    // Use SliverList for loading state too (lazy loading skeletons)
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => Padding(
                           padding: EdgeInsets.fromLTRB(
                             context.horizontalPadding,
                             0,
@@ -198,6 +204,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                           ),
                           child: const BookingCardSkeleton(),
                         ),
+                        childCount: 5, // Show 5 card skeletons
                       ),
                     );
                   }
@@ -211,35 +218,37 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       errorMsg.contains('0');
 
                   if (isEmptyResult) {
-                    return _buildEmptyState();
+                    return SliverToBoxAdapter(child: _buildEmptyState());
                   }
 
-                  return Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(context.horizontalPadding),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: AppDimensions.iconSizeXL,
-                            color: theme.colorScheme.error,
-                          ),
-                          const SizedBox(height: AppDimensions.spaceS),
-                          Text(
-                            'Greška pri učitavanju rezervacija',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: AppDimensions.spaceXS),
-                          Text(
-                            error.toString(),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: context.textColorSecondary),
-                            textAlign: TextAlign.center,
-                            maxLines: 5,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                  return SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(context.horizontalPadding),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: AppDimensions.iconSizeXL,
+                              color: theme.colorScheme.error,
+                            ),
+                            const SizedBox(height: AppDimensions.spaceS),
+                            Text(
+                              'Greška pri učitavanju rezervacija',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: AppDimensions.spaceXS),
+                            Text(
+                              error.toString(),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: context.textColorSecondary),
+                              textAlign: TextAlign.center,
+                              maxLines: 5,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -247,24 +256,25 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               ),
 
               // Load more indicator
-              Consumer(
-                builder: (context, ref, child) {
-                  final hasMore = ref.watch(hasMoreBookingsProvider).valueOrNull ?? false;
-                  final pagination = ref.watch(bookingsPaginationNotifierProvider);
-                  final localTheme = Theme.of(context);
+              SliverToBoxAdapter(
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final hasMore = ref.watch(hasMoreBookingsProvider).valueOrNull ?? false;
+                    final pagination = ref.watch(bookingsPaginationNotifierProvider);
+                    final localTheme = Theme.of(context);
 
-                  if (!hasMore) {
-                    return const SizedBox(height: 24);
-                  }
+                    if (!hasMore) {
+                      return const SizedBox(height: 24);
+                    }
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Center(
-                      child: pagination.isLoadingMore
-                          ? Column(
-                              children: [
-                                CircularProgressIndicator(
-                                  color: localTheme.colorScheme.primary,
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: pagination.isLoadingMore
+                            ? Column(
+                                children: [
+                                  CircularProgressIndicator(
+                                    color: localTheme.colorScheme.primary,
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
@@ -281,13 +291,16 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                                 color: localTheme.colorScheme.onSurfaceVariant,
                               ),
                             ),
-                    ),
-                  );
-                },
+                      ),
+                    );
+                  },
+                ),
               ),
 
               // Bottom spacing
-              const SizedBox(height: 24),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 24),
+              ),
             ],
           ),
         ),
@@ -595,83 +608,85 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
-  Widget _buildBookingsList(List<OwnerBooking> bookings, bool isMobile) {
+  /// Build bookings list using SliverList for proper lazy loading
+  /// Eliminates nested ListView anti-pattern and fixes performance issues
+  Widget _buildBookingsSliverList(List<OwnerBooking> bookings, bool isMobile) {
     // Calculate screen width for responsive layout
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
 
     if (isDesktop) {
-      // Desktop: 2-column layout using ListView.builder for lazy loading
+      // Desktop: 2-column layout using SliverList
       final rowCount = (bookings.length / 2).ceil();
 
-      return Padding(
+      return SliverPadding(
         padding: EdgeInsets.fromLTRB(
           context.horizontalPadding,
           0,
           context.horizontalPadding,
           24,
         ),
-        child: ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: rowCount,
-          itemBuilder: (context, rowIndex) {
-            final leftIndex = rowIndex * 2;
-            final rightIndex = leftIndex + 1;
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, rowIndex) {
+              final leftIndex = rowIndex * 2;
+              final rightIndex = leftIndex + 1;
 
-            final leftBooking = bookings[leftIndex];
-            final rightBooking = rightIndex < bookings.length ? bookings[rightIndex] : null;
+              final leftBooking = bookings[leftIndex];
+              final rightBooking = rightIndex < bookings.length ? bookings[rightIndex] : null;
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _BookingCard(
-                      key: ValueKey(leftBooking.booking.id),
-                      ownerBooking: leftBooking,
-                    ),
-                  ),
-                  if (rightBooking != null) ...[
-                    const SizedBox(width: 16),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Expanded(
                       child: _BookingCard(
-                        key: ValueKey(rightBooking.booking.id),
-                        ownerBooking: rightBooking,
+                        key: ValueKey(leftBooking.booking.id),
+                        ownerBooking: leftBooking,
                       ),
                     ),
-                  ] else
-                    const Spacer(),
-                ],
-              ),
-            );
-          },
+                    if (rightBooking != null) ...[
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _BookingCard(
+                          key: ValueKey(rightBooking.booking.id),
+                          ownerBooking: rightBooking,
+                        ),
+                      ),
+                    ] else
+                      const Spacer(),
+                  ],
+                ),
+              );
+            },
+            childCount: rowCount,
+          ),
         ),
       );
     } else {
-      // Mobile/Tablet: Single column with lazy loading
-      return Padding(
+      // Mobile/Tablet: Single column with SliverList for true lazy loading
+      return SliverPadding(
         padding: EdgeInsets.fromLTRB(
           context.horizontalPadding,
           0,
           context.horizontalPadding,
           24,
         ),
-        child: ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: bookings.length,
-          itemBuilder: (context, index) {
-            final ownerBooking = bookings[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _BookingCard(
-                key: ValueKey(ownerBooking.booking.id),
-                ownerBooking: ownerBooking,
-              ),
-            );
-          },
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final ownerBooking = bookings[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _BookingCard(
+                  key: ValueKey(ownerBooking.booking.id),
+                  ownerBooking: ownerBooking,
+                ),
+              );
+            },
+            childCount: bookings.length,
+          ),
         ),
       );
     }

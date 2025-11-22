@@ -308,17 +308,24 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   label: Text(property.name),
                   selectedColor: Theme.of(context).colorScheme.primary,
                   backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  side: BorderSide(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                    width: isSelected ? 2 : 1,
+                  ),
                   labelStyle: TextStyle(
                     color: isSelected
-                        ? Theme.of(context).colorScheme.onPrimary
+                        ? Colors.white  // White text on selected chip
                         : Theme.of(context).colorScheme.onSurface,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   ),
-                  checkmarkColor: Theme.of(context).colorScheme.onPrimary,
+                  checkmarkColor: Colors.white,
                   avatar: Icon(
                     Icons.home_outlined,
                     size: 18,
                     color: isSelected
-                        ? Theme.of(context).colorScheme.onPrimary
+                        ? Colors.white  // White icon on selected chip
                         : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   onSelected: (selected) {
@@ -391,17 +398,24 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   label: Text(unit.name),
                   selectedColor: Theme.of(context).colorScheme.primary,
                   backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  side: BorderSide(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                    width: isSelected ? 2 : 1,
+                  ),
                   labelStyle: TextStyle(
                     color: isSelected
-                        ? Theme.of(context).colorScheme.onPrimary
+                        ? Colors.white  // White text on selected chip
                         : Theme.of(context).colorScheme.onSurface,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   ),
-                  checkmarkColor: Theme.of(context).colorScheme.onPrimary,
+                  checkmarkColor: Colors.white,
                   avatar: Icon(
                     Icons.meeting_room,
                     size: 18,
                     color: isSelected
-                        ? Theme.of(context).colorScheme.onPrimary
+                        ? Colors.white  // White icon on selected chip
                         : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   onSelected: (selected) {
@@ -463,12 +477,19 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
               label: Text(status.displayName),
               selectedColor: Theme.of(context).colorScheme.primary,
               backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              side: BorderSide(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                width: isSelected ? 2 : 1,
+              ),
               labelStyle: TextStyle(
                 color: isSelected
-                    ? Theme.of(context).colorScheme.onPrimary
+                    ? Colors.white  // White text on selected chip
                     : Theme.of(context).colorScheme.onSurface,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
-              checkmarkColor: Theme.of(context).colorScheme.onPrimary,
+              checkmarkColor: Colors.white,
               avatar: Container(
                 width: 12,
                 height: 12,
@@ -477,7 +498,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: isSelected
-                        ? theme.colorScheme.onPrimary
+                        ? Colors.white
                         : Colors.transparent,
                     width: 2,
                   ),
@@ -538,17 +559,24 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
               label: Text(label),
               selectedColor: Theme.of(context).colorScheme.primary,
               backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              side: BorderSide(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                width: isSelected ? 2 : 1,
+              ),
               labelStyle: TextStyle(
                 color: isSelected
-                    ? Theme.of(context).colorScheme.onPrimary
+                    ? Colors.white  // White text on selected chip
                     : Theme.of(context).colorScheme.onSurface,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
-              checkmarkColor: Theme.of(context).colorScheme.onPrimary,
+              checkmarkColor: Colors.white,
               avatar: Icon(
                 icon,
                 size: 18,
                 color: isSelected
-                    ? Theme.of(context).colorScheme.onPrimary
+                    ? Colors.white  // White icon on selected chip
                     : color,
               ),
               onSelected: (selected) {

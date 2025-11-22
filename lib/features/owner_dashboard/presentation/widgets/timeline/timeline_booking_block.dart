@@ -99,22 +99,20 @@ class TimelineBookingBlock extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Flexible(
-                        child: Text(
-                          booking.guestName ?? 'Gost',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: guestNameFontSize,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      Text(
+                        booking.guestName ?? 'Gost',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: guestNameFontSize,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 1),
-                      Flexible(
-                        child: Row(
+                      Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
@@ -149,7 +147,6 @@ class TimelineBookingBlock extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ),
                     ],
                   ),
                 ),

@@ -65,7 +65,7 @@ class CalendarTopToolbar extends StatelessWidget {
       ),
       padding: EdgeInsets.only(
         left: isCompact ? 4 : 16,
-        right: isCompact ? 4 : 0, // Remove right padding in desktop mode
+        right: 0, // No right padding - icons flush to edge
       ),
       child: Row(
         children: [

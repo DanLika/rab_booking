@@ -14,11 +14,13 @@ import '../widgets/advanced_settings/ical_export_card.dart';
 class WidgetAdvancedSettingsScreen extends ConsumerStatefulWidget {
   final String propertyId;
   final String unitId;
+  final bool showAppBar;
 
   const WidgetAdvancedSettingsScreen({
     super.key,
     required this.propertyId,
     required this.unitId,
+    this.showAppBar = true,
   });
 
   @override
@@ -189,9 +191,12 @@ class _WidgetAdvancedSettingsScreenState
     return settingsAsync.when(
       data: (settings) {
         if (settings == null) {
+          const errorContent = Center(child: Text('Widget settings not found'));
+          if (!widget.showAppBar) return errorContent;
+
           return Scaffold(
             appBar: AppBar(title: const Text('Advanced Settings')),
-            body: const Center(child: Text('Widget settings not found')),
+            body: errorContent,
           );
         }
 
@@ -205,30 +210,7 @@ class _WidgetAdvancedSettingsScreenState
           });
         }
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Advanced Settings'),
-            actions: [
-              if (_isSaving)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                )
-              else
-                IconButton(
-                  icon: const Icon(Icons.save),
-                  onPressed: () => _saveSettings(settings),
-                  tooltip: 'Save',
-                ),
-            ],
-          ),
-          body: Form(
+        final bodyContent = Form(
             key: _formKey,
             child: ListView(
               padding: const EdgeInsets.all(16),
@@ -299,16 +281,50 @@ class _WidgetAdvancedSettingsScreenState
                 ),
               ],
             ),
+          );
+
+        // When showAppBar is false, return only content (for embedding in tabs)
+        if (!widget.showAppBar) {
+          return bodyContent;
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Advanced Settings'),
+            actions: [
+              if (_isSaving)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              else
+                IconButton(
+                  icon: const Icon(Icons.save),
+                  onPressed: () => _saveSettings(settings),
+                  tooltip: 'Save',
+                ),
+            ],
           ),
+          body: bodyContent,
         );
       },
-      loading: () => Scaffold(
-        appBar: AppBar(title: const Text('Advanced Settings')),
-        body: const Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Scaffold(
-        appBar: AppBar(title: const Text('Advanced Settings')),
-        body: Center(
+      loading: () {
+        const loadingContent = Center(child: CircularProgressIndicator());
+        if (!widget.showAppBar) return loadingContent;
+
+        return Scaffold(
+          appBar: AppBar(title: const Text('Advanced Settings')),
+          body: loadingContent,
+        );
+      },
+      error: (error, stack) {
+        final errorContent = Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -317,8 +333,15 @@ class _WidgetAdvancedSettingsScreenState
               Text('Error: $error'),
             ],
           ),
-        ),
-      ),
+        );
+
+        if (!widget.showAppBar) return errorContent;
+
+        return Scaffold(
+          appBar: AppBar(title: const Text('Advanced Settings')),
+          body: errorContent,
+        );
+      },
     );
   }
 }

@@ -1095,37 +1095,33 @@ class _TimelineCalendarWidgetState
   ) {
     final theme = Theme.of(context);
 
-    return SingleChildScrollView(
-      controller: _summaryScrollController,
-      scrollDirection: Axis.horizontal,
-      physics:
-          const NeverScrollableScrollPhysics(), // Sync only, no manual scroll
-      child: Container(
-        height: 120,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withAlpha(
-            (0.3 * 255).toInt(),
-          ),
-          border: Border(
-            top: BorderSide(
-              color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
-              width: 2,
-            ),
+    // FIXED: Removed nested SingleChildScrollView - summary now scrolls with main timeline
+    // No need for separate scroll controller and sync logic
+    return Container(
+      height: 120,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+          (0.3 * 255).toInt(),
+        ),
+        border: Border(
+          top: BorderSide(
+            color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
+            width: 2,
           ),
         ),
-        child: Row(
-          children: [
-            // Offset padding to maintain scroll position
-            if (offsetWidth > 0) SizedBox(width: offsetWidth),
-            ...dates.map(
-              (date) => TimelineSummaryCell(
-                date: date,
-                bookingsByUnit: bookingsByUnit,
-                dayWidth: _getDayWidth(context),
-              ),
+      ),
+      child: Row(
+        children: [
+          // Offset padding to maintain scroll position
+          if (offsetWidth > 0) SizedBox(width: offsetWidth),
+          ...dates.map(
+            (date) => TimelineSummaryCell(
+              date: date,
+              bookingsByUnit: bookingsByUnit,
+              dayWidth: _getDayWidth(context),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

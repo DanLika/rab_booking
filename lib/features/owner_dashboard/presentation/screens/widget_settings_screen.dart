@@ -15,11 +15,13 @@ class WidgetSettingsScreen extends ConsumerStatefulWidget {
   const WidgetSettingsScreen({
     required this.propertyId,
     required this.unitId,
+    this.showAppBar = true,
     super.key,
   });
 
   final String propertyId;
   final String unitId;
+  final bool showAppBar;
 
   @override
   ConsumerState<WidgetSettingsScreen> createState() =>
@@ -321,15 +323,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CommonAppBar(
-        title: 'Postavke Widgeta',
-        leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
+    final bodyContent = _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Form(
               key: _formKey,
               child: ListView(
                 padding: const EdgeInsets.all(16),
@@ -434,7 +430,20 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   ),
                 ],
               ),
-            ),
+            );
+
+    // When showAppBar is false, return only content (for embedding in tabs)
+    if (!widget.showAppBar) {
+      return bodyContent;
+    }
+
+    return Scaffold(
+      appBar: CommonAppBar(
+        title: 'Postavke Widgeta',
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+      ),
+      body: bodyContent,
     );
   }
 

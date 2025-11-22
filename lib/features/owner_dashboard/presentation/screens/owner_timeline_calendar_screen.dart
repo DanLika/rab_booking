@@ -98,7 +98,7 @@ class _OwnerTimelineCalendarScreenState
                           Theme.of(context).colorScheme.mediumDarkGray,
                         ]
                       : [
-                          const Color(0xFFF5F5F5), // veryLightGray
+                          Theme.of(context).colorScheme.veryLightGray,
                           Colors.white,
                         ],
                   stops: const [0.0, 0.3],
@@ -195,15 +195,14 @@ class _OwnerTimelineCalendarScreenState
                     ),
                     borderRadius: BorderRadius.all(Radius.circular(16)),
                   ),
-                  child: FloatingActionButton.extended(
+                  child: FloatingActionButton(
                     onPressed: _showCreateBookingDialog,
                     backgroundColor: Colors.transparent,
-                    elevation: 4,
-                    label: const Text(
-                      'Nova Rezervacija',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                    ),
-                    icon: const Icon(Icons.add, color: Colors.white),
+                    elevation: 0,
+                    hoverElevation: 0,
+                    focusElevation: 0,
+                    highlightElevation: 0,
+                    child: const Icon(Icons.add, color: Colors.white),
                   ),
                 );
               },

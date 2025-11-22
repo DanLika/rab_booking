@@ -14,8 +14,13 @@ import '../../../../core/constants/app_dimensions.dart';
 /// Can be accessed from drawer (no unit selected) or from unit management (specific unit)
 class UnitPricingScreen extends ConsumerStatefulWidget {
   final UnitModel? unit;
+  final bool showAppBar;
 
-  const UnitPricingScreen({super.key, this.unit});
+  const UnitPricingScreen({
+    super.key,
+    this.unit,
+    this.showAppBar = true,
+  });
 
   @override
   ConsumerState<UnitPricingScreen> createState() => _UnitPricingScreenState();
@@ -95,6 +100,15 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             return const SizedBox.shrink();
           }
 
+          // When showAppBar is false, return only content (for embedding in tabs)
+          if (!widget.showAppBar) {
+            return _buildMainContent(
+              isMobile: isMobile,
+              units: units,
+              showUnitSelector: true,
+            );
+          }
+
           return Scaffold(
             resizeToAvoidBottomInset: true,
             backgroundColor: Theme.of(context).colorScheme.surface,
@@ -116,6 +130,15 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     }
 
     // Unit was provided (accessed from unit management)
+    // When showAppBar is false, return only content (for embedding in tabs)
+    if (!widget.showAppBar) {
+      return _buildMainContent(
+        isMobile: isMobile,
+        units: null,
+        showUnitSelector: false,
+      );
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -579,11 +602,20 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
         basePrice: price,
       );
 
+      // Invalidate unit provider to refresh data across app
+      ref.invalidate(allOwnerUnitsProvider);
+
       if (mounted) {
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          'Osnovna cijena uspješno ažurirana',
-        );
+        // Try to show success message, but don't crash if no Scaffold available
+        try {
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            'Osnovna cijena uspješno ažurirana',
+          );
+        } catch (scaffoldError) {
+          // Embedded in tab without Scaffold - silently succeed
+          debugPrint('[PRICING] Price updated successfully (embedded mode)');
+        }
       }
     } catch (e) {
       if (mounted) {

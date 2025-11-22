@@ -60,13 +60,21 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
     final nights = _checkOut.difference(_checkIn).inDays;
 
     return AlertDialog(
-      title: const Row(
-        children: [
-          Icon(Icons.edit, color: AppColors.authPrimary),
-          SizedBox(width: 8),
-          Text('Edit Booking'),
-        ],
-      ),
+      title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Edit Booking',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                Icon(
+                  Icons.edit,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ],
+            ),
       content: SizedBox(
         width: 500,
         child: SingleChildScrollView(
@@ -77,11 +85,17 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
               // Booking Info
               Text(
                 'Booking: ${widget.booking.id}',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
               ),
               Text(
                 'Guest: ${widget.booking.guestName}',
-                style: const TextStyle(fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -133,7 +147,12 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.remove),
+                      icon: Icon(
+                        Icons.remove,
+                        color: _guestCount > 1
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).disabledColor,
+                      ),
                       onPressed: _guestCount > 1
                           ? () => setState(() => _guestCount--)
                           : null,
@@ -146,7 +165,10 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.add),
+                      icon: Icon(
+                        Icons.add,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       onPressed: () => setState(() => _guestCount++),
                     ),
                   ],
@@ -174,19 +196,36 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _saveChanges,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.authPrimary,
-            foregroundColor: Colors.white,
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF6B4CE6), // Purple
+                Color(0xFF4A90E2), // Blue
+              ],
+            ),
+            borderRadius: BorderRadius.all(Radius.circular(4)),
           ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Save Changes'),
+          child: ElevatedButton(
+            onPressed: _isLoading ? null : _saveChanges,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shadowColor: Colors.transparent,
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text('Save Changes'),
+          ),
         ),
       ],
     );

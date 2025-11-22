@@ -84,13 +84,21 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     final unitsAsync = ref.watch(ownerUnitsProvider);
 
     return AlertDialog(
-      title: const Row(
-        children: [
-          Icon(Icons.add_circle, color: AppColors.authPrimary),
-          SizedBox(width: 8),
-          Text('Nova rezervacija'),
-        ],
-      ),
+      title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Nova rezervacija',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                Icon(
+                  Icons.add_circle,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ],
+            ),
       content: SizedBox(
         width: double.maxFinite,
         child: Form(
@@ -473,22 +481,36 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
           onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
           child: const Text('Otkaži'),
         ),
-        ElevatedButton(
-          onPressed: _isSaving ? null : _createBooking,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.authPrimary,
-            foregroundColor: Colors.white,
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF6B4CE6), // Purple
+                Color(0xFF4A90E2), // Blue
+              ],
+            ),
+            borderRadius: BorderRadius.all(Radius.circular(4)),
           ),
-          child: _isSaving
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text('Kreiraj'),
+          child: ElevatedButton(
+            onPressed: _isSaving ? null : _createBooking,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shadowColor: Colors.transparent,
+            ),
+            child: _isSaving
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Kreiraj'),
+          ),
         ),
       ],
     );

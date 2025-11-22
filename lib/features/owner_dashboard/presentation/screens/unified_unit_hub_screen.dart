@@ -40,6 +40,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   PropertyModel? _selectedProperty;
   late TabController _tabController;
 
+  // GlobalKey for Scaffold to avoid context issues
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   // Search and filter state
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -108,11 +111,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     });
 
     return Scaffold(
+      key: _scaffoldKey,
       appBar: isDesktop
           ? CommonAppBar(
               title: 'Smještajne Jedinice',
               leadingIcon: Icons.menu,
-              onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+              onLeadingIconTap: (_) => _scaffoldKey.currentState?.openDrawer(),
             )
           : AppBar(
               title: Text(
@@ -120,19 +124,15 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 style: const TextStyle(color: Colors.white),
               ),
               centerTitle: false,
-              leading: Builder(
-                builder: (context) => IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.white),
-                  onPressed: () => Scaffold.of(context).openDrawer(),
-                ),
+              leading: IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
               ),
               actions: [
-                Builder(
-                  builder: (context) => IconButton(
-                    icon: const Icon(Icons.list, color: Colors.white),
-                    onPressed: () => Scaffold.of(context).openEndDrawer(),
-                    tooltip: 'Prikaži sve jedinice',
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.list, color: Colors.white),
+                  onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                  tooltip: 'Prikaži sve jedinice',
                 ),
               ],
               flexibleSpace: Container(
@@ -856,8 +856,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   Widget _buildTab2_Pricing(ThemeData theme, bool isDark) {
     if (_selectedUnit == null) return const SizedBox.shrink();
 
-    // Embed UnitPricingScreen content
-    return UnitPricingScreen(unit: _selectedUnit);
+    // Embed UnitPricingScreen content WITHOUT app bar
+    return UnitPricingScreen(
+      unit: _selectedUnit,
+      showAppBar: false, // Hide app bar when embedded in tabs
+    );
   }
 
   Widget _buildTab3_Widget(ThemeData theme, bool isDark) {
@@ -865,10 +868,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       return const SizedBox.shrink();
     }
 
-    // Embed WidgetSettingsScreen content
+    // Embed WidgetSettingsScreen content WITHOUT app bar
     return WidgetSettingsScreen(
       propertyId: _selectedProperty!.id,
       unitId: _selectedUnit!.id,
+      showAppBar: false, // Hide app bar when embedded in tabs
     );
   }
 
@@ -877,10 +881,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       return const SizedBox.shrink();
     }
 
-    // Embed WidgetAdvancedSettingsScreen content
+    // Embed WidgetAdvancedSettingsScreen content WITHOUT app bar
     return WidgetAdvancedSettingsScreen(
       propertyId: _selectedProperty!.id,
       unitId: _selectedUnit!.id,
+      showAppBar: false, // Hide app bar when embedded in tabs
     );
   }
 

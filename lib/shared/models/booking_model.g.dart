@@ -80,10 +80,6 @@ Map<String, dynamic> _$$BookingModelImplToJson(
 const _$BookingStatusEnumMap = {
   BookingStatus.pending: 'pending',
   BookingStatus.confirmed: 'confirmed',
-  BookingStatus.checkedIn: 'checked_in',
-  BookingStatus.checkedOut: 'checked_out',
   BookingStatus.cancelled: 'cancelled',
   BookingStatus.completed: 'completed',
-  BookingStatus.inProgress: 'in_progress',
-  BookingStatus.blocked: 'blocked',
 };

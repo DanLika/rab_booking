@@ -262,28 +262,25 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                                 child: Row(
                                   children: [
                                     SizedBox(
-                                      height: 48,
-                                      width: 48,
-                                      child: Center(
-                                        child: SizedBox(
-                                          height: 24,
-                                          width: 24,
-                                          child: Checkbox(
-                                            value: _rememberMe,
-                                            onChanged: (value) => setState(
-                                              () => _rememberMe = value!,
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            activeColor: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                          ),
+                                      height: 24,
+                                      width: 24,
+                                      child: Checkbox(
+                                        value: _rememberMe,
+                                        onChanged: (value) => setState(
+                                          () => _rememberMe = value!,
                                         ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                        ),
+                                        activeColor: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
                                       ),
                                     ),
+                                    const SizedBox(width: 12),
                                     Text(
                                       'Remember me',
                                       style: Theme.of(context)

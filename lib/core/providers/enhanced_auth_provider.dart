@@ -330,11 +330,12 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           : _getAuthErrorMessage(e);
 
       state = state.copyWith(isLoading: false, error: errorMessage);
-      rethrow;
+      throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
       unawaited(LoggingService.logError('Sign in ERROR', e));
-      state = state.copyWith(isLoading: false, error: e.toString());
-      rethrow;
+      final errorMessage = e.toString();
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      throw errorMessage; // Throw user-friendly message
     }
   }
 
@@ -473,10 +474,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           : _getAuthErrorMessage(e);
 
       state = state.copyWith(isLoading: false, error: errorMessage);
-      rethrow;
+      throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-      rethrow;
+      final errorMessage = e.toString();
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      throw errorMessage; // Throw user-friendly message
     }
   }
 
@@ -567,18 +569,17 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         'Anonymous Sign-In error: ${e.code} - ${e.message}',
         tag: 'AUTH_ERROR',
       );
-      state = state.copyWith(isLoading: false, error: _getAuthErrorMessage(e));
-      rethrow;
+      final errorMessage = _getAuthErrorMessage(e);
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
       LoggingService.log(
         'Anonymous Sign-In unexpected error: $e',
         tag: 'AUTH_ERROR',
       );
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to sign in anonymously. Please try again.',
-      );
-      rethrow;
+      const errorMessage = 'Failed to sign in anonymously. Please try again.';
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      throw errorMessage; // Throw user-friendly message
     }
   }
 
@@ -652,18 +653,17 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         'Google Sign-In error: ${e.code} - ${e.message}',
         tag: 'AUTH_ERROR',
       );
-      state = state.copyWith(isLoading: false, error: _getAuthErrorMessage(e));
-      rethrow;
+      final errorMessage = _getAuthErrorMessage(e);
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
       LoggingService.log(
         'Google Sign-In unexpected error: $e',
         tag: 'AUTH_ERROR',
       );
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to sign in with Google. Please try again.',
-      );
-      rethrow;
+      const errorMessage = 'Failed to sign in with Google. Please try again.';
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      throw errorMessage; // Throw user-friendly message
     }
   }
 
@@ -719,18 +719,17 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         'Apple Sign-In error: ${e.code} - ${e.message}',
         tag: 'AUTH_ERROR',
       );
-      state = state.copyWith(isLoading: false, error: _getAuthErrorMessage(e));
-      rethrow;
+      final errorMessage = _getAuthErrorMessage(e);
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
       LoggingService.log(
         'Apple Sign-In unexpected error: $e',
         tag: 'AUTH_ERROR',
       );
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to sign in with Apple. Please try again.',
-      );
-      rethrow;
+      const errorMessage = 'Failed to sign in with Apple. Please try again.';
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      throw errorMessage; // Throw user-friendly message
     }
   }
 
@@ -811,7 +810,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       throw _getAuthErrorMessage(e);
     } catch (e) {
       unawaited(LoggingService.logError('Email update error', e));
-      rethrow;
+      const errorMessage = 'Failed to update email. Please try again.';
+      throw errorMessage; // Throw user-friendly message instead of raw exception
     }
   }
 

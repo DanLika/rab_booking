@@ -33,6 +33,7 @@ class _OwnerTimelineCalendarScreenState
   late DateRangeSelection _currentRange;
   bool _showSummary = false;
   int _visibleDays = 30; // Default to 30 days, will be updated based on screen size
+  int _calendarRebuildCounter = 0; // Force rebuild counter for Today button
 
   @override
   void initState() {
@@ -139,7 +140,7 @@ class _OwnerTimelineCalendarScreenState
           // Timeline calendar widget (it fetches its own data via providers)
           Expanded(
             child: TimelineCalendarWidget(
-              key: ValueKey(_currentRange.startDate), // Rebuild on date change
+              key: ValueKey('${_currentRange.startDate}_$_calendarRebuildCounter'), // Rebuild on date change + counter
               initialScrollToDate: _currentRange.startDate, // Scroll to selected date
               showSummary: _showSummary,
               onCellLongPress: (date, unit) => _showCreateBookingDialog(
@@ -195,6 +196,7 @@ class _OwnerTimelineCalendarScreenState
   void _goToToday() {
     setState(() {
       _currentRange = DateRangeSelection.days(DateTime.now(), _visibleDays);
+      _calendarRebuildCounter++; // Force widget rebuild to trigger scroll
     });
   }
 
@@ -237,7 +239,7 @@ class _OwnerTimelineCalendarScreenState
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withOpacity(0.2),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

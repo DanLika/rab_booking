@@ -79,6 +79,7 @@ class TimelineDayHeader extends StatelessWidget {
 
     return Container(
       width: dayWidth,
+      constraints: const BoxConstraints(minHeight: 60),
       decoration: BoxDecoration(
         color: isToday
             ? theme.colorScheme.primary.withValues(alpha: 0.2)
@@ -94,13 +95,13 @@ class TimelineDayHeader extends StatelessWidget {
         ),
       ),
       padding: const EdgeInsets.symmetric(
-        vertical: 12,
+        vertical: 16,
         horizontal: 8,
       ),
       child: Center(
         child: Container(
-          width: 36,
-          height: 36,
+          width: 40,
+          height: 40,
           decoration: isToday
               ? BoxDecoration(
                   color: theme.colorScheme.primary,
@@ -113,6 +114,7 @@ class TimelineDayHeader extends StatelessWidget {
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: 16,
+              height: 1.2,
               color: isToday
                   ? theme.colorScheme.onPrimary
                   : (isWeekend ? theme.colorScheme.error : null),

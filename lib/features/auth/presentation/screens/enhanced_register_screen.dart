@@ -336,7 +336,7 @@ class _EnhancedRegisterScreenState
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
 
                         // Privacy Policy Checkbox
                         _buildCheckbox(
@@ -375,7 +375,7 @@ class _EnhancedRegisterScreenState
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
 
                         // Newsletter Checkbox
                         _buildCheckbox(
@@ -534,8 +534,8 @@ class _EnhancedRegisterScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 48,
-          width: 48,
+          height: 24,
+          width: 24,
           child: Checkbox(
             value: value,
             onChanged: onChanged,
@@ -543,12 +543,12 @@ class _EnhancedRegisterScreenState
               borderRadius: BorderRadius.circular(4),
             ),
             activeColor: theme.colorScheme.primary,
-            materialTapTargetSize: MaterialTapTargetSize.padded,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
         Expanded(
-          child: Padding(padding: const EdgeInsets.only(top: 1), child: child),
+          child: Padding(padding: const EdgeInsets.only(top: 2), child: child),
         ),
       ],
     );

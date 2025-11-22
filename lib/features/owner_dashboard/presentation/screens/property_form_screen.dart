@@ -423,7 +423,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           onSelected: (selected) {
             print('🎯 [AMENITY] Chip tapped: ${amenity.displayName}');
             print('📊 [AMENITY] Selected: $selected (was: $isSelected)');
-            print('📋 [AMENITY] Current set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}');
+            print(
+              '📋 [AMENITY] Current set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}',
+            );
 
             setState(() {
               // Force create new Set to trigger rebuild
@@ -431,10 +433,13 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                 _selectedAmenities = {..._selectedAmenities, amenity};
                 print('✅ [AMENITY] Added ${amenity.displayName}');
               } else {
-                _selectedAmenities = Set.from(_selectedAmenities)..remove(amenity);
+                _selectedAmenities = Set.from(_selectedAmenities)
+                  ..remove(amenity);
                 print('❌ [AMENITY] Removed ${amenity.displayName}');
               }
-              print('📊 [AMENITY] New set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}');
+              print(
+                '📊 [AMENITY] New set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}',
+              );
             });
           },
           avatar: Icon(
@@ -637,20 +642,20 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
     if (!_isEditing && totalImages < 3) {
       // Soft warning - allow save without blocking
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.info_outline, color: Colors.white),
-              const SizedBox(width: 8),
+              Icon(Icons.info_outline, color: Colors.white),
+              SizedBox(width: 8),
               Expanded(
-                child: const Text(
+                child: Text(
                   'Preporuka: Dodajte najmanje 3 fotografije za bolju vidljivost',
                 ),
               ),
             ],
           ),
           backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 3),
+          duration: Duration(seconds: 3),
         ),
       );
       // Continue with save (no return)
@@ -671,7 +676,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
       // Upload new images to Firebase Storage
       final List<String> uploadedImageUrls = [];
       if (_selectedImages.isNotEmpty) {
-        print('🔍 [UPLOAD] Starting upload for ${_selectedImages.length} images');
+        print(
+          '🔍 [UPLOAD] Starting upload for ${_selectedImages.length} images',
+        );
 
         try {
           final propertyId = _isEditing
@@ -682,7 +689,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
 
           for (int i = 0; i < _selectedImages.length; i++) {
             final image = _selectedImages[i];
-            print('📸 [UPLOAD] Image ${i + 1}/${_selectedImages.length} - Path: ${image.path}');
+            print(
+              '📸 [UPLOAD] Image ${i + 1}/${_selectedImages.length} - Path: ${image.path}',
+            );
 
             final bytes = await image.readAsBytes();
             print('✅ [UPLOAD] Read ${bytes.length} bytes');

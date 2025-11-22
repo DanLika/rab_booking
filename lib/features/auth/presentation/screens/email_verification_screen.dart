@@ -46,8 +46,11 @@ class _EmailVerificationScreenState
 
     final authState = ref.read(enhancedAuthProvider);
     if (!authState.requiresEmailVerification && mounted) {
-      // Email verified! Navigate to calendar
-      context.go(OwnerRoutes.calendarWeek);
+      // Email verified! Let router handle navigation based on onboarding status
+      // Router will redirect to:
+      // - /onboarding/wizard if requiresOnboarding is true
+      // - /owner/overview if requiresOnboarding is false
+      context.go('/');
     }
   }
 

@@ -1,14 +1,8 @@
-import 'dart:convert';
-import 'dart:html' as html;
-import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
 import '../providers/theme_provider.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/services/email_notification_service.dart';
@@ -16,6 +10,7 @@ import '../../../../core/services/ical_generator.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../domain/models/widget_settings.dart';
 import '../utils/snackbar_helper.dart';
+import '../../utils/ics_download.dart';
 
 /// Simplified Booking Confirmation Screen for Embedded Widget
 /// Shows booking confirmation with reference number and details
@@ -266,34 +261,24 @@ class _BookingConfirmationScreenState
     }
   }
 
-  /// Download .ics file (platform-specific implementation)
-  /// Web: Triggers browser download via anchor tag
-  /// Mobile/Desktop: Shares .ics file via share dialog using share_plus
+  /// Downloads/shares ICS file using platform-specific implementation
+  ///
+  /// Web: Triggers browser download via Blob + Anchor element
+  /// Mobile/Desktop: Opens native share sheet via share_plus
+  ///
+  /// The implementation is automatically selected at compile-time
+  /// using conditional imports (see lib/features/widget/utils/ics_download.dart)
   Future<void> _downloadIcsFile(String content, String filename) async {
-    if (kIsWeb) {
-      // Web: Use anchor tag download
-      final bytes = utf8.encode(content);
-      final blob = html.Blob([bytes], 'text/calendar');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      html.AnchorElement(href: url)
-        ..setAttribute('download', filename)
-        ..click();
-      html.Url.revokeObjectUrl(url);
-    } else {
-      // Mobile/Desktop: Save to temporary directory and share
-      try {
-        final tempDir = await getTemporaryDirectory();
-        final file = File('${tempDir.path}/$filename');
-        await file.writeAsString(content);
-
-        // Share the file using share_plus
-        await Share.shareXFiles(
-          [XFile(file.path, mimeType: 'text/calendar')],
-          subject: 'Booking Calendar Event',
-          text: 'Add your booking to your calendar',
+    try {
+      // Platform-specific implementation selected automatically at compile-time
+      await downloadIcsFile(content, filename);
+    } catch (e) {
+      // Show error to user if download/share fails
+      if (mounted) {
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Failed to download calendar file: $e',
         );
-      } catch (e) {
-        throw Exception('Failed to share calendar file: $e');
       }
     }
   }

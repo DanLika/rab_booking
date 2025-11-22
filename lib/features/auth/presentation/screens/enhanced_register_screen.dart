@@ -119,8 +119,19 @@ class _EnhancedRegisterScreenState
             profileImageName: _profileImageName,
           );
 
-      // Router will automatically redirect based on auth state
-      // (email verification, onboarding, or dashboard)
+      // Registration successful - navigate to email verification
+      if (mounted) {
+        final authState = ref.read(enhancedAuthProvider);
+
+        // Check if email verification required (always true for new registrations)
+        if (authState.requiresEmailVerification) {
+          context.go(OwnerRoutes.emailVerification);
+          return;
+        }
+
+        // If somehow email is already verified, continue to onboarding/dashboard
+        // Router will handle navigation based on requiresOnboarding flag
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -266,9 +277,14 @@ class _EnhancedRegisterScreenState
                         const SizedBox(height: 12),
 
                         // Password Strength Indicator
-                        if (_passwordController.text.isNotEmpty)
+                        if (_passwordController.text.isNotEmpty) ...[
                           _buildPasswordStrengthIndicator(),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Spacing when no strength indicator
+                        if (_passwordController.text.isEmpty)
+                          const SizedBox(height: 4),
 
                         // Confirm Password
                         PremiumInputField(

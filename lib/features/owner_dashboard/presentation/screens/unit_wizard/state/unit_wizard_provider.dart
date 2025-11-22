@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../../../../shared/models/unit_model.dart';
 import '../../../../../../shared/providers/repository_providers.dart';
 import '../../../../../../core/providers/enhanced_auth_provider.dart';
 import 'unit_wizard_state.dart';

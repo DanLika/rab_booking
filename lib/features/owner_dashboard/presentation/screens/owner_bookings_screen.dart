@@ -26,11 +26,6 @@ import '../widgets/booking_card/booking_card_date_range.dart';
 import '../widgets/booking_card/booking_card_payment_info.dart';
 import '../widgets/booking_card/booking_card_notes.dart';
 import '../widgets/booking_card/booking_card_actions.dart';
-// Booking action dialogs
-import '../widgets/booking_actions/booking_approve_dialog.dart';
-import '../widgets/booking_actions/booking_reject_dialog.dart';
-import '../widgets/booking_actions/booking_complete_dialog.dart';
-import '../widgets/booking_actions/booking_cancel_dialog.dart';
 
 /// Owner bookings screen with filters and booking management
 class OwnerBookingsScreen extends ConsumerStatefulWidget {
@@ -1510,24 +1505,6 @@ class _BookingCard extends ConsumerWidget {
       }
     }
   }
-
-  /// Get icon for booking status
-  IconData _getStatusIcon(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.pending:
-        return Icons.schedule;
-      case BookingStatus.confirmed:
-        return Icons.check_circle;
-      case BookingStatus.cancelled:
-        return Icons.cancel;
-      case BookingStatus.completed:
-        return Icons.task_alt;
-      case BookingStatus.blocked:
-        return Icons.block;
-      default:
-        return Icons.info;
-    }
-  }
 }
 
 
@@ -1556,39 +1533,6 @@ class _InfoRow extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(child: child),
-      ],
-    );
-  }
-}
-
-/// Payment info column widget
-class _PaymentInfoColumn extends StatelessWidget {
-  const _PaymentInfoColumn({
-    required this.label,
-    required this.value,
-    this.valueStyle,
-  });
-
-  final String label;
-  final String value;
-  final TextStyle? valueStyle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(value, style: valueStyle),
       ],
     );
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,11 @@ import 'state/unit_wizard_provider.dart';
 import 'widgets/wizard_progress_bar.dart';
 import 'widgets/wizard_navigation_buttons.dart';
 import 'widgets/wizard_step_container.dart';
+import 'steps/step_1_basic_info.dart';
+import 'steps/step_2_capacity.dart';
+import 'steps/step_3_pricing.dart';
+import 'steps/step_4_availability.dart';
+import 'steps/step_8_review.dart';
 
 /// Unit Wizard Screen - Multi-step wizard for creating/editing units
 ///
@@ -69,9 +75,11 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
     // Move to next step
     if (currentStep < 8) {
       await notifier.goToNextStep();
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+      unawaited(
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        ),
       );
     } else {
       // Final step - publish unit
@@ -84,9 +92,11 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
     final notifier = ref.read(unitWizardNotifierProvider(widget.unitId).notifier);
     await notifier.goToPreviousStep();
 
-    _pageController.previousPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+    unawaited(
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      ),
     );
   }
 
@@ -101,9 +111,11 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
     await notifier.markStepSkipped(currentState.currentStep);
     await notifier.goToNextStep();
 
-    _pageController.nextPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+    unawaited(
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      ),
     );
   }
 
@@ -260,14 +272,14 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(), // Disable swipe
                 children: [
-                  _buildStepPlaceholder(1, 'Basic Info'),
-                  _buildStepPlaceholder(2, 'Capacity & Space'),
-                  _buildStepPlaceholder(3, 'Pricing'),
-                  _buildStepPlaceholder(4, 'Availability'),
+                  Step1BasicInfo(unitId: widget.unitId),
+                  Step2Capacity(unitId: widget.unitId),
+                  Step3Pricing(unitId: widget.unitId),
+                  Step4Availability(unitId: widget.unitId),
                   _buildStepPlaceholder(5, 'Photos'),
                   _buildStepPlaceholder(6, 'Widget Setup'),
                   _buildStepPlaceholder(7, 'Advanced Options'),
-                  _buildStepPlaceholder(8, 'Review & Publish'),
+                  Step8Review(unitId: widget.unitId),
                 ],
               ),
             ),

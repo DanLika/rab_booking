@@ -42,7 +42,7 @@ class WizardProgressBar extends StatelessWidget {
         color: theme.colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -70,7 +70,7 @@ class WizardProgressBar extends StatelessWidget {
         color: theme.colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -222,8 +222,8 @@ class WizardProgressBar extends StatelessWidget {
           colors: isCompleted
               ? [theme.colorScheme.tertiary, theme.colorScheme.tertiary]
               : [
-                  theme.colorScheme.outline.withOpacity(0.3),
-                  theme.colorScheme.outline.withOpacity(0.3),
+                  theme.colorScheme.outline.withValues(alpha: 0.3),
+                  theme.colorScheme.outline.withValues(alpha: 0.3),
                 ],
         ),
       ),

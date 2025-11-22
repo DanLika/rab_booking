@@ -68,7 +68,6 @@ class UnitWizardDraft with _$UnitWizardDraft {
   factory UnitWizardDraft.fromUnit(UnitModel unit) {
     return UnitWizardDraft(
       unitId: unit.id,
-      currentStep: 1,
       completedSteps: {1: true, 2: true, 3: true, 4: true},
       name: unit.name,
       propertyId: unit.propertyId,
@@ -80,7 +79,6 @@ class UnitWizardDraft with _$UnitWizardDraft {
       areaSqm: unit.areaSqm,
       pricePerNight: unit.pricePerNight,
       minStayNights: unit.minStayNights,
-      availableYearRound: true,
       images: unit.images,
       coverImageUrl: unit.images.isNotEmpty ? unit.images.first : null,
       widgetMode: 'bookingInstant',
@@ -114,7 +112,7 @@ extension UnitWizardDraftFirestore on UnitWizardDraft {
       'available_year_round': availableYearRound,
       'season_start_date': seasonStartDate != null ? Timestamp.fromDate(seasonStartDate!) : null,
       'season_end_date': seasonEndDate != null ? Timestamp.fromDate(seasonEndDate!) : null,
-      'blocked_dates': blockedDates.map((d) => Timestamp.fromDate(d)).toList(),
+      'blocked_dates': blockedDates.map(Timestamp.fromDate).toList(),
       'images': images,
       'cover_image_url': coverImageUrl,
       'widget_mode': widgetMode,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../../../shared/providers/repository_providers.dart';
 import '../../../../../../core/providers/enhanced_auth_provider.dart';
@@ -14,6 +15,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
   Timer? _autoSaveTimer;
   String? _draftId;
 
+  @override
   Future<UnitWizardDraft> build(String? unitId) async {
     // Get current user
     final authState = ref.read(enhancedAuthProvider);
@@ -66,9 +68,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
     }
 
     // Create new empty draft
-    return const UnitWizardDraft(
-      createdAt: null, // Will be set on first save
-    );
+    return const UnitWizardDraft();
   }
 
   /// Update a single field with auto-save (2s debounce)
@@ -83,9 +83,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
 
     // Schedule auto-save (debounced)
     _autoSaveTimer?.cancel();
-    _autoSaveTimer = Timer(const Duration(seconds: 2), () {
-      _saveDraft();
-    });
+    _autoSaveTimer = Timer(const Duration(seconds: 2), _saveDraft);
   }
 
   /// Update multiple fields at once
@@ -102,9 +100,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
 
     // Auto-save
     _autoSaveTimer?.cancel();
-    _autoSaveTimer = Timer(const Duration(seconds: 2), () {
-      _saveDraft();
-    });
+    _autoSaveTimer = Timer(const Duration(seconds: 2), _saveDraft);
   }
 
   /// Go to next step
@@ -203,7 +199,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
       );
     } catch (e) {
       // Silent fail - don't interrupt user flow
-      print('[UnitWizard] Auto-save failed: $e');
+      debugPrint('[UnitWizard] Auto-save failed: $e');
     }
   }
 
@@ -219,7 +215,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
           .doc('${userId}_$_draftId')
           .delete();
     } catch (e) {
-      print('[UnitWizard] Failed to delete draft: $e');
+      debugPrint('[UnitWizard] Failed to delete draft: $e');
     }
   }
 

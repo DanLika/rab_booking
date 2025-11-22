@@ -36,7 +36,7 @@ class WizardNavigationButtons extends StatelessWidget {
         color: theme.colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -54,7 +54,7 @@ class WizardNavigationButtons extends StatelessWidget {
                   vertical: isMobile ? 12 : 14,
                 ),
                 side: BorderSide(
-                  color: theme.colorScheme.outline.withOpacity(0.3),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
                 ),
               ),
             )
@@ -81,12 +81,12 @@ class WizardNavigationButtons extends StatelessWidget {
           FilledButton.icon(
             onPressed: nextEnabled && !isLoading ? onNext : null,
             icon: isLoading
-                ? SizedBox(
+                ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: const AlwaysStoppedAnimation(Colors.white),
+                      valueColor: AlwaysStoppedAnimation(Colors.white),
                     ),
                   )
                 : Icon(
@@ -102,7 +102,7 @@ class WizardNavigationButtons extends StatelessWidget {
               disabledBackgroundColor:
                   theme.colorScheme.surfaceContainerHighest,
               disabledForegroundColor:
-                  theme.colorScheme.onSurface.withOpacity(0.38),
+                  theme.colorScheme.onSurface.withValues(alpha: 0.38),
               padding: EdgeInsets.symmetric(
                 horizontal: isMobile ? 20 : 32,
                 vertical: isMobile ? 12 : 14,

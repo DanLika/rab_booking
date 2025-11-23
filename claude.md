@@ -4,6 +4,157 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🎨 Timeline Calendar - Diagonal Gradient Background
+
+**Datum: 2025-11-23**
+**Status: ✅ COMPLETED - Diagonal gradient applied to timeline calendar**
+
+### 📋 Problem Statement
+
+Korisnik je tražio dijagonalni gradient na timeline calendar screen-u koji će:
+- Teći od **top-left prema bottom-right** (dijagonalno, ne vertikalno)
+- Biti vidljiv u **date header area** (gdje se prikazuju datumi: 8, 9, 10...)
+- **NE** biti primjenjen na timeline calendar grid cells (ćelije sa rezervacijama)
+
+**Specifični zahtjev:**
+> "Nije taj gradient kao što sam očekivao. Header je i dalje crn, a ja želim dijagonalni gradient koji će krenuti od top left prema bottom right. U to nije uključen timeline calendar kao komponenta za scrollanje, razumiješ, cells sa rezervacijama itd."
+
+---
+
+### 🔧 Solution: Transparent Headers + Diagonal Body Gradient
+
+**Pristup:**
+1. **Promijeniti direkciju body gradient-a** - Sa vertical (top→bottom) na diagonal (topLeft→bottomRight)
+2. **Učiniti date headers transparent** - Da se vidi gradient ispod njih
+3. **Cells ostaju nepromijenjeni** - Timeline grid ne dobija gradient
+
+---
+
+### 📁 Modified Files
+
+**1. Timeline Date Header Components**
+```
+lib/features/owner_dashboard/presentation/widgets/timeline/timeline_date_header.dart
+```
+
+**Lines 42 & 109: Made backgrounds transparent**
+
+**PRIJE:**
+```dart
+// TimelineMonthHeader
+color: theme.cardColor,  // Black in dark mode, white in light
+
+// TimelineDayHeader
+color: isToday
+    ? theme.colorScheme.primary.withValues(alpha: 0.2)
+    : theme.cardColor,  // Black in dark mode, white in light
+```
+
+**POSLIJE:**
+```dart
+// TimelineMonthHeader
+color: Colors.transparent,  // Transparent to show parent gradient
+
+// TimelineDayHeader
+color: isToday
+    ? theme.colorScheme.primary.withValues(alpha: 0.2)
+    : Colors.transparent,  // Transparent to show parent gradient
+```
+
+---
+
+**2. Timeline Calendar Screen**
+```
+lib/features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart
+```
+
+**Lines 93-96: Changed gradient direction**
+
+**PRIJE:**
+```dart
+body: Container(
+  decoration: BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,        // ⬇️ VERTICAL
+      end: Alignment.bottomCenter,       // ⬇️ VERTICAL
+      colors: Theme.of(context).brightness == Brightness.dark
+          ? [
+              Theme.of(context).colorScheme.veryDarkGray,
+              Theme.of(context).colorScheme.mediumDarkGray,
+            ]
+          : [
+              Theme.of(context).colorScheme.veryLightGray,
+              Colors.white,
+            ],
+      stops: const [0.0, 0.3],
+    ),
+  ),
+```
+
+**POSLIJE:**
+```dart
+body: Container(
+  decoration: BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topLeft,          // ↘️ DIAGONAL
+      end: Alignment.bottomRight,        // ↘️ DIAGONAL
+      colors: Theme.of(context).brightness == Brightness.dark
+          ? [
+              Theme.of(context).colorScheme.veryDarkGray,
+              Theme.of(context).colorScheme.mediumDarkGray,
+            ]
+          : [
+              Theme.of(context).colorScheme.veryLightGray,
+              Colors.white,
+            ],
+      stops: const [0.0, 0.3],
+    ),
+  ),
+```
+
+---
+
+### ✅ Rezultat
+
+**Dark Theme:**
+- Gradient teče dijagonalno od gore lijevo prema dolje desno ✅
+- Date header (mjesec + dani) je transparent → vidi se gradient ✅
+- Timeline grid cells (rezervacije) ostaju nepromijenjeni ✅
+- Boje: `veryDarkGray` (#1A1A1A) → `mediumDarkGray` (#2D2D2D) ✅
+
+**Light Theme:**
+- Gradient teče dijagonalno od gore lijevo prema dolje desno ✅
+- Date header transparent → vidi se gradient ✅
+- Timeline grid cells ostaju nepromijenjeni ✅
+- Boje: `veryLightGray` (#F5F5F5) → `white` (#FFFFFF) ✅
+
+---
+
+### ⚠️ Important Notes for Future Sessions
+
+**1. NE VRAĆAJ header backgrounds na theme.cardColor:**
+- Headers MORAJU biti transparent da se vidi gradient
+- Ovo je user request - eksplicitno traženo!
+
+**2. NE MIJENJAJ gradient direkciju nazad na vertical:**
+- `topLeft → bottomRight` je finalna verzija
+- Vertical (`topCenter → bottomCenter`) je STARA verzija
+
+**3. Timeline grid cells NE DOBIJAJU gradient:**
+- Samo body i date headers imaju gradient
+- Grid cells (reservations) ostaju kako jesu
+- Ovo je namjerno - user ne želi gradient na ćelijama!
+
+**4. Gradient stops ostaju [0.0, 0.3]:**
+- Fade efekat se dešava na gornjih 30% ekrana
+- NE mijenjaj stops bez razloga!
+
+---
+
+**Commit:** `ca59494` - feat: apply diagonal gradient to timeline calendar
+
+---
+
 ## 🎨 Timeline Calendar - Z-Index Booking Layering & Toolbar Layout
 
 **Datum: 2025-11-22**

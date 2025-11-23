@@ -149,11 +149,41 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       endDrawer: !isDesktop
           ? Drawer(
               width: 320,
-              child: Builder(
-                builder: (context) => _buildMasterPanel(
-                  theme,
-                  isDark,
-                  onUnitSelected: () => Navigator.of(context).pop(),
+              child: Container(
+                decoration: BoxDecoration(
+                  // Diagonal gradient (top-right → bottom-left) with 5-color stops - REVERSED
+                  gradient: isDark
+                      ? LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
+                          colors: [
+                            theme.colorScheme.mediumDarkGray,
+                            theme.colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
+                            theme.colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
+                            theme.colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
+                            theme.colorScheme.veryDarkGray,
+                          ],
+                          stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                        )
+                      : LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
+                          colors: [
+                            Colors.white,
+                            Colors.white.withAlpha((0.95 * 255).toInt()),
+                            theme.colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
+                            theme.colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
+                            theme.colorScheme.veryLightGray,
+                          ],
+                          stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                        ),
+                ),
+                child: Builder(
+                  builder: (context) => _buildMasterPanel(
+                    theme,
+                    isDark,
+                    onUnitSelected: () => Navigator.of(context).pop(),
+                  ),
                 ),
               ),
             )
@@ -200,9 +230,32 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         Container(
           width: 320,
           decoration: BoxDecoration(
-            color: isDark
-                ? theme.colorScheme.surface
-                : theme.colorScheme.surfaceContainerHighest,
+            // Diagonal gradient (top-right → bottom-left) with 5-color stops - same as mobile endDrawer
+            gradient: isDark
+                ? LinearGradient(
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                    colors: [
+                      theme.colorScheme.mediumDarkGray,
+                      theme.colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
+                      theme.colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
+                      theme.colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
+                      theme.colorScheme.veryDarkGray,
+                    ],
+                    stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                  )
+                : LinearGradient(
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                    colors: [
+                      Colors.white,
+                      Colors.white.withAlpha((0.95 * 255).toInt()),
+                      theme.colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
+                      theme.colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
+                      theme.colorScheme.veryLightGray,
+                    ],
+                    stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                  ),
             border: Border(
               left: BorderSide(
                 color: theme.colorScheme.outline.withOpacity(0.2),
@@ -555,7 +608,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     ),
                     decoration: BoxDecoration(
                       color: unit.isAvailable
-                          ? AppColors.success.withAlpha((0.2 * 255).toInt())
+                          ? const Color(0xFF66BB6A).withAlpha((0.2 * 255).toInt()) // Same as Confirmed badge
                           : AppColors.error.withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -563,7 +616,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                       unit.isAvailable ? 'Dostupan' : 'Nedostupan',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: unit.isAvailable
-                            ? AppColors.success
+                            ? const Color(0xFF66BB6A) // Same as Confirmed badge
                             : AppColors.error,
                         fontWeight: FontWeight.w600,
                       ),

@@ -602,30 +602,56 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   }
 
   Widget _buildSaveButton(ThemeData theme, bool isVerySmall) {
-    return FilledButton.icon(
-      onPressed: _isUpdatingBasePrice ? null : _updateBasePrice,
-      icon: _isUpdatingBasePrice
-          ? const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            )
-          : const Icon(Icons.save_outlined, size: 18),
-      label: Text(isVerySmall ? 'Sačuvaj Cijenu' : 'Sačuvaj'),
-      style: FilledButton.styleFrom(
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: isVerySmall ? 14 : 16,
+    // Use gradient button like app bar (Purple → Blue)
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF6B4CE6), // Purple (same as app bar)
+            Color(0xFF4A90E2), // Blue (same as app bar)
+          ],
         ),
-        shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _isUpdatingBasePrice ? null : _updateBasePrice,
           borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: isVerySmall ? 14 : 16,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _isUpdatingBasePrice
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.save_outlined,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                const SizedBox(width: 8),
+                Text(
+                  isVerySmall ? 'Sačuvaj Cijenu' : 'Sačuvaj',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        elevation: 0,
       ),
     );
   }

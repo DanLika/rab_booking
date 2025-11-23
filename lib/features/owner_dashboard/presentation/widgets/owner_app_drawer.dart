@@ -24,11 +24,11 @@ class OwnerAppDrawer extends ConsumerWidget {
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
-          // Diagonal gradient (top-right → bottom-left) with 5-color stops
+          // Diagonal gradient (top-left → bottom-right) with 5-color stops
           gradient: isDarkMode
               ? LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                   colors: [
                     theme.colorScheme.mediumDarkGray,
                     theme.colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
@@ -39,8 +39,8 @@ class OwnerAppDrawer extends ConsumerWidget {
                   stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
                 )
               : LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                   colors: [
                     Colors.white,
                     Colors.white.withAlpha((0.95 * 255).toInt()),

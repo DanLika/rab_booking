@@ -119,7 +119,7 @@ class TimelineDayHeader extends StatelessWidget {
       ),
       padding: EdgeInsets.symmetric(
         vertical: verticalPadding,
-        horizontal: 8,
+        horizontal: 4, // Reduced from 8 to prevent overflow
       ),
       child: Center(
         child: Container(

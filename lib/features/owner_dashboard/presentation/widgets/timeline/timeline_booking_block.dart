@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
-import '../../../../../core/constants/enums.dart';
 import '../../../../../core/utils/platform_utils.dart';
 import '../../../utils/calendar_grid_calculator.dart';
 import '../../../utils/booking_overlap_detector.dart';
@@ -61,9 +60,6 @@ class TimelineBookingBlock extends StatelessWidget {
     // ENHANCED: Detect conflicts with other bookings in the same unit
     final hasConflict = hasBookingConflict(booking, allBookingsByUnit);
 
-    // ENHANCED: Check if this is a cancelled booking overlapping with confirmed
-    final shouldReduceOpacity = shouldHaveReducedOpacity(booking, allBookingsByUnit);
-
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: PlatformUtils.supportsHover
@@ -79,9 +75,7 @@ class TimelineBookingBlock extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         onLongPress: onLongPress,
-        child: Opacity(
-          opacity: shouldReduceOpacity ? 0.6 : 1.0,
-          child: Container(
+        child: Container(
             width: width - 2,
             height: blockHeight,
             margin: const EdgeInsets.symmetric(horizontal: 1),
@@ -161,8 +155,7 @@ class TimelineBookingBlock extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   /// Calculate number of nights between check-in and check-out
@@ -198,19 +191,5 @@ class TimelineBookingBlock extends StatelessWidget {
     );
 
     return conflicts.isNotEmpty;
-  }
-
-  /// Check if a cancelled booking should have reduced opacity
-  ///
-  /// Returns true for all cancelled bookings to create visual layering.
-  /// Combined with z-index sorting (cancelled render first), this ensures
-  /// active bookings (confirmed/pending) appear on top with full visibility.
-  static bool shouldHaveReducedOpacity(
-    BookingModel booking,
-    Map<String, List<BookingModel>> allBookingsByUnit,
-  ) {
-    // Apply reduced opacity to all cancelled bookings
-    // Z-index sorting ensures they render below active bookings
-    return booking.status == BookingStatus.cancelled;
   }
 }

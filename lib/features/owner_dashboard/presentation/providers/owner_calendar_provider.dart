@@ -8,6 +8,7 @@ import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/services/logging_service.dart';
+import '../../../../core/constants/enums.dart';
 
 part 'owner_calendar_provider.g.dart';
 
@@ -41,7 +42,8 @@ Future<List<UnitModel>> allOwnerUnits(Ref ref) async {
   return allUnits;
 }
 
-/// Calendar bookings provider - returns ALL bookings for owner (no filtering)
+/// Calendar bookings provider - returns ACTIVE bookings only (excludes cancelled)
+/// Cancelled bookings are not shown on timeline calendar (consistent with booking widget)
 @riverpod
 Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
   final repository = ref.watch(ownerBookingsRepositoryProvider);
@@ -59,11 +61,25 @@ Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
   final endDate = DateTime(now.year + 1, now.month, now.day);
 
   // No property/unit filtering - timeline widget shows ALL units
-  return repository.getCalendarBookings(
+  final allBookings = await repository.getCalendarBookings(
     ownerId: userId,
     startDate: startDate,
     endDate: endDate,
   );
+
+  // FILTER: Exclude cancelled bookings from timeline display
+  // Cancelled bookings don't block dates and shouldn't clutter the calendar
+  final activeBookingsMap = <String, List<BookingModel>>{};
+  for (final entry in allBookings.entries) {
+    final activeBookings = entry.value
+        .where((booking) => booking.status != BookingStatus.cancelled)
+        .toList();
+    if (activeBookings.isNotEmpty) {
+      activeBookingsMap[entry.key] = activeBookings;
+    }
+  }
+
+  return activeBookingsMap;
 }
 
 /// Realtime subscription manager for owner calendar

@@ -1,4 +1,5 @@
 import '../../../shared/models/booking_model.dart';
+import '../../../core/constants/enums.dart';
 
 /// Booking overlap detector for drag-and-drop validation
 /// Checks if a booking can be moved to a new date/unit without conflicts
@@ -7,6 +8,10 @@ import '../../../shared/models/booking_model.dart';
 /// - Booking A can check-out on May 5
 /// - Booking B can check-in on May 5 (same day)
 /// - This is NOT considered an overlap
+///
+/// IMPORTANT: Cancelled bookings are IGNORED in conflict detection
+/// - Cancelled reservations don't block dates
+/// - Only active bookings (confirmed, pending, completed, etc.) are checked
 class BookingOverlapDetector {
   /// Check if a booking overlaps with another booking
   ///
@@ -31,6 +36,7 @@ class BookingOverlapDetector {
 
   /// Check if a booking can be placed in a unit without conflicts
   /// Returns true if there are NO conflicts (placement is valid)
+  /// FILTER: Ignores cancelled bookings - they don't block dates
   static bool canPlaceBooking({
     required String unitId,
     required DateTime newCheckIn,
@@ -45,6 +51,11 @@ class BookingOverlapDetector {
     for (final booking in unitBookings) {
       // Skip the booking being moved (if editing)
       if (bookingIdToExclude != null && booking.id == bookingIdToExclude) {
+        continue;
+      }
+
+      // FILTER: Ignore cancelled bookings - they don't block dates
+      if (booking.status == BookingStatus.cancelled) {
         continue;
       }
 
@@ -63,6 +74,7 @@ class BookingOverlapDetector {
   }
 
   /// Get all conflicting bookings for a date range in a unit
+  /// FILTER: Ignores cancelled bookings - they don't block dates
   static List<BookingModel> getConflictingBookings({
     required String unitId,
     required DateTime newCheckIn,
@@ -76,6 +88,11 @@ class BookingOverlapDetector {
     for (final booking in unitBookings) {
       // Skip the booking being moved
       if (bookingIdToExclude != null && booking.id == bookingIdToExclude) {
+        continue;
+      }
+
+      // FILTER: Ignore cancelled bookings - they don't block dates
+      if (booking.status == BookingStatus.cancelled) {
         continue;
       }
 
@@ -165,6 +182,7 @@ class BookingOverlapDetector {
 
   /// Find available date slots in a unit
   /// Returns list of available date ranges (gaps between bookings)
+  /// FILTER: Ignores cancelled bookings - they don't block dates
   static List<DateRange> findAvailableSlots({
     required String unitId,
     required DateTime rangeStart,
@@ -175,8 +193,13 @@ class BookingOverlapDetector {
     final unitBookings = allBookings[unitId] ?? [];
     final availableSlots = <DateRange>[];
 
+    // FILTER: Only consider active bookings (exclude cancelled)
+    final activeBookings = unitBookings
+        .where((booking) => booking.status != BookingStatus.cancelled)
+        .toList();
+
     // Sort bookings by check-in date
-    final sortedBookings = [...unitBookings]
+    final sortedBookings = [...activeBookings]
       ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
 
     // Find gaps between bookings

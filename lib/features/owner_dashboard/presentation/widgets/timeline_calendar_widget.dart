@@ -947,26 +947,9 @@ class _TimelineCalendarWidgetState
       '[TIMELINE RENDER] _buildReservationBlocks called with ${bookings.length} bookings, visible dates: ${dates.first} to ${dates.last}',
     );
 
-    // Sort bookings by status priority to control z-index (rendering order)
-    // Cancelled bookings render FIRST (bottom layer, with reduced opacity)
-    // Confirmed/Pending render LAST (top layer, full visibility)
-    // This creates visual layering: active bookings appear on top of cancelled ones
-    final sortedBookings = [...bookings]..sort((a, b) {
-      // Priority: cancelled (0) < pending (1) < confirmed (2)
-      final priorityA = a.status == BookingStatus.cancelled
-          ? 0
-          : a.status == BookingStatus.pending
-              ? 1
-              : 2;
-      final priorityB = b.status == BookingStatus.cancelled
-          ? 0
-          : b.status == BookingStatus.pending
-              ? 1
-              : 2;
-      return priorityA.compareTo(priorityB);
-    });
-
-    for (final booking in sortedBookings) {
+    // NOTE: Cancelled bookings are filtered out at provider level
+    // Only active bookings (confirmed, pending, completed) are rendered
+    for (final booking in bookings) {
       // Calculate position and width
       final checkIn = booking.checkIn;
       final nights = TimelineBookingBlock.calculateNights(

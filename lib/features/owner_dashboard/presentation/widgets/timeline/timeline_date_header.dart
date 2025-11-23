@@ -39,7 +39,7 @@ class TimelineMonthHeader extends StatelessWidget {
     return Container(
       width: dayWidth * dayCount,
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: Colors.transparent, // Transparent to show parent gradient
         border: Border(
           bottom: BorderSide(color: theme.dividerColor, width: 1.5),
           right: BorderSide(
@@ -106,7 +106,7 @@ class TimelineDayHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: isToday
             ? theme.colorScheme.primary.withValues(alpha: 0.2)
-            : theme.cardColor,
+            : Colors.transparent, // Transparent to show parent gradient
         border: Border(
           left: BorderSide(
             color: isFirstDayOfMonth

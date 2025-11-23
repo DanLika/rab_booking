@@ -91,8 +91,8 @@ class _OwnerTimelineCalendarScreenState
             body: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                   colors: Theme.of(context).brightness == Brightness.dark
                       ? [
                           Theme.of(context).colorScheme.veryDarkGray,

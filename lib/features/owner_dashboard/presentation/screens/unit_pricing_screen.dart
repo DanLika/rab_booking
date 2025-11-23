@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/theme/app_color_extensions.dart';
 import '../widgets/price_list_calendar_widget.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -397,6 +398,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
   Widget _buildBasePriceSection(bool isMobile) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Card(
       elevation: 0.5,
@@ -408,39 +410,63 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
           width: 0.5,
         ),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(isMobile ? 16 : 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with icon - Minimalist
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha(
-                      (0.12 * 255).toInt(),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    Theme.of(context).colorScheme.mediumDarkGray,
+                    Theme.of(context).colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryDarkGray,
+                  ]
+                : [
+                    Colors.white,
+                    Colors.white.withAlpha((0.95 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryLightGray,
+                  ],
+            stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with icon - Minimalist
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withAlpha(
+                        (0.12 * 255).toInt(),
+                      ),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.euro_outlined,
-                    color: theme.colorScheme.primary,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Osnovna Cijena',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                    child: Icon(
+                      Icons.euro_outlined,
+                      color: theme.colorScheme.primary,
+                      size: 18,
                     ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Osnovna Cijena',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             const SizedBox(height: 8),
             Text(
               'Ovo je default cijena po noćenju koja se koristi kada nema posebnih cijena.',
@@ -486,6 +512,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

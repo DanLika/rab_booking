@@ -71,18 +71,12 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            // Rezervacije Expansion
-            _PremiumExpansionTile(
+            // Rezervacije
+            _DrawerItem(
               icon: Icons.book_online,
               title: 'Rezervacije',
-              isExpanded: currentRoute.startsWith('bookings'),
-              children: [
-                _DrawerSubItem(
-                  title: 'Sve rezervacije',
-                  isSelected: currentRoute == 'bookings',
-                  onTap: () => context.go(OwnerRoutes.bookings),
-                ),
-              ],
+              isSelected: currentRoute == 'bookings',
+              onTap: () => context.go(OwnerRoutes.bookings),
             ),
 
             const SizedBox(height: 4),

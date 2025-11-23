@@ -531,7 +531,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: isSelected
-                            ? theme.colorScheme.onPrimaryContainer
+                            ? (isDark ? Colors.white : theme.colorScheme.onPrimaryContainer)
                             : theme.colorScheme.onSurface,
                       ),
                       maxLines: 1,
@@ -570,7 +570,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 propertyName,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: isSelected
-                      ? theme.colorScheme.onPrimaryContainer.withOpacity(0.7)
+                      ? (isDark ? Colors.white.withOpacity(0.7) : theme.colorScheme.onPrimaryContainer.withOpacity(0.7))
                       : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -584,7 +584,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     Icons.people_outline,
                     size: 16,
                     color: isSelected
-                        ? theme.colorScheme.onPrimaryContainer.withOpacity(0.7)
+                        ? (isDark ? Colors.white.withOpacity(0.7) : theme.colorScheme.onPrimaryContainer.withOpacity(0.7))
                         : theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
@@ -592,9 +592,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     '${unit.maxGuests}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isSelected
-                          ? theme.colorScheme.onPrimaryContainer.withOpacity(
-                              0.7,
-                            )
+                          ? (isDark ? Colors.white.withOpacity(0.7) : theme.colorScheme.onPrimaryContainer.withOpacity(0.7))
                           : theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -603,7 +601,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     Icons.euro_outlined,
                     size: 16,
                     color: isSelected
-                        ? theme.colorScheme.onPrimaryContainer.withOpacity(0.7)
+                        ? (isDark ? Colors.white.withOpacity(0.7) : theme.colorScheme.onPrimaryContainer.withOpacity(0.7))
                         : theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
@@ -611,9 +609,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     '${unit.pricePerNight.toStringAsFixed(0)}/noć',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isSelected
-                          ? theme.colorScheme.onPrimaryContainer.withOpacity(
-                              0.7,
-                            )
+                          ? (isDark ? Colors.white.withOpacity(0.7) : theme.colorScheme.onPrimaryContainer.withOpacity(0.7))
                           : theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),

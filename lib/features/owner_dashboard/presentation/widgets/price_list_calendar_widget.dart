@@ -7,6 +7,7 @@ import '../../../../shared/models/daily_price_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/price_list_provider.dart';
@@ -262,13 +263,11 @@ class _PriceListCalendarWidgetState
               end: Alignment.bottomRight,
               colors: isDark
                   ? [
-                      context.surfaceColor.withOpacity(0.95),
-                      context.surfaceVariantColor.withOpacity(0.90),
+                      Theme.of(context).colorScheme.mediumDarkGray,
+                      Theme.of(context).colorScheme.veryDarkGray,
                     ]
-                  : [
-                      context.surfaceColor.withOpacity(0.95),
-                      context.surfaceColor.withOpacity(0.90),
-                    ],
+                  : [Colors.white, Theme.of(context).colorScheme.veryLightGray],
+              stops: const [0.0, 0.3],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
@@ -572,13 +571,11 @@ class _PriceListCalendarWidgetState
                   end: Alignment.bottomRight,
                   colors: isDark
                       ? [
-                          context.surfaceColor.withOpacity(0.95),
-                          context.surfaceVariantColor.withOpacity(0.90),
+                          Theme.of(context).colorScheme.mediumDarkGray,
+                          Theme.of(context).colorScheme.veryDarkGray,
                         ]
-                      : [
-                          context.surfaceColor.withOpacity(0.95),
-                          context.surfaceColor.withOpacity(0.90),
-                        ],
+                      : [Colors.white, Theme.of(context).colorScheme.veryLightGray],
+                  stops: const [0.0, 0.3],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(

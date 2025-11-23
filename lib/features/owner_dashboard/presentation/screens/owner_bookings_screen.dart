@@ -131,8 +131,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,        // Diagonal gradient
+            end: Alignment.bottomRight,      // top-left → bottom-right
             colors: isDark
                 ? [
                     theme.colorScheme.veryDarkGray,

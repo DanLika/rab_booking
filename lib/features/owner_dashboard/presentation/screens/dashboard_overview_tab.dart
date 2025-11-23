@@ -8,6 +8,7 @@ import '../../../../core/theme/app_color_extensions.dart';
 import '../widgets/recent_activity_widget.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/booking_details_dialog.dart';
+import '../widgets/dashboard_stats_skeleton.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_bookings_provider.dart';
@@ -75,16 +76,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                 child: statsAsync.when(
                   data: (stats) =>
                       _buildStatsCards(context: context, stats: stats),
-                  loading: () => Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(40),
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ),
+                  loading: () => const DashboardStatsSkeleton(),
                   error: (e, s) => Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),

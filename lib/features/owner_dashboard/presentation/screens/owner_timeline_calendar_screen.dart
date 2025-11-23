@@ -81,6 +81,7 @@ class _OwnerTimelineCalendarScreenState
         child: Focus(
           autofocus: true,
           child: Scaffold(
+            backgroundColor: Colors.transparent, // Transparent to show gradient background
             appBar: CommonAppBar(
               title: 'Kalendar',
               leadingIcon: Icons.menu,

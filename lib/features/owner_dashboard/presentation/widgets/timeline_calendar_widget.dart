@@ -553,6 +553,8 @@ class _TimelineCalendarWidgetState
 
     return Card(
       margin: EdgeInsets.zero,
+      color: Colors.transparent, // Transparent to show parent gradient
+      elevation: 0, // Remove shadow
       child: Column(
         children: [
           // Date headers
@@ -621,7 +623,10 @@ class _TimelineCalendarWidgetState
       child: Row(
         children: [
           // Empty space for unit names column
-          Container(width: unitColumnWidth, color: Theme.of(context).cardColor),
+          Container(
+            width: unitColumnWidth,
+            color: Colors.transparent, // Transparent to show gradient
+          ),
 
           // Scrollable headers
           Expanded(
@@ -723,11 +728,10 @@ class _TimelineCalendarWidgetState
   ) {
     final unitColumnWidth = _getUnitColumnWidth(context);
     final baseRowHeight = _getUnitRowHeight(context);
-    final theme = Theme.of(context);
 
     return Container(
       width: unitColumnWidth,
-      color: theme.cardColor.withAlpha((0.95 * 255).toInt()),
+      color: Colors.transparent, // Transparent to show parent gradient
       child: Column(
         children: units.map((unit) {
           // Calculate dynamic height for this unit based on booking stacks
@@ -907,7 +911,7 @@ class _TimelineCalendarWidgetState
             ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
             : isWeekend
             ? theme.dividerColor.withAlpha((0.05 * 255).toInt())
-            : theme.scaffoldBackgroundColor,
+            : Colors.transparent, // Transparent to show parent gradient
         border: Border(
           left: BorderSide(
             color: isFirstDayOfMonth

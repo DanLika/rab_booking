@@ -67,12 +67,14 @@ Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
     endDate: endDate,
   );
 
-  // FILTER: Exclude cancelled bookings from timeline display
-  // Cancelled bookings don't block dates and shouldn't clutter the calendar
+  // FILTER: Only show active bookings on timeline (pending + confirmed)
+  // Completed and cancelled bookings are visible on Reservations page
   final activeBookingsMap = <String, List<BookingModel>>{};
   for (final entry in allBookings.entries) {
     final activeBookings = entry.value
-        .where((booking) => booking.status != BookingStatus.cancelled)
+        .where((booking) =>
+            booking.status == BookingStatus.pending ||
+            booking.status == BookingStatus.confirmed)
         .toList();
     if (activeBookings.isNotEmpty) {
       activeBookingsMap[entry.key] = activeBookings;

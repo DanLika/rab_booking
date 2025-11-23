@@ -4,6 +4,89 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🎨 Unit Hub & Pricing UI Consistency Improvements
+
+**Datum: 2025-11-23**
+**Status: ✅ COMPLETED - UI consistency enhanced across Unit Hub and pricing screens**
+
+### 📋 Overview
+
+Implementirane vizuelne konzistentnosti kroz Unit Hub i pricing screen-ove, fokusirajući na gradijentne pozadine, badge boje i button stilove.
+
+### 🔧 Key Changes
+
+**1. Desktop Master Panel Gradient (Unit Hub)**
+```
+lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart
+```
+**Lines 229-266:**
+- Desktop master panel (lista jedinica) dobio 5-color diagonal gradient
+- Isti gradient kao mobile endDrawer za konzistentnost
+- Dark mode: mediumDarkGray → veryDarkGray sa alpha variations
+- Light mode: white → veryLightGray sa alpha variations
+
+**2. "Dostupan" Badge Color Update**
+```
+lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart
+```
+**Lines 604-624:**
+- Badge boja promijenjena sa generičkog `AppColors.success` na `Color(0xFF66BB6A)`
+- Sada koristi **iste boje** kao "Confirmed" booking status badge
+- Background: 20% alpha overlay
+- Text: Full color za dobar kontrast
+
+**3. Save Button Gradient (Base Price Section)**
+```
+lib/features/owner_dashboard/presentation/screens/unit_pricing_screen.dart
+```
+**Lines 604-657:**
+- Zamijenjen solid purple FilledButton sa gradient Container
+- Gradient: Purple (#6B4CE6) → Blue (#4A90E2) - **isti kao app bar**
+- Material + InkWell wrapper za proper ripple effects
+- Row layout sa icon + text (umjesto FilledButton.icon)
+
+**4. Owner App Drawer Gradient Direction**
+```
+lib/features/owner_dashboard/presentation/widgets/owner_app_drawer.dart
+```
+**Lines 27-28 & 42-43:**
+- Promijenjena gradient direkcija sa topRight→bottomLeft na **topLeft→bottomRight**
+- Razlog: Bolja vizuelna konzistentnost sa drugim screen-ovima
+
+### ✅ Rezultat
+
+**Konzistentnost:**
+- ✅ Desktop i mobile endDrawer imaju isti gradient pattern
+- ✅ Badge boje su unificirane (Dostupan = Confirmed = #66BB6A)
+- ✅ Button gradient odgovara app bar gradijent-u
+- ✅ Drawer gradient direkcija konzistentna sa drugim screen-ovima
+
+**Vizuelni Kvalitet:**
+- ✅ 5-color gradient stops za smooth transitions (0.0, 0.25, 0.5, 0.75, 1.0)
+- ✅ Proper alpha blending (85%, 70%, 85%, 100%)
+- ✅ InkWell ripple effects za bolji UX
+- ✅ Theme-aware boje svugdje
+
+### ⚠️ Important Notes for Future Sessions
+
+**DO NOT:**
+- Mijenjaj desktop master panel gradient nazad na solid color - gradijent je user request!
+- Mijenjaj "Dostupan" badge na `AppColors.success` - mora biti #66BB6A!
+- Mijenjaj Save button nazad na FilledButton - gradient je finalna verzija!
+- Mijenjaj drawer gradient direkciju - topLeft→bottomRight je standard!
+
+**IF USER REPORTS:**
+- "Desktop panel is black" → Proveri da gradient nije uklonjen
+- "Badge colors don't match" → Proveri da koristi Color(0xFF66BB6A)
+- "Save button is purple" → Proveri da koristi Purple→Blue gradient
+- "Drawer looks different" → Proveri gradient direction (topLeft→bottomRight)
+
+---
+
+**Commit:** `00b0af0` - refine: enhance UI consistency across Unit Hub and pricing screens
+
+---
+
 ## 🎨 Timeline Calendar - Diagonal Gradient Background
 
 **Datum: 2025-11-23**

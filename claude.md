@@ -155,6 +155,285 @@ body: Container(
 
 ---
 
+## 🎨 Owner Dashboard - Diagonal Gradients & UI Consistency
+
+**Datum: 2025-11-23**
+**Status: ✅ COMPLETED - Diagonal gradients applied across multiple screens**
+
+### 📋 Overview
+
+Primjenjen konzistentan dizajn sa dijagonalnim gradientima i poboljšanim UX elementima kroz cijeli owner dashboard.
+
+---
+
+### 🎨 Diagonal Gradients Applied
+
+**1. Owner Bookings Screen**
+```
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart
+```
+
+**Lines 134-135: Changed gradient direction**
+```dart
+// PRIJE: Vertical gradient
+begin: Alignment.topCenter,
+end: Alignment.bottomCenter,
+
+// POSLIJE: Diagonal gradient
+begin: Alignment.topLeft,        // Diagonal gradient
+end: Alignment.bottomRight,      // top-left → bottom-right
+```
+
+**Boje:**
+- Dark: `veryDarkGray` → `mediumDarkGray`
+- Light: `veryLightGray` → `white`
+
+---
+
+**2. Unit Pricing Screen - Base Price Card**
+```
+lib/features/owner_dashboard/presentation/screens/unit_pricing_screen.dart
+```
+
+**Lines 413-434: Multi-stop diagonal gradient**
+
+**Karakteristike:**
+- 5-stop gradient za smooth fade efekat
+- Stops: `[0.0, 0.25, 0.5, 0.75, 1.0]`
+- Díagonalna direkcija: `topLeft → bottomRight`
+
+**Dark Mode:**
+```dart
+colors: [
+  mediumDarkGray,                                      // 0.0
+  mediumDarkGray.withAlpha((0.85 * 255).toInt()),     // 0.25
+  veryDarkGray.withAlpha((0.7 * 255).toInt()),        // 0.5
+  veryDarkGray.withAlpha((0.85 * 255).toInt()),       // 0.75
+  veryDarkGray,                                        // 1.0
+]
+```
+
+**Light Mode:**
+```dart
+colors: [
+  Colors.white,                                        // 0.0
+  Colors.white.withAlpha((0.95 * 255).toInt()),       // 0.25
+  veryLightGray.withAlpha((0.5 * 255).toInt()),       // 0.5
+  veryLightGray.withAlpha((0.75 * 255).toInt()),      // 0.75
+  veryLightGray,                                       // 1.0
+]
+```
+
+**Rezultat:** Smooth gradient sa 5 transition tačaka ✅
+
+---
+
+**3. Price List Calendar Widget**
+```
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart
+```
+
+**Lines 266-269 & 574-577: Simplified gradient**
+
+**PRIJE:**
+```dart
+// Complicated with opacity
+colors: isDark
+  ? [
+      context.surfaceColor.withOpacity(0.95),
+      context.surfaceVariantColor.withOpacity(0.90),
+    ]
+  : [
+      context.surfaceColor.withOpacity(0.95),
+      context.surfaceColor.withOpacity(0.90),
+    ]
+```
+
+**POSLIJE:**
+```dart
+// Simplified with consistent colors
+colors: isDark
+  ? [
+      Theme.of(context).colorScheme.mediumDarkGray,
+      Theme.of(context).colorScheme.veryDarkGray,
+    ]
+  : [Colors.white, Theme.of(context).colorScheme.veryLightGray],
+stops: const [0.0, 0.3],  // Consistent fade
+```
+
+**Rezultat:**
+- Konzistentne boje kao ostali screen-ovi ✅
+- Jednake stops vrednosti `[0.0, 0.3]` ✅
+- Dijagonalna direkcija ✅
+
+---
+
+### 🎯 Dashboard Stats Skeleton
+
+**Novi fajl:**
+```
+lib/features/owner_dashboard/presentation/widgets/dashboard_stats_skeleton.dart
+```
+
+**Svrha:** Skeleton loader za dashboard stat cards (umjesto običnog spinner-a)
+
+**Features:**
+- Imitira 6 stat cards u responsive grid-u
+- Animirani shimmer efekat
+- Responsive layout (2/3/fixed columns ovisno od screen width)
+- Theme-aware boje
+
+**Korištenje u dashboard_overview_tab.dart:**
+```dart
+// PRIJE:
+loading: () => Center(
+  child: CircularProgressIndicator(
+    valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+  ),
+),
+
+// POSLIJE:
+loading: () => const DashboardStatsSkeleton(),
+```
+
+**Prednost:** Bolji UX - korisnik vidi gde će biti stat cards prije nego što se učitaju ✅
+
+---
+
+### 🎨 Unit Hub - Dark Mode Fix
+
+**Fajl:**
+```
+lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart
+```
+
+**Lines 534, 573, 587: Fixed text contrast on selected unit cards**
+
+**Problem:** U dark mode-u, tekst na selektovanim unit card-ovima nije bio čitljiv.
+
+**PRIJE:**
+```dart
+color: isSelected
+  ? theme.colorScheme.onPrimaryContainer  // Loš kontrast u dark mode
+  : theme.colorScheme.onSurface,
+```
+
+**POSLIJE:**
+```dart
+color: isSelected
+  ? (isDark ? Colors.white : theme.colorScheme.onPrimaryContainer)  // Bijeli tekst u dark mode
+  : theme.colorScheme.onSurface,
+```
+
+**Rezultat:**
+- Dark mode: Bijeli tekst na selektovanom card-u ✅
+- Light mode: `onPrimaryContainer` kao prije ✅
+- Odličan kontrast u oba theme-a ✅
+
+---
+
+### 🗂️ Drawer Navigation Simplification
+
+**Fajl:**
+```
+lib/features/owner_dashboard/presentation/widgets/owner_app_drawer.dart
+```
+
+**Lines 74-80: Rezervacije item simplified**
+
+**PRIJE:**
+```dart
+_PremiumExpansionTile(  // ExpansionTile sa 1 sub-item-om
+  icon: Icons.book_online,
+  title: 'Rezervacije',
+  children: [
+    _DrawerSubItem(
+      title: 'Sve rezervacije',  // Redudantan sub-item
+      onTap: () => context.go(OwnerRoutes.bookings),
+    ),
+  ],
+),
+```
+
+**POSLIJE:**
+```dart
+_DrawerItem(  // Običan drawer item - direktan klik
+  icon: Icons.book_online,
+  title: 'Rezervacije',
+  isSelected: currentRoute == 'bookings',
+  onTap: () => context.go(OwnerRoutes.bookings),
+),
+```
+
+**Razlog:**
+- "Sve rezervacije" sub-item bio je redudantan
+- Nema drugih sub-item-a → ExpansionTile nije potreban
+- Direktan klik je brži i jednostavniji ✅
+
+---
+
+### 🎨 Gradient Consistency
+
+**Standardizovane boje:**
+
+**Dark Mode:**
+```dart
+colors: [
+  theme.colorScheme.veryDarkGray,      // #1A1A1A
+  theme.colorScheme.mediumDarkGray,    // #2D2D2D
+]
+// ILI obrnuto za drugačiji efekat
+```
+
+**Light Mode:**
+```dart
+colors: [
+  theme.colorScheme.veryLightGray,     // #F5F5F5
+  Colors.white,                         // #FFFFFF
+]
+// ILI obrnuto za drugačiji efekat
+```
+
+**Stops:**
+- Većina screen-a: `[0.0, 0.3]` (fade at 30%)
+- Unit Pricing base card: `[0.0, 0.25, 0.5, 0.75, 1.0]` (5 stops za smooth fade)
+
+**Direkcija:**
+- SVE gradijenti: `topLeft → bottomRight` (dijagonalno) ✅
+- NEMA više vertikalnih gradienata (`topCenter → bottomCenter`)
+
+---
+
+### ⚠️ Important Notes for Future Sessions
+
+**1. Gradient direkcija je FIKSIRANA:**
+- `topLeft → bottomRight` za SVE screen-ove
+- NE vraćaj nazad na vertical (`topCenter → bottomCenter`)!
+
+**2. Gradient boje su STANDARDIZOVANE:**
+- Dark: `veryDarkGray` + `mediumDarkGray`
+- Light: `veryLightGray` + `white`
+- NE koristi custom boje ili opacity kombinacije!
+
+**3. Stops vrednosti:**
+- Default: `[0.0, 0.3]` za fade at 30%
+- Multi-stop: `[0.0, 0.25, 0.5, 0.75, 1.0]` SAMO za base price card
+- NE mijenjaj stops bez razloga!
+
+**4. DashboardStatsSkeleton:**
+- Koristi GA umjesto CircularProgressIndicator-a
+- NE briši ovaj component - bolja UX od spinner-a!
+
+**5. Unit Hub dark mode fix:**
+- `isDark ? Colors.white : onPrimaryContainer` je finalno rješenje
+- NE vraćaj samo `onPrimaryContainer` - loš kontrast u dark mode!
+
+---
+
+**Commit:** `72954a7` - refactor: apply diagonal gradients and UI improvements across owner dashboard
+
+---
+
 ## 🎨 Timeline Calendar - Z-Index Booking Layering & Toolbar Layout
 
 **Datum: 2025-11-22**

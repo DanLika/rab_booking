@@ -5,6 +5,7 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/app_color_extensions.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../widgets/price_list_calendar_widget.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -207,21 +208,48 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
   Widget _buildUnitSelector(List<UnitModel> units, bool isMobile) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Card(
-      elevation: 2,
+      elevation: 0.5,
+      shadowColor: theme.colorScheme.shadow.withAlpha((0.05 * 255).toInt()),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
+          color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
+          width: 0.5,
         ),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(isMobile ? 16 : 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: isDark
+                ? [
+                    Theme.of(context).colorScheme.mediumDarkGray,
+                    Theme.of(context).colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryDarkGray,
+                  ]
+                : [
+                    Colors.white,
+                    Colors.white.withAlpha((0.95 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
+                    Theme.of(context).colorScheme.veryLightGray,
+                  ],
+            stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
             // Header with icon
             Row(
               children: [
@@ -281,6 +309,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
           ],
         ),
       ),
+        ),
     );
   }
 
@@ -400,43 +429,50 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 0.5,
-      shadowColor: theme.colorScheme.shadow.withAlpha((0.05 * 255).toInt()),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
-          width: 0.5,
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppShadows.getElevation(3, isDark: isDark),
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    Theme.of(context).colorScheme.mediumDarkGray,
-                    Theme.of(context).colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryDarkGray,
-                  ]
-                : [
-                    Colors.white,
-                    Colors.white.withAlpha((0.95 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryLightGray,
-                  ],
-            stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Card(
+          elevation: 3,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(
+              color: context.borderColor.withOpacity(0.4),
+              width: 1.5,
+            ),
           ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(isMobile ? 16 : 20),
-          child: Column(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: isDark
+                    ? [
+                        Theme.of(context).colorScheme.mediumDarkGray,
+                        Theme.of(context).colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
+                        Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
+                        Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
+                        Theme.of(context).colorScheme.veryDarkGray,
+                      ]
+                    : [
+                        Colors.white,
+                        Colors.white.withAlpha((0.95 * 255).toInt()),
+                        Theme.of(context).colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
+                        Theme.of(context).colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
+                        Theme.of(context).colorScheme.veryLightGray,
+                      ],
+                stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+              ),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(isMobile ? 16 : 20),
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header with icon - Minimalist
@@ -512,7 +548,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             ),
           ],
         ),
-      ),
+            ),
+          ),
+        ),
       ),
     );
   }

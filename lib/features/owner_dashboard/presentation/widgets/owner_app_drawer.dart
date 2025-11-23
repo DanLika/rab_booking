@@ -24,22 +24,31 @@ class OwnerAppDrawer extends ConsumerWidget {
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
-          // Dark mode: gradient matching dashboard, Light mode: beige to white
+          // Diagonal gradient (top-right → bottom-left) with 5-color stops
           gradient: isDarkMode
               ? LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
                   colors: [
-                    theme.colorScheme.veryDarkGray,
                     theme.colorScheme.mediumDarkGray,
+                    theme.colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
+                    theme.colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
+                    theme.colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
+                    theme.colorScheme.veryDarkGray,
                   ],
-                  stops: const [0.0, 0.3],
+                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
                 )
               : LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [theme.colorScheme.beige, Colors.white],
-                  stops: const [0.0, 0.3],
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors: [
+                    Colors.white,
+                    Colors.white.withAlpha((0.95 * 255).toInt()),
+                    theme.colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
+                    theme.colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
+                    theme.colorScheme.veryLightGray,
+                  ],
+                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
                 ),
         ),
         child: ListView(

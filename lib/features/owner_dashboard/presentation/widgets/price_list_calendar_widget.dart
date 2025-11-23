@@ -259,15 +259,24 @@ class _PriceListCalendarWidgetState
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
               colors: isDark
                   ? [
                       Theme.of(context).colorScheme.mediumDarkGray,
+                      Theme.of(context).colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
+                      Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
+                      Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
                       Theme.of(context).colorScheme.veryDarkGray,
                     ]
-                  : [Colors.white, Theme.of(context).colorScheme.veryLightGray],
-              stops: const [0.0, 0.3],
+                  : [
+                      Colors.white,
+                      Colors.white.withAlpha((0.95 * 255).toInt()),
+                      Theme.of(context).colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
+                      Theme.of(context).colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
+                      Theme.of(context).colorScheme.veryLightGray,
+                    ],
+              stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
@@ -567,15 +576,24 @@ class _PriceListCalendarWidgetState
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
                   colors: isDark
                       ? [
                           Theme.of(context).colorScheme.mediumDarkGray,
+                          Theme.of(context).colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
+                          Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
+                          Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
                           Theme.of(context).colorScheme.veryDarkGray,
                         ]
-                      : [Colors.white, Theme.of(context).colorScheme.veryLightGray],
-                  stops: const [0.0, 0.3],
+                      : [
+                          Colors.white,
+                          Colors.white.withAlpha((0.95 * 255).toInt()),
+                          Theme.of(context).colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
+                          Theme.of(context).colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
+                          Theme.of(context).colorScheme.veryLightGray,
+                        ],
+                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(

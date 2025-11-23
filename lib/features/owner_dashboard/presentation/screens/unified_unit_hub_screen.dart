@@ -166,10 +166,19 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             colors: isDark
                 ? [
                     theme.colorScheme.veryDarkGray,
+                    theme.colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
+                    theme.colorScheme.mediumDarkGray.withAlpha((0.7 * 255).toInt()),
+                    theme.colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
                     theme.colorScheme.mediumDarkGray,
                   ]
-                : [theme.colorScheme.veryLightGray, Colors.white],
-            stops: const [0.0, 0.3],
+                : [
+                    theme.colorScheme.veryLightGray,
+                    theme.colorScheme.veryLightGray.withAlpha((0.85 * 255).toInt()),
+                    Colors.white.withAlpha((0.7 * 255).toInt()),
+                    Colors.white.withAlpha((0.85 * 255).toInt()),
+                    Colors.white,
+                  ],
+            stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
           ),
         ),
         child: isDesktop

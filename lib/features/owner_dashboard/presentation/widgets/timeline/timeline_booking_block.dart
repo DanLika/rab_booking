@@ -95,7 +95,7 @@ class TimelineBookingBlock extends StatelessWidget {
               ClipPath(
                 clipper: SkewedBookingClipper(),
                 child: Padding(
-                  padding: bookingPadding.copyWith(left: bookingPadding.left + 8),
+                  padding: bookingPadding.copyWith(left: bookingPadding.left + 12), // Increased from 8 to 12 for better spacing
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,

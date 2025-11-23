@@ -351,9 +351,9 @@ class _BookingInlineEditDialogState
           onPressed: _guestCount > 1
               ? () => setState(() => _guestCount--)
               : null,
-          icon: Icon(
+          icon: const Icon(
             Icons.remove,
-            color: Theme.of(context).colorScheme.onSecondaryContainer,
+            color: Colors.white, // White icon for better visibility
           ),
           style: IconButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
@@ -362,9 +362,9 @@ class _BookingInlineEditDialogState
         const SizedBox(width: 4),
         IconButton.filledTonal(
           onPressed: () => setState(() => _guestCount++),
-          icon: Icon(
+          icon: const Icon(
             Icons.add,
-            color: Theme.of(context).colorScheme.onSecondaryContainer,
+            color: Colors.white, // White icon for better visibility
           ),
           style: IconButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.secondaryContainer,

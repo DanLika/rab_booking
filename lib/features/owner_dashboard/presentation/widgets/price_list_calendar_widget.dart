@@ -253,7 +253,7 @@ class _PriceListCalendarWidgetState
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(3, isDark: isDark),
+        boxShadow: AppShadows.getElevation(1, isDark: isDark),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -281,7 +281,7 @@ class _PriceListCalendarWidgetState
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: context.borderColor.withOpacity(0.4),
+              color: context.borderColor.withOpacity(0.5),
               width: 1.5,
             ),
           ),
@@ -575,7 +575,7 @@ class _PriceListCalendarWidgetState
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            boxShadow: AppShadows.getElevation(3, isDark: isDark),
+            boxShadow: AppShadows.getElevation(1, isDark: isDark),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
@@ -603,7 +603,7 @@ class _PriceListCalendarWidgetState
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: context.borderColor.withOpacity(0.4),
+                  color: context.borderColor.withOpacity(0.5),
                   width: 1.5,
                 ),
               ),

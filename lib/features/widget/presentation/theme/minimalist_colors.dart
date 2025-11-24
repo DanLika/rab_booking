@@ -109,8 +109,8 @@ class MinimalistColors {
 
   // ==================== SEMANTIC COLORS ====================
 
-  /// Success state (mirrors available teal)
-  static const Color success = Color(0xFF14B8A6);
+  /// Success state (matches confirmed badge green)
+  static const Color success = Color(0xFF66BB6A); // #66BB6A
 
   /// Error state (mirrors booked pink)
   static const Color error = Color(0xFFEC4899);
@@ -274,8 +274,8 @@ class MinimalistColorsDark {
 
   // ==================== SEMANTIC COLORS ====================
 
-  /// Success state
-  static const Color success = Color(0xFF14B8A6);
+  /// Success state (matches confirmed badge green)
+  static const Color success = Color(0xFF66BB6A); // #66BB6A
 
   /// Error state
   static const Color error = Color(0xFFEC4899);

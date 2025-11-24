@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_color_extensions.dart';
 import '../widgets/recent_activity_widget.dart';
 import '../widgets/owner_app_drawer.dart';
@@ -234,31 +233,17 @@ class DashboardOverviewTab extends ConsumerWidget {
     );
   }
 
-  // Helper method to create theme-aware gradient
-  Gradient _createThemeGradient(BuildContext context, List<Color> lightColors) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    if (isDark) {
-      // In dark mode, use slightly darker versions but keep full opacity
-      return LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: lightColors.map((color) {
-          // Darken the color but keep full opacity
-          final hsl = HSLColor.fromColor(color);
-          return hsl
-              .withLightness((hsl.lightness * 0.7).clamp(0.0, 1.0))
-              .toColor();
-        }).toList(),
-      );
-    } else {
-      // In light mode, use the original colors
-      return LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: lightColors,
-      );
-    }
+  // Helper method to create theme-aware gradient with alpha fade
+  // Uses single color with alpha fade for consistent purple-fade pattern
+  Gradient _createThemeGradient(BuildContext context, Color baseColor) {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        baseColor,
+        baseColor.withValues(alpha: 0.7), // 70% opacity fade
+      ],
+    );
   }
 
   Widget _buildStatsCards({
@@ -279,10 +264,10 @@ class DashboardOverviewTab extends ConsumerWidget {
           title: 'Zarada ovaj mjesec',
           value: '€${stats.monthlyRevenue.toStringAsFixed(0)}',
           icon: Icons.euro_rounded,
-          gradient: _createThemeGradient(context, [
-            AppColors.info,
-            AppColors.infoDark,
-          ]),
+          gradient: _createThemeGradient(
+            context,
+            Theme.of(context).colorScheme.primary, // Purple (matches app bar)
+          ),
           isMobile: isMobile,
           isTablet: isTablet,
         ),
@@ -291,10 +276,10 @@ class DashboardOverviewTab extends ConsumerWidget {
           title: 'Zarada ove godine',
           value: '€${stats.yearlyRevenue.toStringAsFixed(0)}',
           icon: Icons.trending_up_rounded,
-          gradient: _createThemeGradient(context, [
-            AppColors.primary,
-            AppColors.primaryDark,
-          ]),
+          gradient: _createThemeGradient(
+            context,
+            Theme.of(context).colorScheme.secondary, // Orange/Coral
+          ),
           isMobile: isMobile,
           isTablet: isTablet,
           animationDelay: 100,
@@ -304,10 +289,10 @@ class DashboardOverviewTab extends ConsumerWidget {
           title: 'Rezervacije ovaj mjesec',
           value: '${stats.monthlyBookings}',
           icon: Icons.calendar_today_rounded,
-          gradient: _createThemeGradient(context, [
-            AppColors.primaryLight,
-            AppColors.primary,
-          ]),
+          gradient: _createThemeGradient(
+            context,
+            Theme.of(context).colorScheme.tertiary, // Green
+          ),
           isMobile: isMobile,
           isTablet: isTablet,
           animationDelay: 200,
@@ -317,10 +302,10 @@ class DashboardOverviewTab extends ConsumerWidget {
           title: 'Nadolazeći check-in',
           value: '${stats.upcomingCheckIns}',
           icon: Icons.schedule_rounded,
-          gradient: _createThemeGradient(context, [
-            AppColors.activityPayment,
-            AppColors.infoDark,
-          ]),
+          gradient: _createThemeGradient(
+            context,
+            Theme.of(context).colorScheme.error, // Red
+          ),
           isMobile: isMobile,
           isTablet: isTablet,
           animationDelay: 300,
@@ -330,10 +315,10 @@ class DashboardOverviewTab extends ConsumerWidget {
           title: 'Aktivne nekretnine',
           value: '${stats.activeProperties}',
           icon: Icons.villa_rounded,
-          gradient: _createThemeGradient(context, [
-            AppColors.textSecondary,
-            AppColors.textDisabled,
-          ]),
+          gradient: _createThemeGradient(
+            context,
+            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), // Gray
+          ),
           isMobile: isMobile,
           isTablet: isTablet,
           animationDelay: 400,
@@ -343,10 +328,10 @@ class DashboardOverviewTab extends ConsumerWidget {
           title: 'Popunjenost',
           value: '${stats.occupancyRate.toStringAsFixed(1)}%',
           icon: Icons.analytics_rounded,
-          gradient: _createThemeGradient(context, [
-            AppColors.textDisabled,
-            AppColors.textSecondary,
-          ]),
+          gradient: _createThemeGradient(
+            context,
+            Theme.of(context).colorScheme.onSurfaceVariant, // Light gray
+          ),
           isMobile: isMobile,
           isTablet: isTablet,
           animationDelay: 500,
@@ -387,7 +372,7 @@ class DashboardOverviewTab extends ConsumerWidget {
     // Extract primary color from gradient for shadow
     final primaryColor = (gradient.colors.isNotEmpty)
         ? gradient.colors.first
-        : AppColors.primary;
+        : Theme.of(context).colorScheme.primary;
 
     // Theme-aware text and icon colors - full opacity
     final textColor = Colors.white;

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../widgets/auth_background.dart';
@@ -41,18 +40,9 @@ class _EnhancedRegisterScreenState
   bool _acceptedPrivacy = false;
   bool _newsletterOptIn = false;
 
-  PasswordStrength _passwordStrength = PasswordStrength.weak;
-  List<String> _missingRequirements = [];
-
   // Profile image
   Uint8List? _profileImageBytes;
   String? _profileImageName;
-
-  @override
-  void initState() {
-    super.initState();
-    _passwordController.addListener(_updatePasswordStrength);
-  }
 
   @override
   void dispose() {
@@ -62,14 +52,6 @@ class _EnhancedRegisterScreenState
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
-  }
-
-  void _updatePasswordStrength() {
-    final result = PasswordValidator.validate(_passwordController.text);
-    setState(() {
-      _passwordStrength = result.strength;
-      _missingRequirements = result.missingRequirements;
-    });
   }
 
   Future<void> _handleRegister() async {
@@ -272,19 +254,9 @@ class _EnhancedRegisterScreenState
                               );
                             },
                           ),
-                          validator: PasswordValidator.validateSimple,
+                          validator: PasswordValidator.validateMinimumLength,
                         ),
-                        const SizedBox(height: 12),
-
-                        // Password Strength Indicator
-                        if (_passwordController.text.isNotEmpty) ...[
-                          _buildPasswordStrengthIndicator(),
-                          const SizedBox(height: 16),
-                        ],
-
-                        // Spacing when no strength indicator
-                        if (_passwordController.text.isEmpty)
-                          const SizedBox(height: 4),
+                        const SizedBox(height: 16),
 
                         // Confirm Password
                         PremiumInputField(
@@ -459,82 +431,6 @@ class _EnhancedRegisterScreenState
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildPasswordStrengthIndicator() {
-    final theme = Theme.of(context);
-
-    final color = _passwordStrength == PasswordStrength.weak
-        ? AppColors.error
-        : _passwordStrength == PasswordStrength.medium
-        ? theme.colorScheme.tertiary
-        : AppColors.success;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withAlpha((0.08 * 255).toInt()),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withAlpha((0.2 * 255).toInt())),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: _passwordStrength == PasswordStrength.weak
-                        ? 0.33
-                        : _passwordStrength == PasswordStrength.medium
-                        ? 0.66
-                        : 1.0,
-                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                    color: color,
-                    minHeight: 6,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                _passwordStrength == PasswordStrength.weak
-                    ? 'Weak'
-                    : _passwordStrength == PasswordStrength.medium
-                    ? 'Medium'
-                    : 'Strong',
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          if (_missingRequirements.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            ...(_missingRequirements.map(
-              (req) => Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Row(
-                  children: [
-                    Icon(Icons.close, size: 13, color: color),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        req,
-                        style: TextStyle(fontSize: 11, color: color),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )),
-          ],
-        ],
       ),
     );
   }

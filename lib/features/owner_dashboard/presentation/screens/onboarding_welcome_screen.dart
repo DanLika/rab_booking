@@ -44,8 +44,8 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
                     // Welcome Title
                     Text(
                       'Dobrodošli u BedBooking!',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
                             color: AppColors.authPrimary,
                           ),
                       textAlign: TextAlign.center,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:graphic/graphic.dart';
 import '../../domain/models/analytics_summary.dart';
 import '../providers/analytics_provider.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -32,15 +32,24 @@ class AnalyticsScreen extends ConsumerWidget {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: isDark
                 ? [
-                    theme.colorScheme.veryDarkGray,
-                    theme.colorScheme.mediumDarkGray,
+                    const Color(0xFF1A1A1A), // veryDarkGray
+                    const Color(0xFF1F1F1F),
+                    const Color(0xFF242424),
+                    const Color(0xFF292929),
+                    const Color(0xFF2D2D2D), // mediumDarkGray
                   ]
-                : [theme.colorScheme.veryLightGray, Colors.white],
-            stops: const [0.0, 0.3],
+                : [
+                    const Color(0xFFF0F0F0), // Lighter grey
+                    const Color(0xFFF2F2F2),
+                    const Color(0xFFF5F5F5),
+                    const Color(0xFFF8F8F8),
+                    const Color(0xFFFAFAFA), // Very light grey
+                  ],
+            stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
           ),
         ),
         child: Column(
@@ -202,6 +211,7 @@ class _AnalyticsContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    final isDesktop = screenWidth > 900;
 
     return ListView(
       padding: EdgeInsets.all(isMobile ? 12 : 16), // Reduced from 16/24
@@ -213,36 +223,137 @@ class _AnalyticsContent extends StatelessWidget {
         ),
         SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
 
+        // Charts Section - Desktop: side-by-side, Mobile/Tablet: stacked
+        if (isDesktop)
+          _buildDesktopChartsRow()
+        else
+          _buildStackedCharts(isMobile),
+
+        SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
+
+        // Bottom Section - Desktop: side-by-side, Mobile/Tablet: stacked
+        if (isDesktop)
+          _buildDesktopBottomRow()
+        else
+          _buildStackedBottom(isMobile),
+
+        SizedBox(height: isMobile ? 12 : 16), // Reduced from 16/24
+      ],
+    );
+  }
+
+  /// Desktop layout - Charts side-by-side (Revenue + Bookings)
+  Widget _buildDesktopChartsRow() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Revenue Chart (left)
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _SectionTitle(title: 'Revenue Over Time'),
+              const SizedBox(height: 12),
+              _RevenueChart(data: analytics.revenueHistory),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16), // Spacing between charts
+        // Bookings Chart (right)
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _SectionTitle(title: 'Bookings Over Time'),
+              const SizedBox(height: 12),
+              _BookingsChart(data: analytics.bookingHistory),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Mobile/Tablet layout - Charts stacked vertically
+  Widget _buildStackedCharts(bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         // Revenue Chart
         const _SectionTitle(title: 'Revenue Over Time'),
-        const SizedBox(height: 12), // Reduced from 16
+        const SizedBox(height: 12),
         _RevenueChart(data: analytics.revenueHistory),
-        SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
+        SizedBox(height: isMobile ? 16 : 20),
 
         // Bookings Chart
         const _SectionTitle(title: 'Bookings Over Time'),
-        const SizedBox(height: 12), // Reduced from 16
+        const SizedBox(height: 12),
         _BookingsChart(data: analytics.bookingHistory),
-        SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
+      ],
+    );
+  }
 
-        // Top Performing Properties
+  /// Desktop layout - Bottom section side-by-side (Top Properties + Widget Analytics)
+  Widget _buildDesktopBottomRow() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Top Properties (left)
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _SectionTitle(title: 'Top Performing Properties'),
+              const SizedBox(height: 12),
+              _TopPropertiesList(properties: analytics.topPerformingProperties),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16), // Spacing between sections
+        // Widget Analytics (right)
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _SectionTitle(title: 'Widget Performance'),
+              const SizedBox(height: 12),
+              _WidgetAnalyticsCard(
+                widgetBookings: analytics.widgetBookings,
+                totalBookings: analytics.totalBookings,
+                widgetRevenue: analytics.widgetRevenue,
+                totalRevenue: analytics.totalRevenue,
+              ),
+              const SizedBox(height: 12),
+              _BookingsBySourceChart(bookingsBySource: analytics.bookingsBySource),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Mobile/Tablet layout - Bottom section stacked vertically
+  Widget _buildStackedBottom(bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Top Properties
         const _SectionTitle(title: 'Top Performing Properties'),
-        const SizedBox(height: 12), // Reduced from 16
+        const SizedBox(height: 12),
         _TopPropertiesList(properties: analytics.topPerformingProperties),
-        SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
+        SizedBox(height: isMobile ? 16 : 20),
 
         // Widget Analytics
         const _SectionTitle(title: 'Widget Performance'),
-        const SizedBox(height: 12), // Reduced from 16
+        const SizedBox(height: 12),
         _WidgetAnalyticsCard(
           widgetBookings: analytics.widgetBookings,
           totalBookings: analytics.totalBookings,
           widgetRevenue: analytics.widgetRevenue,
           totalRevenue: analytics.totalRevenue,
         ),
-        const SizedBox(height: 12), // Reduced from 16
+        const SizedBox(height: 12),
         _BookingsBySourceChart(bookingsBySource: analytics.bookingsBySource),
-        SizedBox(height: isMobile ? 12 : 16), // Reduced from 16/24
       ],
     );
   }
@@ -258,7 +369,10 @@ class _SectionTitle extends StatelessWidget {
     final theme = Theme.of(context);
     return Text(
       title,
-      style: AppTypography.h2.copyWith(color: theme.colorScheme.onSurface),
+      style: theme.textTheme.titleLarge?.copyWith(
+        fontWeight: FontWeight.w600,
+        color: theme.colorScheme.onSurface,
+      ),
     );
   }
 }
@@ -308,63 +422,55 @@ class _MetricCardsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 900
-            ? 4
-            : constraints.maxWidth > 600
-            ? 2
-            : 1;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 900;
 
-        // Responsive aspect ratio - optimized for compact layout
-        final aspectRatio = constraints.maxWidth > 900
-            ? 1.65 // Desktop - wider, less tall (was 1.4)
-            : constraints.maxWidth > 600
-            ? 1.45 // Tablet - wider (was 1.2)
-            : 1.1; // Mobile - slightly wider (was 1.0)
-
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: crossAxisCount,
-          mainAxisSpacing: 12, // Tighter spacing (was 16)
-          crossAxisSpacing: 12, // Tighter spacing (was 16)
-          childAspectRatio: aspectRatio,
-          children: [
-            _MetricCard(
-              title: 'Total Revenue',
-              value: '\$${analytics.totalRevenue.toStringAsFixed(2)}',
-              subtitle:
-                  '${_getRecentPeriodLabel()}: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
-              icon: Icons.euro_rounded,
-              gradientColor: _getPurpleShade(context, 3), // Original purple
-            ),
-            _MetricCard(
-              title: 'Total Bookings',
-              value: '${analytics.totalBookings}',
-              subtitle: '${_getRecentPeriodLabel()}: ${analytics.monthlyBookings}',
-              icon: Icons.calendar_today_rounded,
-              gradientColor: _getPurpleShade(context, 4), // Light purple
-            ),
-            _MetricCard(
-              title: 'Occupancy Rate',
-              value: '${analytics.occupancyRate.toStringAsFixed(1)}%',
-              subtitle:
-                  '${analytics.activeProperties}/${analytics.totalProperties} properties active',
-              icon: Icons.analytics_rounded,
-              gradientColor: _getPurpleShade(context, 5), // Lighter purple
-            ),
-            _MetricCard(
-              title: 'Avg. Nightly Rate',
-              value: '\$${analytics.averageNightlyRate.toStringAsFixed(2)}',
-              subtitle:
-                  'Cancellation: ${analytics.cancellationRate.toStringAsFixed(1)}%',
-              icon: Icons.trending_up_rounded,
-              gradientColor: _getPurpleShade(context, 2), // Dark purple
-            ),
-          ],
-        );
-      },
+    return Wrap(
+      spacing: isMobile ? 12.0 : 16.0,
+      runSpacing: isMobile ? 12.0 : 16.0,
+      alignment: WrapAlignment.center,
+      children: [
+        _MetricCard(
+          title: 'Total Revenue',
+          value: '\$${analytics.totalRevenue.toStringAsFixed(2)}',
+          subtitle:
+              '${_getRecentPeriodLabel()}: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
+          icon: Icons.euro_rounded,
+          gradientColor: _getPurpleShade(context, 3), // Original purple
+          isMobile: isMobile,
+          isTablet: isTablet,
+        ),
+        _MetricCard(
+          title: 'Total Bookings',
+          value: '${analytics.totalBookings}',
+          subtitle: '${_getRecentPeriodLabel()}: ${analytics.monthlyBookings}',
+          icon: Icons.calendar_today_rounded,
+          gradientColor: _getPurpleShade(context, 4), // Light purple
+          isMobile: isMobile,
+          isTablet: isTablet,
+        ),
+        _MetricCard(
+          title: 'Occupancy Rate',
+          value: '${analytics.occupancyRate.toStringAsFixed(1)}%',
+          subtitle:
+              '${analytics.activeProperties}/${analytics.totalProperties} properties active',
+          icon: Icons.analytics_rounded,
+          gradientColor: _getPurpleShade(context, 5), // Lighter purple
+          isMobile: isMobile,
+          isTablet: isTablet,
+        ),
+        _MetricCard(
+          title: 'Avg. Nightly Rate',
+          value: '\$${analytics.averageNightlyRate.toStringAsFixed(2)}',
+          subtitle:
+              'Cancellation: ${analytics.cancellationRate.toStringAsFixed(1)}%',
+          icon: Icons.trending_up_rounded,
+          gradientColor: _getPurpleShade(context, 2), // Dark purple
+          isMobile: isMobile,
+          isTablet: isTablet,
+        ),
+      ],
     );
   }
 }
@@ -375,6 +481,8 @@ class _MetricCard extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final Color gradientColor;
+  final bool isMobile;
+  final bool isTablet;
 
   const _MetricCard({
     required this.title,
@@ -382,13 +490,28 @@ class _MetricCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.gradientColor,
+    required this.isMobile,
+    required this.isTablet,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final spacing = isMobile ? 12.0 : 16.0;
+
+    // Calculate responsive width (same as Dashboard)
+    double cardWidth;
+    if (isMobile) {
+      // Mobile: 2 cards per row
+      cardWidth = (screenWidth - (spacing * 3 + 32)) / 2; // 32 = left/right padding
+    } else if (isTablet) {
+      // Tablet: 3 cards per row
+      cardWidth = (screenWidth - (spacing * 4 + 48)) / 3;
+    } else {
+      // Desktop: fixed width
+      cardWidth = 280.0;
+    }
 
     // Use the provided color for shadow
     final primaryColor = gradientColor;
@@ -402,6 +525,9 @@ class _MetricCard extends StatelessWidget {
     final iconBgColor = Colors.white.withAlpha((0.2 * 255).toInt());
 
     return Container(
+      width: cardWidth,
+      height: isMobile ? 160 : 180,
+      constraints: const BoxConstraints(maxWidth: 320),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -419,53 +545,53 @@ class _MetricCard extends StatelessWidget {
             gradient: gradient,
             borderRadius: BorderRadius.circular(20),
           ),
-          padding: EdgeInsets.all(isMobile ? 10 : 12), // Reduced (was 12/14)
+          padding: EdgeInsets.all(isMobile ? 14 : 18),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Icon container
               Container(
-                padding: EdgeInsets.all(isMobile ? 6 : 8), // Reduced (was 8/10)
+                padding: EdgeInsets.all(isMobile ? 10 : 12),
                 decoration: BoxDecoration(
                   color: iconBgColor,
-                  borderRadius: BorderRadius.circular(10), // Smaller radius
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: iconColor, size: isMobile ? 18 : 20), // Smaller icons (was 20/22)
+                child: Icon(icon, color: iconColor, size: isMobile ? 22 : 26),
               ),
-              SizedBox(height: isMobile ? 4 : 6), // Tighter spacing (was 6/8)
+              SizedBox(height: isMobile ? 8 : 12),
 
               // Value
               FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
                   value,
-                  style: theme.textTheme.headlineMedium?.copyWith(
+                  style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: textColor,
                     height: 1.0,
-                    letterSpacing: -0.5,
+                    letterSpacing: 0,
+                    fontSize: isMobile ? 24 : 28,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
                 ),
               ),
-              SizedBox(height: isMobile ? 2 : 3), // Tighter (was 3/4)
+              SizedBox(height: isMobile ? 6 : 8),
 
               // Title
               Text(
                 title,
-                style: theme.textTheme.bodyMedium?.copyWith(
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: textColor,
                   fontWeight: FontWeight.w500,
-                  height: 1.2,
-                  fontSize: isMobile ? 13 : 14, // Slightly smaller font
+                  height: 1.3,
+                  fontSize: isMobile ? 12 : 13,
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: isMobile ? 2 : 3), // Tighter (was 3/4)
 
               // Subtitle
               Text(
@@ -473,6 +599,7 @@ class _MetricCard extends StatelessWidget {
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: textColor.withAlpha((0.9 * 255).toInt()),
                   height: 1.2,
+                  fontSize: isMobile ? 10 : 11,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
@@ -521,70 +648,89 @@ class _RevenueChart extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Dynamic chart height based on available space (min 180, max 300)
+        final availableHeight = constraints.maxHeight;
         final chartHeight = constraints.maxWidth > 900
-            ? 240.0  // Desktop (reduced from 300)
+            ? (availableHeight * 0.4).clamp(240.0, 300.0)  // Desktop: 40% of height
             : constraints.maxWidth > 600
-                ? 200.0  // Tablet (reduced from 250)
-                : 180.0; // Mobile (reduced from 200)
+                ? (availableHeight * 0.35).clamp(200.0, 250.0)  // Tablet: 35% of height
+                : (availableHeight * 0.3).clamp(180.0, 220.0); // Mobile: 30% of height
 
         return SizedBox(
           height: chartHeight,
           child: Card(
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(12), // Reduced from 16
-          child: LineChart(
-            LineChartData(
-              titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 60,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        '\$${value.toStringAsFixed(0)}',
-                        style: AppTypography.bodySmall,
-                      );
-                    },
+            elevation: 3,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Chart(
+                data: data.asMap().entries.map((e) => {
+                  'index': e.key,
+                  'label': e.value.label,
+                  'amount': e.value.amount,
+                }).toList(),
+                variables: {
+                  'index': Variable(
+                    accessor: (Map map) => map['index'] as num,
+                  ),
+                  'amount': Variable(
+                    accessor: (Map map) => map['amount'] as num,
+                    scale: LinearScale(min: 0),
+                  ),
+                },
+                marks: [
+                  AreaMark(
+                    shape: ShapeEncode(
+                      value: BasicAreaShape(smooth: true),
+                    ),
+                    color: ColorEncode(
+                      value: theme.colorScheme.primary.withValues(alpha: 0.15),
+                    ),
+                  ),
+                  LineMark(
+                    shape: ShapeEncode(
+                      value: BasicLineShape(smooth: true),
+                    ),
+                    size: SizeEncode(value: 3),
+                    color: ColorEncode(
+                      value: theme.colorScheme.primary,
+                    ),
+                  ),
+                  PointMark(
+                    shape: ShapeEncode(value: CircleShape()),
+                    size: SizeEncode(value: 8),
+                    color: ColorEncode(
+                      value: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+                axes: [
+                  Defaults.horizontalAxis..label = null,
+                  Defaults.verticalAxis
+                    ..label = null
+                    ..grid = null,
+                ],
+                selections: {
+                  'touchMove': PointSelection(
+                    on: {GestureType.hover},
+                    devices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+                  )
+                },
+                tooltip: TooltipGuide(
+                  backgroundColor: theme.colorScheme.surface,
+                  elevation: 8,
+                  textStyle: AppTypography.bodySmall.copyWith(
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      final index = value.toInt();
-                      if (index >= 0 && index < data.length) {
-                        return Text(
-                          data[index].label,
-                          style: AppTypography.bodySmall,
-                        );
-                      }
-                      return const Text('');
-                    },
-                  ),
+                crosshair: CrosshairGuide(
+                  followPointer: [false, true],
                 ),
-                rightTitles: const AxisTitles(),
-                topTitles: const AxisTitles(),
               ),
-              borderData: FlBorderData(show: true),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: data.asMap().entries.map((entry) {
-                    return FlSpot(entry.key.toDouble(), entry.value.amount);
-                  }).toList(),
-                  isCurved: true,
-                  color: Theme.of(context).colorScheme.primary, // Purple line
-                  barWidth: 3,
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                  ),
-                ),
-              ],
             ),
           ),
-        ),
-      ),
         );
       },
     );
@@ -626,69 +772,81 @@ class _BookingsChart extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Dynamic chart height based on available space (min 180, max 300)
+        final availableHeight = constraints.maxHeight;
         final chartHeight = constraints.maxWidth > 900
-            ? 240.0  // Desktop (reduced from 300)
+            ? (availableHeight * 0.4).clamp(240.0, 300.0)  // Desktop: 40% of height
             : constraints.maxWidth > 600
-                ? 200.0  // Tablet (reduced from 250)
-                : 180.0; // Mobile (reduced from 200)
+                ? (availableHeight * 0.35).clamp(200.0, 250.0)  // Tablet: 35% of height
+                : (availableHeight * 0.3).clamp(180.0, 220.0); // Mobile: 30% of height
 
         return SizedBox(
           height: chartHeight,
           child: Card(
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(12), // Reduced from 16
-          child: BarChart(
-            BarChartData(
-              gridData: const FlGridData(),
-              titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        value.toInt().toString(),
-                        style: AppTypography.bodySmall,
-                      );
-                    },
+            elevation: 3,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Chart(
+                data: data.asMap().entries.map((e) => {
+                  'index': e.key,
+                  'label': e.value.label,
+                  'count': e.value.count,
+                }).toList(),
+                variables: {
+                  'index': Variable(
+                    accessor: (Map map) => map['index'] as num,
                   ),
-                ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      final index = value.toInt();
-                      if (index >= 0 && index < data.length) {
-                        return Text(
-                          data[index].label,
-                          style: AppTypography.bodySmall,
-                        );
-                      }
-                      return const Text('');
-                    },
+                  'count': Variable(
+                    accessor: (Map map) => map['count'] as num,
+                    scale: LinearScale(min: 0),
                   ),
-                ),
-                rightTitles: const AxisTitles(),
-                topTitles: const AxisTitles(),
-              ),
-              borderData: FlBorderData(show: true),
-              barGroups: data.asMap().entries.map((entry) {
-                return BarChartGroupData(
-                  x: entry.key,
-                  barRods: [
-                    BarChartRodData(
-                      toY: entry.value.count.toDouble(),
-                      color: Theme.of(context).colorScheme.primary, // Purple bars
-                      width: 20,
+                },
+                marks: [
+                  IntervalMark(
+                    shape: ShapeEncode(
+                      value: RectShape(borderRadius: BorderRadius.circular(8)),
                     ),
-                  ],
-                );
-              }).toList(),
+                    color: ColorEncode(
+                      value: theme.colorScheme.primary,
+                    ),
+                    elevation: ElevationEncode(value: 2),
+                    gradient: GradientEncode(
+                      value: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          theme.colorScheme.primary,
+                          theme.colorScheme.primary.withValues(alpha: 0.7),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                axes: [
+                  Defaults.horizontalAxis..label = null,
+                  Defaults.verticalAxis
+                    ..label = null
+                    ..grid = null,
+                ],
+                selections: {
+                  'touchMove': PointSelection(
+                    on: {GestureType.hover},
+                    devices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
+                  )
+                },
+                tooltip: TooltipGuide(
+                  backgroundColor: theme.colorScheme.surface,
+                  elevation: 8,
+                  textStyle: AppTypography.bodySmall.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
         );
       },
     );
@@ -730,7 +888,10 @@ class _TopPropertiesList extends StatelessWidget {
     }
 
     return Card(
-      elevation: 2,
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -828,7 +989,10 @@ class _WidgetAnalyticsCard extends StatelessWidget {
         : '0.0';
 
     return Card(
-      elevation: 2,
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(12), // Compact padding (was 20)
         child: Column(
@@ -1057,21 +1221,33 @@ class _BookingsBySourceChart extends StatelessWidget {
 
     final totalCount = bookingsBySource.values.fold<int>(0, (sum, count) => sum + count);
 
+    // Limit to top 5 sources to prevent overcrowding
+    final displayEntries = sortedEntries.take(5).toList();
+
+    // Calculate "Other" count if there are more than 5 sources
+    final hasOther = sortedEntries.length > 5;
+    final otherCount = hasOther
+        ? sortedEntries.skip(5).fold<int>(0, (sum, entry) => sum + entry.value)
+        : 0;
+
     return Card(
-      elevation: 2,
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(12), // Compact padding (was 20)
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Bookings by Source',
+              'Bookings by Source (Top 5)',
               style: AppTypography.bodyLarge.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 12), // Compact spacing (was 20)
-            ...sortedEntries.asMap().entries.map((entry) {
+            ...displayEntries.asMap().entries.map((entry) {
               final index = entry.key;
               final sourceEntry = entry.value;
               final source = sourceEntry.key;
@@ -1134,6 +1310,64 @@ class _BookingsBySourceChart extends StatelessWidget {
                 ),
               );
             }),
+
+            // Add "Other" category if there are more than 5 sources
+            if (hasOther) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  'Other (${sortedEntries.length - 5} sources)',
+                                  style: AppTypography.bodyMedium,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          '$otherCount (${totalCount > 0 ? (otherCount / totalCount * 100).toStringAsFixed(1) : "0.0"}%)',
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: totalCount > 0 ? otherCount / totalCount : 0,
+                      backgroundColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.borderDark
+                          : AppColors.borderLight,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      minHeight: 8,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),

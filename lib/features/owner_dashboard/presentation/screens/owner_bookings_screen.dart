@@ -3,14 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../../../../core/utils/input_decoration_helper.dart';
 import '../providers/owner_bookings_provider.dart';
-import '../providers/owner_calendar_provider.dart';
 import '../providers/owner_bookings_view_preference_provider.dart';
 import '../../domain/models/bookings_view_mode.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -18,6 +15,7 @@ import '../widgets/bookings_table_view.dart';
 import '../widgets/booking_details_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../widgets/bookings/bookings_filters_dialog.dart';
 // Booking card components
 import '../widgets/booking_card/booking_card_header.dart';
 import '../widgets/booking_card/booking_card_guest_info.dart';
@@ -324,33 +322,34 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     ThemeData theme,
     BookingsViewMode viewMode,
   ) {
-    final propertiesAsync = ref.watch(ownerPropertiesCalendarProvider);
+    // Count active filters for display
+    int activeFilterCount = 0;
+    if (filters.status != null) activeFilterCount++;
+    if (filters.propertyId != null) activeFilterCount++;
+    if (filters.startDate != null && filters.endDate != null) activeFilterCount++;
 
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: Theme.of(
-            context,
-          ).colorScheme.outline.withAlpha((0.15 * 255).toInt()),
+          color: theme.colorScheme.outline.withValues(alpha: 0.15),
         ),
       ),
       child: Padding(
         padding: EdgeInsets.all(isMobile ? 16 : 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Top row: Title + View mode + Actions
             Row(
               children: [
                 // Filter Icon
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha(
-                      (0.12 * 255).toInt(),
-                    ),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -361,8 +360,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Filteri',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  'Filteri i Pregled',
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -371,9 +370,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 // View mode toggle button
                 Container(
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withAlpha(
-                      (0.5 * 255).toInt(),
-                    ),
+                    color: theme.colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -398,222 +396,141 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     ],
                   ),
                 ),
-
-                if (filters.hasActiveFilters) ...[
-                  const SizedBox(width: 8),
-                  TextButton.icon(
-                    onPressed: () {
-                      ref
-                          .read(bookingsFiltersNotifierProvider.notifier)
-                          .clearFilters();
-                    },
-                    icon: const Icon(Icons.close, size: 16),
-                    label: const Text('Očisti'),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
-            SizedBox(height: isMobile ? 12 : 16),
-            // Responsive filter layout with Wrap for better overflow handling
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isSmallMobile = constraints.maxWidth < 768;
-                final isTablet =
-                    constraints.maxWidth >= 768 && constraints.maxWidth < 1024;
-                final spacing = isSmallMobile ? 8.0 : 12.0;
 
-                if (isSmallMobile) {
-                  // Column layout for mobile - full width filters
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildStatusFilter(filters, isMobile),
-                      SizedBox(height: spacing),
-                      _buildPropertyFilter(filters, propertiesAsync, isMobile),
-                      SizedBox(height: spacing),
-                      _buildDateRangeFilter(filters),
-                    ],
-                  );
-                } else if (isTablet) {
-                  // 2-column layout for tablets
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildStatusFilter(filters, isMobile),
+            const SizedBox(height: 16),
+
+            // Advanced filters button with gradient
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    theme.colorScheme.primary.withValues(alpha: 0.08),
+                    theme.colorScheme.primary.withValues(alpha: 0.04),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const BookingsFiltersDialog(),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.tune,
+                          color: theme.colorScheme.primary,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Napredno filtriranje',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                activeFilterCount > 0
+                                    ? '$activeFilterCount ${activeFilterCount == 1 ? "aktivan filter" : "aktivna filtera"}'
+                                    : 'Filtriraj po statusu, nekretnini, datumu',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: activeFilterCount > 0
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: activeFilterCount > 0
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: spacing),
-                          Expanded(
-                            child: _buildPropertyFilter(
-                              filters,
-                              propertiesAsync,
-                              isMobile,
+                        ),
+                        const SizedBox(width: 12),
+                        if (activeFilterCount > 0) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '$activeFilterCount',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 8),
                         ],
-                      ),
-                      SizedBox(height: spacing),
-                      _buildDateRangeFilter(filters),
-                    ],
-                  );
-                } else {
-                  // 3-column Row layout for desktop
-                  return Row(
-                    children: [
-                      Expanded(child: _buildStatusFilter(filters, isMobile)),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildPropertyFilter(
-                          filters,
-                          propertiesAsync,
-                          isMobile,
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildDateRangeFilter(filters)),
-                    ],
-                  );
-                }
-              },
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
+
+            // Clear filters button (only if filters active)
+            if (filters.hasActiveFilters) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  ref
+                      .read(bookingsFiltersNotifierProvider.notifier)
+                      .clearFilters();
+                },
+                icon: const Icon(Icons.clear_all, size: 18),
+                label: const Text('Očisti sve filtere'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  side: BorderSide(
+                    color: theme.colorScheme.error.withValues(alpha: 0.3),
+                  ),
+                  foregroundColor: theme.colorScheme.error,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildStatusFilter(BookingsFilters filters, bool isMobile) {
-    return DropdownButtonFormField<BookingStatus?>(
-      key: ValueKey(filters.status),
-      decoration: InputDecorationHelper.buildFilterDecoration(
-        context,
-        labelText: 'Status',
-        prefixIcon: const Icon(Icons.filter_list),
-        isMobile: isMobile,
-      ),
-      initialValue: filters.status,
-      items: [
-        const DropdownMenuItem(child: Text('Svi statusi')),
-        ...BookingStatus.values.where((s) {
-          // Only show statuses that are actively used
-          return s == BookingStatus.pending ||
-              s == BookingStatus.confirmed ||
-              s == BookingStatus.cancelled ||
-              s == BookingStatus.completed;
-        }).map((
-          status,
-        ) {
-          return DropdownMenuItem(
-            value: status,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: status.color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    status.displayName,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-      onChanged: (value) {
-        ref.read(bookingsFiltersNotifierProvider.notifier).setStatus(value);
-      },
-    );
-  }
-
-  Widget _buildPropertyFilter(
-    BookingsFilters filters,
-    AsyncValue propertiesAsync,
-    bool isMobile,
-  ) {
-    return propertiesAsync.when(
-      data: (properties) {
-        return DropdownButtonFormField<String?>(
-          key: ValueKey(filters.propertyId),
-          decoration: InputDecorationHelper.buildFilterDecoration(
-            context,
-            labelText: 'Objekt',
-            prefixIcon: const Icon(Icons.home_outlined),
-            isMobile: isMobile,
-          ),
-          initialValue: filters.propertyId,
-          items: [
-            const DropdownMenuItem<String?>(child: Text('Svi objekti')),
-            ...properties.map((property) {
-              return DropdownMenuItem<String?>(
-                value: property.id,
-                child: Text(property.name, overflow: TextOverflow.ellipsis),
-              );
-            }),
-          ],
-          onChanged: (value) {
-            ref
-                .read(bookingsFiltersNotifierProvider.notifier)
-                .setProperty(value);
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => const Text('Error'),
-    );
-  }
-
-  Widget _buildDateRangeFilter(BookingsFilters filters) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 400;
-        final theme = Theme.of(context);
-
-        return OutlinedButton.icon(
-          onPressed: _showDateRangePicker,
-          icon: const Icon(Icons.date_range),
-          label: Text(
-            filters.startDate != null && filters.endDate != null
-                ? '${filters.startDate!.day}.${filters.startDate!.month}. - ${filters.endDate!.day}.${filters.endDate!.month}.'
-                : 'Odaberi raspon',
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-            softWrap: false,
-          ),
-          style: OutlinedButton.styleFrom(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 14 : 20,
-              vertical: isMobile ? 14 : 18,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            side: BorderSide(
-              color: theme.colorScheme.outline.withAlpha((0.25 * 255).toInt()),
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -729,8 +646,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               // Main title
               Text(
                 'Nemate rezervacija',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: AppDimensions.spaceS),
@@ -758,45 +675,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
-  Future<void> _showDateRangePicker() async {
-    try {
-      final filters = ref.read(bookingsFiltersNotifierProvider);
-      final picked = await showDateRangePicker(
-        context: context,
-        firstDate: DateTime(2020),
-        lastDate: DateTime(2030),
-        initialDateRange: filters.startDate != null && filters.endDate != null
-            ? DateTimeRange(start: filters.startDate!, end: filters.endDate!)
-            : null,
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: Theme.of(context).colorScheme.copyWith(
-                primary: AppColors.primary,
-                onPrimary: Colors.white,
-                surface: Theme.of(context).scaffoldBackgroundColor,
-              ),
-            ),
-            child: child!,
-          );
-        },
-      );
-
-      if (picked != null && mounted) {
-        ref
-            .read(bookingsFiltersNotifierProvider.notifier)
-            .setDateRange(picked.start, picked.end);
-      }
-    } catch (e) {
-      if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: 'Greška prilikom odabira datuma',
-        );
-      }
-    }
-  }
 }
 
 /// Booking card widget

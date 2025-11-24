@@ -99,6 +99,7 @@ dependencies:
 
   # Charts
   fl_chart: ^0.69.2
+  graphic: ^2.6.0
 
 dev_dependencies:
   flutter_test:

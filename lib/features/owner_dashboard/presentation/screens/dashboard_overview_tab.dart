@@ -461,11 +461,12 @@ class DashboardOverviewTab extends ConsumerWidget {
                   fit: BoxFit.scaleDown,
                   child: Text(
                     value,
-                    style: theme.textTheme.displaySmall?.copyWith(
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: textColor,
                       height: 1.0,
-                      letterSpacing: -1,
+                      letterSpacing: 0,
+                      fontSize: 32,
                     ),
                     textAlign: TextAlign.center,
                   ),

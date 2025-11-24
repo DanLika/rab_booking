@@ -49,26 +49,21 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   String _searchQuery = '';
   String? _selectedPropertyFilter; // null = all properties
 
-  // Modern horizontal tabs with icon on the left
+  // Vertical tabs with icon above text (compact design)
   List<Widget> _buildTabs() {
     return [
-      _buildTab(Icons.info_outline, 'Osnovni Podaci'),
-      _buildTab(Icons.euro_outlined, 'Cjenovnik'),
-      _buildTab(Icons.widgets_outlined, 'Widget'),
-      _buildTab(Icons.settings_outlined, 'Napredne Postavke'),
+      _buildTab(Icons.description_outlined, 'Osnovni Podaci'),
+      _buildTab(Icons.payments_outlined, 'Cjenovnik'),
+      _buildTab(Icons.code, 'Widget'),
+      _buildTab(Icons.tune, 'Napredne Postavke'),
     ];
   }
 
   Widget _buildTab(IconData icon, String label) {
     return Tab(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 20),
-          const SizedBox(width: 8),
-          Text(label),
-        ],
-      ),
+      icon: Icon(icon, size: 22),
+      text: label,
+      height: 72, // Explicit height for vertical layout
     );
   }
 
@@ -233,7 +228,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           ),
         ),
         child: isDesktop
-            ? _buildDesktopLayout(theme, isDark)
+            ? _buildDesktopLayout(theme, isDark, screenWidth)
             : _buildMobileLayout(theme, isDark),
       ),
     );
@@ -241,11 +236,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
   /// Desktop layout - Master-Detail sa split view
   /// Master panel je DESNO, Detail panel LIJEVO
-  Widget _buildDesktopLayout(ThemeData theme, bool isDark) {
+  Widget _buildDesktopLayout(ThemeData theme, bool isDark, double screenWidth) {
     return Row(
       children: [
         // Detail panel (left) - Tab content
-        Expanded(child: _buildDetailPanel(theme, isDark)),
+        Expanded(child: _buildDetailPanel(theme, isDark, screenWidth)),
 
         // Master panel (right) - Units list
         Container(
@@ -293,7 +288,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   /// EndDrawer pokazuje master panel sa listom jedinica
   Widget _buildMobileLayout(ThemeData theme, bool isDark) {
     // Samo prikaži detail panel - master panel je u endDrawer-u
-    return _buildDetailPanel(theme, isDark);
+    final screenWidth = MediaQuery.of(context).size.width;
+    return _buildDetailPanel(theme, isDark, screenWidth);
   }
 
   /// Master panel - Units list (all properties)
@@ -709,7 +705,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }
 
   /// Detail panel - Tab navigation + content
-  Widget _buildDetailPanel(ThemeData theme, bool isDark) {
+  Widget _buildDetailPanel(ThemeData theme, bool isDark, double screenWidth) {
     if (_selectedUnit == null) {
       return _buildEmptyState(theme, isDark);
     }
@@ -733,9 +729,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             labelColor: theme.colorScheme.primary,
             unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
             indicatorColor: theme.colorScheme.primary,
-            indicatorWeight: 4,
+            indicatorWeight: 3,
             indicatorSize: TabBarIndicatorSize.label,
-            labelPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            // Responsive padding: smaller for mobile, larger for desktop
+            labelPadding: EdgeInsets.symmetric(
+              horizontal: screenWidth < 600 ? 12 : 20,
+              vertical: 0,
+            ),
             labelStyle: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -746,11 +746,15 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               fontWeight: FontWeight.w400,
               letterSpacing: 0.1,
             ),
+            // Theme-aware divider color (lighter for light theme, darker for dark theme)
+            dividerColor: isDark
+                ? Colors.white.withOpacity(0.15)
+                : Colors.black.withOpacity(0.1),
             indicator: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
                   color: theme.colorScheme.primary,
-                  width: 4,
+                  width: 3,
                 ),
               ),
             ),
@@ -817,8 +821,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           children: [
             Text(
               'Osnovni Podaci',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 20,
               ),
             ),
             FilledButton.icon(

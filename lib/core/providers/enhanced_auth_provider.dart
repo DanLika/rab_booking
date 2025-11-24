@@ -358,10 +358,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       throw 'First name and last name are required';
     }
 
-    // Validate password strength
-    final passwordValidation = PasswordValidator.validate(password);
-    if (passwordValidation.strength == PasswordStrength.weak) {
-      throw 'Password is too weak. ${passwordValidation.missingRequirements.join(', ')}';
+    // Validate password minimum length (8+ characters)
+    final passwordError = PasswordValidator.validateMinimumLength(password);
+    if (passwordError != null) {
+      throw passwordError;
     }
 
     if (!acceptedTerms || !acceptedPrivacy) {

@@ -151,6 +151,24 @@ class PasswordValidator {
     return result.isValid ? null : result.errorMessage;
   }
 
+  /// Minimum length validation (8+ characters only) - for login and register
+  /// No complexity requirements - user can enter any password they want
+  static String? validateMinimumLength(String? password) {
+    if (password == null || password.isEmpty) {
+      return 'Please enter your password';
+    }
+
+    if (password.length < minLength) {
+      return 'Password must be at least $minLength characters';
+    }
+
+    if (password.length > maxLength) {
+      return 'Password must be less than $maxLength characters';
+    }
+
+    return null;
+  }
+
   /// Check if two passwords match
   static String? validateConfirmPassword(String? password, String? confirm) {
     if (confirm == null || confirm.isEmpty) {

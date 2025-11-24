@@ -188,9 +188,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         // Title
                         Text(
                           l10n.changePassword,
-                          style: Theme.of(context).textTheme.headlineMedium
+                          style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 28,
                                 color: Theme.of(context).colorScheme.onSurface,
                               ),

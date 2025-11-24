@@ -365,9 +365,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             // Title
                             Text(
                               'Edit Profile',
-                              style: Theme.of(context).textTheme.headlineMedium
+                              style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     fontSize: 28,
                                     color: Theme.of(context).colorScheme.onSurface,
                                   ),

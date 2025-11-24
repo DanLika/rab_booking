@@ -391,8 +391,8 @@ class _EmptyPropertiesState extends StatelessWidget {
               // Main title
               Text(
                 'Nemate dodanih nekretnina',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
               ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/profile_validators.dart';
+import '../../../../core/utils/password_validator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
@@ -27,6 +28,18 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
   bool _obscurePassword = true;
   bool _rememberMe = true;
   bool _isLoading = false;
+  String? _passwordErrorFromServer; // Store Firebase auth errors
+
+  @override
+  void initState() {
+    super.initState();
+    // Clear server error when user starts typing
+    _passwordController.addListener(() {
+      if (_passwordErrorFromServer != null) {
+        setState(() => _passwordErrorFromServer = null);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -76,21 +89,33 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+        final errorMessage = e.toString();
+
+        // Check if it's a wrong password error - show inline
+        if (errorMessage.contains('Incorrect password') ||
+            errorMessage.contains('Invalid password') ||
+            errorMessage.contains('wrong-password') ||
+            errorMessage.contains('invalid-credential')) {
+          setState(() {
+            _passwordErrorFromServer = 'Incorrect password. Try again or reset your password.';
+            _isLoading = false;
+          });
+          // Trigger form validation to show inline error
+          _formKey.currentState!.validate();
+        } else {
+          // Other errors - show SnackBar
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-          ),
-        );
-      }
-    } finally {
-      // Always reset loading state
-      if (mounted) {
-        setState(() => _isLoading = false);
+          );
+        }
       }
     }
   }
@@ -244,10 +269,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                             },
                           ),
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your password';
+                            // Check server error first (wrong password from Firebase)
+                            if (_passwordErrorFromServer != null) {
+                              return _passwordErrorFromServer;
                             }
-                            return null;
+                            // Then check minimum length (8+ characters)
+                            return PasswordValidator.validateMinimumLength(value);
                           },
                         ),
                         const SizedBox(height: 16),

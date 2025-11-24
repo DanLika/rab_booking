@@ -49,8 +49,8 @@ class OnboardingSuccessScreen extends ConsumerWidget {
                     // Title
                     Text(
                       'Čestitamo!',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
                             color: AppColors.success,
                           ),
                       textAlign: TextAlign.center,

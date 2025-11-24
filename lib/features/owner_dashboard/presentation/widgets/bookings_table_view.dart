@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
@@ -42,72 +43,124 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Selection action bar
+          // Premium selection action bar with MenuAnchor
           if (_selectedBookingIds.isNotEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Theme.of(context)
-                      .colorScheme
-                      .primaryContainer
-                      .withValues(alpha: 0.3)
-                  : AppColors.authPrimary.withValues(alpha: 0.1),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    Text(
-                      '${_selectedBookingIds.length} odabrano',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+              height: 60,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                boxShadow: AppShadows.getElevation(
+                  2,
+                  isDark: Theme.of(context).brightness == Brightness.dark,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  // Selection count badge with gradient
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    const SizedBox(width: 16),
-                    // Bulk confirm - only show if all selected are pending
-                    if (allSelectedArePending) ...[
-                      TextButton.icon(
-                        onPressed: _confirmSelectedBookings,
-                        icon: const Icon(
-                          Icons.check_circle_outline,
-                          color: AppColors.success,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
-                        label: const Text(
-                          'Potvrdi odabrane',
-                          style: TextStyle(color: AppColors.success),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${_selectedBookingIds.length} odabrano',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton.icon(
-                        onPressed: _rejectSelectedBookings,
-                        icon: const Icon(
-                          Icons.cancel_outlined,
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Clear selection button
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(_selectedBookingIds.clear);
+                    },
+                    icon: const Icon(Icons.close, size: 18),
+                    label: const Text('Poništi odabir'),
+                    style: TextButton.styleFrom(
+                      foregroundColor:
+                          Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Bulk actions MenuAnchor
+                  MenuAnchor(
+                    builder: (context, controller, child) {
+                      return IconButton(
+                        onPressed: () {
+                          if (controller.isOpen) {
+                            controller.close();
+                          } else {
+                            controller.open();
+                          }
+                        },
+                        icon: const Icon(Icons.edit_note),
+                        tooltip: 'Grupne akcije',
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.1),
+                          foregroundColor:
+                              Theme.of(context).colorScheme.primary,
+                        ),
+                      );
+                    },
+                    menuChildren: [
+                      // Confirm action (only if all pending)
+                      if (allSelectedArePending)
+                        MenuItemButton(
+                          leadingIcon: const Icon(
+                            Icons.check_circle_outline,
+                            color: AppColors.success,
+                          ),
+                          onPressed: _confirmSelectedBookings,
+                          child: const Text('Potvrdi odabrane'),
+                        ),
+
+                      // Reject action (only if all pending)
+                      if (allSelectedArePending)
+                        MenuItemButton(
+                          leadingIcon: const Icon(
+                            Icons.cancel_outlined,
+                            color: AppColors.error,
+                          ),
+                          onPressed: _rejectSelectedBookings,
+                          child: const Text('Odbij odabrane'),
+                        ),
+
+                      // Delete action (always available)
+                      MenuItemButton(
+                        leadingIcon: const Icon(
+                          Icons.delete_outline,
                           color: AppColors.error,
                         ),
-                        label: const Text(
-                          'Odbij odabrane',
-                          style: TextStyle(color: AppColors.error),
-                        ),
+                        onPressed: _deleteSelectedBookings,
+                        child: const Text('Obriši odabrane'),
                       ),
-                      const SizedBox(width: 8),
                     ],
-                    TextButton.icon(
-                      onPressed: _deleteSelectedBookings,
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        color: AppColors.error,
-                      ),
-                      label: const Text(
-                        'Obriši odabrane',
-                        style: TextStyle(color: AppColors.error),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: () {
-                        setState(_selectedBookingIds.clear);
-                      },
-                      child: const Text('Poništi odabir'),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           // Table - no fixed height, parent CustomScrollView controls vertical scrolling

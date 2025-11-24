@@ -62,10 +62,10 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: AppBar(
         title: Text(
           title,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
             color: titleColor,
-            letterSpacing: -0.5,
+            letterSpacing: 0,
           ),
         ),
         backgroundColor: Colors.transparent,

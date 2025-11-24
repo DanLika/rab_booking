@@ -347,8 +347,8 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
               const SizedBox(height: AppDimensions.spaceL),
               Text(
                 'Nemate dodane jedinice',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: AppDimensions.spaceS),

@@ -570,6 +570,123 @@ class BookingCardSkeleton extends StatelessWidget {
   }
 }
 
+/// Booking table skeleton loader (for DataTable-style booking list)
+class BookingTableSkeleton extends StatelessWidget {
+  const BookingTableSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Card(
+      elevation: 0.5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header row (mimics DataTable header)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? theme.colorScheme.surfaceContainerHighest
+                  : theme.colorScheme.surfaceContainerHigh,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: const Row(
+              children: [
+                SizedBox(width: 80, child: SkeletonLoader(width: 60, height: 14)),
+                SizedBox(width: 12),
+                Expanded(child: SkeletonLoader(width: 100, height: 14)),
+                SizedBox(width: 12),
+                SizedBox(width: 100, child: SkeletonLoader(width: 80, height: 14)),
+                SizedBox(width: 12),
+                SizedBox(width: 90, child: SkeletonLoader(width: 75, height: 14)),
+                SizedBox(width: 12),
+                SizedBox(width: 90, child: SkeletonLoader(width: 75, height: 14)),
+                SizedBox(width: 12),
+                SizedBox(width: 60, child: SkeletonLoader(width: 45, height: 14)),
+                SizedBox(width: 12),
+                SizedBox(width: 70, child: SkeletonLoader(width: 50, height: 14)),
+                SizedBox(width: 12),
+                SizedBox(width: 90, child: SkeletonLoader(width: 70, height: 14)),
+                SizedBox(width: 12),
+                SizedBox(width: 100, child: SkeletonLoader(width: 80, height: 14)),
+                SizedBox(width: 12),
+                SizedBox(width: 80, child: SkeletonLoader(width: 60, height: 14)),
+              ],
+            ),
+          ),
+
+          // Data rows (5 skeleton rows)
+          ...List.generate(5, (index) => _buildTableRowSkeleton(isDark)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableRowSkeleton(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+          ),
+        ),
+      ),
+      child: const Row(
+        children: [
+          // Guest name
+          SizedBox(width: 80, child: SkeletonLoader(width: 70, height: 16)),
+          SizedBox(width: 12),
+          // Property name
+          Expanded(child: SkeletonLoader(width: 110, height: 16)),
+          SizedBox(width: 12),
+          // Unit name
+          SizedBox(width: 100, child: SkeletonLoader(width: 90, height: 16)),
+          SizedBox(width: 12),
+          // Check-in
+          SizedBox(width: 90, child: SkeletonLoader(width: 80, height: 16)),
+          SizedBox(width: 12),
+          // Check-out
+          SizedBox(width: 90, child: SkeletonLoader(width: 80, height: 16)),
+          SizedBox(width: 12),
+          // Nights
+          SizedBox(width: 60, child: SkeletonLoader(width: 35, height: 16)),
+          SizedBox(width: 12),
+          // Guests
+          SizedBox(width: 70, child: SkeletonLoader(width: 35, height: 16)),
+          SizedBox(width: 12),
+          // Total price
+          SizedBox(width: 90, child: SkeletonLoader(width: 75, height: 16)),
+          SizedBox(width: 12),
+          // Status badge
+          SizedBox(width: 100, child: SkeletonLoader(width: 85, height: 28, borderRadius: 14)),
+          SizedBox(width: 12),
+          // Actions (icon buttons)
+          SizedBox(width: 80, child: Row(
+            children: [
+              SkeletonLoader(width: 32, height: 32, borderRadius: 16),
+              SizedBox(width: 8),
+              SkeletonLoader(width: 32, height: 32, borderRadius: 16),
+            ],
+          )),
+        ],
+      ),
+    );
+  }
+}
+
 /// Grid skeleton loader
 class SkeletonGrid extends StatelessWidget {
   const SkeletonGrid({this.itemCount = 6, this.crossAxisCount = 2, super.key});

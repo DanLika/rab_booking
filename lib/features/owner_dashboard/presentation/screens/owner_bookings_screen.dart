@@ -239,12 +239,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   if (viewMode == BookingsViewMode.table) {
                     return SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.all(48),
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            color: theme.colorScheme.primary,
-                          ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.horizontalPadding,
                         ),
+                        child: const BookingTableSkeleton(),
                       ),
                     );
                   } else {

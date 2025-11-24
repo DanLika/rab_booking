@@ -321,12 +321,15 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     final bodyContent = _isLoading
         ? const Center(child: CircularProgressIndicator())
         : Form(
               key: _formKey,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(isMobile ? 16 : 20),
                 children: [
                   _buildWidgetModeSection(),
 
@@ -617,8 +620,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
               colors: isDark
                   ? const [
                       Color(0xFF1A1A1A), // veryDarkGray
@@ -1216,8 +1219,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
               colors: isDark
                   ? const [
                       Color(0xFF1A1A1A), // veryDarkGray
@@ -1545,8 +1548,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
               colors: isDark
                   ? const [
                       Color(0xFF1A1A1A), // veryDarkGray
@@ -1793,8 +1796,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 color.withAlpha((0.1 * 255).toInt()),
                 color.withAlpha((0.05 * 255).toInt()),
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: color.withAlpha((0.3 * 255).toInt())),

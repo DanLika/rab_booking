@@ -221,9 +221,9 @@ class _WidgetAdvancedSettingsScreenState
                 // Email Verification Section (first section)
                 Padding(
                   padding: EdgeInsets.fromLTRB(
-                    isMobile ? 16 : 24, // left
+                    isMobile ? 16 : 20, // left
                     isMobile ? 16 : 20, // top (first section)
-                    isMobile ? 16 : 24, // right
+                    isMobile ? 16 : 20, // right
                     isMobile ? 8 : 12, // bottom
                   ),
                   child: EmailVerificationCard(
@@ -238,9 +238,9 @@ class _WidgetAdvancedSettingsScreenState
                 // Tax/Legal Disclaimer Section (middle section)
                 Padding(
                   padding: EdgeInsets.fromLTRB(
-                    isMobile ? 16 : 24, // left
+                    isMobile ? 16 : 20, // left
                     isMobile ? 8 : 12, // top (other sections)
-                    isMobile ? 16 : 24, // right
+                    isMobile ? 16 : 20, // right
                     isMobile ? 8 : 12, // bottom
                   ),
                   child: TaxLegalDisclaimerCard(
@@ -268,9 +268,9 @@ class _WidgetAdvancedSettingsScreenState
                 // iCal Export Section (last section)
                 Padding(
                   padding: EdgeInsets.fromLTRB(
-                    isMobile ? 16 : 24, // left
+                    isMobile ? 16 : 20, // left
                     isMobile ? 8 : 12, // top (other sections)
-                    isMobile ? 16 : 24, // right
+                    isMobile ? 16 : 20, // right
                     isMobile ? 16 : 20, // bottom (last section)
                   ),
                   child: IcalExportCard(
@@ -288,7 +288,7 @@ class _WidgetAdvancedSettingsScreenState
                 // Save Button
                 Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 16 : 24,
+                    horizontal: isMobile ? 16 : 20,
                   ),
                   child: ElevatedButton(
                     onPressed: _isSaving ? null : () => _saveSettings(settings),

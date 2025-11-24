@@ -10,7 +10,6 @@ import '../../../../shared/models/property_model.dart';
 import '../providers/owner_properties_provider.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
-import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import 'unit_pricing_screen.dart';
 import 'widget_settings_screen.dart';
 import 'widget_advanced_settings_screen.dart';
@@ -437,9 +436,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
 
     return unitsAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: PropertyListSkeleton(),
+      loading: () => Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(
+            isDark ? Colors.white : Colors.black,
+          ),
+        ),
       ),
       error: (error, stack) => Center(
         child: Padding(
@@ -734,7 +736,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             indicatorSize: TabBarIndicatorSize.label,
             // Responsive padding: smaller for mobile, larger for desktop
             labelPadding: EdgeInsets.symmetric(
-              horizontal: screenWidth < 600 ? 12 : 20,
+              horizontal: screenWidth < 600 ? 8 : 20,
             ),
             labelStyle: const TextStyle(
               fontSize: 14,
@@ -812,8 +814,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   Widget _buildTab1_BasicInfo(ThemeData theme, bool isDark) {
     if (_selectedUnit == null) return const SizedBox.shrink();
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       children: [
         // Header with Edit Button
         Row(
@@ -1091,17 +1096,16 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withValues(alpha: 0.7),
-                        ],
+                      color: theme.colorScheme.primary.withAlpha(
+                        (0.12 * 255).toInt(),
                       ),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(icon, color: Colors.white, size: 20),
+                    child: Icon(
+                      icon,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Text(

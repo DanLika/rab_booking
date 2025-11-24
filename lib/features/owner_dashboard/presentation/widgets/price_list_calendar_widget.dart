@@ -167,7 +167,7 @@ class _PriceListCalendarWidgetState
             icon: const Icon(Icons.euro),
             label: const Text('Postavi cijenu'),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 15), // Same as Save button
               backgroundColor: context.primaryColor,
               foregroundColor: Colors.white,
               textStyle: const TextStyle(
@@ -176,7 +176,7 @@ class _PriceListCalendarWidgetState
                 letterSpacing: 0.5,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(10), // Same as Save button
               ),
             ),
           ),
@@ -186,14 +186,14 @@ class _PriceListCalendarWidgetState
             icon: const Icon(Icons.block),
             label: const Text('Dostupnost'),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 15), // Same as Save button
               textStyle: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.5,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(10), // Same as Save button
               ),
             ),
           ),
@@ -209,7 +209,7 @@ class _PriceListCalendarWidgetState
             icon: const Icon(Icons.euro),
             label: const Text('Postavi cijenu'),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 15), // Same as Save button
               backgroundColor: context.primaryColor,
               foregroundColor: Colors.white,
               textStyle: const TextStyle(
@@ -218,7 +218,7 @@ class _PriceListCalendarWidgetState
                 letterSpacing: 0.5,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(10), // Same as Save button
               ),
             ),
           ),
@@ -230,14 +230,14 @@ class _PriceListCalendarWidgetState
             icon: const Icon(Icons.block),
             label: const Text('Dostupnost'),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 15), // Same as Save button
               textStyle: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.5,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(10), // Same as Save button
               ),
             ),
           ),
@@ -357,9 +357,11 @@ class _PriceListCalendarWidgetState
                   ],
                 )
               : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Month selector
-                    Expanded(
+                    SizedBox(
+                      width: 150, // Max 150px constraint
                       child: DropdownButtonFormField<DateTime>(
                         // Safe: _selectedMonth is initialized in initState() before first build
                         initialValue: _selectedMonth,

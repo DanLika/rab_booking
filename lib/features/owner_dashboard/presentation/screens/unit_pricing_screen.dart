@@ -532,10 +532,14 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                 }
 
                 return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(flex: 2, child: priceInput),
+                    SizedBox(width: 100, child: priceInput),
                     const SizedBox(width: 16),
-                    Expanded(child: saveButton),
+                    SizedBox(
+                      width: 90, // 80-100px constraint
+                      child: saveButton,
+                    ),
                   ],
                 );
               },

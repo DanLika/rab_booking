@@ -329,8 +329,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final propertiesAsync = ref.watch(ownerPropertiesCalendarProvider);
 
     return Card(
-      elevation: 2,
-      shadowColor: theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
@@ -818,8 +817,7 @@ class _BookingCard extends ConsumerWidget {
     final isMobile = screenWidth < 600;
 
     return Card(
-      elevation: 0.5,
-      shadowColor: theme.colorScheme.shadow.withAlpha((0.05 * 255).toInt()),
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(

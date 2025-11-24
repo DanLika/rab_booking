@@ -285,6 +285,266 @@ Builder(
 
 ---
 
+## 🏢 UNIT HUB - CJENOVNIK TAB IS FINALIZED (DO NOT MODIFY!)
+
+**Datum: 2025-11-24**
+**Status: ✅ FINALIZED - Cjenovnik tab je ZAVRŠEN i FROZEN**
+**KRITIČNO:** Cjenovnik tab služi kao **ZLATNI STANDARD** za implementaciju drugih tabova!
+
+### 📋 Overview
+
+**Cjenovnik (Pricing) tab** u Unit Hub screen-u (`unified_unit_hub_screen.dart`) je **KOMPLETNO IMPLEMENTIRAN** i **NE SMIJE SE MIJENJATI**. Ovaj tab sada služi kao **REFERENTNI PRIMJER** za implementaciju preostalih tabova u Unit Hub-u.
+
+**Screen:** `lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart`
+
+**Tabovi u Unit Hub-u:**
+1. **Osnovni Podaci** - Unit details, edit form ⚠️ NEEDS WORK
+2. **Cjenovnik** - Pricing calendar ✅ **FINALIZED - USE AS REFERENCE!**
+3. **Widget** - Widget customization ⚠️ NEEDS WORK
+4. **Napredne** - Advanced settings ⚠️ NEEDS WORK
+
+---
+
+### ✅ Šta Je Implementirano u Cjenovnik Tabu
+
+**1. Responsive Layout:**
+```dart
+// Desktop (>= 1200px): Fixed 1000px width, centered
+// Tablet (600-1199px): Full width minus padding
+// Mobile (< 600px): Full width minus smaller padding
+
+final isDesktop = MediaQuery.of(context).size.width >= 1200;
+final maxWidth = isDesktop ? 1000.0 : double.infinity;
+
+Container(
+  constraints: BoxConstraints(maxWidth: maxWidth),
+  child: PriceListCalendarWidget(...),
+)
+```
+
+**2. Loading State:**
+```dart
+if (_isLoadingPricing) {
+  return Center(
+    child: CircularProgressIndicator(
+      valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+    ),
+  );
+}
+```
+
+**3. Error State:**
+```dart
+if (_pricingError != null) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
+        SizedBox(height: 16),
+        Text('Greška: $_pricingError'),
+        ElevatedButton(
+          onPressed: _loadPricingData,
+          child: Text('Pokušaj ponovo'),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+**4. Content State:**
+```dart
+return PriceListCalendarWidget(
+  unit: _selectedUnit!,
+  startDate: _priceStartDate,
+  endDate: _priceEndDate,
+  onMonthChanged: (month) {
+    setState(() {
+      _priceStartDate = DateTime(month.year, month.month, 1);
+      _priceEndDate = DateTime(month.year, month.month + 1, 0);
+    });
+    _loadPricingData();
+  },
+);
+```
+
+**5. Theme-Aware Styling:**
+- CircularProgressIndicator koristi `theme.colorScheme.primary`
+- Error icon koristi `theme.colorScheme.error`
+- Text styles koriste theme typography
+- Proper dark/light mode support
+
+**6. State Management:**
+- `_isLoadingPricing` flag za loading state
+- `_pricingError` string za error messages
+- `_priceStartDate` i `_priceEndDate` za date range tracking
+- `_loadPricingData()` async metoda za fetch logic
+
+---
+
+### ⚠️ KRITIČNO - ŠTA CLAUDE CODE **NE SMIJE** RADITI!
+
+**1. NE MIJENJAJ CJENOVNIK TAB KOD:**
+- ❌ **ZABRANJENO**: Refaktorisanje postojećeg koda
+- ❌ **ZABRANJENO**: Dodavanje novih feature-a
+- ❌ **ZABRANJENO**: Mijenjanje layout logike
+- ❌ **ZABRANJENO**: Mijenjanje state management-a
+- ❌ **ZABRANJENO**: "Poboljšavanje" ili "optimizacija"
+- ❌ **ZABRANJENO**: Mijenjanje error handling-a
+
+**2. NE MIJENJAJ PriceListCalendarWidget:**
+```
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart
+```
+- Ova komponenta se koristi UNUTAR Cjenovnik taba
+- Već je kompletno implementirana sa:
+  - Kalendar prikaz sa mjesečnim view-om
+  - Inline edit dialog-ove za single/bulk edit
+  - Date range selection
+  - Loading states
+  - Error handling
+  - Responsive design
+- **NE DIRAJ** ovaj widget bez eksplicitnog user zahtjeva!
+
+**3. JEDINI DOZVOLJENI RAZLOG ZA IZMJENU:**
+- User **eksplicitno** traži bug fix
+- User **eksplicitno** traži novu funkcionalnost
+- User kaže "Nemoj reći da je finalizovano, želim ovo da se promijeni"
+
+---
+
+### 🎯 Kako Koristiti Kao Referencu
+
+**Kada implementiraš DRUGI tab (Osnovni Podaci, Widget, Napredne):**
+
+**1. Kopiraj Pattern:**
+```dart
+// ✅ CORRECT - Copy this pattern!
+Widget _buildTabContent() {
+  // Step 1: Loading state
+  if (_isLoadingXXX) {
+    return Center(
+      child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+      ),
+    );
+  }
+
+  // Step 2: Error state
+  if (_xxxError != null) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
+          SizedBox(height: 16),
+          Text('Greška: $_xxxError'),
+          ElevatedButton(
+            onPressed: _loadXXXData,
+            child: Text('Pokušaj ponovo'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Step 3: Responsive layout
+  final isDesktop = MediaQuery.of(context).size.width >= 1200;
+  final maxWidth = isDesktop ? 1000.0 : double.infinity;
+
+  return Container(
+    constraints: BoxConstraints(maxWidth: maxWidth),
+    padding: EdgeInsets.all(16),
+    child: YourTabContentWidget(...),
+  );
+}
+```
+
+**2. Prilagodi za Tvoj Tab:**
+- Zamijeni `_isLoadingXXX` sa tvojim loading flag-om
+- Zamijeni `_xxxError` sa tvojim error string-om
+- Zamijeni `_loadXXXData()` sa tvojom fetch metodom
+- Zamijeni `YourTabContentWidget` sa tvojim content widget-om
+
+**3. Zadrži:**
+- ✅ Isti responsive breakpoint (1200px)
+- ✅ Isti maxWidth (1000px za desktop)
+- ✅ Isti error UI (icon + text + retry button)
+- ✅ Isti loading indicator (CircularProgressIndicator sa theme.primary)
+
+---
+
+### 📊 Razlozi Zašto Je Cjenovnik Frozen
+
+**1. Kompletno Testiran:**
+- Responsive layout radi na svim screen sizes ✅
+- Loading states rade kako treba ✅
+- Error handling radi ✅
+- PriceListCalendarWidget je production-ready ✅
+
+**2. User Je Zadovoljan:**
+- User je pregledao implementaciju
+- User je potvrdio da radi kako treba
+- User želi da OSTALI tabovi prate ovaj pattern
+
+**3. Referentna Implementacija:**
+- Pokazuje kako treba implementirati responsive layout
+- Pokazuje kako treba implementirati loading/error states
+- Pokazuje kako treba integrisati widget komponente
+- Pokazuje proper state management
+
+---
+
+### 🧪 Ako User Prijavi Problem
+
+**1. PRVO Provjeri Da Li Problem NIJE u Cjenovnik Tabu:**
+- Možda je problem u drugom tabu?
+- Možda je problem u navigation-u?
+- Možda je problem u selectedUnit state-u?
+
+**2. AKO Problem JE u Cjenovnik Tabu:**
+- Pitaj usera za screenshot ili video
+- Pitaj za reproducible steps
+- Pitaj da li želi da se izmijeni "finalizirani" tab
+- **NE MIJENJAJ** dok user ne potvrdi!
+
+**3. AKO User Kaže "Promijeni":**
+- OK, možeš mijenjati
+- ALI dokumentuj izmjenu ovdje u CLAUDE.md
+- ALI update-uj "Datum" i "Status" u ovoj sekciji
+
+---
+
+### 🎯 TL;DR - Najvažnije
+
+1. **CJENOVNIK TAB JE FROZEN** - Ne mijenjaj bez eksplicitnog user zahtjeva!
+2. **KORISTI GA KAO REFERENCU** - Copy pattern za druge tabove!
+3. **1200px BREAKPOINT** - Desktop layout se aktivira na >= 1200px!
+4. **1000px MAX WIDTH** - Desktop content je ograničen na 1000px i centriran!
+5. **LOADING/ERROR STATES** - Identični pattern za sve tabove!
+6. **THEME-AWARE** - Sve boje iz `theme.colorScheme.*`!
+7. **PITAJ USERA** - Ako nešto izgleda čudno, PITAJ prije nego što mijenjaj!
+
+**Referentni Fajl:**
+```
+lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart
+```
+
+**Cjenovnik Tab Implementacija:**
+- Lines ~700-800: `_buildPricingTab()` metod
+- Lines ~600-700: Loading/Error states
+- Lines ~400-500: `_loadPricingData()` async fetch
+
+**PriceListCalendarWidget:**
+```
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart
+```
+- ~1500 lines - KOMPLETNA implementacija
+- NE DIRAJ bez user zahtjeva!
+
+---
+
 ## 🎨 Unit Hub & Pricing UI Consistency Improvements
 
 **Datum: 2025-11-23**

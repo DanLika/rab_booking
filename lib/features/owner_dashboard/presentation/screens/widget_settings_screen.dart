@@ -375,34 +375,86 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     'Napredne Postavke',
                     Icons.settings_applications,
                   ),
-                  Card(
-                    child: ListTile(
-                      leading: Icon(Icons.tune, color: context.primaryColor),
-                      title: const Text('Email i Pravne Postavke'),
-                      subtitle: const Text(
-                        'Konfigurišite email notifikacije i pravne napomene',
-                      ),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => WidgetAdvancedSettingsScreen(
-                              propertyId: widget.propertyId,
-                              unitId: widget.unitId,
+                  Builder(
+                    builder: (context) {
+                      final theme = Theme.of(context);
+                      final isDark = theme.brightness == Brightness.dark;
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.black.withAlpha((0.3 * 255).toInt())
+                                  : Colors.black.withAlpha((0.1 * 255).toInt()),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topRight,
+                                end: Alignment.bottomLeft,
+                                colors: isDark
+                                    ? const [
+                                        Color(0xFF1A1A1A), // veryDarkGray
+                                        Color(0xFF1F1F1F),
+                                        Color(0xFF242424),
+                                        Color(0xFF292929),
+                                        Color(0xFF2D2D2D), // mediumDarkGray
+                                      ]
+                                    : const [
+                                        Color(0xFFF0F0F0), // Lighter grey
+                                        Color(0xFFF2F2F2),
+                                        Color(0xFFF5F5F5),
+                                        Color(0xFFF8F8F8),
+                                        Color(0xFFFAFAFA), // Very light grey
+                                      ],
+                                stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: theme.colorScheme.outline
+                                    .withAlpha((0.5 * 255).toInt()),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: ListTile(
+                              leading: Icon(Icons.tune, color: context.primaryColor),
+                              title: const Text('Email i Pravne Postavke'),
+                              subtitle: const Text(
+                                'Konfigurišite email notifikacije i pravne napomene',
+                              ),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => WidgetAdvancedSettingsScreen(
+                                      propertyId: widget.propertyId,
+                                      unitId: widget.unitId,
+                                    ),
+                                  ),
+                                );
+                                // After returning from Advanced Settings, reload settings
+                                // to ensure Widget Settings has fresh data from Firestore
+                                if (mounted) {
+                                  ref.invalidate(
+                                    widget_provider.widgetSettingsProvider,
+                                  );
+                                  await _loadSettings(); // Re-fetch and apply fresh settings
+                                }
+                              },
                             ),
                           ),
-                        );
-                        // After returning from Advanced Settings, reload settings
-                        // to ensure Widget Settings has fresh data from Firestore
-                        if (mounted) {
-                          ref.invalidate(
-                            widget_provider.widgetSettingsProvider,
-                          );
-                          await _loadSettings(); // Re-fetch and apply fresh settings
-                        }
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 32),
@@ -464,95 +516,188 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   }
 
   Widget _buildWidgetModeSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Odaberite kako će widget funkcionirati:',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-              ),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withAlpha((0.3 * 255).toInt())
+                : Colors.black.withAlpha((0.1 * 255).toInt()),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: isDark
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF1F1F1F),
+                      Color(0xFF242424),
+                      Color(0xFF292929),
+                      Color(0xFF2D2D2D), // mediumDarkGray
+                    ]
+                  : const [
+                      Color(0xFFF0F0F0), // Lighter grey
+                      Color(0xFFF2F2F2),
+                      Color(0xFFF5F5F5),
+                      Color(0xFFF8F8F8),
+                      Color(0xFFFAFAFA), // Very light grey
+                    ],
+              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
             ),
-            const SizedBox(height: 12),
-            ...WidgetMode.values.map(
-              (mode) => InkWell(
-                onTap: () {
-                  setState(() => _selectedMode = mode);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      // Custom radio indicator to avoid deprecated API
-                      Container(
-                        width: 20,
-                        height: 20,
-                        margin: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _selectedMode == mode
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurface
-                                      .withAlpha((0.3 * 255).toInt()),
-                            width: 2,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
+              width: 1.5,
+            ),
+          ),
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Odaberite kako će widget funkcionirati:',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...WidgetMode.values.map(
+                (mode) => InkWell(
+                  onTap: () {
+                    setState(() => _selectedMode = mode);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        // Custom radio indicator to avoid deprecated API
+                        Container(
+                          width: 20,
+                          height: 20,
+                          margin: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _selectedMode == mode
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.onSurface
+                                        .withAlpha((0.3 * 255).toInt()),
+                              width: 2,
+                            ),
+                          ),
+                          child: _selectedMode == mode
+                              ? Center(
+                                  child: Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(mode.displayName),
+                              Text(
+                                mode.description,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withAlpha((0.6 * 255).toInt()),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: _selectedMode == mode
-                            ? Center(
-                                child: Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
-                                ),
-                              )
-                            : null,
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(mode.displayName),
-                            Text(
-                              mode.description,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurface
-                                    .withAlpha((0.6 * 255).toInt()),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildPaymentMethodsSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withAlpha((0.3 * 255).toInt())
+                : Colors.black.withAlpha((0.1 * 255).toInt()),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: isDark
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF1F1F1F),
+                      Color(0xFF242424),
+                      Color(0xFF292929),
+                      Color(0xFF2D2D2D), // mediumDarkGray
+                    ]
+                  : const [
+                      Color(0xFFF0F0F0), // Lighter grey
+                      Color(0xFFF2F2F2),
+                      Color(0xFFF5F5F5),
+                      Color(0xFFF8F8F8),
+                      Color(0xFFFAFAFA), // Very light grey
+                    ],
+              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
+              width: 1.5,
+            ),
+          ),
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Info text
             Text(
               'Odaberite metode plaćanja dostupne gostima:',
@@ -572,9 +717,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withAlpha((0.3 * 255).toInt()),
                 ),
               ),
               child: Column(
@@ -895,7 +1041,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 );
               },
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1075,12 +1222,58 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   }
 
   Widget _buildBookingBehaviorSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withAlpha((0.3 * 255).toInt())
+                : Colors.black.withAlpha((0.1 * 255).toInt()),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: isDark
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF1F1F1F),
+                      Color(0xFF242424),
+                      Color(0xFF292929),
+                      Color(0xFF2D2D2D), // mediumDarkGray
+                    ]
+                  : const [
+                      Color(0xFFF0F0F0), // Lighter grey
+                      Color(0xFFF2F2F2),
+                      Color(0xFFF5F5F5),
+                      Color(0xFFF8F8F8),
+                      Color(0xFFFAFAFA), // Very light grey
+                    ],
+              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
+              width: 1.5,
+            ),
+          ),
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Responsive Grid for Switches
             LayoutBuilder(
               builder: (context, constraints) {
@@ -1150,9 +1343,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       .withAlpha((0.3 * 255).toInt()),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withAlpha((0.3 * 255).toInt()),
                   ),
                 ),
                 child: Column(
@@ -1199,9 +1393,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     .withAlpha((0.3 * 255).toInt()),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withAlpha((0.3 * 255).toInt()),
                 ),
               ),
               child: Column(
@@ -1245,6 +1440,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -1260,12 +1456,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: value
-            ? Theme.of(
-                context,
-              ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(
-                (0.3 * 255).toInt(),
-              ),
+            ? Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withAlpha((0.3 * 255).toInt())
+            : Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withAlpha((0.3 * 255).toInt()),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value
@@ -1323,109 +1521,156 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   }
 
   Widget _buildContactOptionsSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Kontakt opcije koje će biti prikazane u widgetu:',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-              ),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withAlpha((0.3 * 255).toInt())
+                : Colors.black.withAlpha((0.1 * 255).toInt()),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: isDark
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF1F1F1F),
+                      Color(0xFF242424),
+                      Color(0xFF292929),
+                      Color(0xFF2D2D2D), // mediumDarkGray
+                    ]
+                  : const [
+                      Color(0xFFF0F0F0), // Lighter grey
+                      Color(0xFFF2F2F2),
+                      Color(0xFFF5F5F5),
+                      Color(0xFFF8F8F8),
+                      Color(0xFFFAFAFA), // Very light grey
+                    ],
+              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
             ),
-            const SizedBox(height: 16),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
+              width: 1.5,
+            ),
+          ),
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Kontakt opcije koje će biti prikazane u widgetu:',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                ),
+              ),
+              const SizedBox(height: 16),
 
-            // Responsive Grid for Switches
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isDesktop = constraints.maxWidth >= 600;
+              // Responsive Grid for Switches
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isDesktop = constraints.maxWidth >= 600;
 
-                if (isDesktop) {
-                  // Desktop: 2 columns grid
-                  return Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      // Row 1
-                      SizedBox(
-                        width: (constraints.maxWidth - 12) / 2,
-                        child: _buildContactSwitchCard(
+                  if (isDesktop) {
+                    // Desktop: 2 columns grid
+                    return Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        // Row 1
+                        SizedBox(
+                          width: (constraints.maxWidth - 12) / 2,
+                          child: _buildContactSwitchCard(
+                            icon: Icons.phone,
+                            label: 'Telefon',
+                            value: _showPhone,
+                            onChanged: (val) => setState(() => _showPhone = val),
+                          ),
+                        ),
+                        SizedBox(
+                          width: (constraints.maxWidth - 12) / 2,
+                          child: _buildContactSwitchCard(
+                            icon: Icons.email,
+                            label: 'Email',
+                            value: _showEmail,
+                            onChanged: (val) => setState(() => _showEmail = val),
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    // Mobile: Vertical column
+                    return Column(
+                      children: [
+                        _buildContactSwitchCard(
                           icon: Icons.phone,
                           label: 'Telefon',
                           value: _showPhone,
                           onChanged: (val) => setState(() => _showPhone = val),
                         ),
-                      ),
-                      SizedBox(
-                        width: (constraints.maxWidth - 12) / 2,
-                        child: _buildContactSwitchCard(
+                        const SizedBox(height: 12),
+                        _buildContactSwitchCard(
                           icon: Icons.email,
                           label: 'Email',
                           value: _showEmail,
                           onChanged: (val) => setState(() => _showEmail = val),
                         ),
-                      ),
-                    ],
-                  );
-                } else {
-                  // Mobile: Vertical column
-                  return Column(
-                    children: [
-                      _buildContactSwitchCard(
-                        icon: Icons.phone,
-                        label: 'Telefon',
-                        value: _showPhone,
-                        onChanged: (val) => setState(() => _showPhone = val),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildContactSwitchCard(
-                        icon: Icons.email,
-                        label: 'Email',
-                        value: _showEmail,
-                        onChanged: (val) => setState(() => _showEmail = val),
-                      ),
-                    ],
-                  );
-                }
-              },
-            ),
-
-            // Input Fields (conditional based on enabled switches)
-            const SizedBox(height: 20),
-
-            if (_showPhone) ...[
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Broj telefona',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                  prefixIcon: Icon(Icons.phone),
-                ),
-                keyboardType: TextInputType.phone,
+                      ],
+                    );
+                  }
+                },
               ),
-              const SizedBox(height: 12),
-            ],
 
-            if (_showEmail) ...[
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email adresa',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                  prefixIcon: Icon(Icons.email),
+              // Input Fields (conditional based on enabled switches)
+              const SizedBox(height: 20),
+
+              if (_showPhone) ...[
+                TextFormField(
+                  controller: _phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Broj telefona',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    prefixIcon: Icon(Icons.phone),
+                  ),
+                  keyboardType: TextInputType.phone,
                 ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
+              ],
+
+              if (_showEmail) ...[
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email adresa',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 12),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -1442,12 +1687,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: value
-            ? Theme.of(
-                context,
-              ).colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt())
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(
-                (0.3 * 255).toInt(),
-              ),
+            ? Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withAlpha((0.3 * 255).toInt())
+            : Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withAlpha((0.3 * 255).toInt()),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value
@@ -1496,52 +1743,70 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     required String message,
     required Color color,
   }) {
-    return Card(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              color.withAlpha((0.1 * 255).toInt()),
-              color.withAlpha((0.05 * 255).toInt()),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withAlpha((0.3 * 255).toInt())
+                : Colors.black.withAlpha((0.1 * 255).toInt()),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withAlpha((0.3 * 255).toInt())),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                      color: color,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    message,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
-                    ),
-                  ),
-                ],
-              ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                color.withAlpha((0.1 * 255).toInt()),
+                color.withAlpha((0.05 * 255).toInt()),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: color.withAlpha((0.3 * 255).toInt())),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      message,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

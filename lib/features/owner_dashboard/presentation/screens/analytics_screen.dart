@@ -648,13 +648,13 @@ class _RevenueChart extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Dynamic chart height based on available space (min 180, max 300)
+        // Dynamic chart height based on available space - more compact for better fit
         final availableHeight = constraints.maxHeight;
         final chartHeight = constraints.maxWidth > 900
-            ? (availableHeight * 0.4).clamp(240.0, 300.0)  // Desktop: 40% of height
+            ? (availableHeight * 0.35).clamp(200.0, 250.0)  // Desktop: 35% of height (reduced from 40%)
             : constraints.maxWidth > 600
-                ? (availableHeight * 0.35).clamp(200.0, 250.0)  // Tablet: 35% of height
-                : (availableHeight * 0.3).clamp(180.0, 220.0); // Mobile: 30% of height
+                ? (availableHeight * 0.3).clamp(180.0, 220.0)  // Tablet: 30% of height (reduced from 35%)
+                : (availableHeight * 0.25).clamp(160.0, 200.0); // Mobile: 25% of height (reduced from 30%)
 
         return SizedBox(
           height: chartHeight,
@@ -664,7 +664,7 @@ class _RevenueChart extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12), // Reduced from 16 for more compact layout
               child: Chart(
                 data: data.asMap().entries.map((e) => {
                   'index': e.key,
@@ -772,13 +772,13 @@ class _BookingsChart extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Dynamic chart height based on available space (min 180, max 300)
+        // Dynamic chart height based on available space - more compact for better fit
         final availableHeight = constraints.maxHeight;
         final chartHeight = constraints.maxWidth > 900
-            ? (availableHeight * 0.4).clamp(240.0, 300.0)  // Desktop: 40% of height
+            ? (availableHeight * 0.35).clamp(200.0, 250.0)  // Desktop: 35% of height (reduced from 40%)
             : constraints.maxWidth > 600
-                ? (availableHeight * 0.35).clamp(200.0, 250.0)  // Tablet: 35% of height
-                : (availableHeight * 0.3).clamp(180.0, 220.0); // Mobile: 30% of height
+                ? (availableHeight * 0.3).clamp(180.0, 220.0)  // Tablet: 30% of height (reduced from 35%)
+                : (availableHeight * 0.25).clamp(160.0, 200.0); // Mobile: 25% of height (reduced from 30%)
 
         return SizedBox(
           height: chartHeight,
@@ -788,7 +788,7 @@ class _BookingsChart extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12), // Reduced from 16 for more compact layout
               child: Chart(
                 data: data.asMap().entries.map((e) => {
                   'index': e.key,

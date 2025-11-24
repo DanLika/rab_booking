@@ -173,7 +173,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
 
         // Status dropdown
         DropdownButtonFormField<BookingStatus?>(
-          value: _filters.status,
+          initialValue: _filters.status,
           decoration: InputDecoration(
             labelText: 'Filtriraj po statusu',
             prefixIcon: Icon(
@@ -190,7 +190,6 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
           ),
           items: [
             const DropdownMenuItem(
-              value: null,
               child: Text('Svi statusi'),
             ),
             ...BookingStatus.values
@@ -269,7 +268,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
         propertiesAsync.when(
           data: (properties) {
             return DropdownButtonFormField<String?>(
-              value: _filters.propertyId,
+              initialValue: _filters.propertyId,
               decoration: InputDecoration(
                 labelText: 'Filtriraj po nekretnini',
                 prefixIcon: Icon(
@@ -286,7 +285,6 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
               ),
               items: [
                 const DropdownMenuItem(
-                  value: null,
                   child: Text('Sve nekretnine'),
                 ),
                 ...properties.map((property) {

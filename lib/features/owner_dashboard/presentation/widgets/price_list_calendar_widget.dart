@@ -265,20 +265,14 @@ class _PriceListCalendarWidgetState
               end: Alignment.bottomLeft,
               colors: isDark
                   ? [
-                      Theme.of(context).colorScheme.mediumDarkGray,
-                      Theme.of(context).colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
-                      Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
-                      Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
-                      Theme.of(context).colorScheme.veryDarkGray,
+                      Theme.of(context).colorScheme.veryDarkGray, // #1A1A1A
+                      Theme.of(context).colorScheme.mediumDarkGray, // #2D2D2D
                     ]
                   : [
-                      Colors.white,
-                      Colors.white.withAlpha((0.95 * 255).toInt()),
-                      Theme.of(context).colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
-                      Theme.of(context).colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
-                      Theme.of(context).colorScheme.veryLightGray,
+                      const Color(0xFFF5F5F5), // Light grey
+                      Colors.white, // #FFFFFF
                     ],
-              stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+              stops: const [0.0, 0.3],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
@@ -401,32 +395,35 @@ class _PriceListCalendarWidgetState
                     const SizedBox(width: 16),
 
                     // Bulk edit mode toggle
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _bulkEditMode = !_bulkEditMode;
-                          _selectedDays.clear();
-                        });
-                      },
-                      icon: Icon(
-                        _bulkEditMode
-                            ? Icons.check_box
-                            : Icons.check_box_outline_blank,
-                      ),
-                      label: Text(_bulkEditMode ? 'Odustani' : 'Bulk Edit'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _bulkEditMode
-                            ? context.primaryColor
-                            : null,
-                        side: _bulkEditMode
-                            ? BorderSide(color: context.primaryColor, width: 2)
-                            : null,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 15, // Same as Save button
+                    SizedBox(
+                      width: 180, // Same width as Save button
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _bulkEditMode = !_bulkEditMode;
+                            _selectedDays.clear();
+                          });
+                        },
+                        icon: Icon(
+                          _bulkEditMode
+                              ? Icons.check_box
+                              : Icons.check_box_outline_blank,
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10), // Same as Save button
+                        label: Text(_bulkEditMode ? 'Odustani' : 'Bulk Edit'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _bulkEditMode
+                              ? context.primaryColor
+                              : null,
+                          side: _bulkEditMode
+                              ? BorderSide(color: context.primaryColor, width: 2)
+                              : null,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 15, // Same as Save button
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10), // Same as Save button
+                          ),
                         ),
                       ),
                     ),
@@ -584,20 +581,14 @@ class _PriceListCalendarWidgetState
                   end: Alignment.bottomLeft,
                   colors: isDark
                       ? [
-                          Theme.of(context).colorScheme.mediumDarkGray,
-                          Theme.of(context).colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
-                          Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
-                          Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
-                          Theme.of(context).colorScheme.veryDarkGray,
+                          Theme.of(context).colorScheme.veryDarkGray, // #1A1A1A
+                          Theme.of(context).colorScheme.mediumDarkGray, // #2D2D2D
                         ]
                       : [
-                          Colors.white,
-                          Colors.white.withAlpha((0.95 * 255).toInt()),
-                          Theme.of(context).colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
-                          Theme.of(context).colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
-                          Theme.of(context).colorScheme.veryLightGray,
+                          const Color(0xFFF5F5F5), // Light grey
+                          Colors.white, // #FFFFFF
                         ],
-                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                  stops: const [0.0, 0.3],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(

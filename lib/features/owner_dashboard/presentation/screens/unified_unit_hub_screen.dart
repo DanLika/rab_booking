@@ -151,11 +151,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               width: 320,
               child: Container(
                 decoration: BoxDecoration(
-                  // Diagonal gradient (top-right → bottom-left) with 5-color stops - REVERSED
+                  // Horizontal gradient (right → left) with 5-color stops
                   gradient: isDark
                       ? LinearGradient(
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
+                          begin: Alignment.centerRight,
+                          end: Alignment.centerLeft,
                           colors: [
                             theme.colorScheme.mediumDarkGray,
                             theme.colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
@@ -166,8 +166,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                           stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
                         )
                       : LinearGradient(
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
+                          begin: Alignment.centerRight,
+                          end: Alignment.centerLeft,
                           colors: [
                             Colors.white,
                             Colors.white.withAlpha((0.95 * 255).toInt()),
@@ -230,31 +230,25 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         Container(
           width: 320,
           decoration: BoxDecoration(
-            // Diagonal gradient (top-right → bottom-left) with 5-color stops - same as mobile endDrawer
+            // TIP 1: Simple diagonal gradient (2 colors, 2 stops) - topRight → bottomLeft
             gradient: isDark
                 ? LinearGradient(
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
                     colors: [
-                      theme.colorScheme.mediumDarkGray,
-                      theme.colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
-                      theme.colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
-                      theme.colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
-                      theme.colorScheme.veryDarkGray,
+                      theme.colorScheme.veryDarkGray, // #1A1A1A
+                      theme.colorScheme.mediumDarkGray, // #2D2D2D
                     ],
-                    stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                    stops: const [0.0, 0.3],
                   )
                 : LinearGradient(
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
                     colors: [
-                      Colors.white,
-                      Colors.white.withAlpha((0.95 * 255).toInt()),
-                      theme.colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
-                      theme.colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
-                      theme.colorScheme.veryLightGray,
+                      const Color(0xFFF5F5F5), // Light grey (F5F5F5)
+                      Colors.white, // #FFFFFF
                     ],
-                    stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                    stops: const [0.0, 0.3],
                   ),
             border: Border(
               left: BorderSide(

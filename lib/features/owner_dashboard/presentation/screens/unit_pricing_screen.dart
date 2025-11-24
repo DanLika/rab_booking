@@ -227,20 +227,14 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             end: Alignment.bottomLeft,
             colors: isDark
                 ? [
-                    Theme.of(context).colorScheme.mediumDarkGray,
-                    Theme.of(context).colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryDarkGray,
+                    Theme.of(context).colorScheme.veryDarkGray, // #1A1A1A
+                    Theme.of(context).colorScheme.mediumDarkGray, // #2D2D2D
                   ]
                 : [
-                    Colors.white,
-                    Colors.white.withAlpha((0.95 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
-                    Theme.of(context).colorScheme.veryLightGray,
+                    const Color(0xFFF5F5F5), // Light grey
+                    Colors.white, // #FFFFFF
                   ],
-            stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+            stops: const [0.0, 0.3],
           ),
           borderRadius: BorderRadius.circular(12),
         ),
@@ -443,12 +437,12 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
               end: Alignment.bottomLeft,
               colors: isDark
                   ? [
-                      Theme.of(context).colorScheme.mediumDarkGray,
-                      Theme.of(context).colorScheme.veryDarkGray,
+                      Theme.of(context).colorScheme.veryDarkGray, // #1A1A1A
+                      Theme.of(context).colorScheme.mediumDarkGray, // #2D2D2D
                     ]
                   : [
-                      Theme.of(context).colorScheme.veryLightGray,
-                      Colors.white,
+                      const Color(0xFFF5F5F5), // Light grey (replaces F8F9FA)
+                      Colors.white, // #FFFFFF
                     ],
               stops: const [0.0, 0.3],
             ),
@@ -549,37 +543,13 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   Widget _buildPriceTextField(ThemeData theme) {
     return TextField(
       controller: _basePriceController,
-      style: theme.textTheme.bodyMedium?.copyWith(
-        fontWeight: FontWeight.w500,
-      ),
       decoration: InputDecoration(
         labelText: 'Cijena po noći (€)',
-        labelStyle: theme.textTheme.bodySmall?.copyWith(
-          fontWeight: FontWeight.w500,
-        ),
         prefixText: '€ ',
-        prefixIcon: const Icon(Icons.euro_outlined, size: 20),
-        filled: true,
-        fillColor: theme.colorScheme.surfaceContainerHighest
-            .withAlpha((0.5 * 255).toInt()),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
-        ),
+        prefixIcon: const Icon(Icons.euro_outlined),
+        // Match dropdown styling: exact same decoration
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(
-            Radius.circular(10),
-          ),
-          borderSide: BorderSide(
-            color: theme.colorScheme.primary,
-            width: 1.5,
-          ),
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
       keyboardType: TextInputType.number,

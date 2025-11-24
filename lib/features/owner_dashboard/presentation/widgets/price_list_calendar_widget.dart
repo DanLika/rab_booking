@@ -271,11 +271,11 @@ class _PriceListCalendarWidgetState
                       Color(0xFF2D2D2D), // mediumDarkGray
                     ]
                   : const [
-                      Color(0xFFE0E0E0), // Darker grey
-                      Color(0xFFE5E5E5),
-                      Color(0xFFEAEAEA),
-                      Color(0xFFF0F0F0),
-                      Color(0xFFF5F5F5), // Light grey
+                      Color(0xFFF0F0F0), // Lighter grey
+                      Color(0xFFF2F2F2),
+                      Color(0xFFF5F5F5),
+                      Color(0xFFF8F8F8),
+                      Color(0xFFFAFAFA), // Very light grey
                     ],
               stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
             ),
@@ -593,11 +593,11 @@ class _PriceListCalendarWidgetState
                           Color(0xFF2D2D2D), // mediumDarkGray
                         ]
                       : const [
-                          Color(0xFFE0E0E0), // Darker grey
-                          Color(0xFFE5E5E5),
-                          Color(0xFFEAEAEA),
-                          Color(0xFFF0F0F0),
-                          Color(0xFFF5F5F5), // Light grey
+                          Color(0xFFF0F0F0), // Lighter grey
+                          Color(0xFFF2F2F2),
+                          Color(0xFFF5F5F5),
+                          Color(0xFFF8F8F8),
+                          Color(0xFFFAFAFA), // Very light grey
                         ],
                   stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
                 ),

@@ -204,45 +204,45 @@ class _AnalyticsContent extends StatelessWidget {
     final isMobile = screenWidth < 600;
 
     return ListView(
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
+      padding: EdgeInsets.all(isMobile ? 12 : 16), // Reduced from 16/24
       children: [
         // Metric Cards
         _MetricCardsGrid(
           analytics: analytics,
           dateRange: dateRange,
         ),
-        SizedBox(height: isMobile ? 24 : 32),
+        SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
 
         // Revenue Chart
         const _SectionTitle(title: 'Revenue Over Time'),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12), // Reduced from 16
         _RevenueChart(data: analytics.revenueHistory),
-        SizedBox(height: isMobile ? 24 : 32),
+        SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
 
         // Bookings Chart
         const _SectionTitle(title: 'Bookings Over Time'),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12), // Reduced from 16
         _BookingsChart(data: analytics.bookingHistory),
-        SizedBox(height: isMobile ? 24 : 32),
+        SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
 
         // Top Performing Properties
         const _SectionTitle(title: 'Top Performing Properties'),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12), // Reduced from 16
         _TopPropertiesList(properties: analytics.topPerformingProperties),
-        SizedBox(height: isMobile ? 24 : 32),
+        SizedBox(height: isMobile ? 16 : 20), // Reduced from 24/32
 
         // Widget Analytics
         const _SectionTitle(title: 'Widget Performance'),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12), // Reduced from 16
         _WidgetAnalyticsCard(
           widgetBookings: analytics.widgetBookings,
           totalBookings: analytics.totalBookings,
           widgetRevenue: analytics.widgetRevenue,
           totalRevenue: analytics.totalRevenue,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12), // Reduced from 16
         _BookingsBySourceChart(bookingsBySource: analytics.bookingsBySource),
-        SizedBox(height: isMobile ? 16 : 24),
+        SizedBox(height: isMobile ? 12 : 16), // Reduced from 16/24
       ],
     );
   }
@@ -316,19 +316,19 @@ class _MetricCardsGrid extends StatelessWidget {
             ? 2
             : 1;
 
-        // Responsive aspect ratio based on screen width
+        // Responsive aspect ratio - optimized for compact layout
         final aspectRatio = constraints.maxWidth > 900
-            ? 1.4 // Desktop - taller cards to fit content
+            ? 1.65 // Desktop - wider, less tall (was 1.4)
             : constraints.maxWidth > 600
-            ? 1.2 // Tablet - taller cards
-            : 1.0; // Mobile - taller cards to prevent overflow
+            ? 1.45 // Tablet - wider (was 1.2)
+            : 1.1; // Mobile - slightly wider (was 1.0)
 
         return GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: crossAxisCount,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
+          mainAxisSpacing: 12, // Tighter spacing (was 16)
+          crossAxisSpacing: 12, // Tighter spacing (was 16)
           childAspectRatio: aspectRatio,
           children: [
             _MetricCard(
@@ -419,21 +419,21 @@ class _MetricCard extends StatelessWidget {
             gradient: gradient,
             borderRadius: BorderRadius.circular(20),
           ),
-          padding: EdgeInsets.all(isMobile ? 12 : 14),
+          padding: EdgeInsets.all(isMobile ? 10 : 12), // Reduced (was 12/14)
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Icon container
               Container(
-                padding: EdgeInsets.all(isMobile ? 8 : 10),
+                padding: EdgeInsets.all(isMobile ? 6 : 8), // Reduced (was 8/10)
                 decoration: BoxDecoration(
                   color: iconBgColor,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10), // Smaller radius
                 ),
-                child: Icon(icon, color: iconColor, size: isMobile ? 20 : 22),
+                child: Icon(icon, color: iconColor, size: isMobile ? 18 : 20), // Smaller icons (was 20/22)
               ),
-              SizedBox(height: isMobile ? 6 : 8),
+              SizedBox(height: isMobile ? 4 : 6), // Tighter spacing (was 6/8)
 
               // Value
               FittedBox(
@@ -450,7 +450,7 @@ class _MetricCard extends StatelessWidget {
                   maxLines: 1,
                 ),
               ),
-              SizedBox(height: isMobile ? 3 : 4),
+              SizedBox(height: isMobile ? 2 : 3), // Tighter (was 3/4)
 
               // Title
               Text(
@@ -459,12 +459,13 @@ class _MetricCard extends StatelessWidget {
                   color: textColor,
                   fontWeight: FontWeight.w500,
                   height: 1.2,
+                  fontSize: isMobile ? 13 : 14, // Slightly smaller font
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: isMobile ? 3 : 4),
+              SizedBox(height: isMobile ? 2 : 3), // Tighter (was 3/4)
 
               // Subtitle
               Text(
@@ -521,17 +522,17 @@ class _RevenueChart extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final chartHeight = constraints.maxWidth > 900
-            ? 300.0  // Desktop
+            ? 240.0  // Desktop (reduced from 300)
             : constraints.maxWidth > 600
-                ? 250.0  // Tablet
-                : 200.0; // Mobile
+                ? 200.0  // Tablet (reduced from 250)
+                : 180.0; // Mobile (reduced from 200)
 
         return SizedBox(
           height: chartHeight,
           child: Card(
         elevation: 2,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12), // Reduced from 16
           child: LineChart(
             LineChartData(
               titlesData: FlTitlesData(
@@ -626,17 +627,17 @@ class _BookingsChart extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final chartHeight = constraints.maxWidth > 900
-            ? 300.0  // Desktop
+            ? 240.0  // Desktop (reduced from 300)
             : constraints.maxWidth > 600
-                ? 250.0  // Tablet
-                : 200.0; // Mobile
+                ? 200.0  // Tablet (reduced from 250)
+                : 180.0; // Mobile (reduced from 200)
 
         return SizedBox(
           height: chartHeight,
           child: Card(
         elevation: 2,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12), // Reduced from 16
           child: BarChart(
             BarChartData(
               gridData: const FlGridData(),
@@ -733,16 +734,18 @@ class _TopPropertiesList extends StatelessWidget {
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: properties.length,
+        itemCount: properties.length > 3 ? 3 : properties.length, // Limit to Top 3
         separatorBuilder: (_, _) => const Divider(),
         itemBuilder: (context, index) {
           final property = properties[index];
           return ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), // Compact padding
             leading: CircleAvatar(
+              radius: 16, // Smaller circle (default 20)
               backgroundColor: AppColors.authPrimary,
               child: Text(
                 '${index + 1}',
-                style: AppTypography.bodyMedium.copyWith(
+                style: AppTypography.bodySmall.copyWith( // Smaller font
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -761,7 +764,7 @@ class _TopPropertiesList extends StatelessWidget {
               ),
             ),
             trailing: SizedBox(
-              width: 120,
+              width: 100, // Compact width (was 120)
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -769,7 +772,7 @@ class _TopPropertiesList extends StatelessWidget {
                 children: [
                   Text(
                     '\$${property.revenue.toStringAsFixed(2)}',
-                    style: AppTypography.bodyMedium.copyWith(
+                    style: AppTypography.bodySmall.copyWith( // Smaller font (was bodyMedium)
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.primary, // Purple revenue
                     ),
@@ -827,14 +830,14 @@ class _WidgetAnalyticsCard extends StatelessWidget {
     return Card(
       elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(12), // Compact padding (was 20)
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Widget Bookings Row
             Row(
               children: [
-                Icon(Icons.widgets, color: theme.colorScheme.primary, size: 24), // Purple icon
+                Icon(Icons.widgets, color: theme.colorScheme.primary, size: 20), // Smaller icon (was 24)
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -853,7 +856,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                         children: [
                           Text(
                             '$widgetBookings',
-                            style: AppTypography.h2.copyWith(
+                            style: AppTypography.h3.copyWith( // Smaller font (was h2)
                               color: theme.colorScheme.primary, // Purple text
                               fontWeight: FontWeight.bold,
                             ),
@@ -882,12 +885,12 @@ class _WidgetAnalyticsCard extends StatelessWidget {
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16), // Compact spacing (was 24)
 
             // Widget Revenue Row
             Row(
               children: [
-                Icon(Icons.attach_money, color: theme.colorScheme.primary, size: 24), // Purple icon
+                Icon(Icons.attach_money, color: theme.colorScheme.primary, size: 20), // Smaller icon (was 24)
                 const SizedBox(width: 12),
                 Flexible(
                   child: Column(
@@ -905,7 +908,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                           Flexible(
                             child: Text(
                               '\$${widgetRevenue.toStringAsFixed(2)}',
-                              style: AppTypography.h2.copyWith(
+                              style: AppTypography.h3.copyWith( // Smaller font (was h2)
                                 color: theme.colorScheme.primary, // Purple text
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1057,7 +1060,7 @@ class _BookingsBySourceChart extends StatelessWidget {
     return Card(
       elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(12), // Compact padding (was 20)
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1067,7 +1070,7 @@ class _BookingsBySourceChart extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12), // Compact spacing (was 20)
             ...sortedEntries.asMap().entries.map((entry) {
               final index = entry.key;
               final sourceEntry = entry.value;
@@ -1079,7 +1082,7 @@ class _BookingsBySourceChart extends StatelessWidget {
               final color = _getSourceColor(context, source, index);
 
               return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.only(bottom: 12), // Compact spacing (was 16)
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

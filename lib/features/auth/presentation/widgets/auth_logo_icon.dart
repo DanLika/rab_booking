@@ -55,6 +55,8 @@ class _AuthLogoIconState extends State<AuthLogoIcon>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -69,14 +71,17 @@ class _AuthLogoIconState extends State<AuthLogoIcon>
                 BoxShadow(
                   color: widget.isWhite
                       ? Colors.white.withAlpha(((_glowAnimation.value * 255 * 0.3).toInt()))
-                      : const Color(0xFFB8A1F5).withAlpha(((_glowAnimation.value * 255 * 0.25).toInt())),
+                      : theme.colorScheme.primary.withAlpha(((_glowAnimation.value * 255 * 0.25).toInt())),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
               ],
             ),
             child: CustomPaint(
-              painter: _LogoPainter(isWhite: widget.isWhite),
+              painter: _LogoPainter(
+                isWhite: widget.isWhite,
+                primaryColor: theme.colorScheme.primary,
+              ),
             ),
           ),
         );
@@ -87,29 +92,33 @@ class _AuthLogoIconState extends State<AuthLogoIcon>
 
 class _LogoPainter extends CustomPainter {
   final bool isWhite;
+  final Color primaryColor;
 
-  _LogoPainter({this.isWhite = false});
+  _LogoPainter({
+    this.isWhite = false,
+    required this.primaryColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width * 0.4;
 
-    // Gradient or white shader
+    // Gradient or white shader (theme-aware purple-fade)
     final shader = isWhite
         ? null
-        : const LinearGradient(
+        : LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF6B4CE6), // Purple
-              Color(0xFF4A90E2), // Blue
+              primaryColor,
+              primaryColor.withValues(alpha: 0.7),
             ],
           ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     // Outer circle badge
     final circlePaint = Paint()
-      ..color = isWhite ? Colors.white : const Color(0xFF6B4CE6)
+      ..color = isWhite ? Colors.white : primaryColor
       ..strokeWidth = 3.5
       ..style = PaintingStyle.stroke;
 
@@ -129,7 +138,7 @@ class _LogoPainter extends CustomPainter {
 
   void _drawWaves(Canvas canvas, Size size, Shader? shader) {
     final wavePaint = Paint()
-      ..color = isWhite ? Colors.white : const Color(0xFF6B4CE6)
+      ..color = isWhite ? Colors.white : primaryColor
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -184,7 +193,7 @@ class _LogoPainter extends CustomPainter {
 
   void _drawVillaRoof(Canvas canvas, Size size, Shader? shader) {
     final roofPaint = Paint()
-      ..color = isWhite ? Colors.white : const Color(0xFF6B4CE6)
+      ..color = isWhite ? Colors.white : primaryColor
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -197,8 +206,8 @@ class _LogoPainter extends CustomPainter {
 
     final fillPaint = Paint()
       ..color = isWhite
-          ? Colors.white.withOpacity(0.2)
-          : const Color(0xFF6B4CE6).withOpacity(0.2)
+          ? Colors.white.withValues(alpha: 0.2)
+          : primaryColor.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
 
     // Apply gradient shader for fill if not white
@@ -221,7 +230,7 @@ class _LogoPainter extends CustomPainter {
 
     // Simple villa structure lines
     final structurePaint = Paint()
-      ..color = isWhite ? Colors.white : const Color(0xFF6B4CE6)
+      ..color = isWhite ? Colors.white : primaryColor
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;

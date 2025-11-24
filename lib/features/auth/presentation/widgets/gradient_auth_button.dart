@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
 
 /// Premium gradient button for auth screens with animations
 class GradientAuthButton extends StatefulWidget {
@@ -62,11 +61,18 @@ class _GradientAuthButtonState extends State<GradientAuthButton>
         child: Container(
           height: 56,
           decoration: BoxDecoration(
-            gradient: AppColors.authGradient,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                theme.colorScheme.primary,
+                theme.colorScheme.primary.withValues(alpha: 0.7),
+              ],
+            ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppColors.authPrimary.withAlpha((0.3 * 255).toInt()),
+                color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
                 blurRadius: _isHovered ? 25 : 15,
                 offset: Offset(0, _isHovered ? 8 : 4),
               ),

@@ -615,7 +615,9 @@ class _PriceListCalendarWidgetState
                   _buildWeekdayHeaders(),
 
                   const SizedBox(height: 8),
-                  const Divider(),
+                  Divider(
+                    color: context.borderColor.withOpacity(0.5),
+                  ),
                   const SizedBox(height: 8),
 
                   // Calendar grid with dynamic height

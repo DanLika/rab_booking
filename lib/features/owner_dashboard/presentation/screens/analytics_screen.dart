@@ -6,6 +6,7 @@ import '../../domain/models/analytics_summary.dart';
 import '../providers/analytics_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/owner_app_drawer.dart';
@@ -651,13 +652,13 @@ class _RevenueChart extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Dynamic chart height based on available space - more compact for better fit
-        final availableHeight = constraints.maxHeight;
-        final chartHeight = constraints.maxWidth > 900
-            ? (availableHeight * 0.35).clamp(200.0, 250.0)  // Desktop: 35% of height (reduced from 40%)
-            : constraints.maxWidth > 600
-                ? (availableHeight * 0.3).clamp(180.0, 220.0)  // Tablet: 30% of height (reduced from 35%)
-                : (availableHeight * 0.25).clamp(160.0, 200.0); // Mobile: 25% of height (reduced from 30%)
+        // Responsive chart height
+        final screenWidth = constraints.maxWidth;
+        final chartHeight = screenWidth > 900
+            ? 300.0  // Desktop
+            : screenWidth > 600
+                ? 250.0  // Tablet
+                : 200.0; // Mobile
 
         return SizedBox(
           height: chartHeight,
@@ -667,7 +668,7 @@ class _RevenueChart extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(12), // Reduced from 16 for more compact layout
+              padding: const EdgeInsets.all(16),
               child: Chart(
                 data: data.asMap().entries.map((e) => {
                   'index': e.key,
@@ -683,6 +684,9 @@ class _RevenueChart extends StatelessWidget {
                     scale: LinearScale(min: 0),
                   ),
                 },
+                coord: RectCoord(
+                  horizontalRangeUpdater: Defaults.horizontalRangeEvent,
+                ),
                 marks: [
                   AreaMark(
                     shape: ShapeEncode(
@@ -691,6 +695,7 @@ class _RevenueChart extends StatelessWidget {
                     color: ColorEncode(
                       value: theme.colorScheme.primary.withValues(alpha: 0.15),
                     ),
+                    entrance: {MarkEntrance.y},
                   ),
                   LineMark(
                     shape: ShapeEncode(
@@ -700,6 +705,7 @@ class _RevenueChart extends StatelessWidget {
                     color: ColorEncode(
                       value: theme.colorScheme.primary,
                     ),
+                    entrance: {MarkEntrance.y},
                   ),
                   PointMark(
                     shape: ShapeEncode(value: CircleShape()),
@@ -707,13 +713,12 @@ class _RevenueChart extends StatelessWidget {
                     color: ColorEncode(
                       value: theme.colorScheme.primary,
                     ),
+                    entrance: {MarkEntrance.opacity},
                   ),
                 ],
                 axes: [
-                  Defaults.horizontalAxis..label = null,
-                  Defaults.verticalAxis
-                    ..label = null
-                    ..grid = null,
+                  Defaults.horizontalAxis,
+                  Defaults.verticalAxis,
                 ],
                 selections: {
                   'touchMove': PointSelection(
@@ -775,13 +780,13 @@ class _BookingsChart extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Dynamic chart height based on available space - more compact for better fit
-        final availableHeight = constraints.maxHeight;
-        final chartHeight = constraints.maxWidth > 900
-            ? (availableHeight * 0.35).clamp(200.0, 250.0)  // Desktop: 35% of height (reduced from 40%)
-            : constraints.maxWidth > 600
-                ? (availableHeight * 0.3).clamp(180.0, 220.0)  // Tablet: 30% of height (reduced from 35%)
-                : (availableHeight * 0.25).clamp(160.0, 200.0); // Mobile: 25% of height (reduced from 30%)
+        // Responsive chart height
+        final screenWidth = constraints.maxWidth;
+        final chartHeight = screenWidth > 900
+            ? 300.0  // Desktop
+            : screenWidth > 600
+                ? 250.0  // Tablet
+                : 200.0; // Mobile
 
         return SizedBox(
           height: chartHeight,
@@ -791,7 +796,7 @@ class _BookingsChart extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(12), // Reduced from 16 for more compact layout
+              padding: const EdgeInsets.all(16),
               child: Chart(
                 data: data.asMap().entries.map((e) => {
                   'index': e.key,
@@ -807,6 +812,9 @@ class _BookingsChart extends StatelessWidget {
                     scale: LinearScale(min: 0),
                   ),
                 },
+                coord: RectCoord(
+                  horizontalRangeUpdater: Defaults.horizontalRangeEvent,
+                ),
                 marks: [
                   IntervalMark(
                     shape: ShapeEncode(
@@ -823,13 +831,12 @@ class _BookingsChart extends StatelessWidget {
                         ],
                       ),
                     ),
+                    entrance: {MarkEntrance.y},
                   ),
                 ],
                 axes: [
-                  Defaults.horizontalAxis..label = null,
-                  Defaults.verticalAxis
-                    ..label = null
-                    ..grid = null,
+                  Defaults.horizontalAxis,
+                  Defaults.verticalAxis,
                 ],
                 selections: {
                   'touchMove': PointSelection(
@@ -981,6 +988,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final widgetBookingsPercent = totalBookings > 0
         ? (widgetBookings / totalBookings * 100).toStringAsFixed(1)
         : '0.0';
@@ -988,127 +996,191 @@ class _WidgetAnalyticsCard extends StatelessWidget {
         ? (widgetRevenue / totalRevenue * 100).toStringAsFixed(1)
         : '0.0';
 
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12), // Compact padding (was 20)
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Widget Bookings Row
-            Row(
-              children: [
-                Icon(Icons.widgets, color: theme.colorScheme.primary, size: 20), // Smaller icon (was 24)
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Widget Bookings',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 8,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            '$widgetBookings',
-                            style: AppTypography.h3.copyWith( // Smaller font (was h2)
-                              color: theme.colorScheme.primary, // Purple text
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            '($widgetBookingsPercent% of total)',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Progress bar for bookings
-            LinearProgressIndicator(
-              value: totalBookings > 0 ? widgetBookings / totalBookings : 0,
-              backgroundColor: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.borderDark
-                  : AppColors.borderLight,
-              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary), // Purple progress
-              minHeight: 8,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            const SizedBox(height: 16), // Compact spacing (was 24)
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
-            // Widget Revenue Row
-            Row(
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: isDark
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF1F1F1F),
+                      Color(0xFF242424),
+                      Color(0xFF292929),
+                      Color(0xFF2D2D2D), // mediumDarkGray
+                    ]
+                  : const [
+                      Color(0xFFF0F0F0), // Lighter grey
+                      Color(0xFFF2F2F2),
+                      Color(0xFFF5F5F5),
+                      Color(0xFFF8F8F8),
+                      Color(0xFFFAFAFA), // Very light grey
+                    ],
+              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(isMobile ? 16 : 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.attach_money, color: theme.colorScheme.primary, size: 20), // Smaller icon (was 24)
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Widget Revenue',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                // Section header with minimalist icon
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.widgets,
+                        color: theme.colorScheme.primary,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Widget Performance',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Track bookings and revenue from embedded widget',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 20),
+
+                // Widget Bookings Row
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Flexible(
-                            child: Text(
-                              '\$${widgetRevenue.toStringAsFixed(2)}',
-                              style: AppTypography.h3.copyWith( // Smaller font (was h2)
-                                color: theme.colorScheme.primary, // Purple text
-                                fontWeight: FontWeight.bold,
-                              ),
-                              maxLines: 1,
+                          Text(
+                            'Widget Bookings',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              '($widgetRevenuePercent% of total)',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                '$widgetBookings',
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              Text(
+                                '($widgetBookingsPercent% of total)',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Progress bar for bookings
+                LinearProgressIndicator(
+                  value: totalBookings > 0 ? widgetBookings / totalBookings : 0,
+                  backgroundColor: theme.brightness == Brightness.dark
+                      ? AppColors.borderDark
+                      : AppColors.borderLight,
+                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                  minHeight: 8,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                const SizedBox(height: 20),
+
+                // Widget Revenue Row
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Widget Revenue',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                '\$${widgetRevenue.toStringAsFixed(2)}',
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '($widgetRevenuePercent% of total)',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Progress bar for revenue
+                LinearProgressIndicator(
+                  value: totalRevenue > 0 ? widgetRevenue / totalRevenue : 0,
+                  backgroundColor: theme.brightness == Brightness.dark
+                      ? AppColors.borderDark
+                      : AppColors.borderLight,
+                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                  minHeight: 8,
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            // Progress bar for revenue
-            LinearProgressIndicator(
-              value: totalRevenue > 0 ? widgetRevenue / totalRevenue : 0,
-              backgroundColor: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.borderDark
-                  : AppColors.borderLight,
-              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary), // Purple progress
-              minHeight: 8,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -285,7 +285,7 @@ class _PriceListCalendarWidgetState
               width: 1.5,
             ),
           ),
-          padding: EdgeInsets.all(isMobile ? 20 : 24),
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
           child: isMobile
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -607,9 +607,7 @@ class _PriceListCalendarWidgetState
                   width: 1.5,
                 ),
               ),
-              padding: EdgeInsets.all(
-                isSmallMobile ? 12 : (isMobile ? 16 : 20),
-              ),
+              padding: EdgeInsets.all(isMobile ? 16 : 20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

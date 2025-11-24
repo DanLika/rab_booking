@@ -330,7 +330,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _buildSectionTitle('Mod Widgeta', Icons.widgets),
                   _buildWidgetModeSection(),
 
                   const SizedBox(height: 24),
@@ -368,94 +367,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     Icons.contact_phone,
                   ),
                   _buildContactOptionsSection(),
-
-                  const SizedBox(height: 24),
-
-                  _buildSectionTitle(
-                    'Napredne Postavke',
-                    Icons.settings_applications,
-                  ),
-                  Builder(
-                    builder: (context) {
-                      final theme = Theme.of(context);
-                      final isDark = theme.brightness == Brightness.dark;
-
-                      return Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isDark
-                                  ? Colors.black.withAlpha((0.3 * 255).toInt())
-                                  : Colors.black.withAlpha((0.1 * 255).toInt()),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topRight,
-                                end: Alignment.bottomLeft,
-                                colors: isDark
-                                    ? const [
-                                        Color(0xFF1A1A1A), // veryDarkGray
-                                        Color(0xFF1F1F1F),
-                                        Color(0xFF242424),
-                                        Color(0xFF292929),
-                                        Color(0xFF2D2D2D), // mediumDarkGray
-                                      ]
-                                    : const [
-                                        Color(0xFFF0F0F0), // Lighter grey
-                                        Color(0xFFF2F2F2),
-                                        Color(0xFFF5F5F5),
-                                        Color(0xFFF8F8F8),
-                                        Color(0xFFFAFAFA), // Very light grey
-                                      ],
-                                stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-                              ),
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                color: theme.colorScheme.outline
-                                    .withAlpha((0.5 * 255).toInt()),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: ListTile(
-                              leading: Icon(Icons.tune, color: context.primaryColor),
-                              title: const Text('Email i Pravne Postavke'),
-                              subtitle: const Text(
-                                'Konfigurišite email notifikacije i pravne napomene',
-                              ),
-                              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                              onTap: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => WidgetAdvancedSettingsScreen(
-                                      propertyId: widget.propertyId,
-                                      unitId: widget.unitId,
-                                    ),
-                                  ),
-                                );
-                                // After returning from Advanced Settings, reload settings
-                                // to ensure Widget Settings has fresh data from Firestore
-                                if (mounted) {
-                                  ref.invalidate(
-                                    widget_provider.widgetSettingsProvider,
-                                  );
-                                  await _loadSettings(); // Re-fetch and apply fresh settings
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
 
                   const SizedBox(height: 32),
 
@@ -568,6 +479,33 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header with icon - Minimalist style (like Osnovna Cijena section)
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.widgets,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Mod Widgeta',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               Text(
                 'Odaberite kako će widget funkcionirati:',
                 style: TextStyle(

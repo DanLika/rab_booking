@@ -203,7 +203,8 @@ class _PriceListCalendarWidgetState
 
     return Row(
       children: [
-        Expanded(
+        SizedBox(
+          width: 180, // Fixed width to match Save button
           child: ElevatedButton.icon(
             onPressed: _showBulkPriceDialog,
             icon: const Icon(Icons.euro),
@@ -224,7 +225,8 @@ class _PriceListCalendarWidgetState
           ),
         ),
         const SizedBox(width: 12),
-        Expanded(
+        SizedBox(
+          width: 180, // Fixed width to match Save button
           child: OutlinedButton.icon(
             onPressed: _showBulkAvailabilityDialog,
             icon: const Icon(Icons.block),
@@ -361,7 +363,7 @@ class _PriceListCalendarWidgetState
                   children: [
                     // Month selector
                     SizedBox(
-                      width: 150, // Max 150px constraint
+                      width: 250, // Increased by 100px for better readability
                       child: DropdownButtonFormField<DateTime>(
                         // Safe: _selectedMonth is initialized in initState() before first build
                         initialValue: _selectedMonth,

@@ -274,6 +274,8 @@ color: Colors.transparent,  // Transparent to show parent gradient ✅
 ---
 
 **2. Timeline Grid - Transparent Future Cells**
+
+**A) Grid and Row Containers:**
 ```
 lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart
 ```
@@ -299,8 +301,34 @@ return Container(
 );
 ```
 
+**B) BookingDropZone Widget:**
+```
+lib/features/owner_dashboard/presentation/widgets/calendar/booking_drop_zone.dart
+```
+
+**Lines 129 & 166:**
+```dart
+// PRIJE (❌):
+color: isPast
+    ? theme.disabledColor.withAlpha((0.05 * 255).toInt())
+    : (isToday
+        ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
+        : theme.scaffoldBackgroundColor), // ← BLACK in dark mode!
+
+// POSLIJE (✅):
+color: isPast
+    ? theme.disabledColor.withAlpha((0.05 * 255).toInt())
+    : (isToday
+        ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
+        : Colors.transparent), // ← Transparent to show parent gradient
+```
+
 **Problem:** Future cells su imale black pozadinu umjesto da propuštaju gradient
-**Rješenje:** Transparent containers na oba mjesta (grid wrapper + unit rows)
+**Root Cause:** BookingDropZone koristio `theme.scaffoldBackgroundColor` (black u dark mode)
+**Rješenje:** Transparent containers na **3 mjesta**:
+  - Grid wrapper (timeline_calendar_widget.dart)
+  - Unit rows (timeline_calendar_widget.dart)
+  - Drop zone cells (booking_drop_zone.dart) ← **Kritičan fix!**
 
 ---
 

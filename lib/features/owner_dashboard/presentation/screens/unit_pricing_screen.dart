@@ -444,19 +444,13 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
               colors: isDark
                   ? [
                       Theme.of(context).colorScheme.mediumDarkGray,
-                      Theme.of(context).colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
-                      Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
-                      Theme.of(context).colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
                       Theme.of(context).colorScheme.veryDarkGray,
                     ]
                   : [
-                      Colors.white,
-                      Colors.white.withAlpha((0.95 * 255).toInt()),
-                      Theme.of(context).colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
-                      Theme.of(context).colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
                       Theme.of(context).colorScheme.veryLightGray,
+                      Colors.white,
                     ],
-              stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+              stops: const [0.0, 0.3],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
@@ -537,7 +531,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                     SizedBox(width: 100, child: priceInput),
                     const SizedBox(width: 16),
                     SizedBox(
-                      width: 90, // 80-100px constraint
+                      width: 180, // Same width as Bulk Edit buttons
                       child: saveButton,
                     ),
                   ],

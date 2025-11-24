@@ -64,16 +64,16 @@ class _BookingInlineEditDialogState
             // Header with gradient (matching CommonAppBar)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFF6B4CE6), // Purple
-                    Color(0xFF4A90E2), // Blue
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primary.withValues(alpha: 0.7),
                   ],
                 ),
-                borderRadius: BorderRadius.vertical(
+                borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(4),
                 ),
               ),
@@ -166,16 +166,16 @@ class _BookingInlineEditDialogState
                       children: [
                         // Save button (full width on mobile) with gradient
                         Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                Color(0xFF6B4CE6), // Purple
-                                Color(0xFF4A90E2), // Blue
+                                theme.colorScheme.primary,
+                                theme.colorScheme.primary.withValues(alpha: 0.7),
                               ],
                             ),
-                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                            borderRadius: const BorderRadius.all(Radius.circular(20)),
                           ),
                           child: ElevatedButton.icon(
                             onPressed: _isSaving ? null : _saveChanges,
@@ -236,16 +236,16 @@ class _BookingInlineEditDialogState
                         const SizedBox(width: 8),
                         Flexible(
                           child: Container(
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Color(0xFF6B4CE6), // Purple
-                                  Color(0xFF4A90E2), // Blue
+                                  theme.colorScheme.primary,
+                                  theme.colorScheme.primary.withValues(alpha: 0.7),
                                 ],
                               ),
-                              borderRadius: BorderRadius.all(Radius.circular(20)),
+                              borderRadius: const BorderRadius.all(Radius.circular(20)),
                             ),
                             child: ElevatedButton.icon(
                               onPressed: _isSaving ? null : _saveChanges,
@@ -351,23 +351,23 @@ class _BookingInlineEditDialogState
           onPressed: _guestCount > 1
               ? () => setState(() => _guestCount--)
               : null,
-          icon: const Icon(
+          icon: Icon(
             Icons.remove,
-            color: Colors.white, // White icon for better visibility
+            color: Theme.of(context).colorScheme.onPrimary,
           ),
           style: IconButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         ),
         const SizedBox(width: 4),
         IconButton.filledTonal(
           onPressed: () => setState(() => _guestCount++),
-          icon: const Icon(
+          icon: Icon(
             Icons.add,
-            color: Colors.white, // White icon for better visibility
+            color: Theme.of(context).colorScheme.onPrimary,
           ),
           style: IconButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         ),
       ],

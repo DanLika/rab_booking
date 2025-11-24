@@ -50,8 +50,8 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                   ? Theme.of(context)
                       .colorScheme
                       .primaryContainer
-                      .withOpacity(0.3)
-                  : AppColors.authPrimary.withOpacity(0.1),
+                      .withValues(alpha: 0.3)
+                  : AppColors.authPrimary.withValues(alpha: 0.1),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -110,41 +110,35 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
                 ),
               ),
             ),
-          // Table
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.6,
-            ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Container(
-                  constraints: BoxConstraints(
-                    minWidth: MediaQuery.of(context).size.width - 48,
-                  ),
-                  child: DataTable(
-                  headingRowColor: WidgetStateProperty.resolveWith((states) {
-                    final isDark = Theme.of(context).brightness == Brightness.dark;
-                    return isDark
-                        ? Theme.of(context).colorScheme.surfaceContainerHighest
-                        : Theme.of(context).colorScheme.surfaceContainerHigh;
-                  }),
-                  columns: const [
-                    DataColumn(label: Text('Gost')),
-                    DataColumn(label: Text('Objekt / Jedinica')),
-                    DataColumn(label: Text('Check-in')),
-                    DataColumn(label: Text('Check-out')),
-                    DataColumn(label: Text('Noći')),
-                    DataColumn(label: Text('Gostiju')),
-                    DataColumn(label: Text('Status')),
-                    DataColumn(label: Text('Cijena')),
-                    DataColumn(label: Text('Izvor')),
-                    DataColumn(label: Text('Akcije')),
-                  ],
-                  rows: widget.bookings.map(_buildTableRow).toList(),
-                  ),
-                ),
+          // Table - no fixed height, parent CustomScrollView controls vertical scrolling
+          // Only horizontal scroll for wide table, vertical scroll removed to work with parent
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Container(
+              constraints: BoxConstraints(
+                minWidth: MediaQuery.of(context).size.width - 48,
+              ),
+              child: DataTable(
+                headingRowColor: WidgetStateProperty.resolveWith((states) {
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  return isDark
+                      ? Theme.of(context).colorScheme.surfaceContainerHighest
+                      : Theme.of(context).colorScheme.surfaceContainerHigh;
+                }),
+                columns: const [
+                  DataColumn(label: Text('Gost')),
+                  DataColumn(label: Text('Objekt / Jedinica')),
+                  DataColumn(label: Text('Check-in')),
+                  DataColumn(label: Text('Check-out')),
+                  DataColumn(label: Text('Noći')),
+                  DataColumn(label: Text('Gostiju')),
+                  DataColumn(label: Text('Status')),
+                  DataColumn(label: Text('Cijena')),
+                  DataColumn(label: Text('Izvor')),
+                  DataColumn(label: Text('Akcije')),
+                ],
+                rows: widget.bookings.map(_buildTableRow).toList(),
               ),
             ),
           ),
@@ -235,7 +229,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: booking.status.color.withOpacity(0.2),
+              color: booking.status.color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: booking.status.color),
             ),

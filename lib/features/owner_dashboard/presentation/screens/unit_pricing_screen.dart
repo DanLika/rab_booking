@@ -570,19 +570,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: theme.colorScheme.outline.withAlpha(
-              (0.3 * 255).toInt(),
-            ),
-          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: theme.colorScheme.outline.withAlpha(
-              (0.25 * 255).toInt(),
-            ),
-          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: const BorderRadius.all(
@@ -611,20 +601,21 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             Color(0xFF4A90E2), // Blue (same as app bar)
           ],
         ),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10), // Same as input field
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: _isUpdatingBasePrice ? null : _updateBasePrice,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10), // Same as input field
           child: Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: isVerySmall ? 14 : 16,
+              horizontal: 10, // Reduced from 20 (width -20px)
+              vertical: isVerySmall ? 13 : 15, // Reduced from 14/16 (height -3px)
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center, // Center the content
               children: [
                 _isUpdatingBasePrice
                     ? const SizedBox(
@@ -636,7 +627,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                         ),
                       )
                     : const Icon(
-                        Icons.save_outlined,
+                        Icons.check, // Modern check icon
                         size: 18,
                         color: Colors.white,
                       ),

@@ -138,7 +138,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     theme.colorScheme.veryDarkGray,
                     theme.colorScheme.mediumDarkGray,
                   ]
-                : [theme.colorScheme.veryLightGray, Colors.white],
+                : [const Color(0xFFF8F9FA), Colors.white],
             stops: const [0.0, 0.3],
           ),
         ),
@@ -167,7 +167,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               ),
 
               // Bookings content
-              bookingsAsync.when(
+              // Use maybeWhen to preserve existing data during pagination loading
+              // This prevents table view from disappearing when loading more bookings
+              bookingsAsync.maybeWhen(
                 data: (bookings) {
                   if (bookings.isEmpty) {
                     return SliverToBoxAdapter(child: _buildEmptyState());
@@ -182,36 +184,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                           horizontal: context.horizontalPadding,
                         ),
                         child: BookingsTableView(bookings: bookings),
-                      ),
-                    );
-                  }
-                },
-                loading: () {
-                  if (viewMode == BookingsViewMode.table) {
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(48),
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    );
-                  } else {
-                    // Use SliverList for loading state too (lazy loading skeletons)
-                    return SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            context.horizontalPadding,
-                            0,
-                            context.horizontalPadding,
-                            16,
-                          ),
-                          child: const BookingCardSkeleton(),
-                        ),
-                        childCount: 5, // Show 5 card skeletons
                       ),
                     );
                   }
@@ -259,6 +231,39 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       ),
                     ),
                   );
+                },
+                // orElse handles loading state when there's no cached data (initial load only)
+                // During pagination, data callback is used with cached values
+                orElse: () {
+                  // Initial loading - show skeleton
+                  if (viewMode == BookingsViewMode.table) {
+                    return SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(48),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    );
+                  } else {
+                    // Use SliverList for loading state too (lazy loading skeletons)
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            context.horizontalPadding,
+                            0,
+                            context.horizontalPadding,
+                            16,
+                          ),
+                          child: const BookingCardSkeleton(),
+                        ),
+                        childCount: 5, // Show 5 card skeletons
+                      ),
+                    );
+                  }
                 },
               ),
 

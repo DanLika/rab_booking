@@ -615,9 +615,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     child: Text(
                       unit.isAvailable ? 'Dostupan' : 'Nedostupan',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: unit.isAvailable
-                            ? const Color(0xFF66BB6A) // Same as Confirmed badge
-                            : AppColors.error,
+                        color: isSelected
+                            ? Colors.white // White text when unit is selected
+                            : (unit.isAvailable
+                                ? const Color(0xFF66BB6A) // Green for available
+                                : AppColors.error), // Red for unavailable
                         fontWeight: FontWeight.w600,
                       ),
                     ),

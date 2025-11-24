@@ -348,9 +348,9 @@ class _PriceListCalendarWidgetState
                         side: _bulkEditMode
                             ? BorderSide(color: context.primaryColor, width: 2)
                             : null,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 15), // Same as Save button
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10), // Same as Save button
                         ),
                       ),
                     ),
@@ -419,10 +419,10 @@ class _PriceListCalendarWidgetState
                             : null,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
-                          vertical: 16,
+                          vertical: 15, // Same as Save button
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10), // Same as Save button
                         ),
                       ),
                     ),

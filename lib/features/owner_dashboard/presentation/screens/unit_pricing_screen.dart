@@ -571,13 +571,15 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   }
 
   Widget _buildSaveButton(ThemeData theme, bool isVerySmall) {
-    // Use gradient button like app bar (Purple → Blue)
+    // Use theme-aware gradient button like app bar (Purple fade)
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [
-            Color(0xFF6B4CE6), // Purple (same as app bar)
-            Color(0xFF4A90E2), // Blue (same as app bar)
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withValues(alpha: 0.7),
           ],
         ),
         borderRadius: BorderRadius.circular(10), // Same as input field

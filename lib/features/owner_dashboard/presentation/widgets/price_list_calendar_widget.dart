@@ -7,7 +7,6 @@ import '../../../../shared/models/daily_price_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
-import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/price_list_provider.dart';

@@ -233,18 +233,26 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 // orElse handles loading state when there's no cached data (initial load only)
                 // During pagination, data callback is used with cached values
                 orElse: () {
+                  final screenWidth = MediaQuery.of(context).size.width;
+
                   // Initial loading - show skeleton
-                  if (viewMode == BookingsViewMode.table) {
+                  // Force card skeleton on mobile (<600px) even in table view
+                  // Reason: Table with 10 columns overflows on small screens
+                  if (viewMode == BookingsViewMode.table && screenWidth >= 600) {
                     return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: context.horizontalPadding,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: context.horizontalPadding,
+                          ),
+                          child: const BookingTableSkeleton(),
                         ),
-                        child: const BookingTableSkeleton(),
                       ),
                     );
                   } else {
                     // Use SliverList for loading state too (lazy loading skeletons)
+                    // This is shown on mobile OR when card view is selected
                     return SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => Padding(

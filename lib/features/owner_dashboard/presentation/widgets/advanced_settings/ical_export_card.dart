@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/theme_extensions.dart';
+import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../shared/providers/repository_providers.dart' as repos;
@@ -23,6 +25,7 @@ class IcalExportCard extends ConsumerWidget {
   final WidgetSettings settings;
   final bool icalExportEnabled;
   final ValueChanged<bool> onEnabledChanged;
+  final bool isMobile;
 
   const IcalExportCard({
     super.key,
@@ -31,81 +34,123 @@ class IcalExportCard extends ConsumerWidget {
     required this.settings,
     required this.icalExportEnabled,
     required this.onEnabledChanged,
+    this.isMobile = false,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      child: ExpansionTile(
-        initiallyExpanded: icalExportEnabled,
-        leading: _buildLeadingIcon(),
-        title: const Text(
-          'iCal Export',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          icalExportEnabled ? 'Enabled' : 'Disabled',
-          style: TextStyle(
-            fontSize: 13,
-            color: icalExportEnabled
-                ? AppColors.success
-                : AppColors.textSecondary,
-          ),
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Master toggle
-                _buildMasterToggle(),
-
-                if (icalExportEnabled) ...[
-                  const Divider(height: 24),
-                  const Text(
-                    'Export Information',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Export URL display (if exists)
-                  if (settings.icalExportUrl != null)
-                    _buildExportUrlDisplay(theme),
-
-                  // Last generated timestamp
-                  if (settings.icalExportLastGenerated != null)
-                    _buildLastGeneratedInfo(theme),
-
-                  // Test iCal Export Button
-                  _buildTestExportButton(context, ref),
-
-                  // Info message
-                  _buildInfoMessage(theme),
-                ],
-              ],
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: isDark
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF1F1F1F),
+                      Color(0xFF242424),
+                      Color(0xFF292929),
+                      Color(0xFF2D2D2D), // mediumDarkGray
+                    ]
+                  : const [
+                      Color(0xFFF0F0F0), // Lighter grey
+                      Color(0xFFF2F2F2),
+                      Color(0xFFF5F5F5),
+                      Color(0xFFF8F8F8),
+                      Color(0xFFFAFAFA), // Very light grey
+                    ],
+              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: context.borderColor.withOpacity(0.4),
+              width: 1.5,
             ),
           ),
-        ],
+          child: ExpansionTile(
+            initiallyExpanded: icalExportEnabled,
+            leading: _buildLeadingIcon(theme),
+            title: Text(
+              'iCal Export',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              icalExportEnabled ? 'Enabled' : 'Disabled',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: icalExportEnabled
+                    ? AppColors.success
+                    : context.textColorSecondary,
+              ),
+            ),
+            children: [
+              Padding(
+                padding: EdgeInsets.all(isMobile ? 16 : 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Master toggle
+                    _buildMasterToggle(),
+
+                    if (icalExportEnabled) ...[
+                      const Divider(height: 24),
+                      Text(
+                        'Export Information',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Export URL display (if exists)
+                      if (settings.icalExportUrl != null)
+                        _buildExportUrlDisplay(theme),
+
+                      // Last generated timestamp
+                      if (settings.icalExportLastGenerated != null)
+                        _buildLastGeneratedInfo(theme),
+
+                      // Test iCal Export Button
+                      _buildTestExportButton(context, ref),
+
+                      // Info message
+                      _buildInfoMessage(theme),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildLeadingIcon() {
+  Widget _buildLeadingIcon(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.info.withAlpha((0.15 * 255).toInt()),
-            AppColors.info.withAlpha((0.08 * 255).toInt()),
-          ],
+        color: theme.colorScheme.primary.withAlpha(
+          (0.12 * 255).toInt(),
         ),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(Icons.calendar_today, color: AppColors.info, size: 20),
+      child: Icon(
+        Icons.calendar_today,
+        color: theme.colorScheme.primary,
+        size: 18,
+      ),
     );
   }
 
@@ -162,17 +207,18 @@ class IcalExportCard extends ConsumerWidget {
                 children: [
                   Icon(Icons.link, size: 16, color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Export URL',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
                 settings.icalExportUrl!,
-                style: TextStyle(
-                  fontSize: 12,
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withAlpha(
                     (0.7 * 255).toInt(),
                   ),
@@ -202,8 +248,7 @@ class IcalExportCard extends ConsumerWidget {
             const SizedBox(width: 8),
             Text(
               'Last generated: ${_formatLastGenerated(settings.icalExportLastGenerated!)}',
-              style: TextStyle(
-                fontSize: 12,
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withAlpha(
                   (0.6 * 255).toInt(),
                 ),
@@ -270,8 +315,7 @@ class IcalExportCard extends ConsumerWidget {
           Expanded(
             child: Text(
               'iCal export will be auto-generated when bookings change. Use the generated URL to sync with external calendars.',
-              style: TextStyle(
-                fontSize: 12,
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withAlpha(
                   (0.7 * 255).toInt(),
                 ),

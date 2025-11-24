@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/theme_extensions.dart';
+import '../../../../../core/theme/app_shadows.dart';
 
 /// Tax & Legal Disclaimer Settings Card
 ///
@@ -17,6 +19,7 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
   final ValueChanged<bool> onUseDefaultChanged;
   final VoidCallback onPreview;
   final String? Function(String?)? customTextValidator;
+  final bool isMobile;
 
   const TaxLegalDisclaimerCard({
     super.key,
@@ -27,74 +30,112 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
     required this.onUseDefaultChanged,
     required this.onPreview,
     this.customTextValidator,
+    this.isMobile = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: ExpansionTile(
-        initiallyExpanded: taxLegalEnabled,
-        leading: _buildLeadingIcon(),
-        title: const Text(
-          'Tax & Legal Disclaimer',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          taxLegalEnabled ? 'Enabled' : 'Disabled',
-          style: TextStyle(
-            fontSize: 13,
-            color: taxLegalEnabled
-                ? AppColors.success
-                : AppColors.textSecondary,
-          ),
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Master toggle
-                _buildMasterToggle(),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-                if (taxLegalEnabled) ...[
-                  const Divider(height: 24),
-
-                  // Disclaimer text source selector
-                  _buildTextSourceSection(),
-
-                  // Preview button
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: onPreview,
-                    icon: const Icon(Icons.preview),
-                    label: const Text('Preview Disclaimer'),
-                  ),
-                ],
-              ],
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: isDark
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF1F1F1F),
+                      Color(0xFF242424),
+                      Color(0xFF292929),
+                      Color(0xFF2D2D2D), // mediumDarkGray
+                    ]
+                  : const [
+                      Color(0xFFF0F0F0), // Lighter grey
+                      Color(0xFFF2F2F2),
+                      Color(0xFFF5F5F5),
+                      Color(0xFFF8F8F8),
+                      Color(0xFFFAFAFA), // Very light grey
+                    ],
+              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: context.borderColor.withOpacity(0.4),
+              width: 1.5,
             ),
           ),
-        ],
+          child: ExpansionTile(
+            initiallyExpanded: taxLegalEnabled,
+            leading: _buildLeadingIcon(theme),
+            title: Text(
+              'Tax & Legal Disclaimer',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              taxLegalEnabled ? 'Enabled' : 'Disabled',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: taxLegalEnabled
+                    ? AppColors.success
+                    : context.textColorSecondary,
+              ),
+            ),
+            children: [
+              Padding(
+                padding: EdgeInsets.all(isMobile ? 16 : 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Master toggle
+                    _buildMasterToggle(),
+
+                    if (taxLegalEnabled) ...[
+                      const Divider(height: 24),
+
+                      // Disclaimer text source selector
+                      _buildTextSourceSection(theme, context),
+
+                      // Preview button
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: onPreview,
+                        icon: const Icon(Icons.preview),
+                        label: const Text('Preview Disclaimer'),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildLeadingIcon() {
+  Widget _buildLeadingIcon(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.warning.withAlpha((0.15 * 255).toInt()),
-            AppColors.warning.withAlpha((0.08 * 255).toInt()),
-          ],
+        color: theme.colorScheme.primary.withAlpha(
+          (0.12 * 255).toInt(),
         ),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(
+      child: Icon(
         Icons.gavel,
-        color: AppColors.warning,
-        size: 20,
+        color: theme.colorScheme.primary,
+        size: 18,
       ),
     );
   }
@@ -111,13 +152,15 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTextSourceSection() {
+  Widget _buildTextSourceSection(ThemeData theme, BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Disclaimer Text Source',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 12),
 
@@ -126,9 +169,15 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
           value: true,
           groupValue: useDefaultText,
           onChanged: (val) => onUseDefaultChanged(true),
-          title: const Text('Use Default Croatian Text'),
-          subtitle: const Text(
+          title: Text(
+            'Use Default Croatian Text',
+            style: theme.textTheme.bodyMedium,
+          ),
+          subtitle: Text(
             'Standard legal text for Croatian properties',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: context.textColorSecondary,
+            ),
           ),
           contentPadding: EdgeInsets.zero,
         ),
@@ -138,8 +187,16 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
           value: false,
           groupValue: useDefaultText,
           onChanged: (val) => onUseDefaultChanged(false),
-          title: const Text('Use Custom Text'),
-          subtitle: const Text('Provide your own legal text'),
+          title: Text(
+            'Use Custom Text',
+            style: theme.textTheme.bodyMedium,
+          ),
+          subtitle: Text(
+            'Provide your own legal text',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: context.textColorSecondary,
+            ),
+          ),
           contentPadding: EdgeInsets.zero,
         ),
 

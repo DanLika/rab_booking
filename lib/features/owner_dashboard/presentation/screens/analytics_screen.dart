@@ -187,13 +187,21 @@ class _FilterChip extends StatelessWidget {
       label: Text(label),
       selected: selected,
       onSelected: (_) => onSelected(),
-      selectedColor: theme.colorScheme.primaryContainer,
-      backgroundColor: theme.colorScheme.surface,
+      selectedColor: theme.colorScheme.primary,
+      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+      side: BorderSide(
+        color: selected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+        width: selected ? 2 : 1,
+      ),
       labelStyle: TextStyle(
         color: selected
-            ? theme.colorScheme.onPrimaryContainer
+            ? Colors.white  // White text on selected chip
             : theme.colorScheme.onSurface,
+        fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
       ),
+      checkmarkColor: Colors.white,
     );
   }
 }
@@ -394,29 +402,24 @@ class _MetricCardsGrid extends StatelessWidget {
   }
 
   // Helper method to create purple shade variations (1-6, darkest to lightest)
+  // Uses fixed purple shades for consistent colors in light and dark mode
   Color _getPurpleShade(BuildContext context, int level) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final hsl = HSLColor.fromColor(primary);
-
-    // 6 levels of purple shades with progressive lightness adjustments
+    // Fixed purple shades - same in both light and dark mode
     switch (level) {
       case 1: // Darkest purple
-        return hsl.withLightness((hsl.lightness * 0.7).clamp(0.0, 1.0)).toColor();
+        return const Color(0xFF4A3A8C); // Dark violet
       case 2: // Dark purple
-        return hsl.withLightness((hsl.lightness * 0.85).clamp(0.0, 1.0)).toColor();
-      case 3: // Original purple (primary)
-        return primary;
+        return const Color(0xFF5B4BA8); // Medium violet
+      case 3: // Original purple (primary-like)
+        return const Color(0xFF6B4CE6); // Standard purple
       case 4: // Light purple
-        return hsl.withLightness((hsl.lightness * 1.15).clamp(0.0, 1.0)).toColor();
+        return const Color(0xFF8B6FF5); // Light purple
       case 5: // Lighter purple
-        return hsl.withLightness((hsl.lightness * 1.25).clamp(0.0, 1.0)).toColor();
+        return const Color(0xFFA08BFF); // Very light purple
       case 6: // Lightest purple (more desaturated)
-        return hsl
-            .withLightness((hsl.lightness * 1.35).clamp(0.0, 1.0))
-            .withSaturation((hsl.saturation * 0.7).clamp(0.0, 1.0))
-            .toColor();
+        return const Color(0xFFB8A8FF); // Pastel purple
       default:
-        return primary;
+        return const Color(0xFF6B4CE6); // Default to standard purple
     }
   }
 
@@ -809,9 +812,6 @@ class _BookingsChart extends StatelessWidget {
                     shape: ShapeEncode(
                       value: RectShape(borderRadius: BorderRadius.circular(8)),
                     ),
-                    color: ColorEncode(
-                      value: theme.colorScheme.primary,
-                    ),
                     elevation: ElevationEncode(value: 2),
                     gradient: GradientEncode(
                       value: LinearGradient(
@@ -1144,29 +1144,24 @@ class _BookingsBySourceChart extends StatelessWidget {
   }
 
   // Helper method to create purple shade variations (1-6, darkest to lightest)
+  // Uses fixed purple shades for consistent colors in light and dark mode
   Color _getPurpleShade(BuildContext context, int level) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final hsl = HSLColor.fromColor(primary);
-
-    // 6 levels of purple shades with progressive lightness adjustments
+    // Fixed purple shades - same in both light and dark mode
     switch (level) {
       case 1: // Darkest purple
-        return hsl.withLightness((hsl.lightness * 0.7).clamp(0.0, 1.0)).toColor();
+        return const Color(0xFF4A3A8C); // Dark violet
       case 2: // Dark purple
-        return hsl.withLightness((hsl.lightness * 0.85).clamp(0.0, 1.0)).toColor();
-      case 3: // Original purple (primary)
-        return primary;
+        return const Color(0xFF5B4BA8); // Medium violet
+      case 3: // Original purple (primary-like)
+        return const Color(0xFF6B4CE6); // Standard purple
       case 4: // Light purple
-        return hsl.withLightness((hsl.lightness * 1.15).clamp(0.0, 1.0)).toColor();
+        return const Color(0xFF8B6FF5); // Light purple
       case 5: // Lighter purple
-        return hsl.withLightness((hsl.lightness * 1.25).clamp(0.0, 1.0)).toColor();
+        return const Color(0xFFA08BFF); // Very light purple
       case 6: // Lightest purple (more desaturated)
-        return hsl
-            .withLightness((hsl.lightness * 1.35).clamp(0.0, 1.0))
-            .withSaturation((hsl.saturation * 0.7).clamp(0.0, 1.0))
-            .toColor();
+        return const Color(0xFFB8A8FF); // Pastel purple
       default:
-        return primary;
+        return const Color(0xFF6B4CE6); // Default to standard purple
     }
   }
 

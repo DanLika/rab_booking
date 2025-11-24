@@ -210,75 +210,110 @@ class _WidgetAdvancedSettingsScreenState
           });
         }
 
+        // Determine if mobile layout
+        final isMobile = MediaQuery.of(context).size.width < 600;
+
         final bodyContent = Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.zero,
               children: [
-                // Email Verification Section
-                EmailVerificationCard(
-                  requireEmailVerification: _requireEmailVerification,
-                  onChanged: (val) => setState(
-                    () => _requireEmailVerification = val,
+                // Email Verification Section (first section)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    isMobile ? 16 : 24, // left
+                    isMobile ? 16 : 20, // top (first section)
+                    isMobile ? 16 : 24, // right
+                    isMobile ? 8 : 12, // bottom
+                  ),
+                  child: EmailVerificationCard(
+                    requireEmailVerification: _requireEmailVerification,
+                    onChanged: (val) => setState(
+                      () => _requireEmailVerification = val,
+                    ),
+                    isMobile: isMobile,
                   ),
                 ),
-                const SizedBox(height: 24),
 
-                // Tax/Legal Disclaimer Section
-                TaxLegalDisclaimerCard(
-                  taxLegalEnabled: _taxLegalEnabled,
-                  useDefaultText: _useDefaultText,
-                  customDisclaimerController: _customDisclaimerController,
-                  onEnabledChanged: (val) => setState(
-                    () => _taxLegalEnabled = val,
+                // Tax/Legal Disclaimer Section (middle section)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    isMobile ? 16 : 24, // left
+                    isMobile ? 8 : 12, // top (other sections)
+                    isMobile ? 16 : 24, // right
+                    isMobile ? 8 : 12, // bottom
                   ),
-                  onUseDefaultChanged: (val) => setState(
-                    () => _useDefaultText = val,
+                  child: TaxLegalDisclaimerCard(
+                    taxLegalEnabled: _taxLegalEnabled,
+                    useDefaultText: _useDefaultText,
+                    customDisclaimerController: _customDisclaimerController,
+                    onEnabledChanged: (val) => setState(
+                      () => _taxLegalEnabled = val,
+                    ),
+                    onUseDefaultChanged: (val) => setState(
+                      () => _useDefaultText = val,
+                    ),
+                    onPreview: _showDisclaimerPreview,
+                    customTextValidator: (value) {
+                      if (!_useDefaultText &&
+                          (value == null || value.trim().isEmpty)) {
+                        return 'Please enter custom text or use default';
+                      }
+                      return null;
+                    },
+                    isMobile: isMobile,
                   ),
-                  onPreview: _showDisclaimerPreview,
-                  customTextValidator: (value) {
-                    if (!_useDefaultText &&
-                        (value == null || value.trim().isEmpty)) {
-                      return 'Please enter custom text or use default';
-                    }
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 24),
 
-                // iCal Export Section
-                IcalExportCard(
-                  propertyId: widget.propertyId,
-                  unitId: widget.unitId,
-                  settings: settings,
-                  icalExportEnabled: _icalExportEnabled,
-                  onEnabledChanged: (val) => setState(
-                    () => _icalExportEnabled = val,
+                // iCal Export Section (last section)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    isMobile ? 16 : 24, // left
+                    isMobile ? 8 : 12, // top (other sections)
+                    isMobile ? 16 : 24, // right
+                    isMobile ? 16 : 20, // bottom (last section)
+                  ),
+                  child: IcalExportCard(
+                    propertyId: widget.propertyId,
+                    unitId: widget.unitId,
+                    settings: settings,
+                    icalExportEnabled: _icalExportEnabled,
+                    onEnabledChanged: (val) => setState(
+                      () => _icalExportEnabled = val,
+                    ),
+                    isMobile: isMobile,
                   ),
                 ),
-                const SizedBox(height: 24),
 
                 // Save Button
-                ElevatedButton(
-                  onPressed: _isSaving ? null : () => _saveSettings(settings),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : 24,
                   ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                  child: ElevatedButton(
+                    onPressed: _isSaving ? null : () => _saveSettings(settings),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
-                          ),
-                        )
-                      : const Text('Save Advanced Settings'),
+                          )
+                        : const Text('Save Advanced Settings'),
+                  ),
                 ),
+
+                // Bottom spacing
+                const SizedBox(height: 24),
               ],
             ),
           );

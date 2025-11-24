@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/domain/models/widget_mode.dart';
@@ -8,7 +7,6 @@ import '../../../widget/presentation/providers/widget_settings_provider.dart'
     as widget_provider;
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
-import 'widget_advanced_settings_screen.dart';
 
 /// Widget Settings Screen - Configure embedded widget for each unit
 class WidgetSettingsScreen extends ConsumerStatefulWidget {
@@ -336,11 +334,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
                   // Payment Methods - ONLY for bookingInstant mode
                   if (_selectedMode == WidgetMode.bookingInstant) ...[
-                    _buildSectionTitle('Metode Plaćanja', Icons.payment),
                     _buildPaymentMethodsSection(),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle('Ponašanje Rezervacije', Icons.settings),
                     _buildBookingBehaviorSection(),
                     const SizedBox(height: 24),
                   ],
@@ -357,37 +353,65 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle('Ponašanje Rezervacije', Icons.settings),
                     _buildBookingBehaviorSection(),
                     const SizedBox(height: 24),
                   ],
 
-                  _buildSectionTitle(
-                    'Kontakt Informacije',
-                    Icons.contact_phone,
-                  ),
                   _buildContactOptionsSection(),
 
                   const SizedBox(height: 32),
 
-                  FilledButton.icon(
-                    onPressed: _isSaving ? null : _saveSettings,
-                    icon: _isSaving
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.save_outlined, size: 20),
-                    label: Text(_isSaving ? 'Čuvanje...' : 'Sačuvaj Postavke'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
+                  // Gradient save button (matches Cjenovnik tab style)
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Theme.of(context).colorScheme.primary,
+                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                        ],
                       ),
-                      minimumSize: const Size(double.infinity, 48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _isSaving ? null : _saveSettings,
+                        borderRadius: BorderRadius.circular(10),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 15,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _isSaving
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.check,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _isSaving ? 'Čuvanje...' : 'Sačuvaj Postavke',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -407,22 +431,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
       body: bodyContent,
-    );
-  }
-
-  Widget _buildSectionTitle(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 24, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
     );
   }
 
@@ -479,17 +487,19 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with icon - Minimalist style (like Osnovna Cijena section)
+              // Header with icon - Minimalist style (matching euro icon from Cjenovnik)
               Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                      color: theme.colorScheme.primary.withAlpha(
+                        (0.12 * 255).toInt(),
+                      ),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      Icons.widgets,
+                      Icons.widgets_outlined,
                       color: theme.colorScheme.primary,
                       size: 18,
                     ),
@@ -607,24 +617,18 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
               colors: isDark
                   ? const [
                       Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF1F1F1F),
-                      Color(0xFF242424),
-                      Color(0xFF292929),
                       Color(0xFF2D2D2D), // mediumDarkGray
                     ]
                   : const [
-                      Color(0xFFF0F0F0), // Lighter grey
-                      Color(0xFFF2F2F2),
-                      Color(0xFFF5F5F5),
-                      Color(0xFFF8F8F8),
-                      Color(0xFFFAFAFA), // Very light grey
+                      Color(0xFFE8E9EB), // Light blue-grey
+                      Colors.white,
                     ],
-              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+              stops: const [0.0, 0.3],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
@@ -636,6 +640,35 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+            // Header with icon and title
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.12 * 255).toInt(),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.payment,
+                    color: theme.colorScheme.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Metode Plaćanja',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             // Info text
             Text(
               'Odaberite metode plaćanja dostupne gostima:',
@@ -1183,24 +1216,18 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
               colors: isDark
                   ? const [
                       Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF1F1F1F),
-                      Color(0xFF242424),
-                      Color(0xFF292929),
                       Color(0xFF2D2D2D), // mediumDarkGray
                     ]
                   : const [
-                      Color(0xFFF0F0F0), // Lighter grey
-                      Color(0xFFF2F2F2),
-                      Color(0xFFF5F5F5),
-                      Color(0xFFF8F8F8),
-                      Color(0xFFFAFAFA), // Very light grey
+                      Color(0xFFE8E9EB), // Light blue-grey
+                      Colors.white,
                     ],
-              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+              stops: const [0.0, 0.3],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
@@ -1212,6 +1239,35 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+            // Header with icon and title
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.12 * 255).toInt(),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.settings,
+                    color: theme.colorScheme.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Ponašanje Rezervacije',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             // Responsive Grid for Switches
             LayoutBuilder(
               builder: (context, constraints) {
@@ -1298,11 +1354,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          'Rok za otkazivanje: $_cancellationHours sati prije prijave',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.onSurface,
+                        Expanded(
+                          child: Text(
+                            'Rok za otkazivanje: $_cancellationHours sati prije prijave',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
                         ),
                       ],
@@ -1412,46 +1470,51 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           width: value ? 2 : 1,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                color: value
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-                size: 24,
-              ),
-              const Spacer(),
-              Switch(
-                value: value,
-                onChanged: onChanged,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ],
+          // Leading icon
+          Icon(
+            icon,
+            color: value
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+            size: 24,
           ),
-          const SizedBox(height: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-              color: value
-                  ? Theme.of(context).colorScheme.onSurface
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
+          const SizedBox(width: 12),
+          // Expanded title and subtitle
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: value
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 13,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurfaceVariant.withAlpha((0.7 * 255).toInt()),
-            ),
+          const SizedBox(width: 8),
+          // Trailing switch
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ],
       ),
@@ -1482,24 +1545,18 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
               colors: isDark
                   ? const [
                       Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF1F1F1F),
-                      Color(0xFF242424),
-                      Color(0xFF292929),
                       Color(0xFF2D2D2D), // mediumDarkGray
                     ]
                   : const [
-                      Color(0xFFF0F0F0), // Lighter grey
-                      Color(0xFFF2F2F2),
-                      Color(0xFFF5F5F5),
-                      Color(0xFFF8F8F8),
-                      Color(0xFFFAFAFA), // Very light grey
+                      Color(0xFFE8E9EB), // Light blue-grey
+                      Colors.white,
                     ],
-              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+              stops: const [0.0, 0.3],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
@@ -1511,6 +1568,35 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header with icon and title
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withAlpha(
+                        (0.12 * 255).toInt(),
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.contact_phone,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Kontakt Informacije',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               Text(
                 'Kontakt opcije koje će biti prikazane u widgetu:',
                 style: TextStyle(

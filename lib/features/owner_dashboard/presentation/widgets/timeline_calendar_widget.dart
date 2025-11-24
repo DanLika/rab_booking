@@ -757,17 +757,20 @@ class _TimelineCalendarWidgetState
     List<DateTime> dates,
     double offsetWidth,
   ) {
-    return Column(
-      children: units.map((unit) {
-        final bookings = bookingsByUnit[unit.id] ?? [];
-        return _buildUnitRow(
-          unit,
-          bookings,
-          dates,
-          offsetWidth,
-          bookingsByUnit,
-        );
-      }).toList(),
+    return Container(
+      color: Colors.transparent, // Transparent to show parent gradient
+      child: Column(
+        children: units.map((unit) {
+          final bookings = bookingsByUnit[unit.id] ?? [];
+          return _buildUnitRow(
+            unit,
+            bookings,
+            dates,
+            offsetWidth,
+            bookingsByUnit,
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -791,6 +794,7 @@ class _TimelineCalendarWidgetState
     return Container(
       height: unitRowHeight,
       decoration: BoxDecoration(
+        color: Colors.transparent, // Transparent to show parent gradient
         border: Border(
           bottom: BorderSide(
             color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),

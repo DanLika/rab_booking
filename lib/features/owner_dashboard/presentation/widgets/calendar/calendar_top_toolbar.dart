@@ -58,7 +58,7 @@ class CalendarTopToolbar extends StatelessWidget {
     return Container(
       height: responsiveHeight,
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: Colors.transparent, // Transparent to show parent gradient
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       padding: EdgeInsets.only(left: isCompact ? 4 : 16),
@@ -66,6 +66,19 @@ class CalendarTopToolbar extends StatelessWidget {
         children: [
           // Spacer - push month selector to center
           const Spacer(),
+
+          // Previous period - LEFT of month selector
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: onPreviousPeriod,
+            tooltip: isWeekView ? 'Prethodni tjedan' : 'Prethodni mjesec',
+            constraints: BoxConstraints(
+              minWidth: isCompact ? 32 : 40,
+              minHeight: isCompact ? 32 : 40,
+            ),
+            iconSize: isCompact ? 18 : 24,
+            padding: EdgeInsets.zero,
+          ),
 
           // Date range display (centered)
           InkWell(
@@ -110,24 +123,7 @@ class CalendarTopToolbar extends StatelessWidget {
             ),
           ),
 
-          // Spacer - balance centering + create space for navigation icons
-          const Spacer(),
-
-          // Navigation arrows (right-aligned)
-          // Previous period
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: onPreviousPeriod,
-            tooltip: isWeekView ? 'Prethodni tjedan' : 'Prethodni mjesec',
-            constraints: BoxConstraints(
-              minWidth: isCompact ? 32 : 40,
-              minHeight: isCompact ? 32 : 40,
-            ),
-            iconSize: isCompact ? 18 : 24,
-            padding: EdgeInsets.zero,
-          ),
-
-          // Next period
+          // Next period - RIGHT of month selector
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: onNextPeriod,
@@ -139,6 +135,9 @@ class CalendarTopToolbar extends StatelessWidget {
             iconSize: isCompact ? 18 : 24,
             padding: EdgeInsets.zero,
           ),
+
+          // Spacer - balance centering
+          const Spacer(),
 
           // Action buttons - FIXED OVERFLOW
           if (isCompact)

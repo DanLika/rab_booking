@@ -130,7 +130,7 @@ class _OwnerTimelineCalendarScreenState
                 ),
                 onNotificationsTap: showNotificationsPanel,
                 // Use higher breakpoint for toolbar to prevent overflow
-                isCompact: MediaQuery.of(context).size.width < 900,
+                isCompact: MediaQuery.of(context).size.width < 1100,
                 // ENHANCED: Analytics toggle integrated in single row
                 showSummaryToggle: true,
                 isSummaryVisible: _showSummary,

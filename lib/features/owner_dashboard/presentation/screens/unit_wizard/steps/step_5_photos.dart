@@ -6,7 +6,6 @@ import '../../../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../../../core/services/storage_service.dart';
 import '../../../../../../core/utils/error_display_utils.dart';
 import '../state/unit_wizard_provider.dart';
-import '../widgets/wizard_step_container.dart';
 
 /// Step 5: Photos - Upload and manage unit images
 class Step5Photos extends ConsumerStatefulWidget {
@@ -148,177 +147,326 @@ class _Step5PhotosState extends ConsumerState<Step5Photos> {
   Widget build(BuildContext context) {
     final wizardState = ref.watch(unitWizardNotifierProvider(widget.unitId));
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return wizardState.when(
       data: (draft) {
         final images = draft.images;
         final coverImageUrl = draft.coverImageUrl;
 
-        return WizardStepContainer(
-          title: 'Fotografije',
-          subtitle: 'Dodajte fotografije smještajne jedinice (preporučeno min. 5)',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Upload button
-              Center(
-                child: OutlinedButton.icon(
-                  onPressed: _isUploading ? null : _pickAndUploadImages,
-                  icon: _isUploading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
-                          ),
-                        )
-                      : const Icon(Icons.add_photo_alternate, size: 20),
-                  label: Text(_isUploading ? 'Uploading...' : 'Add Photos'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        return Container(
+          decoration: BoxDecoration(
+            // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
+            // topLeft → bottomRight za body
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF2D2D2D), // mediumDarkGray
+                    ]
+                  : const [
+                      Color(0xFFF5F5F5), // Light grey
+                      Colors.white,      // white
+                    ],
+              stops: const [0.0, 0.3],
+            ),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(isMobile ? 16 : 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                Text(
+                  'Fotografije',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
-              ),
+                const SizedBox(height: 8),
 
-              const SizedBox(height: AppDimensions.spaceL),
+                // Subtitle
+                Text(
+                  'Dodajte fotografije smještajne jedinice (preporučeno min. 5)',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-              // Images grid
-              if (images.isEmpty)
-                Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.photo_library_outlined,
-                        size: 64,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No photos yet',
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add at least 5 photos for better presentation',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                // Upload Section Card - matching Step 1-4 styling
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.3)
+                            : Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                )
-              else
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemCount: images.length,
-                  itemBuilder: (context, index) {
-                    final imageUrl = images[index];
-                    final isCover = imageUrl == coverImageUrl;
-
-                    return Stack(
-                      children: [
-                        // Image
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: isCover
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.outline.withValues(alpha: 0.3),
-                                width: isCover ? 3 : 1,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: theme.colorScheme.surfaceContainerHighest,
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    color: theme.colorScheme.error,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
+                        // topRight → bottomLeft za section
+                        gradient: LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
+                          colors: isDark
+                              ? const [
+                                  Color(0xFF1A1A1A), // veryDarkGray
+                                  Color(0xFF2D2D2D), // mediumDarkGray
+                                ]
+                              : const [
+                                  Color(0xFFF5F5F5), // Light grey
+                                  Colors.white,      // white
+                                ],
+                          stops: const [0.0, 0.3],
                         ),
-
-                        // Cover badge
-                        if (isCover)
-                          Positioned(
-                            top: 8,
-                            left: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
-                                borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(isMobile ? 16 : 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header with icon - Minimalist
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary.withAlpha(
+                                      (0.12 * 255).toInt(),
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.photo_library,
+                                    color: theme.colorScheme.primary,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Galerija Fotografija',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Upload fotografija vaše jedinice',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
-                              child: Text(
-                                'Cover',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Upload button
+                            Center(
+                              child: ElevatedButton.icon(
+                                onPressed: _isUploading ? null : _pickAndUploadImages,
+                                icon: _isUploading
+                                    ? SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation(
+                                            theme.colorScheme.onPrimary,
+                                          ),
+                                        ),
+                                      )
+                                    : const Icon(Icons.add_photo_alternate, size: 20),
+                                label: Text(_isUploading ? 'Uploading...' : 'Dodaj Fotografije'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                                 ),
                               ),
                             ),
+
+                            const SizedBox(height: 20),
+
+                            // Empty state or image count
+                            if (images.isEmpty)
+                              Center(
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.photo_library_outlined,
+                                      size: 48,
+                                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Nema fotografija',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '${images.length} ${images.length == 1 ? 'fotografija' : 'fotografija'}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Images grid
+                if (images.isNotEmpty) ...[
+                  const SizedBox(height: AppDimensions.spaceL),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: images.length,
+                    itemBuilder: (context, index) {
+                      final imageUrl = images[index];
+                      final isCover = imageUrl == coverImageUrl;
+
+                      return Stack(
+                        children: [
+                          // Image
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: isCover
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.outline.withValues(alpha: 0.3),
+                                  width: isCover ? 3 : 1,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Image.network(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: theme.colorScheme.surfaceContainerHighest,
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      color: theme.colorScheme.error,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                           ),
 
-                        // Action buttons
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Set cover button
-                              if (!isCover)
+                          // Cover badge
+                          if (isCover)
+                            Positioned(
+                              top: 8,
+                              left: 8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Naslovna',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                          // Action buttons
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Set cover button
+                                if (!isCover)
+                                  IconButton(
+                                    onPressed: () => _setCoverImage(imageUrl),
+                                    icon: const Icon(Icons.star_border, size: 20),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.black.withValues(alpha: 0.5),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.all(8),
+                                    ),
+                                    tooltip: 'Postavi kao naslovnu',
+                                  ),
+
+                                const SizedBox(width: 4),
+
+                                // Delete button
                                 IconButton(
-                                  onPressed: () => _setCoverImage(imageUrl),
-                                  icon: const Icon(Icons.star_border, size: 20),
+                                  onPressed: () => _deleteImage(imageUrl, images),
+                                  icon: const Icon(Icons.delete_outline, size: 20),
                                   style: IconButton.styleFrom(
                                     backgroundColor: Colors.black.withValues(alpha: 0.5),
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.all(8),
                                   ),
-                                  tooltip: 'Set as cover',
+                                  tooltip: 'Obriši',
                                 ),
-
-                              const SizedBox(width: 4),
-
-                              // Delete button
-                              IconButton(
-                                onPressed: () => _deleteImage(imageUrl, images),
-                                icon: const Icon(Icons.delete_outline, size: 20),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.black.withValues(alpha: 0.5),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.all(8),
-                                ),
-                                tooltip: 'Delete',
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-            ],
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ],
+            ),
           ),
         );
       },

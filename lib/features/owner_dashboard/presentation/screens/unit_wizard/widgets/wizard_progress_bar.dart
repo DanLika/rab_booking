@@ -39,7 +39,20 @@ class WizardProgressBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
+        // Horizontal: left → right za header (default direction)
+        gradient: LinearGradient(
+          colors: isDark
+              ? const [
+                  Color(0xFF1A1A1A), // veryDarkGray
+                  Color(0xFF2D2D2D), // mediumDarkGray
+                ]
+              : const [
+                  Color(0xFFF5F5F5), // Light grey
+                  Colors.white,      // white
+                ],
+          stops: const [0.0, 0.3],
+        ),
         border: Border(
           bottom: BorderSide(
             color: theme.colorScheme.outline.withValues(alpha: 0.2),
@@ -67,7 +80,20 @@ class WizardProgressBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
+        // Horizontal: left → right za header (default direction)
+        gradient: LinearGradient(
+          colors: isDark
+              ? const [
+                  Color(0xFF1A1A1A), // veryDarkGray
+                  Color(0xFF2D2D2D), // mediumDarkGray
+                ]
+              : const [
+                  Color(0xFFF5F5F5), // Light grey
+                  Colors.white,      // white
+                ],
+          stops: const [0.0, 0.3],
+        ),
         border: Border(
           bottom: BorderSide(
             color: theme.colorScheme.outline.withValues(alpha: 0.2),

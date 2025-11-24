@@ -167,31 +167,25 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               width: 320,
               child: Container(
                 decoration: BoxDecoration(
-                  // 5-color smooth gradient (Right → Left) - topRight → bottomLeft
+                  // TIP 1: Simple diagonal gradient (2 colors, 2 stops) - topRight → bottomLeft
                   gradient: isDark
                       ? const LinearGradient(
                           begin: Alignment.topRight,
                           end: Alignment.bottomLeft,
                           colors: [
                             Color(0xFF1A1A1A), // veryDarkGray
-                            Color(0xFF1F1F1F),
-                            Color(0xFF242424),
-                            Color(0xFF292929),
                             Color(0xFF2D2D2D), // mediumDarkGray
                           ],
-                          stops: [0.0, 0.125, 0.25, 0.375, 0.5],
+                          stops: [0.0, 0.3],
                         )
                       : const LinearGradient(
                           begin: Alignment.topRight,
                           end: Alignment.bottomLeft,
                           colors: [
-                            Color(0xFFF0F0F0), // Lighter grey
-                            Color(0xFFF2F2F2),
-                            Color(0xFFF5F5F5),
-                            Color(0xFFF8F8F8),
-                            Color(0xFFFAFAFA), // Very light grey
+                            Color(0xFFF5F5F5), // Light grey
+                            Colors.white,      // White
                           ],
-                          stops: [0.0, 0.125, 0.25, 0.375, 0.5],
+                          stops: [0.0, 0.3],
                         ),
                 ),
                 child: Builder(
@@ -246,31 +240,25 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         Container(
           width: 320,
           decoration: BoxDecoration(
-            // 5-color smooth gradient (Right → Left) - topRight → bottomLeft
+            // TIP 1: Simple diagonal gradient (2 colors, 2 stops) - topRight → bottomLeft
             gradient: isDark
                 ? const LinearGradient(
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
                     colors: [
                       Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF1F1F1F),
-                      Color(0xFF242424),
-                      Color(0xFF292929),
                       Color(0xFF2D2D2D), // mediumDarkGray
                     ],
-                    stops: [0.0, 0.125, 0.25, 0.375, 0.5],
+                    stops: [0.0, 0.3],
                   )
                 : const LinearGradient(
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
                     colors: [
-                      Color(0xFFF0F0F0), // Lighter grey
-                      Color(0xFFF2F2F2),
-                      Color(0xFFF5F5F5),
-                      Color(0xFFF8F8F8),
-                      Color(0xFFFAFAFA), // Very light grey
+                      Color(0xFFF5F5F5), // Light grey
+                      Colors.white,      // White
                     ],
-                    stops: [0.0, 0.125, 0.25, 0.375, 0.5],
+                    stops: [0.0, 0.3],
                   ),
             border: Border(
               left: BorderSide(

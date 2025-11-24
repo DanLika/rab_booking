@@ -5,6 +5,7 @@ class InputDecorationHelper {
   InputDecorationHelper._();
 
   /// Creates modern input decoration for form fields
+  /// Matches Cjenovnik tab styling: borderRadius 12, default theme borders
   static InputDecoration buildDecoration(
     BuildContext context, {
     required String labelText,
@@ -22,34 +23,9 @@ class InputDecorationHelper {
       helperText: helperText,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
+      // Match Cjenovnik tab: borderRadius 12, use theme default colors
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: theme.colorScheme.primary,
-          width: 2,
-        ),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: theme.colorScheme.error,
-        ),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: theme.colorScheme.error,
-          width: 2,
-        ),
       ),
       filled: true,
       fillColor: theme.cardColor,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../state/unit_wizard_provider.dart';
-import '../widgets/wizard_step_container.dart';
 
 /// Step 8: Review & Publish - Final review before creating the unit
 class Step8Review extends ConsumerWidget {
@@ -14,138 +13,272 @@ class Step8Review extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final wizardState = ref.watch(unitWizardNotifierProvider(unitId));
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return wizardState.when(
       data: (draft) {
         // Check if all required steps are completed
         final allRequiredCompleted = _validateAllRequiredSteps(draft);
 
-        return WizardStepContainer(
-          title: 'Pregled i Objava',
-          subtitle: 'Pregledajte sve informacije prije objave jedinice',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Validation Warning (if incomplete)
-              if (!allRequiredCompleted) ...[
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: theme.colorScheme.error.withValues(alpha: 0.3),
-                    ),
+        return Container(
+          decoration: BoxDecoration(
+            // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
+            // topLeft → bottomRight za body
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF2D2D2D), // mediumDarkGray
+                    ]
+                  : const [
+                      Color(0xFFF5F5F5), // Light grey
+                      Colors.white,      // white
+                    ],
+              stops: const [0.0, 0.3],
+            ),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(isMobile ? 16 : 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                Text(
+                  'Pregled i Objava',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
                   ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.warning, color: theme.colorScheme.error),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Molimo popunite sve obavezne korake prije objave',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.error,
-                            fontWeight: FontWeight.w500,
+                ),
+                const SizedBox(height: 8),
+
+                // Subtitle
+                Text(
+                  'Pregledajte sve informacije prije objave jedinice',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Validation Warning (if incomplete) - responsive width
+                if (!allRequiredCompleted) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.error.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning, color: theme.colorScheme.error),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Molimo popunite sve obavezne korake prije objave',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.error,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.spaceL),
+                ],
+
+                // Summary Card with all sections
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.3)
+                            : Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
                     ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
+                        // topRight → bottomLeft za section
+                        gradient: LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
+                          colors: isDark
+                              ? const [
+                                  Color(0xFF1A1A1A), // veryDarkGray
+                                  Color(0xFF2D2D2D), // mediumDarkGray
+                                ]
+                              : const [
+                                  Color(0xFFF5F5F5), // Light grey
+                                  Colors.white,      // white
+                                ],
+                          stops: const [0.0, 0.3],
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(isMobile ? 16 : 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header with icon - Minimalist
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary.withAlpha(
+                                      (0.12 * 255).toInt(),
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.summarize,
+                                    color: theme.colorScheme.primary,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Sažetak Jedinice',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Pregledajte sve unesene informacije',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Summary sections
+                            _buildSummarySection(
+                              context,
+                              theme,
+                              'Osnovne Informacije',
+                              Icons.info_outline,
+                              [
+                                _buildSummaryRow(theme, 'Naziv', draft.name ?? '-'),
+                                _buildSummaryRow(theme, 'Slug', draft.slug ?? '-'),
+                                if (draft.description != null && draft.description!.isNotEmpty)
+                                  _buildSummaryRow(theme, 'Opis', draft.description!),
+                              ],
+                            ),
+                            const SizedBox(height: AppDimensions.spaceM),
+
+                            _buildSummarySection(
+                              context,
+                              theme,
+                              'Kapacitet',
+                              Icons.people,
+                              [
+                                _buildSummaryRow(theme, 'Spavaće sobe', draft.bedrooms?.toString() ?? '-'),
+                                _buildSummaryRow(theme, 'Kupatila', draft.bathrooms?.toString() ?? '-'),
+                                _buildSummaryRow(theme, 'Max gostiju', draft.maxGuests?.toString() ?? '-'),
+                                if (draft.areaSqm != null)
+                                  _buildSummaryRow(theme, 'Površina', '${draft.areaSqm} m²'),
+                              ],
+                            ),
+                            const SizedBox(height: AppDimensions.spaceM),
+
+                            _buildSummarySection(
+                              context,
+                              theme,
+                              'Cene',
+                              Icons.euro,
+                              [
+                                _buildSummaryRow(
+                                  theme,
+                                  'Cena po noći',
+                                  draft.pricePerNight != null ? '€${draft.pricePerNight}' : '-',
+                                ),
+                                _buildSummaryRow(
+                                  theme,
+                                  'Min. boravak',
+                                  draft.minStayNights != null ? '${draft.minStayNights} noći' : '-',
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppDimensions.spaceM),
+
+                            _buildSummarySection(
+                              context,
+                              theme,
+                              'Dostupnost',
+                              Icons.calendar_today,
+                              [
+                                _buildSummaryRow(
+                                  theme,
+                                  'Tokom godine',
+                                  draft.availableYearRound ? 'Da' : 'Sezonski',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppDimensions.spaceL),
-              ],
 
-              // Summary sections
-              _buildSummarySection(
-                context,
-                theme,
-                'Osnovne Informacije',
-                Icons.info_outline,
-                [
-                  _buildSummaryRow('Naziv', draft.name ?? '-'),
-                  _buildSummaryRow('Slug', draft.slug ?? '-'),
-                  if (draft.description != null && draft.description!.isNotEmpty)
-                    _buildSummaryRow('Opis', draft.description!),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.spaceM),
-
-              _buildSummarySection(
-                context,
-                theme,
-                'Kapacitet',
-                Icons.people,
-                [
-                  _buildSummaryRow('Spavaće sobe', draft.bedrooms?.toString() ?? '-'),
-                  _buildSummaryRow('Kupatila', draft.bathrooms?.toString() ?? '-'),
-                  _buildSummaryRow('Max gostiju', draft.maxGuests?.toString() ?? '-'),
-                  if (draft.areaSqm != null)
-                    _buildSummaryRow('Površina', '${draft.areaSqm} m²'),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.spaceM),
-
-              _buildSummarySection(
-                context,
-                theme,
-                'Cene',
-                Icons.euro,
-                [
-                  _buildSummaryRow(
-                    'Cena po noći',
-                    draft.pricePerNight != null ? '€${draft.pricePerNight}' : '-',
-                  ),
-                  _buildSummaryRow(
-                    'Min. boravak',
-                    draft.minStayNights != null ? '${draft.minStayNights} noći' : '-',
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.spaceM),
-
-              _buildSummarySection(
-                context,
-                theme,
-                'Dostupnost',
-                Icons.calendar_today,
-                [
-                  _buildSummaryRow(
-                    'Tokom godine',
-                    draft.availableYearRound ? 'Da' : 'Sezonski',
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.spaceL),
-
-              // Success info card
-              if (allRequiredCompleted) ...[
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+                // Success info card - responsive width
+                if (allRequiredCompleted) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_circle, color: theme.colorScheme.tertiary),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Sve obavezne informacije su popunjene. Kliknite "Publish" za objavljivanje jedinice.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface,
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: theme.colorScheme.tertiary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Sve obavezne informacije su popunjene. Kliknite "Publish" za objavljivanje jedinice.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         );
       },
@@ -206,7 +339,7 @@ class Step8Review extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value) {
+  Widget _buildSummaryRow(ThemeData theme, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -216,16 +349,19 @@ class Step8Review extends ConsumerWidget {
             width: 120,
             child: Text(
               label,
-              style: const TextStyle(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w500,
-                color: Colors.grey,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
           ),
         ],

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../state/unit_wizard_provider.dart';
-import '../widgets/wizard_step_container.dart';
 
 /// Step 3: Pricing - Price per night, Min stay, Seasonal pricing
 class Step3Pricing extends ConsumerStatefulWidget {
@@ -55,6 +54,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
   Widget build(BuildContext context) {
     final wizardState = ref.watch(unitWizardNotifierProvider(widget.unitId));
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -62,109 +62,242 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
       data: (draft) {
         _loadData(draft);
 
-        return WizardStepContainer(
-          title: 'Cene i Pravila',
-          subtitle: 'Postavite osnovnu cenu i minimalan broj noći',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Price per night
-              TextFormField(
-                controller: _priceController,
-                decoration: InputDecorationHelper.buildDecoration(
-                  context,
-                  labelText: 'Cena po Noći (€) *',
-                  hintText: '50',
-                  prefixIcon: const Icon(Icons.euro),
-                  isMobile: isMobile,
-                ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                ],
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Cena je obavezna';
-                  }
-                  final number = double.tryParse(value);
-                  if (number == null || number <= 0) {
-                    return 'Unesite ispravnu cenu';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppDimensions.spaceM),
-
-              // Min stay nights
-              TextFormField(
-                controller: _minStayController,
-                decoration: InputDecorationHelper.buildDecoration(
-                  context,
-                  labelText: 'Minimalan Boravak (noći) *',
-                  hintText: '1',
-                  helperText: 'Najmanje noći za rezervaciju',
-                  prefixIcon: const Icon(Icons.calendar_today),
-                  isMobile: isMobile,
-                ),
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Minimalan boravak je obavezan';
-                  }
-                  final number = int.tryParse(value);
-                  if (number == null || number < 1) {
-                    return 'Minimum je 1 noć';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppDimensions.spaceL),
-
-              // Seasonal pricing placeholder
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+        return Container(
+          decoration: BoxDecoration(
+            // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
+            // topLeft → bottomRight za body
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF2D2D2D), // mediumDarkGray
+                    ]
+                  : const [
+                      Color(0xFFF5F5F5), // Light grey
+                      Colors.white,      // white
+                    ],
+              stops: const [0.0, 0.3],
+            ),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(isMobile ? 16 : 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                Text(
+                  'Cene i Pravila',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_month,
-                          color: theme.colorScheme.primary,
+                const SizedBox(height: 8),
+
+                // Subtitle
+                Text(
+                  'Postavite osnovnu cenu i minimalan broj noći',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Pricing Info Card - matching Step 1 & 2 styling
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.3)
+                            : Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
+                        // topRight → bottomLeft za section
+                        gradient: LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
+                          colors: isDark
+                              ? const [
+                                  Color(0xFF1A1A1A), // veryDarkGray
+                                  Color(0xFF2D2D2D), // mediumDarkGray
+                                ]
+                              : const [
+                                  Color(0xFFF5F5F5), // Light grey
+                                  Colors.white,      // white
+                                ],
+                          stops: const [0.0, 0.3],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Sezonske Cene',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(isMobile ? 16 : 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header with icon - Minimalist
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary.withAlpha(
+                                      (0.12 * 255).toInt(),
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.euro,
+                                    color: theme.colorScheme.primary,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Informacije o Cijeni',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Osnovna cijena i pravila rezervacije',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Price per night
+                            TextFormField(
+                              controller: _priceController,
+                              decoration: InputDecorationHelper.buildDecoration(
+                                context,
+                                labelText: 'Cena po Noći (€) *',
+                                hintText: '50',
+                                prefixIcon: const Icon(Icons.euro),
+                                isMobile: isMobile,
+                              ),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                              ],
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Cena je obavezna';
+                                }
+                                final number = double.tryParse(value);
+                                if (number == null || number <= 0) {
+                                  return 'Unesite ispravnu cenu';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: AppDimensions.spaceM),
+
+                            // Min stay nights
+                            TextFormField(
+                              controller: _minStayController,
+                              decoration: InputDecorationHelper.buildDecoration(
+                                context,
+                                labelText: 'Minimalan Boravak (noći) *',
+                                hintText: '1',
+                                helperText: 'Najmanje noći za rezervaciju',
+                                prefixIcon: const Icon(Icons.calendar_today),
+                                isMobile: isMobile,
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Minimalan boravak je obavezan';
+                                }
+                                final number = int.tryParse(value);
+                                if (number == null || number < 1) {
+                                  return 'Minimum je 1 noć';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Napredna konfiguracija sezonskih cena biće dostupna nakon kreiranja jedinice.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppDimensions.spaceL),
+
+                // Seasonal pricing placeholder - centered with max width
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 500),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_month,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Sezonske Cene',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Napredna konfiguracija sezonskih cena biće dostupna nakon kreiranja jedinice.',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

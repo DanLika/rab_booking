@@ -51,29 +51,25 @@ class IcalExportCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
+            // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
+            // topRight → bottomLeft za section
             gradient: LinearGradient(
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
               colors: isDark
                   ? const [
                       Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF1F1F1F),
-                      Color(0xFF242424),
-                      Color(0xFF292929),
                       Color(0xFF2D2D2D), // mediumDarkGray
                     ]
                   : const [
-                      Color(0xFFF0F0F0), // Lighter grey
-                      Color(0xFFF2F2F2),
-                      Color(0xFFF5F5F5),
-                      Color(0xFFF8F8F8),
-                      Color(0xFFFAFAFA), // Very light grey
+                      Color(0xFFF5F5F5), // Light grey
+                      Colors.white,      // White
                     ],
-              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+              stops: const [0.0, 0.3],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: context.borderColor.withOpacity(0.4),
+              color: context.borderColor.withValues(alpha: 0.4),
               width: 1.5,
             ),
           ),

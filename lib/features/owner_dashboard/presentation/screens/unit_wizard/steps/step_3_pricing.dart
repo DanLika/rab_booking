@@ -71,12 +71,12 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
               end: Alignment.bottomLeft,
               colors: isDark
                   ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray (darker)
-                      Color(0xFF2D2D2D), // mediumDarkGray (lighter)
+                      Color(0xFF2D2D2D), // mediumDarkGray (lighter) - RIGHT
+                      Color(0xFF1A1A1A), // veryDarkGray (darker) - LEFT
                     ]
                   : const [
-                      Color(0xFFF5F5F5), // Light grey
-                      Colors.white,      // white
+                      Colors.white,      // white (lighter) - RIGHT
+                      Color(0xFFF5F5F5), // Light grey (darker) - LEFT
                     ],
               stops: const [0.0, 0.3],
             ),
@@ -130,12 +130,12 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                           end: Alignment.bottomLeft,
                           colors: isDark
                               ? const [
-                                  Color(0xFF1A1A1A), // veryDarkGray (darker)
-                                  Color(0xFF2D2D2D), // mediumDarkGray (lighter)
+                                  Color(0xFF2D2D2D), // mediumDarkGray (lighter) - RIGHT
+                                  Color(0xFF1A1A1A), // veryDarkGray (darker) - LEFT
                                 ]
                               : const [
-                                  Color(0xFFF5F5F5), // Light grey
-                                  Colors.white,      // white
+                                  Colors.white,      // white (lighter) - RIGHT
+                                  Color(0xFFF5F5F5), // Light grey (darker) - LEFT
                                 ],
                           stops: const [0.0, 0.3],
                         ),

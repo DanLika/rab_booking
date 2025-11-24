@@ -114,6 +114,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Dialog(
       child: Container(
         width: MediaQuery.of(context).size.width * 0.8,
@@ -127,16 +128,16 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
             // Header with gradient (matching CommonAppBar)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFF6B4CE6), // Purple
-                    Color(0xFF4A90E2), // Blue
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primary.withValues(alpha: 0.7),
                   ],
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(4),
                   topRight: Radius.circular(4),
                 ),

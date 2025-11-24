@@ -37,16 +37,16 @@ class UnitFutureBookingsDialog extends StatelessWidget {
               padding: EdgeInsets.all(
                 isMobile ? AppDimensions.spaceS : AppDimensions.spaceM,
               ),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFF6B4CE6), // Purple
-                    Color(0xFF4A90E2), // Blue
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primary.withValues(alpha: 0.7),
                   ],
                 ),
-                borderRadius: BorderRadius.vertical(
+                borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(4),
                 ),
               ),

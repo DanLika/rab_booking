@@ -397,36 +397,41 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
           onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
           child: const Text('Otkaži'),
         ),
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF6B4CE6), // Purple
-                Color(0xFF4A90E2), // Blue
-              ],
-            ),
-            borderRadius: BorderRadius.all(Radius.circular(4)),
-          ),
-          child: ElevatedButton(
-            onPressed: _isSaving ? null : _createBooking,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              foregroundColor: Colors.white,
-              shadowColor: Colors.transparent,
-            ),
-            child: _isSaving
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Kreiraj'),
-          ),
+        Builder(
+          builder: (context) {
+            final theme = Theme.of(context);
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primary.withValues(alpha: 0.7),
+                  ],
+                ),
+                borderRadius: const BorderRadius.all(Radius.circular(4)),
+              ),
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _createBooking,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.white,
+                  shadowColor: Colors.transparent,
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Kreiraj'),
+              ),
+            );
+          },
         ),
       ],
     );

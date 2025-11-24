@@ -184,17 +184,18 @@ class _OwnerTimelineCalendarScreenState
                   return const SizedBox.shrink();
                 }
 
+                final theme = Theme.of(context);
                 return Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Color(0xFF6B4CE6), // Purple
-                        Color(0xFF4A90E2), // Blue
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withValues(alpha: 0.7),
                       ],
                     ),
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
                   ),
                   child: FloatingActionButton(
                     onPressed: _showCreateBookingDialog,

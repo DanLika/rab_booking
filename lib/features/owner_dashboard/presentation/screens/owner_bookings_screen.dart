@@ -233,26 +233,22 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 // orElse handles loading state when there's no cached data (initial load only)
                 // During pagination, data callback is used with cached values
                 orElse: () {
-                  final screenWidth = MediaQuery.of(context).size.width;
-
-                  // Initial loading - show skeleton
-                  // Force card skeleton on mobile (<600px) even in table view
-                  // Reason: Table with 10 columns overflows on small screens
-                  if (viewMode == BookingsViewMode.table && screenWidth >= 600) {
-                    return SliverToBoxAdapter(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: context.horizontalPadding,
+                  // Initial loading
+                  if (viewMode == BookingsViewMode.table) {
+                    // Table view: Show spinner instead of skeleton
+                    // Reason: Table skeleton with 10 columns causes overflow on small screens
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            theme.colorScheme.primary,
                           ),
-                          child: const BookingTableSkeleton(),
                         ),
                       ),
                     );
                   } else {
-                    // Use SliverList for loading state too (lazy loading skeletons)
-                    // This is shown on mobile OR when card view is selected
+                    // Card view: Show card skeletons
                     return SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => Padding(

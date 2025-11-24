@@ -279,6 +279,33 @@ class _MetricCardsGrid extends StatelessWidget {
     return 'Last 30 days';
   }
 
+  // Helper method to create purple shade variations (1-6, darkest to lightest)
+  Color _getPurpleShade(BuildContext context, int level) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final hsl = HSLColor.fromColor(primary);
+
+    // 6 levels of purple shades with progressive lightness adjustments
+    switch (level) {
+      case 1: // Darkest purple
+        return hsl.withLightness((hsl.lightness * 0.7).clamp(0.0, 1.0)).toColor();
+      case 2: // Dark purple
+        return hsl.withLightness((hsl.lightness * 0.85).clamp(0.0, 1.0)).toColor();
+      case 3: // Original purple (primary)
+        return primary;
+      case 4: // Light purple
+        return hsl.withLightness((hsl.lightness * 1.15).clamp(0.0, 1.0)).toColor();
+      case 5: // Lighter purple
+        return hsl.withLightness((hsl.lightness * 1.25).clamp(0.0, 1.0)).toColor();
+      case 6: // Lightest purple (more desaturated)
+        return hsl
+            .withLightness((hsl.lightness * 1.35).clamp(0.0, 1.0))
+            .withSaturation((hsl.saturation * 0.7).clamp(0.0, 1.0))
+            .toColor();
+      default:
+        return primary;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -310,14 +337,14 @@ class _MetricCardsGrid extends StatelessWidget {
               subtitle:
                   '${_getRecentPeriodLabel()}: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
               icon: Icons.euro_rounded,
-              gradientColor: Theme.of(context).colorScheme.primary, // Purple (matches app bar)
+              gradientColor: _getPurpleShade(context, 3), // Original purple
             ),
             _MetricCard(
               title: 'Total Bookings',
               value: '${analytics.totalBookings}',
               subtitle: '${_getRecentPeriodLabel()}: ${analytics.monthlyBookings}',
               icon: Icons.calendar_today_rounded,
-              gradientColor: Theme.of(context).colorScheme.secondary, // Orange/Coral
+              gradientColor: _getPurpleShade(context, 4), // Light purple
             ),
             _MetricCard(
               title: 'Occupancy Rate',
@@ -325,7 +352,7 @@ class _MetricCardsGrid extends StatelessWidget {
               subtitle:
                   '${analytics.activeProperties}/${analytics.totalProperties} properties active',
               icon: Icons.analytics_rounded,
-              gradientColor: Theme.of(context).colorScheme.tertiary, // Green
+              gradientColor: _getPurpleShade(context, 5), // Lighter purple
             ),
             _MetricCard(
               title: 'Avg. Nightly Rate',
@@ -333,7 +360,7 @@ class _MetricCardsGrid extends StatelessWidget {
               subtitle:
                   'Cancellation: ${analytics.cancellationRate.toStringAsFixed(1)}%',
               icon: Icons.trending_up_rounded,
-              gradientColor: Theme.of(context).colorScheme.error, // Red
+              gradientColor: _getPurpleShade(context, 2), // Dark purple
             ),
           ],
         );
@@ -545,11 +572,11 @@ class _RevenueChart extends StatelessWidget {
                     return FlSpot(entry.key.toDouble(), entry.value.amount);
                   }).toList(),
                   isCurved: true,
-                  color: AppColors.success,
+                  color: Theme.of(context).colorScheme.primary, // Purple line
                   barWidth: 3,
                   belowBarData: BarAreaData(
                     show: true,
-                    color: AppColors.success.withValues(alpha: 0.2),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                   ),
                 ),
               ],
@@ -651,7 +678,7 @@ class _BookingsChart extends StatelessWidget {
                   barRods: [
                     BarChartRodData(
                       toY: entry.value.count.toDouble(),
-                      color: AppColors.info,
+                      color: Theme.of(context).colorScheme.primary, // Purple bars
                       width: 20,
                     ),
                   ],
@@ -744,7 +771,7 @@ class _TopPropertiesList extends StatelessWidget {
                     '\$${property.revenue.toStringAsFixed(2)}',
                     style: AppTypography.bodyMedium.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: AppColors.success,
+                      color: Theme.of(context).colorScheme.primary, // Purple revenue
                     ),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
@@ -789,6 +816,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final widgetBookingsPercent = totalBookings > 0
         ? (widgetBookings / totalBookings * 100).toStringAsFixed(1)
         : '0.0';
@@ -806,7 +834,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
             // Widget Bookings Row
             Row(
               children: [
-                const Icon(Icons.widgets, color: AppColors.info, size: 24),
+                Icon(Icons.widgets, color: theme.colorScheme.primary, size: 24), // Purple icon
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -826,7 +854,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                           Text(
                             '$widgetBookings',
                             style: AppTypography.h2.copyWith(
-                              color: AppColors.info,
+                              color: theme.colorScheme.primary, // Purple text
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -850,7 +878,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
               backgroundColor: Theme.of(context).brightness == Brightness.dark
                   ? AppColors.borderDark
                   : AppColors.borderLight,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.info),
+              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary), // Purple progress
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
             ),
@@ -859,7 +887,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
             // Widget Revenue Row
             Row(
               children: [
-                const Icon(Icons.attach_money, color: AppColors.success, size: 24),
+                Icon(Icons.attach_money, color: theme.colorScheme.primary, size: 24), // Purple icon
                 const SizedBox(width: 12),
                 Flexible(
                   child: Column(
@@ -878,7 +906,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                             child: Text(
                               '\$${widgetRevenue.toStringAsFixed(2)}',
                               style: AppTypography.h2.copyWith(
-                                color: AppColors.success,
+                                color: theme.colorScheme.primary, // Purple text
                                 fontWeight: FontWeight.bold,
                               ),
                               maxLines: 1,
@@ -909,7 +937,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
               backgroundColor: Theme.of(context).brightness == Brightness.dark
                   ? AppColors.borderDark
                   : AppColors.borderLight,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
+              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary), // Purple progress
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
             ),
@@ -948,21 +976,48 @@ class _BookingsBySourceChart extends StatelessWidget {
     }
   }
 
-  Color _getSourceColor(String source, int index) {
+  // Helper method to create purple shade variations (1-6, darkest to lightest)
+  Color _getPurpleShade(BuildContext context, int level) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final hsl = HSLColor.fromColor(primary);
+
+    // 6 levels of purple shades with progressive lightness adjustments
+    switch (level) {
+      case 1: // Darkest purple
+        return hsl.withLightness((hsl.lightness * 0.7).clamp(0.0, 1.0)).toColor();
+      case 2: // Dark purple
+        return hsl.withLightness((hsl.lightness * 0.85).clamp(0.0, 1.0)).toColor();
+      case 3: // Original purple (primary)
+        return primary;
+      case 4: // Light purple
+        return hsl.withLightness((hsl.lightness * 1.15).clamp(0.0, 1.0)).toColor();
+      case 5: // Lighter purple
+        return hsl.withLightness((hsl.lightness * 1.25).clamp(0.0, 1.0)).toColor();
+      case 6: // Lightest purple (more desaturated)
+        return hsl
+            .withLightness((hsl.lightness * 1.35).clamp(0.0, 1.0))
+            .withSaturation((hsl.saturation * 0.7).clamp(0.0, 1.0))
+            .toColor();
+      default:
+        return primary;
+    }
+  }
+
+  Color _getSourceColor(BuildContext context, String source, int index) {
     switch (source.toLowerCase()) {
       case 'widget':
-        return AppColors.info;
+        return _getPurpleShade(context, 3); // Original purple
       case 'admin':
-        return AppColors.secondary;
+        return _getPurpleShade(context, 2); // Dark purple
       case 'direct':
-        return AppColors.warning;
+        return _getPurpleShade(context, 4); // Light purple
       case 'booking.com':
       case 'booking_com':
-        return const Color(0xFF003580); // Booking.com blue
+        return _getPurpleShade(context, 1); // Darkest purple
       case 'airbnb':
-        return const Color(0xFFFF5A5F); // Airbnb red
+        return _getPurpleShade(context, 5); // Lighter purple
       default:
-        return AppColors.textSecondary;
+        return _getPurpleShade(context, 6); // Lightest purple (desaturated)
     }
   }
 
@@ -1021,7 +1076,7 @@ class _BookingsBySourceChart extends StatelessWidget {
               final percentage = totalCount > 0
                   ? (count / totalCount * 100).toStringAsFixed(1)
                   : '0.0';
-              final color = _getSourceColor(source, index);
+              final color = _getSourceColor(context, source, index);
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),

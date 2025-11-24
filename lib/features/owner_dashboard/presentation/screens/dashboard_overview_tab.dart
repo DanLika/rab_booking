@@ -233,6 +233,33 @@ class DashboardOverviewTab extends ConsumerWidget {
     );
   }
 
+  // Helper method to create purple shade variations (1-6, darkest to lightest)
+  Color _getPurpleShade(BuildContext context, int level) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final hsl = HSLColor.fromColor(primary);
+
+    // 6 levels of purple shades with progressive lightness adjustments
+    switch (level) {
+      case 1: // Darkest purple
+        return hsl.withLightness((hsl.lightness * 0.7).clamp(0.0, 1.0)).toColor();
+      case 2: // Dark purple
+        return hsl.withLightness((hsl.lightness * 0.85).clamp(0.0, 1.0)).toColor();
+      case 3: // Original purple (primary)
+        return primary;
+      case 4: // Light purple
+        return hsl.withLightness((hsl.lightness * 1.15).clamp(0.0, 1.0)).toColor();
+      case 5: // Lighter purple
+        return hsl.withLightness((hsl.lightness * 1.25).clamp(0.0, 1.0)).toColor();
+      case 6: // Lightest purple (more desaturated)
+        return hsl
+            .withLightness((hsl.lightness * 1.35).clamp(0.0, 1.0))
+            .withSaturation((hsl.saturation * 0.7).clamp(0.0, 1.0))
+            .toColor();
+      default:
+        return primary;
+    }
+  }
+
   // Helper method to create theme-aware gradient with alpha fade
   // Uses single color with alpha fade for consistent purple-fade pattern
   Gradient _createThemeGradient(BuildContext context, Color baseColor) {
@@ -266,7 +293,7 @@ class DashboardOverviewTab extends ConsumerWidget {
           icon: Icons.euro_rounded,
           gradient: _createThemeGradient(
             context,
-            Theme.of(context).colorScheme.primary, // Purple (matches app bar)
+            _getPurpleShade(context, 3), // Original purple
           ),
           isMobile: isMobile,
           isTablet: isTablet,
@@ -278,7 +305,7 @@ class DashboardOverviewTab extends ConsumerWidget {
           icon: Icons.trending_up_rounded,
           gradient: _createThemeGradient(
             context,
-            Theme.of(context).colorScheme.secondary, // Orange/Coral
+            _getPurpleShade(context, 4), // Light purple
           ),
           isMobile: isMobile,
           isTablet: isTablet,
@@ -291,7 +318,7 @@ class DashboardOverviewTab extends ConsumerWidget {
           icon: Icons.calendar_today_rounded,
           gradient: _createThemeGradient(
             context,
-            Theme.of(context).colorScheme.tertiary, // Green
+            _getPurpleShade(context, 5), // Lighter purple
           ),
           isMobile: isMobile,
           isTablet: isTablet,
@@ -304,7 +331,7 @@ class DashboardOverviewTab extends ConsumerWidget {
           icon: Icons.schedule_rounded,
           gradient: _createThemeGradient(
             context,
-            Theme.of(context).colorScheme.error, // Red
+            _getPurpleShade(context, 2), // Dark purple
           ),
           isMobile: isMobile,
           isTablet: isTablet,
@@ -317,7 +344,7 @@ class DashboardOverviewTab extends ConsumerWidget {
           icon: Icons.villa_rounded,
           gradient: _createThemeGradient(
             context,
-            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), // Gray
+            _getPurpleShade(context, 6), // Lightest purple (desaturated)
           ),
           isMobile: isMobile,
           isTablet: isTablet,
@@ -330,7 +357,7 @@ class DashboardOverviewTab extends ConsumerWidget {
           icon: Icons.analytics_rounded,
           gradient: _createThemeGradient(
             context,
-            Theme.of(context).colorScheme.onSurfaceVariant, // Light gray
+            _getPurpleShade(context, 1), // Darkest purple
           ),
           isMobile: isMobile,
           isTablet: isTablet,

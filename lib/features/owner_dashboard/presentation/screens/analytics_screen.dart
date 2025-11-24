@@ -310,14 +310,14 @@ class _MetricCardsGrid extends StatelessWidget {
               subtitle:
                   '${_getRecentPeriodLabel()}: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
               icon: Icons.euro_rounded,
-              gradientColors: const [AppColors.info, AppColors.infoDark],
+              gradientColor: Theme.of(context).colorScheme.primary, // Purple (matches app bar)
             ),
             _MetricCard(
               title: 'Total Bookings',
               value: '${analytics.totalBookings}',
               subtitle: '${_getRecentPeriodLabel()}: ${analytics.monthlyBookings}',
               icon: Icons.calendar_today_rounded,
-              gradientColors: const [AppColors.primary, AppColors.primaryDark],
+              gradientColor: Theme.of(context).colorScheme.secondary, // Orange/Coral
             ),
             _MetricCard(
               title: 'Occupancy Rate',
@@ -325,7 +325,7 @@ class _MetricCardsGrid extends StatelessWidget {
               subtitle:
                   '${analytics.activeProperties}/${analytics.totalProperties} properties active',
               icon: Icons.analytics_rounded,
-              gradientColors: const [AppColors.primaryLight, AppColors.primary],
+              gradientColor: Theme.of(context).colorScheme.tertiary, // Green
             ),
             _MetricCard(
               title: 'Avg. Nightly Rate',
@@ -333,7 +333,7 @@ class _MetricCardsGrid extends StatelessWidget {
               subtitle:
                   'Cancellation: ${analytics.cancellationRate.toStringAsFixed(1)}%',
               icon: Icons.trending_up_rounded,
-              gradientColors: const [AppColors.textSecondary, AppColors.textDisabled],
+              gradientColor: Theme.of(context).colorScheme.error, // Red
             ),
           ],
         );
@@ -347,14 +347,14 @@ class _MetricCard extends StatelessWidget {
   final String value;
   final String subtitle;
   final IconData icon;
-  final List<Color> gradientColors;
+  final Color gradientColor;
 
   const _MetricCard({
     required this.title,
     required this.value,
     required this.subtitle,
     required this.icon,
-    required this.gradientColors,
+    required this.gradientColor,
   });
 
   @override
@@ -363,13 +363,11 @@ class _MetricCard extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    // Extract primary color from gradient for shadow
-    final primaryColor = gradientColors.isNotEmpty
-        ? gradientColors.first
-        : theme.colorScheme.primary;
+    // Use the provided color for shadow
+    final primaryColor = gradientColor;
 
-    // Create theme-aware gradient
-    final gradient = _createThemeGradient(context, gradientColors);
+    // Create theme-aware gradient with alpha fade
+    final gradient = _createThemeGradient(context, gradientColor);
 
     // Theme-aware text and icon colors - white on gradient
     const textColor = Colors.white;
@@ -1085,30 +1083,15 @@ class _BookingsBySourceChart extends StatelessWidget {
   }
 }
 
-/// Helper function to create theme-aware gradients
-/// In dark mode, darkens the colors by 30% for better contrast
-Gradient _createThemeGradient(BuildContext context, List<Color> lightColors) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-
-  if (isDark) {
-    // In dark mode, use slightly darker versions but keep full opacity
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: lightColors.map((color) {
-        // Darken the color but keep full opacity
-        final hsl = HSLColor.fromColor(color);
-        return hsl
-            .withLightness((hsl.lightness * 0.7).clamp(0.0, 1.0))
-            .toColor();
-      }).toList(),
-    );
-  } else {
-    // In light mode, use the original colors
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: lightColors,
-    );
-  }
+/// Helper function to create theme-aware gradient with alpha fade
+/// Uses single color with alpha fade for consistent purple-fade pattern
+Gradient _createThemeGradient(BuildContext context, Color baseColor) {
+  return LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      baseColor,
+      baseColor.withValues(alpha: 0.7), // 70% opacity fade
+    ],
+  );
 }

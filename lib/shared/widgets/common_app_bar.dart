@@ -15,7 +15,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final void Function(BuildContext) onLeadingIconTap;
 
   /// Gradient colors for the app bar background
-  /// Default: Purple-Blue gradient [0xFF6B4CE6, 0xFF4A90E2]
+  /// Default: Purple fade gradient [0xFF6B4CE6, 0xB36B4CE6] (100% -> 70%)
   final List<Color> gradientColors;
 
   /// Title text color
@@ -36,8 +36,8 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.leadingIcon,
     required this.onLeadingIconTap,
     this.gradientColors = const [
-      Color(0xFF6B4CE6), // Purple
-      Color(0xFF4A90E2), // Blue
+      Color(0xFF6B4CE6), // Purple 100%
+      Color(0xB36B4CE6), // Purple 70% (B3 = 179/255 ≈ 70%)
     ],
     this.titleColor = Colors.white,
     this.iconColor = Colors.white,

@@ -226,15 +226,21 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
             colors: isDark
-                ? [
-                    Theme.of(context).colorScheme.veryDarkGray, // #1A1A1A
-                    Theme.of(context).colorScheme.mediumDarkGray, // #2D2D2D
+                ? const [
+                    Color(0xFF1A1A1A), // veryDarkGray
+                    Color(0xFF1F1F1F),
+                    Color(0xFF242424),
+                    Color(0xFF292929),
+                    Color(0xFF2D2D2D), // mediumDarkGray
                   ]
-                : [
-                    const Color(0xFFF5F5F5), // Light grey
-                    Colors.white, // #FFFFFF
+                : const [
+                    Color(0xFFE0E0E0), // Darker grey
+                    Color(0xFFE5E5E5),
+                    Color(0xFFEAEAEA),
+                    Color(0xFFF0F0F0),
+                    Color(0xFFF5F5F5), // Light grey
                   ],
-            stops: const [0.0, 0.3],
+            stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
           ),
           borderRadius: BorderRadius.circular(12),
         ),
@@ -436,15 +442,21 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
               colors: isDark
-                  ? [
-                      Theme.of(context).colorScheme.veryDarkGray, // #1A1A1A
-                      Theme.of(context).colorScheme.mediumDarkGray, // #2D2D2D
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF1F1F1F),
+                      Color(0xFF242424),
+                      Color(0xFF292929),
+                      Color(0xFF2D2D2D), // mediumDarkGray
                     ]
-                  : [
-                      const Color(0xFFF5F5F5), // Light grey (replaces F8F9FA)
-                      Colors.white, // #FFFFFF
+                  : const [
+                      Color(0xFFE0E0E0), // Darker grey
+                      Color(0xFFE5E5E5),
+                      Color(0xFFEAEAEA),
+                      Color(0xFFF0F0F0),
+                      Color(0xFFF5F5F5), // Light grey
                     ],
-              stops: const [0.0, 0.3],
+              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(

@@ -32,11 +32,16 @@ class BookingDetailsDialog extends ConsumerWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.authSecondary],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.primary.withValues(alpha: 0.7),
+                ],
               ),
-              borderRadius: BorderRadius.all(Radius.circular(12)),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
             ),
             child: const Icon(Icons.receipt_long, color: Colors.white, size: 24),
           ),
@@ -370,11 +375,16 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.all(6),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.authSecondary],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+              ],
             ),
-            borderRadius: BorderRadius.all(Radius.circular(8)),
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
           ),
           child: Icon(icon, color: Colors.white, size: 18),
         ),

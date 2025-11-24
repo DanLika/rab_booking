@@ -151,9 +151,14 @@ class _StripeConnectSetupScreenState
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/stripe'),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColors.primary, AppColors.authSecondary],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primary,
+              theme.colorScheme.primary.withValues(alpha: 0.7),
+            ],
           ),
         ),
         child: _isLoading

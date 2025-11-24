@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/property_model.dart';
@@ -137,9 +136,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 ),
               ],
               flexibleSpace: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.authSecondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primary.withValues(alpha: 0.7),
+                    ],
                   ),
                 ),
               ),
@@ -151,31 +155,31 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               width: 320,
               child: Container(
                 decoration: BoxDecoration(
-                  // Horizontal gradient (right → left) with 5-color stops
+                  // 5-color smooth gradient (Right → Left) - topRight → bottomLeft
                   gradient: isDark
-                      ? LinearGradient(
-                          begin: Alignment.centerRight,
-                          end: Alignment.centerLeft,
+                      ? const LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
                           colors: [
-                            theme.colorScheme.mediumDarkGray,
-                            theme.colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
-                            theme.colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
-                            theme.colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
-                            theme.colorScheme.veryDarkGray,
+                            Color(0xFF1A1A1A), // veryDarkGray
+                            Color(0xFF1F1F1F),
+                            Color(0xFF242424),
+                            Color(0xFF292929),
+                            Color(0xFF2D2D2D), // mediumDarkGray
                           ],
-                          stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                          stops: [0.0, 0.125, 0.25, 0.375, 0.5],
                         )
-                      : LinearGradient(
-                          begin: Alignment.centerRight,
-                          end: Alignment.centerLeft,
+                      : const LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
                           colors: [
-                            Colors.white,
-                            Colors.white.withAlpha((0.95 * 255).toInt()),
-                            theme.colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
-                            theme.colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
-                            theme.colorScheme.veryLightGray,
+                            Color(0xFFE0E0E0), // Darker grey
+                            Color(0xFFE5E5E5),
+                            Color(0xFFEAEAEA),
+                            Color(0xFFF0F0F0),
+                            Color(0xFFF5F5F5), // Light grey
                           ],
-                          stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                          stops: [0.0, 0.125, 0.25, 0.375, 0.5],
                         ),
                 ),
                 child: Builder(
@@ -195,20 +199,20 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             end: Alignment.bottomRight,
             colors: isDark
                 ? [
-                    theme.colorScheme.veryDarkGray,
-                    theme.colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
-                    theme.colorScheme.mediumDarkGray.withAlpha((0.7 * 255).toInt()),
-                    theme.colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
-                    theme.colorScheme.mediumDarkGray,
+                    const Color(0xFF1A1A1A), // veryDarkGray
+                    const Color(0xFF1F1F1F),
+                    const Color(0xFF242424),
+                    const Color(0xFF292929),
+                    const Color(0xFF2D2D2D), // mediumDarkGray
                   ]
                 : [
-                    theme.colorScheme.veryLightGray,
-                    theme.colorScheme.veryLightGray.withAlpha((0.85 * 255).toInt()),
-                    Colors.white.withAlpha((0.7 * 255).toInt()),
-                    Colors.white.withAlpha((0.85 * 255).toInt()),
-                    Colors.white,
+                    const Color(0xFFE0E0E0), // Darker grey
+                    const Color(0xFFE5E5E5),
+                    const Color(0xFFEAEAEA),
+                    const Color(0xFFF0F0F0),
+                    const Color(0xFFF5F5F5), // Light grey
                   ],
-            stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+            stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
           ),
         ),
         child: isDesktop
@@ -230,25 +234,31 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         Container(
           width: 320,
           decoration: BoxDecoration(
-            // TIP 1: Simple diagonal gradient (2 colors, 2 stops) - topRight → bottomLeft
+            // 5-color smooth gradient (Right → Left) - topRight → bottomLeft
             gradient: isDark
-                ? LinearGradient(
+                ? const LinearGradient(
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
                     colors: [
-                      theme.colorScheme.veryDarkGray, // #1A1A1A
-                      theme.colorScheme.mediumDarkGray, // #2D2D2D
+                      Color(0xFF1A1A1A), // veryDarkGray
+                      Color(0xFF1F1F1F),
+                      Color(0xFF242424),
+                      Color(0xFF292929),
+                      Color(0xFF2D2D2D), // mediumDarkGray
                     ],
-                    stops: const [0.0, 0.3],
+                    stops: [0.0, 0.125, 0.25, 0.375, 0.5],
                   )
-                : LinearGradient(
+                : const LinearGradient(
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
                     colors: [
-                      const Color(0xFFF5F5F5), // Light grey (F5F5F5)
-                      Colors.white, // #FFFFFF
+                      Color(0xFFE0E0E0), // Darker grey
+                      Color(0xFFE5E5E5),
+                      Color(0xFFEAEAEA),
+                      Color(0xFFF0F0F0),
+                      Color(0xFFF5F5F5), // Light grey
                     ],
-                    stops: const [0.0, 0.3],
+                    stops: [0.0, 0.125, 0.25, 0.375, 0.5],
                   ),
             border: Border(
               left: BorderSide(
@@ -970,8 +980,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primary, AppColors.authSecondary],
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withValues(alpha: 0.7),
+                      ],
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),

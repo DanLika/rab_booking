@@ -26,29 +26,29 @@ class OwnerAppDrawer extends ConsumerWidget {
         decoration: BoxDecoration(
           // Diagonal gradient (top-left → bottom-right) with 5-color stops
           gradient: isDarkMode
-              ? LinearGradient(
+              ? const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    theme.colorScheme.mediumDarkGray,
-                    theme.colorScheme.mediumDarkGray.withAlpha((0.85 * 255).toInt()),
-                    theme.colorScheme.veryDarkGray.withAlpha((0.7 * 255).toInt()),
-                    theme.colorScheme.veryDarkGray.withAlpha((0.85 * 255).toInt()),
-                    theme.colorScheme.veryDarkGray,
+                    Color(0xFF1A1A1A), // veryDarkGray
+                    Color(0xFF1F1F1F),
+                    Color(0xFF242424),
+                    Color(0xFF292929),
+                    Color(0xFF2D2D2D), // mediumDarkGray
                   ],
-                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                  stops: [0.0, 0.125, 0.25, 0.375, 0.5],
                 )
-              : LinearGradient(
+              : const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.white,
-                    Colors.white.withAlpha((0.95 * 255).toInt()),
-                    theme.colorScheme.veryLightGray.withAlpha((0.5 * 255).toInt()),
-                    theme.colorScheme.veryLightGray.withAlpha((0.75 * 255).toInt()),
-                    theme.colorScheme.veryLightGray,
+                    Color(0xFFE0E0E0), // Darker grey
+                    Color(0xFFE5E5E5),
+                    Color(0xFFEAEAEA),
+                    Color(0xFFF0F0F0),
+                    Color(0xFFF5F5F5), // Light grey
                   ],
-                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                  stops: [0.0, 0.125, 0.25, 0.375, 0.5],
                 ),
         ),
         child: ListView(
@@ -247,11 +247,14 @@ class OwnerAppDrawer extends ConsumerWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [theme.colorScheme.brandPurple, theme.colorScheme.brandBlue],
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withValues(alpha: 0.7),
+          ],
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.brandPurple.withAlpha((0.3 * 255).toInt()),
+            color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),

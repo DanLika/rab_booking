@@ -64,9 +64,6 @@ class CalendarTopToolbar extends StatelessWidget {
       padding: EdgeInsets.only(left: isCompact ? 4 : 16),
       child: Row(
         children: [
-          // Spacer - push month selector to center
-          const Spacer(),
-
           // Previous period - LEFT of month selector
           IconButton(
             icon: const Icon(Icons.chevron_left),
@@ -136,8 +133,8 @@ class CalendarTopToolbar extends StatelessWidget {
             padding: EdgeInsets.zero,
           ),
 
-          // Spacer - balance centering
-          const Spacer(),
+          // Spacer - push action buttons to the right
+          const Spacer(flex: 2),
 
           // Action buttons - FIXED OVERFLOW
           if (isCompact)

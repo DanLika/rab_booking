@@ -67,18 +67,34 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     return Scaffold(
       body: AuthBackground(
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width < 400 ? 16 : 24,
-                vertical: 24,
-              ),
-              child: Center(
-                child: GlassCard(
-                  child: _emailSent ? _buildSuccessView() : _buildFormView(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Center(
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: MediaQuery.of(context).size.width < 400 ? 16 : 24,
+                              vertical: 24,
+                            ),
+                            child: GlassCard(
+                              child: _emailSent ? _buildSuccessView() : _buildFormView(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),

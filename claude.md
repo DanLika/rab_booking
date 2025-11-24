@@ -4,10 +4,293 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🎨 GRADIENT STANDARDIZATION - Purple-Fade Pattern (THEME-AWARE)
+
+**Datum: 2025-11-24**
+**Status: ✅ COMPLETED - All gradients standardized to theme-aware purple-fade pattern**
+**Commits:**
+- `f524445` - refactor: standardize gradients to theme-aware purple-fade pattern
+- `7d075d8` - refactor: standardize gradients in calendar dialogs and buttons
+
+### 📋 Overview
+
+**KRITIČNO**: Svi gradijenti u aplikaciji su standardizovani na **theme-aware purple-fade pattern**. Stari gradijenti koji su koristili `AppColors.primary` + `AppColors.authSecondary` ili hardcoded boje su **ZAMENJENI** i **NE SMU** biti vraćeni.
+
+**Novi Standard:**
+```dart
+// ✅ CORRECT - Theme-aware purple-fade gradient
+final theme = Theme.of(context);
+Container(
+  decoration: BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        theme.colorScheme.primary,
+        theme.colorScheme.primary.withValues(alpha: 0.7),
+      ],
+    ),
+  ),
+)
+```
+
+**StariPattern (DEPRECATED - NE KORISTITI):**
+```dart
+// ❌ WRONG - Old pattern with AppColors
+gradient: LinearGradient(
+  colors: [AppColors.primary, AppColors.authSecondary],
+)
+
+// ❌ WRONG - Hardcoded colors
+gradient: LinearGradient(
+  colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
+)
+```
+
+### 🔧 Key Changes
+
+#### **Phase 1: Main Screens & Components (14 files)**
+
+**Commit:** `f524445`
+
+**Modified Files:**
+1. `lib/shared/widgets/common_app_bar.dart` - App bar gradient
+2. `lib/features/owner_dashboard/presentation/widgets/owner_app_drawer.dart` - Drawer header gradient
+3. `lib/features/owner_dashboard/presentation/widgets/booking_details_dialog.dart` - 2 gradient locations
+4. `lib/features/owner_dashboard/presentation/screens/ical_sync/ical_sync_settings_screen.dart` - Body gradient
+5. `lib/features/owner_dashboard/presentation/screens/ical_sync/ical_export_list_screen.dart` - Body gradient
+6. `lib/features/owner_dashboard/presentation/screens/ical_sync/ical_export_screen.dart` - Body gradient
+7. `lib/features/owner_dashboard/presentation/screens/ical_sync/ical_guide_screen.dart` - Body gradient
+8. `lib/features/owner_dashboard/presentation/screens/unit_wizard/unit_form_screen.dart` - Body gradient
+9. `lib/features/owner_dashboard/presentation/screens/property_form_screen.dart` - Body gradient
+10. `lib/features/owner_dashboard/presentation/screens/unit_pricing_screen.dart` - Body gradient
+11. `lib/features/owner_dashboard/presentation/widgets/calendar/calendar_top_toolbar.dart` - Toolbar gradient
+12. `lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart` - Calendar gradient
+13. `lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart` - AppBar + info card (2 locations)
+14. `lib/features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart` - Body gradient
+
+**Example - unified_unit_hub_screen.dart (Line 139-150):**
+```dart
+// AppBar flexibleSpace
+flexibleSpace: Container(
+  decoration: BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        theme.colorScheme.primary,
+        theme.colorScheme.primary.withValues(alpha: 0.7),
+      ],
+    ),
+  ),
+),
+```
+
+**Example - stripe_connect_setup_screen.dart (Line 153-163):**
+```dart
+// Full screen body gradient
+body: Container(
+  decoration: BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        theme.colorScheme.primary,
+        theme.colorScheme.primary.withValues(alpha: 0.7),
+      ],
+    ),
+  ),
+  child: _isLoading ? ... : ...
+)
+```
+
+#### **Phase 2: Calendar Dialogs & Buttons (6 files)**
+
+**Commit:** `7d075d8`
+
+**Modified Files:**
+1. `lib/features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart` - FAB gradient wrapper
+2. `lib/features/owner_dashboard/presentation/widgets/edit_booking_dialog.dart` - Save button gradient
+3. `lib/features/owner_dashboard/presentation/widgets/booking_create_dialog.dart` - Create button gradient
+4. `lib/features/owner_dashboard/presentation/widgets/calendar/calendar_filters_panel.dart` - Dialog header gradient
+5. `lib/features/owner_dashboard/presentation/widgets/calendar/unit_future_bookings_dialog.dart` - Dialog header gradient
+6. `lib/features/owner_dashboard/presentation/widgets/calendar/calendar_search_dialog.dart` - Dialog header gradient
+
+**Example - owner_timeline_calendar_screen.dart (Line 187-209):**
+```dart
+// FloatingActionButton gradient wrapper
+final theme = Theme.of(context);
+return Container(
+  decoration: BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        theme.colorScheme.primary,
+        theme.colorScheme.primary.withValues(alpha: 0.7),
+      ],
+    ),
+    borderRadius: const BorderRadius.all(Radius.circular(16)),
+  ),
+  child: FloatingActionButton(
+    onPressed: _showCreateBookingDialog,
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    child: const Icon(Icons.add, color: Colors.white),
+  ),
+);
+```
+
+**Example - edit_booking_dialog.dart (Line 224-259):**
+```dart
+// Button gradient with Builder for theme access
+Builder(
+  builder: (context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withValues(alpha: 0.7),
+          ],
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
+      ),
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _saveChanges,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          shadowColor: Colors.transparent,
+        ),
+        child: _isLoading ? CircularProgressIndicator(...) : const Text('Save Changes'),
+      ),
+    );
+  },
+),
+```
+
+**Example - calendar_search_dialog.dart (Line 116-144):**
+```dart
+// Dialog header gradient
+@override
+Widget build(BuildContext context) {
+  final theme = Theme.of(context);
+  return Dialog(
+    child: Container(
+      child: Column(
+        children: [
+          // Header with gradient
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.primary.withValues(alpha: 0.7),
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(4),
+              ),
+            ),
+            child: Row(...),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+```
+
+### 🎯 Pattern Details
+
+**Gradient Configuration:**
+- **Direction**: `begin: Alignment.topLeft, end: Alignment.bottomRight` (diagonal)
+- **Colors**:
+  - Start: `theme.colorScheme.primary` (full opacity purple)
+  - End: `theme.colorScheme.primary.withValues(alpha: 0.7)` (70% opacity purple fade)
+- **Theme-Aware**: Uses `Theme.of(context)` for automatic light/dark mode adaptation
+
+**When to Use Builder Widget:**
+If the widget tree doesn't have direct access to `BuildContext` for theme (e.g., in `actions` list of dialogs), wrap the gradient container in a `Builder`:
+```dart
+Builder(
+  builder: (context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(...),
+      ),
+      child: ElevatedButton(...),
+    );
+  },
+)
+```
+
+### ✅ Rezultat
+
+**Konzistentnost:**
+- ✅ Svi gradijenti koriste isti pattern: `primary` → `primary.withValues(alpha: 0.7)`
+- ✅ Sve direkcije su dijagonalne: `topLeft → bottomRight`
+- ✅ Svi gradijenti su theme-aware (adaptiraju se na light/dark mode)
+- ✅ 20 fajlova ažurirano across 2 commits
+
+**Vizuelni Kvalitet:**
+- ✅ Konzistentan purple-fade efekat kroz cijelu aplikaciju
+- ✅ Smooth transitions zbog alpha blending-a
+- ✅ Proper transparency na kraju gradijenta (70% opacity)
+
+**Technical:**
+- ✅ Koristi `theme.colorScheme.primary` umesto hardcoded boja
+- ✅ Koristi `.withValues(alpha: 0.7)` umesto deprecated `.withOpacity()`
+- ✅ Nije potrebno importovati `AppColors` ili custom extension-e
+
+### ⚠️ KRITIČNO - Important Notes for Future Sessions
+
+**DO NOT:**
+- ❌ **NE VRAĆAJ** stare gradijente sa `AppColors.primary` + `AppColors.authSecondary`
+- ❌ **NE KORISTI** hardcoded boje kao `Color(0xFF6B4CE6)` ili `Color(0xFF4A90E2)`
+- ❌ **NE KORISTI** vertikalne gradijente (`begin: Alignment.topCenter, end: Alignment.bottomCenter`)
+- ❌ **NE KORISTI** `.withOpacity()` - koristi `.withValues(alpha: X)` umesto toga
+- ❌ **NE PRESKAČI** `begin` i `end` parametre - mora biti dijagonalno!
+
+**ALWAYS:**
+- ✅ **UVEK KORISTI** `theme.colorScheme.primary` za boje
+- ✅ **UVEK KORISTI** dijagonalni pravac: `begin: Alignment.topLeft, end: Alignment.bottomRight`
+- ✅ **UVEK KORISTI** alpha fade: `primary.withValues(alpha: 0.7)` za kraj gradijenta
+- ✅ **UVEK DOBIJ** theme sa `Theme.of(context)` na početku build metode
+- ✅ **KORISTI Builder** widget ako nemaš pristup BuildContext-u za theme
+
+**IF USER REPORTS:**
+- "Gradijent ne izgleda dobro" → Proveri da koristi theme-aware pattern
+- "Boje ne odgovaraju dizajnu" → Proveri da je dijagonalni pravac (topLeft→bottomRight)
+- "Gradijent je preteško tamno/svetlo" → Proveri alpha vrednost (mora biti 0.7)
+- "Compile error: undefined 'theme'" → Dodaj `final theme = Theme.of(context);` ili koristi Builder
+
+**IF YOU NEED TO ADD NEW GRADIENT:**
+1. Kopiraj pattern gore (sa `theme.colorScheme.primary` + `alpha: 0.7`)
+2. Koristi dijagonalni pravac (`topLeft → bottomRight`)
+3. Dodaj `final theme = Theme.of(context);` na početku build metode ili koristi Builder
+
+**Related Sections:**
+- See "Unit Hub & Pricing UI Consistency Improvements" below for additional gradient context
+- This standardization **supersedes** old gradient patterns mentioned in other sections
+
+---
+
 ## 🎨 Unit Hub & Pricing UI Consistency Improvements
 
 **Datum: 2025-11-23**
 **Status: ✅ COMPLETED - UI consistency enhanced across Unit Hub and pricing screens**
+
+> ⚠️ **UPDATE (2025-11-24):** The gradient patterns described in this section have been **SUPERSEDED** by the new theme-aware gradient standardization. All gradients now use `theme.colorScheme.primary` with alpha fade (70% opacity) instead of the old Purple→Blue pattern. See "GRADIENT STANDARDIZATION - Purple-Fade Pattern" section at the top for current implementation.
 
 ### 📋 Overview
 
@@ -1087,6 +1370,8 @@ child: Row(
 
 **Datum: 2025-11-22**
 **Status: ✅ FIXED - Purple/Blue gradient restored**
+
+> ⚠️ **UPDATE (2025-11-24):** The gradient pattern described in this section has been **SUPERSEDED** by the new theme-aware gradient standardization. The drawer now uses `theme.colorScheme.primary` with alpha fade instead of `brandPurple` + `brandBlue`. See "GRADIENT STANDARDIZATION - Purple-Fade Pattern" section at the top for current implementation.
 
 ### 📋 Problem
 
@@ -6832,6 +7117,8 @@ lib/features/owner_dashboard/presentation/screens/profile_screen.dart
 
 **Datum: 2025-11-16**
 **Status: ✅ STABILAN - Kompletno refaktorisan sa Master-Detail pattern-om**
+
+> ⚠️ **UPDATE (2025-11-24):** All iCal screen gradients have been **UPDATED** to use the new theme-aware gradient standardization (`theme.colorScheme.primary` with alpha fade). Old references to `AppColors.primary` + `AppColors.authSecondary` in this section are now obsolete. See "GRADIENT STANDARDIZATION - Purple-Fade Pattern" section at the top for current implementation.
 
 #### 📋 Svrha
 iCal Integration omogućava owner-ima da:

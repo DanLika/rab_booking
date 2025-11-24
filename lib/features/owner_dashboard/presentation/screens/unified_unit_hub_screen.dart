@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/property_model.dart';
@@ -705,7 +706,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             color: Colors.transparent,
             border: Border(
               bottom: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.2),
+                color: context.borderColor.withOpacity(0.5),
               ),
             ),
           ),

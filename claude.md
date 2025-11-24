@@ -238,6 +238,303 @@ body: Container(
 
 ---
 
+## 🎨 Timeline Calendar - UI Improvements & Layout Fixes
+
+**Datum: 2025-11-24**
+**Status: ✅ COMPLETED - Toolbar transparency, navigation layout, and overflow fixes**
+
+### 📋 Overview
+
+Četiri ključne UI izmjene na timeline calendar screen-u za bolju vizuelnu konzistentnost i usability:
+- Toolbar transparent pozadina (propušta parent gradient)
+- Timeline grid transparent containers (future cells imaju istu boju kao past cells)
+- Navigacijske strelice repozicionirane oko month selektora
+- Toolbar breakpoint povećan da spriječi overflow
+
+---
+
+### 🔧 Key Changes
+
+**1. Calendar Toolbar - Transparent Background**
+```
+lib/features/owner_dashboard/presentation/widgets/calendar/calendar_top_toolbar.dart
+```
+
+**Line 61:**
+```dart
+// PRIJE:
+color: theme.cardColor,  // Black in dark mode - blokiralo je gradient
+
+// POSLIJE:
+color: Colors.transparent,  // Transparent to show parent gradient ✅
+```
+
+**Rezultat:** Toolbar sada propušta dijagonalni gradient iz parent container-a!
+
+---
+
+**2. Timeline Grid - Transparent Future Cells**
+```
+lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart
+```
+
+**Lines 760-774 - Grid wrapper:**
+```dart
+Widget _buildTimelineGrid(...) {
+  return Container(
+    color: Colors.transparent, // Transparent to show parent gradient
+    child: Column(...),
+  );
+}
+```
+
+**Line 797 - Unit row:**
+```dart
+return Container(
+  height: unitRowHeight,
+  decoration: BoxDecoration(
+    color: Colors.transparent, // Transparent to show parent gradient
+    border: Border(...),
+  ),
+);
+```
+
+**Problem:** Future cells su imale black pozadinu umjesto da propuštaju gradient
+**Rješenje:** Transparent containers na oba mjesta (grid wrapper + unit rows)
+
+---
+
+**3. Navigation Layout - Arrows Around Month Selector**
+```
+lib/features/owner_dashboard/presentation/widgets/calendar/calendar_top_toolbar.dart
+```
+
+**Lines 68-140 - Repositioned navigation:**
+```dart
+// PRIJE (❌):
+// [Month Selector] [Previous] [Next] [Spacer] [Action buttons →]
+
+// POSLIJE (✅):
+child: Row(
+  children: [
+    const Spacer(),                    // ← Push selector to center
+
+    IconButton(                        // ← Previous BEFORE selector
+      icon: const Icon(Icons.chevron_left),
+      onPressed: onPreviousPeriod,
+    ),
+
+    InkWell(                           // ← Month selector (centered)
+      onTap: onDatePickerTap,
+      child: Container(...),
+    ),
+
+    IconButton(                        // ← Next AFTER selector
+      icon: const Icon(Icons.chevron_right),
+      onPressed: onNextPeriod,
+    ),
+
+    const Spacer(),                    // ← Balance centering
+    // Action buttons (right-aligned)
+  ],
+)
+```
+
+**Rezultat:**
+- Month selector PERFECTLY CENTERED (balansiran sa 2 Spacer-a)
+- Navigation arrows flank month selector (left & right)
+- Action buttons ostaju right-aligned
+
+---
+
+**4. Toolbar Breakpoint - Prevent Overflow**
+```
+lib/features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart
+```
+
+**Line 133:**
+```dart
+// PRIJE (❌):
+isCompact: MediaQuery.of(context).size.width < 900,  // Overflow at 930px!
+
+// POSLIJE (✅):
+isCompact: MediaQuery.of(context).size.width < 1100, // Fixed!
+```
+
+**Problem:** "RenderFlex overflowed by 24 pixels on the right" na 930px screen width
+**Rješenje:** Povećan breakpoint sa 900px → 1100px
+
+---
+
+### ✅ Rezultat
+
+**Vizuelna Konzistentnost:**
+- ✅ Toolbar propušta parent gradient (vidi se dijagonalni gradient)
+- ✅ Future cells imaju istu boju kao past cells (transparent)
+- ✅ Navigation arrows u logičnom rasporedu (oko month selektora)
+- ✅ Nema overflow errors na širim ekranima
+
+**UX Poboljšanja:**
+- ✅ Bolji vizualni flow - gradient teče kroz cijeli screen
+- ✅ Intuitivnija navigacija - strelice oko month selektora
+- ✅ Responsive design - prilagođava se svim screen sizes
+
+---
+
+### ⚠️ Important Notes for Future Sessions
+
+**1. NE VRAĆAJ toolbar background na theme.cardColor:**
+- Mora ostati `Colors.transparent` da se vidi gradient
+- User request - eksplicitno traženo!
+
+**2. NE VRAĆAJ grid/row colors na theme boje:**
+- Grid wrapper i unit rows MORAJU biti transparent
+- Ovo omogućava da se vidi parent gradient
+
+**3. NE MIJENJAJ navigation layout:**
+- 2x Spacer pattern je namjeran (centering)
+- Previous arrow MORA biti PRIJE month selektora
+- Next arrow MORA biti POSLIJE month selektora
+
+**4. NE SMANJUJ breakpoint ispod 1100px:**
+- 900px je causing overflow
+- 1100px je testiran i radi bez overflow-a
+
+**IF USER REPORTS:**
+- "Toolbar is black" → Check that background is `Colors.transparent`
+- "Future cells are black" → Check that containers are transparent
+- "Navigation arrows wrong order" → Check Spacer placement
+- "Toolbar overflows" → Check breakpoint is >= 1100px
+
+---
+
+**Commit:** `ce5e979` - fix: timeline calendar UI improvements
+
+---
+
+## 🎨 UI Refinements - Cards, Buttons, and Layout Consistency
+
+**Datum: 2025-11-24**
+**Status: ✅ COMPLETED - Minor UI refinements for cleaner look**
+
+### 📋 Overview
+
+Tri brze izmjene za uniformniji i čistiji UI:
+- Uklanjanje card shadows iz bookings screen-a
+- Fixed-width layout za price input u pricing screen-u
+- Standardizacija button styling-a u price calendar-u
+
+---
+
+### 🔧 Changes
+
+**1. Owner Bookings Screen - Remove Card Shadows**
+```
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart
+```
+
+**Lines 329 & 818:**
+```dart
+// PRIJE:
+Card(
+  elevation: 2,  // or 0.5
+  shadowColor: theme.colorScheme.primary.withAlpha(...),
+)
+
+// POSLIJE:
+Card(
+  elevation: 0,  // No shadow - cleaner look
+  shape: RoundedRectangleBorder(...), // Border only
+)
+```
+
+**Razlog:** Shadows dodavaju vizualni clutter - border je dovoljan
+
+---
+
+**2. Unit Pricing Screen - Fixed-Width Layout**
+```
+lib/features/owner_dashboard/presentation/screens/unit_pricing_screen.dart
+```
+
+**Lines 532-544:**
+```dart
+// PRIJE (❌):
+Row(
+  children: [
+    Expanded(flex: 2, child: priceInput),      // Unpredictable width
+    const SizedBox(width: 16),
+    Expanded(child: saveButton),               // Unpredictable width
+  ],
+)
+
+// POSLIJE (✅):
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    SizedBox(width: 100, child: priceInput),   // Fixed 100px
+    const SizedBox(width: 16),
+    SizedBox(width: 90, child: saveButton),    // Fixed 90px (80-100px constraint)
+  ],
+)
+```
+
+**Razlog:** Fixed widths daju konzistentniji layout, umjesto Expanded fleksibilnosti
+
+---
+
+**3. Price List Calendar Widget - Button Styling Consistency**
+```
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart
+```
+
+**Lines 167-230:**
+```dart
+// PRIJE:
+ElevatedButton(
+  style: ElevatedButton.styleFrom(
+    padding: EdgeInsets.symmetric(vertical: 16),  // Different!
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),    // Different!
+    ),
+  ),
+)
+
+// POSLIJE:
+ElevatedButton(
+  style: ElevatedButton.styleFrom(
+    padding: EdgeInsets.symmetric(vertical: 15),  // Same as Save button
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10),    // Same as Save button
+    ),
+  ),
+)
+```
+
+**Promjene:**
+- Padding: 16 → 15 (konzistentno sa Save button-om)
+- BorderRadius: 16 → 10 (konzistentno sa Save button-om)
+- 4 button-a updated (2x "Postavi cijenu", 2x "Dostupnost")
+
+---
+
+### ✅ Rezultat
+
+**Cleaner UI:**
+- ✅ Manje vizualnog clutter-a (no shadows)
+- ✅ Predvidljiviji layout (fixed widths)
+- ✅ Konzistentno button styling (padding & radius)
+
+**Maintenance:**
+- ✅ Lakše za održavanje (manje varijacija)
+- ✅ Unificirane vrijednosti kroz pricing screens
+
+---
+
+**Commit:** `0770670` - refine: improve UI consistency across pricing and bookings screens
+
+---
+
 ## 🎨 Owner Dashboard - Diagonal Gradients & UI Consistency
 
 **Datum: 2025-11-23**

@@ -344,7 +344,7 @@ class DashboardOverviewTab extends ConsumerWidget {
           icon: Icons.villa_rounded,
           gradient: _createThemeGradient(
             context,
-            _getPurpleShade(context, 6), // Lightest purple (desaturated)
+            _getPurpleShade(context, 2), // Dark purple (darker shade)
           ),
           isMobile: isMobile,
           isTablet: isTablet,

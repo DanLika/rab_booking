@@ -285,6 +285,324 @@ Builder(
 
 ---
 
+## 🎨 Widget Advanced Settings - Cjenovnik Styling Applied
+
+**Datum: 2025-11-24**
+**Status: ✅ COMPLETED - Advanced Settings kartice sada imaju identičan styling kao Cjenovnik tab**
+**Commit:** `a88fd99` - refactor: apply Cjenovnik styling to Advanced Settings and fix widget tab layouts
+
+### 📋 Overview
+
+Primenjen **IDENTIČAN styling** iz Cjenovnik tab-a na sve tri kartice u Advanced Settings screen-u (Email Verification, Tax/Legal Disclaimer, iCal Export). Takođe reorganizovan layout u Widget Settings screen-u za konzistentnost.
+
+---
+
+### ✅ Cjenovnik Styling - Šta Je Primenjeno
+
+**3 Kartice u Advanced Settings:**
+1. **Email Verification Card** (`email_verification_card.dart`)
+2. **Tax & Legal Disclaimer Card** (`tax_legal_disclaimer_card.dart`)
+3. **iCal Export Card** (`ical_export_card.dart`)
+
+**Design Elements:**
+
+**1. 5-Color Diagonal Gradient (topRight → bottomLeft)**
+```dart
+gradient: LinearGradient(
+  begin: Alignment.topRight,
+  end: Alignment.bottomLeft,
+  colors: isDark
+    ? const [
+        Color(0xFF1A1A1A), // veryDarkGray
+        Color(0xFF1F1F1F),
+        Color(0xFF242424),
+        Color(0xFF292929),
+        Color(0xFF2D2D2D), // mediumDarkGray
+      ]
+    : const [
+        Color(0xFFF0F0F0), // Lighter grey
+        Color(0xFFF2F2F2),
+        Color(0xFFF5F5F5),
+        Color(0xFFF8F8F8),
+        Color(0xFFFAFAFA), // Very light grey
+      ],
+  stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+)
+```
+
+**2. Container Structure**
+```dart
+Container(
+  decoration: BoxDecoration(
+    borderRadius: BorderRadius.circular(24),
+    boxShadow: AppShadows.getElevation(1, isDark: isDark),
+  ),
+  child: ClipRRect(
+    borderRadius: BorderRadius.circular(24),
+    child: Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(...),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: context.borderColor.withOpacity(0.4),
+          width: 1.5,
+        ),
+      ),
+      child: ExpansionTile(...),
+    ),
+  ),
+)
+```
+
+**3. Minimalist Icons**
+```dart
+Widget _buildLeadingIcon(ThemeData theme) {
+  return Container(
+    padding: const EdgeInsets.all(8),
+    decoration: BoxDecoration(
+      color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Icon(
+      Icons.verified_user, // or gavel, calendar_today
+      color: theme.colorScheme.primary,
+      size: 18,
+    ),
+  );
+}
+```
+
+**4. ExpansionTile Styling**
+- `initiallyExpanded: enabled` (otvoren ako je enabled)
+- Title: `theme.textTheme.titleMedium` sa `fontWeight.bold`
+- Subtitle: `theme.textTheme.bodySmall` sa conditional color (success ili textColorSecondary)
+
+**5. Responsive Padding**
+```dart
+padding: EdgeInsets.all(isMobile ? 16 : 20)
+```
+
+---
+
+### 🔧 Widget Settings Screen - Layout Fixes
+
+**File:** `lib/features/owner_dashboard/presentation/screens/widget_settings_screen.dart`
+
+**Problem 1 - Overflow Text:**
+- "Rok za otkazivanje: X sati prije prijave" overflow-ovao na malim ekranima
+- **Fix:** Wrap text sa `Expanded` (linija 1357-1365)
+
+**Problem 2 - Behavior Switch Cards Layout:**
+- "Zahtijeva Odobrenje" i "Dozvolite Otkazivanje" nisu imali konzistentan layout sa "Bankovna Uplata"
+
+**Stari Layout (_buildBehaviorSwitchCard):**
+```dart
+Column(
+  children: [
+    Row([Icon, Spacer, Switch]),
+    SizedBox(height: 12),
+    Text(label),
+    Text(subtitle),
+  ],
+)
+```
+
+**Novi Layout (kao ExpansionTile):**
+```dart
+Row(
+  children: [
+    Icon(icon, size: 24),              // Leading
+    SizedBox(width: 12),
+    Expanded(                           // Middle
+      child: Column([
+        Text(label, fontWeight: w600),
+        Text(subtitle),
+      ]),
+    ),
+    SizedBox(width: 8),
+    Switch(value, onChanged),          // Trailing
+  ],
+)
+```
+
+**Rezultat:**
+- ✅ Ikona, naslov i subtitle u istom redu
+- ✅ Switch na kraju (trailing)
+- ✅ Konzistentno sa "Bankovna Uplata" ExpansionTile pattern-om
+
+---
+
+### 📁 Modified Files (8 fajlova)
+
+**Advanced Settings Kartice:**
+1. `email_verification_card.dart` (136 linija promjena)
+   - Dodato: gradient, shadows, minimalist icon, ExpansionTile
+   - Dodato: `isMobile` parameter, responsive padding
+
+2. `tax_legal_disclaimer_card.dart` (167 linija promjena)
+   - Dodato: gradient, shadows, minimalist icon, ExpansionTile
+   - Fixed: `_buildTextSourceSection` sada prima `context` parametar (linija 106)
+
+3. `ical_export_card.dart` (164 linije promjena)
+   - Dodato: gradient, shadows, minimalist icon, ExpansionTile
+   - Dodato: "Test iCal Export" button (navigira na iCal Export screen)
+
+**Main Screen:**
+4. `widget_advanced_settings_screen.dart` (137 linija promjena)
+   - Dodato: `isMobile` parametar svim karticama (linija 234, 264, 284)
+   - Responsive padding: `isMobile ? 16 : 24`
+
+**Widget Settings Screen:**
+5. `widget_settings_screen.dart` (324 linije promjena)
+   - Fixed: `_buildBehaviorSwitchCard` layout (linija 1443-1522)
+   - Fixed: "Rok za otkazivanje" text overflow (linija 1357-1365)
+
+**Theme-Aware Loading Indicators:**
+6. `analytics_screen.dart` (67 linija promjena)
+7. `dashboard_overview_tab.dart` (24 linije promjena)
+8. `owner_bookings_screen.dart` (18 linija promjena)
+
+**Ukupno:** +644 insertions, -393 deletions
+
+---
+
+### ⚠️ KRITIČNO - Important Notes for Future Sessions
+
+**1. IDENTIČAN STYLING SA CJENOVNIKOM:**
+- Advanced Settings kartice MORAJU izgledati IDENTIČNO kao Cjenovnik sekcije
+- 5-color gradient, BorderRadius 24, border width 1.5, AppShadows elevation 1
+- **NE MIJENJAJ** styling bez eksplicitnog user zahtjeva!
+
+**2. MINIMALIST ICONS:**
+- Padding 8, primary color 12% alpha background, size 18, borderRadius 8
+- **NE POVEĆAVAJ** icon size ili padding!
+
+**3. RESPONSIVE PADDING:**
+- `isMobile ? 16 : 20` za kartice
+- **NE KORISTI** hardcoded padding bez isMobile check-a!
+
+**4. BEHAVIOR SWITCH CARDS:**
+- Layout pattern: `Icon → Expanded(Column) → Switch`
+- **NE VRAĆAJ** stari layout (Column sa Row + Spacer)!
+
+**5. CONTEXT PARAMETER:**
+- `_buildTextSourceSection(theme, context)` prima 2 parametra
+- **NE ZABORAVI** context parametar (compile error ako fali)!
+
+---
+
+### 🧪 Testing Checklist
+
+```bash
+# 1. Flutter analyze
+flutter analyze lib/features/owner_dashboard/presentation/widgets/advanced_settings/
+flutter analyze lib/features/owner_dashboard/presentation/screens/widget_advanced_settings_screen.dart
+# Očekivano: 0 errors
+
+# 2. Visual test - Advanced Settings
+# - Otvori Unit Hub → Select unit → Tab 4 (Napredne)
+# - Provjeri: Email Verification kartica ima gradient + minimalist icon
+# - Provjeri: Tax/Legal Disclaimer kartica ima gradient + minimalist icon
+# - Provjeri: iCal Export kartica ima gradient + minimalist icon
+# - Sve 3 kartice izgledaju IDENTIČNO kao Cjenovnik sekcije
+
+# 3. Visual test - Widget Settings
+# - Otvori Unit Hub → Select unit → Tab 3 (Widget)
+# - Scroll do "Ponašanje Rezervacije"
+# - Provjeri: "Zahtijeva Odobrenje" ima Icon → (Title, Subtitle) → Switch layout
+# - Provjeri: "Dozvolite Otkazivanje" ima isti layout
+# - Uključi "Dozvolite Otkazivanje"
+# - Provjeri: "Rok za otkazivanje" tekst se wrap-uje na malim ekranima (nema overflow)
+
+# 4. Responsive test
+# - Resize window < 600px (mobile)
+# - Provjeri: Padding je 16px na karticama
+# - Resize window >= 600px (desktop)
+# - Provjeri: Padding je 20px na karticama
+```
+
+---
+
+### 🎯 TL;DR - Najvažnije
+
+1. **ADVANCED SETTINGS = CJENOVNIK STYLING** - Sve 3 kartice identične sa Cjenovnik tab-om!
+2. **5-COLOR GRADIENT** - topRight → bottomLeft, stops [0.0, 0.125, 0.25, 0.375, 0.5]!
+3. **MINIMALIST ICONS** - padding 8, 12% alpha, size 18, borderRadius 8!
+4. **BEHAVIOR SWITCH LAYOUT** - Icon → Expanded(Column) → Switch pattern!
+5. **NO OVERFLOW** - "Rok za otkazivanje" tekst wrap-ovan sa Expanded!
+6. **CONTEXT PARAMETER** - `_buildTextSourceSection` mora primiti context!
+7. **0 ERRORS** - flutter analyze clean!
+
+**Key Stats:**
+- 📏 8 files changed
+- ➕ +644 insertions
+- ➖ -393 deletions
+- ✅ 0 analyzer errors
+- 🎨 100% styling konzistentnost sa Cjenovnikom
+
+---
+
+## 🔄 Unit Hub - Loading Indicator Improvement
+
+**Datum: 2025-11-24**
+**Status: ✅ COMPLETED - Skeleton loader replaced with simple theme-aware spinner**
+**Commit:** `cff108f` - refactor: replace skeleton loader with simple spinner in unit hub
+
+### 📋 Overview
+
+Zamijenjen custom skeleton loader sa jednostavnim CircularProgressIndicator-om za učitavanje jedinica (units) u Unit Hub screen-u. Spinner je sada theme-aware - bijeli u dark mode-u, crni u light mode-u.
+
+### 🔧 Key Changes
+
+**File:** `lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart`
+
+**PRIJE (❌ - custom skeleton):**
+```dart
+loading: () => const Padding(
+  padding: EdgeInsets.all(16.0),
+  child: PropertyListSkeleton(),
+),
+```
+
+**POSLIJE (✅ - simple spinner):**
+```dart
+loading: () => Center(
+  child: CircularProgressIndicator(
+    valueColor: AlwaysStoppedAnimation<Color>(
+      isDark ? Colors.white : Colors.black,
+    ),
+  ),
+),
+```
+
+### ✅ Rezultat
+
+**Loader behavior:**
+- ✅ Dark theme: **Bijeli** spinner (Colors.white)
+- ✅ Light theme: **Crni** spinner (Colors.black)
+- ✅ Centered u available space
+- ✅ Jednostavniji i konzistentniji sa drugim loading indicator-ima
+
+**Cleanup:**
+- ✅ Uklonjen unused import: `skeleton_loader.dart`
+- ✅ PropertyListSkeleton se više ne koristi za unit loading
+
+### ⚠️ Important Notes
+
+**1. NE VRAĆAJ PropertyListSkeleton:**
+- User je eksplicitno tražio jednostavan circular spinner
+- Skeleton je bio previše kompleksan za ovaj use case
+
+**2. Theme-aware colors su OBAVEZNE:**
+- Spinner MORA koristiti `isDark ? Colors.white : Colors.black`
+- Automatski se prilagođava theme mode-u
+
+**3. PropertyListSkeleton JE OK za druge screen-ove:**
+- Skeleton se i dalje koristi u Properties Screen-u (lista nekretnina)
+- SAMO za Unit Hub loading je zamijenjen sa spinner-om
+
+---
+
 ## 🏢 UNIT HUB - CJENOVNIK TAB IS FINALIZED (DO NOT MODIFY!)
 
 **Datum: 2025-11-24**

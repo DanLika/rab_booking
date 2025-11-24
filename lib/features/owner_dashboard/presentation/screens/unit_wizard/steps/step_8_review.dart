@@ -25,14 +25,14 @@ class Step8Review extends ConsumerWidget {
         return Container(
           decoration: BoxDecoration(
             // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
-            // topLeft → bottomRight za body
+            // topRight → bottomLeft za body background (matching section cards)
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
               colors: isDark
                   ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF2D2D2D), // mediumDarkGray
+                      Color(0xFF1A1A1A), // veryDarkGray (darker)
+                      Color(0xFF2D2D2D), // mediumDarkGray (lighter)
                     ]
                   : const [
                       Color(0xFFF5F5F5), // Light grey
@@ -120,8 +120,8 @@ class Step8Review extends ConsumerWidget {
                           end: Alignment.bottomLeft,
                           colors: isDark
                               ? const [
-                                  Color(0xFF1A1A1A), // veryDarkGray
-                                  Color(0xFF2D2D2D), // mediumDarkGray
+                                  Color(0xFF1A1A1A), // veryDarkGray (darker)
+                                  Color(0xFF2D2D2D), // mediumDarkGray (lighter)
                                 ]
                               : const [
                                   Color(0xFFF5F5F5), // Light grey

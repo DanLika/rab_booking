@@ -80,17 +80,17 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
       data: (draft) {
         _loadData(draft);
 
+        // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
+        // topRight → bottomLeft za body background (matching section cards)
         return Container(
           decoration: BoxDecoration(
-            // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
-            // topLeft → bottomRight za body
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
               colors: isDark
                   ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF2D2D2D), // mediumDarkGray
+                      Color(0xFF1A1A1A), // veryDarkGray (darker)
+                      Color(0xFF2D2D2D), // mediumDarkGray (lighter)
                     ]
                   : const [
                       Color(0xFFF5F5F5), // Light grey
@@ -148,8 +148,8 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                           end: Alignment.bottomLeft,
                           colors: isDark
                               ? const [
-                                  Color(0xFF1A1A1A), // veryDarkGray
-                                  Color(0xFF2D2D2D), // mediumDarkGray
+                                  Color(0xFF1A1A1A), // veryDarkGray (darker)
+                                  Color(0xFF2D2D2D), // mediumDarkGray (lighter)
                                 ]
                               : const [
                                   Color(0xFFF5F5F5), // Light grey

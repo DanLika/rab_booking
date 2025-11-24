@@ -297,6 +297,22 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       appBar: AppBar(
         title: Text(widget.unitId == null ? 'Create New Unit' : 'Edit Unit'),
         centerTitle: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF6B4CE6), // Purple 100%
+                Color(0xB36B4CE6), // Purple 70%
+              ],
+            ),
+          ),
+        ),
         actions: [
           // Auto-save indicator
           wizardState.when(

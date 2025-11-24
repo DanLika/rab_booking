@@ -62,17 +62,17 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
       data: (draft) {
         _loadData(draft);
 
+        // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
+        // topRight → bottomLeft za body background (matching section cards)
         return Container(
           decoration: BoxDecoration(
-            // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
-            // topLeft → bottomRight za body
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
               colors: isDark
                   ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF2D2D2D), // mediumDarkGray
+                      Color(0xFF1A1A1A), // veryDarkGray (darker)
+                      Color(0xFF2D2D2D), // mediumDarkGray (lighter)
                     ]
                   : const [
                       Color(0xFFF5F5F5), // Light grey
@@ -130,8 +130,8 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                           end: Alignment.bottomLeft,
                           colors: isDark
                               ? const [
-                                  Color(0xFF1A1A1A), // veryDarkGray
-                                  Color(0xFF2D2D2D), // mediumDarkGray
+                                  Color(0xFF1A1A1A), // veryDarkGray (darker)
+                                  Color(0xFF2D2D2D), // mediumDarkGray (lighter)
                                 ]
                               : const [
                                   Color(0xFFF5F5F5), // Light grey
@@ -250,50 +250,45 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                 ),
                 const SizedBox(height: AppDimensions.spaceL),
 
-                // Seasonal pricing placeholder - centered with max width
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 500),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                // Seasonal pricing placeholder - responsive width
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_month,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Sezonske Cene',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Napredna konfiguracija sezonskih cena biće dostupna nakon kreiranja jedinice.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_month,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Sezonske Cene',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Napredna konfiguracija sezonskih cena biće dostupna nakon kreiranja jedinice.',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    ],
                   ),
                 ),
               ],

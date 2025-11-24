@@ -29,18 +29,18 @@ class _Step4AvailabilityState extends ConsumerState<Step4Availability> {
         return Container(
           decoration: BoxDecoration(
             // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
-            // topLeft → bottomRight za body
+            // topRight → bottomLeft za body background (matching section cards)
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
               colors: isDark
                   ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF2D2D2D), // mediumDarkGray
+                      Color(0xFF2D2D2D), // mediumDarkGray (lighter) - RIGHT
+                      Color(0xFF1A1A1A), // veryDarkGray (darker) - LEFT
                     ]
                   : const [
-                      Color(0xFFF5F5F5), // Light grey
-                      Colors.white,      // white
+                      Colors.white,      // white (lighter) - RIGHT
+                      Color(0xFFF5F5F5), // Light grey (darker) - LEFT
                     ],
               stops: const [0.0, 0.3],
             ),
@@ -94,12 +94,12 @@ class _Step4AvailabilityState extends ConsumerState<Step4Availability> {
                           end: Alignment.bottomLeft,
                           colors: isDark
                               ? const [
-                                  Color(0xFF1A1A1A), // veryDarkGray
-                                  Color(0xFF2D2D2D), // mediumDarkGray
+                                  Color(0xFF2D2D2D), // mediumDarkGray (lighter) - RIGHT
+                                  Color(0xFF1A1A1A), // veryDarkGray (darker) - LEFT
                                 ]
                               : const [
-                                  Color(0xFFF5F5F5), // Light grey
-                                  Colors.white,      // white
+                                  Colors.white,      // white (lighter) - RIGHT
+                                  Color(0xFFF5F5F5), // Light grey (darker) - LEFT
                                 ],
                           stops: const [0.0, 0.3],
                         ),

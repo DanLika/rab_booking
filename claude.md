@@ -4,6 +4,94 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🎨 INPUT FIELD STYLING STANDARDIZATION
+
+**Datum: 2025-11-24**
+**Status: ✅ COMPLETED - All wizard input fields standardized to Cjenovnik tab styling**
+**Commit:** `b8ed9fd` - refactor: standardize input field styling to match Cjenovnik tab
+
+### 📋 Overview
+
+**KRITIČNO**: Svi input text fields u wizard flow-u su standardizovani da koriste isti styling kao Cjenovnik tab. `InputDecorationHelper` je pojednostavljen da koristi **theme default borders** umjesto custom colored borders.
+
+**Novi Standard (Cjenovnik tab styling):**
+```dart
+// ✅ CORRECT - Simple borderRadius 12, theme defaults
+InputDecoration(
+  labelText: 'Label',
+  border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+  ),
+  filled: true,
+  fillColor: theme.cardColor,
+)
+```
+
+**Stari Pattern (DEPRECATED - NE KORISTITI):**
+```dart
+// ❌ WRONG - Custom colored borders
+InputDecoration(
+  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+  enabledBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(color: theme.colorScheme.outline.withAlpha(0.3)),
+  ),
+  focusedBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+  ),
+  // ... more custom borders
+)
+```
+
+### 🔧 Key Changes
+
+**File:** `lib/core/utils/input_decoration_helper.dart`
+
+**Changes Made:**
+1. ✅ Removed `enabledBorder` - was using custom outline color with 30% alpha
+2. ✅ Removed `focusedBorder` - was using custom primary color with width 2
+3. ✅ Removed `errorBorder` - was using custom error color
+4. ✅ Removed `focusedErrorBorder` - was using custom error color with width 2
+5. ✅ Kept only base `border` with `borderRadius: BorderRadius.circular(12)`
+6. ✅ Added documentation comment explaining it matches Cjenovnik tab styling
+
+**Result:**
+- Flutter theme system now handles all border states automatically
+- Enabled state: Uses theme's default enabled border color
+- Focused state: Uses theme's default primary color
+- Error state: Uses theme's default error color
+- All border state colors adapt to light/dark theme automatically
+
+### ⚠️ KRITIČNO - Important Notes for Future Sessions
+
+**DO NOT:**
+- ❌ **NE VRAĆAJ** custom colored borders (enabledBorder, focusedBorder, etc.)
+- ❌ **NE MIJENJAJ** borderRadius bez konzultacije - mora biti 12!
+- ❌ **NE DODAVAJ** custom border colors - theme defaults rade perfektno!
+
+**ALWAYS:**
+- ✅ **UVIJEK KORISTI** `InputDecorationHelper.buildDecoration()` za wizard fields
+- ✅ **UVIJEK ČUVAJ** borderRadius 12 (matching Cjenovnik tab)
+- ✅ **UVIJEK DOZVOLI** theme-u da upravlja border bojama
+
+**IF USER REPORTS:**
+- "Input borders izgledaju drugačije" → Provjeri da koristi `InputDecorationHelper`
+- "Borders nisu vidljivi u dark mode" → Provjeri da NEMA custom colors
+- "Focus state ne radi" → Provjeri da theme default focusedBorder nije overridden
+
+**Impacted Files (All use InputDecorationHelper):**
+- `lib/features/owner_dashboard/presentation/screens/unit_wizard/steps/step_1_basic_info.dart`
+- `lib/features/owner_dashboard/presentation/screens/unit_wizard/steps/step_2_capacity.dart`
+- `lib/features/owner_dashboard/presentation/screens/unit_wizard/steps/step_3_pricing.dart`
+- All other wizard steps that use form fields
+
+**Related Documentation:**
+- See "Cjenovnik Tab" section (if exists) for reference implementation
+- This standardization ensures wizard matches existing Cjenovnik styling
+
+---
+
 ## 🎨 GRADIENT STANDARDIZATION - Purple-Fade Pattern (THEME-AWARE)
 
 **Datum: 2025-11-24**

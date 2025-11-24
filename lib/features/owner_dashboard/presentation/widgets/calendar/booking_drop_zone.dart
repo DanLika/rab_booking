@@ -126,7 +126,7 @@ class BookingDropZone extends ConsumerWidget {
           ? theme.disabledColor.withAlpha((0.05 * 255).toInt())
           : (isToday
               ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
-              : theme.scaffoldBackgroundColor),
+              : Colors.transparent), // Transparent to show parent gradient
       border: Border(
         right: BorderSide(
           color: theme.dividerColor.withAlpha((0.6 * 255).toInt()),
@@ -163,7 +163,7 @@ class BookingDropZone extends ConsumerWidget {
           ? theme.disabledColor.withAlpha((0.05 * 255).toInt())
           : (isToday
               ? theme.colorScheme.primary.withAlpha((0.05 * 255).toInt())
-              : theme.scaffoldBackgroundColor);
+              : Colors.transparent); // Transparent to show parent gradient
       borderColor = theme.dividerColor.withAlpha((0.6 * 255).toInt());
     }
 

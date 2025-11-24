@@ -533,7 +533,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SizedBox(width: 100, child: priceInput),
+                    SizedBox(width: 250, child: priceInput), // Match month dropdown width
                     const SizedBox(width: 16),
                     SizedBox(
                       width: 180, // Same width as Bulk Edit buttons

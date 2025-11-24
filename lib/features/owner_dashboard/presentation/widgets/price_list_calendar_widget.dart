@@ -424,7 +424,7 @@ class _PriceListCalendarWidgetState
                               : null,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,
-                            vertical: 15, // Same as Save button
+                            vertical: 20, // Match dropdown height
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10), // Same as Save button

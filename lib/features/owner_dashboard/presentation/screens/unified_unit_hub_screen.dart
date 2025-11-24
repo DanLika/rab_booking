@@ -49,18 +49,34 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   String _searchQuery = '';
   String? _selectedPropertyFilter; // null = all properties
 
-  final List<Tab> _tabs = const [
-    Tab(text: 'Osnovni Podaci', icon: Icon(Icons.info_outline)),
-    Tab(text: 'Cjenovnik', icon: Icon(Icons.euro_outlined)),
-    Tab(text: 'Widget', icon: Icon(Icons.widgets_outlined)),
-    Tab(text: 'Napredne Postavke', icon: Icon(Icons.settings_outlined)),
-  ];
+  // Modern horizontal tabs with icon on the left
+  List<Widget> _buildTabs() {
+    return [
+      _buildTab(Icons.info_outline, 'Osnovni Podaci'),
+      _buildTab(Icons.euro_outlined, 'Cjenovnik'),
+      _buildTab(Icons.widgets_outlined, 'Widget'),
+      _buildTab(Icons.settings_outlined, 'Napredne Postavke'),
+    ];
+  }
+
+  Widget _buildTab(IconData icon, String label) {
+    return Tab(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: _tabs.length,
+      length: 4, // 4 tabs: Basic Info, Pricing, Widget, Advanced
       vsync: this,
       initialIndex: widget.initialTabIndex,
     );
@@ -712,12 +728,32 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           ),
           child: TabBar(
             controller: _tabController,
-            tabs: _tabs,
+            tabs: _buildTabs(),
             isScrollable: true,
             labelColor: theme.colorScheme.primary,
             unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
             indicatorColor: theme.colorScheme.primary,
-            indicatorWeight: 3,
+            indicatorWeight: 4,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            labelStyle: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              letterSpacing: 0.1,
+            ),
+            indicator: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: theme.colorScheme.primary,
+                  width: 4,
+                ),
+              ),
+            ),
           ),
         ),
 

@@ -1005,7 +1005,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     if (_selectedUnit == null) return const SizedBox.shrink();
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
     final isDesktop = screenWidth >= 900;
 
     // Build individual cards as widgets for flex layout
@@ -1073,8 +1072,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ],
     );
 
+    // 3-level responsive padding: mobile 16, tablet 20, desktop 24
+    final contentPadding = screenWidth < 600 ? 16.0 : screenWidth < 1200 ? 20.0 : 24.0;
+
     return ListView(
-      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      padding: EdgeInsets.all(contentPadding),
       children: [
         // Header with Edit Button
         Row(
@@ -1319,7 +1321,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }) {
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    // 3-level responsive padding: mobile 16, tablet 20, desktop 24
+    final cardPadding = screenWidth < 600 ? 16.0 : screenWidth < 1200 ? 20.0 : 24.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -1352,11 +1355,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.5),
+              color: theme.colorScheme.outline.withValues(alpha: 0.5),
               width: 1.5,
             ),
           ),
-          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          padding: EdgeInsets.all(cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

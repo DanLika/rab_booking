@@ -67,25 +67,35 @@ class _CalendarSkeletonLoaderState extends State<CalendarSkeletonLoader>
 
   Widget _buildHeaderSkeleton(BuildContext context) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 8 : 16),
       decoration: BoxDecoration(
         color: theme.cardColor,
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         children: [
-          // Left controls
-          const _SkeletonBox(width: 120, height: 36, borderRadius: 8),
+          // Left controls - responsive width
+          _SkeletonBox(
+            width: isMobile ? 80 : 120,
+            height: 36,
+            borderRadius: 8,
+          ),
           const Spacer(),
-          // Right controls
+          // Right controls - fewer on mobile
           Row(
             children: List.generate(
-              3,
-              (index) => const Padding(
-                padding: EdgeInsets.only(left: 8),
-                child: _SkeletonBox(width: 40, height: 40, borderRadius: 20),
+              isMobile ? 1 : 3,
+              (index) => Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: _SkeletonBox(
+                  width: isMobile ? 32 : 40,
+                  height: isMobile ? 32 : 40,
+                  borderRadius: isMobile ? 16 : 20,
+                ),
               ),
             ),
           ),
@@ -107,9 +117,12 @@ class _CalendarSkeletonLoaderState extends State<CalendarSkeletonLoader>
 
   Widget _buildUnitRowSkeleton(BuildContext context, int unitIndex) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final unitColumnWidth = isMobile ? 100.0 : 120.0;
 
     return Container(
-      height: 80,
+      height: isMobile ? 60 : 80,
       margin: const EdgeInsets.only(bottom: 1),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
@@ -121,29 +134,31 @@ class _CalendarSkeletonLoaderState extends State<CalendarSkeletonLoader>
       ),
       child: Row(
         children: [
-          // Unit name
+          // Unit name - responsive width
           Container(
-            width: 120,
-            padding: const EdgeInsets.all(12),
-            child: const _SkeletonBox(width: 100, height: 20),
+            width: unitColumnWidth,
+            padding: EdgeInsets.all(isMobile ? 8 : 12),
+            child: _SkeletonBox(width: unitColumnWidth - 20, height: 20),
           ),
 
-          // Booking blocks placeholders
+          // Booking blocks placeholders - clipped to prevent overflow
           Expanded(
-            child: Row(
-              children: [
-                const SizedBox(width: 12),
-                ...List.generate(
-                  _getRandomBlockCount(unitIndex),
-                  (blockIndex) => Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: _SkeletonBox(
-                      width: _getRandomBlockWidth(unitIndex, blockIndex),
-                      height: 56,
+            child: ClipRect(
+              child: Row(
+                children: [
+                  const SizedBox(width: 8),
+                  ...List.generate(
+                    _getRandomBlockCount(unitIndex),
+                    (blockIndex) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _SkeletonBox(
+                        width: _getRandomBlockWidth(unitIndex, blockIndex),
+                        height: isMobile ? 40 : 56,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

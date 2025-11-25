@@ -286,7 +286,6 @@ class _TimelineCalendarWidgetState
   void _scrollToTodayWithRetry({int retryCount = 0}) {
     // Max 10 retries (100ms each = 1 second total)
     if (retryCount >= 10) {
-      print('[TIMELINE] Failed to scroll to today after 10 retries');
       return;
     }
 
@@ -302,7 +301,6 @@ class _TimelineCalendarWidgetState
     }
 
     // Controller is ready - scroll to today
-    print('[TIMELINE] Scrolling to today (retry count: $retryCount)');
     _scrollToToday();
   }
 
@@ -319,10 +317,6 @@ class _TimelineCalendarWidgetState
     final dayWidth = _getDayWidth(context);
     final scrollPosition = daysSinceStart * dayWidth;
 
-    print(
-      '[TIMELINE] _scrollToToday: startDate=$startDate, targetDate=$targetDate, daysSinceStart=$daysSinceStart',
-    );
-
     // Scroll to target date (centered in viewport) with smooth animation
     final maxScroll = _horizontalScrollController.position.maxScrollExtent;
     final unitColumnWidth = _getUnitColumnWidth(context);
@@ -332,8 +326,6 @@ class _TimelineCalendarWidgetState
     // Center target date in the visible area
     final targetScroll = (scrollPosition - (visibleWidth / 2) + (dayWidth / 2))
         .clamp(0.0, maxScroll);
-
-    print('[TIMELINE] Scrolling to position: $targetScroll (max: $maxScroll)');
 
     _horizontalScrollController.animateTo(
       targetScroll,
@@ -454,29 +446,6 @@ class _TimelineCalendarWidgetState
                     data: (bookingsByUnit) {
                       // Always show timeline view, even if no bookings exist
                       // (empty calendar grid is better UX than empty state)
-                      final totalBookings = bookingsByUnit.values.fold<int>(
-                        0,
-                        (sum, list) => sum + list.length,
-                      );
-                      print(
-                        '[TIMELINE] Building timeline with ${units.length} units and ${bookingsByUnit.length} booking groups',
-                      );
-                      print(
-                        '[TIMELINE] Total bookings across all groups: $totalBookings',
-                      );
-
-                      // Debug each unit's bookings
-                      bookingsByUnit.forEach((unitId, bookings) {
-                        print(
-                          '[TIMELINE] Unit $unitId has ${bookings.length} bookings',
-                        );
-                        for (final booking in bookings) {
-                          print(
-                            '[TIMELINE]   - Booking ${booking.id}: checkIn=${booking.checkIn}, checkOut=${booking.checkOut}',
-                          );
-                        }
-                      });
-
                       return _buildTimelineView(units, bookingsByUnit);
                     },
                     loading: () => const CalendarSkeletonLoader(
@@ -951,10 +920,6 @@ class _TimelineCalendarWidgetState
     final dayWidth = _getDayWidth(context);
     final List<Widget> blocks = [];
 
-    print(
-      '[TIMELINE RENDER] _buildReservationBlocks called with ${bookings.length} bookings, visible dates: ${dates.first} to ${dates.last}',
-    );
-
     // NOTE: Cancelled bookings are filtered out at provider level
     // Only active bookings (confirmed, pending, completed) are rendered
     for (final booking in bookings) {
@@ -968,15 +933,8 @@ class _TimelineCalendarWidgetState
       // Find index of check-in date in visible range
       final startIndex = dates.indexWhere((d) => _isSameDay(d, checkIn));
       if (startIndex == -1) {
-        print(
-          '[TIMELINE RENDER] Skipping booking ${booking.id}: checkIn=$checkIn not in visible range',
-        );
         continue; // Booking not in visible range
       }
-
-      print(
-        '[TIMELINE RENDER] Rendering booking ${booking.id}: checkIn=$checkIn, startIndex=$startIndex, nights=$nights',
-      );
 
       // Calculate left position (including offset for windowing)
       final left = offsetWidth + (startIndex * dayWidth);
@@ -991,10 +949,6 @@ class _TimelineCalendarWidgetState
       // Get stack level for vertical positioning
       final stackLevel = stackLevels[booking.id] ?? 0;
       final topPosition = 8 + (stackLevel * baseRowHeight); // Stack vertically
-
-      print(
-        '[TIMELINE RENDER] Booking ${booking.id} at stack level $stackLevel, top=$topPosition',
-      );
 
       // Create reservation block
       blocks.add(

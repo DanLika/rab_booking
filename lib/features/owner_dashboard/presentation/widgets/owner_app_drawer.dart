@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_color_extensions.dart';
+import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../auth/presentation/widgets/auth_logo_icon.dart';
 
@@ -178,9 +180,12 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Divider(
+                height: 1,
+                color: context.borderColor.withValues(alpha: 0.5),
+              ),
             ),
 
             // Settings & Profile
@@ -200,9 +205,12 @@ class OwnerAppDrawer extends ConsumerWidget {
               onTap: () => context.go(OwnerRoutes.profile),
             ),
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Divider(
+                height: 1,
+                color: context.borderColor.withValues(alpha: 0.5),
+              ),
             ),
 
             // Logout
@@ -244,17 +252,10 @@ class OwnerAppDrawer extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.7),
-          ],
-        ),
+        gradient: GradientTokens.brandPrimary,
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
+            color: GradientTokens.brandPrimaryStart.withAlpha((0.3 * 255).toInt()),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -372,9 +373,18 @@ class _DrawerItem extends StatefulWidget {
 class _DrawerItemState extends State<_DrawerItem> {
   bool _isHovered = false;
 
+  // Light purple for dark theme text (lightened version of brandPurple)
+  static const _lightPurple = Color(0xFFB794F6);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // In dark mode, use lighter purple text and stronger purple background
+    final selectedTextColor = isDark ? _lightPurple : theme.colorScheme.brandPurple;
+    final selectedBgAlpha = isDark ? 0.15 : 0.12;
+    final hoverBgAlpha = isDark ? 0.08 : 0.06;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -386,16 +396,16 @@ class _DrawerItemState extends State<_DrawerItem> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: widget.isSelected
-                ? theme.colorScheme.brandPurple.withAlpha((0.12 * 255).toInt())
+                ? theme.colorScheme.brandPurple.withAlpha((selectedBgAlpha * 255).toInt())
                 : _isHovered
-                ? theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt())
+                ? theme.colorScheme.brandPurple.withAlpha((hoverBgAlpha * 255).toInt())
                 : Colors.transparent,
           ),
           child: ListTile(
             leading: Icon(
               widget.icon,
               color: widget.isSelected
-                  ? theme.colorScheme.brandPurple
+                  ? selectedTextColor
                   : theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
               size: 24,
             ),
@@ -407,7 +417,7 @@ class _DrawerItemState extends State<_DrawerItem> {
                     ? FontWeight.w600
                     : FontWeight.w500,
                 color: widget.isSelected
-                    ? theme.colorScheme.brandPurple
+                    ? selectedTextColor
                     : theme.colorScheme.onSurface,
               ),
             ),
@@ -445,9 +455,19 @@ class _DrawerSubItem extends StatefulWidget {
 class _DrawerSubItemState extends State<_DrawerSubItem> {
   bool _isHovered = false;
 
+  // Light purple for dark theme text (lightened version of brandPurple)
+  static const _lightPurple = Color(0xFFB794F6);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // In dark mode, use lighter purple text and stronger purple background
+    final selectedTextColor =
+        isDark ? _lightPurple : theme.colorScheme.brandPurple;
+    final selectedBgAlpha = isDark ? 0.15 : 0.12;
+    final hoverBgAlpha = isDark ? 0.08 : 0.06;
 
     return Padding(
       padding: const EdgeInsets.only(left: 24, right: 12, top: 2, bottom: 2),
@@ -459,10 +479,12 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             color: widget.isSelected
-                ? theme.colorScheme.brandPurple.withAlpha((0.12 * 255).toInt())
+                ? theme.colorScheme.brandPurple
+                    .withAlpha((selectedBgAlpha * 255).toInt())
                 : _isHovered
-                ? theme.colorScheme.brandPurple.withAlpha((0.06 * 255).toInt())
-                : Colors.transparent,
+                    ? theme.colorScheme.brandPurple
+                        .withAlpha((hoverBgAlpha * 255).toInt())
+                    : Colors.transparent,
           ),
           child: ListTile(
             dense: true,
@@ -471,7 +493,7 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     widget.icon,
                     size: 18,
                     color: widget.isSelected
-                        ? theme.colorScheme.brandPurple
+                        ? selectedTextColor
                         : theme.colorScheme.onSurface.withAlpha(
                             (0.5 * 255).toInt(),
                           ),
@@ -485,7 +507,7 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
                     ? FontWeight.w600
                     : FontWeight.w500,
                 color: widget.isSelected
-                    ? theme.colorScheme.brandPurple
+                    ? selectedTextColor
                     : theme.colorScheme.onSurface.withAlpha(
                         (0.85 * 255).toInt(),
                       ),

@@ -71,7 +71,7 @@ class CalendarDayCell extends StatelessWidget {
                     ? context.primaryColor.withOpacity(0.5)
                     : hasRestrictions
                         ? context.warningColor.withOpacity(0.6)
-                        : Colors.transparent,
+                        : context.borderColor.withValues(alpha: 0.5),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -154,16 +154,14 @@ class CalendarDayCell extends StatelessWidget {
     bool isWeekend,
     bool hasPrice,
   ) {
-    return Flexible(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 30, minHeight: 14),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
+    return Expanded(
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
                 '€${price.toStringAsFixed(0)}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -178,25 +176,18 @@ class CalendarDayCell extends StatelessWidget {
                     ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ),
-          if (!hasPrice && isAvailable && !isSmallMobile)
-            ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 25, minHeight: 10),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
+              if (!hasPrice && isAvailable && !isSmallMobile)
+                Text(
                   'base',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: isMobile ? 7 : 8,
                         color: context.textColorTertiary,
                       ),
                 ),
-              ),
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

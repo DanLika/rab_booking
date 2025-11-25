@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../../shared/widgets/custom_date_range_picker.dart';
 import '../../../domain/models/calendar_filter_options.dart';
 import '../../providers/calendar_filters_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
@@ -53,19 +55,12 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with gradient (matching CommonAppBar)
+            // Header with gradient (using brand gradient)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withValues(alpha: 0.7),
-                  ],
-                ),
-                borderRadius: const BorderRadius.vertical(
+              decoration: const BoxDecoration(
+                gradient: GradientTokens.brandPrimary,
+                borderRadius: BorderRadius.vertical(
                   top: Radius.circular(4),
                 ),
               ),
@@ -138,17 +133,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Apply button (full width on mobile) with gradient
+                        // Apply button (full width on mobile) with brand gradient
                         Container(
                           decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFF6B4CE6), // Purple
-                                Color(0xFF4A90E2), // Blue
-                              ],
-                            ),
+                            gradient: GradientTokens.brandPrimary,
                             borderRadius: BorderRadius.all(Radius.circular(20)),
                           ),
                           child: ElevatedButton.icon(
@@ -235,17 +223,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              // Apply button with gradient
+                              // Apply button with brand gradient
                               Container(
                                 decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      Color(0xFF6B4CE6), // Purple
-                                      Color(0xFF4A90E2), // Blue
-                                    ],
-                                  ),
+                                  gradient: GradientTokens.brandPrimary,
                                   borderRadius: BorderRadius.all(Radius.circular(20)),
                                 ),
                                 child: ElevatedButton.icon(
@@ -713,7 +694,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   }
 
   Future<void> _showDateRangePicker() async {
-    final picked = await showDateRangePicker(
+    final picked = await showCustomDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../shared/models/booking_model.dart';
+import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -58,6 +60,9 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
   @override
   Widget build(BuildContext context) {
     final nights = _checkOut.difference(_checkIn).inDays;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = Breakpoints.isMobile(context);
 
     return AlertDialog(
       title: const Text(
@@ -66,8 +71,11 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
           color: Colors.white,
         ),
       ),
-      content: SizedBox(
-        width: 500,
+      content: Container(
+        width: isMobile ? screenWidth * 0.9 : 500,
+        constraints: BoxConstraints(
+          maxHeight: screenHeight * 0.8,
+        ),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -221,41 +229,29 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        Builder(
-          builder: (context) {
-            final theme = Theme.of(context);
-            return Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withValues(alpha: 0.7),
-                  ],
-                ),
-                borderRadius: const BorderRadius.all(Radius.circular(4)),
-              ),
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _saveChanges,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Text('Save Changes'),
-              ),
-            );
-          },
+        Container(
+          decoration: const BoxDecoration(
+            gradient: GradientTokens.brandPrimary,
+            borderRadius: BorderRadius.all(Radius.circular(4)),
+          ),
+          child: ElevatedButton(
+            onPressed: _isLoading ? null : _saveChanges,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shadowColor: Colors.transparent,
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text('Save Changes'),
+          ),
         ),
       ],
     );

@@ -93,7 +93,6 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                   TextField(
                     controller: _reasonController,
                     decoration: InputDecorationHelper.buildDecoration(
-                      context,
                       labelText: 'Razlog otkazivanja',
                       hintText: 'Unesite razlog...',
                       prefixIcon: const Icon(Icons.edit_note),

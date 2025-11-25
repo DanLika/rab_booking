@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/date_range_selection.dart';
 import '../providers/notifications_provider.dart';
@@ -184,18 +185,10 @@ class _OwnerTimelineCalendarScreenState
                   return const SizedBox.shrink();
                 }
 
-                final theme = Theme.of(context);
                 return Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primary.withValues(alpha: 0.7),
-                      ],
-                    ),
-                    borderRadius: const BorderRadius.all(Radius.circular(16)),
+                  decoration: const BoxDecoration(
+                    gradient: GradientTokens.brandPrimary,
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
                   ),
                   child: FloatingActionButton(
                     onPressed: _showCreateBookingDialog,

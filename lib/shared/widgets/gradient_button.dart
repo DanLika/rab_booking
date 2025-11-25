@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../core/design_tokens/gradient_tokens.dart';
 
 /// Reusable premium gradient button with animations
-/// Can be used throughout the app for consistent gradient button styling
+/// Uses GradientTokens.brandPrimary for consistent branding across themes
 class GradientButton extends StatefulWidget {
   final String text;
   final VoidCallback? onPressed;
@@ -60,8 +61,8 @@ class _GradientButtonState extends State<GradientButton>
     final gradientColors =
         widget.gradientColors ??
         [
-          const Color(0xFF6B4CE6), // Purple
-          const Color(0xFF4A90E2), // Blue
+          GradientTokens.brandPrimaryStart,
+          GradientTokens.brandPrimaryEnd,
         ];
 
     final borderRadius = widget.borderRadius ?? BorderRadius.circular(16);

@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/constants/breakpoints.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
@@ -71,6 +73,9 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   @override
   Widget build(BuildContext context) {
     final unitsAsync = ref.watch(ownerUnitsProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = Breakpoints.isMobile(context);
 
     return AlertDialog(
       title: const Text(
@@ -79,8 +84,11 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
           color: Colors.white,
         ),
       ),
-      content: SizedBox(
-        width: double.maxFinite,
+      content: Container(
+        width: isMobile ? screenWidth * 0.9 : 500,
+        constraints: BoxConstraints(
+          maxHeight: screenHeight * 0.8,
+        ),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -144,25 +152,43 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                 ),
                 const SizedBox(height: 8),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildDateField(
+                // Responsive date fields: Column on mobile, Row on desktop
+                if (isMobile)
+                  Column(
+                    children: [
+                      _buildDateField(
                         label: 'Check-in *',
                         date: _checkInDate,
                         onTap: _selectCheckInDate,
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildDateField(
+                      const SizedBox(height: 12),
+                      _buildDateField(
                         label: 'Check-out *',
                         date: _checkOutDate,
                         onTap: _selectCheckOutDate,
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDateField(
+                          label: 'Check-in *',
+                          date: _checkInDate,
+                          onTap: _selectCheckInDate,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildDateField(
+                          label: 'Check-out *',
+                          date: _checkOutDate,
+                          onTap: _selectCheckOutDate,
+                        ),
+                      ),
+                    ],
+                  ),
 
                 const SizedBox(height: 12),
 
@@ -397,41 +423,29 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
           onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
           child: const Text('Otkaži'),
         ),
-        Builder(
-          builder: (context) {
-            final theme = Theme.of(context);
-            return Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withValues(alpha: 0.7),
-                  ],
-                ),
-                borderRadius: const BorderRadius.all(Radius.circular(4)),
-              ),
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _createBooking,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                ),
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Kreiraj'),
-              ),
-            );
-          },
+        Container(
+          decoration: const BoxDecoration(
+            gradient: GradientTokens.brandPrimary,
+            borderRadius: BorderRadius.all(Radius.circular(4)),
+          ),
+          child: ElevatedButton(
+            onPressed: _isSaving ? null : _createBooking,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shadowColor: Colors.transparent,
+            ),
+            child: _isSaving
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Kreiraj'),
+          ),
         ),
       ],
     );

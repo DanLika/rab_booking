@@ -9,6 +9,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/custom_date_range_picker.dart';
 import '../widgets/owner_app_drawer.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
@@ -89,8 +90,11 @@ class _DateRangeSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
       color: Colors.transparent,
       child: Row(
         children: [
@@ -142,7 +146,7 @@ class _DateRangeSelector extends ConsumerWidget {
                   const SizedBox(width: 8),
                   OutlinedButton.icon(
                     onPressed: () async {
-                      final picked = await showDateRangePicker(
+                      final picked = await showCustomDateRangePicker(
                         context: context,
                         firstDate: DateTime(2020),
                         lastDate: DateTime(2030),

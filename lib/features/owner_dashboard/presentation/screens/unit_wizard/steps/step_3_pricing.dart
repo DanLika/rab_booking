@@ -42,10 +42,18 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
   void _loadData(dynamic draft) {
     if (_isInitialized) return;
 
-    // Only set initial values - listeners are already attached in initState
+    // Remove listeners temporarily to avoid triggering provider updates during build
+    _priceController.removeListener(_onPriceChanged);
+    _minStayController.removeListener(_onMinStayChanged);
+
+    // Set initial values
     _priceController.text = draft.pricePerNight?.toString() ?? '';
     _minStayController.text = draft.minStayNights?.toString() ?? '';
     _isInitialized = true;
+
+    // Re-attach listeners after setting initial values
+    _priceController.addListener(_onPriceChanged);
+    _minStayController.addListener(_onMinStayChanged);
   }
 
   void _onPriceChanged() {
@@ -209,7 +217,6 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                       TextFormField(
                                         controller: _priceController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          context,
                                           labelText: 'Cena po Noći (€) *',
                                           hintText: '50',
                                           helperText: 'Osnovna cena za jednu noć',
@@ -236,7 +243,6 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                       TextFormField(
                                         controller: _minStayController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          context,
                                           labelText: 'Minimalan Boravak (noći) *',
                                           hintText: '1',
                                           helperText: 'Najmanje noći za rezervaciju',
@@ -270,7 +276,6 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                       child: TextFormField(
                                         controller: _priceController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          context,
                                           labelText: 'Cena po Noći (€) *',
                                           hintText: '50',
                                           helperText: 'Osnovna cena za jednu noć',
@@ -299,7 +304,6 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                       child: TextFormField(
                                         controller: _minStayController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          context,
                                           labelText: 'Minimalan Boravak (noći) *',
                                           hintText: '1',
                                           helperText: 'Najmanje noći za rezervaciju',
@@ -419,7 +423,8 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                             const SizedBox(height: 20),
 
                             // Year-round toggle
-                            SwitchListTile(
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
                               title: Text(
                                 'Dostupna Tokom Cijele Godine',
                                 style: theme.textTheme.titleMedium,
@@ -430,14 +435,15 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
-                              value: draft.availableYearRound,
-                              onChanged: (value) {
-                                ref
-                                    .read(unitWizardNotifierProvider(widget.unitId).notifier)
-                                    .updateField('availableYearRound', value);
-                              },
-                              activeTrackColor: theme.colorScheme.primary,
-                              contentPadding: EdgeInsets.zero,
+                              trailing: Switch(
+                                value: draft.availableYearRound,
+                                onChanged: (value) {
+                                  ref
+                                      .read(unitWizardNotifierProvider(widget.unitId).notifier)
+                                      .updateField('availableYearRound', value);
+                                },
+                                thumbColor: WidgetStateProperty.all(Colors.transparent),
+                              ),
                             ),
                           ],
                         ),

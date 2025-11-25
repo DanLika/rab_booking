@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/config/router_owner.dart';
@@ -139,8 +140,6 @@ class _StripeConnectSetupScreenState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: CommonAppBar(
@@ -149,17 +148,9 @@ class _StripeConnectSetupScreenState
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/stripe'),
-      extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.primary.withValues(alpha: 0.7),
-            ],
-          ),
+        decoration: const BoxDecoration(
+          gradient: GradientTokens.brandPrimary,
         ),
         child: _isLoading
             ? const Center(
@@ -256,14 +247,13 @@ class _StripeConnectSetupScreenState
   }
 
   Widget _buildStatusCard() {
-    final theme = Theme.of(context);
     Color statusColor;
     IconData statusIcon;
     String statusTitle;
     String statusDescription;
 
     if (_stripeAccountId == null) {
-      statusColor = theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt());
+      statusColor = AppColors.textTertiaryLight;
       statusIcon = Icons.warning_amber_rounded;
       statusTitle = 'Nije povezano';
       statusDescription =
@@ -282,6 +272,7 @@ class _StripeConnectSetupScreenState
     }
 
     return Card(
+      color: AppColors.surfaceLight,
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -315,22 +306,18 @@ class _StripeConnectSetupScreenState
                   const SizedBox(height: 4),
                   Text(
                     statusDescription,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: theme.colorScheme.onSurface.withAlpha(
-                        (0.8 * 255).toInt(),
-                      ),
+                      color: AppColors.textSecondaryLight,
                     ),
                   ),
                   if (_stripeAccountId != null) ...[
                     const SizedBox(height: 8),
                     Text(
                       'ID: $_stripeAccountId',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: theme.colorScheme.onSurface.withAlpha(
-                          (0.6 * 255).toInt(),
-                        ),
+                        color: AppColors.textTertiaryLight,
                         fontFamily: 'monospace',
                       ),
                     ),

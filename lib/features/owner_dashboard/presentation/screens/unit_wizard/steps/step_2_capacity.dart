@@ -24,7 +24,22 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
   bool _isInitialized = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Add listeners in initState - they will be active for all user input
+    _bedroomsController.addListener(_onBedroomsChanged);
+    _bathroomsController.addListener(_onBathroomsChanged);
+    _maxGuestsController.addListener(_onMaxGuestsChanged);
+    _areaSqmController.addListener(_onAreaChanged);
+  }
+
+  @override
   void dispose() {
+    // Remove listeners before disposing controllers
+    _bedroomsController.removeListener(_onBedroomsChanged);
+    _bathroomsController.removeListener(_onBathroomsChanged);
+    _maxGuestsController.removeListener(_onMaxGuestsChanged);
+    _areaSqmController.removeListener(_onAreaChanged);
     _bedroomsController.dispose();
     _bathroomsController.dispose();
     _maxGuestsController.dispose();
@@ -35,13 +50,20 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
   void _loadData(dynamic draft) {
     if (_isInitialized) return;
 
+    // Remove listeners temporarily to avoid triggering provider updates during build
+    _bedroomsController.removeListener(_onBedroomsChanged);
+    _bathroomsController.removeListener(_onBathroomsChanged);
+    _maxGuestsController.removeListener(_onMaxGuestsChanged);
+    _areaSqmController.removeListener(_onAreaChanged);
+
+    // Set initial values
     _bedroomsController.text = draft.bedrooms?.toString() ?? '';
     _bathroomsController.text = draft.bathrooms?.toString() ?? '';
     _maxGuestsController.text = draft.maxGuests?.toString() ?? '';
     _areaSqmController.text = draft.areaSqm?.toString() ?? '';
     _isInitialized = true;
 
-    // Add listeners
+    // Re-attach listeners after setting initial values
     _bedroomsController.addListener(_onBedroomsChanged);
     _bathroomsController.addListener(_onBathroomsChanged);
     _maxGuestsController.addListener(_onMaxGuestsChanged);
@@ -211,7 +233,6 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                   child: TextFormField(
                                     controller: _bedroomsController,
                                     decoration: InputDecorationHelper.buildDecoration(
-                                      context,
                                       labelText: 'Spavaće Sobe *',
                                       hintText: '1',
                                       prefixIcon: const Icon(Icons.bed),
@@ -238,7 +259,6 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                   child: TextFormField(
                                     controller: _bathroomsController,
                                     decoration: InputDecorationHelper.buildDecoration(
-                                      context,
                                       labelText: 'Kupatila *',
                                       hintText: '1',
                                       prefixIcon: const Icon(Icons.bathroom),
@@ -271,7 +291,6 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                   child: TextFormField(
                                     controller: _maxGuestsController,
                                     decoration: InputDecorationHelper.buildDecoration(
-                                      context,
                                       labelText: 'Maksimalno Gostiju *',
                                       hintText: '2',
                                       prefixIcon: const Icon(Icons.people),
@@ -298,7 +317,6 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                   child: TextFormField(
                                     controller: _areaSqmController,
                                     decoration: InputDecorationHelper.buildDecoration(
-                                      context,
                                       labelText: 'Površina (m²)',
                                       hintText: '50',
                                       prefixIcon: const Icon(Icons.square_foot),

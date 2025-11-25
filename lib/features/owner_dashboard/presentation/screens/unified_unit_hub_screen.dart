@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
@@ -44,10 +45,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   // GlobalKey for Scaffold to avoid context issues
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // Search and filter state
+  // Search state
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  String? _selectedPropertyFilter; // null = all properties
 
   // Vertical tabs with icon above text (compact design)
   List<Widget> _buildTabs() {
@@ -81,10 +81,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       });
     });
 
-    // Initialize property filter from parameter
-    if (widget.initialPropertyFilter != null) {
-      _selectedPropertyFilter = widget.initialPropertyFilter;
-    }
   }
 
   @override
@@ -148,19 +144,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 ),
               ],
               flexibleSpace: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.primary.withValues(alpha: 0.7),
-                    ],
-                  ),
+                decoration: const BoxDecoration(
+                  gradient: GradientTokens.brandPrimary,
                 ),
               ),
             ),
-      drawer: const OwnerAppDrawer(currentRoute: 'units'),
+      drawer: const OwnerAppDrawer(currentRoute: 'unit-hub'),
       // EndDrawer for mobile/tablet - shows master panel
       endDrawer: !isDesktop
           ? Drawer(
@@ -189,10 +178,15 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                         ),
                 ),
                 child: Builder(
-                  builder: (context) => _buildMasterPanel(
+                  builder: (drawerContext) => _buildMasterPanel(
                     theme,
                     isDark,
-                    onUnitSelected: () => Navigator.of(context).pop(),
+                    onUnitSelected: () {
+                      // Check if drawer context is still valid before popping
+                      if (drawerContext.mounted) {
+                        Navigator.of(drawerContext).pop();
+                      }
+                    },
                   ),
                 ),
               ),
@@ -280,7 +274,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     return _buildDetailPanel(theme, isDark, screenWidth);
   }
 
-  /// Master panel - Units list (all properties)
+  /// Master panel - Properties and Units list (hierarchical view)
   Widget _buildMasterPanel(
     ThemeData theme,
     bool isDark, {
@@ -312,18 +306,19 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Sve Jedinice',
+                      'Objekti i Jedinice',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
+                  // Add Property button
                   IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
+                    icon: const Icon(Icons.add_business, size: 22),
                     onPressed: () {
-                      context.push(OwnerRoutes.unitWizard);
+                      context.push(OwnerRoutes.propertyNew);
                     },
-                    tooltip: 'Dodaj novu jedinicu',
+                    tooltip: 'Dodaj novi objekt',
                   ),
                 ],
               ),
@@ -333,7 +328,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Pretraži jedinice...',
+                  hintText: 'Pretraži...',
                   prefixIcon: const Icon(Icons.search, size: 20),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
@@ -354,74 +349,136 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 8),
-
-              // Property filter dropdown
-              propertiesAsync.when(
-                data: (properties) {
-                  if (properties.isEmpty) return const SizedBox.shrink();
-
-                  return DropdownButtonFormField<String?>(
-                    initialValue: _selectedPropertyFilter,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.filter_list, size: 20),
-                      filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      isDense: true,
-                    ),
-                    items: [
-                      const DropdownMenuItem<String?>(
-                        child: Text('Svi objekti'),
-                      ),
-                      ...properties.map((property) {
-                        return DropdownMenuItem<String?>(
-                          value: property.id,
-                          child: Text(property.name),
-                        );
-                      }),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedPropertyFilter = value;
-                      });
-                    },
-                  );
-                },
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
             ],
           ),
         ),
 
-        // Units list
+        // Properties and Units list (hierarchical)
         Expanded(
-          child: _buildUnitsListView(
-            theme,
-            isDark,
-            onUnitSelected: onUnitSelected,
+          child: propertiesAsync.when(
+            loading: () => Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isDark ? Colors.white : Colors.black,
+                ),
+              ),
+            ),
+            error: (error, stack) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: theme.colorScheme.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Greška pri učitavanju',
+                      style: theme.textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            data: (properties) {
+              if (properties.isEmpty) {
+                return _buildEmptyPropertiesState(theme, isDark);
+              }
+              return _buildPropertiesWithUnits(
+                theme,
+                isDark,
+                properties,
+                onUnitSelected: onUnitSelected,
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  /// Units list view - fetches and displays all units
-  Widget _buildUnitsListView(
+  /// Empty state when no properties exist
+  Widget _buildEmptyPropertiesState(ThemeData theme, bool isDark) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.add_business,
+              size: 64,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Nemate objekata',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Kreirajte prvi objekt da biste mogli dodavati smještajne jedinice',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Container(
+              decoration: BoxDecoration(
+                gradient: GradientTokens.brandPrimary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    context.push(OwnerRoutes.propertyNew);
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add_business, size: 20, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text(
+                          'Kreiraj Objekt',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Properties with their units - hierarchical view
+  Widget _buildPropertiesWithUnits(
     ThemeData theme,
-    bool isDark, {
+    bool isDark,
+    List<PropertyModel> properties, {
     VoidCallback? onUnitSelected,
   }) {
     final unitsAsync = ref.watch(ownerUnitsProvider);
-    final propertiesAsync = ref.watch(ownerPropertiesProvider);
 
     return unitsAsync.when(
       loading: () => Center(
@@ -432,53 +489,31 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ),
       ),
       error: (error, stack) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: theme.colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Greška pri učitavanju jedinica',
-                style: theme.textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: theme.textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+        child: Text('Greška: $error'),
       ),
-      data: (units) {
-        // Apply filters
-        final filteredUnits = units.where((unit) {
-          // Search filter
-          if (_searchQuery.isNotEmpty) {
-            final matchesSearch =
-                unit.name.toLowerCase().contains(_searchQuery) ||
-                (unit.description?.toLowerCase().contains(_searchQuery) ??
-                    false);
-            if (!matchesSearch) return false;
-          }
+      data: (allUnits) {
+        // Group units by property
+        final unitsByProperty = <String, List<UnitModel>>{};
+        for (final unit in allUnits) {
+          unitsByProperty.putIfAbsent(unit.propertyId, () => []);
+          unitsByProperty[unit.propertyId]!.add(unit);
+        }
 
-          // Property filter
-          if (_selectedPropertyFilter != null) {
-            if (unit.propertyId != _selectedPropertyFilter) return false;
-          }
+        // Filter properties by search query
+        final filteredProperties = properties.where((property) {
+          if (_searchQuery.isEmpty) return true;
 
-          return true;
+          // Match property name
+          if (property.name.toLowerCase().contains(_searchQuery)) return true;
+
+          // Match any unit in this property
+          final propertyUnits = unitsByProperty[property.id] ?? [];
+          return propertyUnits.any((unit) =>
+              unit.name.toLowerCase().contains(_searchQuery) ||
+              (unit.description?.toLowerCase().contains(_searchQuery) ?? false));
         }).toList();
 
-        if (filteredUnits.isEmpty) {
+        if (filteredProperties.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(32.0),
@@ -486,32 +521,16 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    _searchQuery.isNotEmpty || _selectedPropertyFilter != null
-                        ? Icons.search_off
-                        : Icons.home_work_outlined,
+                    Icons.search_off,
                     size: 64,
                     color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _searchQuery.isNotEmpty || _selectedPropertyFilter != null
-                        ? 'Nema rezultata'
-                        : 'Nema smještajnih jedinica',
+                    'Nema rezultata',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _searchQuery.isNotEmpty || _selectedPropertyFilter != null
-                        ? 'Pokušajte promijeniti filter'
-                        : 'Dodajte prvu jedinicu da biste počeli',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                        0.7,
-                      ),
-                    ),
-                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -519,28 +538,25 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           );
         }
 
-        // Build properties map for quick lookup
-        final propertiesMap = <String, PropertyModel>{};
-        propertiesAsync.whenData((properties) {
-          for (final property in properties) {
-            propertiesMap[property.id] = property;
-          }
-        });
-
         return ListView.builder(
           padding: const EdgeInsets.all(8),
-          itemCount: filteredUnits.length,
+          itemCount: filteredProperties.length,
           itemBuilder: (context, index) {
-            final unit = filteredUnits[index];
-            final property = propertiesMap[unit.propertyId];
-            final isSelected = _selectedUnit?.id == unit.id;
+            final property = filteredProperties[index];
+            final propertyUnits = unitsByProperty[property.id] ?? [];
 
-            return _buildUnitListTile(
+            // Filter units by search
+            final filteredUnits = _searchQuery.isEmpty
+                ? propertyUnits
+                : propertyUnits.where((unit) =>
+                    unit.name.toLowerCase().contains(_searchQuery) ||
+                    (unit.description?.toLowerCase().contains(_searchQuery) ?? false)).toList();
+
+            return _buildPropertySection(
               theme,
               isDark,
-              unit: unit,
-              propertyName: property?.name ?? 'Unknown Property',
-              isSelected: isSelected,
+              property: property,
+              units: filteredUnits,
               onUnitSelected: onUnitSelected,
             );
           },
@@ -549,6 +565,166 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
   }
 
+  /// Property section with expandable units
+  Widget _buildPropertySection(
+    ThemeData theme,
+    bool isDark, {
+    required PropertyModel property,
+    required List<UnitModel> units,
+    VoidCallback? onUnitSelected,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: isDark
+              ? const [
+                  Color(0xFF1A1A1A),
+                  Color(0xFF1F1F1F),
+                  Color(0xFF242424),
+                  Color(0xFF292929),
+                  Color(0xFF2D2D2D),
+                ]
+              : const [
+                  Color(0xFFF0F0F0),
+                  Color(0xFFF2F2F2),
+                  Color(0xFFF5F5F5),
+                  Color(0xFFF8F8F8),
+                  Color(0xFFFAFAFA),
+                ],
+          stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+          width: 1.5,
+        ),
+        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+      ),
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: true,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          childrenPadding: const EdgeInsets.only(bottom: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.apartment,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
+          ),
+          title: Text(
+            property.name,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          subtitle: Text(
+            '${units.length} ${units.length == 1 ? 'jedinica' : 'jedinica'}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Add unit to this property
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline, size: 20),
+                onPressed: () {
+                  // TODO: Pass propertyId to wizard when supported
+                  context.push(OwnerRoutes.unitWizard);
+                },
+                tooltip: 'Dodaj jedinicu',
+                visualDensity: VisualDensity.compact,
+              ),
+              const Icon(Icons.expand_more),
+            ],
+          ),
+          children: [
+            if (units.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 20,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Nema jedinica u ovom objektu',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: GradientTokens.brandPrimary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              context.push(OwnerRoutes.unitWizard);
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              child: Text(
+                                'Dodaj',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ...units.map((unit) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: _buildUnitListTile(
+                  theme,
+                  isDark,
+                  unit: unit,
+                  propertyName: property.name,
+                  isSelected: _selectedUnit?.id == unit.id,
+                  onUnitSelected: onUnitSelected,
+                ),
+              )),
+          ],
+        ),
+      ),
+    );
+  }
   /// Unit list tile - single unit in master panel
   Widget _buildUnitListTile(
     ThemeData theme,
@@ -561,16 +737,37 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: isSelected
-            ? theme.colorScheme.primaryContainer
-            : theme.colorScheme.surface,
+        gradient: isSelected
+            ? null
+            : LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: isDark
+                    ? const [
+                        Color(0xFF1A1A1A),
+                        Color(0xFF1F1F1F),
+                        Color(0xFF242424),
+                        Color(0xFF292929),
+                        Color(0xFF2D2D2D),
+                      ]
+                    : const [
+                        Color(0xFFF0F0F0),
+                        Color(0xFFF2F2F2),
+                        Color(0xFFF5F5F5),
+                        Color(0xFFF8F8F8),
+                        Color(0xFFFAFAFA),
+                      ],
+                stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
+              ),
+        color: isSelected ? theme.colorScheme.primaryContainer : null,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected
               ? theme.colorScheme.primary
-              : theme.colorScheme.outline.withOpacity(0.2),
-          width: isSelected ? 2 : 1,
+              : theme.colorScheme.outline.withValues(alpha: 0.4),
+          width: isSelected ? 2 : 1.5,
         ),
+        boxShadow: AppShadows.getElevation(1, isDark: isDark),
       ),
       child: InkWell(
         onTap: () async {
@@ -722,6 +919,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             indicatorColor: theme.colorScheme.primary,
             indicatorWeight: 3,
             indicatorSize: TabBarIndicatorSize.label,
+            // Tab bar left padding: smaller for mobile
+            padding: EdgeInsets.only(
+              left: screenWidth < 600 ? 4 : 16,
+            ),
             // Responsive padding: smaller for mobile, larger for desktop
             labelPadding: EdgeInsets.symmetric(
               horizontal: screenWidth < 600 ? 8 : 20,
@@ -804,6 +1005,72 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    final isDesktop = screenWidth >= 900;
+
+    // Build individual cards as widgets for flex layout
+    final informacijeCard = _buildInfoCard(
+      theme,
+      title: 'Informacije',
+      icon: Icons.info_outline,
+      children: [
+        _buildDetailRow(theme, 'Naziv', _selectedUnit!.name),
+        _buildDetailRow(theme, 'Slug', _selectedUnit!.slug ?? 'N/A'),
+        if (_selectedUnit!.description != null)
+          _buildDetailRow(theme, 'Opis', _selectedUnit!.description!),
+        _buildDetailRow(
+          theme,
+          'Status',
+          _selectedUnit!.isAvailable ? 'Dostupan' : 'Nedostupan',
+          valueColor: _selectedUnit!.isAvailable
+              ? AppColors.success
+              : AppColors.error,
+        ),
+      ],
+    );
+
+    final kapacitetCard = _buildInfoCard(
+      theme,
+      title: 'Kapacitet',
+      icon: Icons.people_outline,
+      children: [
+        _buildDetailRow(
+          theme,
+          'Spavaće sobe',
+          '${_selectedUnit!.bedrooms}',
+        ),
+        _buildDetailRow(theme, 'Kupaonice', '${_selectedUnit!.bathrooms}'),
+        _buildDetailRow(
+          theme,
+          'Max gostiju',
+          '${_selectedUnit!.maxGuests}',
+        ),
+        if (_selectedUnit!.areaSqm != null)
+          _buildDetailRow(
+            theme,
+            'Površina',
+            '${_selectedUnit!.areaSqm!.toStringAsFixed(0)} m²',
+          ),
+      ],
+    );
+
+    final cijenaCard = _buildInfoCard(
+      theme,
+      title: 'Cijena',
+      icon: Icons.euro_outlined,
+      children: [
+        _buildDetailRow(
+          theme,
+          'Cijena po noći',
+          '€${_selectedUnit!.pricePerNight.toStringAsFixed(0)}',
+          valueColor: theme.colorScheme.primary,
+        ),
+        _buildDetailRow(
+          theme,
+          'Min noći',
+          '${_selectedUnit!.minStayNights}',
+        ),
+      ],
+    );
 
     return ListView(
       padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -819,17 +1086,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 fontSize: 20,
               ),
             ),
-            // Gradient button to match Cjenovnik tab design
+            // Gradient button using brand gradient
             Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withValues(alpha: 0.7),
-                  ],
-                ),
+                gradient: GradientTokens.brandPrimary,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Material(
@@ -875,119 +1135,133 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ),
         const SizedBox(height: 24),
 
-        // Unit Details Cards
-        _buildInfoCard(
-          theme,
-          title: 'Informacije',
-          icon: Icons.info_outline,
-          children: [
-            _buildDetailRow(theme, 'Naziv', _selectedUnit!.name),
-            _buildDetailRow(theme, 'Slug', _selectedUnit!.slug ?? 'N/A'),
-            if (_selectedUnit!.description != null)
-              _buildDetailRow(theme, 'Opis', _selectedUnit!.description!),
-            _buildDetailRow(
-              theme,
-              'Status',
-              _selectedUnit!.isAvailable ? 'Dostupan' : 'Nedostupan',
-              valueColor: _selectedUnit!.isAvailable
-                  ? AppColors.success
-                  : AppColors.error,
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        _buildInfoCard(
-          theme,
-          title: 'Kapacitet',
-          icon: Icons.people_outline,
-          children: [
-            _buildDetailRow(
-              theme,
-              'Spavaće sobe',
-              '${_selectedUnit!.bedrooms}',
-            ),
-            _buildDetailRow(theme, 'Kupaonice', '${_selectedUnit!.bathrooms}'),
-            _buildDetailRow(
-              theme,
-              'Max gostiju',
-              '${_selectedUnit!.maxGuests}',
-            ),
-            if (_selectedUnit!.areaSqm != null)
-              _buildDetailRow(
-                theme,
-                'Površina',
-                '${_selectedUnit!.areaSqm!.toStringAsFixed(0)} m²',
-              ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        _buildInfoCard(
-          theme,
-          title: 'Cijena',
-          icon: Icons.euro_outlined,
-          children: [
-            _buildDetailRow(
-              theme,
-              'Cijena po noći',
-              '€${_selectedUnit!.pricePerNight.toStringAsFixed(0)}',
-              valueColor: theme.colorScheme.primary,
-            ),
-            _buildDetailRow(
-              theme,
-              'Min noći',
-              '${_selectedUnit!.minStayNights}',
-            ),
-          ],
-        ),
-
-        // Images Section
-        if (_selectedUnit!.images.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          _buildInfoCard(
-            theme,
-            title: 'Fotografije',
-            icon: Icons.photo_library_outlined,
+        // Unit Details Cards - Flex layout on desktop
+        if (isDesktop) ...[
+          // Row 1: Informacije and Kapacitet side by side
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _selectedUnit!.images.take(6).map((imageUrl) {
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      imageUrl,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 100,
-                          height: 100,
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          child: Icon(
-                            Icons.broken_image,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                }).toList(),
-              ),
-              if (_selectedUnit!.images.length > 6)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    '+${_selectedUnit!.images.length - 6} više',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
+              Expanded(child: informacijeCard),
+              const SizedBox(width: 16),
+              Expanded(child: kapacitetCard),
             ],
           ),
+          const SizedBox(height: 16),
+          // Row 2: Cijena and Fotografije side by side
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: cijenaCard),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildInfoCard(
+                  theme,
+                  title: 'Fotografije',
+                  icon: Icons.photo_library_outlined,
+                  children: [
+                    if (_selectedUnit!.images.isNotEmpty) ...[
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _selectedUnit!.images.take(6).map((imageUrl) {
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              imageUrl,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: theme.colorScheme.surfaceContainerHighest,
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      if (_selectedUnit!.images.length > 6)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            '+${_selectedUnit!.images.length - 6} više',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                    ] else
+                      Text(
+                        'Nema fotografija',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ] else ...[
+          // Stacked layout for mobile/tablet
+          informacijeCard,
+          const SizedBox(height: 16),
+          kapacitetCard,
+          const SizedBox(height: 16),
+          cijenaCard,
+          // Images Section for mobile
+          if (_selectedUnit!.images.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildInfoCard(
+              theme,
+              title: 'Fotografije',
+              icon: Icons.photo_library_outlined,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _selectedUnit!.images.take(6).map((imageUrl) {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        imageUrl,
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 100,
+                            height: 100,
+                            color: theme.colorScheme.surfaceContainerHighest,
+                            child: Icon(
+                              Icons.broken_image,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+                if (_selectedUnit!.images.length > 6)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      '+${_selectedUnit!.images.length - 6} više',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ],
       ],
     );
@@ -997,7 +1271,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     if (_selectedUnit == null) return const SizedBox.shrink();
 
     // Embed UnitPricingScreen content WITHOUT app bar
+    // Key forces widget recreation when unit changes
     return UnitPricingScreen(
+      key: ValueKey('pricing_${_selectedUnit!.id}'),
       unit: _selectedUnit,
       showAppBar: false, // Hide app bar when embedded in tabs
     );
@@ -1009,7 +1285,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     }
 
     // Embed WidgetSettingsScreen content WITHOUT app bar
+    // Key forces widget recreation when unit changes
     return WidgetSettingsScreen(
+      key: ValueKey('widget_${_selectedUnit!.id}'),
       propertyId: _selectedProperty!.id,
       unitId: _selectedUnit!.id,
       showAppBar: false, // Hide app bar when embedded in tabs
@@ -1022,7 +1300,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     }
 
     // Embed WidgetAdvancedSettingsScreen content WITHOUT app bar
+    // Key forces widget recreation when unit changes
     return WidgetAdvancedSettingsScreen(
+      key: ValueKey('advanced_${_selectedUnit!.id}'),
       propertyId: _selectedProperty!.id,
       unitId: _selectedUnit!.id,
       showAppBar: false, // Hide app bar when embedded in tabs

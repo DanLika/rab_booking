@@ -47,12 +47,22 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
   void _loadData(dynamic draft) {
     if (_isInitialized) return;
 
-    // Only set initial values - listeners are already attached in initState
+    // Remove listeners temporarily to avoid triggering provider updates during build
+    _nameController.removeListener(_onNameChanged);
+    _slugController.removeListener(_onSlugChanged);
+    _descriptionController.removeListener(_onDescriptionChanged);
+
+    // Set initial values
     _nameController.text = draft.name ?? '';
     _slugController.text = draft.slug ?? '';
     _descriptionController.text = draft.description ?? '';
     _isManualSlugEdit = draft.slug != null && draft.slug!.isNotEmpty;
     _isInitialized = true;
+
+    // Re-attach listeners after setting initial values
+    _nameController.addListener(_onNameChanged);
+    _slugController.addListener(_onSlugChanged);
+    _descriptionController.addListener(_onDescriptionChanged);
   }
 
   void _onNameChanged() {
@@ -242,7 +252,6 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                       TextFormField(
                                         controller: _nameController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          context,
                                           labelText: 'Naziv Jedinice *',
                                           hintText: 'npr. Apartman Prizemlje',
                                           prefixIcon: const Icon(Icons.meeting_room),
@@ -260,7 +269,6 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                       TextFormField(
                                         controller: _slugController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          context,
                                           labelText: 'URL Slug',
                                           hintText: 'apartman-prizemlje',
                                           prefixIcon: const Icon(Icons.link),
@@ -293,7 +301,6 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                       child: TextFormField(
                                         controller: _nameController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          context,
                                           labelText: 'Naziv Jedinice *',
                                           hintText: 'npr. Apartman Prizemlje',
                                           prefixIcon: const Icon(Icons.meeting_room),
@@ -313,7 +320,6 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                       child: TextFormField(
                                         controller: _slugController,
                                         decoration: InputDecorationHelper.buildDecoration(
-                                          context,
                                           labelText: 'URL Slug',
                                           hintText: 'apartman-prizemlje',
                                           prefixIcon: const Icon(Icons.link),
@@ -435,7 +441,6 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                             TextFormField(
                               controller: _descriptionController,
                               decoration: InputDecorationHelper.buildDecoration(
-                                context,
                                 labelText: 'Opis (opcionalno)',
                                 hintText: 'Kratki opis jedinice...',
                                 isMobile: isMobile,

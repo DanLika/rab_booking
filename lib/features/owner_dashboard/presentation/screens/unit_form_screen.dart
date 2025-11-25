@@ -132,7 +132,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        context,
                         labelText: 'Naziv jedinice *',
                         hintText: 'npr. Apartman prizemlje',
                         prefixIcon: const Icon(Icons.meeting_room),
@@ -150,7 +149,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _slugController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        context,
                         labelText: 'URL Slug',
                         hintText: 'apartman-prizemlje',
                         helperText: 'SEO-friendly URL: /booking/{slug}',
@@ -186,7 +184,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        context,
                         labelText: 'Opis',
                         hintText: 'Dodatne informacije o jedinici...',
                         prefixIcon: const Icon(Icons.description),
@@ -207,7 +204,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _bedroomsController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        context,
                         labelText: 'Spavaće sobe *',
                         prefixIcon: const Icon(Icons.bed),
                         isMobile: isMobile,
@@ -229,7 +225,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _bathroomsController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        context,
                         labelText: 'Kupaonice *',
                         prefixIcon: const Icon(Icons.bathroom),
                         isMobile: isMobile,
@@ -251,7 +246,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _maxGuestsController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        context,
                         labelText: 'Max gostiju *',
                         prefixIcon: const Icon(Icons.person),
                         isMobile: isMobile,
@@ -273,7 +267,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _areaController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        context,
                         labelText: 'Površina (m²)',
                         prefixIcon: const Icon(Icons.aspect_ratio),
                         isMobile: isMobile,
@@ -294,7 +287,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _priceController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        context,
                         labelText: 'Cijena po noći (€) *',
                         prefixIcon: const Icon(Icons.payments),
                         isMobile: isMobile,
@@ -316,7 +308,6 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                     TextFormField(
                       controller: _minStayController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        context,
                         labelText: 'Min noći *',
                         prefixIcon: const Icon(Icons.nights_stay),
                         isMobile: isMobile,
@@ -362,17 +353,20 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen> {
                   title: 'Dostupnost',
                   icon: Icons.toggle_on_outlined,
                   children: [
-                    SwitchListTile(
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
                       title: const Text('Dostupno za rezervaciju'),
                       subtitle: Text(
                         _isAvailable
                             ? 'Jedinica će biti dostupna za rezervacije'
                             : 'Jedinica neće biti prikazana',
                       ),
-                      value: _isAvailable,
-                      onChanged: (value) =>
-                          setState(() => _isAvailable = value),
-                      contentPadding: EdgeInsets.zero,
+                      trailing: Switch(
+                        value: _isAvailable,
+                        onChanged: (value) =>
+                            setState(() => _isAvailable = value),
+                        thumbColor: WidgetStateProperty.all(Colors.transparent),
+                      ),
                     ),
                   ],
                 ),

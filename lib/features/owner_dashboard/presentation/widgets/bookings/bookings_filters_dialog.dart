@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../../shared/models/property_model.dart';
+import '../../../../../shared/widgets/custom_date_range_picker.dart';
 import '../../providers/owner_bookings_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
 
@@ -47,16 +49,9 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             // Header with gradient (matching CommonAppBar)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withValues(alpha: 0.7),
-                  ],
-                ),
-                borderRadius: const BorderRadius.vertical(
+              decoration: const BoxDecoration(
+                gradient: GradientTokens.brandPrimary,
+                borderRadius: BorderRadius.vertical(
                   top: Radius.circular(4),
                 ),
               ),
@@ -390,21 +385,11 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
                 ? DateTimeRange(start: _selectedStartDate!, end: _selectedEndDate!)
                 : null;
 
-            final picked = await showDateRangePicker(
+            final picked = await showCustomDateRangePicker(
               context: context,
               firstDate: DateTime(2020),
               lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
               initialDateRange: initialRange,
-              builder: (context, child) {
-                return Theme(
-                  data: theme.copyWith(
-                    colorScheme: theme.colorScheme.copyWith(
-                      primary: theme.colorScheme.primary,
-                    ),
-                  ),
-                  child: child!,
-                );
-              },
             );
 
             if (picked != null) {
@@ -471,16 +456,9 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
 
   Widget _buildApplyButton(ThemeData theme, bool isFullWidth) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.7),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
+      decoration: const BoxDecoration(
+        gradient: GradientTokens.brandPrimary,
+        borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
       child: Material(
         color: Colors.transparent,

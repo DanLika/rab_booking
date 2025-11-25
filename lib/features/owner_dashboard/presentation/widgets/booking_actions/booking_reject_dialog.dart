@@ -87,7 +87,6 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
                   TextField(
                     controller: _reasonController,
                     decoration: InputDecorationHelper.buildDecoration(
-                      context,
                       labelText: 'Razlog odbijanja',
                       hintText: 'Unesite razlog (opcionalno)...',
                       prefixIcon: const Icon(Icons.edit_note),

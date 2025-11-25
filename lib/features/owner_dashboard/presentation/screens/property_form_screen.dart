@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
@@ -143,7 +144,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                               TextFormField(
                                 controller: _nameController,
                                 decoration: InputDecorationHelper.buildDecoration(
-                                  context,
                                   labelText: 'Naziv nekretnine *',
                                   hintText: 'npr. Villa Mediteran',
                                   isMobile: isMobile,
@@ -161,7 +161,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                               TextFormField(
                                 controller: _slugController,
                                 decoration: InputDecorationHelper.buildDecoration(
-                                  context,
                                   labelText: 'URL Slug',
                                   hintText: 'villa-mediteran',
                                   helperText: 'SEO-friendly URL: /booking/{slug}',
@@ -205,7 +204,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                               child: TextFormField(
                                 controller: _nameController,
                                 decoration: InputDecorationHelper.buildDecoration(
-                                  context,
                                   labelText: 'Naziv nekretnine *',
                                   hintText: 'npr. Villa Mediteran',
                                   isMobile: isMobile,
@@ -225,7 +223,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                               child: TextFormField(
                                 controller: _slugController,
                                 decoration: InputDecorationHelper.buildDecoration(
-                                  context,
                                   labelText: 'URL Slug',
                                   hintText: 'villa-mediteran',
                                   helperText: 'SEO-friendly URL: /booking/{slug}',
@@ -266,7 +263,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                     DropdownButtonFormField<PropertyType>(
                       initialValue: _selectedType,
                       decoration: InputDecorationHelper.buildDecoration(
-                        context,
                         labelText: 'Tip nekretnine *',
                         isMobile: isMobile,
                       ),
@@ -287,7 +283,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecorationHelper.buildDecoration(
-                        context,
                         labelText: 'Opis *',
                         hintText: 'Detaljno opišite vašu nekretninu...',
                         isMobile: isMobile,
@@ -326,7 +321,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                               TextFormField(
                                 controller: _locationController,
                                 decoration: InputDecorationHelper.buildDecoration(
-                                  context,
                                   labelText: 'Lokacija *',
                                   hintText: 'npr. Rab (grad), Otok Rab',
                                   prefixIcon: const Icon(Icons.location_on),
@@ -343,7 +337,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                               TextFormField(
                                 controller: _addressController,
                                 decoration: InputDecorationHelper.buildDecoration(
-                                  context,
                                   labelText: 'Adresa',
                                   hintText: 'Ulica i broj',
                                   prefixIcon: const Icon(Icons.home),
@@ -362,7 +355,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                               child: TextFormField(
                                 controller: _locationController,
                                 decoration: InputDecorationHelper.buildDecoration(
-                                  context,
                                   labelText: 'Lokacija *',
                                   hintText: 'npr. Rab (grad), Otok Rab',
                                   prefixIcon: const Icon(Icons.location_on),
@@ -381,7 +373,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                               child: TextFormField(
                                 controller: _addressController,
                                 decoration: InputDecorationHelper.buildDecoration(
-                                  context,
                                   labelText: 'Adresa',
                                   hintText: 'Ulica i broj',
                                   prefixIcon: const Icon(Icons.home),
@@ -421,32 +412,32 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                   title: 'Postavke',
                   icon: Icons.settings,
                   children: [
-                    SwitchListTile(
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
                       title: const Text('Objavi odmah'),
                       subtitle: Text(
                         _isPublished
                             ? 'Nekretnina će biti vidljiva korisnicima'
                             : 'Nekretnina će biti skrivena',
                       ),
-                      value: _isPublished,
-                      onChanged: (value) =>
-                          setState(() => _isPublished = value),
+                      trailing: Switch(
+                        value: _isPublished,
+                        onChanged: (value) =>
+                            setState(() => _isPublished = value),
+                        thumbColor: WidgetStateProperty.all(Colors.transparent),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: AppDimensions.spaceL),
 
-                // Modern Gradient Save Button - uses app bar gradient (Purple 100% → Purple 70%)
+                // Modern Gradient Save Button - uses brand gradient (GradientTokens.brandPrimary)
                 GradientButton(
                   text: _isEditing ? 'Spremi Izmjene' : 'Dodaj Nekretninu',
                   onPressed: _handleSave,
                   isLoading: _isLoading,
                   icon: _isEditing ? Icons.save : Icons.add,
                   width: double.infinity,
-                  gradientColors: const [
-                    Color(0xFF6B4CE6), // Purple 100%
-                    Color(0xB36B4CE6), // Purple 70% (0xB3 = ~70% opacity)
-                  ],
                 ),
                 const SizedBox(height: AppDimensions.spaceXL),
               ],
@@ -470,15 +461,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                       children: [
                         Container(
                           padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                theme.colorScheme.primary,
-                                theme.colorScheme.primary.withValues(alpha: 0.7),
-                              ],
-                            ),
+                          decoration: const BoxDecoration(
+                            gradient: GradientTokens.brandPrimary,
                             shape: BoxShape.circle,
                           ),
                           child: const CircularProgressIndicator(

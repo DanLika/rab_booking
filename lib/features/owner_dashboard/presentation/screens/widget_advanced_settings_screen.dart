@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../widget/domain/models/widget_settings.dart';
@@ -285,30 +286,55 @@ class _WidgetAdvancedSettingsScreenState
                   ),
                 ),
 
-                // Save Button
+                // Save Button (uses brand gradient)
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: isMobile ? 16 : 20,
                   ),
-                  child: ElevatedButton(
-                    onPressed: _isSaving ? null : () => _saveSettings(settings),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: GradientTokens.brandPrimary,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: _isSaving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _isSaving ? null : () => _saveSettings(settings),
+                        borderRadius: BorderRadius.circular(10),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _isSaving
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.check,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _isSaving ? 'Saving...' : 'Save Advanced Settings',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                          )
-                        : const Text('Save Advanced Settings'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
 

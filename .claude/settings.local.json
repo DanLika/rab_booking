@@ -47,7 +47,15 @@
       "Bash(nc:*)",
       "Bash(tee:*)",
       "Bash(find:*)",
-      "Bash(/dev/tcp/127.0.0.1/58259)"
+      "Bash(/dev/tcp/127.0.0.1/58259)",
+      "Bash(brew upgrade:*)",
+      "Bash(wc:*)",
+      "Bash(git -C /Users/duskolicanin/git/rab_booking status CLAUDE.md)",
+      "Bash(git -C /Users/duskolicanin/git/rab_booking diff --stat CLAUDE.md)",
+      "Bash(git -C /Users/duskolicanin/git/rab_booking ls-files:*)",
+      "Bash(git -C /Users/duskolicanin/git/rab_booking status --porcelain)",
+      "Bash(git -C /Users/duskolicanin/git/rab_booking diff --stat claude.md)",
+      "Bash(git -C /Users/duskolicanin/git/rab_booking checkout HEAD -- claude.md)"
     ],
     "deny": [
       "Read(.env)",

@@ -106,7 +106,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
   /// Go to next step
   Future<void> goToNextStep() async {
     final currentState = state.value;
-    if (currentState == null || currentState.currentStep >= 8) return;
+    if (currentState == null || currentState.currentStep >= 5) return;
 
     final nextStep = currentState.currentStep + 1;
     state = AsyncValue.data(
@@ -131,7 +131,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
 
   /// Jump to specific step
   Future<void> jumpToStep(int step) async {
-    if (step < 1 || step > 8) return;
+    if (step < 1 || step > 5) return;
 
     final currentState = state.value;
     if (currentState == null) return;
@@ -226,14 +226,16 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
     dynamic value,
   ) {
     switch (field) {
-      // Step 1
+      // Step 1 - Basic Info
       case 'name':
         return draft.copyWith(name: value);
       case 'propertyId':
         return draft.copyWith(propertyId: value);
+      case 'slug':
+        return draft.copyWith(slug: value);
       case 'description':
         return draft.copyWith(description: value);
-      // Step 2
+      // Step 2 - Capacity
       case 'bedrooms':
         return draft.copyWith(bedrooms: value);
       case 'bathrooms':
@@ -242,14 +244,13 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
         return draft.copyWith(maxGuests: value);
       case 'areaSqm':
         return draft.copyWith(areaSqm: value);
-      // Step 3
+      // Step 3 - Pricing & Availability (merged)
       case 'pricePerNight':
         return draft.copyWith(pricePerNight: value);
       case 'minStayNights':
         return draft.copyWith(minStayNights: value);
       case 'seasons':
         return draft.copyWith(seasons: value);
-      // Step 4
       case 'availableYearRound':
         return draft.copyWith(availableYearRound: value);
       case 'seasonStartDate':
@@ -258,19 +259,19 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
         return draft.copyWith(seasonEndDate: value);
       case 'blockedDates':
         return draft.copyWith(blockedDates: value);
-      // Step 5
+      // Step 4 - Photos (optional)
       case 'images':
         return draft.copyWith(images: value);
       case 'coverImageUrl':
         return draft.copyWith(coverImageUrl: value);
-      // Step 6
+      // Step 5 - Review & Publish (no fields to update here)
+      // Additional fields for future use
       case 'widgetMode':
         return draft.copyWith(widgetMode: value);
       case 'widgetTheme':
         return draft.copyWith(widgetTheme: value);
       case 'widgetSettings':
         return draft.copyWith(widgetSettings: value);
-      // Step 7
       case 'icalConfig':
         return draft.copyWith(icalConfig: value);
       case 'emailConfig':

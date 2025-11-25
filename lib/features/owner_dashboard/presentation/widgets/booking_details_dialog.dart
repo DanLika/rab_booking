@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -18,7 +19,6 @@ class BookingDetailsDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final booking = ownerBooking.booking;
     final property = ownerBooking.property;
     final unit = ownerBooking.unit;
@@ -33,16 +33,9 @@ class BookingDetailsDialog extends ConsumerWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  theme.colorScheme.primary,
-                  theme.colorScheme.primary.withValues(alpha: 0.7),
-                ],
-              ),
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
+            decoration: const BoxDecoration(
+              gradient: GradientTokens.brandPrimary,
+              borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
             child: const Icon(Icons.receipt_long, color: Colors.white, size: 24),
           ),
@@ -376,16 +369,9 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
-              ],
-            ),
-            borderRadius: const BorderRadius.all(Radius.circular(8)),
+          decoration: const BoxDecoration(
+            gradient: GradientTokens.brandPrimary,
+            borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
           child: Icon(icon, color: Colors.white, size: 18),
         ),

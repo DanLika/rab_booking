@@ -7,17 +7,17 @@ import '../../../../../../core/services/storage_service.dart';
 import '../../../../../../core/utils/error_display_utils.dart';
 import '../state/unit_wizard_provider.dart';
 
-/// Step 5: Photos - Upload and manage unit images
-class Step5Photos extends ConsumerStatefulWidget {
+/// Step 4: Photos - Upload and manage unit images
+class Step4Photos extends ConsumerStatefulWidget {
   final String? unitId;
 
-  const Step5Photos({super.key, this.unitId});
+  const Step4Photos({super.key, this.unitId});
 
   @override
-  ConsumerState<Step5Photos> createState() => _Step5PhotosState();
+  ConsumerState<Step4Photos> createState() => _Step4PhotosState();
 }
 
-class _Step5PhotosState extends ConsumerState<Step5Photos> {
+class _Step4PhotosState extends ConsumerState<Step4Photos> {
   final ImagePicker _imagePicker = ImagePicker();
   final StorageService _storageService = StorageService();
   bool _isUploading = false;
@@ -37,13 +37,17 @@ class _Step5PhotosState extends ConsumerState<Step5Photos> {
       final wizardState = ref.read(unitWizardNotifierProvider(widget.unitId)).value;
       if (wizardState == null) return;
 
-      // Get user ID and property ID
+      // Get user ID
       final userId = ref.read(enhancedAuthProvider).firebaseUser?.uid;
-      final propertyId = wizardState.propertyId;
 
-      if (userId == null || propertyId == null) {
-        throw Exception('Missing user ID or property ID');
+      if (userId == null) {
+        throw Exception('User not authenticated');
       }
+
+      // Use propertyId if available, otherwise use 'draft' folder
+      // Images will be stored in user's draft folder during wizard flow
+      // and can be moved/associated with proper property when unit is published
+      final propertyId = wizardState.propertyId ?? 'draft';
 
       // Upload images one by one
       final List<String> uploadedUrls = [];
@@ -196,7 +200,7 @@ class _Step5PhotosState extends ConsumerState<Step5Photos> {
                 ),
                 const SizedBox(height: 24),
 
-                // Upload Section Card - matching Step 1-4 styling
+                // Upload Section Card - matching Step 1-3 styling
                 Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),

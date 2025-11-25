@@ -45,19 +45,38 @@ class FirebaseUnitRepository implements UnitRepository {
 
   @override
   Future<UnitModel> createUnit(UnitModel unit) async {
-    final docRef = await _firestore.collection('units').add(unit.toJson());
+    // Units are stored as subcollection under properties/{propertyId}/units
+    final docRef = await _firestore
+        .collection('properties')
+        .doc(unit.propertyId)
+        .collection('units')
+        .add(unit.toJson());
     return unit.copyWith(id: docRef.id);
   }
 
   @override
   Future<UnitModel> updateUnit(UnitModel unit) async {
-    await _firestore.collection('units').doc(unit.id).update(unit.toJson());
+    // Units are stored as subcollection under properties/{propertyId}/units
+    await _firestore
+        .collection('properties')
+        .doc(unit.propertyId)
+        .collection('units')
+        .doc(unit.id)
+        .update(unit.toJson());
     return unit;
   }
 
   @override
   Future<void> deleteUnit(String id) async {
-    await _firestore.collection('units').doc(id).delete();
+    // Use collectionGroup to find and delete the unit
+    final querySnapshot = await _firestore.collectionGroup('units').get();
+    for (final doc in querySnapshot.docs) {
+      if (doc.id == id) {
+        await doc.reference.delete();
+        return;
+      }
+    }
+    throw Exception('Unit not found');
   }
 
   @override
@@ -85,26 +104,42 @@ class FirebaseUnitRepository implements UnitRepository {
 
   @override
   Future<UnitModel> toggleUnitAvailability(String id, bool isAvailable) async {
-    final doc = await _firestore.collection('units').doc(id).get();
-    if (!doc.exists) throw Exception('Unit not found');
-
-    final unit = UnitModel.fromJson({...doc.data()!, 'id': doc.id});
-    final updated = unit.copyWith(isAvailable: isAvailable);
-
-    await _firestore.collection('units').doc(id).update(updated.toJson());
-    return updated;
+    // Use collectionGroup to find the unit across all properties
+    final querySnapshot = await _firestore.collectionGroup('units').get();
+    for (final doc in querySnapshot.docs) {
+      if (doc.id == id) {
+        final propertyId = doc.reference.parent.parent?.id;
+        final unit = UnitModel.fromJson({
+          ...doc.data(),
+          'id': doc.id,
+          'property_id': propertyId,
+        });
+        final updated = unit.copyWith(isAvailable: isAvailable);
+        await doc.reference.update(updated.toJson());
+        return updated;
+      }
+    }
+    throw Exception('Unit not found');
   }
 
   @override
   Future<UnitModel> updateUnitPrice(String id, double pricePerNight) async {
-    final doc = await _firestore.collection('units').doc(id).get();
-    if (!doc.exists) throw Exception('Unit not found');
-
-    final unit = UnitModel.fromJson({...doc.data()!, 'id': doc.id});
-    final updated = unit.copyWith(pricePerNight: pricePerNight);
-
-    await _firestore.collection('units').doc(id).update(updated.toJson());
-    return updated;
+    // Use collectionGroup to find the unit across all properties
+    final querySnapshot = await _firestore.collectionGroup('units').get();
+    for (final doc in querySnapshot.docs) {
+      if (doc.id == id) {
+        final propertyId = doc.reference.parent.parent?.id;
+        final unit = UnitModel.fromJson({
+          ...doc.data(),
+          'id': doc.id,
+          'property_id': propertyId,
+        });
+        final updated = unit.copyWith(pricePerNight: pricePerNight);
+        await doc.reference.update(updated.toJson());
+        return updated;
+      }
+    }
+    throw Exception('Unit not found');
   }
 
   @override

@@ -30,6 +30,7 @@ class WizardNavigationButtons extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    final isVerySmall = screenWidth < 400; // Extra small screens (360px etc.)
 
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
@@ -48,30 +49,37 @@ class WizardNavigationButtons extends StatelessWidget {
                 ],
           stops: const [0.0, 0.3],
         ),
-        border: Border(
-          top: BorderSide(
-            color: theme.colorScheme.outline.withValues(alpha: 0.2),
-          ),
-        ),
+        // Border removed for seamless gradient flow with content above
       ),
       child: Row(
         children: [
-          // Back button
+          // Back button - icon only on very small screens
           if (showBack)
-            OutlinedButton.icon(
-              onPressed: onBack,
-              icon: const Icon(Icons.arrow_back, size: 18),
-              label: Text(isMobile ? 'Back' : 'Back'),
-              style: OutlinedButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 16 : 24,
-                  vertical: isMobile ? 12 : 14,
-                ),
-                side: BorderSide(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                ),
-              ),
-            )
+            isVerySmall
+                ? IconButton(
+                    onPressed: onBack,
+                    icon: const Icon(Icons.arrow_back, size: 20),
+                    style: IconButton.styleFrom(
+                      side: BorderSide(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    tooltip: 'Back',
+                  )
+                : OutlinedButton.icon(
+                    onPressed: onBack,
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: const Text('Back'),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 16 : 24,
+                        vertical: isMobile ? 12 : 14,
+                      ),
+                      side: BorderSide(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                      ),
+                    ),
+                  )
           else
             const SizedBox.shrink(),
 
@@ -81,48 +89,80 @@ class WizardNavigationButtons extends StatelessWidget {
           if (showSkip) ...[
             TextButton(
               onPressed: onSkip,
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isVerySmall ? 8 : (isMobile ? 12 : 16),
+                ),
+              ),
               child: Text(
-                isMobile ? 'Skip' : 'Skip for Now',
+                'Skip',
                 style: TextStyle(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
-            SizedBox(width: isMobile ? 8 : 12),
+            SizedBox(width: isVerySmall ? 4 : (isMobile ? 8 : 12)),
           ],
 
-          // Next/Continue button
-          FilledButton.icon(
-            onPressed: nextEnabled && !isLoading ? onNext : null,
-            icon: isLoading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(Colors.white),
+          // Next/Continue button - shorter label on very small screens
+          isVerySmall && nextLabel == 'Continue to Review'
+              ? FilledButton.icon(
+                  onPressed: nextEnabled && !isLoading ? onNext : null,
+                  icon: isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.arrow_forward, size: 18),
+                  label: const Text('Review'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        theme.colorScheme.surfaceContainerHighest,
+                    disabledForegroundColor:
+                        theme.colorScheme.onSurface.withValues(alpha: 0.38),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-                  )
-                : Icon(
-                    nextLabel == 'Publish'
-                        ? Icons.publish
-                        : Icons.arrow_forward,
-                    size: 18,
                   ),
-            label: Text(nextLabel),
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor:
-                  theme.colorScheme.surfaceContainerHighest,
-              disabledForegroundColor:
-                  theme.colorScheme.onSurface.withValues(alpha: 0.38),
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 20 : 32,
-                vertical: isMobile ? 12 : 14,
-              ),
-            ),
-          ),
+                )
+              : FilledButton.icon(
+                  onPressed: nextEnabled && !isLoading ? onNext : null,
+                  icon: isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        )
+                      : Icon(
+                          nextLabel == 'Publish'
+                              ? Icons.publish
+                              : Icons.arrow_forward,
+                          size: 18,
+                        ),
+                  label: Text(nextLabel),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        theme.colorScheme.surfaceContainerHighest,
+                    disabledForegroundColor:
+                        theme.colorScheme.onSurface.withValues(alpha: 0.38),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isVerySmall ? 16 : (isMobile ? 20 : 32),
+                      vertical: isMobile ? 12 : 14,
+                    ),
+                  ),
+                ),
         ],
       ),
     );

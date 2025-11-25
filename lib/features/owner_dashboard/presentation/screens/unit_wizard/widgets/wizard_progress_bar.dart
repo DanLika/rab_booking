@@ -1,22 +1,43 @@
 import 'package:flutter/material.dart';
 
 /// Wizard Progress Bar - shows current step and completion status
-/// Displays 8 steps with visual indicators for completed, current, and pending
+/// Displays 5 steps with icons, labels, and visual indicators
 class WizardProgressBar extends StatelessWidget {
-  final int currentStep; // 1-8
-  final int totalSteps; // Always 8
+  final int currentStep; // 1-5
+  final int totalSteps; // Always 5
   final Map<int, bool> completedSteps; // {1: true, 2: true, ...}
-  final Set<int> optionalSteps; // {5, 7} - shows "optional" badge
-  final Set<int> requiredSteps; // {1,2,3,4,6,8} - shows "*" indicator
+  final Set<int> optionalSteps; // {4} - Photos step is optional
+  final Set<int> requiredSteps; // {1,2,3,5} - required steps
   final Function(int)? onStepTap; // Optional - jump to step
+
+  // Green color from Confirmed badge (#66BB6A)
+  static const Color _completedColor = Color(0xFF66BB6A);
+
+  // Step icons mapping
+  static const Map<int, IconData> _stepIcons = {
+    1: Icons.info_outline,           // Info/Basic
+    2: Icons.people_outline,         // Capacity
+    3: Icons.euro,                   // Pricing + Availability
+    4: Icons.photo_library_outlined, // Photos
+    5: Icons.check_circle_outline,   // Review
+  };
+
+  // Step labels mapping (single word)
+  static const Map<int, String> _stepLabels = {
+    1: 'Info',
+    2: 'Kapacitet',
+    3: 'Cena',
+    4: 'Fotografije',
+    5: 'Pregled',
+  };
 
   const WizardProgressBar({
     super.key,
     required this.currentStep,
-    this.totalSteps = 8,
+    this.totalSteps = 5,
     this.completedSteps = const {},
-    this.optionalSteps = const {5, 7},
-    this.requiredSteps = const {1, 2, 3, 4, 6, 8},
+    this.optionalSteps = const {4},
+    this.requiredSteps = const {1, 2, 3, 5},
     this.onStepTap,
   });
 
@@ -53,11 +74,7 @@ class WizardProgressBar extends StatelessWidget {
                 ],
           stops: const [0.0, 0.3],
         ),
-        border: Border(
-          bottom: BorderSide(
-            color: theme.colorScheme.outline.withValues(alpha: 0.2),
-          ),
-        ),
+        // Border removed for seamless gradient flow with content below
       ),
       child: Row(
         children: [
@@ -94,11 +111,7 @@ class WizardProgressBar extends StatelessWidget {
                 ],
           stops: const [0.0, 0.3],
         ),
-        border: Border(
-          bottom: BorderSide(
-            color: theme.colorScheme.outline.withValues(alpha: 0.2),
-          ),
-        ),
+        // Border removed for seamless gradient flow with content below
       ),
       child: Row(
         children: [
@@ -117,7 +130,7 @@ class WizardProgressBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: completedCount / totalSteps,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
+              valueColor: const AlwaysStoppedAnimation(_completedColor), // Green
               borderRadius: BorderRadius.circular(4),
               minHeight: 6,
             ),
@@ -138,38 +151,40 @@ class WizardProgressBar extends StatelessWidget {
     );
   }
 
-  /// Step indicator (circle with number/checkmark)
+  /// Step indicator (circle with icon/checkmark + label)
   Widget _buildStepIndicator(int step, ThemeData theme, bool isDark) {
     final isCompleted = completedSteps[step] == true;
     final isCurrent = step == currentStep;
     final isOptional = optionalSteps.contains(step);
-    final isRequired = requiredSteps.contains(step);
 
     Color backgroundColor;
     Color borderColor;
-    Color textColor;
+    Color iconColor;
 
     if (isCompleted) {
-      // Completed - green
-      backgroundColor = theme.colorScheme.tertiary;
-      borderColor = theme.colorScheme.tertiary;
-      textColor = Colors.white;
+      // Completed - green (#66BB6A from Confirmed badge)
+      backgroundColor = _completedColor;
+      borderColor = _completedColor;
+      iconColor = Colors.white;
     } else if (isCurrent) {
-      // Current - primary gradient
+      // Current - primary (purple)
       backgroundColor = theme.colorScheme.primary;
       borderColor = theme.colorScheme.primary;
-      textColor = Colors.white;
+      iconColor = Colors.white;
     } else {
-      // Pending - gray
+      // Pending - gray outline
       backgroundColor = Colors.transparent;
       borderColor = theme.colorScheme.outline;
-      textColor = theme.colorScheme.onSurfaceVariant;
+      iconColor = theme.colorScheme.onSurfaceVariant;
     }
+
+    final stepIcon = _stepIcons[step] ?? Icons.circle;
+    final stepLabel = _stepLabels[step] ?? '';
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Circle with number/checkmark
+        // Circle with icon/checkmark
         InkWell(
           onTap: onStepTap != null ? () => onStepTap!(step) : null,
           borderRadius: BorderRadius.circular(20),
@@ -186,18 +201,15 @@ class WizardProgressBar extends StatelessWidget {
             ),
             child: Center(
               child: isCompleted
-                  ? Icon(
+                  ? const Icon(
                       Icons.check,
                       size: 20,
-                      color: textColor,
+                      color: Colors.white,
                     )
-                  : Text(
-                      '$step',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
-                      ),
+                  : Icon(
+                      stepIcon,
+                      size: 20,
+                      color: iconColor,
                     ),
             ),
           ),
@@ -205,33 +217,32 @@ class WizardProgressBar extends StatelessWidget {
 
         const SizedBox(height: 4),
 
-        // Required/Optional badge
-        if (isOptional)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
-            ),
+        // Step label (single word)
+        Text(
+          stepLabel,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isCompleted || isCurrent ? FontWeight.w600 : FontWeight.w400,
+            color: isCompleted
+                ? _completedColor
+                : isCurrent
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+
+        // Optional badge (only for optional steps that are not completed)
+        if (isOptional && !isCompleted)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
             child: Text(
-              'Optional',
+              '(opcionalno)',
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          )
-        else if (isRequired && !isCompleted)
-          Text(
-            '*',
-            style: TextStyle(
-              fontSize: 16,
-              color: theme.colorScheme.error,
-              fontWeight: FontWeight.bold,
-            ),
-          )
-        else
-          const SizedBox(height: 16), // Spacing placeholder
+          ),
       ],
     );
   }
@@ -243,16 +254,9 @@ class WizardProgressBar extends StatelessWidget {
     return Container(
       height: 2,
       margin: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isCompleted
-              ? [theme.colorScheme.tertiary, theme.colorScheme.tertiary]
-              : [
-                  theme.colorScheme.outline.withValues(alpha: 0.3),
-                  theme.colorScheme.outline.withValues(alpha: 0.3),
-                ],
-        ),
-      ),
+      color: isCompleted
+          ? _completedColor // Green for completed
+          : theme.colorScheme.outline.withValues(alpha: 0.3),
     );
   }
 }

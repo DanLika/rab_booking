@@ -2,26 +2,25 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../../../shared/models/unit_model.dart';
 import '../../../../../../shared/providers/repository_providers.dart';
+import '../../providers/owner_properties_provider.dart';
 import 'state/unit_wizard_provider.dart';
 import 'widgets/wizard_progress_bar.dart';
 import 'widgets/wizard_navigation_buttons.dart';
 import 'steps/step_1_basic_info.dart';
 import 'steps/step_2_capacity.dart';
 import 'steps/step_3_pricing.dart';
-import 'steps/step_4_availability.dart';
-import 'steps/step_5_photos.dart';
-import 'steps/step_6_widget.dart';
-import 'steps/step_7_advanced.dart';
-import 'steps/step_8_review.dart';
+import 'steps/step_4_photos.dart';
+import 'steps/step_5_review.dart';
 
 /// Unit Wizard Screen - Multi-step wizard for creating/editing units
 ///
 /// Features:
-/// - 8-step wizard flow (Basic Info → Review & Publish)
+/// - 5-step wizard flow (Basic Info → Review & Publish)
 /// - Auto-save with draft persistence
-/// - Skip optional steps (Photos, Advanced Options)
+/// - Skip optional step (Photos)
 /// - Resume from draft
 /// - Responsive design (mobile + desktop)
 class UnitWizardScreen extends ConsumerStatefulWidget {
@@ -47,7 +46,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
 
   /// Handle step navigation
   Future<void> _goToStep(int step) async {
-    if (step < 1 || step > 8) return;
+    if (step < 1 || step > 5) return;
 
     await _pageController.animateToPage(
       step - 1,
@@ -77,7 +76,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
     await notifier.markStepCompleted(currentStep);
 
     // Move to next step
-    if (currentStep < 8) {
+    if (currentStep < 5) {
       await notifier.goToNextStep();
       unawaited(
         _pageController.nextPage(
@@ -126,26 +125,21 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
   /// Validate step data
   bool _validateStep(int step, dynamic state) {
     switch (step) {
-      case 1: // Basic Info
+      case 1: // Basic Info - only validate name and slug (propertyId will be added in Phase 3)
         return state.name != null &&
                state.name!.isNotEmpty &&
-               state.propertyId != null;
+               state.slug != null &&
+               state.slug!.isNotEmpty;
       case 2: // Capacity & Space
         return state.bedrooms != null &&
                state.bathrooms != null &&
                state.maxGuests != null;
-      case 3: // Pricing
+      case 3: // Pricing & Availability
         return state.pricePerNight != null &&
                state.minStayNights != null;
-      case 4: // Availability
-        return true; // Always valid (defaults provided)
-      case 5: // Photos (optional)
+      case 4: // Photos (optional)
         return true; // Always valid
-      case 6: // Widget Setup (recommended)
-        return true; // Always valid
-      case 7: // Advanced Options (optional)
-        return true; // Always valid
-      case 8: // Review & Publish
+      case 5: // Review & Publish
         return _validateAllRequiredSteps(state);
       default:
         return true;
@@ -153,9 +147,12 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
   }
 
   /// Validate all required steps are complete
+  /// Note: propertyId validation temporarily disabled until Phase 3 (Property Selector)
   bool _validateAllRequiredSteps(dynamic state) {
     return state.name != null &&
-           state.propertyId != null &&
+           state.name!.isNotEmpty &&
+           state.slug != null &&
+           state.slug!.isNotEmpty &&
            state.bedrooms != null &&
            state.bathrooms != null &&
            state.maxGuests != null &&
@@ -168,12 +165,12 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
     String message;
     switch (step) {
       case 1:
-        message = 'Please fill in unit name and select a property';
+        message = 'Please fill in unit name and URL slug';
       case 2:
         message = 'Please fill in bedrooms, bathrooms, and max guests';
       case 3:
         message = 'Please set price per night and minimum stay';
-      case 8:
+      case 5:
         message = 'Please complete all required steps before publishing';
       default:
         message = 'Please complete this step';
@@ -200,11 +197,24 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       }
 
       // Validate required fields
+      // Note: propertyId validation temporarily disabled until Phase 3 (Property Selector)
       if (draft.name == null ||
-          draft.propertyId == null ||
           draft.pricePerNight == null ||
           draft.maxGuests == null) {
         throw Exception('Missing required fields');
+      }
+
+      // Get propertyId - use draft's propertyId or fetch owner's first property
+      String propertyId;
+      if (draft.propertyId != null && draft.propertyId!.isNotEmpty) {
+        propertyId = draft.propertyId!;
+      } else {
+        // Fetch owner's properties and use the first one
+        final properties = await ref.read(ownerPropertiesProvider.future);
+        if (properties.isEmpty) {
+          throw Exception('No properties found. Please create a property first.');
+        }
+        propertyId = properties.first.id;
       }
 
       // Generate slug from name if not set
@@ -217,7 +227,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       // Create or update UnitModel
       final unit = UnitModel(
         id: widget.unitId ?? '',
-        propertyId: draft.propertyId!,
+        propertyId: propertyId,
         name: draft.name!,
         slug: slug,
         description: draft.description,
@@ -243,13 +253,16 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
         await ref
             .read(widgetSettingsRepositoryProvider)
             .createDefaultSettings(
-              propertyId: draft.propertyId!,
+              propertyId: propertyId,
               unitId: savedUnit.id,
             );
       }
 
       // Clear draft
       await ref.read(unitWizardNotifierProvider(widget.unitId).notifier).clearDraft();
+
+      // Invalidate units provider so Unit Hub refreshes its list
+      ref.invalidate(ownerUnitsProvider);
 
       // Show success message
       if (mounted) {
@@ -283,8 +296,8 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
 
   /// Get next button label based on current step
   String _getNextLabel(int step) => switch (step) {
-    8 => 'Publish',
-    7 => 'Continue to Review',
+    5 => 'Publish',
+    4 => 'Continue to Review',
     _ => 'Next',
   };
 
@@ -295,7 +308,15 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.unitId == null ? 'Create New Unit' : 'Edit Unit'),
+        toolbarHeight: 56.0, // Standard AppBar height (matches CommonAppBar)
+        title: Text(
+          widget.unitId == null ? 'Create New Unit' : 'Edit Unit',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            letterSpacing: 0,
+          ),
+        ),
         centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -303,14 +324,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
         surfaceTintColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF6B4CE6), // Purple 100%
-                Color(0xB36B4CE6), // Purple 70%
-              ],
-            ),
+            gradient: GradientTokens.brandPrimary,
           ),
         ),
         actions: [
@@ -364,11 +378,8 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
                   Step1BasicInfo(unitId: widget.unitId),
                   Step2Capacity(unitId: widget.unitId),
                   Step3Pricing(unitId: widget.unitId),
-                  Step4Availability(unitId: widget.unitId),
-                  Step5Photos(unitId: widget.unitId),
-                  Step6Widget(unitId: widget.unitId),
-                  Step7Advanced(unitId: widget.unitId),
-                  Step8Review(unitId: widget.unitId),
+                  Step4Photos(unitId: widget.unitId),
+                  Step5Review(unitId: widget.unitId),
                 ],
               ),
             ),
@@ -377,12 +388,10 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
             WizardNavigationButtons(
               onBack: draft.currentStep > 1 ? _handleBack : null,
               onNext: _handleNext,
-              onSkip: (draft.currentStep == 5 || draft.currentStep == 7)
-                  ? _handleSkip
-                  : null,
+              onSkip: draft.currentStep == 4 ? _handleSkip : null,
               nextLabel: _getNextLabel(draft.currentStep),
               showBack: draft.currentStep > 1,
-              showSkip: draft.currentStep == 5 || draft.currentStep == 7,
+              showSkip: draft.currentStep == 4, // Only Photos step is optional
             ),
           ],
         ),

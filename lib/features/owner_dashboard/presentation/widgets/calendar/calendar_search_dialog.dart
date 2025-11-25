@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -114,7 +115,6 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Dialog(
       child: Container(
         width: MediaQuery.of(context).size.width * 0.8,
@@ -125,19 +125,12 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
         ),
         child: Column(
           children: [
-            // Header with gradient (matching CommonAppBar)
+            // Header with gradient (using brand gradient)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withValues(alpha: 0.7),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
+              decoration: const BoxDecoration(
+                gradient: GradientTokens.brandPrimary,
+                borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(4),
                   topRight: Radius.circular(4),
                 ),

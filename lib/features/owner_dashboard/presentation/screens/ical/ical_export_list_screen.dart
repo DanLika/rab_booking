@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../../../../shared/providers/repository_providers.dart';
@@ -61,8 +62,6 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: CommonAppBar(
@@ -71,17 +70,9 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical/export-list'),
-      extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.primary.withValues(alpha: 0.7),
-            ],
-          ),
+        decoration: const BoxDecoration(
+          gradient: GradientTokens.brandPrimary,
         ),
         child: SafeArea(
           child: _isLoading
@@ -97,23 +88,27 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                       children: [
                   // Info card
                   Card(
-                    color: AppColors.info.withAlpha((0.1 * 255).toInt()),
-                    child: Padding(
+                    color: AppColors.surfaceLight,
+                    child: Container(
                       padding: const EdgeInsets.all(16),
-                      child: Row(
+                      decoration: BoxDecoration(
+                        color: AppColors.info.withAlpha((0.1 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.info_outline,
                             color: AppColors.info,
                             size: 24,
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               'Odaberite smještajnu jedinicu za generisanje i pregled iCal export fajla.',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: theme.colorScheme.onSurface,
+                                color: AppColors.textPrimaryLight,
                               ),
                             ),
                           ),
@@ -129,6 +124,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                     final property = item['property'];
 
                     return Card(
+                      color: AppColors.surfaceLight,
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(16),
@@ -149,6 +145,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimaryLight,
                           ),
                         ),
                         subtitle: Column(
@@ -157,31 +154,25 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                             const SizedBox(height: 4),
                             Text(
                               property.name,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 14,
-                                color: theme.colorScheme.onSurface.withAlpha(
-                                  (0.7 * 255).toInt(),
-                                ),
+                                color: AppColors.textSecondaryLight,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Row(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.people,
                                   size: 14,
-                                  color: theme.colorScheme.onSurface.withAlpha(
-                                    (0.5 * 255).toInt(),
-                                  ),
+                                  color: AppColors.textTertiaryLight,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   'Max ${unit.maxGuests} gostiju',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 12,
-                                    color: theme.colorScheme.onSurface.withAlpha(
-                                      (0.5 * 255).toInt(),
-                                    ),
+                                    color: AppColors.textTertiaryLight,
                                   ),
                                 ),
                               ],
@@ -222,35 +213,34 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
   Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Card(
+        color: AppColors.surfaceLight,
         margin: const EdgeInsets.all(24),
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              const Icon(
                 Icons.apartment_outlined,
                 size: 64,
-                color: Colors.grey[400],
+                color: AppColors.textTertiaryLight,
               ),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Nema smještajnih jedinica',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: AppColors.textPrimaryLight,
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 'Prvo kreirajte nekretninu i dodajte smještajne jedinice.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha(
-                    (0.7 * 255).toInt(),
-                  ),
+                  color: AppColors.textSecondaryLight,
                 ),
               ),
               const SizedBox(height: 24),
@@ -273,6 +263,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
   Widget _buildErrorState(BuildContext context, Object error) {
     return Center(
       child: Card(
+        color: AppColors.surfaceLight,
         margin: const EdgeInsets.all(24),
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -285,23 +276,21 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                 color: AppColors.error,
               ),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Greška pri učitavanju',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: AppColors.textPrimaryLight,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 error.toString(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha(
-                    (0.7 * 255).toInt(),
-                  ),
+                  color: AppColors.textSecondaryLight,
                 ),
               ),
             ],

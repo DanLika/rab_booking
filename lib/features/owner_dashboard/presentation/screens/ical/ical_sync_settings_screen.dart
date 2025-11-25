@@ -6,6 +6,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_color_extensions.dart';
+import '../../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../domain/models/ical_feed.dart';
@@ -39,17 +40,9 @@ class _IcalSyncSettingsScreenState
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical'),
-      extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.primary.withValues(alpha: 0.7),
-            ],
-          ),
+        decoration: const BoxDecoration(
+          gradient: GradientTokens.brandPrimary,
         ),
         child: statsAsync.when(
           data: (stats) => _buildContent(context, feedsAsync, stats, theme),
@@ -169,7 +162,7 @@ class _IcalSyncSettingsScreenState
     String statusDescription;
 
     if (totalFeeds == 0) {
-      statusColor = theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt());
+      statusColor = AppColors.textTertiaryLight;
       statusIcon = Icons.sync_disabled;
       statusTitle = 'Nema feedova';
       statusDescription = 'Dodajte prvi iCal feed da započnete sinhronizaciju';
@@ -191,6 +184,7 @@ class _IcalSyncSettingsScreenState
     }
 
     return Card(
+      color: AppColors.surfaceLight,
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -218,16 +212,15 @@ class _IcalSyncSettingsScreenState
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimaryLight,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     statusDescription,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
-                      color: theme.colorScheme.onSurface.withAlpha(
-                        (0.6 * 255).toInt(),
-                      ),
+                      color: AppColors.textSecondaryLight,
                     ),
                   ),
                 ],
@@ -313,8 +306,8 @@ class _IcalSyncSettingsScreenState
   }
 
   Widget _buildEmptyFeedsCard() {
-    final theme = Theme.of(context);
     return Card(
+      color: AppColors.surfaceLight,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -326,31 +319,31 @@ class _IcalSyncSettingsScreenState
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: theme.colorScheme.brandPurple.withAlpha(
-                  (0.1 * 255).toInt(),
-                ),
+                color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.sync_disabled,
                 size: 40,
-                color: theme.colorScheme.brandPurple,
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: 16),
             const Text(
               'Nema iCal Feedova',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimaryLight,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Dodajte iCal feed da sinhronizujete rezervacije sa booking platformama',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.6 * 255).toInt(),
-                ),
+                color: AppColors.textSecondaryLight,
               ),
             ),
           ],
@@ -388,11 +381,12 @@ class _IcalSyncSettingsScreenState
     final statusIcon = _getStatusIcon(feed.status);
 
     return Card(
+      color: AppColors.surfaceLight,
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: statusColor.withOpacity(0.2), width: 1.5),
+        side: BorderSide(color: statusColor.withValues(alpha: 0.2), width: 1.5),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -400,7 +394,7 @@ class _IcalSyncSettingsScreenState
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [statusColor.withOpacity(0.8), statusColor],
+              colors: [statusColor.withValues(alpha: 0.8), statusColor],
             ),
             shape: BoxShape.circle,
           ),
@@ -408,7 +402,10 @@ class _IcalSyncSettingsScreenState
         ),
         title: Text(
           feed.platformDisplayName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimaryLight,
+          ),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
         ),
@@ -418,11 +415,9 @@ class _IcalSyncSettingsScreenState
             const SizedBox(height: 4),
             Text(
               'Zadnje sinhronizovano: ${feed.getTimeSinceLastSync()}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.6 * 255).toInt(),
-                ),
+                color: AppColors.textSecondaryLight,
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -430,17 +425,15 @@ class _IcalSyncSettingsScreenState
             if (feed.hasError && feed.lastError != null)
               Text(
                 'Greška: ${feed.lastError}',
-                style: TextStyle(fontSize: 12, color: theme.colorScheme.error),
+                style: const TextStyle(fontSize: 12, color: AppColors.error),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 2,
               ),
             Text(
               '${feed.eventCount} rezervacija • ${feed.syncCount} sinhronizacija',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.6 * 255).toInt(),
-                ),
+                color: AppColors.textTertiaryLight,
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -450,7 +443,6 @@ class _IcalSyncSettingsScreenState
         trailing: PopupMenuButton<String>(
           onSelected: (value) => _handleFeedAction(value, feed),
           itemBuilder: (popupContext) {
-            final errorColor = Theme.of(popupContext).colorScheme.error;
             return [
               const PopupMenuItem(
                 value: 'sync',
@@ -486,13 +478,13 @@ class _IcalSyncSettingsScreenState
                 ),
               ),
               const PopupMenuDivider(),
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete, size: 18, color: errorColor),
-                    const SizedBox(width: 8),
-                    Text('Obriši', style: TextStyle(color: errorColor)),
+                    Icon(Icons.delete, size: 18, color: AppColors.error),
+                    SizedBox(width: 8),
+                    Text('Obriši', style: TextStyle(color: AppColors.error)),
                   ],
                 ),
               ),
@@ -737,22 +729,22 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final unitsAsync = ref.watch(ownerUnitsProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final dialogWidth = screenWidth > 500 ? 500.0 : screenWidth * 0.9;
 
     return AlertDialog(
+      backgroundColor: AppColors.surfaceLight,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 colors: [
-                  theme.colorScheme.brandPurple,
-                  theme.colorScheme.brandBlue,
+                  AppColors.primary,
+                  AppColors.authSecondary,
                 ],
               ),
               borderRadius: BorderRadius.circular(12),
@@ -766,6 +758,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                   ? 'Dodaj iCal Feed'
                   : 'Uredi iCal Feed',
               overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppColors.textPrimaryLight),
             ),
           ),
         ],
@@ -783,10 +776,10 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                 unitsAsync.when(
                   data: (units) {
                     if (units.isEmpty) {
-                      return Text(
+                      return const Text(
                         'Nemate kreiranih jedinica. Prvo kreirajte apartman.',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
+                          color: AppColors.error,
                         ),
                       );
                     }
@@ -894,15 +887,13 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        theme.colorScheme.brandPurple.withOpacity(0.1),
-                        theme.colorScheme.brandPurple.withOpacity(0.05),
+                        AppColors.primary.withValues(alpha: 0.1),
+                        AppColors.primary.withValues(alpha: 0.05),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: theme.colorScheme.brandPurple.withValues(
-                        alpha: 0.3,
-                      ),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                   ),
@@ -912,10 +903,10 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [
-                              theme.colorScheme.brandPurple,
-                              theme.colorScheme.brandBlue,
+                              AppColors.primary,
+                              AppColors.authSecondary,
                             ],
                           ),
                           borderRadius: BorderRadius.circular(8),
@@ -936,9 +927,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.brandPurple.withValues(
-                                  alpha: 0.9,
-                                ),
+                                color: AppColors.primary.withValues(alpha: 0.9),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -946,9 +935,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                               'Rezervacije će se automatski sinhronizovati svakih 60 minuta. Inicijalna sinhronizacija će se pokrenuti odmah nakon dodavanja.',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: theme.colorScheme.brandPurple.withValues(
-                                  alpha: 0.8,
-                                ),
+                                color: AppColors.primary.withValues(alpha: 0.8),
                               ),
                             ),
                           ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/theme_extensions.dart';
@@ -565,17 +566,10 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   }
 
   Widget _buildSaveButton(ThemeData theme, bool isVerySmall) {
-    // Use theme-aware gradient button like app bar (Purple fade)
+    // Use brand gradient for consistent button styling
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.7),
-          ],
-        ),
+        gradient: GradientTokens.brandPrimary,
         borderRadius: BorderRadius.circular(10), // Same as input field
       ),
       child: Material(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/design_tokens/gradient_tokens.dart';
 
 /// Dialog for confirming booking completion
 ///
@@ -21,12 +21,7 @@ class BookingCompleteDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.primary, // Purple
-                    AppColors.authSecondary, // Blue
-                  ],
-                ),
+                gradient: GradientTokens.brandPrimary,
               ),
               child: Row(
                 children: [

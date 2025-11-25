@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
@@ -85,86 +84,181 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: theme.colorScheme.surface,
       appBar: CommonAppBar(
         title: _isEditing ? 'Uredi Nekretninu' : 'Dodaj Nekretninu',
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      body: Stack(
-        children: [
-          Form(
-            key: _formKey,
-            child: ListView(
-              padding: EdgeInsets.fromLTRB(
-                isMobile ? 16 : 24,
-                isMobile ? 16 : 24,
-                isMobile ? 16 : 24,
-                24,
-              ),
-              children: [
+      body: Container(
+        // Horizontal gradient (left → right) - matches footer gradient for seamless transition
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? const [
+                    Color(0xFF1A1A1A), // veryDarkGray (darker) - LEFT
+                    Color(0xFF2D2D2D), // mediumDarkGray (lighter) - RIGHT
+                  ]
+                : const [
+                    Color(0xFFF5F5F5), // Light grey (darker) - LEFT
+                    Colors.white,      // white (lighter) - RIGHT
+                  ],
+            stops: const [0.0, 0.3],
+          ),
+        ),
+        child: Stack(
+          children: [
+            Form(
+              key: _formKey,
+              child: ListView(
+                padding: EdgeInsets.fromLTRB(
+                  isMobile ? 16 : 24,
+                  isMobile ? 16 : 24,
+                  isMobile ? 16 : 24,
+                  24,
+                ),
+                children: [
                 // Basic Info Section
                 _buildSection(
                   context,
                   title: 'Osnovne Informacije',
                   icon: Icons.info_outline,
                   children: [
-                    // Property Name
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        context,
-                        labelText: 'Naziv nekretnine *',
-                        hintText: 'npr. Villa Mediteran',
-                        isMobile: isMobile,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Naziv je obavezan';
+                    // Property Name + URL Slug - Responsive layout
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isVerySmall = constraints.maxWidth < 500;
+
+                        if (isVerySmall) {
+                          // Column layout for small screens
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Property Name
+                              TextFormField(
+                                controller: _nameController,
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  context,
+                                  labelText: 'Naziv nekretnine *',
+                                  hintText: 'npr. Villa Mediteran',
+                                  isMobile: isMobile,
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Naziv je obavezan';
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value) => _autoGenerateSlug(),
+                              ),
+                              const SizedBox(height: AppDimensions.spaceM),
+                              // URL Slug
+                              TextFormField(
+                                controller: _slugController,
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  context,
+                                  labelText: 'URL Slug',
+                                  hintText: 'villa-mediteran',
+                                  helperText: 'SEO-friendly URL: /booking/{slug}',
+                                  isMobile: isMobile,
+                                  suffixIcon: IconButton(
+                                    icon: const Icon(Icons.refresh),
+                                    tooltip: 'Regeneriši iz naziva',
+                                    onPressed: () {
+                                      setState(() {
+                                        _isManualSlugEdit = false;
+                                        _autoGenerateSlug();
+                                      });
+                                    },
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Slug je obavezan';
+                                  }
+                                  if (!isValidSlug(value)) {
+                                    return 'Slug može sadržavati samo mala slova, brojeve i crtice';
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value) {
+                                  if (value.isNotEmpty) {
+                                    setState(() => _isManualSlugEdit = true);
+                                  }
+                                },
+                              ),
+                            ],
+                          );
                         }
-                        return null;
-                      },
-                      onChanged: (value) => _autoGenerateSlug(),
-                    ),
-                    const SizedBox(height: AppDimensions.spaceM),
-                    // URL Slug
-                    TextFormField(
-                      controller: _slugController,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        context,
-                        labelText: 'URL Slug',
-                        hintText: 'villa-mediteran',
-                        helperText: 'SEO-friendly URL: /booking/{slug}',
-                        isMobile: isMobile,
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.refresh),
-                          tooltip: 'Regeneriši iz naziva',
-                          onPressed: () {
-                            setState(() {
-                              _isManualSlugEdit = false;
-                              _autoGenerateSlug();
-                            });
-                          },
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Slug je obavezan';
-                        }
-                        if (!isValidSlug(value)) {
-                          return 'Slug može sadržavati samo mala slova, brojeve i crtice';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        if (value.isNotEmpty) {
-                          setState(() => _isManualSlugEdit = true);
-                        }
+
+                        // Row layout for larger screens
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Property Name
+                            Expanded(
+                              child: TextFormField(
+                                controller: _nameController,
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  context,
+                                  labelText: 'Naziv nekretnine *',
+                                  hintText: 'npr. Villa Mediteran',
+                                  isMobile: isMobile,
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Naziv je obavezan';
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value) => _autoGenerateSlug(),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            // URL Slug
+                            Expanded(
+                              child: TextFormField(
+                                controller: _slugController,
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  context,
+                                  labelText: 'URL Slug',
+                                  hintText: 'villa-mediteran',
+                                  helperText: 'SEO-friendly URL: /booking/{slug}',
+                                  isMobile: isMobile,
+                                  suffixIcon: IconButton(
+                                    icon: const Icon(Icons.refresh),
+                                    tooltip: 'Regeneriši iz naziva',
+                                    onPressed: () {
+                                      setState(() {
+                                        _isManualSlugEdit = false;
+                                        _autoGenerateSlug();
+                                      });
+                                    },
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Slug je obavezan';
+                                  }
+                                  if (!isValidSlug(value)) {
+                                    return 'Slug može sadržavati samo mala slova, brojeve i crtice';
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value) {
+                                  if (value.isNotEmpty) {
+                                    setState(() => _isManualSlugEdit = true);
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        );
                       },
                     ),
                     const SizedBox(height: AppDimensions.spaceM),
@@ -219,32 +313,85 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                   title: 'Lokacija',
                   icon: Icons.location_on,
                   children: [
-                    TextFormField(
-                      controller: _locationController,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        context,
-                        labelText: 'Lokacija *',
-                        hintText: 'npr. Rab (grad), Otok Rab',
-                        prefixIcon: const Icon(Icons.location_on),
-                        isMobile: isMobile,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Lokacija je obavezna';
+                    // Location + Address - Responsive layout
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isVerySmall = constraints.maxWidth < 500;
+
+                        if (isVerySmall) {
+                          // Column layout for small screens
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextFormField(
+                                controller: _locationController,
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  context,
+                                  labelText: 'Lokacija *',
+                                  hintText: 'npr. Rab (grad), Otok Rab',
+                                  prefixIcon: const Icon(Icons.location_on),
+                                  isMobile: isMobile,
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Lokacija je obavezna';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: AppDimensions.spaceM),
+                              TextFormField(
+                                controller: _addressController,
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  context,
+                                  labelText: 'Adresa',
+                                  hintText: 'Ulica i broj',
+                                  prefixIcon: const Icon(Icons.home),
+                                  isMobile: isMobile,
+                                ),
+                              ),
+                            ],
+                          );
                         }
-                        return null;
+
+                        // Row layout for larger screens
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _locationController,
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  context,
+                                  labelText: 'Lokacija *',
+                                  hintText: 'npr. Rab (grad), Otok Rab',
+                                  prefixIcon: const Icon(Icons.location_on),
+                                  isMobile: isMobile,
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Lokacija je obavezna';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _addressController,
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  context,
+                                  labelText: 'Adresa',
+                                  hintText: 'Ulica i broj',
+                                  prefixIcon: const Icon(Icons.home),
+                                  isMobile: isMobile,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
                       },
-                    ),
-                    const SizedBox(height: AppDimensions.spaceM),
-                    TextFormField(
-                      controller: _addressController,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        context,
-                        labelText: 'Adresa',
-                        hintText: 'Ulica i broj',
-                        prefixIcon: const Icon(Icons.home),
-                        isMobile: isMobile,
-                      ),
                     ),
                   ],
                 ),
@@ -289,13 +436,17 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceL),
 
-                // Modern Gradient Save Button
+                // Modern Gradient Save Button - uses app bar gradient (Purple 100% → Purple 70%)
                 GradientButton(
                   text: _isEditing ? 'Spremi Izmjene' : 'Dodaj Nekretninu',
                   onPressed: _handleSave,
                   isLoading: _isLoading,
                   icon: _isEditing ? Icons.save : Icons.add,
                   width: double.infinity,
+                  gradientColors: const [
+                    Color(0xFF6B4CE6), // Purple 100%
+                    Color(0xB36B4CE6), // Purple 70% (0xB3 = ~70% opacity)
+                  ],
                 ),
                 const SizedBox(height: AppDimensions.spaceXL),
               ],
@@ -319,11 +470,13 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                       children: [
                         Container(
                           padding: const EdgeInsets.all(16),
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                               colors: [
-                                AppColors.primary,
-                                AppColors.authSecondary,
+                                theme.colorScheme.primary,
+                                theme.colorScheme.primary.withValues(alpha: 0.7),
                               ],
                             ),
                             shape: BoxShape.circle,
@@ -349,7 +502,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                 ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -360,48 +514,101 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
     required String title,
     required IconData icon,
     required List<Widget> children,
+    String? subtitle,
   }) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Section Header
-            Row(
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            // Section cards: topRight → bottomLeft gradient
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: isDark
+                  ? const [
+                      Color(0xFF1A1A1A), // veryDarkGray (darker) - RIGHT
+                      Color(0xFF2D2D2D), // mediumDarkGray (lighter) - LEFT
+                    ]
+                  : const [
+                      Color(0xFFF5F5F5), // Light grey (darker) - RIGHT
+                      Colors.white,      // white (lighter) - LEFT
+                    ],
+              stops: const [0.0, 0.3],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(isMobile ? 16 : 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
-                      ],
+                // Section Header - Minimalist style
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withAlpha(
+                          (0.12 * 255).toInt(),
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: theme.colorScheme.primary,
+                        size: 18,
+                      ),
                     ),
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  ),
-                  child: Icon(icon, color: Colors.white, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                if (subtitle != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
+                ],
+                const SizedBox(height: 20),
+                // Section Content
+                ...children,
               ],
             ),
-            const SizedBox(height: 20),
-            // Section Content
-            ...children,
-          ],
+          ),
         ),
       ),
     );

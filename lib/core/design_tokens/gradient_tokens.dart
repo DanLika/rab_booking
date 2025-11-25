@@ -26,21 +26,21 @@ class GradientTokens {
     ],
   );
 
-  /// Brand gradient - Purple 100% → 70%
+  /// Brand gradient - Purple solid colors (no alpha transparency)
   /// Used for: App Bar, Drawer Header, Primary Buttons
   /// Consistent across Light and Dark themes
   static const LinearGradient brandPrimary = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF6B4CE6), // Purple 100%
-      Color(0xB36B4CE6), // Purple 70% (alpha B3 = 179/255 ≈ 70%)
+      Color(0xFF6B4CE6), // Purple (start)
+      Color(0xFF7E5FEE), // Lighter purple (end) - solid, no alpha
     ],
   );
 
   /// Brand gradient colors (for custom usage with gradientColors parameter)
   static const Color brandPrimaryStart = Color(0xFF6B4CE6);
-  static const Color brandPrimaryEnd = Color(0xB36B4CE6);
+  static const Color brandPrimaryEnd = Color(0xFF7E5FEE); // Solid lighter purple
 
   /// Primary accent gradient
   static const LinearGradient primaryAccent = LinearGradient(

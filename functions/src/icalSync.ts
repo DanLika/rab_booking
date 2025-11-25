@@ -121,14 +121,47 @@ async function syncSingleFeed(
 }
 
 /**
- * Fetch iCal data from URL
+ * Fetch iCal data from URL with redirect support
+ * Follows up to 5 redirects (301, 302, 303, 307, 308)
  */
-function fetchIcalData(url: string): Promise<string> {
+function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
   return new Promise((resolve, reject) => {
+    if (maxRedirects <= 0) {
+      reject(new Error('Too many redirects'));
+      return;
+    }
+
     const protocol = url.startsWith('https') ? https : http;
 
     protocol
       .get(url, (response) => {
+        // Handle redirects (301, 302, 303, 307, 308)
+        if (response.statusCode && [301, 302, 303, 307, 308].includes(response.statusCode)) {
+          let redirectUrl = response.headers.location;
+          if (!redirectUrl) {
+            reject(new Error(`Redirect ${response.statusCode} without Location header`));
+            return;
+          }
+
+          // Handle relative URLs by constructing absolute URL
+          if (redirectUrl.startsWith('/')) {
+            const urlObj = new URL(url);
+            redirectUrl = `${urlObj.protocol}//${urlObj.host}${redirectUrl}`;
+          }
+
+          logInfo("[iCal Sync] Following redirect", {
+            from: url.substring(0, 50) + '...',
+            to: redirectUrl.substring(0, 50) + '...',
+            statusCode: response.statusCode
+          });
+
+          // Follow the redirect
+          fetchIcalData(redirectUrl, maxRedirects - 1)
+            .then(resolve)
+            .catch(reject);
+          return;
+        }
+
         if (response.statusCode !== 200) {
           reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`));
           return;

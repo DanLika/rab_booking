@@ -914,6 +914,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             controller: _tabController,
             tabs: _buildTabs(),
             isScrollable: true,
+            tabAlignment: TabAlignment.start,
             labelColor: theme.colorScheme.primary,
             unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
             indicatorColor: theme.colorScheme.primary,

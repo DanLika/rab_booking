@@ -175,8 +175,8 @@ class _FAQScreenState extends State<FAQScreen> {
     FAQItem(
       category: 'iCal Sync',
       question: 'Mogu li sync-ovati sa više platformi istovremeno?',
-      answer: 'Da! Možete dodati iCal feed-ove sa Booking.com, Airbnb, VRBO, HomeAway i drugih platformi '
-          'za isti apartman. Sve rezervacije će biti prikazane.',
+      answer: 'Da! Možete dodati iCal feed-ove sa Booking.com, Airbnb ili bilo koje druge platforme '
+          'koja podržava iCal format za isti apartman. Sve rezervacije će biti prikazane.',
     ),
 
     // Technical Support

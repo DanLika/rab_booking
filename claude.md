@@ -1235,19 +1235,74 @@ GoRoute(
 
 ### Edit Profile Screen
 
-**Status**: ✅ STABILAN - Refaktorisan (2025-11-16)
+**Status**: ✅ STABILAN - Refaktorisan (2025-11-25)
 
 #### Osnovne Informacije
-- **File**: `edit_profile_screen.dart` (~708 lines)
+- **File**: `edit_profile_screen.dart` (~830 lines)
 - **Svrha**: Owner profil + company details (za fakture i komunikaciju)
-- **Features**: 13 controllers, profile image upload, dual save (profile + company)
+- **Features**: Profile image upload, dual save (profile + company)
+- **Kartice**: 3 collapsible cards (Lični Podaci, Adresa, Kompanija)
 
 #### Ključni Constraint-ovi
 - ❌ **NE DODAVAJ** instagram/linkedin u SocialLinks (model ima SAMO website + facebook!)
 - ❌ **NE MIJENJAJ** controllers lifecycle - svi moraju biti disposed!
+- ❌ **NE DODAVAJ** bank fields ovdje - premješteni u Bank Account Screen!
 - ✅ **Dual save**: UserProfile + CompanyDetails se čuvaju odvojeno
 - ✅ **SocialLinks**: SAMO website i facebook (2 fields)
-- ✅ **Company Details**: ExpansionTile sa 9 fields (name, tax, vat, iban, swift, address)
+- ✅ **Bank details**: Premješteni u `Integracije → Plaćanja → Bankovni Račun`
+- ✅ Pri save-u ČUVAJ postojeće bank podatke: `existingCompany?.bankAccountIban ?? ''`
+
+---
+
+### Bank Account Screen & Drawer Reorganization
+
+**Status**: ✅ COMPLETED (2025-11-25)
+**Commit**: `bc65be1`
+
+#### Svrha
+Dedicated screen za upravljanje bankovnim podacima (IBAN, SWIFT, Bank Name, Account Holder).
+Podaci se koriste u Booking Widget-u kada gost odabere "Bankovni prijenos" kao način plaćanja.
+
+#### Nova Drawer Struktura
+```
+[Expandable] Integracije
+├── [Section Header] iCal
+│   ├── Import Rezervacija
+│   └── Export Kalendara
+└── [Section Header] Plaćanja
+    ├── Stripe Plaćanja
+    └── Bankovni Račun  ← NOVA stranica
+```
+
+#### Key Files
+- **NEW**: `lib/features/owner_dashboard/presentation/screens/bank_account_screen.dart`
+- **EDIT**: `lib/features/owner_dashboard/presentation/widgets/owner_app_drawer.dart`
+- **EDIT**: `lib/core/config/router_owner.dart`
+
+#### Ruta
+```dart
+static const String bankAccount = '/owner/integrations/payments/bank-account';
+```
+
+#### Data Storage
+- **Firestore lokacija**: `users/{userId}/profile/company` (ISTA kao prije!)
+- **Model**: `CompanyDetails` (bankAccountIban, swift, bankName, accountHolder)
+- **Zero migration**: Postojeći podaci ostaju netaknuti
+
+#### Ključni Constraint-ovi
+- ❌ **NE VRAĆAJ** bank fields u Edit Profile - premješteni su namjerno!
+- ❌ **NE MIJENJAJ** Firestore lokaciju - widget čita iz istog mjesta
+- ✅ Pri save-u **ČUVAJ** ostale CompanyDetails fields (companyName, taxId, etc.)
+- ✅ Widget Settings navigacija vodi na Bank Account (ne Edit Profile)
+
+#### _DrawerSectionHeader Widget
+Nova helper komponenta za section headers unutar ExpansionTile:
+```dart
+class _DrawerSectionHeader extends StatelessWidget {
+  final String title;
+  // Renders: vertical accent bar + section title text
+}
+```
 
 ---
 
@@ -1291,11 +1346,15 @@ surfaceTintColor: Colors.transparent, // Blokira tint
 /owner/calendar/timeline     // Timeline calendar
 /owner/bookings              // Bookings list
 /owner/analytics             // Analytics screen
-/owner/integrations/ical/import        // iCal import
-/owner/integrations/ical/export-list   // iCal export list
-/owner/integrations/ical/export        // iCal export detail (REQUIRES params!)
-/owner/profile/edit                     // Edit profile
-/owner/profile/notifications           // Notification settings
+// Integrations
+/owner/integrations/stripe                    // Stripe setup
+/owner/integrations/payments/bank-account     // Bank account (NEW)
+/owner/integrations/ical/import               // iCal import
+/owner/integrations/ical/export-list          // iCal export list
+/owner/integrations/ical/export               // iCal export detail (REQUIRES params!)
+// Profile
+/owner/profile/edit                           // Edit profile
+/owner/profile/notifications                  // Notification settings
 ```
 
 #### isLoading Check (KRITIČNO!)
@@ -1486,11 +1545,9 @@ context.go(OwnerRoutes.icalExport);
 
 ---
 
-**Last Updated**: 2025-11-25  
-**Version**: 2.0 (Optimizovana verzija)  
-**Original Size**: 278.3k chars  
-**Current Size**: ~50k chars (82% reduction)  
-**Focus**: Unit Hub, Wizard, Calendar, Bookings + Standards & Bug Fixes
+**Last Updated**: 2025-11-25
+**Version**: 2.1
+**Focus**: Unit Hub, Wizard, Calendar, Bookings, Drawer Reorganization + Standards & Bug Fixes
 
 ---
 

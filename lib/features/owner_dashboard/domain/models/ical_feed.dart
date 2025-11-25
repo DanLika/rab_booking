@@ -6,7 +6,7 @@ class IcalFeed {
   final String id;
   final String unitId;
   final String propertyId;
-  final String platform; // 'booking_com', 'airbnb', 'expedia', 'other'
+  final String platform; // 'booking_com', 'airbnb', 'other'
   final String icalUrl;
   final int syncIntervalMinutes; // How often to sync (default: 60 min)
   final DateTime? lastSynced;
@@ -77,14 +77,10 @@ class IcalFeed {
         return 'Booking.com';
       case 'airbnb':
         return 'Airbnb';
-      case 'expedia':
-        return 'Expedia';
-      case 'vrbo':
-        return 'VRBO';
-      case 'homeaway':
-        return 'HomeAway';
+      case 'other':
+        return 'Druga platforma';
       default:
-        return 'Drugi';
+        return platform; // Fallback za eventualne legacy podatke
     }
   }
 

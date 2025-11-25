@@ -5,8 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/models/user_profile_model.dart';
-import '../../../auth/presentation/widgets/auth_background.dart';
-import '../../../auth/presentation/widgets/glass_card.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
 import '../providers/user_profile_provider.dart';
 
@@ -231,7 +230,6 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
         color: theme.colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
         border: Border.all(
           color: theme.colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
-          width: 1,
         ),
       ),
       child: Row(
@@ -352,6 +350,8 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final userDataAsync = ref.watch(userDataProvider);
 
     return PopScope(
@@ -385,106 +385,55 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
       },
       child: Scaffold(
         resizeToAvoidBottomInset: true,
-        body: AuthBackground(
+        appBar: CommonAppBar(
+          title: 'Bankovni Račun',
+          leadingIcon: Icons.arrow_back,
+          onLeadingIconTap: (ctx) => context.pop(),
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? const [Color(0xFF1A1A1A), Color(0xFF2D2D2D)]
+                  : const [Color(0xFFF5F5F5), Colors.white],
+              stops: const [0.0, 0.3],
+            ),
+          ),
           child: userDataAsync.when(
             data: (userData) {
               // Create default userData if null
               final effectiveUserData =
-                  userData ?? UserData(profile: UserProfile(userId: ''));
+                  userData ?? const UserData(profile: UserProfile(userId: ''));
 
               _loadData(effectiveUserData);
 
               return SingleChildScrollView(
+                padding: EdgeInsets.all(
+                  MediaQuery.of(context).size.width < 400 ? 16 : 24,
+                ),
                 child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(
-                      MediaQuery.of(context).size.width < 400 ? 16 : 24,
-                    ),
-                    child: GlassCard(
-                      maxWidth: 500,
-                      child: Form(
-                        key: _formKey,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Back Button
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: IconButton(
-                                onPressed: () => context.pop(),
-                                icon: const Icon(Icons.arrow_back),
-                                tooltip: 'Natrag',
-                              ),
-                            ),
-                            const SizedBox(height: 8),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Form(
+                      key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Info Card
+                          _buildInfoCard(),
 
-                            // Icon
-                            Center(
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withAlpha((0.1 * 255).toInt()),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.account_balance_outlined,
-                                  size: 48,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
+                          // Bank Details Card
+                          _buildBankCard(),
 
-                            // Title
-                            Text(
-                              'Bankovni Račun',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 28,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
+                          const SizedBox(height: 8),
 
-                            // Subtitle
-                            Text(
-                              'Podaci za primanje uplata putem bankovnog prijenosa',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                    fontSize: 15,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 32),
-
-                            // Info Card
-                            _buildInfoCard(),
-
-                            // Bank Details Card
-                            _buildBankCard(),
-
-                            const SizedBox(height: 8),
-
-                            // Action Buttons
-                            _buildActionButtons(),
-                          ],
-                        ),
+                          // Action Buttons
+                          _buildActionButtons(),
+                        ],
                       ),
                     ),
                   ),

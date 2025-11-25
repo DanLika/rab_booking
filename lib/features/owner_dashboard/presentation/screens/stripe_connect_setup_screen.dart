@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/config/router_owner.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Stripe Connect setup screen for property owners
 /// Allows owners to connect their Stripe account to receive payments
@@ -140,17 +139,60 @@ class _StripeConnectSetupScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Hardcoded horizontal gradient colors (left → right)
+    const gradientStart = Color(0xFF6B4CE6); // Purple
+    const gradientEnd = Color(0xFF7E5FEE); // Lighter purple
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: CommonAppBar(
-        title: 'Stripe Plaćanja',
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [gradientStart, gradientEnd],
+            ),
+          ),
+          child: AppBar(
+            title: Text(
+              'Stripe Plaćanja',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: 0,
+              ),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            surfaceTintColor: Colors.transparent,
+            leading: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                tooltip: 'Menu',
+              ),
+            ),
+            systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.light,
+              statusBarBrightness: Brightness.dark,
+            ),
+          ),
+        ),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/stripe'),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: GradientTokens.brandPrimary,
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [gradientStart, gradientEnd],
+          ),
         ),
         child: _isLoading
             ? const Center(
@@ -164,7 +206,7 @@ class _StripeConnectSetupScreenState
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Status card
-                    _buildStatusCard(),
+                    _buildStatusCard(theme),
 
                     const SizedBox(height: 24),
 
@@ -246,38 +288,51 @@ class _StripeConnectSetupScreenState
     );
   }
 
-  Widget _buildStatusCard() {
+  Widget _buildStatusCard(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    const cardColorDark = Color(0xFF2D2D2D);
+    const confirmedGreen = Color(0xFF66BB6A);
+    const pendingOrange = Color(0xFFFFA726);
+
+    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
+    final textTertiary = isDark ? Colors.white54 : AppColors.textTertiaryLight;
+
     Color statusColor;
     IconData statusIcon;
     String statusTitle;
     String statusDescription;
 
     if (_stripeAccountId == null) {
-      statusColor = AppColors.textTertiaryLight;
+      statusColor = isDark ? textTertiary : AppColors.textTertiaryLight;
       statusIcon = Icons.warning_amber_rounded;
       statusTitle = 'Nije povezano';
       statusDescription =
           'Stripe račun nije povezan. Prijem plaćanja nije moguć.';
     } else if (_stripeAccountStatus != 'complete') {
-      statusColor = Colors.orange;
+      statusColor = pendingOrange;
       statusIcon = Icons.pending;
       statusTitle = 'Setup u toku';
       statusDescription =
           'Završite Stripe setup da biste mogli primati plaćanja.';
     } else {
-      statusColor = Colors.green;
+      statusColor = confirmedGreen;
       statusIcon = Icons.check_circle;
       statusTitle = 'Aktivno';
       statusDescription = 'Stripe račun je povezan. Možete primati plaćanja!';
     }
 
+    final borderColor = isDark
+        ? statusColor.withAlpha((0.3 * 255).toInt())
+        : statusColor.withAlpha((0.3 * 255).toInt());
+
     return Card(
-      color: AppColors.surfaceLight,
+      color: cardColor,
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: statusColor.withAlpha((0.3 * 255).toInt()),
+          color: borderColor,
           width: 2,
         ),
       ),
@@ -306,18 +361,18 @@ class _StripeConnectSetupScreenState
                   const SizedBox(height: 4),
                   Text(
                     statusDescription,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.textSecondaryLight,
+                      color: textSecondary,
                     ),
                   ),
                   if (_stripeAccountId != null) ...[
                     const SizedBox(height: 8),
                     Text(
                       'ID: $_stripeAccountId',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textTertiaryLight,
+                        color: textTertiary,
                         fontFamily: 'monospace',
                       ),
                     ),

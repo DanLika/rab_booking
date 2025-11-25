@@ -137,23 +137,6 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
               placeholder: 'Slika: Airbnb - Export calendar',
             ),
 
-            const SizedBox(height: 16),
-
-            // VRBO/HomeAway Instructions
-            _buildPlatformSection(
-              platformName: 'VRBO / HomeAway',
-              icon: Icons.cottage,
-              color: AppColors.warning,
-              steps: [
-                '1. Ulogujte se na VRBO owner dashboard',
-                '2. Idite na: Listings → Select property',
-                '3. Kliknite: Calendar → Import/Export',
-                '4. Kopirajte export link',
-                '5. Zalijepite u Owner aplikaciju',
-              ],
-              placeholder: 'Slika: VRBO - Calendar export',
-            ),
-
             const SizedBox(height: 24),
 
             // Step-by-step in Owner App
@@ -493,15 +476,6 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
         '5️⃣ Kliknite "Export calendar" i kopirajte link',
         '📋 Paste URL u Owner aplikaciju',
       ]);
-    } else if (context.contains('VRBO')) {
-      return _buildDetailedSteps([
-        '1️⃣ Ulogujte se na owner.vrbo.com',
-        '2️⃣ Odaberite property iz liste',
-        '3️⃣ Calendar → Import/Export',
-        '4️⃣ Kliknite "Export" tab',
-        '5️⃣ Kopirajte iCal URL',
-        '📋 Paste URL u Owner aplikaciju',
-      ]);
     } else {
       // GIF placeholder za Owner app demo
       return Column(
@@ -663,7 +637,7 @@ class _IcalGuideScreenState extends State<IcalGuideScreen> {
             ),
             _buildFAQItem(
               'Mogu li dodati više feed-ova za isti apartman?',
-              'Da, možete dodati feed-ove sa više platformi (Booking.com + Airbnb + VRBO) za isti unit. Sve rezervacije će biti sinhronizovane.',
+              'Da, možete dodati feed-ove sa više platformi (Booking.com, Airbnb, ili bilo koja druga iCal platforma) za isti unit. Sve rezervacije će biti sinhronizovane.',
             ),
             _buildFAQItem(
               'Da li mogu vidjeti detalje gosta sa drugih platformi?',

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../../core/config/router_owner.dart';
-import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../widgets/owner_app_drawer.dart';
 import '../../providers/owner_properties_provider.dart';
@@ -62,17 +61,60 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Hardcoded horizontal gradient colors (left → right)
+    const gradientStart = Color(0xFF6B4CE6); // Purple
+    const gradientEnd = Color(0xFF7E5FEE); // Lighter purple
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: CommonAppBar(
-        title: 'iCal Export - Odaberi Jedinicu',
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [gradientStart, gradientEnd],
+            ),
+          ),
+          child: AppBar(
+            title: Text(
+              'iCal Export - Odaberi Jedinicu',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: 0,
+              ),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            surfaceTintColor: Colors.transparent,
+            leading: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                tooltip: 'Menu',
+              ),
+            ),
+            systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.light,
+              statusBarBrightness: Brightness.dark,
+            ),
+          ),
+        ),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical/export-list'),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: GradientTokens.brandPrimary,
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [gradientStart, gradientEnd],
+          ),
         ),
         child: SafeArea(
           child: _isLoading
@@ -82,126 +124,19 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                   ),
                 )
               : _allUnits.isEmpty
-                  ? _buildEmptyState(context)
+                  ? _buildEmptyState(context, theme)
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
                       children: [
                   // Info card
-                  Card(
-                    color: AppColors.surfaceLight,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.info.withAlpha((0.1 * 255).toInt()),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: AppColors.info,
-                            size: 24,
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Odaberite smještajnu jedinicu za generisanje i pregled iCal export fajla.',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textPrimaryLight,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildInfoCard(theme),
                   const SizedBox(height: 16),
 
                   // Units list
                   ..._allUnits.map((item) {
                     final unit = item['unit'];
                     final property = item['property'];
-
-                    return Card(
-                      color: AppColors.surfaceLight,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        leading: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.apartment,
-                            color: AppColors.primary,
-                            size: 24,
-                          ),
-                        ),
-                        title: Text(
-                          unit.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimaryLight,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4),
-                            Text(
-                              property.name,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondaryLight,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.people,
-                                  size: 14,
-                                  color: AppColors.textTertiaryLight,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Max ${unit.maxGuests} gostiju',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textTertiaryLight,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        trailing: FilledButton.icon(
-                          onPressed: () {
-                            context.push(
-                              OwnerRoutes.icalExport,
-                              extra: {
-                                'unit': unit,
-                                'propertyId': property.id,
-                              },
-                            );
-                          },
-                          icon: const Icon(Icons.upload, size: 18),
-                          label: const Text('Export'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
+                    return _buildUnitCard(unit, property, theme);
                   }),
                       ],
                     ),
@@ -210,37 +145,172 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildInfoCard(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    const cardColorDark = Color(0xFF2D2D2D);
+    const confirmedGreen = Color(0xFF66BB6A);
+
+    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
+    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
+    final borderColor = isDark
+        ? confirmedGreen.withAlpha((0.3 * 255).toInt())
+        : Colors.transparent;
+
+    return Card(
+      color: cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: borderColor, width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: confirmedGreen.withAlpha((0.2 * 255).toInt()),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.info_outline,
+                color: confirmedGreen,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'iCal Export',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Odaberite jedinicu za koju želite generirati iCal URL za sinkronizaciju kalendara.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUnitCard(dynamic unit, dynamic property, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    const cardColorDark = Color(0xFF2D2D2D);
+    const confirmedGreen = Color(0xFF66BB6A);
+
+    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
+    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
+    final borderColor = isDark
+        ? confirmedGreen.withAlpha((0.3 * 255).toInt())
+        : Colors.transparent;
+
+    return Card(
+      color: cardColor,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: borderColor, width: 1),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withAlpha((0.15 * 255).toInt()),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(
+            Icons.apartment,
+            color: AppColors.primary,
+            size: 24,
+          ),
+        ),
+        title: Text(
+          unit.name ?? 'Nepoznata jedinica',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: textPrimary,
+          ),
+        ),
+        subtitle: Text(
+          property.name ?? 'Nepoznata nekretnina',
+          style: TextStyle(
+            color: textSecondary,
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: textSecondary,
+        ),
+        onTap: () {
+          context.push(
+            OwnerRoutes.icalExport,
+            extra: {
+              'unit': unit,
+              'propertyId': property.id,
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    const cardColorDark = Color(0xFF2D2D2D);
+
+    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
+    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
+    final iconColor = isDark ? Colors.white54 : AppColors.textTertiaryLight;
+
     return Center(
       child: Card(
-        color: AppColors.surfaceLight,
+        color: cardColor,
         margin: const EdgeInsets.all(24),
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.apartment_outlined,
                 size: 64,
-                color: AppColors.textTertiaryLight,
+                color: iconColor,
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Nema smještajnih jedinica',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimaryLight,
+                  color: textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Prvo kreirajte nekretninu i dodajte smještajne jedinice.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.textSecondaryLight,
+                  color: textSecondary,
                 ),
               ),
               const SizedBox(height: 24),

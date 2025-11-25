@@ -6,14 +6,12 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_color_extensions.dart';
-import '../../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../domain/models/ical_feed.dart';
 import '../../providers/ical_feeds_provider.dart';
 import '../../providers/owner_properties_provider.dart';
 import '../../widgets/owner_app_drawer.dart';
-import '../../../../../shared/widgets/common_app_bar.dart';
 
 /// Screen for managing iCal calendar sync feeds
 class IcalSyncSettingsScreen extends ConsumerStatefulWidget {
@@ -32,17 +30,58 @@ class _IcalSyncSettingsScreenState
     final statsAsync = ref.watch(icalStatisticsProvider);
     final theme = Theme.of(context);
 
+    // Hardcoded horizontal gradient colors (left → right)
+    const gradientStart = Color(0xFF6B4CE6); // Purple
+    const gradientEnd = Color(0xFF7E5FEE); // Lighter purple
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: CommonAppBar(
-        title: 'iCal Sinhronizacija',
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [gradientStart, gradientEnd],
+            ),
+          ),
+          child: AppBar(
+            title: Text(
+              'iCal Sinhronizacija',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: 0,
+              ),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            surfaceTintColor: Colors.transparent,
+            leading: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                tooltip: 'Menu',
+              ),
+            ),
+            systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.light,
+              statusBarBrightness: Brightness.dark,
+            ),
+          ),
+        ),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical'),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: GradientTokens.brandPrimary,
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [gradientStart, gradientEnd],
+          ),
         ),
         child: statsAsync.when(
           data: (stats) => _buildContent(context, feedsAsync, stats, theme),
@@ -109,24 +148,8 @@ class _IcalSyncSettingsScreenState
 
           const SizedBox(height: 24),
 
-          // Add feed button
-          FilledButton.icon(
-            onPressed: () => _showAddFeedDialog(context),
-            icon: const Icon(Icons.add, size: 20),
-            label: const Text(
-              'Dodaj iCal Feed',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              minimumSize: const Size(double.infinity, 48),
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
+          // Add feed card section
+          _buildAddFeedCard(),
 
           const SizedBox(height: 16),
 
@@ -151,9 +174,16 @@ class _IcalSyncSettingsScreenState
 
   Widget _buildStatusCard(Map<String, dynamic>? stats) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final activeFeeds = stats?['active_feeds'] as int? ?? 0;
     final errorFeeds = stats?['error_feeds'] as int? ?? 0;
     final totalFeeds = stats?['total_feeds'] as int? ?? 0;
+
+    // Dark theme colors
+    const cardColorDark = Color(0xFF2D2D2D);
+    const confirmedGreen = Color(0xFF66BB6A);
+    const pendingOrange = Color(0xFFFFA726);
+    const cancelledRed = Color(0xFFEF5350);
 
     // Determine status
     Color statusColor;
@@ -167,24 +197,28 @@ class _IcalSyncSettingsScreenState
       statusTitle = 'Nema feedova';
       statusDescription = 'Dodajte prvi iCal feed da započnete sinhronizaciju';
     } else if (errorFeeds > 0) {
-      statusColor = theme.colorScheme.danger;
+      statusColor = cancelledRed;
       statusIcon = Icons.error;
       statusTitle = 'Greška u sinhronizaciji';
       statusDescription = '$errorFeeds od $totalFeeds feedova ima grešku';
     } else if (activeFeeds > 0) {
-      statusColor = theme.colorScheme.success;
+      statusColor = confirmedGreen;
       statusIcon = Icons.check_circle;
       statusTitle = 'Sinhronizacija aktivna';
       statusDescription = '$activeFeeds feedova aktivno sinhronizovano';
     } else {
-      statusColor = theme.colorScheme.warning;
+      statusColor = pendingOrange;
       statusIcon = Icons.pause_circle;
       statusTitle = 'Svi feedovi pauzirani';
       statusDescription = 'Nema aktivnih feedova';
     }
 
+    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
+    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
+
     return Card(
-      color: AppColors.surfaceLight,
+      color: cardColor,
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -209,18 +243,18 @@ class _IcalSyncSettingsScreenState
                 children: [
                   Text(
                     statusTitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimaryLight,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     statusDescription,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.textSecondaryLight,
+                      color: textSecondary,
                     ),
                   ),
                 ],
@@ -258,7 +292,7 @@ class _IcalSyncSettingsScreenState
         _buildInfoItem(
           Icons.check_circle_outline_rounded,
           'Kompatibilnost',
-          'Podržava Booking.com, Airbnb, Expedia, VRBO i druge platforme',
+          'Podržava Booking.com, Airbnb i druge iCal platforme',
         ),
         _buildInfoItem(
           Icons.security_rounded,
@@ -306,10 +340,33 @@ class _IcalSyncSettingsScreenState
   }
 
   Widget _buildEmptyFeedsCard() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Dark theme colors
+    const cardColorDark = Color(0xFF2D2D2D);
+    const confirmedGreen = Color(0xFF66BB6A);
+
+    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
+    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
+    final iconColor = isDark ? confirmedGreen : AppColors.primary;
+    final iconBgColor = isDark
+        ? confirmedGreen.withAlpha((0.15 * 255).toInt())
+        : AppColors.primary.withAlpha((0.1 * 255).toInt());
+
     return Card(
-      color: AppColors.surfaceLight,
+      color: cardColor,
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: isDark
+            ? BorderSide(
+                color: confirmedGreen.withAlpha((0.3 * 255).toInt()),
+                width: 1.5,
+              )
+            : BorderSide.none,
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
         child: Column(
@@ -319,31 +376,119 @@ class _IcalSyncSettingsScreenState
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                color: iconBgColor,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.sync_disabled,
                 size: 40,
-                color: AppColors.primary,
+                color: iconColor,
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Nema iCal Feedova',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimaryLight,
+                color: textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Dodajte iCal feed da sinhronizujete rezervacije sa booking platformama',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondaryLight,
+                color: textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddFeedCard() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Dark theme colors
+    const cardColorDark = Color(0xFF2D2D2D);
+    const confirmedGreen = Color(0xFF66BB6A);
+
+    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
+    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
+    final iconColor = isDark ? confirmedGreen : AppColors.primary;
+    final iconBgColor = isDark
+        ? confirmedGreen.withAlpha((0.15 * 255).toInt())
+        : AppColors.primary.withAlpha((0.1 * 255).toInt());
+    final buttonBgColor = isDark ? confirmedGreen : AppColors.primary;
+
+    return Card(
+      color: cardColor,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: isDark
+            ? BorderSide(
+                color: confirmedGreen.withAlpha((0.3 * 255).toInt()),
+                width: 1.5,
+              )
+            : BorderSide.none,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: iconBgColor,
+              ),
+              child: Icon(
+                Icons.add_circle_outline,
+                size: 28,
+                color: iconColor,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Dodaj iCal Feed',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Povežite kalendar sa Booking.com, Airbnb ili druge platforme',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () => _showAddFeedDialog(context),
+              icon: const Icon(Icons.add, size: 20),
+              label: const Text(
+                'Dodaj Feed',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                backgroundColor: buttonBgColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ],
@@ -377,16 +522,25 @@ class _IcalSyncSettingsScreenState
 
   Widget _buildFeedCard(IcalFeed feed) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final statusColor = _getStatusColor(feed.status, theme);
     final statusIcon = _getStatusIcon(feed.status);
 
+    // Dark theme colors
+    const cardColorDark = Color(0xFF2D2D2D);
+
+    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
+    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
+    final textTertiary = isDark ? Colors.white54 : AppColors.textTertiaryLight;
+
     return Card(
-      color: AppColors.surfaceLight,
+      color: cardColor,
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: statusColor.withValues(alpha: 0.2), width: 1.5),
+        side: BorderSide(color: statusColor.withValues(alpha: 0.3), width: 1.5),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -402,9 +556,9 @@ class _IcalSyncSettingsScreenState
         ),
         title: Text(
           feed.platformDisplayName,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimaryLight,
+            color: textPrimary,
           ),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
@@ -415,9 +569,9 @@ class _IcalSyncSettingsScreenState
             const SizedBox(height: 4),
             Text(
               'Zadnje sinhronizovano: ${feed.getTimeSinceLastSync()}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textSecondaryLight,
+                color: textSecondary,
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -431,9 +585,9 @@ class _IcalSyncSettingsScreenState
               ),
             Text(
               '${feed.eventCount} rezervacija • ${feed.syncCount} sinhronizacija',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textTertiaryLight,
+                color: textTertiary,
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -496,13 +650,18 @@ class _IcalSyncSettingsScreenState
   }
 
   Color _getStatusColor(String status, ThemeData theme) {
+    // Use BookingStatus badge colors for consistency
+    const confirmedGreen = Color(0xFF66BB6A);
+    const pendingOrange = Color(0xFFFFA726);
+    const cancelledRed = Color(0xFFEF5350);
+
     switch (status) {
       case 'active':
-        return theme.colorScheme.success; // Green for active
+        return confirmedGreen; // Green for active (same as confirmed badge)
       case 'error':
-        return theme.colorScheme.danger; // Red for errors
+        return cancelledRed; // Red for errors (same as cancelled badge)
       case 'paused':
-        return theme.colorScheme.warning; // Orange for paused
+        return pendingOrange; // Orange for paused (same as pending badge)
       default:
         return theme.colorScheme.outline; // Theme-aware neutral color
     }
@@ -646,6 +805,10 @@ class _IcalSyncSettingsScreenState
                 final repository = ref.read(icalRepositoryProvider);
                 await repository.deleteIcalFeed(feed.id);
 
+                // Invalidate providers to refresh UI immediately
+                ref.invalidate(icalFeedsStreamProvider);
+                ref.invalidate(icalStatisticsProvider);
+
                 if (mounted) {
                   messenger.showSnackBar(
                     SnackBar(
@@ -784,8 +947,13 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                       );
                     }
 
+                    // Validate that selected unit exists in the list
+                    final validUnitId = units.any((u) => u.id == _selectedUnitId)
+                        ? _selectedUnitId
+                        : null;
+
                     return DropdownButtonFormField<String>(
-                      initialValue: _selectedUnitId,
+                      value: validUnitId,
                       decoration: const InputDecoration(
                         labelText: 'Odaberi jedinicu *',
                         border: OutlineInputBorder(),
@@ -817,30 +985,33 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                 const SizedBox(height: 16),
 
                 // Platform selector
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedPlatform,
-                  decoration: const InputDecoration(
-                    labelText: 'Platforma *',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'booking_com',
-                      child: Text('Booking.com'),
-                    ),
-                    DropdownMenuItem(value: 'airbnb', child: Text('Airbnb')),
-                    DropdownMenuItem(value: 'expedia', child: Text('Expedia')),
-                    DropdownMenuItem(value: 'vrbo', child: Text('VRBO')),
-                    DropdownMenuItem(
-                      value: 'homeaway',
-                      child: Text('HomeAway'),
-                    ),
-                    DropdownMenuItem(value: 'other', child: Text('Druga')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedPlatform = value!;
-                    });
+                Builder(
+                  builder: (context) {
+                    const validPlatforms = ['booking_com', 'airbnb', 'other'];
+                    final validPlatform = validPlatforms.contains(_selectedPlatform)
+                        ? _selectedPlatform
+                        : 'booking_com';
+
+                    return DropdownButtonFormField<String>(
+                      value: validPlatform,
+                      decoration: const InputDecoration(
+                        labelText: 'Platforma *',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'booking_com',
+                          child: Text('Booking.com'),
+                        ),
+                        DropdownMenuItem(value: 'airbnb', child: Text('Airbnb')),
+                        DropdownMenuItem(value: 'other', child: Text('Druga platforma (iCal)')),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedPlatform = value!;
+                        });
+                      },
+                    );
                   },
                 ),
 
@@ -1034,6 +1205,10 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
       if (widget.existingFeed == null) {
         feedId = await repository.createIcalFeed(feed);
 
+        // Invalidate providers to refresh UI immediately
+        ref.invalidate(icalFeedsStreamProvider);
+        ref.invalidate(icalStatisticsProvider);
+
         if (mounted) {
           Navigator.pop(context);
           ErrorDisplayUtils.showSuccessSnackBar(
@@ -1046,6 +1221,10 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         }
       } else {
         await repository.updateIcalFeed(feed);
+
+        // Invalidate providers to refresh UI immediately
+        ref.invalidate(icalFeedsStreamProvider);
+        ref.invalidate(icalStatisticsProvider);
 
         if (mounted) {
           Navigator.pop(context);

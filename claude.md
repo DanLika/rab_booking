@@ -1155,11 +1155,12 @@ if (confirmed == true && context.mounted) {
 
 ### iCal Integration (Import/Export)
 
-**Status**: ✅ STABILAN - Master-Detail pattern (2025-11-16)
+**Status**: ✅ STABILAN - Master-Detail pattern (2025-11-25)
 
 #### Osnovne Informacije
 - **Folder**: `lib/features/owner_dashboard/presentation/screens/ical/`
 - **Svrha**: Import rezervacija sa Booking.com/Airbnb, Export iCal URL-ova
+- **Platform Options**: Booking.com, Airbnb, Druga platforma (iCal)
 
 #### Screen-ovi
 1. **Import** - `ical_sync_settings_screen.dart` - Dodaj/uredi iCal feed-ove
@@ -1167,11 +1168,40 @@ if (confirmed == true && context.mounted) {
 3. **Export Detail** - `ical_export_screen.dart` - iCal URL za konkretnu jedinicu (REQUIRES params!)
 4. **Guide** - `ical_guide_screen.dart` - Uputstvo za setup
 
+#### ⚠️ KRITIČNO - Provider Invalidation za UI Refresh
+
+**Problem riješen (2025-11-25):** UI se nije osvježavao nakon CRUD operacija na feed-ovima.
+
+**Rješenje:** Dodano `ref.invalidate()` nakon svake operacije:
+```dart
+// Nakon delete/create/update feed-a:
+ref.invalidate(icalFeedsStreamProvider);
+ref.invalidate(icalStatisticsProvider);
+```
+
+**Lokacije u kodu:**
+- `_confirmDeleteFeed()` - linije 808-810
+- `_saveFeed()` (create) - linije 1204-1206
+- `_saveFeed()` (update) - linije 1221-1223
+
+#### ⚠️ KRITIČNO - Cloud Function HTTP Redirect Handling
+
+**File:** `functions/src/icalSync.ts`
+
+**Problem riješen:** Booking.com koristi HTTP redirecte (301, 302, 303, 307, 308) za iCal URL-ove.
+
+**Rješenje:** `fetchIcalData()` funkcija sada:
+- Prati do 5 redirecta rekurzivno
+- Podržava relative URL redirecte (`/path` → `https://host/path`)
+- Logira svaki redirect za debugging
+
 #### Ključni Constraint-ovi
 - ❌ **NE OTVORI** Export Screen sa `context.go()` (mora `context.push()` sa extra params!)
 - ❌ **NE MIJENJAJ** null-safety validation u route builder-u
+- ❌ **NE UKLANJAJ** provider invalidation iz CRUD operacija!
 - ✅ **Master-Detail pattern**: Export List (no params) → Export Screen (requires unit + propertyId)
 - ✅ **Horizontal gradient**: Svi 4 screen-a koriste left→right gradient
+- ✅ **Instant UI refresh**: Provider invalidation nakon svake CRUD operacije
 
 **Route Builder (KRITIČNO!):**
 ```dart
@@ -1179,17 +1209,19 @@ GoRoute(
   path: OwnerRoutes.icalExport,
   builder: (context, state) {
     if (state.extra == null) return const NotFoundScreen();
-    
+
     final extra = state.extra as Map<String, dynamic>;
     final unit = extra['unit'] as UnitModel?;
     final propertyId = extra['propertyId'] as String?;
-    
+
     if (unit == null || propertyId == null) return const NotFoundScreen();
-    
+
     return IcalExportScreen(unit: unit, propertyId: propertyId);
   },
 )
 ```
+
+**Commit:** `4fff528` (2025-11-25)
 
 ---
 

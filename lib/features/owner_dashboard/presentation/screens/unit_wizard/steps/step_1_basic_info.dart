@@ -24,7 +24,20 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
   bool _isInitialized = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Add listeners in initState - they will be active for all user input
+    _nameController.addListener(_onNameChanged);
+    _slugController.addListener(_onSlugChanged);
+    _descriptionController.addListener(_onDescriptionChanged);
+  }
+
+  @override
   void dispose() {
+    // Remove listeners before disposing controllers
+    _nameController.removeListener(_onNameChanged);
+    _slugController.removeListener(_onSlugChanged);
+    _descriptionController.removeListener(_onDescriptionChanged);
     _nameController.dispose();
     _slugController.dispose();
     _descriptionController.dispose();
@@ -34,16 +47,12 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
   void _loadData(dynamic draft) {
     if (_isInitialized) return;
 
+    // Only set initial values - listeners are already attached in initState
     _nameController.text = draft.name ?? '';
     _slugController.text = draft.slug ?? '';
     _descriptionController.text = draft.description ?? '';
     _isManualSlugEdit = draft.slug != null && draft.slug!.isNotEmpty;
     _isInitialized = true;
-
-    // Add listeners after loading data
-    _nameController.addListener(_onNameChanged);
-    _slugController.addListener(_onSlugChanged);
-    _descriptionController.addListener(_onDescriptionChanged);
   }
 
   void _onNameChanged() {
@@ -276,13 +285,11 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                   );
                                 }
 
-                                // Row layout for larger screens - both 250px, centered
+                                // Row layout for larger screens - use Expanded for maximum space
                                 return Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    // Unit Name - 250px fixed width
-                                    SizedBox(
-                                      width: 250,
+                                    // Unit Name - flexible width
+                                    Expanded(
                                       child: TextFormField(
                                         controller: _nameController,
                                         decoration: InputDecorationHelper.buildDecoration(
@@ -301,9 +308,8 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                       ),
                                     ),
                                     const SizedBox(width: 16),
-                                    // URL Slug - 250px fixed width (same as Name)
-                                    SizedBox(
-                                      width: 250,
+                                    // URL Slug - flexible width
+                                    Expanded(
                                       child: TextFormField(
                                         controller: _slugController,
                                         decoration: InputDecorationHelper.buildDecoration(
@@ -425,16 +431,20 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                             ),
                             const SizedBox(height: 20),
 
-                            // Description TextField
+                            // Description TextField - optional, max 500 characters
                             TextFormField(
                               controller: _descriptionController,
                               decoration: InputDecorationHelper.buildDecoration(
                                 context,
-                                labelText: 'Opis',
-                                hintText: 'Unesite detaljan opis jedinice, sadržaj, удобства...',
+                                labelText: 'Opis (opcionalno)',
+                                hintText: 'Kratki opis jedinice...',
                                 isMobile: isMobile,
+                              ).copyWith(
+                                counterText: '${_descriptionController.text.length}/500',
                               ),
-                              maxLines: 5,
+                              minLines: 2,
+                              maxLines: 4,
+                              maxLength: 500,
                               textInputAction: TextInputAction.newline,
                             ),
                           ],
@@ -444,35 +454,6 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                   ),
                 ),
                 const SizedBox(height: AppDimensions.spaceL),
-
-                // TODO: Property Selector - Responsive width
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Property selector će biti dodat u Phase 3',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),

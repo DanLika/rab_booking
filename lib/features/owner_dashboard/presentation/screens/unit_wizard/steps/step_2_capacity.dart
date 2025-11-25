@@ -80,21 +80,18 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
       data: (draft) {
         _loadData(draft);
 
-        // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
-        // topRight → bottomLeft za body background (matching section cards)
+        // Horizontal gradient (left → right) - matches footer gradient for seamless transition
         return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
               colors: isDark
                   ? const [
-                      Color(0xFF2D2D2D), // mediumDarkGray (lighter) - RIGHT
                       Color(0xFF1A1A1A), // veryDarkGray (darker) - LEFT
+                      Color(0xFF2D2D2D), // mediumDarkGray (lighter) - RIGHT
                     ]
                   : const [
-                      Colors.white,      // white (lighter) - RIGHT
                       Color(0xFFF5F5F5), // Light grey (darker) - LEFT
+                      Colors.white,      // white (lighter) - RIGHT
                     ],
               stops: const [0.0, 0.3],
             ),
@@ -142,18 +139,18 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                     child: Container(
                       decoration: BoxDecoration(
                         // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
-                        // topRight → bottomLeft za section
+                        // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
                         gradient: LinearGradient(
                           begin: Alignment.topRight,
                           end: Alignment.bottomLeft,
                           colors: isDark
                               ? const [
-                                  Color(0xFF2D2D2D), // mediumDarkGray (lighter) - RIGHT
-                                  Color(0xFF1A1A1A), // veryDarkGray (darker) - LEFT
+                                  Color(0xFF1A1A1A), // veryDarkGray (darker) - RIGHT
+                                  Color(0xFF2D2D2D), // mediumDarkGray (lighter) - LEFT
                                 ]
                               : const [
-                                  Colors.white,      // white (lighter) - RIGHT
-                                  Color(0xFFF5F5F5), // Light grey (darker) - LEFT
+                                  Color(0xFFF5F5F5), // Light grey (darker) - RIGHT
+                                  Colors.white,      // white (lighter) - LEFT
                                 ],
                           stops: const [0.0, 0.3],
                         ),

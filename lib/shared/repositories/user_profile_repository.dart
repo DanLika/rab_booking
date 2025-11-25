@@ -115,6 +115,8 @@ class UserProfileRepository {
           'vatId': company.vatId,
           'bankAccountIban': company.bankAccountIban,
           'swift': company.swift,
+          'bankName': company.bankName,
+          'accountHolder': company.accountHolder,
           'address': company.address.toJson(),
           'updatedAt': FieldValue.serverTimestamp(),
         },

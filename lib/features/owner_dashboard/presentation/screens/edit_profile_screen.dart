@@ -50,6 +50,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _vatIdController = TextEditingController();
   final _ibanController = TextEditingController();
   final _swiftController = TextEditingController();
+  final _bankNameController = TextEditingController();
+  final _accountHolderController = TextEditingController();
   final _companyCountryController = TextEditingController();
   final _companyCityController = TextEditingController();
   final _companyStreetController = TextEditingController();
@@ -84,6 +86,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _vatIdController.dispose();
     _ibanController.dispose();
     _swiftController.dispose();
+    _bankNameController.dispose();
+    _accountHolderController.dispose();
     _companyCountryController.dispose();
     _companyCityController.dispose();
     _companyStreetController.dispose();
@@ -119,6 +123,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _vatIdController.text = company.vatId;
     _ibanController.text = company.bankAccountIban;
     _swiftController.text = company.swift;
+    _bankNameController.text = company.bankName;
+    _accountHolderController.text = company.accountHolder;
     _companyCountryController.text = company.address.country;
     _companyCityController.text = company.address.city;
     _companyStreetController.text = company.address.street;
@@ -142,6 +148,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _vatIdController.addListener(_markDirty);
     _ibanController.addListener(_markDirty);
     _swiftController.addListener(_markDirty);
+    _bankNameController.addListener(_markDirty);
+    _accountHolderController.addListener(_markDirty);
     _companyCountryController.addListener(_markDirty);
     _companyCityController.addListener(_markDirty);
     _companyStreetController.addListener(_markDirty);
@@ -221,6 +229,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         vatId: _vatIdController.text.trim(),
         bankAccountIban: _ibanController.text.trim(),
         swift: _swiftController.text.trim(),
+        bankName: _bankNameController.text.trim(),
+        accountHolder: _accountHolderController.text.trim(),
         address: Address(
           country: _companyCountryController.text.trim(),
           city: _companyCityController.text.trim(),
@@ -602,6 +612,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     controller: _swiftController,
                                     labelText: 'SWIFT/BIC',
                                     prefixIcon: Icons.code,
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // Bank Name
+                                  PremiumInputField(
+                                    controller: _bankNameController,
+                                    labelText: 'Naziv Banke',
+                                    prefixIcon: Icons.account_balance,
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // Account Holder
+                                  PremiumInputField(
+                                    controller: _accountHolderController,
+                                    labelText: 'Vlasnik Računa',
+                                    prefixIcon: Icons.person,
                                   ),
                                   const SizedBox(height: 28),
 

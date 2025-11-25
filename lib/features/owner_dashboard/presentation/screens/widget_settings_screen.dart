@@ -1,12 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/router_owner.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../shared/models/user_profile_model.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/domain/models/widget_mode.dart';
 import '../../../widget/presentation/providers/widget_settings_provider.dart'
     as widget_provider;
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../providers/user_profile_provider.dart';
 
 /// Widget Settings Screen - Configure embedded widget for each unit
 class WidgetSettingsScreen extends ConsumerStatefulWidget {
@@ -38,10 +44,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   bool _stripeEnabled = false;
 
   bool _bankTransferEnabled = false;
-  final _bankNameController = TextEditingController();
-  final _ibanController = TextEditingController();
-  final _swiftController = TextEditingController();
-  final _accountHolderController = TextEditingController();
+  // Bank details now read from CompanyDetails (profile), not stored per-unit
   int _bankPaymentDeadlineDays = 3;
   bool _bankEnableQrCode = true;
   final _bankCustomNotesController = TextEditingController();
@@ -74,6 +77,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
   WidgetSettings? _existingSettings;
+  CompanyDetails? _companyDetails;
 
   @override
   void initState() {
@@ -94,6 +98,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       if (settings != null) {
         _existingSettings = settings;
         _applySettingsToForm(settings);
+      }
+
+      // Load company details for bank transfer validation
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId != null) {
+        final profileRepository = ref.read(userProfileRepositoryProvider);
+        _companyDetails = await profileRepository.getCompanyDetails(userId);
       }
     } catch (e) {
       if (mounted) {
@@ -119,13 +130,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       // Payment Methods - Stripe
       _stripeEnabled = settings.stripeConfig?.enabled ?? false;
 
-      // Payment Methods - Bank Transfer
+      // Payment Methods - Bank Transfer (bank details now from profile)
       _bankTransferEnabled = settings.bankTransferConfig?.enabled ?? false;
-      _bankNameController.text = settings.bankTransferConfig?.bankName ?? '';
-      _ibanController.text = settings.bankTransferConfig?.iban ?? '';
-      _swiftController.text = settings.bankTransferConfig?.swift ?? '';
-      _accountHolderController.text =
-          settings.bankTransferConfig?.accountHolder ?? '';
       _bankPaymentDeadlineDays =
           settings.bankTransferConfig?.paymentDeadlineDays ?? 3;
       _bankEnableQrCode = settings.bankTransferConfig?.enableQrCode ?? true;
@@ -166,6 +172,209 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       _syncIntervalMinutes =
           settings.externalCalendarConfig?.syncIntervalMinutes ?? 60;
     });
+  }
+
+  /// Handle bank transfer toggle with lazy validation
+  Future<void> _handleBankTransferToggle(bool val) async {
+    if (val) {
+      // Check if bank details exist in profile
+      if (_companyDetails == null || !_companyDetails!.hasBankDetails) {
+        // Show dialog to go to profile
+        final goToProfile = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Bankovni podaci nisu uneseni'),
+            content: const Text(
+              'Da biste omogućili bankovnu uplatu, morate prvo unijeti '
+              'bankovne podatke u svom profilu (naziv banke, IBAN, vlasnik računa).',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Odustani'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Idi na Profil'),
+              ),
+            ],
+          ),
+        );
+
+        if (goToProfile == true && mounted) {
+          // Navigate to edit profile and reload on return
+          await context.push(OwnerRoutes.profileEdit);
+          // Reload company details after returning from profile
+          final userId = FirebaseAuth.instance.currentUser?.uid;
+          if (userId != null) {
+            final profileRepository = ref.read(userProfileRepositoryProvider);
+            _companyDetails = await profileRepository.getCompanyDetails(userId);
+            // If now has bank details, enable bank transfer
+            if (_companyDetails?.hasBankDetails == true) {
+              setState(() => _bankTransferEnabled = true);
+            }
+          }
+        }
+        return; // Don't enable if no bank details
+      }
+    }
+
+    setState(() => _bankTransferEnabled = val);
+  }
+
+  /// Build read-only display of bank details from profile
+  Widget _buildBankDetailsFromProfile() {
+    final theme = Theme.of(context);
+    final company = _companyDetails;
+
+    if (company == null || !company.hasBankDetails) {
+      // Show warning card
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.errorContainer.withAlpha((0.3 * 255).toInt()),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colorScheme.error.withAlpha((0.5 * 255).toInt()),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: theme.colorScheme.error,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bankovni podaci nisu uneseni',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Unesite bankovne podatke u profilu.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                await context.push(OwnerRoutes.profileEdit);
+                // Reload on return
+                final userId = FirebaseAuth.instance.currentUser?.uid;
+                if (userId != null) {
+                  final profileRepository = ref.read(userProfileRepositoryProvider);
+                  final updatedCompany = await profileRepository.getCompanyDetails(userId);
+                  if (mounted) {
+                    setState(() => _companyDetails = updatedCompany);
+                  }
+                }
+              },
+              child: const Text('Uredi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show bank details from profile
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withAlpha((0.2 * 255).toInt()),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Bankovni podaci iz profila:',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () async {
+                  await context.push(OwnerRoutes.profileEdit);
+                  // Reload on return
+                  final userId = FirebaseAuth.instance.currentUser?.uid;
+                  if (userId != null) {
+                    final profileRepository = ref.read(userProfileRepositoryProvider);
+                    final updatedCompany = await profileRepository.getCompanyDetails(userId);
+                    if (mounted) {
+                      setState(() => _companyDetails = updatedCompany);
+                    }
+                  }
+                },
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('Uredi'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _buildBankDetailRow('Banka', company.bankName),
+          _buildBankDetailRow('IBAN', company.bankAccountIban),
+          _buildBankDetailRow('SWIFT/BIC', company.swift),
+          _buildBankDetailRow('Vlasnik računa', company.accountHolder),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBankDetailRow(String label, String value) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value.isNotEmpty ? value : '-',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _saveSettings() async {
@@ -211,18 +420,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 enabled: true,
                 depositPercentage:
                     _globalDepositPercentage, // Use global deposit
-                bankName: _bankNameController.text.isEmpty
-                    ? null
-                    : _bankNameController.text,
-                iban: _ibanController.text.isEmpty
-                    ? null
-                    : _ibanController.text,
-                swift: _swiftController.text.isEmpty
-                    ? null
-                    : _swiftController.text,
-                accountHolder: _accountHolderController.text.isEmpty
-                    ? null
-                    : _accountHolderController.text,
+                // Owner ID for fetching bank details from CompanyDetails
+                ownerId: FirebaseAuth.instance.currentUser?.uid,
+                // Bank details copied from CompanyDetails for backward compatibility
+                // New widgets use ownerId to fetch fresh data from owner's profile
+                bankName: _companyDetails?.bankName,
+                iban: _companyDetails?.bankAccountIban,
+                swift: _companyDetails?.swift,
+                accountHolder: _companyDetails?.accountHolder,
                 paymentDeadlineDays: _bankPaymentDeadlineDays,
                 enableQrCode: _bankEnableQrCode,
                 customNotes: _bankCustomNotesController.text.isEmpty
@@ -305,10 +510,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   @override
   void dispose() {
-    _bankNameController.dispose();
-    _ibanController.dispose();
-    _swiftController.dispose();
-    _accountHolderController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     _bookingComAccountIdController.dispose();
@@ -364,17 +565,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
                   const SizedBox(height: 32),
 
-                  // Gradient save button (matches Cjenovnik tab style)
+                  // Gradient save button (uses brand gradient)
                   Container(
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Theme.of(context).colorScheme.primary,
-                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
-                        ],
-                      ),
+                      gradient: GradientTokens.brandPrimary,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Material(
@@ -775,125 +969,20 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
             const SizedBox(height: 12),
 
-            // Bank Transfer - Collapsible (no deposit slider)
+            // Bank Transfer - Collapsible with lazy validation
             _buildPaymentMethodExpansionTile(
               icon: Icons.account_balance,
               title: 'Bankovna Uplata',
               subtitle: 'Uplata na račun',
               enabled: _bankTransferEnabled,
-              onToggle: (val) => setState(() => _bankTransferEnabled = val),
+              onToggle: _handleBankTransferToggle,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 12),
 
-                  // Bank details in responsive grid
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isDesktop = constraints.maxWidth >= 600;
-
-                      if (isDesktop) {
-                        // Desktop: 2 columns
-                        return Column(
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _bankNameController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Naziv banke',
-                                      border: OutlineInputBorder(),
-                                      isDense: true,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _accountHolderController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Vlasnik računa',
-                                      border: OutlineInputBorder(),
-                                      isDense: true,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  flex: 2,
-                                  child: TextFormField(
-                                    controller: _ibanController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'IBAN',
-                                      border: OutlineInputBorder(),
-                                      isDense: true,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _swiftController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'SWIFT/BIC',
-                                      border: OutlineInputBorder(),
-                                      isDense: true,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        );
-                      } else {
-                        // Mobile: Vertical
-                        return Column(
-                          children: [
-                            TextFormField(
-                              controller: _bankNameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Naziv banke',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _ibanController,
-                              decoration: const InputDecoration(
-                                labelText: 'IBAN',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _swiftController,
-                              decoration: const InputDecoration(
-                                labelText: 'SWIFT/BIC',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _accountHolderController,
-                              decoration: const InputDecoration(
-                                labelText: 'Vlasnik računa',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-                    },
-                  ),
+                  // Bank details from profile (read-only display)
+                  _buildBankDetailsFromProfile(),
 
                   const SizedBox(height: 12),
 
@@ -1090,6 +1179,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                 value: enabled,
                 onChanged: onToggle,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                thumbColor: WidgetStateProperty.all(Colors.transparent),
               ),
               if (enabled) ...[
                 const SizedBox(width: 8),
@@ -1189,6 +1279,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             value: value,
             onChanged: onChanged,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            thumbColor: WidgetStateProperty.all(Colors.transparent),
           ),
         ],
       ),
@@ -1518,6 +1609,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             value: value,
             onChanged: onChanged,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            thumbColor: WidgetStateProperty.all(Colors.transparent),
           ),
         ],
       ),
@@ -1611,10 +1703,32 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Responsive Grid for Switches
+              // Responsive Grid for Switches with input fields
               LayoutBuilder(
                 builder: (context, constraints) {
                   final isDesktop = constraints.maxWidth >= 600;
+
+                  final phoneInput = TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(
+                      labelText: 'Broj telefona',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      prefixIcon: Icon(Icons.phone),
+                    ),
+                    keyboardType: TextInputType.phone,
+                  );
+
+                  final emailInput = TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Email adresa',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      prefixIcon: Icon(Icons.email),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                  );
 
                   if (isDesktop) {
                     // Desktop: 2 columns grid
@@ -1622,7 +1736,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                       spacing: 12,
                       runSpacing: 12,
                       children: [
-                        // Row 1
                         SizedBox(
                           width: (constraints.maxWidth - 12) / 2,
                           child: _buildContactSwitchCard(
@@ -1630,6 +1743,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                             label: 'Telefon',
                             value: _showPhone,
                             onChanged: (val) => setState(() => _showPhone = val),
+                            child: phoneInput,
                           ),
                         ),
                         SizedBox(
@@ -1639,6 +1753,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                             label: 'Email',
                             value: _showEmail,
                             onChanged: (val) => setState(() => _showEmail = val),
+                            child: emailInput,
                           ),
                         ),
                       ],
@@ -1652,6 +1767,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           label: 'Telefon',
                           value: _showPhone,
                           onChanged: (val) => setState(() => _showPhone = val),
+                          child: phoneInput,
                         ),
                         const SizedBox(height: 12),
                         _buildContactSwitchCard(
@@ -1659,43 +1775,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                           label: 'Email',
                           value: _showEmail,
                           onChanged: (val) => setState(() => _showEmail = val),
+                          child: emailInput,
                         ),
                       ],
                     );
                   }
                 },
               ),
-
-              // Input Fields (conditional based on enabled switches)
-              const SizedBox(height: 20),
-
-              if (_showPhone) ...[
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Broj telefona',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.phone),
-                  ),
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 12),
-              ],
-
-              if (_showEmail) ...[
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email adresa',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 12),
-              ],
             ],
           ),
         ),
@@ -1709,6 +1795,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     required String label,
     required bool value,
     required ValueChanged<bool> onChanged,
+    Widget? child,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -1732,32 +1819,42 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           width: value ? 2 : 1,
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: value
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: value ? FontWeight.w600 : FontWeight.normal,
+          Row(
+            children: [
+              Icon(
+                icon,
                 color: value
-                    ? Theme.of(context).colorScheme.onSurface
+                    ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 20,
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: value ? FontWeight.w600 : FontWeight.normal,
+                    color: value
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Switch(
+                value: value,
+                onChanged: onChanged,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                thumbColor: WidgetStateProperty.all(Colors.transparent),
+              ),
+            ],
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
+          if (value && child != null) ...[
+            const SizedBox(height: 12),
+            child,
+          ],
         ],
       ),
     );

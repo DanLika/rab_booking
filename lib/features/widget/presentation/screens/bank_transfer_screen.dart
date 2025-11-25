@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../providers/booking_price_provider.dart';
+import '../providers/owner_bank_details_provider.dart';
 import '../providers/theme_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../widget/domain/models/widget_settings.dart';
+import '../../../../shared/models/user_profile_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../utils/snackbar_helper.dart';
@@ -31,14 +33,6 @@ class BankTransferScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final priceCalc = ref.watch(
-      bookingPriceProvider(
-        unitId: unitId,
-        checkIn: checkIn,
-        checkOut: checkOut,
-      ),
-    );
-
     final settingsAsync = ref
         .watch(widgetSettingsRepositoryProvider)
         .getWidgetSettings(propertyId: propertyId, unitId: unitId);
@@ -85,75 +79,173 @@ class BankTransferScreen extends ConsumerWidget {
           final settings = settingsSnapshot.data;
           final bankConfig = settings?.bankTransferConfig;
 
-          return priceCalc.when(
-            data: (calculation) {
-              if (calculation == null) {
-                return Center(
-                  child: Text(
-                    'Greška pri učitavanju cijene',
-                    style: TextStyle(
-                      color: getColor(
-                        MinimalistColors.error,
-                        MinimalistColorsDark.error,
-                      ),
+          // Check if we should fetch bank details from owner's profile
+          final ownerId = bankConfig?.ownerId;
+          final shouldFetchFromOwner = ownerId != null && ownerId.isNotEmpty;
+
+          // If ownerId exists, fetch CompanyDetails for bank info
+          if (shouldFetchFromOwner) {
+            final ownerBankAsync = ref.watch(ownerBankDetailsProvider(ownerId));
+
+            return ownerBankAsync.when(
+              data: (companyDetails) {
+                // Create effective bank config with data from CompanyDetails
+                final effectiveBankConfig = _createEffectiveBankConfig(
+                  bankConfig!,
+                  companyDetails,
+                );
+
+                return _buildWithBankConfig(
+                  context,
+                  ref,
+                  isDarkMode,
+                  getColor,
+                  effectiveBankConfig,
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(
+                child: Text(
+                  'Greška pri učitavanju bankovnih podataka: $error',
+                  style: TextStyle(
+                    color: getColor(
+                      MinimalistColors.error,
+                      MinimalistColorsDark.error,
                     ),
                   ),
-                );
-              }
+                ),
+              ),
+            );
+          }
 
-              // Calculate payment deadline
-              final deadlineDays = bankConfig?.paymentDeadlineDays ?? 3;
-              final paymentDeadline = DateTime.now().add(
-                Duration(days: deadlineDays),
-              );
-              final formattedDeadline = DateFormat(
-                'd. MMMM yyyy.',
-              ).format(paymentDeadline);
+          return _buildWithBankConfig(
+            context,
+            ref,
+            isDarkMode,
+            getColor,
+            bankConfig,
+          );
+        },
+      ),
+    );
+  }
 
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final isDesktop = constraints.maxWidth >= 900;
-                  final spacing = isDesktop ? SpacingTokens.m : SpacingTokens.l;
+  /// Create effective bank config by merging widget config with owner's CompanyDetails
+  BankTransferConfig _createEffectiveBankConfig(
+    BankTransferConfig widgetConfig,
+    CompanyDetails? companyDetails,
+  ) {
+    if (companyDetails == null) {
+      return widgetConfig;
+    }
 
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.all(SpacingTokens.m),
-                    child: isDesktop
-                        ? _buildDesktopLayout(
-                            context,
-                            isDarkMode,
-                            getColor,
-                            calculation,
-                            bankConfig,
-                            formattedDeadline,
-                            spacing,
-                          )
-                        : _buildMobileLayout(
-                            context,
-                            isDarkMode,
-                            getColor,
-                            calculation,
-                            bankConfig,
-                            formattedDeadline,
-                            spacing,
-                          ),
-                  );
-                },
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => Center(
-              child: Text(
-                'Greška: $error',
-                style: TextStyle(
-                  color: getColor(
-                    MinimalistColors.error,
-                    MinimalistColorsDark.error,
-                  ),
+    return BankTransferConfig(
+      enabled: widgetConfig.enabled,
+      depositPercentage: widgetConfig.depositPercentage,
+      ownerId: widgetConfig.ownerId,
+      paymentDeadlineDays: widgetConfig.paymentDeadlineDays,
+      enableQrCode: widgetConfig.enableQrCode,
+      customNotes: widgetConfig.customNotes,
+      useCustomNotes: widgetConfig.useCustomNotes,
+      // Bank details from owner's CompanyDetails
+      bankName: companyDetails.bankName.isNotEmpty
+          ? companyDetails.bankName
+          : widgetConfig.bankName,
+      iban: companyDetails.bankAccountIban.isNotEmpty
+          ? companyDetails.bankAccountIban
+          : widgetConfig.iban,
+      swift: companyDetails.swift.isNotEmpty
+          ? companyDetails.swift
+          : widgetConfig.swift,
+      accountHolder: companyDetails.accountHolder.isNotEmpty
+          ? companyDetails.accountHolder
+          : widgetConfig.accountHolder,
+      accountNumber: widgetConfig.accountNumber, // Keep legacy if exists
+    );
+  }
+
+  /// Build the screen content with the given bank config
+  Widget _buildWithBankConfig(
+    BuildContext context,
+    WidgetRef ref,
+    bool isDarkMode,
+    Color Function(Color, Color) getColor,
+    BankTransferConfig? bankConfig,
+  ) {
+    final priceCalc = ref.watch(
+      bookingPriceProvider(
+        unitId: unitId,
+        checkIn: checkIn,
+        checkOut: checkOut,
+      ),
+    );
+
+    return priceCalc.when(
+      data: (calculation) {
+        if (calculation == null) {
+          return Center(
+            child: Text(
+              'Greška pri učitavanju cijene',
+              style: TextStyle(
+                color: getColor(
+                  MinimalistColors.error,
+                  MinimalistColorsDark.error,
                 ),
               ),
             ),
           );
-        },
+        }
+
+        // Calculate payment deadline
+        final deadlineDays = bankConfig?.paymentDeadlineDays ?? 3;
+        final paymentDeadline = DateTime.now().add(
+          Duration(days: deadlineDays),
+        );
+        final formattedDeadline = DateFormat(
+          'd. MMMM yyyy.',
+        ).format(paymentDeadline);
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= 900;
+            final spacing = isDesktop ? SpacingTokens.m : SpacingTokens.l;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(SpacingTokens.m),
+              child: isDesktop
+                  ? _buildDesktopLayout(
+                      context,
+                      isDarkMode,
+                      getColor,
+                      calculation,
+                      bankConfig,
+                      formattedDeadline,
+                      spacing,
+                    )
+                  : _buildMobileLayout(
+                      context,
+                      isDarkMode,
+                      getColor,
+                      calculation,
+                      bankConfig,
+                      formattedDeadline,
+                      spacing,
+                    ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text(
+          'Greška: $error',
+          style: TextStyle(
+            color: getColor(
+              MinimalistColors.error,
+              MinimalistColorsDark.error,
+            ),
+          ),
+        ),
       ),
     );
   }

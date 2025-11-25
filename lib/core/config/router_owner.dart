@@ -26,6 +26,7 @@ import '../../features/owner_dashboard/presentation/screens/unit_wizard/unit_wiz
 import '../../features/owner_dashboard/presentation/screens/notifications_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/profile_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/edit_profile_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/bank_account_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/change_password_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/notification_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/about_screen.dart';
@@ -113,6 +114,7 @@ class OwnerRoutes {
   static const String widgetSettings = '/owner/widget-settings';
   // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
+  static const String bankAccount = '/owner/integrations/payments/bank-account';
   // iCal routes (NEW structure - organized under /ical/)
   static const String icalImport =
       '/owner/integrations/ical/import'; // iCal Sync Settings (Import)
@@ -548,6 +550,11 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: OwnerRoutes.stripeIntegration,
         builder: (context, state) => const StripeConnectSetupScreen(),
+      ),
+      // Bank Account (for bank transfer payments)
+      GoRoute(
+        path: OwnerRoutes.bankAccount,
+        builder: (context, state) => const BankAccountScreen(),
       ),
       // iCal Sync Settings (Import) - NEW
       GoRoute(

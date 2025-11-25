@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -12,7 +12,6 @@ import '../../../../shared/models/user_profile_model.dart';
 import '../../../auth/presentation/widgets/auth_background.dart';
 import '../../../auth/presentation/widgets/glass_card.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
-import '../../../auth/presentation/widgets/gradient_auth_button.dart';
 import '../../../auth/presentation/widgets/profile_image_picker.dart';
 import '../providers/user_profile_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -44,14 +43,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _facebookController = TextEditingController();
   final _propertyTypeController = TextEditingController();
 
-  // Controllers - Company Details
+  // Controllers - Company Details (Bank details moved to dedicated Bank Account screen)
   final _companyNameController = TextEditingController();
   final _taxIdController = TextEditingController();
   final _vatIdController = TextEditingController();
-  final _ibanController = TextEditingController();
-  final _swiftController = TextEditingController();
-  final _bankNameController = TextEditingController();
-  final _accountHolderController = TextEditingController();
   final _companyCountryController = TextEditingController();
   final _companyCityController = TextEditingController();
   final _companyStreetController = TextEditingController();
@@ -80,14 +75,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _facebookController.dispose();
     _propertyTypeController.dispose();
 
-    // Company Details
+    // Company Details (Bank details moved to dedicated Bank Account screen)
     _companyNameController.dispose();
     _taxIdController.dispose();
     _vatIdController.dispose();
-    _ibanController.dispose();
-    _swiftController.dispose();
-    _bankNameController.dispose();
-    _accountHolderController.dispose();
     _companyCountryController.dispose();
     _companyCityController.dispose();
     _companyStreetController.dispose();
@@ -117,14 +108,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _facebookController.text = profile.social.facebook;
     _propertyTypeController.text = profile.propertyType;
 
-    // Company Details
+    // Company Details (Bank details managed in dedicated Bank Account screen)
     _companyNameController.text = company.companyName;
     _taxIdController.text = company.taxId;
     _vatIdController.text = company.vatId;
-    _ibanController.text = company.bankAccountIban;
-    _swiftController.text = company.swift;
-    _bankNameController.text = company.bankName;
-    _accountHolderController.text = company.accountHolder;
     _companyCountryController.text = company.address.country;
     _companyCityController.text = company.address.city;
     _companyStreetController.text = company.address.street;
@@ -146,10 +133,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _companyNameController.addListener(_markDirty);
     _taxIdController.addListener(_markDirty);
     _vatIdController.addListener(_markDirty);
-    _ibanController.addListener(_markDirty);
-    _swiftController.addListener(_markDirty);
-    _bankNameController.addListener(_markDirty);
-    _accountHolderController.addListener(_markDirty);
     _companyCountryController.addListener(_markDirty);
     _companyCityController.addListener(_markDirty);
     _companyStreetController.addListener(_markDirty);
@@ -222,15 +205,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         logoUrl: _originalProfile?.logoUrl ?? '',
       );
 
-      // Create updated company details
+      // Create updated company details (preserve bank data from original - managed in Bank Account screen)
+      final userData = ref.read(userDataProvider).value;
+      final existingCompany = userData?.company;
       final updatedCompany = CompanyDetails(
         companyName: _companyNameController.text.trim(),
         taxId: _taxIdController.text.trim(),
         vatId: _vatIdController.text.trim(),
-        bankAccountIban: _ibanController.text.trim(),
-        swift: _swiftController.text.trim(),
-        bankName: _bankNameController.text.trim(),
-        accountHolder: _accountHolderController.text.trim(),
+        bankAccountIban: existingCompany?.bankAccountIban ?? '',
+        swift: existingCompany?.swift ?? '',
+        bankName: existingCompany?.bankName ?? '',
+        accountHolder: existingCompany?.accountHolder ?? '',
         address: Address(
           country: _companyCountryController.text.trim(),
           city: _companyCityController.text.trim(),
@@ -276,6 +261,218 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         );
       }
     }
+  }
+
+  // ========== HELPER METHODS ==========
+
+  bool _hasAddressData() {
+    return _countryController.text.isNotEmpty ||
+        _streetController.text.isNotEmpty ||
+        _cityController.text.isNotEmpty ||
+        _postalCodeController.text.isNotEmpty;
+  }
+
+  Widget _buildProfileCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+    bool initiallyExpanded = false,
+    bool isOptional = false,
+    String? subtitle,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: isDark
+                  ? const [Color(0xFF1A1A1A), Color(0xFF2D2D2D)]
+                  : const [Color(0xFFF5F5F5), Colors.white],
+              stops: const [0.0, 0.3],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: theme.dividerColor.withAlpha((0.4 * 255).toInt()),
+              width: 1.5,
+            ),
+          ),
+          child: Theme(
+            data: theme.copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: initiallyExpanded,
+              tilePadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color:
+                      theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: theme.colorScheme.primary, size: 18),
+              ),
+              title: Row(
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (isOptional) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'opcionalno',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              subtitle: subtitle != null
+                  ? Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                  : null,
+              children: children,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionDivider(String title) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 16,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    final theme = Theme.of(context);
+
+    return Column(
+      children: [
+        // Save Button - sa app bar gradient
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: (_isDirty && !_isSaving)
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withValues(alpha: 0.7),
+                      ],
+                    )
+                  : null,
+              color: (_isDirty && !_isSaving)
+                  ? null
+                  : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ElevatedButton.icon(
+              onPressed: (_isDirty && !_isSaving) ? _saveProfile : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                shadowColor: Colors.transparent,
+                disabledBackgroundColor: Colors.transparent,
+                disabledForegroundColor: theme.disabledColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.save_rounded),
+              label: Text(_isSaving ? 'Spremanje...' : 'Spremi Promjene'),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Cancel Button - veći height
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: TextButton(
+            onPressed: () => context.pop(),
+            style: TextButton.styleFrom(
+              foregroundColor:
+                  theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: theme.dividerColor,
+                ),
+              ),
+            ),
+            child: const Text('Odustani'),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -397,335 +594,172 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             ),
                             const SizedBox(height: 32),
 
-                            // Display Name
-                            PremiumInputField(
-                              controller: _displayNameController,
-                              labelText: 'Display Name',
-                              prefixIcon: Icons.person_outline,
-                              validator: ProfileValidators.validateName,
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Email
-                            PremiumInputField(
-                              controller: _emailContactController,
-                              labelText: 'Contact Email',
-                              prefixIcon: Icons.email_outlined,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: ProfileValidators.validateEmail,
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Phone
-                            PremiumInputField(
-                              controller: _phoneController,
-                              labelText: 'Phone',
-                              prefixIcon: Icons.phone_outlined,
-                              keyboardType: TextInputType.phone,
-                              validator: ProfileValidators.validatePhone,
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Website
-                            PremiumInputField(
-                              controller: _websiteController,
-                              labelText: 'Website',
-                              prefixIcon: Icons.language_outlined,
-                              keyboardType: TextInputType.url,
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Facebook
-                            PremiumInputField(
-                              controller: _facebookController,
-                              labelText: 'Facebook Page',
-                              prefixIcon: Icons.facebook,
-                              keyboardType: TextInputType.url,
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Property Type
-                            PremiumInputField(
-                              controller: _propertyTypeController,
-                              labelText: 'Property Type',
-                              prefixIcon: Icons.business_outlined,
-                            ),
-                            const SizedBox(height: 28),
-
-                            // Address Section Header
-                            Row(
+                            // ========== KARTICA 1: LIČNI PODACI ==========
+                            _buildProfileCard(
+                              title: 'Lični Podaci',
+                              icon: Icons.person_outline,
+                              initiallyExpanded: true,
+                              subtitle: 'Osnovni kontakt podaci',
                               children: [
-                                Container(
-                                  width: 4,
-                                  height: 20,
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        AppColors.primary,
-                                        AppColors.authSecondary,
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(2),
-                                    ),
-                                  ),
+                                PremiumInputField(
+                                  controller: _displayNameController,
+                                  labelText: 'Ime i Prezime',
+                                  prefixIcon: Icons.person_outline,
+                                  validator: ProfileValidators.validateName,
                                 ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Address',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).colorScheme.onSurface,
-                                  ),
+                                const SizedBox(height: 16),
+                                PremiumInputField(
+                                  controller: _emailContactController,
+                                  labelText: 'Email',
+                                  prefixIcon: Icons.email_outlined,
+                                  keyboardType: TextInputType.emailAddress,
+                                  validator: ProfileValidators.validateEmail,
+                                ),
+                                const SizedBox(height: 16),
+                                PremiumInputField(
+                                  controller: _phoneController,
+                                  labelText: 'Telefon',
+                                  prefixIcon: Icons.phone_outlined,
+                                  keyboardType: TextInputType.phone,
+                                  validator: ProfileValidators.validatePhone,
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 20),
 
-                            // Country
-                            PremiumInputField(
-                              controller: _countryController,
-                              labelText: 'Country',
-                              prefixIcon: Icons.public,
-                              validator: (v) =>
-                                  ProfileValidators.validateAddressField(
-                                    v,
-                                    'Country',
-                                  ),
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Street
-                            PremiumInputField(
-                              controller: _streetController,
-                              labelText: 'Street',
-                              prefixIcon: Icons.location_on_outlined,
-                              validator: (v) =>
-                                  ProfileValidators.validateAddressField(
-                                    v,
-                                    'Street',
-                                  ),
-                            ),
-                            const SizedBox(height: 20),
-
-                            // City & Postal Code Row
-                            Row(
+                            // ========== KARTICA 2: ADRESA ==========
+                            _buildProfileCard(
+                              title: 'Adresa',
+                              icon: Icons.location_on_outlined,
+                              initiallyExpanded: _hasAddressData(),
+                              isOptional: true,
+                              subtitle: 'Vaša fizička adresa',
                               children: [
-                                Expanded(
-                                  child: PremiumInputField(
-                                    controller: _cityController,
-                                    labelText: 'City',
-                                    prefixIcon: Icons.location_city,
-                                    validator: (v) =>
-                                        ProfileValidators.validateAddressField(
-                                          v,
-                                          'City',
-                                        ),
-                                  ),
+                                PremiumInputField(
+                                  controller: _countryController,
+                                  labelText: 'Država',
+                                  prefixIcon: Icons.public,
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: PremiumInputField(
-                                    controller: _postalCodeController,
-                                    labelText: 'Postal Code',
-                                    prefixIcon: Icons.markunread_mailbox,
-                                    validator:
-                                        ProfileValidators.validatePostalCode,
-                                  ),
+                                const SizedBox(height: 16),
+                                PremiumInputField(
+                                  controller: _streetController,
+                                  labelText: 'Ulica i Broj',
+                                  prefixIcon: Icons.location_on_outlined,
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 32),
-
-                            // Company Details Section
-                            Theme(
-                              data: Theme.of(context).copyWith(
-                                dividerColor: Colors.transparent,
-                              ),
-                              child: ExpansionTile(
-                                tilePadding: EdgeInsets.zero,
-                                childrenPadding: const EdgeInsets.only(top: 20),
-                                title: Row(
+                                const SizedBox(height: 16),
+                                Row(
                                   children: [
-                                    Container(
-                                      width: 4,
-                                      height: 20,
-                                      decoration: const BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            AppColors.primary,
-                                            AppColors.authSecondary,
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(2),
-                                        ),
+                                    Expanded(
+                                      child: PremiumInputField(
+                                        controller: _cityController,
+                                        labelText: 'Grad',
+                                        prefixIcon: Icons.location_city,
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-                                    Text(
-                                      'Company Details',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).colorScheme.onSurface,
+                                    Expanded(
+                                      child: PremiumInputField(
+                                        controller: _postalCodeController,
+                                        labelText: 'Poštanski Broj',
+                                        prefixIcon: Icons.markunread_mailbox,
                                       ),
                                     ),
                                   ],
                                 ),
-                                children: [
-                                  // Company Name
-                                  PremiumInputField(
-                                    controller: _companyNameController,
-                                    labelText: 'Company Name',
-                                    prefixIcon: Icons.business,
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // Tax ID
-                                  PremiumInputField(
-                                    controller: _taxIdController,
-                                    labelText: 'Tax ID',
-                                    prefixIcon: Icons.receipt_long,
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // VAT ID
-                                  PremiumInputField(
-                                    controller: _vatIdController,
-                                    labelText: 'VAT ID',
-                                    prefixIcon: Icons.account_balance,
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // IBAN
-                                  PremiumInputField(
-                                    controller: _ibanController,
-                                    labelText: 'IBAN',
-                                    prefixIcon: Icons.credit_card,
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // SWIFT
-                                  PremiumInputField(
-                                    controller: _swiftController,
-                                    labelText: 'SWIFT/BIC',
-                                    prefixIcon: Icons.code,
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // Bank Name
-                                  PremiumInputField(
-                                    controller: _bankNameController,
-                                    labelText: 'Naziv Banke',
-                                    prefixIcon: Icons.account_balance,
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // Account Holder
-                                  PremiumInputField(
-                                    controller: _accountHolderController,
-                                    labelText: 'Vlasnik Računa',
-                                    prefixIcon: Icons.person,
-                                  ),
-                                  const SizedBox(height: 28),
-
-                                  // Company Address Header
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 4,
-                                        height: 20,
-                                        decoration: const BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              AppColors.primary,
-                                              AppColors.authSecondary,
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.all(
-                                            Radius.circular(2),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        'Company Address',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Theme.of(context).colorScheme.onSurface,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // Company Country
-                                  PremiumInputField(
-                                    controller: _companyCountryController,
-                                    labelText: 'Country',
-                                    prefixIcon: Icons.public,
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // Company Street
-                                  PremiumInputField(
-                                    controller: _companyStreetController,
-                                    labelText: 'Street',
-                                    prefixIcon: Icons.location_on_outlined,
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // Company City & Postal Code Row
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: PremiumInputField(
-                                          controller: _companyCityController,
-                                          labelText: 'City',
-                                          prefixIcon: Icons.location_city,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: PremiumInputField(
-                                          controller: _companyPostalCodeController,
-                                          labelText: 'Postal Code',
-                                          prefixIcon: Icons.markunread_mailbox,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                              ],
                             ),
-                            const SizedBox(height: 32),
 
-                            // Save Button
-                            GradientAuthButton(
-                              text: 'Save Changes',
-                              onPressed: (_isDirty && !_isSaving)
-                                  ? _saveProfile
-                                  : null,
-                              isLoading: _isSaving,
-                              icon: Icons.save_rounded,
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Cancel Button
-                            TextButton(
-                              onPressed: () => context.pop(),
-                              child: Text(
-                                'Cancel',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w600,
+                            // ========== KARTICA 3: KOMPANIJA ==========
+                            // Note: Bankovni Podaci moved to dedicated Bank Account screen
+                            // in Integracije → Plaćanja → Bankovni Račun
+                            _buildProfileCard(
+                              title: 'Kompanija',
+                              icon: Icons.business_outlined,
+                              isOptional: true,
+                              subtitle: 'Za poslovne korisnike i fakture',
+                              children: [
+                                // Company Info
+                                PremiumInputField(
+                                  controller: _companyNameController,
+                                  labelText: 'Naziv Kompanije',
+                                  prefixIcon: Icons.business,
                                 ),
-                              ),
+                                const SizedBox(height: 16),
+                                PremiumInputField(
+                                  controller: _taxIdController,
+                                  labelText: 'OIB / Porezni Broj',
+                                  prefixIcon: Icons.receipt_long,
+                                ),
+                                const SizedBox(height: 16),
+                                PremiumInputField(
+                                  controller: _vatIdController,
+                                  labelText: 'PDV ID',
+                                  prefixIcon: Icons.account_balance,
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Company Address
+                                _buildSectionDivider('Adresa Kompanije'),
+                                PremiumInputField(
+                                  controller: _companyCountryController,
+                                  labelText: 'Država',
+                                  prefixIcon: Icons.public,
+                                ),
+                                const SizedBox(height: 16),
+                                PremiumInputField(
+                                  controller: _companyStreetController,
+                                  labelText: 'Ulica i Broj',
+                                  prefixIcon: Icons.location_on_outlined,
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: PremiumInputField(
+                                        controller: _companyCityController,
+                                        labelText: 'Grad',
+                                        prefixIcon: Icons.location_city,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: PremiumInputField(
+                                        controller: _companyPostalCodeController,
+                                        labelText: 'Poštanski Broj',
+                                        prefixIcon: Icons.markunread_mailbox,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Online Presence
+                                _buildSectionDivider('Online Prisutnost'),
+                                PremiumInputField(
+                                  controller: _websiteController,
+                                  labelText: 'Web Stranica',
+                                  prefixIcon: Icons.language_outlined,
+                                  keyboardType: TextInputType.url,
+                                ),
+                                const SizedBox(height: 16),
+                                PremiumInputField(
+                                  controller: _facebookController,
+                                  labelText: 'Facebook Stranica',
+                                  prefixIcon: Icons.facebook,
+                                  keyboardType: TextInputType.url,
+                                ),
+                                const SizedBox(height: 16),
+                                PremiumInputField(
+                                  controller: _propertyTypeController,
+                                  labelText: 'Tip Nekretnine',
+                                  prefixIcon: Icons.home_work_outlined,
+                                ),
+                              ],
                             ),
+
+                            const SizedBox(height: 8),
+
+                            // ========== ACTION BUTTONS ==========
+                            _buildActionButtons(),
                           ],
                         ),
                       ),

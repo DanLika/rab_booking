@@ -195,7 +195,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Idi na Profil'),
+                child: const Text('Dodaj Bankovne Podatke'),
               ),
             ],
           ),
@@ -203,7 +203,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
         if (goToProfile == true && mounted) {
           // Navigate to edit profile and reload on return
-          await context.push(OwnerRoutes.profileEdit);
+          await context.push(OwnerRoutes.bankAccount);
           // Reload company details after returning from profile
           final userId = FirebaseAuth.instance.currentUser?.uid;
           if (userId != null) {
@@ -259,7 +259,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Unesite bankovne podatke u profilu.',
+                    'Unesite bankovne podatke u Integracije → Plaćanja.',
                     style: TextStyle(
                       fontSize: 13,
                       color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
@@ -270,7 +270,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             ),
             TextButton(
               onPressed: () async {
-                await context.push(OwnerRoutes.profileEdit);
+                await context.push(OwnerRoutes.bankAccount);
                 // Reload on return
                 final userId = FirebaseAuth.instance.currentUser?.uid;
                 if (userId != null) {
@@ -319,7 +319,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               const Spacer(),
               TextButton.icon(
                 onPressed: () async {
-                  await context.push(OwnerRoutes.profileEdit);
+                  await context.push(OwnerRoutes.bankAccount);
                   // Reload on return
                   final userId = FirebaseAuth.instance.currentUser?.uid;
                   if (userId != null) {

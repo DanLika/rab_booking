@@ -112,12 +112,14 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            // iCal Integracija Expansion
+            // Unified Integracije Expansion (iCal + Plaćanja)
             _PremiumExpansionTile(
-              icon: Icons.sync,
-              title: 'iCal Integracija',
-              isExpanded: currentRoute.startsWith('integrations/ical'),
+              icon: Icons.extension_outlined,
+              title: 'Integracije',
+              isExpanded: currentRoute.startsWith('integrations'),
               children: [
+                // iCal Section Header
+                const _DrawerSectionHeader(title: 'iCal'),
                 _DrawerSubItem(
                   title: 'Import Rezervacija',
                   subtitle: 'Sync sa booking.com',
@@ -132,23 +134,24 @@ class OwnerAppDrawer extends ConsumerWidget {
                   isSelected: currentRoute == 'integrations/ical/export-list',
                   onTap: () => context.go(OwnerRoutes.icalExportList),
                 ),
-              ],
-            ),
 
-            const SizedBox(height: 4),
+                const SizedBox(height: 8),
 
-            // Integracije Expansion
-            _PremiumExpansionTile(
-              icon: Icons.settings_outlined,
-              title: 'Integracije',
-              isExpanded: currentRoute.startsWith('integrations/stripe'),
-              children: [
+                // Plaćanja Section Header
+                const _DrawerSectionHeader(title: 'Plaćanja'),
                 _DrawerSubItem(
                   title: 'Stripe Plaćanja',
                   subtitle: 'Obrada kartica',
-                  icon: Icons.payment,
+                  icon: Icons.credit_card,
                   isSelected: currentRoute == 'integrations/stripe',
                   onTap: () => context.go(OwnerRoutes.stripeIntegration),
+                ),
+                _DrawerSubItem(
+                  title: 'Bankovni Račun',
+                  subtitle: 'Podaci za uplate',
+                  icon: Icons.account_balance,
+                  isSelected: currentRoute == 'integrations/payments/bank-account',
+                  onTap: () => context.go(OwnerRoutes.bankAccount),
                 ),
               ],
             ),
@@ -427,6 +430,44 @@ class _DrawerItemState extends State<_DrawerItem> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Section Header for grouping drawer items
+class _DrawerSectionHeader extends StatelessWidget {
+  final String title;
+
+  const _DrawerSectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 40, right: 12, top: 8, bottom: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 12,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withAlpha((0.6 * 255).toInt()),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }

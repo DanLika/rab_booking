@@ -4,6 +4,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/constants/app_dimensions.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/presentation/providers/widget_settings_provider.dart';
 import '../widgets/advanced_settings/email_verification_card.dart';
@@ -212,7 +213,10 @@ class _WidgetAdvancedSettingsScreenState
         }
 
         // Determine if mobile layout
-        final isMobile = MediaQuery.of(context).size.width < 600;
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isMobile = screenWidth < 600;
+        final padding = context.horizontalPadding;
+        final gap = isMobile ? 8.0 : 16.0;
 
         final bodyContent = Form(
             key: _formKey,
@@ -221,12 +225,7 @@ class _WidgetAdvancedSettingsScreenState
               children: [
                 // Email Verification Section (first section)
                 Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    isMobile ? 16 : 20, // left
-                    isMobile ? 16 : 20, // top (first section)
-                    isMobile ? 16 : 20, // right
-                    isMobile ? 8 : 12, // bottom
-                  ),
+                  padding: EdgeInsets.fromLTRB(padding, padding, padding, gap),
                   child: EmailVerificationCard(
                     requireEmailVerification: _requireEmailVerification,
                     onChanged: (val) => setState(
@@ -238,12 +237,7 @@ class _WidgetAdvancedSettingsScreenState
 
                 // Tax/Legal Disclaimer Section (middle section)
                 Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    isMobile ? 16 : 20, // left
-                    isMobile ? 8 : 12, // top (other sections)
-                    isMobile ? 16 : 20, // right
-                    isMobile ? 8 : 12, // bottom
-                  ),
+                  padding: EdgeInsets.fromLTRB(padding, gap, padding, gap),
                   child: TaxLegalDisclaimerCard(
                     taxLegalEnabled: _taxLegalEnabled,
                     useDefaultText: _useDefaultText,
@@ -268,12 +262,7 @@ class _WidgetAdvancedSettingsScreenState
 
                 // iCal Export Section (last section)
                 Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    isMobile ? 16 : 20, // left
-                    isMobile ? 8 : 12, // top (other sections)
-                    isMobile ? 16 : 20, // right
-                    isMobile ? 16 : 20, // bottom (last section)
-                  ),
+                  padding: EdgeInsets.fromLTRB(padding, gap, padding, padding),
                   child: IcalExportCard(
                     propertyId: widget.propertyId,
                     unitId: widget.unitId,
@@ -288,9 +277,7 @@ class _WidgetAdvancedSettingsScreenState
 
                 // Save Button (uses brand gradient)
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 16 : 20,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: padding),
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: GradientTokens.brandPrimary,

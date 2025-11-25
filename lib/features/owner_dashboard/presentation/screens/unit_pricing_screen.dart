@@ -6,11 +6,11 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/constants/app_dimensions.dart';
 import '../widgets/price_list_calendar_widget.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/owner_calendar_provider.dart';
-import '../../../../core/constants/app_dimensions.dart';
 
 /// Screen for managing unit pricing (base price and bulk month pricing)
 /// Can be accessed from drawer (no unit selected) or from unit management (specific unit)
@@ -162,40 +162,28 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   }) {
     if (_selectedUnit == null) return const SizedBox.shrink();
 
+    final padding = context.horizontalPadding;
+    final gap = isMobile ? 8.0 : 16.0;
+
     return SingleChildScrollView(
       child: Column(
         children: [
           // Unit selector (only when accessed from drawer)
           if (showUnitSelector && units != null)
             Padding(
-              padding: EdgeInsets.fromLTRB(
-                isMobile ? 16 : 24,
-                isMobile ? 16 : 20,
-                isMobile ? 16 : 24,
-                isMobile ? 8 : 12,
-              ),
+              padding: EdgeInsets.fromLTRB(padding, padding, padding, gap),
               child: _buildUnitSelector(units, isMobile),
             ),
 
           // Base price section
           Padding(
-            padding: EdgeInsets.fromLTRB(
-              isMobile ? 16 : 24,
-              isMobile ? 16 : 20,
-              isMobile ? 16 : 24,
-              isMobile ? 8 : 12,
-            ),
+            padding: EdgeInsets.fromLTRB(padding, padding, padding, gap),
             child: _buildBasePriceSection(isMobile),
           ),
 
           // Calendar section
           Padding(
-            padding: EdgeInsets.fromLTRB(
-              isMobile ? 16 : 24,
-              isMobile ? 8 : 12,
-              isMobile ? 16 : 24,
-              isMobile ? 16 : 20,
-            ),
+            padding: EdgeInsets.fromLTRB(padding, gap, padding, padding),
             child: PriceListCalendarWidget(unit: _selectedUnit!),
           ),
 
@@ -209,6 +197,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   Widget _buildUnitSelector(List<UnitModel> units, bool isMobile) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final cardPadding = context.horizontalPadding;
 
     return Card(
       elevation: 0.5,
@@ -245,7 +234,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Padding(
-          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          padding: EdgeInsets.all(cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -428,6 +417,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
   Widget _buildBasePriceSection(bool isMobile) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final sectionPadding = context.horizontalPadding;
 
     return Container(
       decoration: BoxDecoration(
@@ -459,7 +449,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
             ),
           ),
           child: Padding(
-              padding: EdgeInsets.all(isMobile ? 16 : 20),
+              padding: EdgeInsets.all(sectionPadding),
               child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/domain/models/widget_mode.dart';
@@ -522,15 +523,14 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final contentPadding = context.horizontalPadding;
 
     final bodyContent = _isLoading
         ? const Center(child: CircularProgressIndicator())
         : Form(
               key: _formKey,
               child: ListView(
-                padding: EdgeInsets.all(isMobile ? 16 : 20),
+                padding: EdgeInsets.all(contentPadding),
                 children: [
                   _buildWidgetModeSection(),
 
@@ -634,8 +634,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   Widget _buildWidgetModeSection() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final sectionPadding = context.horizontalPadding;
 
     return Container(
       decoration: BoxDecoration(
@@ -680,7 +679,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               width: 1.5,
             ),
           ),
-          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          padding: EdgeInsets.all(sectionPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -793,8 +792,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   Widget _buildPaymentMethodsSection() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final sectionPadding = context.horizontalPadding;
 
     return Container(
       decoration: BoxDecoration(
@@ -833,7 +831,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               width: 1.5,
             ),
           ),
-          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          padding: EdgeInsets.all(sectionPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1289,8 +1287,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   Widget _buildBookingBehaviorSection() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final sectionPadding = context.horizontalPadding;
 
     return Container(
       decoration: BoxDecoration(
@@ -1329,7 +1326,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               width: 1.5,
             ),
           ),
-          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          padding: EdgeInsets.all(sectionPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1619,8 +1616,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   Widget _buildContactOptionsSection() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final sectionPadding = context.horizontalPadding;
 
     return Container(
       decoration: BoxDecoration(
@@ -1659,7 +1655,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               width: 1.5,
             ),
           ),
-          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          padding: EdgeInsets.all(sectionPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

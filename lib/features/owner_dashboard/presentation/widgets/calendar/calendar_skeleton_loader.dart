@@ -143,7 +143,9 @@ class _CalendarSkeletonLoaderState extends State<CalendarSkeletonLoader>
 
           // Booking blocks placeholders - clipped to prevent overflow
           Expanded(
-            child: ClipRect(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
               child: Row(
                 children: [
                   const SizedBox(width: 8),

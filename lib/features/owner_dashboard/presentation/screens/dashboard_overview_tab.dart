@@ -67,9 +67,9 @@ class DashboardOverviewTab extends ConsumerWidget {
               // Stats cards section
               Padding(
                 padding: EdgeInsets.fromLTRB(
-                  isMobile ? 16 : 24,
+                  context.horizontalPadding,
                   isMobile ? 16 : 20,
-                  isMobile ? 16 : 24,
+                  context.horizontalPadding,
                   isMobile ? 8 : 12,
                 ),
                 child: statsAsync.when(
@@ -134,9 +134,9 @@ class DashboardOverviewTab extends ConsumerWidget {
               // Recent activity section
               Padding(
                 padding: EdgeInsets.fromLTRB(
-                  isMobile ? 16 : 24,
+                  context.horizontalPadding,
                   isMobile ? 16 : 20,
-                  isMobile ? 16 : 24,
+                  context.horizontalPadding,
                   isMobile ? 16 : 20,
                 ),
                 child: _buildRecentActivity(context, ref),

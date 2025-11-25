@@ -155,9 +155,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
-                    context.horizontalPadding,
+                    0,
                     isMobile ? 16 : 20,
-                    context.horizontalPadding,
+                    0,
                     isMobile ? 8 : 12,
                   ),
                   child: _buildFiltersSection(filters, isMobile, theme, viewMode),
@@ -177,12 +177,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     return _buildBookingsSliverList(bookings, isMobile);
                   } else {
                     return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: context.horizontalPadding,
-                        ),
-                        child: BookingsTableView(bookings: bookings),
-                      ),
+                      child: BookingsTableView(bookings: bookings),
                     );
                   }
                 },
@@ -550,12 +545,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       final rowCount = (bookings.length / 2).ceil();
 
       return SliverPadding(
-        padding: EdgeInsets.fromLTRB(
-          context.horizontalPadding,
-          0,
-          context.horizontalPadding,
-          24,
-        ),
+        padding: const EdgeInsets.only(bottom: 24),
         sliver: SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, rowIndex) {
@@ -597,12 +587,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     } else {
       // Mobile/Tablet: Single column with SliverList for true lazy loading
       return SliverPadding(
-        padding: EdgeInsets.fromLTRB(
-          context.horizontalPadding,
-          0,
-          context.horizontalPadding,
-          24,
-        ),
+        padding: const EdgeInsets.only(bottom: 24),
         sliver: SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {

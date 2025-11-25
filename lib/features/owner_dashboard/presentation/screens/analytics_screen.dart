@@ -7,6 +7,7 @@ import '../providers/analytics_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/custom_date_range_picker.dart';
@@ -94,7 +95,10 @@ class _DateRangeSelector extends ConsumerWidget {
     final isMobile = screenWidth < 600;
 
     return Container(
-      padding: EdgeInsets.all(isMobile ? 12 : 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.horizontalPadding,
+        vertical: isMobile ? 12 : 16,
+      ),
       color: Colors.transparent,
       child: Row(
         children: [
@@ -227,7 +231,10 @@ class _AnalyticsContent extends StatelessWidget {
     final isDesktop = screenWidth > 900;
 
     return ListView(
-      padding: EdgeInsets.all(isMobile ? 12 : 16), // Reduced from 16/24
+      padding: EdgeInsets.symmetric(
+        horizontal: context.horizontalPadding,
+        vertical: isMobile ? 12 : 16,
+      ),
       children: [
         // Metric Cards
         _MetricCardsGrid(

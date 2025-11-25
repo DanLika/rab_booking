@@ -5,6 +5,7 @@ import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/property_model.dart';
@@ -1006,12 +1007,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
+    final isMobile = screenWidth < 600;
 
     // Build individual cards as widgets for flex layout
     final informacijeCard = _buildInfoCard(
       theme,
       title: 'Informacije',
       icon: Icons.info_outline,
+      isMobile: isMobile,
       children: [
         _buildDetailRow(theme, 'Naziv', _selectedUnit!.name),
         _buildDetailRow(theme, 'Slug', _selectedUnit!.slug ?? 'N/A'),
@@ -1032,6 +1035,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       theme,
       title: 'Kapacitet',
       icon: Icons.people_outline,
+      isMobile: isMobile,
       children: [
         _buildDetailRow(
           theme,
@@ -1057,6 +1061,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       theme,
       title: 'Cijena',
       icon: Icons.euro_outlined,
+      isMobile: isMobile,
       children: [
         _buildDetailRow(
           theme,
@@ -1072,11 +1077,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ],
     );
 
-    // 3-level responsive padding: mobile 16, tablet 20, desktop 24
-    final contentPadding = screenWidth < 600 ? 16.0 : screenWidth < 1200 ? 20.0 : 24.0;
-
     return ListView(
-      padding: EdgeInsets.all(contentPadding),
+      padding: EdgeInsets.all(context.horizontalPadding),
       children: [
         // Header with Edit Button
         Row(
@@ -1161,6 +1163,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   theme,
                   title: 'Fotografije',
                   icon: Icons.photo_library_outlined,
+                  isMobile: isMobile,
                   children: [
                     if (_selectedUnit!.images.isNotEmpty) ...[
                       Wrap(
@@ -1225,6 +1228,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               theme,
               title: 'Fotografije',
               icon: Icons.photo_library_outlined,
+              isMobile: isMobile,
               children: [
                 Wrap(
                   spacing: 8,
@@ -1318,11 +1322,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     required String title,
     required IconData icon,
     required List<Widget> children,
+    required bool isMobile,
   }) {
     final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    // 3-level responsive padding: mobile 16, tablet 20, desktop 24
-    final cardPadding = screenWidth < 600 ? 16.0 : screenWidth < 1200 ? 20.0 : 24.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -1359,7 +1361,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               width: 1.5,
             ),
           ),
-          padding: EdgeInsets.all(cardPadding),
+          padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -66,6 +66,22 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
       if (mounted) {
         final authState = ref.read(enhancedAuthProvider);
 
+        // Check for errors from provider
+        if (authState.error != null) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authState.error!),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+          return;
+        }
+
         // Check if email verification required
         if (authState.requiresEmailVerification) {
           context.go(OwnerRoutes.emailVerification);
@@ -89,7 +105,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final errorMessage = e.toString();
+        final authState = ref.read(enhancedAuthProvider);
+        final errorMessage = authState.error ?? e.toString();
 
         // Check if it's a wrong password error - show inline
         if (errorMessage.contains('Incorrect password') ||
@@ -122,14 +139,18 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
 
   Future<void> _handleGoogleSignIn() async {
     final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isLoading = true);
+
     try {
       await ref.read(enhancedAuthProvider.notifier).signInWithGoogle();
       // Navigation handled by router based on auth state
     } catch (e) {
       if (mounted) {
+        setState(() => _isLoading = false);
+        final authState = ref.read(enhancedAuthProvider);
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Google Sign-In failed: ${e.toString()}'),
+            content: Text(authState.error ?? e.toString()),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -143,14 +164,18 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
 
   Future<void> _handleAppleSignIn() async {
     final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isLoading = true);
+
     try {
       await ref.read(enhancedAuthProvider.notifier).signInWithApple();
       // Navigation handled by router based on auth state
     } catch (e) {
       if (mounted) {
+        setState(() => _isLoading = false);
+        final authState = ref.read(enhancedAuthProvider);
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Apple Sign-In failed: ${e.toString()}'),
+            content: Text(authState.error ?? e.toString()),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -164,14 +189,18 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
 
   Future<void> _handleAnonymousSignIn() async {
     final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isLoading = true);
+
     try {
       await ref.read(enhancedAuthProvider.notifier).signInAnonymously();
       // Navigation handled by router based on auth state
     } catch (e) {
       if (mounted) {
+        setState(() => _isLoading = false);
+        final authState = ref.read(enhancedAuthProvider);
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Anonymous Sign-In failed: ${e.toString()}'),
+            content: Text(authState.error ?? e.toString()),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(

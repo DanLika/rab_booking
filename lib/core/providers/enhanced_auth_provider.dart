@@ -300,8 +300,16 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         location = null;
       }
 
-      // Log security event with location
-      await _security.logLogin(credential.user!, location: location);
+      // Log security event with location (non-blocking)
+      try {
+        await _security.logLogin(credential.user!, location: location);
+      } catch (e) {
+        // Don't block login if security logging fails
+        LoggingService.log(
+          'Security event logging failed: $e',
+          tag: 'AUTH_WARNING',
+        );
+      }
 
       // Set persistence based on rememberMe
       if (!rememberMe) {
@@ -425,8 +433,16 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       // Reset rate limit on success
       await _rateLimit.resetAttempts(email);
 
-      // Send email verification
-      await credential.user!.sendEmailVerification();
+      // Send email verification (non-blocking - user can resend from verification screen)
+      try {
+        await credential.user!.sendEmailVerification();
+      } catch (e) {
+        // Don't block registration if email verification fails
+        LoggingService.log(
+          'Failed to send verification email: $e',
+          tag: 'AUTH_WARNING',
+        );
+      }
 
       // Get geolocation (with timeout to avoid blocking registration)
       String? location;
@@ -441,21 +457,29 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         location = null;
       }
 
-      // Log registration with location
-      await _security.logEvent(
-        userId: credential.user!.uid,
-        type: SecurityEventType.registration,
-        location: location,
-        metadata: {'email': email, 'accountType': AccountType.trial.name},
-      );
+      // Log registration with location (non-blocking)
+      try {
+        await _security.logEvent(
+          userId: credential.user!.uid,
+          type: SecurityEventType.registration,
+          location: location,
+          metadata: {'email': email, 'accountType': AccountType.trial.name},
+        );
 
-      // Log email verification sent
-      await _security.logEvent(
-        userId: credential.user!.uid,
-        type: SecurityEventType.emailVerification,
-        location: location,
-        metadata: {'action': 'sent'},
-      );
+        // Log email verification sent
+        await _security.logEvent(
+          userId: credential.user!.uid,
+          type: SecurityEventType.emailVerification,
+          location: location,
+          metadata: {'action': 'sent'},
+        );
+      } catch (e) {
+        // Don't block registration if security logging fails
+        LoggingService.log(
+          'Security event logging failed during registration: $e',
+          tag: 'AUTH_WARNING',
+        );
+      }
 
       state = EnhancedAuthState(
         firebaseUser: credential.user,
@@ -556,12 +580,19 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         await _updateLastLogin(userCredential.user!.uid);
       }
 
-      // Log security event
-      await _security.logEvent(
-        userId: userCredential.user!.uid,
-        type: SecurityEventType.login,
-        metadata: {'provider': 'anonymous', 'isNewUser': isNewUser},
-      );
+      // Log security event (non-blocking)
+      try {
+        await _security.logEvent(
+          userId: userCredential.user!.uid,
+          type: SecurityEventType.login,
+          metadata: {'provider': 'anonymous', 'isNewUser': isNewUser},
+        );
+      } catch (e) {
+        LoggingService.log(
+          'Security event logging failed: $e',
+          tag: 'AUTH_WARNING',
+        );
+      }
 
       state = state.copyWith(isLoading: false);
     } on FirebaseAuthException catch (e) {
@@ -640,12 +671,19 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         await _updateLastLogin(userCredential.user!.uid);
       }
 
-      // Log security event
-      await _security.logEvent(
-        userId: userCredential.user!.uid,
-        type: SecurityEventType.login,
-        metadata: {'provider': 'google', 'isNewUser': isNewUser},
-      );
+      // Log security event (non-blocking)
+      try {
+        await _security.logEvent(
+          userId: userCredential.user!.uid,
+          type: SecurityEventType.login,
+          metadata: {'provider': 'google', 'isNewUser': isNewUser},
+        );
+      } catch (e) {
+        LoggingService.log(
+          'Security event logging failed: $e',
+          tag: 'AUTH_WARNING',
+        );
+      }
 
       state = state.copyWith(isLoading: false);
     } on FirebaseAuthException catch (e) {
@@ -706,12 +744,19 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         await _updateLastLogin(userCredential.user!.uid);
       }
 
-      // Log security event
-      await _security.logEvent(
-        userId: userCredential.user!.uid,
-        type: SecurityEventType.login,
-        metadata: {'provider': 'apple', 'isNewUser': isNewUser},
-      );
+      // Log security event (non-blocking)
+      try {
+        await _security.logEvent(
+          userId: userCredential.user!.uid,
+          type: SecurityEventType.login,
+          metadata: {'provider': 'apple', 'isNewUser': isNewUser},
+        );
+      } catch (e) {
+        LoggingService.log(
+          'Security event logging failed: $e',
+          tag: 'AUTH_WARNING',
+        );
+      }
 
       state = state.copyWith(isLoading: false);
     } on FirebaseAuthException catch (e) {

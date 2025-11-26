@@ -105,6 +105,22 @@ class _EnhancedRegisterScreenState
       if (mounted) {
         final authState = ref.read(enhancedAuthProvider);
 
+        // Check for errors from provider
+        if (authState.error != null) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authState.error!),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+          return;
+        }
+
         // Check if email verification required (always true for new registrations)
         if (authState.requiresEmailVerification) {
           context.go(OwnerRoutes.emailVerification);
@@ -117,9 +133,10 @@ class _EnhancedRegisterScreenState
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
+        final authState = ref.read(enhancedAuthProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(authState.error ?? e.toString()),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(

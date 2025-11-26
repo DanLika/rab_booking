@@ -116,6 +116,25 @@ test/
 | `/pr-comments` | Dohvati GitHub PR komentare |
 | `/security-review` | Security audit pending changes |
 
+### Instalirani Plugini
+
+**Marketplace**: `jeremylongshore/claude-code-plugins-plus`
+**Datum instalacije**: 2025-11-26
+
+| Plugin | Svrha |
+|--------|-------|
+| `project-health-auditor` | Analizira code quality, dependencies, security issues, tech debt |
+| `git-commit-smart` | Auto-generira pametne commit poruke na osnovu staged diff-a |
+
+**Korištenje:**
+```bash
+# Health audit projekta
+/project-health-auditor
+
+# Smart commit (nakon git add)
+/git-commit-smart
+```
+
 ---
 
 ## 🎯 KRITIČNE SEKCIJE - NE MIJENJAJ BEZ RAZLOGA!

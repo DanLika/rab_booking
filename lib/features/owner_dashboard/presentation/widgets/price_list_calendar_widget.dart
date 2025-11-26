@@ -561,10 +561,11 @@ class _PriceListCalendarWidgetState
         // Calculate aspect ratio based on device size
         final aspectRatio = isSmallMobile ? 0.85 : (isMobile ? 1.0 : 1.2);
 
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            boxShadow: AppShadows.getElevation(1, isDark: Theme.of(context).brightness == Brightness.dark),
+            boxShadow: AppShadows.getElevation(1, isDark: isDark),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
@@ -573,7 +574,10 @@ class _PriceListCalendarWidgetState
                 gradient: context.gradients.sectionBackground,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: context.borderColor.withOpacity(0.5),
+                  // Warm borders: beige for light theme, warm gray for dark theme
+                  color: isDark
+                      ? const Color(0xFF3D3733) // Warm gray
+                      : const Color(0xFFE8E5DC), // Warm beige
                   width: 1.5,
                 ),
               ),

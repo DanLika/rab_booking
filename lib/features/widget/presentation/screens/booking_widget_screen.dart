@@ -15,7 +15,6 @@ import '../providers/widget_settings_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
-import '../providers/ical_sync_status_provider.dart';
 import '../providers/additional_services_provider.dart';
 import '../../domain/models/calendar_view_type.dart';
 import '../../domain/models/widget_settings.dart';
@@ -678,8 +677,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                           ),
                         ),
 
-                      // Bug #67 Fix: iCal sync warning banner
-                      _buildIcalSyncWarningInline(unitId, isDarkMode),
+                      // NOTE: iCal sync warning banner removed from guest widget
+                      // This is owner-only information - guests don't need to see sync status
+                      // Owners can monitor sync status in their dashboard
 
                       // Calendar with calculated height (respects minimum 400px constraint)
                       SizedBox(
@@ -782,69 +782,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           },
         ),
       ),
-    );
-  }
-
-  /// Bug #67 Fix: Build iCal sync warning banner (inline version for scrollable layout)
-  /// Shows warning when external calendars (Airbnb/Booking.com) haven't been synced recently
-  Widget _buildIcalSyncWarningInline(String unitId, bool isDarkMode) {
-    final syncStatus = ref.watch(icalSyncStatusProvider(unitId));
-
-    return syncStatus.when(
-      data: (status) {
-        // Don't show banner if no active feeds or recently synced (< 30 min)
-        if (!status.hasActiveFeeds || !status.isStale) {
-          return const SizedBox.shrink();
-        }
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Material(
-            elevation: 4,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? MinimalistColorsDark.statusPendingBackground
-                    : MinimalistColors.statusPendingBackground,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isDarkMode
-                      ? MinimalistColorsDark.statusPendingBorder
-                      : MinimalistColors.statusPendingBorder,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    color: isDarkMode
-                        ? MinimalistColorsDark.warning
-                        : MinimalistColors.warning,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      status.displayText,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDarkMode
-                            ? MinimalistColorsDark.statusPendingText
-                            : MinimalistColors.statusPendingText,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
     );
   }
 

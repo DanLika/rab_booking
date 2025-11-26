@@ -37,9 +37,17 @@ mixin _$UnitModel {
   /// Unit description
   String? get description => throw _privateConstructorUsedError;
 
-  /// Price per night in EUR
+  /// Price per night in EUR (base price for weekdays)
   @JsonKey(name: 'base_price')
   double get pricePerNight => throw _privateConstructorUsedError;
+
+  /// Weekend base price in EUR (optional, for Sat-Sun by default)
+  @JsonKey(name: 'weekend_base_price')
+  double? get weekendBasePrice => throw _privateConstructorUsedError;
+
+  /// Days considered as weekend (1=Mon...7=Sun, default: [6,7] = Sat-Sun)
+  @JsonKey(name: 'weekend_days')
+  List<int>? get weekendDays => throw _privateConstructorUsedError;
 
   /// Currency code (default: EUR)
   String? get currency => throw _privateConstructorUsedError;
@@ -109,6 +117,8 @@ abstract class $UnitModelCopyWith<$Res> {
     String? slug,
     String? description,
     @JsonKey(name: 'base_price') double pricePerNight,
+    @JsonKey(name: 'weekend_base_price') double? weekendBasePrice,
+    @JsonKey(name: 'weekend_days') List<int>? weekendDays,
     String? currency,
     @JsonKey(name: 'max_guests') int maxGuests,
     int bedrooms,
@@ -147,6 +157,8 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
     Object? slug = freezed,
     Object? description = freezed,
     Object? pricePerNight = null,
+    Object? weekendBasePrice = freezed,
+    Object? weekendDays = freezed,
     Object? currency = freezed,
     Object? maxGuests = null,
     Object? bedrooms = null,
@@ -186,6 +198,14 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
                 ? _value.pricePerNight
                 : pricePerNight // ignore: cast_nullable_to_non_nullable
                       as double,
+            weekendBasePrice: freezed == weekendBasePrice
+                ? _value.weekendBasePrice
+                : weekendBasePrice // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            weekendDays: freezed == weekendDays
+                ? _value.weekendDays
+                : weekendDays // ignore: cast_nullable_to_non_nullable
+                      as List<int>?,
             currency: freezed == currency
                 ? _value.currency
                 : currency // ignore: cast_nullable_to_non_nullable
@@ -256,6 +276,8 @@ abstract class _$$UnitModelImplCopyWith<$Res>
     String? slug,
     String? description,
     @JsonKey(name: 'base_price') double pricePerNight,
+    @JsonKey(name: 'weekend_base_price') double? weekendBasePrice,
+    @JsonKey(name: 'weekend_days') List<int>? weekendDays,
     String? currency,
     @JsonKey(name: 'max_guests') int maxGuests,
     int bedrooms,
@@ -293,6 +315,8 @@ class __$$UnitModelImplCopyWithImpl<$Res>
     Object? slug = freezed,
     Object? description = freezed,
     Object? pricePerNight = null,
+    Object? weekendBasePrice = freezed,
+    Object? weekendDays = freezed,
     Object? currency = freezed,
     Object? maxGuests = null,
     Object? bedrooms = null,
@@ -332,6 +356,14 @@ class __$$UnitModelImplCopyWithImpl<$Res>
             ? _value.pricePerNight
             : pricePerNight // ignore: cast_nullable_to_non_nullable
                   as double,
+        weekendBasePrice: freezed == weekendBasePrice
+            ? _value.weekendBasePrice
+            : weekendBasePrice // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        weekendDays: freezed == weekendDays
+            ? _value._weekendDays
+            : weekendDays // ignore: cast_nullable_to_non_nullable
+                  as List<int>?,
         currency: freezed == currency
             ? _value.currency
             : currency // ignore: cast_nullable_to_non_nullable
@@ -395,6 +427,8 @@ class _$UnitModelImpl extends _UnitModel {
     this.slug,
     this.description,
     @JsonKey(name: 'base_price') required this.pricePerNight,
+    @JsonKey(name: 'weekend_base_price') this.weekendBasePrice,
+    @JsonKey(name: 'weekend_days') final List<int>? weekendDays,
     this.currency = 'EUR',
     @JsonKey(name: 'max_guests') required this.maxGuests,
     this.bedrooms = 1,
@@ -407,7 +441,8 @@ class _$UnitModelImpl extends _UnitModel {
     @JsonKey(name: 'created_at') @TimestampConverter() required this.createdAt,
     @JsonKey(name: 'updated_at') @NullableTimestampConverter() this.updatedAt,
     @JsonKey(name: 'deleted_at') this.deletedAt,
-  }) : _images = images,
+  }) : _weekendDays = weekendDays,
+       _images = images,
        super._();
 
   factory _$UnitModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -434,10 +469,29 @@ class _$UnitModelImpl extends _UnitModel {
   @override
   final String? description;
 
-  /// Price per night in EUR
+  /// Price per night in EUR (base price for weekdays)
   @override
   @JsonKey(name: 'base_price')
   final double pricePerNight;
+
+  /// Weekend base price in EUR (optional, for Sat-Sun by default)
+  @override
+  @JsonKey(name: 'weekend_base_price')
+  final double? weekendBasePrice;
+
+  /// Days considered as weekend (1=Mon...7=Sun, default: [6,7] = Sat-Sun)
+  final List<int>? _weekendDays;
+
+  /// Days considered as weekend (1=Mon...7=Sun, default: [6,7] = Sat-Sun)
+  @override
+  @JsonKey(name: 'weekend_days')
+  List<int>? get weekendDays {
+    final value = _weekendDays;
+    if (value == null) return null;
+    if (_weekendDays is EqualUnmodifiableListView) return _weekendDays;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
 
   /// Currency code (default: EUR)
   @override
@@ -510,7 +564,7 @@ class _$UnitModelImpl extends _UnitModel {
 
   @override
   String toString() {
-    return 'UnitModel(id: $id, propertyId: $propertyId, name: $name, slug: $slug, description: $description, pricePerNight: $pricePerNight, currency: $currency, maxGuests: $maxGuests, bedrooms: $bedrooms, bathrooms: $bathrooms, areaSqm: $areaSqm, images: $images, isAvailable: $isAvailable, minStayNights: $minStayNights, maxStayNights: $maxStayNights, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
+    return 'UnitModel(id: $id, propertyId: $propertyId, name: $name, slug: $slug, description: $description, pricePerNight: $pricePerNight, weekendBasePrice: $weekendBasePrice, weekendDays: $weekendDays, currency: $currency, maxGuests: $maxGuests, bedrooms: $bedrooms, bathrooms: $bathrooms, areaSqm: $areaSqm, images: $images, isAvailable: $isAvailable, minStayNights: $minStayNights, maxStayNights: $maxStayNights, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
   }
 
   @override
@@ -527,6 +581,12 @@ class _$UnitModelImpl extends _UnitModel {
                 other.description == description) &&
             (identical(other.pricePerNight, pricePerNight) ||
                 other.pricePerNight == pricePerNight) &&
+            (identical(other.weekendBasePrice, weekendBasePrice) ||
+                other.weekendBasePrice == weekendBasePrice) &&
+            const DeepCollectionEquality().equals(
+              other._weekendDays,
+              _weekendDays,
+            ) &&
             (identical(other.currency, currency) ||
                 other.currency == currency) &&
             (identical(other.maxGuests, maxGuests) ||
@@ -553,7 +613,7 @@ class _$UnitModelImpl extends _UnitModel {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     id,
     propertyId,
@@ -561,6 +621,8 @@ class _$UnitModelImpl extends _UnitModel {
     slug,
     description,
     pricePerNight,
+    weekendBasePrice,
+    const DeepCollectionEquality().hash(_weekendDays),
     currency,
     maxGuests,
     bedrooms,
@@ -573,7 +635,7 @@ class _$UnitModelImpl extends _UnitModel {
     createdAt,
     updatedAt,
     deletedAt,
-  );
+  ]);
 
   /// Create a copy of UnitModel
   /// with the given fields replaced by the non-null parameter values.
@@ -597,6 +659,8 @@ abstract class _UnitModel extends UnitModel {
     final String? slug,
     final String? description,
     @JsonKey(name: 'base_price') required final double pricePerNight,
+    @JsonKey(name: 'weekend_base_price') final double? weekendBasePrice,
+    @JsonKey(name: 'weekend_days') final List<int>? weekendDays,
     final String? currency,
     @JsonKey(name: 'max_guests') required final int maxGuests,
     final int bedrooms,
@@ -640,10 +704,20 @@ abstract class _UnitModel extends UnitModel {
   @override
   String? get description;
 
-  /// Price per night in EUR
+  /// Price per night in EUR (base price for weekdays)
   @override
   @JsonKey(name: 'base_price')
   double get pricePerNight;
+
+  /// Weekend base price in EUR (optional, for Sat-Sun by default)
+  @override
+  @JsonKey(name: 'weekend_base_price')
+  double? get weekendBasePrice;
+
+  /// Days considered as weekend (1=Mon...7=Sun, default: [6,7] = Sat-Sun)
+  @override
+  @JsonKey(name: 'weekend_days')
+  List<int>? get weekendDays;
 
   /// Currency code (default: EUR)
   @override

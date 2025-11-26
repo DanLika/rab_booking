@@ -101,10 +101,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
 
-    // Auto-select first unit when units are loaded
+    // Auto-select first unit when units are loaded, or update selected unit when data changes
     final unitsAsync = ref.watch(ownerUnitsProvider);
     unitsAsync.whenData((units) {
       if (units.isNotEmpty && _selectedUnit == null) {
+        // Auto-select first unit when none is selected
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (mounted && _selectedUnit == null) {
             final firstUnit = units.first;
@@ -119,6 +120,22 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             }
           }
         });
+      } else if (_selectedUnit != null) {
+        // Update selected unit with fresh data from stream
+        final updatedUnit = units.firstWhere(
+          (u) => u.id == _selectedUnit!.id,
+          orElse: () => _selectedUnit!,
+        );
+        // Only update if data actually changed
+        if (updatedUnit != _selectedUnit) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _selectedUnit = updatedUnit;
+              });
+            }
+          });
+        }
       }
     });
 

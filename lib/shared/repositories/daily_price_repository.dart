@@ -16,11 +16,17 @@ abstract class DailyPriceRepository {
   });
 
   /// Calculate total booking price for date range
+  /// Uses price hierarchy: custom daily_price > weekendBasePrice (from unit) > basePrice
+  /// [fallbackPrice] - Unit's base price per night (required for fallback when no daily_price)
+  /// [weekendBasePrice] - Unit's weekend base price (optional, for Sat-Sun by default)
+  /// [weekendDays] - optional custom weekend days (1=Mon...7=Sun). Default: [6,7]
   Future<double> calculateBookingPrice({
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
     double? fallbackPrice,
+    double? weekendBasePrice,
+    List<int>? weekendDays,
   });
 
   /// Set price for specific date

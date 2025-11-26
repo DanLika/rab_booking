@@ -106,9 +106,6 @@ class SnackBarHelper {
     required Duration duration,
   }) {
     try {
-      // Dismiss any existing snackbar first
-      _currentSnackBar?.close();
-
       // Get root ScaffoldMessenger safely (using root navigator to avoid dialog context issues)
       final messenger = ScaffoldMessenger.maybeOf(context);
       if (messenger == null) {
@@ -117,6 +114,10 @@ class SnackBarHelper {
         print('SnackBar message: $message');
         return;
       }
+
+      // Clear ALL snackbars (queue + current) to ensure new one is always shown
+      // This fixes the issue where repeated taps wouldn't show the snackbar
+      messenger.clearSnackBars();
 
       // Show new snackbar
       _currentSnackBar = messenger.showSnackBar(

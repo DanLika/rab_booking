@@ -133,22 +133,31 @@ class DailyPriceModel with _$DailyPriceModel {
     return date.isAfter(DateTime.now()) && !isToday;
   }
 
-  /// Check if date is a weekend (Saturday or Sunday)
+  /// Check if date is a weekend using default days (Saturday=6 or Sunday=7)
   bool get isWeekend {
     return date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
   }
 
+  /// Check if date is a weekend using custom weekend days
+  /// [weekendDays] - list of weekday numbers (1=Mon, 2=Tue, ..., 6=Sat, 7=Sun)
+  bool isWeekendDay(List<int>? weekendDays) {
+    final effectiveWeekendDays = weekendDays ?? const [6, 7]; // Default: Sat, Sun
+    return effectiveWeekendDays.contains(date.weekday);
+  }
+
   /// Get effective price based on stay type and occupancy
+  /// [weekendDays] - optional custom weekend days (1=Mon...7=Sun). Default: [6,7]
   double getEffectivePrice({
     int? nights,
     int? occupancy,
     bool? hasChildren,
+    List<int>? weekendDays,
   }) {
     // Start with base price
     double effectivePrice = price;
 
-    // Apply weekend price if set
-    if (weekendPrice != null && isWeekend) {
+    // Apply weekend price if set (use configurable weekend days)
+    if (weekendPrice != null && isWeekendDay(weekendDays)) {
       effectivePrice = weekendPrice!;
     }
 

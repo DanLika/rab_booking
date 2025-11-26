@@ -22,6 +22,7 @@ class WidgetSettings {
   final bool allowGuestCancellation;
   final int? cancellationDeadlineHours; // Hours before check-in
   final int minNights; // Minimum nights required for booking (default: 1)
+  final List<int> weekendDays; // Days considered as weekend (1=Mon...7=Sun). Default: [6,7] (Sat, Sun)
 
   // Contact Information (for calendar_only mode)
   final ContactOptions contactOptions;
@@ -63,6 +64,7 @@ class WidgetSettings {
     this.allowGuestCancellation = true,
     this.cancellationDeadlineHours = 48,
     this.minNights = 1,
+    this.weekendDays = const [6, 7], // Default: Saturday (6) and Sunday (7)
     required this.contactOptions,
     required this.emailConfig,
     this.externalCalendarConfig,
@@ -104,6 +106,10 @@ class WidgetSettings {
       allowGuestCancellation: data['allow_guest_cancellation'] ?? true,
       cancellationDeadlineHours: data['cancellation_deadline_hours'] ?? 48,
       minNights: data['min_nights'] ?? 1,
+      weekendDays: (data['weekend_days'] as List<dynamic>?)
+              ?.map((e) => e as int)
+              .toList() ??
+          const [6, 7], // Default: Saturday (6) and Sunday (7)
       contactOptions: ContactOptions.fromMap(data['contact_options'] ?? {}),
       emailConfig: EmailNotificationConfig.fromMap(data['email_config'] ?? {}),
       externalCalendarConfig: data['external_calendar_config'] != null
@@ -139,6 +145,7 @@ class WidgetSettings {
       'allow_guest_cancellation': allowGuestCancellation,
       'cancellation_deadline_hours': cancellationDeadlineHours,
       'min_nights': minNights,
+      'weekend_days': weekendDays,
       'contact_options': contactOptions.toMap(),
       'email_config': emailConfig.toMap(),
       'external_calendar_config': externalCalendarConfig?.toMap(),
@@ -184,6 +191,7 @@ class WidgetSettings {
     bool? allowGuestCancellation,
     int? cancellationDeadlineHours,
     int? minNights,
+    List<int>? weekendDays,
     ContactOptions? contactOptions,
     EmailNotificationConfig? emailConfig,
     ExternalCalendarConfig? externalCalendarConfig,
@@ -212,6 +220,7 @@ class WidgetSettings {
       cancellationDeadlineHours:
           cancellationDeadlineHours ?? this.cancellationDeadlineHours,
       minNights: minNights ?? this.minNights,
+      weekendDays: weekendDays ?? this.weekendDays,
       contactOptions: contactOptions ?? this.contactOptions,
       emailConfig: emailConfig ?? this.emailConfig,
       externalCalendarConfig:

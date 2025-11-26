@@ -7,6 +7,7 @@ import '../providers/year_calendar_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/widget_settings_provider.dart';
+import '../../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import '../theme/responsive_helper.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
@@ -39,14 +40,23 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // Get minNights from widget settings for gap blocking
-    final widgetSettings = ref.watch(
-      widgetSettingsProvider((widget.propertyId, widget.unitId)),
-    );
-    final minNights = widgetSettings.value?.minNights ?? 1;
+    // Get unit data for pricing and minNights (gap blocking)
+    final unitAsync = ref.watch(unitByIdProvider(widget.propertyId, widget.unitId));
+    final unit = unitAsync.valueOrNull;
+    final basePrice = unit?.pricePerNight ?? 0.0;
+    final weekendBasePrice = unit?.weekendBasePrice;
+    final weekendDays = unit?.weekendDays;
+    final minNights = unit?.minStayNights ?? 1; // Read from UnitModel, not WidgetSettings
 
     final calendarData = ref.watch(
-      yearCalendarDataProvider((widget.unitId, _currentYear, minNights)),
+      yearCalendarDataProvider((
+        unitId: widget.unitId,
+        year: _currentYear,
+        minNights: minNights,
+        basePrice: basePrice,
+        weekendBasePrice: weekendBasePrice,
+        weekendDays: weekendDays,
+      )),
     );
     final isDarkMode = ref.watch(themeProvider);
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);

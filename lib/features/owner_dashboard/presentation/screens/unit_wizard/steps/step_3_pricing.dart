@@ -18,6 +18,7 @@ class Step3Pricing extends ConsumerStatefulWidget {
 
 class _Step3PricingState extends ConsumerState<Step3Pricing> {
   final _priceController = TextEditingController();
+  final _weekendPriceController = TextEditingController();
   final _minStayController = TextEditingController();
 
   bool _isInitialized = false;
@@ -27,6 +28,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
     super.initState();
     // Add listeners in initState - they will be active for all user input
     _priceController.addListener(_onPriceChanged);
+    _weekendPriceController.addListener(_onWeekendPriceChanged);
     _minStayController.addListener(_onMinStayChanged);
   }
 
@@ -34,8 +36,10 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
   void dispose() {
     // Remove listeners before disposing controllers
     _priceController.removeListener(_onPriceChanged);
+    _weekendPriceController.removeListener(_onWeekendPriceChanged);
     _minStayController.removeListener(_onMinStayChanged);
     _priceController.dispose();
+    _weekendPriceController.dispose();
     _minStayController.dispose();
     super.dispose();
   }
@@ -45,21 +49,29 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
 
     // Remove listeners temporarily to avoid triggering provider updates during build
     _priceController.removeListener(_onPriceChanged);
+    _weekendPriceController.removeListener(_onWeekendPriceChanged);
     _minStayController.removeListener(_onMinStayChanged);
 
     // Set initial values
     _priceController.text = draft.pricePerNight?.toString() ?? '';
+    _weekendPriceController.text = draft.weekendBasePrice?.toString() ?? '';
     _minStayController.text = draft.minStayNights?.toString() ?? '';
     _isInitialized = true;
 
     // Re-attach listeners after setting initial values
     _priceController.addListener(_onPriceChanged);
+    _weekendPriceController.addListener(_onWeekendPriceChanged);
     _minStayController.addListener(_onMinStayChanged);
   }
 
   void _onPriceChanged() {
     final value = double.tryParse(_priceController.text);
     ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('pricePerNight', value);
+  }
+
+  void _onWeekendPriceChanged() {
+    final value = double.tryParse(_weekendPriceController.text);
+    ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('weekendBasePrice', value);
   }
 
   void _onMinStayChanged() {
@@ -216,6 +228,33 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                         },
                                       ),
                                       const SizedBox(height: AppDimensions.spaceM),
+                                      // Weekend price (optional)
+                                      TextFormField(
+                                        controller: _weekendPriceController,
+                                        decoration: InputDecorationHelper.buildDecoration(
+                                          labelText: 'Vikend Cena (€)',
+                                          hintText: '70',
+                                          helperText: 'Cena za Sub-Ned (opcionalno)',
+                                          prefixIcon: const Icon(Icons.weekend),
+                                          isMobile: isMobile,
+                                          context: context,
+                                        ),
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                                        ],
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return null; // Weekend price is optional
+                                          }
+                                          final number = double.tryParse(value);
+                                          if (number == null || number <= 0) {
+                                            return 'Unesite ispravnu cenu';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      const SizedBox(height: AppDimensions.spaceM),
                                       // Min stay nights
                                       TextFormField(
                                         controller: _minStayController,
@@ -247,64 +286,102 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                 }
 
                                 // Row layout for larger screens - use Expanded for maximum space
-                                return Row(
+                                return Column(
                                   children: [
-                                    // Price per night - flexible width
-                                    Expanded(
-                                      child: TextFormField(
-                                        controller: _priceController,
-                                        decoration: InputDecorationHelper.buildDecoration(
-                                          labelText: 'Cena po Noći (€) *',
-                                          hintText: '50',
-                                          helperText: 'Osnovna cena za jednu noć',
-                                          prefixIcon: const Icon(Icons.euro),
-                                          isMobile: isMobile,
-                                          context: context,
+                                    Row(
+                                      children: [
+                                        // Price per night - flexible width
+                                        Expanded(
+                                          child: TextFormField(
+                                            controller: _priceController,
+                                            decoration: InputDecorationHelper.buildDecoration(
+                                              labelText: 'Cena po Noći (€) *',
+                                              hintText: '50',
+                                              helperText: 'Osnovna cena za jednu noć',
+                                              prefixIcon: const Icon(Icons.euro),
+                                              isMobile: isMobile,
+                                              context: context,
+                                            ),
+                                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                                            ],
+                                            validator: (value) {
+                                              if (value == null || value.isEmpty) {
+                                                return 'Cena je obavezna';
+                                              }
+                                              final number = double.tryParse(value);
+                                              if (number == null || number <= 0) {
+                                                return 'Unesite ispravnu cenu';
+                                              }
+                                              return null;
+                                            },
+                                          ),
                                         ),
-                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                                        ],
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Cena je obavezna';
-                                          }
-                                          final number = double.tryParse(value);
-                                          if (number == null || number <= 0) {
-                                            return 'Unesite ispravnu cenu';
-                                          }
-                                          return null;
-                                        },
-                                      ),
+                                        const SizedBox(width: 16),
+                                        // Weekend price (optional) - flexible width
+                                        Expanded(
+                                          child: TextFormField(
+                                            controller: _weekendPriceController,
+                                            decoration: InputDecorationHelper.buildDecoration(
+                                              labelText: 'Vikend Cena (€)',
+                                              hintText: '70',
+                                              helperText: 'Cena za Sub-Ned (opcionalno)',
+                                              prefixIcon: const Icon(Icons.weekend),
+                                              isMobile: isMobile,
+                                              context: context,
+                                            ),
+                                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                                            ],
+                                            validator: (value) {
+                                              if (value == null || value.isEmpty) {
+                                                return null; // Weekend price is optional
+                                              }
+                                              final number = double.tryParse(value);
+                                              if (number == null || number <= 0) {
+                                                return 'Unesite ispravnu cenu';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 16),
-                                    // Min stay nights - flexible width
-                                    Expanded(
-                                      child: TextFormField(
-                                        controller: _minStayController,
-                                        decoration: InputDecorationHelper.buildDecoration(
-                                          labelText: 'Minimalan Boravak (noći) *',
-                                          hintText: '1',
-                                          helperText: 'Najmanje noći za rezervaciju',
-                                          prefixIcon: const Icon(Icons.calendar_today),
-                                          isMobile: isMobile,
-                                          context: context,
+                                    const SizedBox(height: AppDimensions.spaceM),
+                                    // Min stay nights - full width row
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: TextFormField(
+                                            controller: _minStayController,
+                                            decoration: InputDecorationHelper.buildDecoration(
+                                              labelText: 'Minimalan Boravak (noći) *',
+                                              hintText: '1',
+                                              helperText: 'Najmanje noći za rezervaciju',
+                                              prefixIcon: const Icon(Icons.calendar_today),
+                                              isMobile: isMobile,
+                                              context: context,
+                                            ),
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.digitsOnly,
+                                            ],
+                                            validator: (value) {
+                                              if (value == null || value.isEmpty) {
+                                                return 'Minimalan boravak je obavezan';
+                                              }
+                                              final number = int.tryParse(value);
+                                              if (number == null || number < 1) {
+                                                return 'Minimum je 1 noć';
+                                              }
+                                              return null;
+                                            },
+                                          ),
                                         ),
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.digitsOnly,
-                                        ],
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Minimalan boravak je obavezan';
-                                          }
-                                          final number = int.tryParse(value);
-                                          if (number == null || number < 1) {
-                                            return 'Minimum je 1 noć';
-                                          }
-                                          return null;
-                                        },
-                                      ),
+                                        const Spacer(), // Balance with empty space
+                                      ],
                                     ),
                                   ],
                                 );

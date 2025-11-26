@@ -217,6 +217,145 @@ export const createBookingAtomic = onCall(async (request) => {
         );
       }
 
+      // ====================================================================
+      // STEP 2.5: Validate daily_prices restrictions
+      // (available, blockCheckIn, blockCheckOut, min/maxNightsOnArrival)
+      // ====================================================================
+
+      // Calculate booking nights for min/max validation
+      const bookingNights = Math.ceil(
+        (checkOutDate.toDate().getTime() - checkInDate.toDate().getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
+
+      // Query daily_prices for all dates in the booking range
+      // (check-in date to check-out date - 1, as check-out is exclusive)
+      const dailyPricesQuery = db
+        .collection("daily_prices")
+        .where("unit_id", "==", unitId)
+        .where("date", ">=", checkInDate)
+        .where("date", "<", checkOutDate);
+
+      const dailyPricesSnapshot = await transaction.get(dailyPricesQuery);
+
+      // Validate each date in the booking range
+      for (const doc of dailyPricesSnapshot.docs) {
+        const priceData = doc.data();
+        const dateTimestamp = priceData.date as admin.firestore.Timestamp;
+        const dateStr = dateTimestamp.toDate().toISOString().split("T")[0];
+
+        // Check 1: Is this date marked as unavailable?
+        if (priceData.available === false) {
+          logError("[AtomicBooking] Date unavailable (blocked by owner)", null, {
+            unitId,
+            blockedDate: dateStr,
+          });
+
+          throw new HttpsError(
+            "failed-precondition",
+            `Date ${dateStr} is not available for booking.`
+          );
+        }
+
+        // Check 2: Is check-in blocked on the check-in date?
+        const isCheckInDate =
+          dateTimestamp.toMillis() === checkInDate.toMillis();
+        if (isCheckInDate && priceData.block_checkin === true) {
+          logError("[AtomicBooking] Check-in blocked on this date", null, {
+            unitId,
+            checkInDate: dateStr,
+          });
+
+          throw new HttpsError(
+            "failed-precondition",
+            `Check-in is not allowed on ${dateStr}.`
+          );
+        }
+
+        // Check 3: minNightsOnArrival on check-in date
+        if (
+          isCheckInDate &&
+          priceData.min_nights_on_arrival != null &&
+          priceData.min_nights_on_arrival > 0
+        ) {
+          if (bookingNights < priceData.min_nights_on_arrival) {
+            logError(
+              "[AtomicBooking] Minimum nights requirement not met",
+              null,
+              {
+                unitId,
+                checkInDate: dateStr,
+                minNightsRequired: priceData.min_nights_on_arrival,
+                bookingNights,
+              }
+            );
+
+            throw new HttpsError(
+              "failed-precondition",
+              `Minimum ${priceData.min_nights_on_arrival} nights required for ` +
+                `check-in on ${dateStr}. You selected ${bookingNights} nights.`
+            );
+          }
+        }
+
+        // Check 4: maxNightsOnArrival on check-in date
+        if (
+          isCheckInDate &&
+          priceData.max_nights_on_arrival != null &&
+          priceData.max_nights_on_arrival > 0
+        ) {
+          if (bookingNights > priceData.max_nights_on_arrival) {
+            logError(
+              "[AtomicBooking] Maximum nights requirement exceeded",
+              null,
+              {
+                unitId,
+                checkInDate: dateStr,
+                maxNightsAllowed: priceData.max_nights_on_arrival,
+                bookingNights,
+              }
+            );
+
+            throw new HttpsError(
+              "failed-precondition",
+              `Maximum ${priceData.max_nights_on_arrival} nights allowed for ` +
+                `check-in on ${dateStr}. You selected ${bookingNights} nights.`
+            );
+          }
+        }
+      }
+
+      // Check 5: Is check-out blocked on the check-out date?
+      // (Check-out date is not in the range query above, need separate check)
+      const checkOutPriceQuery = db
+        .collection("daily_prices")
+        .where("unit_id", "==", unitId)
+        .where("date", "==", checkOutDate);
+
+      const checkOutPriceSnapshot = await transaction.get(checkOutPriceQuery);
+
+      if (!checkOutPriceSnapshot.empty) {
+        const checkOutData = checkOutPriceSnapshot.docs[0].data();
+        if (checkOutData.block_checkout === true) {
+          const dateStr = checkOutDate.toDate().toISOString().split("T")[0];
+          logError("[AtomicBooking] Check-out blocked on this date", null, {
+            unitId,
+            checkOutDate: dateStr,
+          });
+
+          throw new HttpsError(
+            "failed-precondition",
+            `Check-out is not allowed on ${dateStr}.`
+          );
+        }
+      }
+
+      logInfo("[AtomicBooking] Daily price restrictions validated", {
+        unitId,
+        datesChecked: dailyPricesSnapshot.docs.length,
+        bookingNights,
+      });
+
       // Step 3: No conflict - create booking atomically
       // Generate secure access token for booking lookup
       const { token: accessToken, hashedToken } = generateBookingAccessToken();

@@ -98,6 +98,8 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     required DateTime checkIn,
     required DateTime checkOut,
     double? fallbackPrice,
+    double? weekendBasePrice,
+    List<int>? weekendDays,
   }) async {
     try {
       final prices = await getPricesForDateRange(
@@ -106,10 +108,22 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
         endDate: checkOut,
       );
 
+      final effectiveWeekendDays = weekendDays ?? [6, 7]; // Default: Sat=6, Sun=7
+
       if (prices.isEmpty && fallbackPrice != null) {
-        // Use fallback price for each night
-        final nights = checkOut.difference(checkIn).inDays;
-        return fallbackPrice * nights;
+        // Use fallback price for each night with weekend pricing support
+        double total = 0.0;
+        DateTime current = checkIn;
+        while (current.isBefore(checkOut)) {
+          if (weekendBasePrice != null &&
+              effectiveWeekendDays.contains(current.weekday)) {
+            total += weekendBasePrice;
+          } else {
+            total += fallbackPrice;
+          }
+          current = current.add(const Duration(days: 1));
+        }
+        return total;
       }
 
       // Sum up all daily prices
@@ -122,16 +136,25 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
               p.date.year == current.year &&
               p.date.month == current.month &&
               p.date.day == current.day,
-          orElse: () => DailyPriceModel(
-            id: '',
-            unitId: unitId,
-            date: current,
-            price: fallbackPrice ?? 0.0,
-            createdAt: DateTime.now(),
-          ),
+          orElse: () {
+            // Create fallback with weekendBasePrice from unit if applicable
+            final isWeekend = effectiveWeekendDays.contains(current.weekday);
+            final effectivePrice = (isWeekend && weekendBasePrice != null)
+                ? weekendBasePrice
+                : (fallbackPrice ?? 0.0);
+            return DailyPriceModel(
+              id: '',
+              unitId: unitId,
+              date: current,
+              price: effectivePrice,
+              createdAt: DateTime.now(),
+            );
+          },
         );
 
-        total += price.price;
+        // Use getEffectivePrice() which returns weekendPrice on configured weekend days
+        // Note: For fallback models, the price is already set correctly above
+        total += price.getEffectivePrice(weekendDays: weekendDays);
         current = current.add(const Duration(days: 1));
       }
 
@@ -152,6 +175,17 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     final dateOnly = DateTime(date.year, date.month, date.day);
     final now = DateTime.now();
 
+    // Check if a document already exists for this date
+    final existingSnapshot = await _firestore
+        .collection('daily_prices')
+        .where('unit_id', isEqualTo: unitId)
+        .where('date', isEqualTo: Timestamp.fromDate(dateOnly))
+        .limit(1)
+        .get();
+
+    final existingDoc =
+        existingSnapshot.docs.isNotEmpty ? existingSnapshot.docs.first : null;
+
     // If priceModel is provided, use all its fields
     if (priceModel != null) {
       final data = priceModel
@@ -161,34 +195,58 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
       // Remove ID from JSON before saving
       data.remove('id');
 
-      final docRef = await _firestore.collection('daily_prices').add(data);
-
-      return priceModel.copyWith(
-        id: docRef.id,
-        unitId: unitId,
-        date: dateOnly,
-        updatedAt: now,
-      );
+      if (existingDoc != null) {
+        // UPDATE existing document
+        await existingDoc.reference.update(data);
+        return priceModel.copyWith(
+          id: existingDoc.id,
+          unitId: unitId,
+          date: dateOnly,
+          updatedAt: now,
+        );
+      } else {
+        // CREATE new document
+        final docRef = await _firestore.collection('daily_prices').add(data);
+        return priceModel.copyWith(
+          id: docRef.id,
+          unitId: unitId,
+          date: dateOnly,
+          updatedAt: now,
+        );
+      }
     }
 
-    // Otherwise, create basic price entry
+    // Otherwise, create/update basic price entry
     final data = {
       'unit_id': unitId,
       'date': Timestamp.fromDate(dateOnly),
       'price': price,
       'available': true, // Default to available
-      'created_at': Timestamp.fromDate(now),
+      'updated_at': Timestamp.fromDate(now),
     };
 
-    final docRef = await _firestore.collection('daily_prices').add(data);
-
-    return DailyPriceModel(
-      id: docRef.id,
-      unitId: unitId,
-      date: dateOnly,
-      price: price,
-      createdAt: now,
-    );
+    if (existingDoc != null) {
+      // UPDATE existing document
+      await existingDoc.reference.update(data);
+      return DailyPriceModel(
+        id: existingDoc.id,
+        unitId: unitId,
+        date: dateOnly,
+        price: price,
+        createdAt: now,
+      );
+    } else {
+      // CREATE new document
+      data['created_at'] = Timestamp.fromDate(now);
+      final docRef = await _firestore.collection('daily_prices').add(data);
+      return DailyPriceModel(
+        id: docRef.id,
+        unitId: unitId,
+        date: dateOnly,
+        price: price,
+        createdAt: now,
+      );
+    }
   }
 
   @override
@@ -302,6 +360,11 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     required List<DateTime> dates,
     required Map<String, dynamic> partialData,
   }) async {
+    // Early return if no dates provided (prevents Firestore 'whereIn' error)
+    if (dates.isEmpty) {
+      return [];
+    }
+
     final List<DailyPriceModel> updatedPrices = [];
 
     // Normalize all dates to midnight (date-only)

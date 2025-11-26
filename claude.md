@@ -981,6 +981,224 @@ if (_selectedMode == WidgetMode.bookingPending) {
 
 ## 🐛 NEDAVNI BUG FIX-EVI (Post 20.11.2025)
 
+### Weekend Base Price - Airbnb-Style Pricing
+
+**Datum**: 2025-11-26
+
+#### Implementacija
+Dodata podrška za vikend cijene na nivou jedinice (UnitModel). Price hijerarhija:
+1. **custom daily_price** (iz `daily_prices` kolekcije) - najviši prioritet
+2. **weekendBasePrice** (iz `units` kolekcije) - za Sub/Ned ako nema daily_price
+3. **basePrice** (pricePerNight iz `units`) - fallback za sve ostale dane
+
+#### Izmijenjeni Fajlovi
+- `UnitModel` - nova polja: `weekendBasePrice`, `weekendDays`
+- `step_3_pricing.dart` - UI za vikend cijenu u Unit Wizard
+- `month_calendar_provider.dart` - `_getEffectivePrice()` helper
+- `year_calendar_provider.dart` - isto
+- `booking_price_provider.dart` - proslijeđuje unit pricing
+- `firebase_booking_calendar_repository.dart` - `calculateBookingPrice()` sa fallback
+- `firebase_daily_price_repository.dart` - isto
+
+#### Korištenje
+```dart
+// Provider automatski uzima vikend cijenu iz UnitModel
+final unit = await unitRepo.fetchUnitById(unitId);
+final basePrice = unit?.pricePerNight ?? 100.0;
+final weekendBasePrice = unit?.weekendBasePrice; // null = koristi basePrice
+final weekendDays = unit?.weekendDays ?? [6, 7]; // Default: Sub=6, Ned=7
+```
+
+---
+
+### minNights Bug Fix - Widget Čita Iz UnitModel
+
+**Datum**: 2025-11-26
+
+#### Problem
+Min nights postavljen u Unit Hub-u se nije primjenjivao na embedded widget kalendar. Widget je čitao `minNights` iz `widget_settings` kolekcije umjesto `minStayNights` iz `units` kolekcije.
+
+#### Rješenje
+Ažurirani `month_calendar_widget.dart` i `year_calendar_widget.dart`:
+```dart
+// PRIJE (bug):
+final minNights = widgetSettings.value?.minNights ?? 1;
+
+// POSLIJE (fix):
+final unitAsync = ref.watch(unitByIdProvider(widget.propertyId, widget.unitId));
+final unit = unitAsync.valueOrNull;
+final minNights = unit?.minStayNights ?? 1;
+```
+
+---
+
+### Navigator Assertion Error Fix
+
+**Datum**: 2025-11-26
+**File**: `widget_settings_screen.dart`
+
+#### Problem
+`!_debugLocked is not true` error kada se promijeni widget mode i sačuva. `ref.invalidate()` triggeruje rebuild dok `Navigator.pop()` pokušava navigirati.
+
+#### Rješenje
+Wrap `Navigator.pop()` u `addPostFrameCallback`:
+```dart
+WidgetsBinding.instance.addPostFrameCallback((_) {
+  if (mounted) {
+    Navigator.pop(context);
+  }
+});
+```
+
+---
+
+### Cross-Month Date Selection Fix
+
+**Datum**: 2025-11-26
+**File**: `month_calendar_widget.dart`
+
+#### Problem
+Kada korisnik odabere checkIn (npr. Nov 29) i prebaci na drugi mjesec da odabere checkOut, selekcija se brisala. Stari "Bug #70 Fix" je brisao `_rangeStart` i `_rangeEnd` uvijek pri navigaciji.
+
+#### Rješenje
+Briši selekciju samo ako je KOMPLETNA (oba datuma odabrana):
+```dart
+// Samo briši ako je kompletna selekcija
+if (_rangeStart != null && _rangeEnd != null) {
+  _rangeStart = null;
+  _rangeEnd = null;
+  widget.onRangeSelected?.call(null, null);
+}
+```
+
+---
+
+### Blocked Dates Bypass Fix
+
+**Datum**: 2025-11-26
+**File**: `firebase_booking_calendar_repository.dart`
+
+#### Problem
+`checkAvailability()` je provjeravala samo bookings i iCal events, ali NE i blokirane datume iz `daily_prices` (`available: false`). Korisnik je mogao odabrati range preko blokiranog datuma.
+
+#### Rješenje
+Dodana treća provjera u `checkAvailability()`:
+```dart
+// Check blocked dates from daily_prices (available: false)
+final blockedDatesSnapshot = await _firestore
+    .collection('daily_prices')
+    .where('unit_id', isEqualTo: unitId)
+    .where('available', isEqualTo: false)
+    .get();
+
+for (final doc in blockedDatesSnapshot.docs) {
+  final blockedDate = (data['date'] as Timestamp).toDate();
+  if (blockedDate >= checkIn && blockedDate < checkOut) {
+    return false; // Conflict with blocked date
+  }
+}
+```
+
+**Sada provjerava:**
+- ✅ Bookings (rezervacije)
+- ✅ iCal events (Booking.com, Airbnb)
+- ✅ Blocked dates (`available: false` u daily_prices)
+
+---
+
+### Backend Daily Price Validation (Security Fix)
+
+**Datum**: 2025-11-26
+**File**: `functions/src/atomicBooking.ts`
+
+#### Problem
+Cloud Function `createBookingAtomic` nije validirala `daily_prices` kolekciju. Gost je mogao zaobići UI restrikcije direktnim API pozivom.
+
+#### Rješenje
+Dodana validacija unutar `db.runTransaction()` bloka (nakon conflict check-a, linija ~220):
+
+```typescript
+// STEP 2.5: Validate daily_prices restrictions
+const dailyPricesQuery = db.collection("daily_prices")
+  .where("unit_id", "==", unitId)
+  .where("date", ">=", checkInDate)
+  .where("date", "<", checkOutDate);
+
+const dailyPricesSnapshot = await transaction.get(dailyPricesQuery);
+
+for (const doc of dailyPricesSnapshot.docs) {
+  const priceData = doc.data();
+
+  // Check 1: available flag
+  if (priceData.available === false) {
+    throw new HttpsError("failed-precondition", "Date not available");
+  }
+
+  // Check 2: blockCheckIn on check-in date
+  if (isCheckInDate && priceData.block_checkin === true) {
+    throw new HttpsError("failed-precondition", "Check-in not allowed");
+  }
+
+  // Check 3: minNightsOnArrival
+  if (isCheckInDate && priceData.min_nights_on_arrival > bookingNights) {
+    throw new HttpsError("failed-precondition", "Minimum nights required");
+  }
+
+  // Check 4: maxNightsOnArrival
+  if (isCheckInDate && priceData.max_nights_on_arrival < bookingNights) {
+    throw new HttpsError("failed-precondition", "Maximum nights exceeded");
+  }
+}
+
+// Check 5: blockCheckOut on check-out date (separate query)
+```
+
+**Validira:**
+- ✅ `available` - Ako `false`, odbij booking
+- ✅ `block_checkin` - Ako `true` na check-in datumu, odbij
+- ✅ `block_checkout` - Ako `true` na check-out datumu, odbij
+- ✅ `min_nights_on_arrival` - Ako booking noći < min, odbij
+- ✅ `max_nights_on_arrival` - Ako booking noći > max, odbij
+
+**Backward Compatible:** Datumi bez daily_prices zapisa = default dostupni.
+
+---
+
+### Edit Date Dialog - UI/UX Cleanup
+
+**Datum**: 2025-11-26
+**File**: `lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart`
+
+#### Promjene
+1. **Uklonjen `isImportant`** - Polje nije imalo nikakvu funkciju
+2. **InputDecorationHelper** - Svi input fieldi sada koriste standardni helper sa borderRadius 12px
+3. **Section headers sa ikonama** - CIJENA, DOSTUPNOST, NAPOMENA sekcije imaju ikone
+4. **ExpansionTile za napredne opcije** - weekendPrice, minNights, maxNights premješteni u collapsible sekciju
+5. **Warning banner** - Upozorenje da napredne opcije nisu aktivne u widgetu
+
+#### Nova Struktura Dialoga
+```
+┌─────────────────────────────────────┐
+│ € CIJENA                            │
+│ [Osnovna cijena po noći]            │
+├─────────────────────────────────────┤
+│ 📅 DOSTUPNOST                        │
+│ [x] Dostupno                        │
+│ [ ] Blokiraj prijavu (check-in)    │
+│ [ ] Blokiraj odjavu (check-out)    │
+├─────────────────────────────────────┤
+│ 📝 NAPOMENA                          │
+│ [Napomena za ovaj datum]            │
+├─────────────────────────────────────┤
+│ ⚙️ Napredne opcije (collapsed)       │
+│   ⚠️ Ove opcije se čuvaju, ali...   │
+│   [Vikend cijena]                   │
+│   [Min. noći] [Max. noći]           │
+└─────────────────────────────────────┘
+```
+
+---
+
 ### Real-Time Sync - StreamProvider Conversion
 
 **Datum**: 2025-11-26

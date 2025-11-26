@@ -23,8 +23,14 @@ class UnitModel with _$UnitModel {
     /// Unit description
     String? description,
 
-    /// Price per night in EUR
+    /// Price per night in EUR (base price for weekdays)
     @JsonKey(name: 'base_price') required double pricePerNight,
+
+    /// Weekend base price in EUR (optional, for Sat-Sun by default)
+    @JsonKey(name: 'weekend_base_price') double? weekendBasePrice,
+
+    /// Days considered as weekend (1=Mon...7=Sun, default: [6,7] = Sat-Sun)
+    @JsonKey(name: 'weekend_days') List<int>? weekendDays,
 
     /// Currency code (default: EUR)
     @Default('EUR') String? currency,

@@ -8,6 +8,7 @@ import '../providers/calendar_view_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/widget_settings_provider.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
+import '../../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import 'split_day_calendar_painter.dart';
 import 'calendar_hover_tooltip.dart';
 import '../theme/responsive_helper.dart';
@@ -42,14 +43,23 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // Get minNights from widget settings for gap blocking
-    final widgetSettings = ref.watch(
-      widgetSettingsProvider((widget.propertyId, widget.unitId)),
-    );
-    final minNights = widgetSettings.value?.minNights ?? 1;
+    // Get unit data for pricing and minNights (gap blocking)
+    final unitAsync = ref.watch(unitByIdProvider(widget.propertyId, widget.unitId));
+    final unit = unitAsync.valueOrNull;
+    final basePrice = unit?.pricePerNight ?? 0.0;
+    final weekendBasePrice = unit?.weekendBasePrice;
+    final weekendDays = unit?.weekendDays;
+    final minNights = unit?.minStayNights ?? 1; // Read from UnitModel, not WidgetSettings
 
     final calendarData = ref.watch(
-      monthCalendarDataProvider((widget.unitId, _currentMonth, minNights)),
+      monthCalendarDataProvider((
+        unitId: widget.unitId,
+        monthStart: _currentMonth,
+        minNights: minNights,
+        basePrice: basePrice,
+        weekendBasePrice: weekendBasePrice,
+        weekendDays: weekendDays,
+      )),
     );
     final isDarkMode = ref.watch(themeProvider);
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
@@ -304,13 +314,16 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 _currentMonth.year,
                 _currentMonth.month - 1,
               );
-              // Bug #70 Fix: Clear range selection when navigating months
-              // to prevent cross-month range corruption
-              _rangeStart = null;
-              _rangeEnd = null;
+              // Only clear range if BOTH dates are selected (complete selection)
+              // Preserve _rangeStart if user is still selecting checkOut
+              // This allows cross-month date range selection
+              if (_rangeStart != null && _rangeEnd != null) {
+                _rangeStart = null;
+                _rangeEnd = null;
+                // Notify parent that range was cleared
+                widget.onRangeSelected?.call(null, null);
+              }
             });
-            // Notify parent that range was cleared
-            widget.onRangeSelected?.call(null, null);
           },
         ),
         Text(
@@ -340,13 +353,16 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 _currentMonth.year,
                 _currentMonth.month + 1,
               );
-              // Bug #70 Fix: Clear range selection when navigating months
-              // to prevent cross-month range corruption
-              _rangeStart = null;
-              _rangeEnd = null;
+              // Only clear range if BOTH dates are selected (complete selection)
+              // Preserve _rangeStart if user is still selecting checkOut
+              // This allows cross-month date range selection
+              if (_rangeStart != null && _rangeEnd != null) {
+                _rangeStart = null;
+                _rangeEnd = null;
+                // Notify parent that range was cleared
+                widget.onRangeSelected?.call(null, null);
+              }
             });
-            // Notify parent that range was cleared
-            widget.onRangeSelected?.call(null, null);
           },
         ),
       ],
@@ -848,7 +864,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 ?.minNights ??
             1;
 
-        // Check minNights validation
+        // Check minNights validation (global from widget settings)
         final selectedNights = end.difference(start).inDays;
         if (selectedNights < minNights) {
           // Reset selection and show error
@@ -863,6 +879,39 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             duration: const Duration(seconds: 3),
           );
           return;
+        }
+
+        // Check minNightsOnArrival/maxNightsOnArrival from daily_prices
+        // Get the check-in date info from calendar data
+        final startKey = DateFormat('yyyy-MM-dd').format(start);
+        final checkInDateInfo = data[startKey];
+
+        if (checkInDateInfo != null) {
+          // Validate minNightsOnArrival (per-date minimum stay requirement)
+          if (checkInDateInfo.minNightsOnArrival != null &&
+              selectedNights < checkInDateInfo.minNightsOnArrival!) {
+            // Keep check-in selected, don't set checkout - show snackbar
+            SnackBarHelper.showError(
+              context: context,
+              message: 'Minimum ${checkInDateInfo.minNightsOnArrival} nights required for this check-in date. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
+              isDarkMode: isDarkMode,
+              duration: const Duration(seconds: 4),
+            );
+            return; // Keep _rangeStart, don't set _rangeEnd
+          }
+
+          // Validate maxNightsOnArrival (per-date maximum stay limit)
+          if (checkInDateInfo.maxNightsOnArrival != null &&
+              selectedNights > checkInDateInfo.maxNightsOnArrival!) {
+            // Keep check-in selected, don't set checkout - show snackbar
+            SnackBarHelper.showError(
+              context: context,
+              message: 'Maximum ${checkInDateInfo.maxNightsOnArrival} nights allowed for this check-in date. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
+              isDarkMode: isDarkMode,
+              duration: const Duration(seconds: 4),
+            );
+            return; // Keep _rangeStart, don't set _rangeEnd
+          }
         }
 
         // Bug #72 Fix: Use backend availability check for cross-month validation

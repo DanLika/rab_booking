@@ -29,6 +29,8 @@ class UnitWizardDraft with _$UnitWizardDraft {
 
     // Step 3: Pricing (REQUIRED)
     double? pricePerNight,
+    double? weekendBasePrice, // Weekend price (Sat-Sun by default)
+    @Default([6, 7]) List<int> weekendDays, // Days considered weekend (1=Mon...7=Sun)
     int? minStayNights,
     @Default([]) List<Map<String, dynamic>> seasons, // Seasonal pricing (simplified)
 
@@ -77,6 +79,8 @@ class UnitWizardDraft with _$UnitWizardDraft {
       maxGuests: unit.maxGuests,
       areaSqm: unit.areaSqm,
       pricePerNight: unit.pricePerNight,
+      weekendBasePrice: unit.weekendBasePrice,
+      weekendDays: unit.weekendDays ?? [6, 7],
       minStayNights: unit.minStayNights,
       images: unit.images,
       coverImageUrl: unit.images.isNotEmpty ? unit.images.first : null,

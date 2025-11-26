@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../shared/providers/repository_providers.dart';
 import 'realtime_booking_calendar_provider.dart';
 
 part 'booking_price_provider.g.dart';
@@ -103,12 +104,22 @@ Future<BookingPriceCalculation?> bookingPrice(
   }
 
   final repository = ref.watch(bookingCalendarRepositoryProvider);
+  final unitRepo = ref.watch(unitRepositoryProvider);
 
-  // Calculate room price from daily prices
+  // Get unit for base price and weekend pricing
+  final unit = await unitRepo.fetchUnitById(unitId);
+  final basePrice = unit?.pricePerNight ?? 100.0;
+  final weekendBasePrice = unit?.weekendBasePrice;
+  final weekendDays = unit?.weekendDays;
+
+  // Calculate room price from daily prices with weekend pricing support
   final roomPrice = await repository.calculateBookingPrice(
     unitId: unitId,
     checkIn: checkIn,
     checkOut: checkOut,
+    basePrice: basePrice,
+    weekendBasePrice: weekendBasePrice,
+    weekendDays: weekendDays,
   );
 
   // Calculate nights

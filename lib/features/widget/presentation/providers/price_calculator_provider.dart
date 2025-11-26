@@ -20,16 +20,20 @@ final bookingPriceProvider = FutureProvider.family<BookingPriceBreakdown?, (Stri
     final dailyPriceRepo = ref.watch(dailyPriceRepositoryProvider);
     final unitRepo = ref.watch(unitRepositoryProvider);
 
-    // Get unit for fallback price
+    // Get unit for fallback price and weekend pricing
     final unit = await unitRepo.fetchUnitById(unitId);
     final fallbackPrice = unit?.pricePerNight ?? 100.0;
+    final weekendBasePrice = unit?.weekendBasePrice;
+    final weekendDays = unit?.weekendDays;
 
-    // Calculate total price
+    // Calculate total price with weekend pricing support
     final totalPrice = await dailyPriceRepo.calculateBookingPrice(
       unitId: unitId,
       checkIn: checkIn,
       checkOut: checkOut,
       fallbackPrice: fallbackPrice,
+      weekendBasePrice: weekendBasePrice,
+      weekendDays: weekendDays,
     );
 
     // Get detailed prices for each night
@@ -39,17 +43,28 @@ final bookingPriceProvider = FutureProvider.family<BookingPriceBreakdown?, (Stri
       endDate: checkOut.subtract(const Duration(days: 1)), // Exclude check-out day
     );
 
-    // Build nightly prices list with fallback to base price
+    // Build nightly prices list with fallback using weekend pricing
+    final effectiveWeekendDays = weekendDays ?? [6, 7]; // Default: Sat=6, Sun=7
     final List<NightlyPrice> nightlyPrices = [];
     DateTime current = checkIn;
     while (current.isBefore(checkOut)) {
-      // Try to find daily price, fallback to base price if not found
+      // Try to find daily price, fallback to base/weekend price if not found
       final dailyPriceModel = dailyPrices.cast<dynamic>().firstWhere(
         (p) => p != null && _isSameDay(p.date, current),
         orElse: () => null,
       );
 
-      final priceForNight = dailyPriceModel?.price ?? fallbackPrice;
+      double priceForNight;
+      if (dailyPriceModel != null) {
+        // Use getEffectivePrice if available (handles weekendPrice in daily_price)
+        priceForNight = dailyPriceModel.getEffectivePrice(weekendDays: weekendDays);
+      } else {
+        // Fallback: use weekendBasePrice if weekend, otherwise basePrice
+        final isWeekend = effectiveWeekendDays.contains(current.weekday);
+        priceForNight = (isWeekend && weekendBasePrice != null)
+            ? weekendBasePrice
+            : fallbackPrice;
+      }
 
       nightlyPrices.add(NightlyPrice(
         date: current,

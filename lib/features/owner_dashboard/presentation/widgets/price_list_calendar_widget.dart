@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/price_list_provider.dart';
 import '../state/price_calendar_state.dart';
@@ -86,12 +87,6 @@ class _PriceListCalendarWidgetState
 
           const SizedBox(height: 16),
 
-          // Undo/Redo bar
-          if (_localState.canUndo || _localState.canRedo) _buildUndoRedoBar(),
-
-          if (_localState.canUndo || _localState.canRedo)
-            const SizedBox(height: 12),
-
           // Selected days counter (in bulk edit mode)
           if (_bulkEditMode && _selectedDays.isNotEmpty) ...[
             _buildSelectionCounter(),
@@ -112,48 +107,6 @@ class _PriceListCalendarWidgetState
           // Action buttons
           if (_bulkEditMode && _selectedDays.isNotEmpty)
             _buildBulkEditActions(isMobile),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUndoRedoBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: context.gradients.sectionBorder,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.history, size: 18, color: context.textColorSecondary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              _localState.lastActionDescription ?? 'Historija akcija',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: context.textColorSecondary,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.undo, size: 20),
-            onPressed: _localState.canUndo ? _localState.undo : null,
-            tooltip: 'Poništi (Ctrl+Z)',
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            icon: const Icon(Icons.redo, size: 20),
-            onPressed: _localState.canRedo ? _localState.redo : null,
-            tooltip: 'Ponovi (Ctrl+Shift+Z)',
-            color: Theme.of(context).colorScheme.primary,
-          ),
         ],
       ),
     );
@@ -773,7 +726,6 @@ class _PriceListCalendarWidgetState
     bool available = existingPrice?.available ?? true;
     bool blockCheckIn = existingPrice?.blockCheckIn ?? false;
     bool blockCheckOut = existingPrice?.blockCheckOut ?? false;
-    bool isImportant = existingPrice?.isImportant ?? false;
 
     if (!mounted) return;
 
@@ -784,6 +736,8 @@ class _PriceListCalendarWidgetState
     // Processing state to prevent duplicate button clicks
     bool isProcessing = false;
     DateTime? lastClickTime;
+    // Track if dialog was closed to prevent setState on defunct StatefulBuilder
+    bool dialogClosed = false;
 
     // Show dialog and dispose controllers when it closes
     unawaited(
@@ -810,44 +764,33 @@ class _PriceListCalendarWidgetState
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Price section
-                      Text(
-                        'Cijene',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: isMobile ? 14 : null,
-                            ),
-                      ),
-                      SizedBox(height: isMobile ? 6 : 8),
-                      TextField(
-                        controller: priceController,
-                        decoration: InputDecoration(
-                          labelText: 'Osnovna cijena po noći (€)',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.euro),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: isMobile ? 12 : 16,
-                            vertical: isMobile ? 12 : 16,
+                      // Price section with icon header
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.euro,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
+                          const SizedBox(width: 8),
+                          Text(
+                            'CIJENA',
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                         ],
                       ),
                       SizedBox(height: isMobile ? 8 : 12),
                       TextField(
-                        controller: weekendPriceController,
-                        decoration: InputDecoration(
-                          labelText: 'Vikend cijena (opciono)',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.weekend),
-                          hintText: 'Npr. 120',
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: isMobile ? 12 : 16,
-                            vertical: isMobile ? 12 : 16,
-                          ),
+                        controller: priceController,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: 'Osnovna cijena po noći (€)',
+                          prefixIcon: const Icon(Icons.euro),
+                          isMobile: isMobile,
+                          context: context,
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [
@@ -857,14 +800,24 @@ class _PriceListCalendarWidgetState
 
                       SizedBox(height: isMobile ? 16 : 24),
 
-                      // Availability section
-                      Text(
-                        'Dostupnost',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
+                      // Availability section with icon header
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.event_available,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'DOSTUPNOST',
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontSize: isMobile ? 14 : null,
+                              color: Theme.of(context).colorScheme.primary,
+                              letterSpacing: 0.5,
                             ),
+                          ),
+                        ],
                       ),
                       SwitchListTile(
                         title: Text(
@@ -906,102 +859,156 @@ class _PriceListCalendarWidgetState
 
                       SizedBox(height: isMobile ? 16 : 24),
 
-                      // Length of stay restrictions
-                      Text(
-                        'Ograničenja boravka',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: isMobile ? 14 : null,
-                            ),
-                      ),
-                      SizedBox(height: isMobile ? 6 : 8),
+                      // Notes section with icon header
                       Row(
                         children: [
-                          Expanded(
-                            child: TextField(
-                              controller: minNightsController,
-                              decoration: InputDecoration(
-                                labelText: 'Min. noći',
-                                border: const OutlineInputBorder(),
-                                hintText: 'npr. 2',
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: isMobile ? 12 : 16,
-                                  vertical: isMobile ? 12 : 16,
-                                ),
-                              ),
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                            ),
+                          Icon(
+                            Icons.sticky_note_2_outlined,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
-                          SizedBox(width: isMobile ? 8 : 12),
-                          Expanded(
-                            child: TextField(
-                              controller: maxNightsController,
-                              decoration: InputDecoration(
-                                labelText: 'Max. noći',
-                                border: const OutlineInputBorder(),
-                                hintText: 'npr. 14',
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: isMobile ? 12 : 16,
-                                  vertical: isMobile ? 12 : 16,
-                                ),
-                              ),
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
+                          const SizedBox(width: 8),
+                          Text(
+                            'NAPOMENA',
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ],
                       ),
-
-                      SizedBox(height: isMobile ? 16 : 24),
-
-                      // Other options
-                      SwitchListTile(
-                        title: Text(
-                          'Označi kao važno',
-                          style: TextStyle(fontSize: isMobile ? 14 : null),
-                        ),
-                        subtitle: Text(
-                          'Istakni ovaj datum u kalendaru',
-                          style: TextStyle(fontSize: isMobile ? 12 : null),
-                        ),
-                        value: isImportant,
-                        onChanged: (value) =>
-                            setState(() => isImportant = value),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-
-                      SizedBox(height: isMobile ? 16 : 24),
-
-                      // Notes section
-                      Text(
-                        'Napomene',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: isMobile ? 14 : null,
-                            ),
-                      ),
-                      SizedBox(height: isMobile ? 6 : 8),
+                      SizedBox(height: isMobile ? 8 : 12),
                       TextField(
                         controller: notesController,
-                        decoration: InputDecoration(
-                          labelText: 'Napomene za ovaj dan',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.notes),
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: 'Napomena za ovaj datum (opciono)',
                           hintText: 'Npr. Vjenčanje, poseban događaj...',
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: isMobile ? 12 : 16,
-                            vertical: isMobile ? 12 : 16,
-                          ),
+                          prefixIcon: const Icon(Icons.sticky_note_2_outlined),
+                          isMobile: isMobile,
+                          context: context,
                         ),
                         maxLines: isMobile ? 2 : 3,
                         textCapitalization: TextCapitalization.sentences,
+                      ),
+
+                      SizedBox(height: isMobile ? 16 : 24),
+
+                      // Advanced options in ExpansionTile (collapsed by default)
+                      Theme(
+                        data: Theme.of(context).copyWith(
+                          dividerColor: Colors.transparent,
+                        ),
+                        child: ExpansionTile(
+                          initiallyExpanded: false,
+                          tilePadding: EdgeInsets.zero,
+                          childrenPadding: EdgeInsets.only(
+                            top: isMobile ? 8 : 12,
+                            bottom: isMobile ? 8 : 12,
+                          ),
+                          leading: Icon(
+                            Icons.tune,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.tertiary,
+                          ),
+                          title: Text(
+                            'Napredne opcije',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Vikend cijena, min/max noći',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          children: [
+                            // Warning banner
+                            Container(
+                              margin: EdgeInsets.only(bottom: isMobile ? 12 : 16),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline,
+                                    size: 16,
+                                    color: Theme.of(context).colorScheme.tertiary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Ove opcije se čuvaju, ali booking widget ih trenutno ne koristi.',
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: Theme.of(context).colorScheme.onSurface,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Weekend price
+                            TextField(
+                              controller: weekendPriceController,
+                              decoration: InputDecorationHelper.buildDecoration(
+                                labelText: 'Vikend cijena (€)',
+                                hintText: 'Npr. 120',
+                                prefixIcon: const Icon(Icons.weekend),
+                                isMobile: isMobile,
+                                context: context,
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                            ),
+                            SizedBox(height: isMobile ? 12 : 16),
+                            // Min/Max nights row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: minNightsController,
+                                    decoration: InputDecorationHelper.buildDecoration(
+                                      labelText: 'Min. noći',
+                                      hintText: 'npr. 2',
+                                      isMobile: isMobile,
+                                      context: context,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: isMobile ? 8 : 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: maxNightsController,
+                                    decoration: InputDecorationHelper.buildDecoration(
+                                      labelText: 'Max. noći',
+                                      hintText: 'npr. 14',
+                                      isMobile: isMobile,
+                                      context: context,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -1070,6 +1077,7 @@ class _PriceListCalendarWidgetState
                               );
 
                               if (mounted) {
+                                dialogClosed = true;
                                 navigator.pop();
                                 messenger.showSnackBar(
                                   const SnackBar(
@@ -1087,7 +1095,8 @@ class _PriceListCalendarWidgetState
                                 );
                               }
                             } finally {
-                              if (mounted) {
+                              // Only reset processing if dialog is still open
+                              if (mounted && !dialogClosed) {
                                 setState(() => isProcessing = false);
                               }
                             }
@@ -1213,7 +1222,6 @@ class _PriceListCalendarWidgetState
                               weekendPrice: weekendPrice,
                               minNightsOnArrival: minNights,
                               maxNightsOnArrival: maxNights,
-                              isImportant: isImportant,
                               notes: notesController.text.trim().isEmpty
                                   ? null
                                   : notesController.text.trim(),
@@ -1237,6 +1245,7 @@ class _PriceListCalendarWidgetState
 
                             // Close dialog and show feedback immediately
                             if (mounted) {
+                              dialogClosed = true;
                               navigator.pop();
                               messenger.showSnackBar(
                                 const SnackBar(
@@ -1298,7 +1307,9 @@ class _PriceListCalendarWidgetState
                               );
                             }
                           } finally {
-                            if (mounted) {
+                            // Only reset processing if dialog is still open
+                            // (dialogClosed is true after navigator.pop())
+                            if (mounted && !dialogClosed) {
                               setState(() => isProcessing = false);
                             }
                           }
@@ -1316,9 +1327,10 @@ class _PriceListCalendarWidgetState
           },
         ),
       ).then((_) {
-        // Dispose controllers in next frame to avoid race condition
-        // when dialog is animating closed but widgets still reference controllers
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Dispose controllers after dialog close animation completes (~300ms)
+        // Using Future.delayed instead of addPostFrameCallback because the
+        // animation takes multiple frames, not just one
+        Future.delayed(const Duration(milliseconds: 350), () {
           priceController.dispose();
           weekendPriceController.dispose();
           minNightsController.dispose();
@@ -1476,6 +1488,8 @@ class _PriceListCalendarWidgetState
                         );
 
                         final count = _selectedDays.length;
+                        // Save dates before clearing for API call
+                        final datesToUpdate = _selectedDays.toList();
 
                         // Close dialog and clear selection immediately
                         if (mounted) {
@@ -1498,7 +1512,7 @@ class _PriceListCalendarWidgetState
 
                           await repository.bulkPartialUpdate(
                             unitId: widget.unit.id,
-                            dates: _selectedDays.toList(),
+                            dates: datesToUpdate,
                             partialData: {'price': price},
                           );
 
@@ -1545,8 +1559,8 @@ class _PriceListCalendarWidgetState
         },
       ),
     ).then((_) {
-      // Dispose controller in next frame to avoid race condition
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Dispose controller after dialog close animation completes (~300ms)
+      Future.delayed(const Duration(milliseconds: 350), () {
         priceController.dispose();
       });
     });
@@ -1554,6 +1568,8 @@ class _PriceListCalendarWidgetState
 
   void _showBulkAvailabilityDialog() {
     bool isProcessing = false;
+    // Track if dialog was closed to prevent setState on defunct StatefulBuilder
+    bool dialogClosed = false;
 
     showDialog(
       context: context,
@@ -1606,6 +1622,7 @@ class _PriceListCalendarWidgetState
                             );
 
                             if (mounted) {
+                              dialogClosed = true;
                               navigator.pop();
                               // Clear selection AFTER dialog closes
                               _selectedDays.clear();
@@ -1629,7 +1646,8 @@ class _PriceListCalendarWidgetState
                               );
                             }
                           } finally {
-                            if (mounted) {
+                            // Only reset if dialog still open
+                            if (mounted && !dialogClosed) {
                               setState(() => isProcessing = false);
                             }
                           }
@@ -1717,6 +1735,7 @@ class _PriceListCalendarWidgetState
                             );
 
                             if (mounted) {
+                              dialogClosed = true;
                               navigator.pop();
                               // Clear selection AFTER dialog closes
                               _selectedDays.clear();
@@ -1740,7 +1759,8 @@ class _PriceListCalendarWidgetState
                               );
                             }
                           } finally {
-                            if (mounted) {
+                            // Only reset if dialog still open
+                            if (mounted && !dialogClosed) {
                               setState(() => isProcessing = false);
                             }
                           }
@@ -1795,6 +1815,7 @@ class _PriceListCalendarWidgetState
                             );
 
                             if (mounted) {
+                              dialogClosed = true;
                               navigator.pop();
                               // Clear selection AFTER dialog closes
                               _selectedDays.clear();
@@ -1818,7 +1839,8 @@ class _PriceListCalendarWidgetState
                               );
                             }
                           } finally {
-                            if (mounted) {
+                            // Only reset if dialog still open
+                            if (mounted && !dialogClosed) {
                               setState(() => isProcessing = false);
                             }
                           }
@@ -1865,6 +1887,7 @@ class _PriceListCalendarWidgetState
                             );
 
                             if (mounted) {
+                              dialogClosed = true;
                               navigator.pop();
                               // Clear selection AFTER dialog closes
                               _selectedDays.clear();
@@ -1888,7 +1911,8 @@ class _PriceListCalendarWidgetState
                               );
                             }
                           } finally {
-                            if (mounted) {
+                            // Only reset if dialog still open
+                            if (mounted && !dialogClosed) {
                               setState(() => isProcessing = false);
                             }
                           }

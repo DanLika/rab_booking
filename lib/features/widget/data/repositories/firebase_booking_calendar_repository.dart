@@ -716,12 +716,50 @@ class FirebaseBookingCalendarRepository {
         }
       }
 
+      // Check blocked dates from daily_prices (available: false)
+      final blockedDatesSnapshot = await _firestore
+          .collection('daily_prices')
+          .where('unit_id', isEqualTo: unitId)
+          .where('available', isEqualTo: false)
+          .get();
+
+      for (final doc in blockedDatesSnapshot.docs) {
+        try {
+          final data = doc.data();
+          final blockedDateRaw = (data['date'] as Timestamp).toDate();
+
+          // Normalize blocked date to midnight
+          final blockedDate = DateTime(
+            blockedDateRaw.year,
+            blockedDateRaw.month,
+            blockedDateRaw.day,
+          );
+
+          // Check if blocked date falls within the requested range
+          // Blocked date is a conflict if: blockedDate >= checkIn AND blockedDate < checkOut
+          // (checkOut day is not counted as a night stay)
+          if ((blockedDate.isAfter(checkIn) ||
+                  blockedDate.isAtSameMomentAs(checkIn)) &&
+              blockedDate.isBefore(checkOut)) {
+            LoggingService.log(
+              '❌ Blocked date conflict found: $blockedDate',
+              tag: 'AVAILABILITY_CHECK',
+            );
+            return false; // Conflict with blocked date
+          }
+        } catch (e) {
+          unawaited(
+            LoggingService.logError('Error checking blocked date availability', e),
+          );
+        }
+      }
+
       LoggingService.log(
         '✅ No conflicts found for $checkIn to $checkOut',
         tag: 'AVAILABILITY_CHECK',
       );
 
-      return true; // No conflicts with either bookings or iCal events
+      return true; // No conflicts with bookings, iCal events, or blocked dates
     } catch (e) {
       unawaited(LoggingService.logError('Error checking availability', e));
       return false;
@@ -729,10 +767,17 @@ class FirebaseBookingCalendarRepository {
   }
 
   /// Calculate total price for date range
+  /// Uses price hierarchy: custom daily_price > weekendBasePrice (from unit) > basePrice
+  /// [basePrice] - Unit's base price per night (required for fallback when no daily_price)
+  /// [weekendBasePrice] - Unit's weekend base price (optional, for Sat-Sun by default)
+  /// [weekendDays] - optional custom weekend days (1=Mon...7=Sun). Default: [6,7]
   Future<double> calculateBookingPrice({
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
+    required double basePrice,
+    double? weekendBasePrice,
+    List<int>? weekendDays,
   }) async {
     try {
       // Bug #73 Fix: Check availability BEFORE calculating price
@@ -758,18 +803,44 @@ class FirebaseBookingCalendarRepository {
           .where('date', isLessThan: Timestamp.fromDate(checkOut))
           .get();
 
-      double total = 0.0;
+      // Build a map of date -> DailyPriceModel for quick lookup
+      final Map<String, DailyPriceModel> priceMap = {};
       for (final doc in pricesSnapshot.docs) {
         final data = doc.data();
-        // Skip documents without valid date field
         if (data['date'] == null) continue;
 
         try {
           final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-          total += price.price;
+          final key = '${price.date.year}-${price.date.month}-${price.date.day}';
+          priceMap[key] = price;
         } catch (e) {
           unawaited(LoggingService.logError('Error parsing price', e));
         }
+      }
+
+      // Calculate total for each day in the range with fallback
+      final effectiveWeekendDays = weekendDays ?? [6, 7]; // Default: Sat=6, Sun=7
+      double total = 0.0;
+      DateTime current = checkIn;
+
+      while (current.isBefore(checkOut)) {
+        final key = '${current.year}-${current.month}-${current.day}';
+        final dailyPrice = priceMap[key];
+
+        if (dailyPrice != null) {
+          // Use daily_price with its getEffectivePrice logic
+          total += dailyPrice.getEffectivePrice(weekendDays: weekendDays);
+        } else {
+          // No daily_price → use fallback from unit
+          final isWeekend = effectiveWeekendDays.contains(current.weekday);
+          if (isWeekend && weekendBasePrice != null) {
+            total += weekendBasePrice;
+          } else {
+            total += basePrice;
+          }
+        }
+
+        current = current.add(const Duration(days: 1));
       }
 
       return total;

@@ -231,6 +231,8 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
         slug: slug,
         description: draft.description,
         pricePerNight: draft.pricePerNight!,
+        weekendBasePrice: draft.weekendBasePrice,
+        weekendDays: draft.weekendDays,
         maxGuests: draft.maxGuests!,
         bedrooms: draft.bedrooms ?? 1,
         bathrooms: draft.bathrooms ?? 1,

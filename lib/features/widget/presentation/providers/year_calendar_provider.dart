@@ -6,12 +6,52 @@ import '../../../../shared/models/daily_price_model.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../../../../core/constants/enums.dart';
 
+/// Params record for year calendar data provider with pricing support
+typedef YearCalendarParams = ({
+  String unitId,
+  int year,
+  int minNights,
+  double basePrice,
+  double? weekendBasePrice,
+  List<int>? weekendDays,
+});
+
+/// Helper function to determine effective price for a date
+/// Priority: custom daily_price > weekendBasePrice (if weekend) > basePrice
+double _getEffectivePrice({
+  required DateTime date,
+  required double basePrice,
+  double? customDailyPrice,
+  double? weekendBasePrice,
+  List<int>? weekendDays,
+}) {
+  // 1. Custom daily price has highest priority
+  if (customDailyPrice != null) {
+    return customDailyPrice;
+  }
+
+  // 2. Weekend price (if it's a weekend and weekendBasePrice is set)
+  final effectiveWeekendDays = weekendDays ?? [6, 7]; // Default: Sat=6, Sun=7
+  if (weekendBasePrice != null && effectiveWeekendDays.contains(date.weekday)) {
+    return weekendBasePrice;
+  }
+
+  // 3. Base price as fallback
+  return basePrice;
+}
+
 /// Provider for year calendar data with gap blocking support
-final yearCalendarDataProvider = FutureProvider.family<Map<String, CalendarDateInfo>, (String, int, int)>((
+/// Now includes price fallback logic: custom daily_price > weekendBasePrice > basePrice
+final yearCalendarDataProvider = FutureProvider.family<Map<String, CalendarDateInfo>, YearCalendarParams>((
   ref,
   params,
 ) async {
-  final (unitId, year, minNights) = params;
+  final unitId = params.unitId;
+  final year = params.year;
+  final minNights = params.minNights;
+  final basePrice = params.basePrice;
+  final weekendBasePrice = params.weekendBasePrice;
+  final weekendDays = params.weekendDays;
   final bookingRepo = ref.watch(bookingRepositoryProvider);
   final dailyPriceRepo = ref.watch(dailyPriceRepositoryProvider);
 
@@ -97,14 +137,38 @@ final yearCalendarDataProvider = FutureProvider.family<Map<String, CalendarDateI
     final isPast = date.isBefore(todayNormalized);
     final priceData = priceMap[key];
 
+    // Determine initial status:
+    // 1. Past dates → disabled
+    // 2. Unavailable dates (available=false) → blocked (gray, not selectable)
+    // 3. Otherwise → available
+    DateStatus prevDecStatus;
+    if (isPast) {
+      prevDecStatus = DateStatus.disabled;
+    } else if (priceData?.available == false) {
+      prevDecStatus = DateStatus.blocked;
+    } else {
+      prevDecStatus = DateStatus.available;
+    }
+
+    // Calculate effective price with fallback logic
+    final prevDecEffectivePrice = _getEffectivePrice(
+      date: date,
+      basePrice: basePrice,
+      customDailyPrice: priceData?.price,
+      weekendBasePrice: weekendBasePrice,
+      weekendDays: weekendDays,
+    );
+
     calendarData[key] = CalendarDateInfo(
       date: date,
-      status: isPast ? DateStatus.disabled : DateStatus.available,
-      price: priceData?.price,
+      status: prevDecStatus,
+      price: prevDecEffectivePrice,
       blockCheckIn: priceData?.blockCheckIn ?? false,
       blockCheckOut: priceData?.blockCheckOut ?? false,
       minDaysAdvance: priceData?.minDaysAdvance,
       maxDaysAdvance: priceData?.maxDaysAdvance,
+      minNightsOnArrival: priceData?.minNightsOnArrival,
+      maxNightsOnArrival: priceData?.maxNightsOnArrival,
     );
   }
 
@@ -121,14 +185,38 @@ final yearCalendarDataProvider = FutureProvider.family<Map<String, CalendarDateI
       // Get price data for this date
       final priceData = priceMap[key];
 
+      // Determine initial status:
+      // 1. Past dates → disabled
+      // 2. Unavailable dates (available=false) → blocked (gray, not selectable)
+      // 3. Otherwise → available
+      DateStatus initialStatus;
+      if (isPast) {
+        initialStatus = DateStatus.disabled;
+      } else if (priceData?.available == false) {
+        initialStatus = DateStatus.blocked;
+      } else {
+        initialStatus = DateStatus.available;
+      }
+
+      // Calculate effective price with fallback logic
+      final effectivePrice = _getEffectivePrice(
+        date: date,
+        basePrice: basePrice,
+        customDailyPrice: priceData?.price,
+        weekendBasePrice: weekendBasePrice,
+        weekendDays: weekendDays,
+      );
+
       calendarData[key] = CalendarDateInfo(
         date: date,
-        status: isPast ? DateStatus.disabled : DateStatus.available,
-        price: priceData?.price,
+        status: initialStatus,
+        price: effectivePrice,
         blockCheckIn: priceData?.blockCheckIn ?? false,
         blockCheckOut: priceData?.blockCheckOut ?? false,
         minDaysAdvance: priceData?.minDaysAdvance,
         maxDaysAdvance: priceData?.maxDaysAdvance,
+        minNightsOnArrival: priceData?.minNightsOnArrival,
+        maxNightsOnArrival: priceData?.maxNightsOnArrival,
       );
     }
   }
@@ -141,14 +229,38 @@ final yearCalendarDataProvider = FutureProvider.family<Map<String, CalendarDateI
     final isPast = date.isBefore(todayNormalized);
     final priceData = priceMap[key];
 
+    // Determine initial status:
+    // 1. Past dates → disabled
+    // 2. Unavailable dates (available=false) → blocked (gray, not selectable)
+    // 3. Otherwise → available
+    DateStatus nextJanStatus;
+    if (isPast) {
+      nextJanStatus = DateStatus.disabled;
+    } else if (priceData?.available == false) {
+      nextJanStatus = DateStatus.blocked;
+    } else {
+      nextJanStatus = DateStatus.available;
+    }
+
+    // Calculate effective price with fallback logic
+    final nextJanEffectivePrice = _getEffectivePrice(
+      date: date,
+      basePrice: basePrice,
+      customDailyPrice: priceData?.price,
+      weekendBasePrice: weekendBasePrice,
+      weekendDays: weekendDays,
+    );
+
     calendarData[key] = CalendarDateInfo(
       date: date,
-      status: isPast ? DateStatus.disabled : DateStatus.available,
-      price: priceData?.price,
+      status: nextJanStatus,
+      price: nextJanEffectivePrice,
       blockCheckIn: priceData?.blockCheckIn ?? false,
       blockCheckOut: priceData?.blockCheckOut ?? false,
       minDaysAdvance: priceData?.minDaysAdvance,
       maxDaysAdvance: priceData?.maxDaysAdvance,
+      minNightsOnArrival: priceData?.minNightsOnArrival,
+      maxNightsOnArrival: priceData?.maxNightsOnArrival,
     );
   }
 
@@ -214,13 +326,16 @@ final yearCalendarDataProvider = FutureProvider.family<Map<String, CalendarDateI
           blockCheckOut: existingInfo.blockCheckOut,
           minDaysAdvance: existingInfo.minDaysAdvance,
           maxDaysAdvance: existingInfo.maxDaysAdvance,
+          minNightsOnArrival: existingInfo.minNightsOnArrival,
+          maxNightsOnArrival: existingInfo.maxNightsOnArrival,
         );
       }
       current = current.add(const Duration(days: 1));
     }
   }
 
-  // Mark iCal events as booked (external bookings from Booking.com, Airbnb, etc.)
+  // Mark iCal events as booked with partial CheckIn/CheckOut support
+  // (same logic as regular bookings - iCal also has check-in/check-out dates)
   for (final event in icalEvents) {
     final startDate = event['start_date'] as DateTime;
     final endDate = event['end_date'] as DateTime;
@@ -238,15 +353,48 @@ final yearCalendarDataProvider = FutureProvider.family<Map<String, CalendarDateI
       if (calendarData.containsKey(key)) {
         final existingInfo = calendarData[key]!;
 
-        // iCal events are always fully booked (no partial check-in/out)
+        // Check if date is in the past (same logic as regular bookings)
+        final isPast = current.isBefore(todayNormalized);
+
+        final isCheckIn = _isSameDay(current, checkIn);
+        final isCheckOut = _isSameDay(current, checkOut);
+
+        DateStatus status;
+        if (isPast) {
+          // Past dates that were part of an iCal reservation show as pastReservation
+          status = DateStatus.pastReservation;
+        } else if (isCheckIn && isCheckOut) {
+          // Single day booking
+          status = DateStatus.booked;
+        } else if (isCheckIn) {
+          // Check if this date already has a check-out (turnover day)
+          if (existingInfo.status == DateStatus.partialCheckOut) {
+            status = DateStatus.partialBoth;
+          } else {
+            status = DateStatus.partialCheckIn;
+          }
+        } else if (isCheckOut) {
+          // Check if this date already has a check-in (turnover day)
+          if (existingInfo.status == DateStatus.partialCheckIn) {
+            status = DateStatus.partialBoth;
+          } else {
+            status = DateStatus.partialCheckOut;
+          }
+        } else {
+          // Full day booked (middle of stay)
+          status = DateStatus.booked;
+        }
+
         calendarData[key] = CalendarDateInfo(
           date: current,
-          status: DateStatus.booked,
+          status: status,
           price: existingInfo.price,
           blockCheckIn: existingInfo.blockCheckIn,
           blockCheckOut: existingInfo.blockCheckOut,
           minDaysAdvance: existingInfo.minDaysAdvance,
           maxDaysAdvance: existingInfo.maxDaysAdvance,
+          minNightsOnArrival: existingInfo.minNightsOnArrival,
+          maxNightsOnArrival: existingInfo.maxNightsOnArrival,
         );
       }
       current = current.add(const Duration(days: 1));
@@ -316,6 +464,8 @@ final yearCalendarDataProvider = FutureProvider.family<Map<String, CalendarDateI
               blockCheckOut: existingInfo.blockCheckOut,
               minDaysAdvance: existingInfo.minDaysAdvance,
               maxDaysAdvance: existingInfo.maxDaysAdvance,
+              minNightsOnArrival: existingInfo.minNightsOnArrival,
+              maxNightsOnArrival: existingInfo.maxNightsOnArrival,
             );
           }
         }

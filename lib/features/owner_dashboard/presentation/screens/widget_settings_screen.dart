@@ -117,7 +117,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         );
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -495,7 +497,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           context,
           'Postavke uspješno sačuvane!',
         );
-        Navigator.pop(context);
+        // Navigate after frame completes to avoid Navigator lock assertion
+        // caused by provider invalidation triggering rebuilds
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -506,7 +514,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         );
       }
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 

@@ -137,6 +137,10 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
       // Step 3 - Pricing & Availability (merged)
       case 'pricePerNight':
         return draft.copyWith(pricePerNight: value);
+      case 'weekendBasePrice':
+        return draft.copyWith(weekendBasePrice: value);
+      case 'weekendDays':
+        return draft.copyWith(weekendDays: value);
       case 'minStayNights':
         return draft.copyWith(minStayNights: value);
       case 'seasons':

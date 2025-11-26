@@ -15,6 +15,10 @@ _$UnitModelImpl _$$UnitModelImplFromJson(
   slug: json['slug'] as String?,
   description: json['description'] as String?,
   pricePerNight: (json['base_price'] as num).toDouble(),
+  weekendBasePrice: (json['weekend_base_price'] as num?)?.toDouble(),
+  weekendDays: (json['weekend_days'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList(),
   currency: json['currency'] as String? ?? 'EUR',
   maxGuests: (json['max_guests'] as num).toInt(),
   bedrooms: (json['bedrooms'] as num?)?.toInt() ?? 1,
@@ -42,6 +46,8 @@ Map<String, dynamic> _$$UnitModelImplToJson(
   'slug': instance.slug,
   'description': instance.description,
   'base_price': instance.pricePerNight,
+  'weekend_base_price': instance.weekendBasePrice,
+  'weekend_days': instance.weekendDays,
   'currency': instance.currency,
   'max_guests': instance.maxGuests,
   'bedrooms': instance.bedrooms,

@@ -114,6 +114,8 @@ class CalendarDateInfo {
   final bool blockCheckOut; // Block check-out on this date
   final int? minDaysAdvance; // Minimum days in advance to book
   final int? maxDaysAdvance; // Maximum days in advance to book
+  final int? minNightsOnArrival; // Minimum nights required when arriving on this date
+  final int? maxNightsOnArrival; // Maximum nights allowed when arriving on this date
 
   const CalendarDateInfo({
     required this.date,
@@ -125,6 +127,8 @@ class CalendarDateInfo {
     this.blockCheckOut = false,
     this.minDaysAdvance,
     this.maxDaysAdvance,
+    this.minNightsOnArrival,
+    this.maxNightsOnArrival,
   });
 
   CalendarDateInfo copyWith({
@@ -137,6 +141,8 @@ class CalendarDateInfo {
     bool? blockCheckOut,
     int? minDaysAdvance,
     int? maxDaysAdvance,
+    int? minNightsOnArrival,
+    int? maxNightsOnArrival,
   }) {
     return CalendarDateInfo(
       date: date ?? this.date,
@@ -148,6 +154,8 @@ class CalendarDateInfo {
       blockCheckOut: blockCheckOut ?? this.blockCheckOut,
       minDaysAdvance: minDaysAdvance ?? this.minDaysAdvance,
       maxDaysAdvance: maxDaysAdvance ?? this.maxDaysAdvance,
+      minNightsOnArrival: minNightsOnArrival ?? this.minNightsOnArrival,
+      maxNightsOnArrival: maxNightsOnArrival ?? this.maxNightsOnArrival,
     );
   }
 

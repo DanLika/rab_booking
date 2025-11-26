@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../../core/utils/slug_utils.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
+import '../../../../../../core/theme/gradient_extensions.dart';
 import '../state/unit_wizard_provider.dart';
 
 /// Step 1: Basic Info - Name, Property, Description, Slug
@@ -105,7 +106,6 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
   Widget build(BuildContext context) {
     final wizardState = ref.watch(unitWizardNotifierProvider(widget.unitId));
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -116,18 +116,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
         return Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray (darker) - LEFT
-                      Color(0xFF2D2D2D), // mediumDarkGray (lighter) - RIGHT
-                    ]
-                  : const [
-                      Color(0xFFF5F5F5), // Light grey (darker) - LEFT
-                      Colors.white,      // white (lighter) - RIGHT
-                    ],
-              stops: const [0.0, 0.3],
-            ),
+            gradient: context.gradients.pageBackground,
           ),
           child: SingleChildScrollView(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -159,7 +148,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: isDark
+                        color: theme.brightness == Brightness.dark
                             ? Colors.black.withValues(alpha: 0.3)
                             : Colors.black.withValues(alpha: 0.1),
                         blurRadius: 8,
@@ -173,20 +162,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                       decoration: BoxDecoration(
                         // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
                         // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
-                        gradient: LinearGradient(
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
-                          colors: isDark
-                              ? const [
-                                  Color(0xFF1A1A1A), // veryDarkGray (darker) - RIGHT
-                                  Color(0xFF2D2D2D), // mediumDarkGray (lighter) - LEFT
-                                ]
-                              : const [
-                                  Color(0xFFF5F5F5), // Light grey (darker) - RIGHT
-                                  Colors.white,      // white (lighter) - LEFT
-                                ],
-                          stops: const [0.0, 0.3],
-                        ),
+                        gradient: context.gradients.sectionBackground,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
                           color: theme.colorScheme.outline.withValues(alpha: 0.4),
@@ -359,7 +335,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: isDark
+                        color: theme.brightness == Brightness.dark
                             ? Colors.black.withValues(alpha: 0.3)
                             : Colors.black.withValues(alpha: 0.1),
                         blurRadius: 8,
@@ -373,20 +349,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                       decoration: BoxDecoration(
                         // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
                         // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
-                        gradient: LinearGradient(
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
-                          colors: isDark
-                              ? const [
-                                  Color(0xFF1A1A1A), // veryDarkGray (darker) - RIGHT
-                                  Color(0xFF2D2D2D), // mediumDarkGray (lighter) - LEFT
-                                ]
-                              : const [
-                                  Color(0xFFF5F5F5), // Light grey (darker) - RIGHT
-                                  Colors.white,      // white (lighter) - LEFT
-                                ],
-                          stops: const [0.0, 0.3],
-                        ),
+                        gradient: context.gradients.sectionBackground,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
                           color: theme.colorScheme.outline.withValues(alpha: 0.4),

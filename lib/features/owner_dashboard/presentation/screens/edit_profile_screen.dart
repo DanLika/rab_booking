@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -281,26 +282,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     String? subtitle,
   }) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [Color(0xFF1A1A1A), Color(0xFF2D2D2D)]
-                  : const [Color(0xFFF5F5F5), Colors.white],
-              stops: const [0.0, 0.3],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.dividerColor.withAlpha((0.4 * 255).toInt()),

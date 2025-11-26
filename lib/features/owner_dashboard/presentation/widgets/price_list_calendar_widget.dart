@@ -8,6 +8,7 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/price_list_provider.dart';
 import '../state/price_calendar_state.dart';
@@ -117,6 +118,7 @@ class _PriceListCalendarWidgetState
   }
 
   Widget _buildUndoRedoBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -124,7 +126,12 @@ class _PriceListCalendarWidgetState
           context,
         ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.borderColor.withOpacity(0.3)),
+        // Warm borders: beige for light theme, warm gray for dark theme
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF3D3733) // Warm gray
+              : const Color(0xFFE8E5DC), // Warm beige
+        ),
       ),
       child: Row(
         children: [
@@ -249,7 +256,6 @@ class _PriceListCalendarWidgetState
 
   Widget _buildHeader(bool isMobile) {
     final isDark = context.isDarkMode;
-
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -259,29 +265,13 @@ class _PriceListCalendarWidgetState
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF1F1F1F),
-                      Color(0xFF242424),
-                      Color(0xFF292929),
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ]
-                  : const [
-                      Color(0xFFF0F0F0), // Lighter grey
-                      Color(0xFFF2F2F2),
-                      Color(0xFFF5F5F5),
-                      Color(0xFFF8F8F8),
-                      Color(0xFFFAFAFA), // Very light grey
-                    ],
-              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: context.borderColor.withOpacity(0.5),
+              // Warm borders: beige for light theme, warm gray for dark theme
+              color: isDark
+                  ? const Color(0xFF3D3733) // Warm gray
+                  : const Color(0xFFE8E5DC), // Warm beige
               width: 1.5,
             ),
           ),
@@ -570,37 +560,17 @@ class _PriceListCalendarWidgetState
 
         // Calculate aspect ratio based on device size
         final aspectRatio = isSmallMobile ? 0.85 : (isMobile ? 1.0 : 1.2);
-        final isDark = Theme.of(context).brightness == Brightness.dark;
 
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            boxShadow: AppShadows.getElevation(1, isDark: isDark),
+            boxShadow: AppShadows.getElevation(1, isDark: Theme.of(context).brightness == Brightness.dark),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                  colors: isDark
-                      ? const [
-                          Color(0xFF1A1A1A), // veryDarkGray
-                          Color(0xFF1F1F1F),
-                          Color(0xFF242424),
-                          Color(0xFF292929),
-                          Color(0xFF2D2D2D), // mediumDarkGray
-                        ]
-                      : const [
-                          Color(0xFFF0F0F0), // Lighter grey
-                          Color(0xFFF2F2F2),
-                          Color(0xFFF5F5F5),
-                          Color(0xFFF8F8F8),
-                          Color(0xFFFAFAFA), // Very light grey
-                        ],
-                  stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-                ),
+                gradient: context.gradients.sectionBackground,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: context.borderColor.withOpacity(0.5),

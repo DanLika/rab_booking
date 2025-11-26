@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../../core/theme/gradient_extensions.dart';
+
 /// Wizard Progress Bar - shows current step and completion status
 /// Displays 5 steps with icons, labels, and visual indicators
 class WizardProgressBar extends StatelessWidget {
@@ -49,31 +51,18 @@ class WizardProgressBar extends StatelessWidget {
     final isMobile = screenWidth < 600;
 
     if (isMobile) {
-      return _buildCompactProgressBar(theme, isDark);
+      return _buildCompactProgressBar(context, theme, isDark);
     } else {
-      return _buildFullProgressBar(theme, isDark);
+      return _buildFullProgressBar(context, theme, isDark);
     }
   }
 
   /// Full progress bar for desktop/tablet (shows all 8 steps)
-  Widget _buildFullProgressBar(ThemeData theme, bool isDark) {
+  Widget _buildFullProgressBar(BuildContext context, ThemeData theme, bool isDark) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
-        // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
-        // Horizontal: left → right za header (default direction)
-        gradient: LinearGradient(
-          colors: isDark
-              ? const [
-                  Color(0xFF1A1A1A), // veryDarkGray
-                  Color(0xFF2D2D2D), // mediumDarkGray
-                ]
-              : const [
-                  Color(0xFFF5F5F5), // Light grey
-                  Colors.white,      // white
-                ],
-          stops: const [0.0, 0.3],
-        ),
+        gradient: context.gradients.pageBackground,
         // Border removed for seamless gradient flow with content below
       ),
       child: Row(
@@ -91,26 +80,13 @@ class WizardProgressBar extends StatelessWidget {
   }
 
   /// Compact progress bar for mobile (shows "Step X of 8")
-  Widget _buildCompactProgressBar(ThemeData theme, bool isDark) {
+  Widget _buildCompactProgressBar(BuildContext context, ThemeData theme, bool isDark) {
     final completedCount = completedSteps.values.where((v) => v).length;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
-        // Horizontal: left → right za header (default direction)
-        gradient: LinearGradient(
-          colors: isDark
-              ? const [
-                  Color(0xFF1A1A1A), // veryDarkGray
-                  Color(0xFF2D2D2D), // mediumDarkGray
-                ]
-              : const [
-                  Color(0xFFF5F5F5), // Light grey
-                  Colors.white,      // white
-                ],
-          stops: const [0.0, 0.3],
-        ),
+        gradient: context.gradients.pageBackground,
         // Border removed for seamless gradient flow with content below
       ),
       child: Row(

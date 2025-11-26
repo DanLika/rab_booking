@@ -49,9 +49,9 @@ extension AppColorExtensions on ColorScheme {
   /// Used for: dark mode elevated surfaces
   Color get mediumDarkGray => const Color(0xFF2D2D2D);
 
-  /// Very light blue for light mode backgrounds
-  /// Used for: light mode page backgrounds
-  Color get veryLightGray => const Color(0xFFE8F4FF);
+  /// Warm cream/beige for light mode backgrounds
+  /// Used for: light mode page backgrounds, gradients (premium feel)
+  Color get veryLightGray => const Color(0xFFFAF8F3);
 
   /// Beige for light mode backgrounds
   /// Used for: light mode drawer and warm backgrounds

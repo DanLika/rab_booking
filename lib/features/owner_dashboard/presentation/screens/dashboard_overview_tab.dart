@@ -37,9 +37,10 @@ class DashboardOverviewTab extends ConsumerWidget {
       drawer: const OwnerAppDrawer(currentRoute: 'overview'),
       body: Container(
         decoration: BoxDecoration(
+          // TIP 1: Simple diagonal gradient (2 colors, 2 stops)
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: isDark
                 ? [
                     theme.colorScheme.veryDarkGray,

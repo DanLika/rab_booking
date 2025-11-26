@@ -27,6 +27,97 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ---
 
+## 🔧 CLAUDE CODE ALATI & SLASH COMMANDS
+
+### MCP Server: Dart/Flutter
+
+**Status**: ✅ Instaliran (2025-11-26)
+
+Dart/Flutter MCP server pruža:
+- Live analiza Dart koda
+- Flutter widget informacije
+- Pub.dev package info
+- Code completion hints
+
+### Custom Slash Commands
+
+#### `/ui` - Flutter UI Generator
+
+Generira Flutter UI komponente prema opisu. Automatski primjenjuje project standarde.
+
+**Primjeri:**
+```bash
+/ui Kreiraj login formu sa email i password poljima
+/ui Napravi card komponentu za prikaz property-ja sa slikom, nazivom i cijenom
+/ui Bottom navigation bar sa 4 taba: Home, Search, Bookings, Profile
+```
+
+**Automatski primjenjuje:**
+- Material 3 design
+- Riverpod za state management
+- LayoutBuilder responsive pattern (500px breakpoint)
+- Theme-aware boje (`theme.colorScheme.*`)
+- Dijagonalni gradient pattern (`topLeft → bottomRight`)
+- BorderRadius 12 za input fields
+
+#### `/firebase` - Firebase CRUD Generator
+
+Generira Firebase repository, model i provider kod.
+
+**Primjeri:**
+```bash
+/firebase CRUD za Reservation model sa fields: guestName, checkIn, checkOut, status, totalPrice
+/firebase Repository za Property sa subcollection Units
+/firebase Stream provider za real-time bookings updates
+```
+
+**Automatski primjenjuje:**
+- Repository pattern (interface + Firebase implementation)
+- Riverpod providers (`@riverpod`)
+- Error handling sa `ErrorDisplayUtils`
+- Optimistic UI + provider invalidation
+- Freezed model sa `fromFirestore`/`toFirestore`
+- Soft delete pattern (`deleted_at`)
+- Nested config `.copyWith()` pattern
+
+#### `/test` - Test Generator
+
+Generira unit, widget i integration testove.
+
+**Primjeri:**
+```bash
+/test Unit tests za BookingModel - serialization i validation
+/test Widget tests za PropertyCard - rendering, tap actions, responsive layout
+/test Integration tests za BookingRepository - full CRUD flow
+/test Svi testovi za UnitWizardProvider - state transitions
+```
+
+**Generira:**
+- **Unit tests**: mocktail mocks, model serialization, provider state
+- **Widget tests**: ProviderScope, tester interactions, theme compliance, responsive
+- **Integration tests**: fake_cloud_firestore, real CRUD flows, stream tests
+- **Provider tests**: container setup, invalidation, async handling
+
+**Test struktura:**
+```
+test/
+├── unit/          # Business logic
+├── widget/        # UI components
+├── integration/   # Firebase flows
+└── helpers/       # Shared mocks
+```
+
+### Existing Slash Commands
+
+| Command | Svrha |
+|---------|-------|
+| `/init` | Initialize CLAUDE.md dokumentaciju |
+| `/review` | Code review za PR |
+| `/pr-comments` | Dohvati GitHub PR komentare |
+| `/security-review` | Security audit pending changes |
+
+---
+
 ## 🎯 KRITIČNE SEKCIJE - NE MIJENJAJ BEZ RAZLOGA!
 
 ### 🏢 Unified Unit Hub - Centralni Management za Jedinice

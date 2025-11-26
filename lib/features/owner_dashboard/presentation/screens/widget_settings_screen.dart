@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/user_profile_model.dart';
@@ -633,7 +634,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   Widget _buildWidgetModeSection() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final sectionPadding = context.horizontalPadding;
 
     return Container(
@@ -641,7 +641,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark
+            color: theme.brightness == Brightness.dark
                 ? Colors.black.withAlpha((0.3 * 255).toInt())
                 : Colors.black.withAlpha((0.1 * 255).toInt()),
             blurRadius: 8,
@@ -653,26 +653,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF1F1F1F),
-                      Color(0xFF242424),
-                      Color(0xFF292929),
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ]
-                  : const [
-                      Color(0xFFF0F0F0), // Lighter grey
-                      Color(0xFFF2F2F2),
-                      Color(0xFFF5F5F5),
-                      Color(0xFFF8F8F8),
-                      Color(0xFFFAFAFA), // Very light grey
-                    ],
-              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-            ),
+            // TIP 1: Simple diagonal gradient (2 colors, 2 stops)
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
@@ -791,7 +773,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   Widget _buildPaymentMethodsSection() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final sectionPadding = context.horizontalPadding;
 
     return Container(
@@ -799,7 +780,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark
+            color: theme.brightness == Brightness.dark
                 ? Colors.black.withAlpha((0.3 * 255).toInt())
                 : Colors.black.withAlpha((0.1 * 255).toInt()),
             blurRadius: 8,
@@ -811,20 +792,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ]
-                  : const [
-                      Color(0xFFE8E9EB), // Light blue-grey
-                      Colors.white,
-                    ],
-              stops: const [0.0, 0.3],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
@@ -1286,7 +1254,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   Widget _buildBookingBehaviorSection() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final sectionPadding = context.horizontalPadding;
 
     return Container(
@@ -1294,7 +1261,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark
+            color: theme.brightness == Brightness.dark
                 ? Colors.black.withAlpha((0.3 * 255).toInt())
                 : Colors.black.withAlpha((0.1 * 255).toInt()),
             blurRadius: 8,
@@ -1306,20 +1273,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ]
-                  : const [
-                      Color(0xFFE8E9EB), // Light blue-grey
-                      Colors.white,
-                    ],
-              stops: const [0.0, 0.3],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
@@ -1615,7 +1569,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
 
   Widget _buildContactOptionsSection() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final sectionPadding = context.horizontalPadding;
 
     return Container(
@@ -1623,7 +1576,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark
+            color: theme.brightness == Brightness.dark
                 ? Colors.black.withAlpha((0.3 * 255).toInt())
                 : Colors.black.withAlpha((0.1 * 255).toInt()),
             blurRadius: 8,
@@ -1635,20 +1588,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ]
-                  : const [
-                      Color(0xFFE8E9EB), // Light blue-grey
-                      Colors.white,
-                    ],
-              stops: const [0.0, 0.3],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
@@ -1864,14 +1804,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
     required Color color,
   }) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark
+            color: theme.brightness == Brightness.dark
                 ? Colors.black.withAlpha((0.3 * 255).toInt())
                 : Colors.black.withAlpha((0.1 * 255).toInt()),
             blurRadius: 8,

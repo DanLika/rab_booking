@@ -11,8 +11,8 @@ class GradientTokens {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFFFAFAFA), // Very light gray
-      Color(0xFFF5F5F5), // Slightly darker gray
+      Color(0xFFFAF8F3), // Cream/beige
+      Color(0xFFFFFFFF), // White
     ],
   );
 

@@ -4,6 +4,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../shared/providers/repository_providers.dart' as repos;
@@ -40,12 +41,11 @@ class IcalExportCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -53,20 +53,7 @@ class IcalExportCard extends ConsumerWidget {
           decoration: BoxDecoration(
             // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
             // topRight → bottomLeft za section
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ]
-                  : const [
-                      Color(0xFFF5F5F5), // Light grey
-                      Colors.white,      // White
-                    ],
-              stops: const [0.0, 0.3],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: context.borderColor.withValues(alpha: 0.4),

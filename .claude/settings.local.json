@@ -57,7 +57,11 @@
       "Bash(git -C /Users/duskolicanin/git/rab_booking diff --stat claude.md)",
       "Bash(git -C /Users/duskolicanin/git/rab_booking checkout HEAD -- claude.md)",
       "Bash(lsof:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(claude mcp remove:*)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp list:*)"
     ],
     "deny": [
       "Read(.env)",

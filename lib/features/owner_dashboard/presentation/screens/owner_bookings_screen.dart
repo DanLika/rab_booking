@@ -9,7 +9,7 @@ import '../../domain/models/bookings_view_mode.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../core/theme/theme_extensions.dart';
-import '../../../../core/theme/app_color_extensions.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/bookings_table_view.dart';
 import '../widgets/booking_details_dialog.dart';
@@ -111,7 +111,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     final filters = ref.watch(bookingsFiltersNotifierProvider);
     final viewMode = ref.watch(ownerBookingsViewProvider);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     // Cache MediaQuery values for performance
     final mediaQuery = MediaQuery.of(context);
@@ -128,17 +127,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       drawer: const OwnerAppDrawer(currentRoute: 'bookings'),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,        // Diagonal gradient
-            end: Alignment.bottomRight,      // top-left → bottom-right
-            colors: isDark
-                ? [
-                    theme.colorScheme.veryDarkGray,
-                    theme.colorScheme.mediumDarkGray,
-                  ]
-                : [const Color(0xFFF8F9FA), Colors.white],
-            stops: const [0.0, 0.3],
-          ),
+          gradient: context.gradients.pageBackground,
         ),
         child: RefreshIndicator(
           onRefresh: () async {

@@ -5,6 +5,7 @@ import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../shared/models/unit_model.dart';
@@ -157,26 +158,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               width: 320,
               child: Container(
                 decoration: BoxDecoration(
-                  // TIP 1: Simple diagonal gradient (2 colors, 2 stops) - topRight → bottomLeft
-                  gradient: isDark
-                      ? const LinearGradient(
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
-                          colors: [
-                            Color(0xFF1A1A1A), // veryDarkGray
-                            Color(0xFF2D2D2D), // mediumDarkGray
-                          ],
-                          stops: [0.0, 0.3],
-                        )
-                      : const LinearGradient(
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
-                          colors: [
-                            Color(0xFFF5F5F5), // Light grey
-                            Colors.white,      // White
-                          ],
-                          stops: [0.0, 0.3],
-                        ),
+                  gradient: context.gradients.sectionBackground,
                 ),
                 child: Builder(
                   builder: (drawerContext) => _buildMasterPanel(
@@ -195,26 +177,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           : null,
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    const Color(0xFF1A1A1A), // veryDarkGray
-                    const Color(0xFF1F1F1F),
-                    const Color(0xFF242424),
-                    const Color(0xFF292929),
-                    const Color(0xFF2D2D2D), // mediumDarkGray
-                  ]
-                : [
-                    const Color(0xFFF0F0F0), // Lighter grey
-                    const Color(0xFFF2F2F2),
-                    const Color(0xFFF5F5F5),
-                    const Color(0xFFF8F8F8),
-                    const Color(0xFFFAFAFA), // Very light grey
-                  ],
-            stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-          ),
+          gradient: context.gradients.pageBackground,
         ),
         child: isDesktop
             ? _buildDesktopLayout(theme, isDark, screenWidth)
@@ -235,26 +198,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         Container(
           width: 320,
           decoration: BoxDecoration(
-            // TIP 1: Simple diagonal gradient (2 colors, 2 stops) - topRight → bottomLeft
-            gradient: isDark
-                ? const LinearGradient(
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                    colors: [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ],
-                    stops: [0.0, 0.3],
-                  )
-                : const LinearGradient(
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                    colors: [
-                      Color(0xFFF5F5F5), // Light grey
-                      Colors.white,      // White
-                    ],
-                    stops: [0.0, 0.3],
-                  ),
+            gradient: context.gradients.sectionBackground,
             border: Border(
               left: BorderSide(
                 color: theme.colorScheme.outline.withOpacity(0.2),
@@ -577,29 +521,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: isDark
-              ? const [
-                  Color(0xFF1A1A1A),
-                  Color(0xFF1F1F1F),
-                  Color(0xFF242424),
-                  Color(0xFF292929),
-                  Color(0xFF2D2D2D),
-                ]
-              : const [
-                  Color(0xFFF0F0F0),
-                  Color(0xFFF2F2F2),
-                  Color(0xFFF5F5F5),
-                  Color(0xFFF8F8F8),
-                  Color(0xFFFAFAFA),
-                ],
-          stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-        ),
+        gradient: context.gradients.sectionBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+          // Warm borders: beige for light theme, warm gray for dark theme
+          color: isDark
+              ? const Color(0xFF3D3733) // Warm gray
+              : const Color(0xFFE8E5DC), // Warm beige
           width: 1.5,
         ),
         boxShadow: AppShadows.getElevation(1, isDark: isDark),
@@ -738,34 +666,16 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        gradient: isSelected
-            ? null
-            : LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: isDark
-                    ? const [
-                        Color(0xFF1A1A1A),
-                        Color(0xFF1F1F1F),
-                        Color(0xFF242424),
-                        Color(0xFF292929),
-                        Color(0xFF2D2D2D),
-                      ]
-                    : const [
-                        Color(0xFFF0F0F0),
-                        Color(0xFFF2F2F2),
-                        Color(0xFFF5F5F5),
-                        Color(0xFFF8F8F8),
-                        Color(0xFFFAFAFA),
-                      ],
-                stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-              ),
+        gradient: isSelected ? null : context.gradients.sectionBackground,
         color: isSelected ? theme.colorScheme.primaryContainer : null,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected
               ? theme.colorScheme.primary
-              : theme.colorScheme.outline.withValues(alpha: 0.4),
+              // Warm borders: beige for light theme, warm gray for dark theme
+              : (isDark
+                  ? const Color(0xFF3D3733) // Warm gray
+                  : const Color(0xFFE8E5DC)), // Warm beige
           width: isSelected ? 2 : 1.5,
         ),
         boxShadow: AppShadows.getElevation(1, isDark: isDark),
@@ -1335,29 +1245,13 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF1F1F1F),
-                      Color(0xFF242424),
-                      Color(0xFF292929),
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ]
-                  : const [
-                      Color(0xFFF0F0F0), // Lighter grey
-                      Color(0xFFF2F2F2),
-                      Color(0xFFF5F5F5),
-                      Color(0xFFF8F8F8),
-                      Color(0xFFFAFAFA), // Very light grey
-                    ],
-              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.5),
+              // Warm borders: beige for light theme, warm gray for dark theme
+              color: isDark
+                  ? const Color(0xFF3D3733) // Warm gray
+                  : const Color(0xFFE8E5DC), // Warm beige
               width: 1.5,
             ),
           ),

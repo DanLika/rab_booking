@@ -6,6 +6,7 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../widgets/price_list_calendar_widget.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -196,41 +197,25 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
   Widget _buildUnitSelector(List<UnitModel> units, bool isMobile) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final cardPadding = context.horizontalPadding;
 
+    final isDark = theme.brightness == Brightness.dark;
     return Card(
       elevation: 0.5,
       shadowColor: theme.colorScheme.shadow.withAlpha((0.05 * 255).toInt()),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
-          width: 0.5,
+          // Warm borders: beige for light theme, warm gray for dark theme
+          color: isDark
+              ? const Color(0xFF3D3733) // Warm gray
+              : const Color(0xFFE8E5DC), // Warm beige
+          width: 1.5,
         ),
       ),
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: isDark
-                ? const [
-                    Color(0xFF1A1A1A), // veryDarkGray
-                    Color(0xFF1F1F1F),
-                    Color(0xFF242424),
-                    Color(0xFF292929),
-                    Color(0xFF2D2D2D), // mediumDarkGray
-                  ]
-                : const [
-                    Color(0xFFE0E0E0), // Darker grey
-                    Color(0xFFE5E5E5),
-                    Color(0xFFEAEAEA),
-                    Color(0xFFF0F0F0),
-                    Color(0xFFF5F5F5), // Light grey
-                  ],
-            stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-          ),
+          gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Padding(
@@ -416,35 +401,24 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
 
   Widget _buildBasePriceSection(bool isMobile) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final sectionPadding = context.horizontalPadding;
 
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ]
-                  : const [
-                      Color(0xFFF5F5F5), // Light grey
-                      Colors.white,      // White
-                    ],
-              stops: const [0.0, 0.3],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: context.borderColor.withOpacity(0.4),
+              // Warm borders: beige for light theme, warm gray for dark theme
+              color: theme.brightness == Brightness.dark
+                  ? const Color(0xFF3D3733) // Warm gray
+                  : const Color(0xFFE8E5DC), // Warm beige
               width: 1.5,
             ),
           ),

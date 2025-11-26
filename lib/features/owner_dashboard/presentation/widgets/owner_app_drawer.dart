@@ -8,6 +8,7 @@ import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../auth/presentation/widgets/auth_logo_icon.dart';
 
 /// Premium Owner App Navigation Drawer
@@ -20,38 +21,11 @@ class OwnerAppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = FirebaseAuth.instance.currentUser;
     final authState = ref.watch(enhancedAuthProvider);
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
-          // Diagonal gradient (top-left → bottom-right) with 5-color stops
-          gradient: isDarkMode
-              ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF1A1A1A), // veryDarkGray
-                    Color(0xFF1F1F1F),
-                    Color(0xFF242424),
-                    Color(0xFF292929),
-                    Color(0xFF2D2D2D), // mediumDarkGray
-                  ],
-                  stops: [0.0, 0.125, 0.25, 0.375, 0.5],
-                )
-              : const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFF0F0F0), // Lighter grey
-                    Color(0xFFF2F2F2),
-                    Color(0xFFF5F5F5),
-                    Color(0xFFF8F8F8),
-                    Color(0xFFFAFAFA), // Very light grey
-                  ],
-                  stops: [0.0, 0.125, 0.25, 0.375, 0.5],
-                ),
+          gradient: context.gradients.pageBackground,
         ),
         child: ListView(
           padding: EdgeInsets.zero,
@@ -242,7 +216,6 @@ class OwnerAppDrawer extends ConsumerWidget {
     dynamic authState,
   ) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final displayName =
         authState.userModel?.firstName != null &&
             authState.userModel?.lastName != null
@@ -281,7 +254,7 @@ class OwnerAppDrawer extends ConsumerWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
-                  boxShadow: AppShadows.getElevation(2, isDark: isDark),
+                  boxShadow: AppShadows.getElevation(2, isDark: theme.brightness == Brightness.dark),
                 ),
                 child:
                     authState.userModel?.avatarUrl != null &&

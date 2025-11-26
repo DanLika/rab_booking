@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
+import '../../../../../../core/theme/gradient_extensions.dart';
 import '../state/unit_wizard_provider.dart';
 
 /// Step 5: Review & Publish - Final review before creating the unit
@@ -13,7 +14,6 @@ class Step5Review extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final wizardState = ref.watch(unitWizardNotifierProvider(unitId));
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final isDesktop = screenWidth >= 900;
@@ -27,7 +27,6 @@ class Step5Review extends ConsumerWidget {
         final basicInfoCard = _buildSummaryCard(
           context,
           theme,
-          isDark,
           isMobile,
           'Osnovne Informacije',
           Icons.info_outline,
@@ -42,7 +41,6 @@ class Step5Review extends ConsumerWidget {
         final capacityCard = _buildSummaryCard(
           context,
           theme,
-          isDark,
           isMobile,
           'Kapacitet',
           Icons.people,
@@ -58,7 +56,6 @@ class Step5Review extends ConsumerWidget {
         final pricingCard = _buildSummaryCard(
           context,
           theme,
-          isDark,
           isMobile,
           'Cijene',
           Icons.euro,
@@ -79,7 +76,6 @@ class Step5Review extends ConsumerWidget {
         final availabilityCard = _buildSummaryCard(
           context,
           theme,
-          isDark,
           isMobile,
           'Dostupnost',
           Icons.calendar_today,
@@ -95,18 +91,7 @@ class Step5Review extends ConsumerWidget {
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
         return Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray (darker) - LEFT
-                      Color(0xFF2D2D2D), // mediumDarkGray (lighter) - RIGHT
-                    ]
-                  : const [
-                      Color(0xFFF5F5F5), // Light grey (darker) - LEFT
-                      Colors.white,      // white (lighter) - RIGHT
-                    ],
-              stops: const [0.0, 0.3],
-            ),
+            gradient: context.gradients.pageBackground,
           ),
           child: SingleChildScrollView(
             padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -250,7 +235,6 @@ class Step5Review extends ConsumerWidget {
   Widget _buildSummaryCard(
     BuildContext context,
     ThemeData theme,
-    bool isDark,
     bool isMobile,
     String title,
     IconData icon,
@@ -261,7 +245,7 @@ class Step5Review extends ConsumerWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark
+            color: theme.brightness == Brightness.dark
                 ? Colors.black.withValues(alpha: 0.3)
                 : Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
@@ -275,20 +259,7 @@ class Step5Review extends ConsumerWidget {
           decoration: BoxDecoration(
             // TIP 1: JEDNOSTAVNI DIJAGONALNI GRADIENT (2 boje, 2 stops)
             // Section cards: topRight → bottomLeft (tamniji desno 30%, svjetliji lijevo 70%)
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray (darker) - RIGHT
-                      Color(0xFF2D2D2D), // mediumDarkGray (lighter) - LEFT
-                    ]
-                  : const [
-                      Color(0xFFF5F5F5), // Light grey (darker) - RIGHT
-                      Colors.white,      // white (lighter) - LEFT
-                    ],
-              stops: const [0.0, 0.3],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(alpha: 0.4),

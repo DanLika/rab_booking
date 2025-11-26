@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
@@ -84,8 +85,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -97,20 +96,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
       body: Container(
-        // Horizontal gradient (left → right) - matches footer gradient for seamless transition
+        // Page background gradient (topLeft → bottomRight)
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark
-                ? const [
-                    Color(0xFF1A1A1A), // veryDarkGray (darker) - LEFT
-                    Color(0xFF2D2D2D), // mediumDarkGray (lighter) - RIGHT
-                  ]
-                : const [
-                    Color(0xFFF5F5F5), // Light grey (darker) - LEFT
-                    Colors.white,      // white (lighter) - RIGHT
-                  ],
-            stops: const [0.0, 0.3],
-          ),
+          gradient: context.gradients.pageBackground,
         ),
         child: Stack(
           children: [
@@ -501,7 +489,6 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
     String? subtitle,
   }) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -510,7 +497,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark
+            color: theme.brightness == Brightness.dark
                 ? Colors.black.withValues(alpha: 0.3)
                 : Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
@@ -523,20 +510,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
         child: Container(
           decoration: BoxDecoration(
             // Section cards: topRight → bottomLeft gradient
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray (darker) - RIGHT
-                      Color(0xFF2D2D2D), // mediumDarkGray (lighter) - LEFT
-                    ]
-                  : const [
-                      Color(0xFFF5F5F5), // Light grey (darker) - RIGHT
-                      Colors.white,      // white (lighter) - LEFT
-                    ],
-              stops: const [0.0, 0.3],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(alpha: 0.4),

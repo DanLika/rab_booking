@@ -7,6 +7,7 @@ import '../providers/analytics_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -19,7 +20,6 @@ class AnalyticsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final dateRange = ref.watch(dateRangeNotifierProvider);
     final analyticsAsync = ref.watch(
       analyticsNotifierProvider(dateRange: dateRange),
@@ -34,26 +34,7 @@ class AnalyticsScreen extends ConsumerWidget {
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    const Color(0xFF1A1A1A), // veryDarkGray
-                    const Color(0xFF1F1F1F),
-                    const Color(0xFF242424),
-                    const Color(0xFF292929),
-                    const Color(0xFF2D2D2D), // mediumDarkGray
-                  ]
-                : [
-                    const Color(0xFFF0F0F0), // Lighter grey
-                    const Color(0xFFF2F2F2),
-                    const Color(0xFFF5F5F5),
-                    const Color(0xFFF8F8F8),
-                    const Color(0xFFFAFAFA), // Very light grey
-                  ],
-            stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-          ),
+          gradient: context.gradients.pageBackground,
         ),
         child: Column(
           children: [
@@ -636,7 +617,6 @@ class _RevenueChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     if (data.isEmpty) {
@@ -679,32 +659,13 @@ class _RevenueChart extends StatelessWidget {
           child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            boxShadow: AppShadows.getElevation(1, isDark: isDark),
+            boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                  colors: isDark
-                      ? const [
-                          Color(0xFF1A1A1A), // veryDarkGray
-                          Color(0xFF1F1F1F),
-                          Color(0xFF242424),
-                          Color(0xFF292929),
-                          Color(0xFF2D2D2D), // mediumDarkGray
-                        ]
-                      : const [
-                          Color(0xFFF0F0F0), // Lighter grey
-                          Color(0xFFF2F2F2),
-                          Color(0xFFF5F5F5),
-                          Color(0xFFF8F8F8),
-                          Color(0xFFFAFAFA), // Very light grey
-                        ],
-                  stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-                ),
+                gradient: context.gradients.sectionBackground,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: theme.colorScheme.outline.withValues(alpha: 0.4),
@@ -845,7 +806,6 @@ class _BookingsChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     if (data.isEmpty) {
@@ -888,32 +848,13 @@ class _BookingsChart extends StatelessWidget {
           child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            boxShadow: AppShadows.getElevation(1, isDark: isDark),
+            boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                  colors: isDark
-                      ? const [
-                          Color(0xFF1A1A1A), // veryDarkGray
-                          Color(0xFF1F1F1F),
-                          Color(0xFF242424),
-                          Color(0xFF292929),
-                          Color(0xFF2D2D2D), // mediumDarkGray
-                        ]
-                      : const [
-                          Color(0xFFF0F0F0), // Lighter grey
-                          Color(0xFFF2F2F2),
-                          Color(0xFFF5F5F5),
-                          Color(0xFFF8F8F8),
-                          Color(0xFFFAFAFA), // Very light grey
-                        ],
-                  stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-                ),
+                gradient: context.gradients.sectionBackground,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: theme.colorScheme.outline.withValues(alpha: 0.4),
@@ -1041,7 +982,6 @@ class _TopPropertiesList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -1049,32 +989,13 @@ class _TopPropertiesList extends StatelessWidget {
       return Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          boxShadow: AppShadows.getElevation(1, isDark: isDark),
+          boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: isDark
-                    ? const [
-                        Color(0xFF1A1A1A), // veryDarkGray
-                        Color(0xFF1F1F1F),
-                        Color(0xFF242424),
-                        Color(0xFF292929),
-                        Color(0xFF2D2D2D), // mediumDarkGray
-                      ]
-                    : const [
-                        Color(0xFFF0F0F0), // Lighter grey
-                        Color(0xFFF2F2F2),
-                        Color(0xFFF5F5F5),
-                        Color(0xFFF8F8F8),
-                        Color(0xFFFAFAFA), // Very light grey
-                      ],
-                stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-              ),
+              gradient: context.gradients.sectionBackground,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: theme.colorScheme.outline.withValues(alpha: 0.4),
@@ -1110,32 +1031,13 @@ class _TopPropertiesList extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF1F1F1F),
-                      Color(0xFF242424),
-                      Color(0xFF292929),
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ]
-                  : const [
-                      Color(0xFFF0F0F0), // Lighter grey
-                      Color(0xFFF2F2F2),
-                      Color(0xFFF5F5F5),
-                      Color(0xFFF8F8F8),
-                      Color(0xFFFAFAFA), // Very light grey
-                    ],
-              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(alpha: 0.4),
@@ -1279,7 +1181,6 @@ class _WidgetAnalyticsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final widgetBookingsPercent = totalBookings > 0
         ? (widgetBookings / totalBookings * 100).toStringAsFixed(1)
         : '0.0';
@@ -1293,32 +1194,13 @@ class _WidgetAnalyticsCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF1F1F1F),
-                      Color(0xFF242424),
-                      Color(0xFF292929),
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ]
-                  : const [
-                      Color(0xFFF0F0F0), // Lighter grey
-                      Color(0xFFF2F2F2),
-                      Color(0xFFF5F5F5),
-                      Color(0xFFF8F8F8),
-                      Color(0xFFFAFAFA), // Very light grey
-                    ],
-              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(alpha: 0.4),
@@ -1549,7 +1431,6 @@ class _BookingsBySourceChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -1595,32 +1476,13 @@ class _BookingsBySourceChart extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+        boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              colors: isDark
-                  ? const [
-                      Color(0xFF1A1A1A), // veryDarkGray
-                      Color(0xFF1F1F1F),
-                      Color(0xFF242424),
-                      Color(0xFF292929),
-                      Color(0xFF2D2D2D), // mediumDarkGray
-                    ]
-                  : const [
-                      Color(0xFFF0F0F0), // Lighter grey
-                      Color(0xFFF2F2F2),
-                      Color(0xFFF5F5F5),
-                      Color(0xFFF8F8F8),
-                      Color(0xFFFAFAFA), // Very light grey
-                    ],
-              stops: const [0.0, 0.125, 0.25, 0.375, 0.5],
-            ),
+            gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(alpha: 0.4),

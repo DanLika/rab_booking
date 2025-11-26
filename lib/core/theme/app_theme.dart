@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app_colors.dart';
+import 'app_gradients.dart';
 import 'app_typography.dart';
 import '../constants/app_dimensions.dart';
 
@@ -18,6 +19,9 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+
+      // Gradient extensions
+      extensions: const [AppGradients.light],
 
       // Color scheme
       colorScheme: const ColorScheme.light(
@@ -261,6 +265,9 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+
+      // Gradient extensions
+      extensions: const [AppGradients.dark],
 
       // Color scheme
       colorScheme: const ColorScheme.dark(

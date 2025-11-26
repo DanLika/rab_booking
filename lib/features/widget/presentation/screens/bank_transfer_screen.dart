@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../providers/booking_price_provider.dart';
 import '../providers/owner_bank_details_provider.dart';
 import '../providers/theme_provider.dart';
@@ -13,8 +12,11 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../utils/snackbar_helper.dart';
 import '../widgets/common/detail_row_widget.dart';
-import '../widgets/common/copyable_text_field.dart';
 import '../widgets/common/theme_colors_helper.dart';
+import '../widgets/bank_transfer/qr_code_payment_section.dart';
+import '../widgets/bank_transfer/bank_details_section.dart';
+import '../widgets/bank_transfer/payment_warning_section.dart';
+import '../widgets/bank_transfer/important_notes_section.dart';
 
 /// Modern Bank Transfer Instructions Screen
 /// Displays owner's actual bank details with responsive design
@@ -285,36 +287,34 @@ class BankTransferScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildPaymentWarning(
-                context,
-                isDarkMode,
-                getColor,
-                calculation.formattedDeposit,
-                formattedDeadline,
+              PaymentWarningSection(
+                isDarkMode: isDarkMode,
+                depositAmount: calculation.formattedDeposit,
+                deadline: formattedDeadline,
               ),
               SizedBox(height: spacing),
               if (bankConfig != null && bankConfig.hasCompleteDetails) ...[
-                _buildBankDetails(context, isDarkMode, getColor, bankConfig),
+                BankDetailsSection(
+                  isDarkMode: isDarkMode,
+                  bankConfig: bankConfig,
+                ),
                 SizedBox(height: spacing),
               ],
               if (bankConfig != null &&
                   bankConfig.enableQrCode &&
                   bankConfig.iban != null) ...[
-                _buildQrCodeSection(
-                  context,
-                  isDarkMode,
-                  getColor,
-                  bankConfig,
-                  calculation.depositAmount,
+                QrCodePaymentSection(
+                  isDarkMode: isDarkMode,
+                  bankConfig: bankConfig,
+                  amount: calculation.depositAmount,
+                  bookingReference: bookingReference,
                 ),
                 SizedBox(height: spacing),
               ],
-              _buildImportantNotes(
-                context,
-                isDarkMode,
-                getColor,
-                bankConfig,
-                calculation.formattedRemaining,
+              ImportantNotesSection(
+                isDarkMode: isDarkMode,
+                bankConfig: bankConfig,
+                remainingAmount: calculation.formattedRemaining,
               ),
               SizedBox(height: spacing),
               _buildDoneButton(context, isDarkMode, getColor),
@@ -342,38 +342,36 @@ class BankTransferScreen extends ConsumerWidget {
         SizedBox(height: spacing),
         _buildReferenceCard(context, isDarkMode, getColor),
         SizedBox(height: spacing),
-        _buildPaymentWarning(
-          context,
-          isDarkMode,
-          getColor,
-          calculation.formattedDeposit,
-          formattedDeadline,
+        PaymentWarningSection(
+          isDarkMode: isDarkMode,
+          depositAmount: calculation.formattedDeposit,
+          deadline: formattedDeadline,
         ),
         SizedBox(height: spacing),
         _buildBookingDetails(context, isDarkMode, getColor, calculation),
         SizedBox(height: spacing),
         if (bankConfig != null && bankConfig.hasCompleteDetails) ...[
-          _buildBankDetails(context, isDarkMode, getColor, bankConfig),
+          BankDetailsSection(
+            isDarkMode: isDarkMode,
+            bankConfig: bankConfig,
+          ),
           SizedBox(height: spacing),
         ],
         if (bankConfig != null &&
             bankConfig.enableQrCode &&
             bankConfig.iban != null) ...[
-          _buildQrCodeSection(
-            context,
-            isDarkMode,
-            getColor,
-            bankConfig,
-            calculation.depositAmount,
+          QrCodePaymentSection(
+            isDarkMode: isDarkMode,
+            bankConfig: bankConfig,
+            amount: calculation.depositAmount,
+            bookingReference: bookingReference,
           ),
           SizedBox(height: spacing),
         ],
-        _buildImportantNotes(
-          context,
-          isDarkMode,
-          getColor,
-          bankConfig,
-          calculation.formattedRemaining,
+        ImportantNotesSection(
+          isDarkMode: isDarkMode,
+          bankConfig: bankConfig,
+          remainingAmount: calculation.formattedRemaining,
         ),
         const SizedBox(height: SpacingTokens.xl),
         _buildDoneButton(context, isDarkMode, getColor),
@@ -579,74 +577,6 @@ class BankTransferScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPaymentWarning(
-    BuildContext context,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
-    String depositAmount,
-    String deadline,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
-      decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.warning,
-          MinimalistColorsDark.warning,
-        ).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: getColor(
-            MinimalistColors.warning,
-            MinimalistColorsDark.warning,
-          ),
-          width: BorderTokens.widthMedium,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.access_time,
-            color: getColor(
-              MinimalistColors.warning,
-              MinimalistColorsDark.warning,
-            ),
-            size: IconSizeTokens.large,
-          ),
-          const SizedBox(width: SpacingTokens.m),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Uplata: $depositAmount',
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeL,
-                    fontWeight: TypographyTokens.bold,
-                    color: getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: SpacingTokens.xxs),
-                Text(
-                  'Rok: $deadline',
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeM,
-                    color: getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildBookingDetails(
     BuildContext context,
     bool isDarkMode,
@@ -798,444 +728,6 @@ class BankTransferScreen extends ConsumerWidget {
                     ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBankDetails(
-    BuildContext context,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
-    BankTransferConfig bankConfig,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
-      decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.account_balance,
-                color: getColor(
-                  MinimalistColors.buttonPrimary,
-                  MinimalistColorsDark.buttonPrimary,
-                ),
-                size: IconSizeTokens.medium,
-              ),
-              const SizedBox(width: SpacingTokens.xs),
-              Text(
-                'Podaci za Uplatu',
-                style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeL,
-                  fontWeight: TypographyTokens.semiBold,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: SpacingTokens.m),
-          if (bankConfig.accountHolder != null)
-            CopyableTextField(
-              label: 'Vlasnik Računa',
-              value: bankConfig.accountHolder!,
-              icon: Icons.person_outline,
-              isDarkMode: isDarkMode,
-              onCopy: () {
-                Clipboard.setData(ClipboardData(text: bankConfig.accountHolder!));
-                SnackBarHelper.showSuccess(
-                  context: context,
-                  message: 'Vlasnik Računa kopiran',
-                  isDarkMode: isDarkMode,
-                  duration: const Duration(seconds: 2),
-                );
-              },
-            ),
-          if (bankConfig.bankName != null) ...[
-            const SizedBox(height: SpacingTokens.s),
-            CopyableTextField(
-              label: 'Naziv Banke',
-              value: bankConfig.bankName!,
-              icon: Icons.account_balance_outlined,
-              isDarkMode: isDarkMode,
-              onCopy: () {
-                Clipboard.setData(ClipboardData(text: bankConfig.bankName!));
-                SnackBarHelper.showSuccess(
-                  context: context,
-                  message: 'Naziv Banke kopiran',
-                  isDarkMode: isDarkMode,
-                  duration: const Duration(seconds: 2),
-                );
-              },
-            ),
-          ],
-          if (bankConfig.iban != null) ...[
-            const SizedBox(height: SpacingTokens.s),
-            CopyableTextField(
-              label: 'IBAN',
-              value: bankConfig.iban!,
-              icon: Icons.credit_card,
-              isDarkMode: isDarkMode,
-              onCopy: () {
-                Clipboard.setData(ClipboardData(text: bankConfig.iban!));
-                SnackBarHelper.showSuccess(
-                  context: context,
-                  message: 'IBAN kopiran',
-                  isDarkMode: isDarkMode,
-                  duration: const Duration(seconds: 2),
-                );
-              },
-            ),
-          ],
-          if (bankConfig.swift != null) ...[
-            const SizedBox(height: SpacingTokens.s),
-            CopyableTextField(
-              label: 'SWIFT/BIC',
-              value: bankConfig.swift!,
-              icon: Icons.language,
-              isDarkMode: isDarkMode,
-              onCopy: () {
-                Clipboard.setData(ClipboardData(text: bankConfig.swift!));
-                SnackBarHelper.showSuccess(
-                  context: context,
-                  message: 'SWIFT/BIC kopiran',
-                  isDarkMode: isDarkMode,
-                  duration: const Duration(seconds: 2),
-                );
-              },
-            ),
-          ],
-          if (bankConfig.accountNumber != null) ...[
-            const SizedBox(height: SpacingTokens.s),
-            CopyableTextField(
-              label: 'Broj Računa',
-              value: bankConfig.accountNumber!,
-              icon: Icons.numbers,
-              isDarkMode: isDarkMode,
-              onCopy: () {
-                Clipboard.setData(ClipboardData(text: bankConfig.accountNumber!));
-                SnackBarHelper.showSuccess(
-                  context: context,
-                  message: 'Broj Računa kopiran',
-                  isDarkMode: isDarkMode,
-                  duration: const Duration(seconds: 2),
-                );
-              },
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQrCodeSection(
-    BuildContext context,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
-    BankTransferConfig bankConfig,
-    double amount,
-  ) {
-    final epcData = _generateEpcQrData(bankConfig, amount);
-
-    return Container(
-      padding: const EdgeInsets.all(SpacingTokens.l),
-      decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(SpacingTokens.s),
-                decoration: BoxDecoration(
-                  color: getColor(
-                    MinimalistColors.buttonPrimary,
-                    MinimalistColorsDark.buttonPrimary,
-                  ).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(
-                    BorderTokens.radiusSubtle,
-                  ),
-                ),
-                child: Icon(
-                  Icons.qr_code_2,
-                  color: getColor(
-                    MinimalistColors.buttonPrimary,
-                    MinimalistColorsDark.buttonPrimary,
-                  ),
-                  size: IconSizeTokens.medium,
-                ),
-              ),
-              const SizedBox(width: SpacingTokens.m),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'QR Kod za Uplatu',
-                      style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeL,
-                        fontWeight: TypographyTokens.bold,
-                        color: getColor(
-                          MinimalistColors.textPrimary,
-                          MinimalistColorsDark.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: SpacingTokens.xxs),
-                    Text(
-                      'Skenirajte sa mobilnom bankom',
-                      style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeS,
-                        color: getColor(
-                          MinimalistColors.textSecondary,
-                          MinimalistColorsDark.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: SpacingTokens.l),
-          Container(
-            padding: const EdgeInsets.all(SpacingTokens.m),
-            decoration: BoxDecoration(
-              color: ColorTokens.pureWhite,
-              borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-              border: Border.all(
-                color: getColor(
-                  MinimalistColors.borderDefault,
-                  MinimalistColorsDark.borderDefault,
-                ),
-                width: BorderTokens.widthMedium,
-              ),
-            ),
-            child: QrImageView(
-              data: epcData,
-              size: 200.0,
-              backgroundColor: ColorTokens.pureWhite,
-              errorCorrectionLevel: QrErrorCorrectLevel.M,
-            ),
-          ),
-          const SizedBox(height: SpacingTokens.m),
-          Container(
-            padding: const EdgeInsets.all(SpacingTokens.s),
-            decoration: BoxDecoration(
-              color: getColor(
-                MinimalistColors.buttonPrimary,
-                MinimalistColorsDark.buttonPrimary,
-              ).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
-              border: Border.all(
-                color: getColor(
-                  MinimalistColors.buttonPrimary,
-                  MinimalistColorsDark.buttonPrimary,
-                ).withOpacity(0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  size: IconSizeTokens.small,
-                  color: getColor(
-                    MinimalistColors.buttonPrimary,
-                    MinimalistColorsDark.buttonPrimary,
-                  ),
-                ),
-                const SizedBox(width: SpacingTokens.s),
-                Expanded(
-                  child: Text(
-                    'QR kod sadrži sve podatke o uplati (IBAN, iznos, referenca). Skenirajte ga sa aplikacijom vaše banke.',
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeS,
-                      color: getColor(
-                        MinimalistColors.textSecondary,
-                        MinimalistColorsDark.textSecondary,
-                      ),
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _generateEpcQrData(BankTransferConfig bankConfig, double amount) {
-    final String bic = bankConfig.swift ?? '';
-    final String beneficiaryName = bankConfig.accountHolder ?? 'N/A';
-    final String iban = bankConfig.iban!.replaceAll(' ', '');
-    final String amountStr = amount.toStringAsFixed(2);
-    final String reference = bookingReference;
-
-    final epcData = [
-      'BCD',
-      '002',
-      '1',
-      'SCT',
-      bic,
-      beneficiaryName,
-      iban,
-      'EUR$amountStr',
-      '',
-      reference,
-      'Booking deposit',
-      '',
-    ].join('\n');
-
-    return epcData;
-  }
-
-  Widget _buildImportantNotes(
-    BuildContext context,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
-    BankTransferConfig? bankConfig,
-    String remainingAmount,
-  ) {
-    final bool useCustom = bankConfig?.useCustomNotes ?? false;
-    final String? customNotes = bankConfig?.customNotes;
-
-    final List<String> notes = [];
-
-    if (useCustom && customNotes != null && customNotes.isNotEmpty) {
-      notes.add(customNotes);
-    } else {
-      notes.addAll([
-        'Obavezno navedite referentni broj u opisu uplate',
-        'Primit ćete email potvrdu nakon što uplata bude zaprimljena',
-        'Preostali iznos ($remainingAmount) plaća se po dolasku',
-        'Politika otkazivanja: 7 dana prije dolaska za potpuni povrat',
-      ]);
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
-      decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                color: getColor(
-                  MinimalistColors.buttonPrimary,
-                  MinimalistColorsDark.buttonPrimary,
-                ),
-                size: IconSizeTokens.medium,
-              ),
-              const SizedBox(width: SpacingTokens.xs),
-              Text(
-                'Važne Informacije',
-                style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeL,
-                  fontWeight: TypographyTokens.semiBold,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: SpacingTokens.m),
-          if (useCustom && customNotes != null && customNotes.isNotEmpty)
-            Text(
-              customNotes,
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
-                height: 1.5,
-              ),
-            )
-          else
-            ...notes.map(
-              (note) => Padding(
-                padding: const EdgeInsets.only(bottom: SpacingTokens.s),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      margin: const EdgeInsets.only(
-                        top: 8,
-                        right: SpacingTokens.s,
-                      ),
-                      decoration: BoxDecoration(
-                        color: getColor(
-                          MinimalistColors.buttonPrimary,
-                          MinimalistColorsDark.buttonPrimary,
-                        ),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        note,
-                        style: TextStyle(
-                          fontSize: TypographyTokens.fontSizeM,
-                          color: getColor(
-                            MinimalistColors.textPrimary,
-                            MinimalistColorsDark.textPrimary,
-                          ),
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
     );

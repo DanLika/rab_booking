@@ -13,6 +13,8 @@ import '../utils/snackbar_helper.dart';
 import '../../utils/ics_download.dart';
 import '../widgets/common/detail_row_widget.dart';
 import '../widgets/common/info_card_widget.dart';
+import '../widgets/confirmation/next_steps_section.dart';
+import '../widgets/confirmation/cancellation_policy_section.dart';
 
 /// Simplified Booking Confirmation Screen for Embedded Widget
 /// Shows booking confirmation with reference number and details
@@ -833,10 +835,18 @@ class _BookingConfirmationScreenState
                   // Cancellation policy (if enabled)
                   if (widget.widgetSettings?.allowGuestCancellation == true &&
                       widget.widgetSettings?.cancellationDeadlineHours != null)
-                    _buildCancellationPolicy(),
+                    CancellationPolicySection(
+                      isDarkMode: isDarkMode,
+                      deadlineHours: widget.widgetSettings!.cancellationDeadlineHours!,
+                      bookingReference: widget.bookingReference,
+                      fromEmail: widget.emailConfig?.fromEmail,
+                    ),
 
                   // Next steps section
-                  _buildNextSteps(),
+                  NextStepsSection(
+                    isDarkMode: isDarkMode,
+                    paymentMethod: widget.paymentMethod,
+                  ),
 
                   const SizedBox(height: SpacingTokens.xl),
 
@@ -886,297 +896,6 @@ class _BookingConfirmationScreenState
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  /// Build cancellation policy widget
-  Widget _buildCancellationPolicy() {
-    final isDarkMode = ref.read(themeProvider);
-    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-    final deadlineHours = widget.widgetSettings!.cancellationDeadlineHours!;
-
-    return Padding(
-      padding: const EdgeInsets.only(top: SpacingTokens.l),
-      child: Container(
-        padding: const EdgeInsets.all(SpacingTokens.m),
-        decoration: BoxDecoration(
-          color: colors.backgroundSecondary,
-          borderRadius: BorderTokens.circularMedium,
-          border: Border.all(
-            color: colors.borderDefault,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.event_available,
-                  color: colors.textPrimary,
-                  size: 24,
-                ),
-                const SizedBox(width: SpacingTokens.s),
-                Text(
-                  'Cancellation Policy',
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeL,
-                    fontWeight: TypographyTokens.bold,
-                    color: colors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: SpacingTokens.s),
-            Text(
-              'Free cancellation up to $deadlineHours hours before check-in',
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
-                fontWeight: TypographyTokens.semiBold,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: SpacingTokens.xs),
-            Text(
-              'To cancel your booking:',
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
-                color: colors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: SpacingTokens.xs),
-            _buildCancellationStep('Reply to the confirmation email'),
-            _buildCancellationStep(
-              'Include your booking reference: ${widget.bookingReference}',
-            ),
-            if (widget.emailConfig?.fromEmail != null)
-              _buildCancellationStep(
-                'Or email: ${widget.emailConfig!.fromEmail}',
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCancellationStep(String text) {
-    final isDarkMode = ref.read(themeProvider);
-    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-
-    return Padding(
-      padding: const EdgeInsets.only(
-        left: SpacingTokens.m,
-        top: SpacingTokens.xxs,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '• ',
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
-              color: colors.textSecondary,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
-                color: colors.textSecondary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Build next steps section based on payment method
-  Widget _buildNextSteps() {
-    final isDarkMode = ref.read(themeProvider);
-    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-    final List<Map<String, dynamic>> steps;
-
-    switch (widget.paymentMethod) {
-      case 'stripe':
-        steps = [
-          {
-            'icon': Icons.email,
-            'title': 'Check Your Email',
-            'description': 'Confirmation email sent with all booking details',
-          },
-          {
-            'icon': Icons.calendar_today,
-            'title': 'Add to Calendar',
-            'description':
-                'Click the "Add to My Calendar" button above to download the event',
-          },
-          {
-            'icon': Icons.directions,
-            'title': 'Prepare for Your Stay',
-            'description': 'Check-in instructions will be sent 24h before',
-          },
-        ];
-        break;
-
-      case 'bank_transfer':
-        steps = [
-          {
-            'icon': Icons.account_balance,
-            'title': 'Complete Bank Transfer',
-            'description':
-                'Transfer the deposit amount within 3 days using the reference number',
-          },
-          {
-            'icon': Icons.email,
-            'title': 'Check Your Email',
-            'description':
-                'Bank transfer instructions and booking details have been sent',
-          },
-          {
-            'icon': Icons.pending,
-            'title': 'Awaiting Confirmation',
-            'description':
-                'We\'ll confirm your booking once payment is received (usually within 24h)',
-          },
-        ];
-        break;
-
-      case 'pay_on_arrival':
-        steps = [
-          {
-            'icon': Icons.email,
-            'title': 'Check Your Email',
-            'description':
-                'Confirmation email sent with all booking details and payment instructions',
-          },
-          {
-            'icon': Icons.calendar_today,
-            'title': 'Add to Calendar',
-            'description':
-                'Click the "Add to My Calendar" button above to download the event',
-          },
-          {
-            'icon': Icons.payments_outlined,
-            'title': 'Payment on Arrival',
-            'description':
-                'Bring payment with you - cash or card accepted at the property',
-          },
-          {
-            'icon': Icons.directions,
-            'title': 'Prepare for Your Stay',
-            'description':
-                'Check-in instructions will be sent 24h before arrival',
-          },
-        ];
-        break;
-
-      default:
-        steps = [
-          {
-            'icon': Icons.email,
-            'title': 'Check Your Email',
-            'description': 'Confirmation email sent with all booking details',
-          },
-          {
-            'icon': Icons.pending,
-            'title': 'Awaiting Processing',
-            'description': 'Your booking is being processed',
-          },
-        ];
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(top: SpacingTokens.l),
-      child: Container(
-        padding: const EdgeInsets.all(SpacingTokens.m),
-        decoration: BoxDecoration(
-          color: colors.backgroundSecondary,
-          borderRadius: BorderTokens.circularMedium,
-          border: Border.all(
-            color: colors.borderDefault,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'What\'s Next?',
-              style: TextStyle(
-                fontSize: TypographyTokens.fontSizeL,
-                fontWeight: TypographyTokens.bold,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: SpacingTokens.m),
-            ...steps.asMap().entries.map((entry) {
-              final index = entry.key;
-              final step = entry.value;
-              final isLast = index == steps.length - 1;
-
-              return Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: colors.textPrimary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            step['icon'] as IconData,
-                            color: colors.backgroundPrimary,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: SpacingTokens.m),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              step['title'] as String,
-                              style: TextStyle(
-                                fontSize: TypographyTokens.fontSizeM,
-                                fontWeight: TypographyTokens.semiBold,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: SpacingTokens.xxs),
-                            Text(
-                              step['description'] as String,
-                              style: TextStyle(
-                                fontSize: TypographyTokens.fontSizeS,
-                                color: colors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (!isLast) ...[
-                    const SizedBox(height: SpacingTokens.m),
-                    Container(
-                      margin: const EdgeInsets.only(left: 20),
-                      width: 2,
-                      height: 24,
-                      color: colors.textPrimary.withOpacity(0.3),
-                    ),
-                    const SizedBox(height: SpacingTokens.m),
-                  ],
-                ],
-              );
-            }),
-          ],
         ),
       ),
     );

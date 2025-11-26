@@ -18,8 +18,11 @@ import '../providers/additional_services_provider.dart';
 import '../../domain/models/calendar_view_type.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
+import '../../domain/services/booking_validation_service.dart';
+import '../../domain/services/price_lock_service.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/models/unit_model.dart';
+import '../../../../shared/models/booking_model.dart';
 import '../../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
@@ -1577,262 +1580,71 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     BookingPriceCalculation calculation,
   ) async {
     final isDarkMode = ref.watch(themeProvider);
+    final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
-    // Validate form
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    // Run all blocking validations using BookingValidationService
+    final validationResult = BookingValidationService.validateAllBlocking(
+      formKey: _formKey,
+      requireEmailVerification:
+          _widgetSettings?.emailConfig.requireEmailVerification ?? false,
+      emailVerified: _emailVerified,
+      taxConfig: _widgetSettings?.taxLegalConfig,
+      taxLegalAccepted: _taxLegalAccepted,
+      checkIn: _checkIn,
+      checkOut: _checkOut,
+      propertyId: _propertyId,
+      ownerId: _ownerId,
+      widgetMode: widgetMode,
+      selectedPaymentMethod: _selectedPaymentMethod,
+      widgetSettings: _widgetSettings,
+      adults: _adults,
+      children: _children,
+      maxGuests: _unit?.maxGuests ?? 10,
+    );
 
-    // Validate email verification if required
-    final requireEmailVerification =
-        _widgetSettings?.emailConfig.requireEmailVerification ?? false;
-    if (requireEmailVerification && !_emailVerified) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Please verify your email before booking',
-        isDarkMode: isDarkMode,
-        duration: const Duration(seconds: 3),
-      );
-      return;
-    }
-
-    // Bug #68: Validate Tax/Legal disclaimer acceptance if required
-    final taxConfig = _widgetSettings?.taxLegalConfig;
-    if (taxConfig != null && taxConfig.enabled && !_taxLegalAccepted) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Please accept the tax and legal obligations before booking',
-        isDarkMode: isDarkMode,
-        duration: const Duration(seconds: 5),
-      );
+    if (!validationResult.isValid) {
+      if (validationResult.errorMessage != null && mounted) {
+        SnackBarHelper.showError(
+          context: context,
+          message: validationResult.errorMessage!,
+          isDarkMode: isDarkMode,
+          duration: validationResult.snackBarDuration,
+        );
+      }
       return;
     }
 
     // Bug #64: Check if price changed since user started booking
-    if (_lockedPriceCalculation != null) {
-      final priceDelta =
-          calculation.totalPrice - _lockedPriceCalculation!.totalPrice;
-      if (priceDelta.abs() > 0.01) {
-        // 1 cent tolerance
-        final priceIncreased = priceDelta > 0;
-        final changeAmount = priceDelta.abs().toStringAsFixed(2);
-
-        if (mounted) {
-          final confirmed = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text(
-                priceIncreased ? '⚠️ Price Increased' : 'ℹ️ Price Decreased',
-                style: TextStyle(
-                  color: priceIncreased ? Colors.orange : Colors.blue,
-                ),
-              ),
-              content: Text(
-                priceIncreased
-                    ? 'The price has increased by €$changeAmount since you started booking.\n\n'
-                          'Original: €${_lockedPriceCalculation!.totalPrice.toStringAsFixed(2)}\n'
-                          'Current: €${calculation.totalPrice.toStringAsFixed(2)}\n\n'
-                          'Do you want to proceed with the new price?'
-                    : 'Good news! The price decreased by €$changeAmount.\n\n'
-                          'Original: €${_lockedPriceCalculation!.totalPrice.toStringAsFixed(2)}\n'
-                          'Current: €${calculation.totalPrice.toStringAsFixed(2)}\n\n'
-                          'Proceed with the new price?',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: priceIncreased
-                        ? Colors.orange
-                        : Colors.blue,
-                  ),
-                  child: const Text('Proceed'),
-                ),
-              ],
-            ),
-          );
-
-          if (confirmed != true) {
-            // User cancelled - update locked price to current
-            setState(() {
-              _lockedPriceCalculation = calculation.copyWithLock();
-            });
-            return;
-          }
-
-          // User confirmed - update locked price to current
+    if (mounted) {
+      final priceLockResult = await PriceLockService.checkAndConfirmPriceChange(
+        context: context,
+        currentCalculation: calculation,
+        lockedCalculation: _lockedPriceCalculation,
+        onLockUpdated: () {
           setState(() {
             _lockedPriceCalculation = calculation.copyWithLock();
           });
-        }
-      }
-    }
+        },
+      );
 
-    // CRITICAL: Validate dates (check-in must be before check-out)
-    if (_checkIn == null || _checkOut == null) {
-      if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Please select check-in and check-out dates.',
-          isDarkMode: isDarkMode,
-        );
-      }
-      return;
-    }
-
-    if (_checkOut!.isBefore(_checkIn!) ||
-        _checkOut!.isAtSameMomentAs(_checkIn!)) {
-      if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Check-out must be after check-in date.',
-          isDarkMode: isDarkMode,
-        );
-      }
-      return;
-    }
-
-    // BUG #22: Validate same-day check-in timing
-    // If check-in is today, ensure current time is before standard check-in time (3 PM)
-    // Bug #65 Fix: Use UTC for DST-safe date comparison
-    final now = DateTime.now().toUtc();
-    final today = DateTime.utc(now.year, now.month, now.day);
-    final checkInDate = DateTime.utc(
-      _checkIn!.year,
-      _checkIn!.month,
-      _checkIn!.day,
-    );
-
-    if (checkInDate.isAtSameMomentAs(today)) {
-      // Standard check-in time: 3 PM (15:00)
-      final checkInTimeHour = 15; // 3 PM
-
-      // If current time is after check-in time, show warning
-      if (now.hour >= checkInTimeHour) {
-        if (mounted) {
-          SnackBarHelper.showWarning(
-            context: context,
-            message:
-                'Same-day check-in: Property check-in time is $checkInTimeHour:00. '
-                'Please note that you may not be able to check in until tomorrow.',
-            isDarkMode: isDarkMode,
-            duration: const Duration(seconds: 7),
-          );
-        }
-        // Don't block the booking, just show warning
-        // User might contact owner to arrange late check-in
-      }
-    }
-
-    // Validate that we have propertyId and ownerId (should already be fetched in initState)
-    if (_propertyId == null || _ownerId == null) {
-      if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Property information not loaded. Please refresh the page.',
-          isDarkMode: isDarkMode,
-        );
-      }
-      return;
-    }
-
-    // Validate payment method for bookingInstant mode
-    final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
-    if (widgetMode == WidgetMode.bookingInstant) {
-      final isStripeEnabled = _widgetSettings?.stripeConfig?.enabled == true;
-      final isBankTransferEnabled =
-          _widgetSettings?.bankTransferConfig?.enabled == true;
-      final isPayOnArrivalEnabled = _widgetSettings?.allowPayOnArrival == true;
-
-      // Check if at least one payment method is enabled
-      if (!isStripeEnabled &&
-          !isBankTransferEnabled &&
-          !isPayOnArrivalEnabled) {
-        if (mounted) {
-          SnackBarHelper.showError(
-            context: context,
-            message:
-                'No payment methods are currently available. Please contact the property owner.',
-            isDarkMode: isDarkMode,
-            duration: const Duration(seconds: 5),
-          );
-        }
-        return;
-      }
-
-      // Check if selected payment method is valid
-      if (_selectedPaymentMethod == 'stripe' && !isStripeEnabled) {
-        if (mounted) {
-          SnackBarHelper.showError(
-            context: context,
-            message:
-                'Stripe payment is not available. Please select another payment method.',
-            isDarkMode: isDarkMode,
-            duration: const Duration(seconds: 5),
-          );
-        }
-        return;
-      }
-
-      if (_selectedPaymentMethod == 'bank_transfer' && !isBankTransferEnabled) {
-        if (mounted) {
-          SnackBarHelper.showError(
-            context: context,
-            message:
-                'Bank transfer is not available. Please select another payment method.',
-            isDarkMode: isDarkMode,
-            duration: const Duration(seconds: 5),
-          );
-        }
-        return;
-      }
-
-      if (_selectedPaymentMethod == 'pay_on_arrival' &&
-          !(_widgetSettings?.allowPayOnArrival ?? false)) {
-        if (mounted) {
-          SnackBarHelper.showError(
-            context: context,
-            message:
-                'Pay on arrival is not available. Please select another payment method.',
-            isDarkMode: isDarkMode,
-            duration: const Duration(seconds: 5),
-          );
-        }
+      if (priceLockResult == PriceLockResult.cancelled) {
         return;
       }
     }
 
-    // Validate guest count against property capacity
-    final totalGuests = _adults + _children;
-    final maxGuests = _unit?.maxGuests ?? 10;
-    if (totalGuests > maxGuests) {
-      if (mounted) {
-        SnackBarHelper.showError(
+    // Check same-day check-in warning (non-blocking)
+    if (_checkIn != null) {
+      final sameDayResult = BookingValidationService.checkSameDayCheckIn(
+        checkIn: _checkIn!,
+      );
+      if (sameDayResult.isWarning && sameDayResult.errorMessage != null && mounted) {
+        SnackBarHelper.showWarning(
           context: context,
-          message:
-              'Maximum $maxGuests ${maxGuests == 1 ? 'guest' : 'guests'} allowed for this property. You selected $totalGuests ${totalGuests == 1 ? 'guest' : 'guests'}.',
+          message: sameDayResult.errorMessage!,
           isDarkMode: isDarkMode,
-          duration: const Duration(seconds: 5),
+          duration: sameDayResult.snackBarDuration,
         );
       }
-      return;
-    }
-
-    // Validate minimum 1 adult required
-    if (_adults == 0) {
-      if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'At least 1 adult is required for booking.',
-          isDarkMode: isDarkMode,
-          duration: const Duration(seconds: 5),
-        );
-      }
-      return;
     }
 
     setState(() {
@@ -1843,8 +1655,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Race condition is handled atomically by createBookingAtomic Cloud Function
       // Client-side checks are unsafe due to TOCTOU (Time-of-check-to-time-of-use)
 
-      final widgetMode =
-          _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
       final bookingService = ref.read(bookingServiceProvider);
 
       // For bookingPending mode - create booking without payment
@@ -1877,99 +1687,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               : null,
         );
 
-        // Send email notifications (if configured and enabled)
-        final emailConfig = _widgetSettings?.emailConfig;
-        if (emailConfig?.enabled == true && emailConfig?.isConfigured == true) {
-          final emailService = EmailNotificationService();
-          final bookingReference = booking.id.substring(0, 8).toUpperCase();
-          final propertyName = _unit?.name ?? 'Vacation Rental';
+        // Send email notifications
+        _sendBookingEmails(
+          booking: booking,
+          requiresApproval: true,
+        );
 
-          // Send booking confirmation to guest
-          unawaited(
-            emailService.sendBookingConfirmationEmail(
-              booking: booking,
-              emailConfig: _widgetSettings!.emailConfig,
-              propertyName: propertyName,
-              bookingReference: bookingReference,
-              bankTransferConfig: _widgetSettings!.bankTransferConfig,
-              allowGuestCancellation: _widgetSettings!.allowGuestCancellation,
-              cancellationDeadlineHours:
-                  _widgetSettings!.cancellationDeadlineHours,
-              ownerEmail: _widgetSettings!.contactOptions.emailAddress,
-              ownerPhone: _widgetSettings!.contactOptions.phoneNumber,
-              customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
-            ),
-          );
-
-          // Send owner notification (if owner email is available and configured)
-          if (_widgetSettings!.emailConfig.sendOwnerNotification) {
-            // Get owner email from property or use configured email
-            final ownerEmail = _widgetSettings!.emailConfig.fromEmail;
-            if (ownerEmail != null) {
-              unawaited(
-                emailService.sendOwnerNotificationEmail(
-                  booking: booking,
-                  emailConfig: _widgetSettings!.emailConfig,
-                  propertyName: propertyName,
-                  bookingReference: bookingReference,
-                  ownerEmail: ownerEmail,
-                  requiresApproval: true,
-                  customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
-                ),
-              );
-            }
-          }
-
-          emailService.dispose();
-        }
-
-        // Navigate to confirmation screen
-        if (mounted) {
-          // Reset form before navigation
-          setState(() {
-            _checkIn = null;
-            _checkOut = null;
-            _showGuestForm = false;
-            _firstNameController.clear();
-            _lastNameController.clear();
-            _emailController.clear();
-            _phoneController.clear();
-            _adults = 2;
-            _children = 0;
-          });
-
-          // Navigate to confirmation screen
-          await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => BookingConfirmationScreen(
-                bookingReference: booking.id.substring(0, 8).toUpperCase(),
-                guestEmail: booking.guestEmail!,
-                guestName: booking.guestName!,
-                checkIn: booking.checkIn,
-                checkOut: booking.checkOut,
-                totalPrice: booking.totalPrice,
-                nights: booking.checkOut.difference(booking.checkIn).inDays,
-                guests: booking.guestCount,
-                propertyName: _unit?.name ?? 'Property',
-                unitName: _unit?.name,
-                paymentMethod: 'pending',
-                booking: booking,
-                emailConfig: _widgetSettings?.emailConfig,
-                widgetSettings: _widgetSettings,
-              ),
-            ),
-          );
-
-          // CRITICAL: Invalidate calendar cache after booking
-          // This ensures the calendar refreshes and shows newly booked dates
-          if (mounted) {
-            ref.invalidate(realtimeYearCalendarProvider);
-            ref.invalidate(realtimeMonthCalendarProvider);
-
-            // Bug #53: Clear saved form data after successful booking
-            await _clearFormData();
-          }
-        }
+        // Navigate to confirmation screen and cleanup
+        await _navigateToConfirmationAndCleanup(
+          booking: booking,
+          paymentMethod: 'pending',
+        );
         return;
       }
 
@@ -2002,60 +1730,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       );
 
       // Send booking confirmation email (pre-payment)
-      final emailConfigInstant = _widgetSettings?.emailConfig;
-      if (emailConfigInstant?.enabled == true &&
-          emailConfigInstant?.isConfigured == true) {
-        final emailService = EmailNotificationService();
-        final bookingReference = booking.id.substring(0, 8).toUpperCase();
-        final propertyName = _unit?.name ?? 'Vacation Rental';
+      // Calculate payment deadline for bank transfer (default 3 days)
+      final paymentDeadlineDays =
+          _widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
+      final paymentDeadline = DateTime.now().add(
+        Duration(days: paymentDeadlineDays),
+      );
+      final dateFormat = DateFormat('dd.MM.yyyy');
 
-        // Calculate payment deadline (default 3 days from now)
-        final paymentDeadlineDays =
-            _widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
-        final paymentDeadline = DateTime.now().add(
-          Duration(days: paymentDeadlineDays),
-        );
-        final dateFormat = DateFormat('dd.MM.yyyy');
-
-        unawaited(
-          emailService.sendBookingConfirmationEmail(
-            booking: booking,
-            emailConfig: _widgetSettings!.emailConfig,
-            propertyName: propertyName,
-            bookingReference: bookingReference,
-            paymentDeadline: dateFormat.format(paymentDeadline),
-            paymentMethod: _selectedPaymentMethod,
-            bankTransferConfig: _widgetSettings!.bankTransferConfig,
-            allowGuestCancellation: _widgetSettings!.allowGuestCancellation,
-            cancellationDeadlineHours:
-                _widgetSettings!.cancellationDeadlineHours,
-            ownerEmail: _widgetSettings!.contactOptions.emailAddress,
-            ownerPhone: _widgetSettings!.contactOptions.phoneNumber,
-            customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
-          ),
-        );
-
-        // Send owner notification
-        if (_widgetSettings!.emailConfig.sendOwnerNotification) {
-          final ownerEmail = _widgetSettings!.emailConfig.fromEmail;
-          if (ownerEmail != null) {
-            unawaited(
-              emailService.sendOwnerNotificationEmail(
-                booking: booking,
-                emailConfig: _widgetSettings!.emailConfig,
-                propertyName: propertyName,
-                bookingReference: bookingReference,
-                ownerEmail: ownerEmail,
-                requiresApproval:
-                    _widgetSettings?.requireOwnerApproval ?? false,
-                customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
-              ),
-            );
-          }
-        }
-
-        emailService.dispose();
-      }
+      _sendBookingEmails(
+        booking: booking,
+        requiresApproval: _widgetSettings?.requireOwnerApproval ?? false,
+        paymentMethod: _selectedPaymentMethod,
+        paymentDeadline: dateFormat.format(paymentDeadline),
+      );
 
       if (_selectedPaymentMethod == 'stripe') {
         // Stripe payment - redirect to checkout
@@ -2067,100 +1755,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         );
       } else if (_selectedPaymentMethod == 'bank_transfer') {
         // Bank transfer - navigate to confirmation screen
-        if (mounted) {
-          // Reset form before navigation
-          setState(() {
-            _checkIn = null;
-            _checkOut = null;
-            _showGuestForm = false;
-            _firstNameController.clear();
-            _lastNameController.clear();
-            _emailController.clear();
-            _phoneController.clear();
-            _adults = 2;
-            _children = 0;
-          });
-
-          // Navigate to confirmation screen
-          await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => BookingConfirmationScreen(
-                bookingReference: booking.id.substring(0, 8).toUpperCase(),
-                guestEmail: booking.guestEmail!,
-                guestName: booking.guestName!,
-                checkIn: booking.checkIn,
-                checkOut: booking.checkOut,
-                totalPrice: booking.totalPrice,
-                nights: booking.checkOut.difference(booking.checkIn).inDays,
-                guests: booking.guestCount,
-                propertyName: _unit?.name ?? 'Property',
-                unitName: _unit?.name,
-                paymentMethod: 'bank_transfer',
-                booking: booking,
-                emailConfig: _widgetSettings?.emailConfig,
-                widgetSettings: _widgetSettings,
-              ),
-            ),
-          );
-
-          // CRITICAL: Invalidate calendar cache after booking
-          // This ensures the calendar refreshes and shows newly booked dates
-          if (mounted) {
-            ref.invalidate(realtimeYearCalendarProvider);
-            ref.invalidate(realtimeMonthCalendarProvider);
-
-            // Bug #53: Clear saved form data after successful booking
-            await _clearFormData();
-          }
-        }
+        await _navigateToConfirmationAndCleanup(
+          booking: booking,
+          paymentMethod: 'bank_transfer',
+        );
       } else if (_selectedPaymentMethod == 'pay_on_arrival') {
         // Pay on Arrival - navigate to confirmation screen
-        if (mounted) {
-          // Reset form before navigation
-          setState(() {
-            _checkIn = null;
-            _checkOut = null;
-            _showGuestForm = false;
-            _firstNameController.clear();
-            _lastNameController.clear();
-            _emailController.clear();
-            _phoneController.clear();
-            _adults = 2;
-            _children = 0;
-          });
-
-          // Navigate to confirmation screen
-          await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => BookingConfirmationScreen(
-                bookingReference: booking.id.substring(0, 8).toUpperCase(),
-                guestEmail: booking.guestEmail!,
-                guestName: booking.guestName!,
-                checkIn: booking.checkIn,
-                checkOut: booking.checkOut,
-                totalPrice: booking.totalPrice,
-                nights: booking.checkOut.difference(booking.checkIn).inDays,
-                guests: booking.guestCount,
-                propertyName: _unit?.name ?? 'Property',
-                unitName: _unit?.name,
-                paymentMethod: 'pay_on_arrival',
-                booking: booking,
-                emailConfig: _widgetSettings?.emailConfig,
-                widgetSettings: _widgetSettings,
-              ),
-            ),
-          );
-
-          // CRITICAL: Invalidate calendar cache after booking
-          // This ensures the calendar refreshes and shows newly booked dates
-          if (mounted) {
-            ref.invalidate(realtimeYearCalendarProvider);
-            ref.invalidate(realtimeMonthCalendarProvider);
-
-            // Bug #53: Clear saved form data after successful booking
-            await _clearFormData();
-          }
-        }
+        await _navigateToConfirmationAndCleanup(
+          booking: booking,
+          paymentMethod: 'pay_on_arrival',
+        );
       }
     } on BookingConflictException catch (e) {
       // Race condition - dates were booked by another user
@@ -2194,6 +1798,116 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         });
       }
     }
+  }
+
+  /// Helper method to navigate to confirmation screen and cleanup form
+  /// Reduces ~120 lines of duplicated code for pending/bank_transfer/pay_on_arrival
+  Future<void> _navigateToConfirmationAndCleanup({
+    required BookingModel booking,
+    required String paymentMethod,
+  }) async {
+    if (!mounted) return;
+
+    // Reset form before navigation
+    setState(() {
+      _checkIn = null;
+      _checkOut = null;
+      _showGuestForm = false;
+      _firstNameController.clear();
+      _lastNameController.clear();
+      _emailController.clear();
+      _phoneController.clear();
+      _adults = 2;
+      _children = 0;
+    });
+
+    // Navigate to confirmation screen
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BookingConfirmationScreen(
+          bookingReference: booking.id.substring(0, 8).toUpperCase(),
+          guestEmail: booking.guestEmail!,
+          guestName: booking.guestName!,
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          totalPrice: booking.totalPrice,
+          nights: booking.checkOut.difference(booking.checkIn).inDays,
+          guests: booking.guestCount,
+          propertyName: _unit?.name ?? 'Property',
+          unitName: _unit?.name,
+          paymentMethod: paymentMethod,
+          booking: booking,
+          emailConfig: _widgetSettings?.emailConfig,
+          widgetSettings: _widgetSettings,
+        ),
+      ),
+    );
+
+    // CRITICAL: Invalidate calendar cache after booking
+    // This ensures the calendar refreshes and shows newly booked dates
+    if (mounted) {
+      ref.invalidate(realtimeYearCalendarProvider);
+      ref.invalidate(realtimeMonthCalendarProvider);
+
+      // Bug #53: Clear saved form data after successful booking
+      await _clearFormData();
+    }
+  }
+
+  /// Helper method to send booking confirmation emails
+  /// Reduces ~100 lines of duplicated code between pending/instant modes
+  void _sendBookingEmails({
+    required BookingModel booking,
+    required bool requiresApproval,
+    String? paymentMethod,
+    String? paymentDeadline,
+  }) {
+    final emailConfig = _widgetSettings?.emailConfig;
+    if (emailConfig?.enabled != true || emailConfig?.isConfigured != true) {
+      return;
+    }
+
+    final emailService = EmailNotificationService();
+    final bookingReference = booking.id.substring(0, 8).toUpperCase();
+    final propertyName = _unit?.name ?? 'Vacation Rental';
+
+    // Send guest confirmation email
+    unawaited(
+      emailService.sendBookingConfirmationEmail(
+        booking: booking,
+        emailConfig: _widgetSettings!.emailConfig,
+        propertyName: propertyName,
+        bookingReference: bookingReference,
+        paymentDeadline: paymentDeadline,
+        paymentMethod: paymentMethod,
+        bankTransferConfig: _widgetSettings!.bankTransferConfig,
+        allowGuestCancellation: _widgetSettings!.allowGuestCancellation,
+        cancellationDeadlineHours: _widgetSettings!.cancellationDeadlineHours,
+        ownerEmail: _widgetSettings!.contactOptions.emailAddress,
+        ownerPhone: _widgetSettings!.contactOptions.phoneNumber,
+        customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
+      ),
+    );
+
+    // Send owner notification (if enabled)
+    if (_widgetSettings!.emailConfig.sendOwnerNotification) {
+      final ownerEmail = _widgetSettings!.emailConfig.fromEmail;
+      if (ownerEmail != null) {
+        unawaited(
+          emailService.sendOwnerNotificationEmail(
+            booking: booking,
+            emailConfig: _widgetSettings!.emailConfig,
+            propertyName: propertyName,
+            bookingReference: bookingReference,
+            ownerEmail: ownerEmail,
+            requiresApproval: requiresApproval,
+            customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
+          ),
+        );
+      }
+    }
+
+    emailService.dispose();
   }
 
   Future<void> _handleStripePayment({

@@ -151,6 +151,7 @@ Master-Detail pattern za upravljanje smještajnim jedinicama. Owner može:
 - Upravljati cijenama kroz kalendar
 - Konfigurisati booking widget
 - Postaviti napredne opcije (email verification, tax, iCal)
+- **Obrisati jedinicu** (sa potvrdom i validacijom aktivnih rezervacija)
 
 #### Tabbed Interface
 1. **Osnovni Podaci** - Pregled i editovanje informacija o jedinici (⚠️ needs work)
@@ -980,6 +981,92 @@ if (_selectedMode == WidgetMode.bookingPending) {
 
 ## 🐛 NEDAVNI BUG FIX-EVI (Post 20.11.2025)
 
+### Real-Time Sync - StreamProvider Conversion
+
+**Datum**: 2025-11-26
+**Commit**: `999ba80`
+
+#### Problem
+- UI se nije automatski osvježavao kada se podaci promijene u drugom browser tabu
+- FutureProvider samo jednom učita podatke, nema live updates
+
+#### Rješenje
+Konverzija `ownerPropertiesProvider` i `ownerUnitsProvider` iz FutureProvider u StreamProvider:
+
+```dart
+// PRIJE (FutureProvider - no live updates)
+@riverpod
+Future<List<PropertyModel>> ownerProperties(Ref ref) async {
+  return await repository.getOwnerProperties(ownerId);
+}
+
+// POSLIJE (StreamProvider - real-time sync)
+@riverpod
+Stream<List<PropertyModel>> ownerProperties(Ref ref) {
+  return repository.watchOwnerProperties(ownerId);
+}
+```
+
+**Nove Repository Metode:**
+- `watchOwnerProperties(ownerId)` - Real-time stream za properties
+- `watchAllOwnerUnits(ownerId)` - Real-time stream za sve jedinice
+
+**Rezultat:**
+- ✅ Promjene u jednom tabu automatski vidljive u drugom
+- ✅ Nema potrebe za manual refresh
+
+---
+
+### Price Calendar - TextEditingController Disposal Fix
+
+**Datum**: 2025-11-26
+**Commit**: `999ba80`
+
+#### Problem
+Red screen greška: "TextEditingController was used after being disposed" kada se sprema cijena u kalendaru.
+
+**Root Cause:** Controllers se dispose-aju u `.then()` callback dok dialog još animira zatvaranje:
+```dart
+// ❌ LOŠE - dispose dok widget još postoji
+showDialog(...).then((_) {
+  priceController.dispose();  // Widget možda još koristi controller!
+});
+```
+
+#### Rješenje
+Wrap dispose u `addPostFrameCallback` da se izvrši u sljedećem frame-u:
+```dart
+// ✅ DOBRO - dispose u sljedećem frame-u
+showDialog(...).then((_) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    priceController.dispose();
+  });
+});
+```
+
+**Primijenjeno na:**
+- Single date edit dialog (~line 1321)
+- Bulk price edit dialog (~line 1549)
+
+---
+
+### Unit Hub - Delete Unit Button
+
+**Datum**: 2025-11-26
+**Commit**: `999ba80`
+
+#### Problem
+Nije postojalo dugme za brisanje jedinica u Unit Hub-u.
+
+#### Rješenje
+Dodana `_confirmDeleteUnit()` metoda i delete dugme u unit list tile:
+- AlertDialog za potvrdu brisanja
+- Validacija aktivnih rezervacija (u repository-u)
+- Provider invalidation za instant UI refresh
+- Reset selekcije ako je obrisana odabrana jedinica
+
+---
+
 ### Auth System - Error Handling & Loading State
 
 **Datum**: 2025-11-26
@@ -1735,9 +1822,9 @@ context.go(OwnerRoutes.icalExport);
 
 ---
 
-**Last Updated**: 2025-11-25
-**Version**: 2.1
-**Focus**: Unit Hub, Wizard, Calendar, Bookings, Drawer Reorganization + Standards & Bug Fixes
+**Last Updated**: 2025-11-26
+**Version**: 2.2
+**Focus**: Real-Time Sync, Delete Unit, Controller Disposal Fix + Unit Hub, Calendar, Bookings
 
 ---
 

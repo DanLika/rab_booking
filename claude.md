@@ -594,35 +594,57 @@ items: BookingStatus.values.where((s) {
 
 ## 🎨 VAŽNI STANDARDI & PATTERNS
 
-### Gradient Standardization - Purple-Fade Pattern (THEME-AWARE)
+### Gradient Standardization - AppGradients ThemeExtension
 
-**Datum**: 2025-11-24  
-**Status**: ✅ COMPLETD - All gradients standardized  
-**Commits**: `f524445`, `7d075d8`
+**Datum**: 2025-11-26 (Updated)
+**Status**: ✅ COMPLETED - Centralized gradient system
+**Commits**: `f524445`, `7d075d8`, `83fc4f5`, `7d90499`
 
-#### Novi Standard (OBAVEZAN!)
+#### Centralizovani Gradient System
 
-**Svi gradijenti u aplikaciji MORAJU koristiti ovaj pattern:**
+**File**: `lib/core/theme/app_gradients.dart`
+
+Svi gradijenti su centralizovani u `AppGradients` ThemeExtension klasi:
+
 ```dart
-final theme = Theme.of(context);
+final gradients = Theme.of(context).extension<AppGradients>()!;
+
+// Page background (screen body)
 Container(
   decoration: BoxDecoration(
-    gradient: LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        theme.colorScheme.primary,
-        theme.colorScheme.primary.withValues(alpha: 0.7),
-      ],
-    ),
+    gradient: gradients.pageBackground,
+  ),
+)
+
+// Section background (cards, panels)
+Container(
+  decoration: BoxDecoration(
+    gradient: gradients.sectionBackground,
+    border: Border.all(color: gradients.sectionBorder),
+  ),
+)
+
+// Brand gradient (AppBar, buttons, headers)
+Container(
+  decoration: BoxDecoration(
+    gradient: gradients.brandPrimary,
   ),
 )
 ```
 
-**Karakteristike:**
+#### Dostupni Gradijenti
+
+| Gradient | Svrha | Light Theme | Dark Theme |
+|----------|-------|-------------|------------|
+| `pageBackground` | Screen body | Off-white → White | Very dark → Medium dark |
+| `sectionBackground` | Cards, panels | Warm cream tones | Warm dark tones |
+| `brandPrimary` | AppBar, buttons | Purple fade | Purple fade |
+| `sectionBorder` | Card borders | Warm beige (#E8E5DC) | Warm gray (#3D3733) |
+
+#### Karakteristike
 - **Direction**: Dijagonalni (topLeft → bottomRight), NE vertikalni!
-- **Colors**: Start = full opacity primary, End = 70% opacity primary fade
-- **Theme-Aware**: Uses `Theme.of(context)` za automatic light/dark mode adaptation
+- **Theme-Aware**: Automatska adaptacija za light/dark mode
+- **Centralized**: Promijeni boju na jednom mjestu = update svuda
 
 #### Impacted Files (20+)
 
@@ -681,29 +703,28 @@ Builder(
 **Zašto Builder?** Ako widget nema direktan pristup BuildContext-u za theme (npr. u `actions` listi dialog-a), wrap-uj u Builder.
 
 #### DO NOT:
-- ❌ **NE VRAĆAJ** stare gradijente sa `AppColors.primary + AppColors.authSecondary`
-- ❌ **NE KORISTI** hardcoded boje kao `Color(0xFF6B4CE6)` ili `Color(0xFF4A90E2)`
-- ❌ **NE KORISTI** vertikalne gradijente (`topCenter → bottomCenter`)
+- ❌ **NE KORISTI** hardcoded boje - koristi `AppGradients`
+- ❌ **NE KREIRAJ** nove LinearGradient ručno - koristi centralizovane
+- ❌ **NE MIJENJAJ** boje u `app_gradients.dart` bez razloga
 - ❌ **NE KORISTI** `.withOpacity()` - uvijek koristi `.withValues(alpha: X)`
-- ❌ **NE PRESKAČI** `begin` i `end` parametre - mora biti dijagonalno!
 
 #### ALWAYS:
-- ✅ **UVIJEK KORISTI** `theme.colorScheme.primary` za boje
-- ✅ **UVIJEK KORISTI** dijagonalni pravac: `topLeft → bottomRight`
-- ✅ **UVIJEK KORISTI** alpha fade: `primary.withValues(alpha: 0.7)` za kraj
-- ✅ **UVIJEK DOBIJ** theme sa `Theme.of(context)` na početku build metode
-- ✅ **KORISTI Builder** widget ako nemaš pristup BuildContext-u za theme
+- ✅ **UVIJEK KORISTI** `Theme.of(context).extension<AppGradients>()!`
+- ✅ **KORISTI** `gradients.pageBackground` za screen body
+- ✅ **KORISTI** `gradients.sectionBackground` za cards/panels
+- ✅ **KORISTI** `gradients.brandPrimary` za AppBar/buttons
+- ✅ **KORISTI** `gradients.sectionBorder` za card borders
 
 #### IF USER REPORTS:
-- "Gradijent ne izgleda dobro" → Provjeri da koristi theme-aware pattern
-- "Boje ne odgovaraju dizajnu" → Provjeri da je dijagonalni pravac (topLeft→bottomRight)
-- "Gradijent je preteško tamno/svetlo" → Provjeri alpha vrednost (mora biti 0.7)
-- "Compile error: undefined 'theme'" → Dodaj `final theme = Theme.of(context);` ili koristi Builder
+- "Gradijent ne izgleda dobro" → Provjeri da koristi `AppGradients` extension
+- "Border boja ne odgovara" → Koristi `gradients.sectionBorder`
+- "Compile error: extension null" → Provjeri da je `AppGradients` registrovan u theme
 
 #### IF YOU NEED TO ADD NEW GRADIENT:
-1. Kopiraj pattern gore (sa `theme.colorScheme.primary` + `alpha: 0.7`)
-2. Koristi dijagonalni pravac (`topLeft → bottomRight`)
-3. Dodaj `final theme = Theme.of(context);` na početku build metode ili koristi Builder
+1. Dodaj novi gradient u `lib/core/theme/app_gradients.dart`
+2. Definiši light i dark varijantu
+3. Dodaj u `copyWith()` i `lerp()` metode
+4. Koristi kroz `Theme.of(context).extension<AppGradients>()!.noviGradient`
 
 ---
 

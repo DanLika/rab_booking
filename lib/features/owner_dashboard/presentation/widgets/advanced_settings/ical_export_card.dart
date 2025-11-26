@@ -56,7 +56,7 @@ class IcalExportCard extends ConsumerWidget {
             gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: context.borderColor.withValues(alpha: 0.4),
+              color: context.gradients.sectionBorder,
               width: 1.5,
             ),
           ),

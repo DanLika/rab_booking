@@ -165,7 +165,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                         gradient: context.gradients.sectionBackground,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                          color: context.gradients.sectionBorder,
                           width: 1.5,
                         ),
                       ),
@@ -352,7 +352,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                         gradient: context.gradients.sectionBackground,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                          color: context.gradients.sectionBorder,
                           width: 1.5,
                         ),
                       ),

@@ -657,10 +657,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              // Warm borders: beige for light theme, warm gray for dark theme
-              color: theme.brightness == Brightness.dark
-                  ? const Color(0xFF3D3733) // Warm gray
-                  : const Color(0xFFE8E5DC), // Warm beige
+              color: context.gradients.sectionBorder,
               width: 1.5,
             ),
           ),
@@ -798,10 +795,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              // Warm borders: beige for light theme, warm gray for dark theme
-              color: theme.brightness == Brightness.dark
-                  ? const Color(0xFF3D3733) // Warm gray
-                  : const Color(0xFFE8E5DC), // Warm beige
+              color: context.gradients.sectionBorder,
               width: 1.5,
             ),
           ),
@@ -1282,10 +1276,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              // Warm borders: beige for light theme, warm gray for dark theme
-              color: theme.brightness == Brightness.dark
-                  ? const Color(0xFF3D3733) // Warm gray
-                  : const Color(0xFFE8E5DC), // Warm beige
+              color: context.gradients.sectionBorder,
               width: 1.5,
             ),
           ),
@@ -1600,10 +1591,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              // Warm borders: beige for light theme, warm gray for dark theme
-              color: theme.brightness == Brightness.dark
-                  ? const Color(0xFF3D3733) // Warm gray
-                  : const Color(0xFFE8E5DC), // Warm beige
+              color: context.gradients.sectionBorder,
               width: 1.5,
             ),
           ),

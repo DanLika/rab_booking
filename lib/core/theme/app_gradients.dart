@@ -19,6 +19,7 @@ class AppGradients extends ThemeExtension<AppGradients> {
     required this.pageBackground,
     required this.sectionBackground,
     required this.brandPrimary,
+    required this.sectionBorder,
   });
 
   /// Screen body gradient (topLeft → bottomRight)
@@ -32,6 +33,10 @@ class AppGradients extends ThemeExtension<AppGradients> {
   /// Brand purple gradient (topLeft → bottomRight)
   /// Used for: AppBar, drawer header, primary buttons
   final LinearGradient brandPrimary;
+
+  /// Section border color (theme-aware)
+  /// Light: warm beige (#E8E5DC), Dark: warm gray (#3D3733)
+  final Color sectionBorder;
 
   // ============================================================================
   // CENTRAL COLOR DEFINITIONS - CHANGE HERE = UPDATE EVERYWHERE!
@@ -48,6 +53,10 @@ class AppGradients extends ThemeExtension<AppGradients> {
   // Brand purple (same for light & dark)
   static const Color _brandStart = Color(0xFF6B4CE6); // Purple
   static const Color _brandEnd = Color(0xFF7E5FEE); // Lighter purple
+
+  // Section border colors (warm tones to match backgrounds)
+  static const Color _lightBorder = Color(0xFFE8E5DC); // Warm beige
+  static const Color _darkBorder = Color(0xFF3D3733); // Warm gray
 
   // ============================================================================
   // PREDEFINED THEME INSTANCES
@@ -72,6 +81,7 @@ class AppGradients extends ThemeExtension<AppGradients> {
       end: Alignment.bottomRight,
       colors: [_brandStart, _brandEnd],
     ),
+    sectionBorder: _lightBorder,
   );
 
   /// Dark theme gradients
@@ -93,6 +103,7 @@ class AppGradients extends ThemeExtension<AppGradients> {
       end: Alignment.bottomRight,
       colors: [_brandStart, _brandEnd],
     ),
+    sectionBorder: _darkBorder,
   );
 
   // ============================================================================
@@ -104,11 +115,13 @@ class AppGradients extends ThemeExtension<AppGradients> {
     LinearGradient? pageBackground,
     LinearGradient? sectionBackground,
     LinearGradient? brandPrimary,
+    Color? sectionBorder,
   }) {
     return AppGradients(
       pageBackground: pageBackground ?? this.pageBackground,
       sectionBackground: sectionBackground ?? this.sectionBackground,
       brandPrimary: brandPrimary ?? this.brandPrimary,
+      sectionBorder: sectionBorder ?? this.sectionBorder,
     );
   }
 
@@ -120,6 +133,7 @@ class AppGradients extends ThemeExtension<AppGradients> {
       pageBackground: LinearGradient.lerp(pageBackground, other.pageBackground, t)!,
       sectionBackground: LinearGradient.lerp(sectionBackground, other.sectionBackground, t)!,
       brandPrimary: LinearGradient.lerp(brandPrimary, other.brandPrimary, t)!,
+      sectionBorder: Color.lerp(sectionBorder, other.sectionBorder, t)!,
     );
   }
 

@@ -118,7 +118,6 @@ class _PriceListCalendarWidgetState
   }
 
   Widget _buildUndoRedoBar() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -126,11 +125,8 @@ class _PriceListCalendarWidgetState
           context,
         ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
-        // Warm borders: beige for light theme, warm gray for dark theme
         border: Border.all(
-          color: isDark
-              ? const Color(0xFF3D3733) // Warm gray
-              : const Color(0xFFE8E5DC), // Warm beige
+          color: context.gradients.sectionBorder,
         ),
       ),
       child: Row(
@@ -268,10 +264,7 @@ class _PriceListCalendarWidgetState
             gradient: context.gradients.sectionBackground,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              // Warm borders: beige for light theme, warm gray for dark theme
-              color: isDark
-                  ? const Color(0xFF3D3733) // Warm gray
-                  : const Color(0xFFE8E5DC), // Warm beige
+              color: context.gradients.sectionBorder,
               width: 1.5,
             ),
           ),
@@ -574,10 +567,7 @@ class _PriceListCalendarWidgetState
                 gradient: context.gradients.sectionBackground,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  // Warm borders: beige for light theme, warm gray for dark theme
-                  color: isDark
-                      ? const Color(0xFF3D3733) // Warm gray
-                      : const Color(0xFFE8E5DC), // Warm beige
+                  color: context.gradients.sectionBorder,
                   width: 1.5,
                 ),
               ),

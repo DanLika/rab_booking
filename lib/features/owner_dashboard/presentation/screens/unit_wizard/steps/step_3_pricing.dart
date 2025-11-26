@@ -130,7 +130,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                         gradient: context.gradients.sectionBackground,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                          color: context.gradients.sectionBorder,
                           width: 1.5,
                         ),
                       ),
@@ -337,7 +337,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                         gradient: context.gradients.sectionBackground,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                          color: context.gradients.sectionBorder,
                           width: 1.5,
                         ),
                       ),

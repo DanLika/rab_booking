@@ -154,7 +154,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                         gradient: context.gradients.sectionBackground,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                          color: context.gradients.sectionBorder,
                           width: 1.5,
                         ),
                       ),

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
@@ -31,7 +30,22 @@ import '../../../../core/constants/enums.dart';
 import 'booking_confirmation_screen.dart';
 import '../widgets/country_code_dropdown.dart';
 import '../widgets/email_verification_dialog.dart';
-import '../utils/form_validators.dart';
+import '../widgets/common/rotate_device_overlay.dart';
+import '../widgets/common/loading_screen.dart';
+import '../widgets/common/error_screen.dart';
+import '../widgets/common/contact/contact_item_widget.dart';
+import '../widgets/booking/payment/payment_option_widget.dart';
+import '../widgets/booking/guest_form/guest_count_picker.dart';
+import '../widgets/common/info_card_widget.dart';
+import '../widgets/booking/guest_form/email_field_with_verification.dart';
+import '../widgets/booking/guest_form/phone_field.dart';
+import '../widgets/booking/guest_form/guest_name_fields.dart';
+import '../widgets/booking/guest_form/notes_field.dart';
+import '../widgets/booking/payment/no_payment_info.dart';
+import '../widgets/booking/payment/payment_method_card.dart';
+import '../widgets/booking/pill_bar_content.dart';
+import '../widgets/booking/booking_pill_bar.dart';
+import '../widgets/common/theme_colors_helper.dart';
 import '../utils/snackbar_helper.dart';
 import '../../../../core/errors/app_exceptions.dart';
 
@@ -440,7 +454,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
     // Helper function to get theme-aware colors
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
 
     // Bug #73: Listen for price calculation errors (dates no longer available)
     // Only listen if dates are selected to avoid unnecessary provider calls
@@ -483,107 +497,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Show loading screen during validation
     if (_isValidating) {
-      return Scaffold(
-        backgroundColor: getColor(
-          MinimalistColors.backgroundPrimary,
-          MinimalistColorsDark.backgroundPrimary,
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                color: getColor(
-                  MinimalistColors.buttonPrimary,
-                  MinimalistColorsDark.buttonPrimary,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Loading booking widget...',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: getColor(
-                    MinimalistColors.textSecondary,
-                    MinimalistColorsDark.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return WidgetLoadingScreen(isDarkMode: isDarkMode);
     }
 
     // Show error screen if validation failed
     if (_validationError != null) {
-      return Scaffold(
-        backgroundColor: getColor(
-          MinimalistColors.backgroundPrimary,
-          MinimalistColorsDark.backgroundPrimary,
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: getColor(
-                    MinimalistColors.error,
-                    MinimalistColorsDark.error,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Configuration Error',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  _validationError!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: _validateUnitAndProperty,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: getColor(
-                      MinimalistColors.buttonPrimary,
-                      MinimalistColorsDark.buttonPrimary,
-                    ),
-                    foregroundColor: getColor(
-                      MinimalistColors.buttonPrimaryText,
-                      MinimalistColorsDark.buttonPrimaryText,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      return WidgetErrorScreen(
+        isDarkMode: isDarkMode,
+        errorMessage: _validationError!,
+        onRetry: _validateUnitAndProperty,
       );
     }
 
@@ -737,9 +659,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
                       // Contact pill card (calendar only mode - inline, below calendar)
                       if (widgetMode == WidgetMode.calendarOnly) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         _buildContactPillCard(isDarkMode, screenWidth),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                       ],
                     ],
                   ),
@@ -776,7 +698,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
                 // Rotate device overlay - HIGHEST z-index, only for year view in portrait
                 if (_shouldShowRotateOverlay(context))
-                  _buildRotateDeviceOverlay(colors),
+                  RotateDeviceOverlay(
+                    isDarkMode: isDarkMode,
+                    colors: colors,
+                    onSwitchToMonthView: () {
+                      ref.read(calendarViewProvider.notifier).state =
+                          CalendarViewType.month;
+                    },
+                  ),
               ],
             );
           },
@@ -796,16 +725,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Build contact pill card for calendar-only mode (inline, below calendar)
   Widget _buildContactPillCard(bool isDarkMode, double screenWidth) {
     final contactOptions = _widgetSettings?.contactOptions;
-    final isDesktop = screenWidth > 600;
+    // Only use column layout on very small screens (< 350px)
+    final useRowLayout = screenWidth >= 350;
 
-    // Dynamic max width: 400px for desktop, 170px for mobile
-    final maxWidth = isDesktop ? 400.0 : 170.0;
+    // Dynamic max width: allow row layout on most screens
+    final maxWidth = useRowLayout ? 500.0 : 200.0;
 
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: isDarkMode
                 ? MinimalistColorsDark.backgroundSecondary
@@ -824,7 +754,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               ),
             ],
           ),
-          child: isDesktop
+          child: useRowLayout
               ? _buildDesktopContactRow(contactOptions, isDarkMode)
               : _buildMobileContactColumn(contactOptions, isDarkMode),
         ),
@@ -848,24 +778,24 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         contactOptions!.phoneNumber!.isNotEmpty;
 
     return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // Email
         if (hasEmail)
-          Expanded(
-            child: _buildContactItem(
-              icon: Icons.email,
-              value: contactOptions.emailAddress!,
-              onTap: () => _launchUrl('mailto:${contactOptions.emailAddress}'),
-              isDarkMode: isDarkMode,
-            ),
+          ContactItemWidget(
+            icon: Icons.email,
+            value: contactOptions.emailAddress!,
+            onTap: () => _launchUrl('mailto:${contactOptions.emailAddress}'),
+            isDarkMode: isDarkMode,
           ),
 
         // Vertical divider
         if (hasEmail && hasPhone)
           Container(
-            height: 40,
+            height: 24,
             width: 1,
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            margin: const EdgeInsets.symmetric(horizontal: 12),
             color: isDarkMode
                 ? MinimalistColorsDark.borderDefault
                 : MinimalistColors.borderDefault,
@@ -873,13 +803,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         // Phone
         if (hasPhone)
-          Expanded(
-            child: _buildContactItem(
-              icon: Icons.phone,
-              value: contactOptions.phoneNumber!,
-              onTap: () => _launchUrl('tel:${contactOptions.phoneNumber}'),
-              isDarkMode: isDarkMode,
-            ),
+          ContactItemWidget(
+            icon: Icons.phone,
+            value: contactOptions.phoneNumber!,
+            onTap: () => _launchUrl('tel:${contactOptions.phoneNumber}'),
+            isDarkMode: isDarkMode,
           ),
       ],
     );
@@ -904,7 +832,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       children: [
         // Email
         if (hasEmail)
-          _buildContactItem(
+          ContactItemWidget(
             icon: Icons.email,
             value: contactOptions.emailAddress!,
             onTap: () => _launchUrl('mailto:${contactOptions.emailAddress}'),
@@ -923,56 +851,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         // Phone
         if (hasPhone)
-          _buildContactItem(
+          ContactItemWidget(
             icon: Icons.phone,
             value: contactOptions.phoneNumber!,
             onTap: () => _launchUrl('tel:${contactOptions.phoneNumber}'),
             isDarkMode: isDarkMode,
           ),
       ],
-    );
-  }
-
-  /// Contact item widget (clickable with icon and value)
-  Widget _buildContactItem({
-    required IconData icon,
-    required String value,
-    required VoidCallback onTap,
-    required bool isDarkMode,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isDarkMode
-                  ? MinimalistColorsDark.buttonPrimary
-                  : MinimalistColors.buttonPrimary,
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                value,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDarkMode
-                      ? MinimalistColorsDark.textPrimary
-                      : MinimalistColors.textPrimary,
-                  decoration: TextDecoration.underline,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1088,73 +973,105 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           return const SizedBox.shrink();
         }
 
-        return Positioned(
-          left: position.dx,
-          top: position.dy,
-          child: GestureDetector(
-            behavior:
-                HitTestBehavior.translucent, // Better hit test for dragging
-            onPanStart: (_) {
-              // Provide haptic feedback on drag start
-              HapticFeedback.selectionClick();
-            },
-            onPanUpdate: (details) {
+        return BookingPillBar(
+          position: position,
+          width: pillBarWidth,
+          maxHeight: maxHeight,
+          isDarkMode: isDarkMode,
+          keyboardInset: MediaQuery.of(context).viewInsets.bottom,
+          onDragStart: () {
+            // Haptic feedback handled in widget
+          },
+          onDragUpdate: (delta) {
+            setState(() {
+              // Allow dragging beyond screen bounds - pill bar will hide if off-screen
+              _pillBarPosition = Offset(
+                position.dx + delta.dx,
+                position.dy + delta.dy,
+              );
+            });
+          },
+          onDragEnd: () {
+            // Drag-to-dismiss: If >50% of pill bar is off-screen, close it
+            if (isMoreThanHalfOffScreen) {
               setState(() {
-                // Allow dragging beyond screen bounds - pill bar will hide if off-screen
-                _pillBarPosition = Offset(
-                  position.dx + details.delta.dx,
-                  position.dy + details.delta.dy,
-                );
+                _checkIn = null;
+                _checkOut = null;
+                _showGuestForm = false;
+                _pillBarPosition = null;
               });
-            },
-            onPanEnd: (_) {
-              // Drag-to-dismiss: If >50% of pill bar is off-screen, close it
-              if (isMoreThanHalfOffScreen) {
-                setState(() {
-                  _checkIn = null;
-                  _checkOut = null;
-                  _showGuestForm = false;
-                  _pillBarPosition = null;
-                });
-              } else if (isCompletelyOffScreen) {
-                // If completely off-screen (but <50%), reset to default position
-                setState(() {
-                  _pillBarPosition = null; // Reset to center
-                });
-              }
-            },
-            child: Material(
-              elevation: 8,
-              borderRadius: BorderRadius.circular(30),
-              child: Container(
-                width: pillBarWidth,
-                height: maxHeight, // Fixed height based on screen
-                decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? MinimalistColorsDark.backgroundPrimary
-                      : MinimalistColors.backgroundPrimary,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: isDarkMode
-                        ? MinimalistColorsDark.borderLight
-                        : MinimalistColors.borderLight,
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(30),
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      12,
-                      8,
-                      12,
-                      // Bug #46: Add keyboard height to bottom padding
-                      8 + MediaQuery.of(context).viewInsets.bottom,
-                    ),
-                    child: _buildPillBarContent(calculation, isDarkMode),
-                  ),
-                ),
-              ),
-            ),
+            } else if (isCompletelyOffScreen) {
+              // If completely off-screen (but <50%), reset to default position
+              setState(() {
+                _pillBarPosition = null; // Reset to center
+              });
+            }
+          },
+          child: PillBarContent(
+                      checkIn: _checkIn!,
+                      checkOut: _checkOut!,
+                      nights: _checkOut!.difference(_checkIn!).inDays,
+                      formattedRoomPrice: calculation.formattedRoomPrice,
+                      additionalServicesTotal: calculation.additionalServicesTotal,
+                      formattedAdditionalServices: calculation.formattedAdditionalServices,
+                      formattedTotal: calculation.formattedTotal,
+                      formattedDeposit: calculation.formattedDeposit,
+                      depositPercentage: calculation.totalPrice > 0
+                          ? ((calculation.depositAmount / calculation.totalPrice) * 100).round()
+                          : 20,
+                      isDarkMode: isDarkMode,
+                      showGuestForm: _showGuestForm,
+                      isWideScreen: MediaQuery.of(context).size.width >= 768,
+                      onClose: () {
+                        // Bug Fix: Set dismissed flag instead of clearing dates
+                        setState(() {
+                          _pillBarDismissed = true;
+                          _showGuestForm = false;
+                          _pillBarPosition = null;
+                        });
+                        _saveFormData();
+                      },
+                      onReserve: () {
+                        // Bug #64: Lock price when user starts booking process
+                        setState(() {
+                          _showGuestForm = true;
+                          _hasInteractedWithBookingFlow = true;
+                          _lockedPriceCalculation = calculation.copyWithLock();
+                        });
+                        _saveFormData();
+                      },
+                      guestFormBuilder: () => _buildGuestInfoForm(calculation, showButton: false),
+                      paymentSectionBuilder: () => _buildPaymentSection(calculation),
+                      additionalServicesBuilder: () => Consumer(
+                        builder: (context, ref, _) {
+                          final servicesAsync = ref.watch(unitAdditionalServicesProvider(_unitId));
+                          return servicesAsync.when(
+                            data: (services) {
+                              if (services.isEmpty) return const SizedBox.shrink();
+                              return Column(
+                                children: [
+                                  const SizedBox(height: SpacingTokens.m),
+                                  AdditionalServicesWidget(
+                                    unitId: _unitId,
+                                    nights: _checkOut!.difference(_checkIn!).inDays,
+                                    guests: _adults + _children,
+                                  ),
+                                  const SizedBox(height: SpacingTokens.m),
+                                ],
+                              );
+                            },
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                          );
+                        },
+                      ),
+                      taxLegalBuilder: () => TaxLegalDisclaimerWidget(
+                        propertyId: _propertyId ?? '',
+                        unitId: _unitId,
+                        onAcceptedChanged: (accepted) {
+                          setState(() => _taxLegalAccepted = accepted);
+                        },
+                      ),
           ),
         );
       },
@@ -1163,492 +1080,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     );
   }
 
-  /// Build the content of the pill bar (dates, price, buttons)
-  Widget _buildPillBarContent(
-    BookingPriceCalculation calculation,
-    bool isDarkMode,
-  ) {
-    // Check screen width for responsive layout
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWideScreen = screenWidth >= 768;
-
-    // If guest form is shown and screen is wide, show 2-column layout
-    if (_showGuestForm && isWideScreen) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Top bar with drag handle and close button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Spacer(),
-              // Drag handle indicator (centered)
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: MinimalistColors.borderLight,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const Spacer(),
-              // Close button (right)
-              InkWell(
-                onTap: () {
-                  // Bug Fix: Set dismissed flag instead of clearing dates
-                  // This way dates stay selected in calendar but pill bar doesn't auto-open on refresh
-                  setState(() {
-                    _pillBarDismissed = true;
-                    _showGuestForm = false;
-                    _pillBarPosition = null;
-                  });
-                  _saveFormData(); // Save dismissed state
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: MinimalistColors.backgroundSecondary,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: MinimalistColors.borderLight),
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    size: 16,
-                    color: MinimalistColors.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // 2-column layout: Guest info (left) | Payment options (right)
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              // Bug #46: Account for keyboard when calculating max height
-              maxHeight:
-                  (MediaQuery.of(context).size.height -
-                      MediaQuery.of(context).viewInsets.bottom) *
-                  0.6,
-            ),
-            child: SingleChildScrollView(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left column: Guest info + Additional Services (55%)
-                  Expanded(
-                    flex: 55,
-                    child: Column(
-                      children: [
-                        _buildGuestInfoForm(calculation, showButton: false),
-                        // Additional Services section (only show if services exist)
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final servicesAsync = ref.watch(
-                              unitAdditionalServicesProvider(_unitId),
-                            );
-                            return servicesAsync.when(
-                              data: (services) {
-                                if (services.isEmpty) {
-                                  return const SizedBox.shrink();
-                                }
-                                return Column(
-                                  children: [
-                                    const SizedBox(height: SpacingTokens.m),
-                                    AdditionalServicesWidget(
-                                      unitId: _unitId,
-                                      nights: _checkOut!
-                                          .difference(_checkIn!)
-                                          .inDays,
-                                      guests: _adults + _children,
-                                    ),
-                                  ],
-                                );
-                              },
-                              loading: () => const SizedBox.shrink(),
-                              error: (_, __) => const SizedBox.shrink(),
-                            );
-                          },
-                        ),
-                        // Tax/Legal Disclaimer section
-                        TaxLegalDisclaimerWidget(
-                          propertyId: _propertyId ?? '',
-                          unitId: _unitId,
-                          onAcceptedChanged: (accepted) {
-                            setState(() => _taxLegalAccepted = accepted);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: SpacingTokens.m),
-                  // Right column: Payment options + button (45%)
-                  Expanded(flex: 45, child: _buildPaymentSection(calculation)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    // Default: show compact summary
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildCompactPillSummary(calculation),
-        // Show guest form if needed (mobile)
-        if (_showGuestForm && !isWideScreen) ...[
-          const SizedBox(height: 12),
-          _buildGuestInfoForm(calculation, showButton: false),
-          // Additional Services section - only show if services exist
-          Consumer(
-            builder: (context, ref, _) {
-              final servicesAsync = ref.watch(
-                unitAdditionalServicesProvider(_unitId),
-              );
-              return servicesAsync.when(
-                data: (services) {
-                  if (services.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  return Column(
-                    children: [
-                      const SizedBox(height: SpacingTokens.m),
-                      AdditionalServicesWidget(
-                        unitId: _unitId,
-                        nights: _checkOut!.difference(_checkIn!).inDays,
-                        guests: _adults + _children,
-                      ),
-                      const SizedBox(height: SpacingTokens.m),
-                    ],
-                  );
-                },
-                loading: () => const SizedBox.shrink(),
-                error: (_, stackTrace) => const SizedBox.shrink(),
-              );
-            },
-          ),
-          // Tax/Legal Disclaimer section
-          TaxLegalDisclaimerWidget(
-            propertyId: _propertyId ?? '',
-            unitId: _unitId,
-            onAcceptedChanged: (accepted) {
-              setState(() => _taxLegalAccepted = accepted);
-            },
-          ),
-          const SizedBox(height: SpacingTokens.m),
-          _buildPaymentSection(calculation),
-        ],
-      ],
-    );
-  }
-
-  /// Build compact pill summary (dates, price, buttons) - redesigned
-  Widget _buildCompactPillSummary(BookingPriceCalculation calculation) {
-    final nights = _checkOut!.difference(_checkIn!).inDays;
-    final dateFormat = DateFormat('MMM dd, yyyy');
-    final isDarkMode = ref.watch(themeProvider);
-
-    // Helper function to get theme-aware colors
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
-
-    return Column(
-      children: [
-        // Close button at top
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            InkWell(
-              onTap: () {
-                // Bug Fix: Set dismissed flag instead of clearing dates
-                // This way dates stay selected in calendar but pill bar doesn't auto-open on refresh
-                setState(() {
-                  _pillBarDismissed = true;
-                  _showGuestForm = false;
-                  _pillBarPosition = null;
-                });
-                _saveFormData(); // Save dismissed state
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: getColor(
-                    MinimalistColors.backgroundSecondary,
-                    ColorTokens.pureWhite,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: getColor(
-                      MinimalistColors.borderLight,
-                      MinimalistColorsDark.borderLight,
-                    ),
-                  ),
-                ),
-                child: Icon(
-                  Icons.close,
-                  size: 16,
-                  color: getColor(
-                    MinimalistColors.textSecondary,
-                    ColorTokens.pureBlack,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Range info with nights badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: getColor(
-              MinimalistColors.buttonPrimary,
-              MinimalistColorsDark.buttonPrimary,
-            ).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: getColor(
-                MinimalistColors.buttonPrimary,
-                MinimalistColorsDark.buttonPrimary,
-              ).withOpacity(0.3),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.calendar_month,
-                size: 18,
-                color: getColor(
-                  MinimalistColors.buttonPrimary,
-                  MinimalistColorsDark.buttonPrimary,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${dateFormat.format(_checkIn!)} - ${dateFormat.format(_checkOut!)}',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: getColor(
-                    MinimalistColors.buttonPrimary,
-                    MinimalistColorsDark.buttonPrimary,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '$nights ${nights == 1 ? 'night' : 'nights'}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: getColor(
-                      MinimalistColors.buttonPrimaryText,
-                      MinimalistColorsDark.buttonPrimaryText,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // Price breakdown section
-        _buildPriceBreakdown(calculation, isDarkMode, getColor),
-
-        const SizedBox(height: 12),
-
-        // Reserve button (only show when guest form is NOT visible)
-        if (!_showGuestForm)
-          InkWell(
-            onTap: () {
-              // Bug #64: Lock price when user starts booking process
-              // Bug Fix: Set interaction flag so pill bar shows after refresh
-              setState(() {
-                _showGuestForm = true;
-                _hasInteractedWithBookingFlow = true; // User clicked Reserve
-                _lockedPriceCalculation = calculation.copyWithLock();
-              });
-              _saveFormData(); // Save state immediately
-            },
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              decoration: BoxDecoration(
-                color: getColor(
-                  MinimalistColors.buttonPrimary,
-                  MinimalistColorsDark.buttonPrimary,
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Reserve',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: getColor(
-                    MinimalistColors.buttonPrimaryText,
-                    MinimalistColorsDark.buttonPrimaryText,
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  /// Build price breakdown (room + services + total + deposit)
-  Widget _buildPriceBreakdown(
-    BookingPriceCalculation calculation,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
-  ) {
-    // Calculate deposit percentage from amounts
-    final depositPercentage = calculation.totalPrice > 0
-        ? ((calculation.depositAmount / calculation.totalPrice) * 100).round()
-        : 20;
-
-    return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
-      decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-      ),
-      child: Column(
-        children: [
-          // Room price
-          _buildPriceRow(
-            'Room (${calculation.nights} ${calculation.nights == 1 ? 'night' : 'nights'})',
-            calculation.formattedRoomPrice,
-            isDarkMode,
-            getColor,
-          ),
-
-          // Additional services (only show if > 0)
-          if (calculation.additionalServicesTotal > 0) ...[
-            const SizedBox(height: SpacingTokens.s),
-            _buildPriceRow(
-              'Additional Services',
-              calculation.formattedAdditionalServices,
-              isDarkMode,
-              getColor,
-              color: getColor(
-                MinimalistColors.statusAvailableBorder,
-                MinimalistColorsDark.statusAvailableBorder,
-              ),
-            ),
-          ],
-
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
-            child: Divider(
-              height: 1,
-              color: getColor(
-                MinimalistColors.borderDefault,
-                MinimalistColorsDark.borderDefault,
-              ),
-            ),
-          ),
-
-          // Total
-          _buildPriceRow(
-            'Total',
-            calculation.formattedTotal,
-            isDarkMode,
-            getColor,
-            isBold: true,
-          ),
-
-          // Deposit info
-          const SizedBox(height: SpacingTokens.s),
-          Text(
-            'Deposit: ${calculation.formattedDeposit} ($depositPercentage%)',
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS, // Increased from fontSizeXS (10px) to fontSizeS (12px) for better visibility
-              color: getColor(
-                MinimalistColors.textSecondary,
-                MinimalistColorsDark.textSecondary,
-              ),
-              fontFamily: 'Manrope',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Helper method to build price row
-  Widget _buildPriceRow(
-    String label,
-    String amount,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor, {
-    Color? color,
-    bool isBold = false,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isBold
-                ? TypographyTokens.fontSizeM
-                : TypographyTokens.fontSizeS,
-            color:
-                color ??
-                getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
-            fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
-            fontFamily: 'Manrope',
-          ),
-        ),
-        Text(
-          amount,
-          style: TextStyle(
-            fontSize: isBold
-                ? TypographyTokens.fontSizeL
-                : TypographyTokens.fontSizeS,
-            color:
-                color ??
-                getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
-            fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
-            fontFamily: 'Manrope',
-          ),
-        ),
-      ],
-    );
-  }
-
   /// Build payment section (payment options + confirm button)
   Widget _buildPaymentSection(BookingPriceCalculation calculation) {
     final isDarkMode = ref.watch(themeProvider);
 
     // Helper function to get theme-aware colors
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
 
     // Safety check: At least one payment method must be available
     final hasAnyPaymentMethod =
@@ -1662,47 +1099,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.all(SpacingTokens.m),
-            decoration: BoxDecoration(
-              color: getColor(
-                MinimalistColors.error,
-                MinimalistColorsDark.error,
-              ).withOpacity(0.1),
-              borderRadius: BorderTokens.circularMedium,
-              border: Border.all(
-                color: getColor(
-                  MinimalistColors.error,
-                  MinimalistColorsDark.error,
-                ),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  color: getColor(
-                    MinimalistColors.error,
-                    MinimalistColorsDark.error,
-                  ),
-                  size: 24,
-                ),
-                const SizedBox(width: SpacingTokens.s),
-                Expanded(
-                  child: Text(
-                    'No payment methods available. Please contact property owner.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: getColor(
-                        MinimalistColors.error,
-                        MinimalistColorsDark.error,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          NoPaymentInfo(
+            isDarkMode: isDarkMode,
+            message: 'No payment methods available. Please contact property owner.',
           ),
           const SizedBox(height: SpacingTokens.m),
           // Disabled confirm button
@@ -1767,47 +1166,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
               // If no payment methods enabled, show error
               if (enabledCount == 0) {
-                return Container(
-                  margin: const EdgeInsets.only(top: SpacingTokens.m),
-                  padding: const EdgeInsets.all(SpacingTokens.m),
-                  decoration: BoxDecoration(
-                    color: getColor(
-                      MinimalistColors.error.withOpacity(0.1),
-                      MinimalistColorsDark.error.withOpacity(0.2),
-                    ),
-                    borderRadius: BorderTokens.circularMedium,
-                    border: Border.all(
-                      color: getColor(
-                        MinimalistColors.error,
-                        MinimalistColorsDark.error,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: getColor(
-                          MinimalistColors.error,
-                          MinimalistColorsDark.error,
-                        ),
-                      ),
-                      const SizedBox(width: SpacingTokens.s),
-                      Expanded(
-                        child: Text(
-                          'No payment methods are currently configured. Please contact the property owner to complete your booking.',
-                          style: TextStyle(
-                            fontSize: TypographyTokens.fontSizeS,
-                            color: getColor(
-                              MinimalistColors.error,
-                              MinimalistColorsDark.error,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
+                return NoPaymentInfo(isDarkMode: isDarkMode);
               }
 
               // If only one method, auto-select and show simplified UI
@@ -1837,67 +1196,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       ),
                     ),
                     const SizedBox(height: SpacingTokens.s),
-                    Container(
-                      padding: const EdgeInsets.all(SpacingTokens.m),
-                      decoration: BoxDecoration(
-                        color: getColor(
-                          MinimalistColors.backgroundSecondary,
-                          MinimalistColorsDark.backgroundSecondary,
-                        ),
-                        borderRadius: BorderTokens.circularMedium,
-                        border: Border.all(
-                          color: getColor(
-                            MinimalistColors.borderDefault,
-                            MinimalistColorsDark.borderDefault,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            singleMethod == 'stripe'
-                                ? Icons.credit_card
-                                : singleMethod == 'bank_transfer'
-                                ? Icons.account_balance
-                                : Icons.home_outlined,
-                            color: getColor(
-                              MinimalistColors.textPrimary,
-                              MinimalistColorsDark.textPrimary,
-                            ),
-                            size: 24,
-                          ),
-                          const SizedBox(width: SpacingTokens.s),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  singleMethodTitle!,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: getColor(
-                                      MinimalistColors.textPrimary,
-                                      MinimalistColorsDark.textPrimary,
-                                    ),
-                                  ),
-                                ),
-                                if (singleMethodSubtitle != null)
-                                  Text(
-                                    singleMethodSubtitle,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: getColor(
-                                        MinimalistColors.textSecondary,
-                                        MinimalistColorsDark.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                    PaymentMethodCard(
+                      icon: singleMethod == 'stripe'
+                          ? Icons.credit_card
+                          : singleMethod == 'bank_transfer'
+                              ? Icons.account_balance
+                              : Icons.home_outlined,
+                      title: singleMethodTitle!,
+                      subtitle: singleMethodSubtitle,
+                      isDarkMode: isDarkMode,
                     ),
                     const SizedBox(height: SpacingTokens.m),
                   ],
@@ -1950,11 +1257,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 children: [
                   // Stripe option
                   if (isStripeEnabled)
-                    _buildPaymentOption(
+                    PaymentOptionWidget(
                       icon: Icons.credit_card,
                       title: 'Credit/Debit Card',
                       subtitle: 'Instant confirmation via Stripe',
-                      value: 'stripe',
+                      isSelected: _selectedPaymentMethod == 'stripe',
+                      onTap: () => setState(() => _selectedPaymentMethod = 'stripe'),
+                      isDarkMode: isDarkMode,
                       depositAmount: calculation.formattedDeposit,
                     ),
 
@@ -1964,11 +1273,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       padding: EdgeInsets.only(
                         top: isStripeEnabled ? SpacingTokens.s : 0,
                       ),
-                      child: _buildPaymentOption(
+                      child: PaymentOptionWidget(
                         icon: Icons.account_balance,
                         title: 'Bank Transfer',
                         subtitle: 'Manual confirmation (3 business days)',
-                        value: 'bank_transfer',
+                        isSelected: _selectedPaymentMethod == 'bank_transfer',
+                        onTap: () => setState(() => _selectedPaymentMethod = 'bank_transfer'),
+                        isDarkMode: isDarkMode,
                         depositAmount: calculation.formattedDeposit,
                       ),
                     ),
@@ -1981,11 +1292,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             ? SpacingTokens.s
                             : 0,
                       ),
-                      child: _buildPaymentOption(
+                      child: PaymentOptionWidget(
                         icon: Icons.home_outlined,
                         title: 'Pay on Arrival',
                         subtitle: 'Pay at the property',
-                        value: 'pay_on_arrival',
+                        isSelected: _selectedPaymentMethod == 'pay_on_arrival',
+                        onTap: () => setState(() => _selectedPaymentMethod = 'pay_on_arrival'),
+                        isDarkMode: isDarkMode,
                       ),
                     ),
                 ],
@@ -1998,39 +1311,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         // Info message for bookingPending mode
         if (_widgetSettings?.widgetMode == WidgetMode.bookingPending) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: SpacingTokens.s,
-              vertical: SpacingTokens.xs,
-            ),
-            decoration: BoxDecoration(
-              color: MinimalistColors.backgroundSecondary,
-              borderRadius: BorderTokens.circularMedium,
-              border: Border.all(color: MinimalistColors.borderDefault),
-            ),
-            child: const Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: 1),
-                  child: Icon(
-                    Icons.info_outline,
-                    color: MinimalistColors.textSecondary,
-                    size: 16,
-                  ),
-                ),
-                SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    'Your booking will be pending until confirmed by the property owner',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: MinimalistColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          InfoCardWidget(
+            message:
+                'Your booking will be pending until confirmed by the property owner',
+            isDarkMode: isDarkMode,
           ),
           const SizedBox(height: SpacingTokens.m),
         ],
@@ -2100,7 +1384,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final isDarkMode = ref.watch(themeProvider);
 
     // Helper function to get theme-aware colors
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
 
     return Form(
       key: _formKey,
@@ -2122,199 +1406,41 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           const SizedBox(height: SpacingTokens.m),
 
           // Name fields (First Name + Last Name in a Row)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // First Name field
-              Expanded(
-                child: TextFormField(
-                  controller: _firstNameController,
-                  maxLength: 50, // Bug #60: Maximum field length validation
-                  style: TextStyle(
-                    color: getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
-                  ),
-                  decoration: InputDecoration(
-                    counterText: '', // Hide character counter
-                    labelText: 'First Name *',
-                    hintText: 'John',
-                    labelStyle: TextStyle(
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
-                    ),
-                    hintStyle: TextStyle(
-                      color: getColor(
-                        MinimalistColors.textSecondary,
-                        MinimalistColorsDark.textSecondary,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: getColor(
-                      MinimalistColors.backgroundSecondary,
-                      MinimalistColorsDark.backgroundSecondary,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                    isDense: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: BorderSide(
-                        color: getColor(
-                          MinimalistColors.textPrimary,
-                          MinimalistColorsDark.textPrimary,
-                        ),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: BorderSide(
-                        color: getColor(
-                          MinimalistColors.textSecondary,
-                          MinimalistColorsDark.textSecondary,
-                        ),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: BorderSide(
-                        color: getColor(
-                          MinimalistColors.textPrimary,
-                          MinimalistColorsDark.textPrimary,
-                        ),
-                        width: 2,
-                      ),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(
-                        color: Colors.red,
-                        width: 1.5,
-                      ),
-                    ),
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(color: Colors.red, width: 2),
-                    ),
-                    errorStyle: const TextStyle(
-                      color: Colors.red,
-                      fontSize: 12,
-                      height: 1.0,
-                    ),
-                    errorMaxLines: 1,
-                    prefixIcon: Icon(
-                      Icons.person_outline,
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
-                    ),
-                  ),
-                  // Real-time validation
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  validator: FirstNameValidator.validate,
-                ),
-              ),
-              const SizedBox(width: SpacingTokens.m),
-              // Last Name field
-              Expanded(
-                child: TextFormField(
-                  controller: _lastNameController,
-                  maxLength: 50, // Bug #60: Maximum field length validation
-                  style: TextStyle(
-                    color: getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
-                  ),
-                  decoration: InputDecoration(
-                    counterText: '', // Hide character counter
-                    labelText: 'Last Name *',
-                    hintText: 'Doe',
-                    labelStyle: TextStyle(
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
-                    ),
-                    hintStyle: TextStyle(
-                      color: getColor(
-                        MinimalistColors.textSecondary,
-                        MinimalistColorsDark.textSecondary,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: getColor(
-                      MinimalistColors.backgroundSecondary,
-                      MinimalistColorsDark.backgroundSecondary,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                    isDense: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: BorderSide(
-                        color: getColor(
-                          MinimalistColors.textPrimary,
-                          MinimalistColorsDark.textPrimary,
-                        ),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: BorderSide(
-                        color: getColor(
-                          MinimalistColors.textSecondary,
-                          MinimalistColorsDark.textSecondary,
-                        ),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: BorderSide(
-                        color: getColor(
-                          MinimalistColors.textPrimary,
-                          MinimalistColorsDark.textPrimary,
-                        ),
-                        width: 2,
-                      ),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(
-                        color: Colors.red,
-                        width: 1.5,
-                      ),
-                    ),
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(color: Colors.red, width: 2),
-                    ),
-                    errorStyle: const TextStyle(
-                      color: Colors.red,
-                      fontSize: 12,
-                      height: 1.0,
-                    ),
-                    errorMaxLines: 1,
-                  ),
-                  // Real-time validation
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  validator: LastNameValidator.validate,
-                ),
-              ),
-            ],
+          GuestNameFields(
+            firstNameController: _firstNameController,
+            lastNameController: _lastNameController,
+            isDarkMode: isDarkMode,
           ),
           const SizedBox(height: 12),
 
           // Email field with verification (if required)
-          _buildEmailFieldWithVerification(isDarkMode),
+          EmailFieldWithVerification(
+            controller: _emailController,
+            isDarkMode: isDarkMode,
+            requireVerification:
+                _widgetSettings?.emailConfig.requireEmailVerification ?? false,
+            emailVerified: _emailVerified,
+            onEmailChanged: (value) {
+              // Reset verification when email changes
+              if (_emailVerified) {
+                setState(() {
+                  _emailVerified = false;
+                });
+              }
+            },
+            onVerifyPressed: () {
+              final email = _emailController.text.trim();
+              if (email.isEmpty || !email.contains('@')) {
+                SnackBarHelper.showError(
+                  context: context,
+                  message: 'Please enter a valid email first',
+                  isDarkMode: isDarkMode,
+                );
+                return;
+              }
+              _openVerificationDialog();
+            },
+          ),
           const SizedBox(height: 12),
 
           // Phone field with country code dropdown
@@ -2347,74 +1473,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               const SizedBox(width: SpacingTokens.s),
               // Phone number input
               Expanded(
-                child: TextFormField(
+                child: PhoneField(
                   controller: _phoneController,
-                  maxLength: 20, // Bug #60: Maximum field length validation
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    PhoneNumberFormatter(_selectedCountry.dialCode),
-                  ],
-                  style: TextStyle(
-                    color: getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
-                  ),
-                  decoration: InputDecoration(
-                    counterText: '', // Hide character counter
-                    labelText: 'Phone Number *',
-                    hintText: '99 123 4567',
-                    labelStyle: TextStyle(
-                      color: getColor(
-                        MinimalistColors.textSecondary,
-                        MinimalistColorsDark.textSecondary,
-                      ),
-                    ),
-                    hintStyle: TextStyle(
-                      color: getColor(
-                        MinimalistColors.textSecondary,
-                        MinimalistColorsDark.textSecondary,
-                      ).withOpacity(0.5),
-                    ),
-                    filled: true,
-                    fillColor: getColor(
-                      MinimalistColors.backgroundSecondary,
-                      MinimalistColorsDark.backgroundSecondary,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(
-                        color: Colors.red,
-                        width: 1.5,
-                      ),
-                    ),
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                      borderSide: const BorderSide(color: Colors.red, width: 2),
-                    ),
-                    errorStyle: const TextStyle(
-                      color: Colors.red,
-                      fontSize: 12,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.phone_outlined,
-                      color: getColor(
-                        MinimalistColors.textSecondary,
-                        MinimalistColorsDark.textSecondary,
-                      ),
-                    ),
-                  ),
-                  // Real-time validation with country-specific rules
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  validator: (value) {
-                    return PhoneValidator.validate(
-                      value,
-                      _selectedCountry.dialCode,
-                    );
-                  },
+                  isDarkMode: isDarkMode,
+                  dialCode: _selectedCountry.dialCode,
                 ),
               ),
             ],
@@ -2422,56 +1484,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           const SizedBox(height: SpacingTokens.m),
 
           // Special requests field
-          TextFormField(
+          NotesField(
             controller: _notesController,
-            maxLines: 3,
-            maxLength: 500,
-            style: TextStyle(
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
-            ),
-            decoration: InputDecoration(
-              labelText: 'Special Requests (Optional)',
-              hintText: 'Any special requirements or preferences...',
-              labelStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
-              ),
-              hintStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ).withOpacity(0.5),
-              ),
-              filled: true,
-              fillColor: getColor(
-                MinimalistColors.backgroundSecondary,
-                MinimalistColorsDark.backgroundSecondary,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-              ),
-              prefixIcon: Icon(
-                Icons.notes,
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 7,
-              ), // Reduced by 10px total (5px top + 5px bottom)
-            ),
+            isDarkMode: isDarkMode,
           ),
           const SizedBox(height: SpacingTokens.m),
 
           // Guest count picker
-          _buildGuestCountPicker(),
+          GuestCountPicker(
+            adults: _adults,
+            children: _children,
+            maxGuests: _unit?.maxGuests ?? 10,
+            isDarkMode: ref.watch(themeProvider),
+            onAdultsChanged: (value) => setState(() => _adults = value),
+            onChildrenChanged: (value) => setState(() => _children = value),
+          ),
           const SizedBox(height: SpacingTokens.s),
 
           // Confirm booking button (only show if showButton parameter is true)
@@ -2544,162 +1571,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
 
     return 'Confirm Booking$nightsText';
-  }
-
-  Widget _buildPaymentOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required String value,
-    String? depositAmount, // Made nullable for "Pay on Arrival"
-  }) {
-    final isSelected = _selectedPaymentMethod == value;
-    final isDarkMode = ref.watch(themeProvider);
-
-    // Helper function to get theme-aware colors
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedPaymentMethod = value;
-        });
-      },
-      borderRadius: BorderTokens.circularMedium,
-      child: Container(
-        padding: const EdgeInsets.all(SpacingTokens.m),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected
-                ? getColor(
-                    MinimalistColors.borderBlack,
-                    MinimalistColorsDark.textPrimary,
-                  )
-                : getColor(
-                    MinimalistColors.borderDefault,
-                    MinimalistColorsDark.borderDefault,
-                  ),
-            width: isSelected
-                ? BorderTokens.widthMedium
-                : BorderTokens.widthThin,
-          ),
-          borderRadius: BorderTokens.circularMedium,
-          color: isSelected
-              ? getColor(
-                  MinimalistColors.backgroundSecondary,
-                  MinimalistColorsDark.backgroundSecondary,
-                )
-              : null,
-        ),
-        child: Row(
-          children: [
-            // Radio button
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected
-                      ? getColor(
-                          MinimalistColors.borderBlack,
-                          MinimalistColorsDark.textPrimary,
-                        )
-                      : getColor(
-                          MinimalistColors.textSecondary,
-                          MinimalistColorsDark.textSecondary,
-                        ),
-                  width: 2,
-                ),
-              ),
-              child: isSelected
-                  ? Center(
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: getColor(
-                            MinimalistColors.buttonPrimary,
-                            MinimalistColorsDark.buttonPrimary,
-                          ),
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: SpacingTokens.s),
-
-            // Icon
-            Icon(
-              icon,
-              color: isSelected
-                  ? getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    )
-                  : getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
-              size: 28,
-            ),
-            const SizedBox(width: SpacingTokens.s),
-
-            // Text content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AutoSizeText(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  AutoSizeText(
-                    subtitle,
-                    maxLines: 2,
-                    minFontSize: 10,
-                    maxFontSize: 12,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: getColor(
-                        MinimalistColors.textSecondary,
-                        MinimalistColorsDark.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Deposit amount (only show if not null)
-            if (depositAmount != null)
-              Text(
-                depositAmount,
-                style: TextStyle(
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.bold,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _handleConfirmBooking(
@@ -3325,293 +2196,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
   }
 
-  Widget _buildGuestCountPicker() {
-    final maxGuests =
-        _unit?.maxGuests ?? 10; // Default to 10 if unit not loaded
-    final totalGuests = _adults + _children;
-    final isAtCapacity = totalGuests >= maxGuests;
-    final isDarkMode = ref.watch(themeProvider);
-
-    // Helper function to get theme-aware colors
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
-
-    return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
-      decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
-        borderRadius: BorderTokens.circularMedium,
-        border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Number of Guests',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
-                ),
-              ),
-              if (_unit != null)
-                Text(
-                  'Max: ${_unit!.maxGuests}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: isAtCapacity
-                        ? getColor(
-                            MinimalistColors.error,
-                            MinimalistColorsDark.error,
-                          )
-                        : getColor(
-                            MinimalistColors.textSecondary,
-                            MinimalistColorsDark.textSecondary,
-                          ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: SpacingTokens.s),
-
-          // Adults
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.person,
-                    color: getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Adults',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: _adults > 1
-                        ? () {
-                            setState(() {
-                              _adults--;
-                            });
-                          }
-                        : null,
-                    icon: Icon(
-                      Icons.remove_circle_outline,
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 40,
-                    alignment: Alignment.center,
-                    child: Text(
-                      '$_adults',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: getColor(
-                          MinimalistColors.textPrimary,
-                          MinimalistColorsDark.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: !isAtCapacity && _adults < maxGuests
-                        ? () {
-                            setState(() {
-                              _adults++;
-                            });
-                          }
-                        : null,
-                    icon: Icon(
-                      Icons.add_circle_outline,
-                      color: isAtCapacity
-                          ? getColor(
-                              MinimalistColors.textSecondary,
-                              MinimalistColorsDark.textSecondary,
-                            ).withOpacity(0.5)
-                          : getColor(
-                              MinimalistColors.textPrimary,
-                              MinimalistColorsDark.textPrimary,
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-
-          // Children
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.child_care,
-                    color: getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Children',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: _children > 0
-                        ? () {
-                            setState(() {
-                              _children--;
-                            });
-                          }
-                        : null,
-                    icon: Icon(
-                      Icons.remove_circle_outline,
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 40,
-                    alignment: Alignment.center,
-                    child: Text(
-                      '$_children',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: getColor(
-                          MinimalistColors.textPrimary,
-                          MinimalistColorsDark.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: !isAtCapacity && _children < maxGuests
-                        ? () {
-                            setState(() {
-                              _children++;
-                            });
-                          }
-                        : null,
-                    icon: Icon(
-                      Icons.add_circle_outline,
-                      color: isAtCapacity
-                          ? getColor(
-                              MinimalistColors.textSecondary,
-                              MinimalistColorsDark.textSecondary,
-                            ).withOpacity(0.5)
-                          : getColor(
-                              MinimalistColors.textPrimary,
-                              MinimalistColorsDark.textPrimary,
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          // Total guests display with capacity warning
-          if (isAtCapacity) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: getColor(
-                  MinimalistColors.error.withOpacity(0.1),
-                  MinimalistColorsDark.error.withOpacity(0.1),
-                ),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: getColor(
-                    MinimalistColors.error,
-                    MinimalistColorsDark.error,
-                  ),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.warning,
-                    color: getColor(
-                      MinimalistColors.error,
-                      MinimalistColorsDark.error,
-                    ),
-                    size: 14,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Max capacity: $maxGuests guests',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: getColor(
-                        MinimalistColors.error,
-                        MinimalistColorsDark.error,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
   Future<void> _handleStripePayment({
     required String bookingId,
     required String bookingReference,
@@ -3801,355 +2385,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         orientation == Orientation.portrait || screenHeight > screenWidth;
 
     return isPortrait;
-  }
-
-  /// Build rotate device overlay - prompts user to rotate to landscape
-  Widget _buildRotateDeviceOverlay(WidgetColorScheme colors) {
-    final isDarkMode = ref.watch(themeProvider);
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
-
-    return Positioned.fill(
-      child: Container(
-        color: getColor(
-          MinimalistColors.backgroundPrimary,
-          MinimalistColorsDark.backgroundPrimary,
-        ).withOpacity(0.95),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(SpacingTokens.xl),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.screen_rotation,
-                  size: 80,
-                  color: colors.textPrimary, // Black (light) / White (dark)
-                ),
-                const SizedBox(height: SpacingTokens.l),
-                Text(
-                  'Rotate Your Device',
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeXXL,
-                    fontWeight: TypographyTokens.bold,
-                    color: colors.textPrimary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: SpacingTokens.m),
-                Text(
-                  'For the best year view experience, please rotate your device to landscape mode.',
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeM,
-                    color: colors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: SpacingTokens.xl),
-                ElevatedButton(
-                  onPressed: () {
-                    // Switch to month view
-                    ref.read(calendarViewProvider.notifier).state =
-                        CalendarViewType.month;
-                  },
-                  style: ElevatedButton.styleFrom(
-                    // Black button (light theme) / White button (dark theme)
-                    backgroundColor: isDarkMode
-                        ? ColorTokens.pureWhite
-                        : ColorTokens.pureBlack,
-                    foregroundColor: isDarkMode
-                        ? ColorTokens.pureBlack
-                        : ColorTokens.pureWhite,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: SpacingTokens.xl,
-                      vertical: SpacingTokens.m,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderTokens.circularMedium,
-                    ),
-                  ),
-                  child: const Text(
-                    'Switch to Month View',
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeM,
-                      fontWeight: TypographyTokens.semiBold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Build email field with verification button (if required)
-  Widget _buildEmailFieldWithVerification(bool isDarkMode) {
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
-    final requireVerification =
-        _widgetSettings?.emailConfig.requireEmailVerification ?? false;
-
-    if (!requireVerification) {
-      // Standard email field without verification
-      return TextFormField(
-        controller: _emailController,
-        maxLength: 100, // Bug #60: Maximum field length validation
-        keyboardType: TextInputType.emailAddress,
-        style: TextStyle(
-          color: getColor(
-            MinimalistColors.textPrimary,
-            MinimalistColorsDark.textPrimary,
-          ),
-        ),
-        decoration: InputDecoration(
-          counterText: '', // Hide character counter
-          labelText: 'Email *',
-          hintText: 'john@example.com',
-          labelStyle: TextStyle(
-            color: getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
-          ),
-          hintStyle: TextStyle(
-            color: getColor(
-              MinimalistColors.textSecondary,
-              MinimalistColorsDark.textSecondary,
-            ),
-          ),
-          filled: true,
-          fillColor: getColor(
-            MinimalistColors.backgroundSecondary,
-            MinimalistColorsDark.backgroundSecondary,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-          isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderTokens.circularMedium,
-            borderSide: BorderSide(
-              color: getColor(
-                MinimalistColors.textSecondary,
-                MinimalistColorsDark.textSecondary,
-              ),
-            ),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderTokens.circularMedium,
-            borderSide: BorderSide(
-              color: getColor(
-                MinimalistColors.textSecondary,
-                MinimalistColorsDark.textSecondary,
-              ),
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderTokens.circularMedium,
-            borderSide: BorderSide(
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
-              width: 2,
-            ),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderTokens.circularMedium,
-            borderSide: const BorderSide(color: Colors.red, width: 1.5),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderTokens.circularMedium,
-            borderSide: const BorderSide(color: Colors.red, width: 2),
-          ),
-          errorStyle: const TextStyle(
-            color: Colors.red,
-            fontSize: 12,
-            height: 1.0,
-          ),
-          errorMaxLines: 1,
-          prefixIcon: Icon(
-            Icons.email_outlined,
-            color: getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
-          ),
-        ),
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        validator: EmailValidator.validate,
-        onChanged: (value) {
-          // Reset verification when email changes
-          if (_emailVerified) {
-            setState(() {
-              _emailVerified = false;
-            });
-          }
-        },
-      );
-    }
-
-    // Email field with verification button
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: TextFormField(
-            controller: _emailController,
-            maxLength: 100, // Bug #60: Maximum field length validation
-            keyboardType: TextInputType.emailAddress,
-            style: TextStyle(
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
-            ),
-            decoration: InputDecoration(
-              counterText: '', // Hide character counter
-              labelText: 'Email *',
-              hintText: 'john@example.com',
-              labelStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
-              ),
-              hintStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
-              ),
-              filled: true,
-              fillColor: getColor(
-                MinimalistColors.backgroundSecondary,
-                MinimalistColorsDark.backgroundSecondary,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-              isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textSecondary,
-                    MinimalistColorsDark.textSecondary,
-                  ),
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textSecondary,
-                    MinimalistColorsDark.textSecondary,
-                  ),
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
-                  width: 2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(color: Colors.red, width: 1.5),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(color: Colors.red, width: 2),
-              ),
-              errorStyle: const TextStyle(
-                color: Colors.red,
-                fontSize: 12,
-                height: 1.0,
-              ),
-              errorMaxLines: 1,
-              prefixIcon: Icon(
-                Icons.email_outlined,
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
-              ),
-            ),
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            validator: EmailValidator.validate,
-            onChanged: (value) {
-              // Reset verification when email changes
-              if (_emailVerified) {
-                setState(() {
-                  _emailVerified = false;
-                });
-              }
-            },
-          ),
-        ),
-        const SizedBox(width: SpacingTokens.m),
-        // Verification status/button (only shown if required in settings)
-        if (_widgetSettings?.emailConfig.requireEmailVerification ?? false) ...[
-          if (_emailVerified)
-            Container(
-              width: 49,
-              height: 49,
-              decoration: BoxDecoration(
-                color: MinimalistColors.success.withOpacity(0.1),
-                borderRadius: BorderTokens.circularMedium,
-                border: Border.all(color: MinimalistColors.success, width: 1.5),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.verified,
-                  color: MinimalistColors.success,
-                  size: 24,
-                ),
-              ),
-            )
-          else
-            SizedBox(
-              width: 100,
-              height: 44,
-              child: ElevatedButton(
-                onPressed: () {
-                  final email = _emailController.text.trim();
-                  if (email.isEmpty || !email.contains('@')) {
-                    SnackBarHelper.showError(
-                      context: context,
-                      message: 'Please enter a valid email first',
-                      isDarkMode: isDarkMode,
-                    );
-                    return;
-                  }
-                  _openVerificationDialog();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
-                  foregroundColor: getColor(
-                    MinimalistColors.backgroundPrimary,
-                    MinimalistColorsDark.backgroundPrimary,
-                  ),
-                  padding: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderTokens.circularMedium,
-                  ),
-                ),
-                child: const Text('Verify'),
-              ),
-            ),
-        ],
-      ],
-    );
   }
 
   /// Open email verification dialog

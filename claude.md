@@ -29,15 +29,58 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ## 🔧 CLAUDE CODE ALATI & SLASH COMMANDS
 
-### MCP Server: Dart/Flutter
+### MCP Serveri
 
-**Status**: ✅ Instaliran (2025-11-26)
+**Datum instalacije**: 2025-11-26
 
-Dart/Flutter MCP server pruža:
-- Live analiza Dart koda
-- Flutter widget informacije
-- Pub.dev package info
-- Code completion hints
+| Server | Svrha | Status |
+|--------|-------|--------|
+| **dart-flutter** | Live Dart analiza, Flutter widgets, pub.dev info | ✅ Aktivan |
+| **firebase** | Firestore operacije, Auth, Cloud Functions direktno iz Claude | ✅ Aktivan |
+| **github** | Issue/PR management, repo operacije | ✅ Aktivan (treba GITHUB_PERSONAL_ACCESS_TOKEN) |
+| **puppeteer** | Browser automation, screenshots, web scraping | ✅ Aktivan |
+| **memory** | Pamćenje konteksta između Claude Code sesija | ✅ Aktivan |
+| **fetch** | HTTP requests, API testiranje | ✅ Aktivan |
+| **thinking** | Kompleksno razmišljanje za teške probleme | ✅ Aktivan |
+
+#### Korištenje MCP Servera
+
+**Firebase MCP** - Direktne Firestore operacije:
+```
+"Pokaži mi sve bookinge za unit abc123"
+"Kreiraj novi property dokument"
+```
+
+**GitHub MCP** - Issue i PR management:
+```
+"Kreiraj issue za bug u calendar komponenti"
+"Pokaži otvorene PR-ove"
+```
+
+**Puppeteer MCP** - Browser automation:
+```
+"Napravi screenshot booking widgeta na localhost:5000"
+"Testiraj booking flow - odaberi datume i popuni formu"
+```
+
+**Memory MCP** - Perzistentna memorija:
+```
+"Zapamti da radimo na refaktoringu widget feature-a"
+"Šta smo radili prošli put?"
+```
+
+**Fetch MCP** - API testiranje:
+```
+"Testiraj POST request na Cloud Function createBookingAtomic"
+"Dohvati iCal feed sa ovog URL-a"
+```
+
+#### Environment Varijable
+
+Potrebne za neke MCP servere (dodaj u `~/.zshrc`):
+```bash
+export GITHUB_PERSONAL_ACCESS_TOKEN="ghp_xxx"  # Za GitHub MCP
+```
 
 ### Custom Slash Commands
 
@@ -1048,6 +1091,76 @@ WidgetsBinding.instance.addPostFrameCallback((_) {
     Navigator.pop(context);
   }
 });
+```
+
+---
+
+### Widget Settings Embedded Mode - Navigator.pop Fix
+
+**Datum**: 2025-11-26
+**File**: `widget_settings_screen.dart`
+
+#### Problem
+"You have popped the last page off of the stack" error kada se sačuva widget settings unutar Unit Hub tab-a. Screen se koristi u dva režima:
+- **Standalone** (`showAppBar: true`) - otvoren kao zasebna stranica
+- **Embedded** (`showAppBar: false`) - ugrađen u Unit Hub tab
+
+#### Rješenje
+Dodaj uslov da `Navigator.pop()` se poziva SAMO u standalone modu:
+```dart
+if (widget.showAppBar) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  });
+}
+```
+
+---
+
+### Calendar Legend/Footer Width Fix
+
+**Datum**: 2025-11-26
+**Files**: `month_calendar_widget.dart`, `year_calendar_widget.dart`, `year_grid_calendar_widget.dart`
+
+#### Problem
+Min. stay info i legenda bili su preširoki - nisu pratili širinu kalendara.
+
+#### Rješenje
+Dodani `Center` wrapper sa `maxWidth` constraint koji prati kalendar:
+```dart
+Center(
+  child: Container(
+    constraints: BoxConstraints(maxWidth: isDesktop ? 650.0 : 600.0),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      // ...
+    ),
+  ),
+)
+```
+
+---
+
+### Contact Info Pills Row Layout Fix
+
+**Datum**: 2025-11-26
+**File**: `booking_widget_screen.dart`
+
+#### Problem
+Email i telefon pills su bili u column na mobilnim uređajima, zauzimali previše vertikalnog prostora.
+
+#### Rješenje
+- Breakpoint promijenjen sa 600px na 350px za row/column switch
+- maxWidth promijenjen sa 170px na 500px za row layout
+- Spacing reduciran sa 12px na 8px
+- Divider smanjen (height 40→24px, margin 16→12px)
+
+```dart
+final useRowLayout = screenWidth >= 350; // Bilo 600
+final maxWidth = useRowLayout ? 500.0 : 200.0; // Bilo 170
 ```
 
 ---

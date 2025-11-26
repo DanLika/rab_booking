@@ -169,14 +169,34 @@ class _YearGridCalendarWidgetState
   Widget _buildLegend() {
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 1024;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildLegendItem('Available', colors.statusAvailableBackground, colors),
-        const SizedBox(width: SpacingTokens.l),
-        _buildLegendItem('Booked', colors.statusBookedBackground, colors),
-      ],
+    // Match calendar width constraint
+    final maxWidth = isDesktop ? 650.0 : 600.0;
+
+    return Center(
+      child: Container(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingTokens.s,
+          vertical: SpacingTokens.xs,
+        ),
+        decoration: BoxDecoration(
+          color: colors.backgroundSecondary,
+          borderRadius: BorderTokens.circularMedium,
+          border: Border.all(color: colors.borderLight),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildLegendItem('Available', colors.statusAvailableBackground, colors),
+            const SizedBox(width: SpacingTokens.l),
+            _buildLegendItem('Booked', colors.statusBookedBackground, colors),
+          ],
+        ),
+      ),
     );
   }
 

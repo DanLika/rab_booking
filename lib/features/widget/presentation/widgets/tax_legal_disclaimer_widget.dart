@@ -5,6 +5,7 @@ import '../providers/widget_settings_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../domain/models/widget_settings.dart';
+import 'common/theme_colors_helper.dart';
 
 /// Widget for Tax & Legal Disclaimer (Croatian boravišna pristojba, fiskalizacija, eVisitor)
 /// Bug #68: Tax disclaimer with required acceptance before booking
@@ -35,7 +36,7 @@ class _TaxLegalDisclaimerWidgetState
     final isDarkMode = ref.watch(themeProvider);
 
     // Helper function to get theme-aware colors
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
 
     // Get tax/legal config from Firestore (Sync Point 1 integration)
     final widgetSettingsAsync = ref.watch(

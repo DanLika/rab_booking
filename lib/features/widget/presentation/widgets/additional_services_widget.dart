@@ -6,6 +6,7 @@ import '../providers/theme_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../utils/snackbar_helper.dart';
+import 'common/theme_colors_helper.dart';
 
 class AdditionalServicesWidget extends ConsumerWidget {
   final String unitId;
@@ -25,7 +26,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
     final isDarkMode = ref.watch(themeProvider);
 
     // Helper function to get theme-aware colors
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
 
     return servicesAsync.when(
       data: (services) {

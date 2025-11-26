@@ -11,6 +11,8 @@ import '../../../../shared/models/booking_model.dart';
 import '../../domain/models/widget_settings.dart';
 import '../utils/snackbar_helper.dart';
 import '../../utils/ics_download.dart';
+import '../widgets/common/detail_row_widget.dart';
+import '../widgets/common/info_card_widget.dart';
 
 /// Simplified Booking Confirmation Screen for Embedded Widget
 /// Shows booking confirmation with reference number and details
@@ -395,49 +397,11 @@ class _BookingConfirmationScreenState
                       widget.booking != null &&
                       (widget.booking!.paymentStatus == 'pending' ||
                           widget.booking!.status.value == 'pending')) ...[
-                    Container(
-                      padding: const EdgeInsets.all(SpacingTokens.m),
-                      decoration: BoxDecoration(
-                        color: colors.backgroundSecondary,
-                        borderRadius: BorderTokens.circularMedium,
-                        border: Border.all(
-                          color: colors.borderDefault,
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: colors.textSecondary,
-                            size: 24,
-                          ),
-                          const SizedBox(width: SpacingTokens.s),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Payment Verification in Progress',
-                                  style: TextStyle(
-                                    fontSize: TypographyTokens.fontSizeM,
-                                    fontWeight: TypographyTokens.bold,
-                                    color: colors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: SpacingTokens.xs),
-                                Text(
-                                  'Your payment was successful, but we\'re still verifying it with the payment provider. You will receive a confirmation email within a few minutes. If you don\'t receive it, please contact the property owner.',
-                                  style: TextStyle(
-                                    fontSize: TypographyTokens.fontSizeS,
-                                    color: colors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                    InfoCardWidget(
+                      title: 'Payment Verification in Progress',
+                      message:
+                          'Your payment was successful, but we\'re still verifying it with the payment provider. You will receive a confirmation email within a few minutes. If you don\'t receive it, please contact the property owner.',
+                      isDarkMode: isDarkMode,
                     ),
                     const SizedBox(height: SpacingTokens.m),
                   ],
@@ -561,37 +525,66 @@ class _BookingConfirmationScreenState
                           ),
                         ),
                         const SizedBox(height: SpacingTokens.m),
-                        _buildDetailRow(
-                          'Property',
-                          widget.unitName ?? widget.propertyName,
+                        DetailRowWidget(
+                          label: 'Property',
+                          value: widget.unitName ?? widget.propertyName,
+                          isDarkMode: isDarkMode,
+                          hasPadding: true,
+                          valueFontWeight: FontWeight.w400,
                         ),
-                        _buildDetailRow('Guest', widget.guestName),
-                        _buildDetailRow('Email', widget.guestEmail),
+                        DetailRowWidget(
+                          label: 'Guest',
+                          value: widget.guestName,
+                          isDarkMode: isDarkMode,
+                          hasPadding: true,
+                          valueFontWeight: FontWeight.w400,
+                        ),
+                        DetailRowWidget(
+                          label: 'Email',
+                          value: widget.guestEmail,
+                          isDarkMode: isDarkMode,
+                          hasPadding: true,
+                          valueFontWeight: FontWeight.w400,
+                        ),
                         const SizedBox(height: SpacingTokens.s),
-                        _buildDetailRow(
-                          'Check-in',
-                          DateFormat(
+                        DetailRowWidget(
+                          label: 'Check-in',
+                          value: DateFormat(
                             'EEEE, MMM dd, yyyy',
                           ).format(widget.checkIn),
+                          isDarkMode: isDarkMode,
+                          hasPadding: true,
+                          valueFontWeight: FontWeight.w400,
                         ),
-                        _buildDetailRow(
-                          'Check-out',
-                          DateFormat(
+                        DetailRowWidget(
+                          label: 'Check-out',
+                          value: DateFormat(
                             'EEEE, MMM dd, yyyy',
                           ).format(widget.checkOut),
+                          isDarkMode: isDarkMode,
+                          hasPadding: true,
+                          valueFontWeight: FontWeight.w400,
                         ),
-                        _buildDetailRow(
-                          'Duration',
-                          '${widget.nights} ${widget.nights == 1 ? 'night' : 'nights'}',
+                        DetailRowWidget(
+                          label: 'Duration',
+                          value: '${widget.nights} ${widget.nights == 1 ? 'night' : 'nights'}',
+                          isDarkMode: isDarkMode,
+                          hasPadding: true,
+                          valueFontWeight: FontWeight.w400,
                         ),
-                        _buildDetailRow(
-                          'Guests',
-                          '${widget.guests} ${widget.guests == 1 ? 'guest' : 'guests'}',
+                        DetailRowWidget(
+                          label: 'Guests',
+                          value: '${widget.guests} ${widget.guests == 1 ? 'guest' : 'guests'}',
+                          isDarkMode: isDarkMode,
+                          hasPadding: true,
+                          valueFontWeight: FontWeight.w400,
                         ),
                         const SizedBox(height: SpacingTokens.s),
-                        _buildDetailRow(
-                          'Total Price',
-                          '€${widget.totalPrice.toStringAsFixed(2)}',
+                        DetailRowWidget(
+                          label: 'Total Price',
+                          value: '€${widget.totalPrice.toStringAsFixed(2)}',
+                          isDarkMode: isDarkMode,
+                          hasPadding: true,
                           isHighlighted: true,
                         ),
                       ],
@@ -894,43 +887,6 @@ class _BookingConfirmationScreenState
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(
-    String label,
-    String value, {
-    bool isHighlighted = false,
-  }) {
-    final isDarkMode = ref.read(themeProvider);
-    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xxs),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
-              color: colors.textSecondary,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
-              fontWeight: isHighlighted
-                  ? TypographyTokens.bold
-                  : TypographyTokens.regular,
-              color: isHighlighted
-                  ? colors.buttonPrimary
-                  : colors.textPrimary,
-            ),
-          ),
-        ],
       ),
     );
   }

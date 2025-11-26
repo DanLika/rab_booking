@@ -12,6 +12,9 @@ import '../../../../shared/models/user_profile_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../utils/snackbar_helper.dart';
+import '../widgets/common/detail_row_widget.dart';
+import '../widgets/common/copyable_text_field.dart';
+import '../widgets/common/theme_colors_helper.dart';
 
 /// Modern Bank Transfer Instructions Screen
 /// Displays owner's actual bank details with responsive design
@@ -40,7 +43,7 @@ class BankTransferScreen extends ConsumerWidget {
     final isDarkMode = ref.watch(themeProvider);
 
     // Helper function to get theme-aware colors
-    Color getColor(Color light, Color dark) => isDarkMode ? dark : light;
+    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
 
     return Scaffold(
       backgroundColor: getColor(
@@ -680,25 +683,22 @@ class BankTransferScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
-          _buildDetailRow(
-            'Dolazak',
-            _formatDate(checkIn),
-            isDarkMode,
-            getColor,
+          DetailRowWidget(
+            label: 'Dolazak',
+            value: _formatDate(checkIn),
+            isDarkMode: isDarkMode,
           ),
           const SizedBox(height: SpacingTokens.s),
-          _buildDetailRow(
-            'Odlazak',
-            _formatDate(checkOut),
-            isDarkMode,
-            getColor,
+          DetailRowWidget(
+            label: 'Odlazak',
+            value: _formatDate(checkOut),
+            isDarkMode: isDarkMode,
           ),
           const SizedBox(height: SpacingTokens.s),
-          _buildDetailRow(
-            'Noći',
-            '${calculation.nights}',
-            isDarkMode,
-            getColor,
+          DetailRowWidget(
+            label: 'Noći',
+            value: '${calculation.nights}',
+            isDarkMode: isDarkMode,
           ),
           Divider(
             height: SpacingTokens.l,
@@ -732,40 +732,6 @@ class BankTransferScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDetailRow(
-    String label,
-    String value,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
-  ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeM,
-            color: getColor(
-              MinimalistColors.textSecondary,
-              MinimalistColorsDark.textSecondary,
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: TypographyTokens.fontSizeM,
-            fontWeight: TypographyTokens.semiBold,
-            color: getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -887,150 +853,93 @@ class BankTransferScreen extends ConsumerWidget {
           ),
           const SizedBox(height: SpacingTokens.m),
           if (bankConfig.accountHolder != null)
-            _buildBankField(
-              context,
-              isDarkMode,
-              getColor,
-              'Vlasnik Računa',
-              bankConfig.accountHolder!,
-              Icons.person_outline,
+            CopyableTextField(
+              label: 'Vlasnik Računa',
+              value: bankConfig.accountHolder!,
+              icon: Icons.person_outline,
+              isDarkMode: isDarkMode,
+              onCopy: () {
+                Clipboard.setData(ClipboardData(text: bankConfig.accountHolder!));
+                SnackBarHelper.showSuccess(
+                  context: context,
+                  message: 'Vlasnik Računa kopiran',
+                  isDarkMode: isDarkMode,
+                  duration: const Duration(seconds: 2),
+                );
+              },
             ),
           if (bankConfig.bankName != null) ...[
             const SizedBox(height: SpacingTokens.s),
-            _buildBankField(
-              context,
-              isDarkMode,
-              getColor,
-              'Naziv Banke',
-              bankConfig.bankName!,
-              Icons.account_balance_outlined,
+            CopyableTextField(
+              label: 'Naziv Banke',
+              value: bankConfig.bankName!,
+              icon: Icons.account_balance_outlined,
+              isDarkMode: isDarkMode,
+              onCopy: () {
+                Clipboard.setData(ClipboardData(text: bankConfig.bankName!));
+                SnackBarHelper.showSuccess(
+                  context: context,
+                  message: 'Naziv Banke kopiran',
+                  isDarkMode: isDarkMode,
+                  duration: const Duration(seconds: 2),
+                );
+              },
             ),
           ],
           if (bankConfig.iban != null) ...[
             const SizedBox(height: SpacingTokens.s),
-            _buildBankField(
-              context,
-              isDarkMode,
-              getColor,
-              'IBAN',
-              bankConfig.iban!,
-              Icons.credit_card,
+            CopyableTextField(
+              label: 'IBAN',
+              value: bankConfig.iban!,
+              icon: Icons.credit_card,
+              isDarkMode: isDarkMode,
+              onCopy: () {
+                Clipboard.setData(ClipboardData(text: bankConfig.iban!));
+                SnackBarHelper.showSuccess(
+                  context: context,
+                  message: 'IBAN kopiran',
+                  isDarkMode: isDarkMode,
+                  duration: const Duration(seconds: 2),
+                );
+              },
             ),
           ],
           if (bankConfig.swift != null) ...[
             const SizedBox(height: SpacingTokens.s),
-            _buildBankField(
-              context,
-              isDarkMode,
-              getColor,
-              'SWIFT/BIC',
-              bankConfig.swift!,
-              Icons.language,
+            CopyableTextField(
+              label: 'SWIFT/BIC',
+              value: bankConfig.swift!,
+              icon: Icons.language,
+              isDarkMode: isDarkMode,
+              onCopy: () {
+                Clipboard.setData(ClipboardData(text: bankConfig.swift!));
+                SnackBarHelper.showSuccess(
+                  context: context,
+                  message: 'SWIFT/BIC kopiran',
+                  isDarkMode: isDarkMode,
+                  duration: const Duration(seconds: 2),
+                );
+              },
             ),
           ],
           if (bankConfig.accountNumber != null) ...[
             const SizedBox(height: SpacingTokens.s),
-            _buildBankField(
-              context,
-              isDarkMode,
-              getColor,
-              'Broj Računa',
-              bankConfig.accountNumber!,
-              Icons.numbers,
+            CopyableTextField(
+              label: 'Broj Računa',
+              value: bankConfig.accountNumber!,
+              icon: Icons.numbers,
+              isDarkMode: isDarkMode,
+              onCopy: () {
+                Clipboard.setData(ClipboardData(text: bankConfig.accountNumber!));
+                SnackBarHelper.showSuccess(
+                  context: context,
+                  message: 'Broj Računa kopiran',
+                  isDarkMode: isDarkMode,
+                  duration: const Duration(seconds: 2),
+                );
+              },
             ),
           ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBankField(
-    BuildContext context,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
-    String label,
-    String value,
-    IconData icon,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(SpacingTokens.s),
-      decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundPrimary,
-          MinimalistColorsDark.backgroundPrimary,
-        ),
-        borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
-        border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: getColor(
-              MinimalistColors.buttonPrimary,
-              MinimalistColorsDark.buttonPrimary,
-            ),
-            size: IconSizeTokens.small,
-          ),
-          const SizedBox(width: SpacingTokens.s),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeXS,
-                    color: getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
-                    fontWeight: TypographyTokens.medium,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeM,
-                    fontWeight: TypographyTokens.semiBold,
-                    color: getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
-                    fontFamily: label.contains('IBAN') || label.contains('Broj')
-                        ? 'monospace'
-                        : null,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.content_copy,
-              size: IconSizeTokens.small,
-              color: getColor(
-                MinimalistColors.buttonPrimary,
-                MinimalistColorsDark.buttonPrimary,
-              ),
-            ),
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: value));
-              SnackBarHelper.showSuccess(
-                context: context,
-                message: '$label kopiran',
-                isDarkMode: isDarkMode,
-                duration: const Duration(seconds: 2),
-              );
-            },
-            tooltip: 'Kopiraj',
-          ),
         ],
       ),
     );

@@ -497,13 +497,17 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
           context,
           'Postavke uspješno sačuvane!',
         );
-        // Navigate after frame completes to avoid Navigator lock assertion
-        // caused by provider invalidation triggering rebuilds
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            Navigator.pop(context);
-          }
-        });
+        // Only navigate back when used as standalone screen (with AppBar)
+        // When embedded in tabs (showAppBar: false), stay on current tab
+        if (widget.showAppBar) {
+          // Navigate after frame completes to avoid Navigator lock assertion
+          // caused by provider invalidation triggering rebuilds
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.pop(context);
+            }
+          });
+        }
       }
     } catch (e) {
       if (mounted) {

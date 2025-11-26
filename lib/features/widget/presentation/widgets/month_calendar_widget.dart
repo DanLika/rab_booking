@@ -1013,77 +1013,89 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrowScreen = screenWidth < 600;
+    final isDesktop = screenWidth >= 1024;
 
-    return Container(
-      margin: const EdgeInsets.only(
-        top: SpacingTokens.s,
-        bottom: SpacingTokens.xs,
-        left: SpacingTokens.xs,
-        right: SpacingTokens.xs,
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.s,
-        vertical: SpacingTokens.xs,
-      ),
-      decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
-        borderRadius: BorderTokens.circularMedium,
-        border: Border.all(color: colors.borderLight),
-      ),
-      child: isNarrowScreen
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Min stay info
-                Row(
-                  children: [
-                    Icon(
-                      Icons.bed_outlined,
-                      size: 14,
-                      color: colors.textSecondary,
-                    ),
-                    const SizedBox(width: SpacingTokens.xxs),
-                    Text(
-                      'Min. stay: $minNights ${minNights == 1 ? 'night' : 'nights'}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: colors.textPrimary,
+    // Match calendar width: 650px desktop, 600px mobile/tablet
+    final maxWidth = isDesktop ? 650.0 : 600.0;
+
+    return Center(
+      child: Container(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        margin: const EdgeInsets.only(
+          top: SpacingTokens.s,
+          bottom: SpacingTokens.xs,
+          left: SpacingTokens.xs,
+          right: SpacingTokens.xs,
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingTokens.s,
+          vertical: SpacingTokens.xs,
+        ),
+        decoration: BoxDecoration(
+          color: colors.backgroundSecondary,
+          borderRadius: BorderTokens.circularMedium,
+          border: Border.all(color: colors.borderLight),
+        ),
+        child: isNarrowScreen
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Min stay info
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.bed_outlined,
+                        size: 14,
+                        color: colors.textSecondary,
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: SpacingTokens.xxs),
-                // Color legend
-                _buildColorLegend(colors),
-              ],
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Min stay info
-                Row(
-                  children: [
-                    Icon(
-                      Icons.bed_outlined,
-                      size: 14,
-                      color: colors.textSecondary,
-                    ),
-                    const SizedBox(width: SpacingTokens.xxs),
-                    Text(
-                      'Min. stay: $minNights ${minNights == 1 ? 'night' : 'nights'}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: colors.textPrimary,
+                      const SizedBox(width: SpacingTokens.xxs),
+                      Text(
+                        'Min. stay: $minNights ${minNights == 1 ? 'night' : 'nights'}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: colors.textPrimary,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                // Color legend
-                _buildColorLegend(colors),
-              ],
-            ),
+                    ],
+                  ),
+                  const SizedBox(height: SpacingTokens.xxs),
+                  // Color legend
+                  _buildColorLegend(colors),
+                ],
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Min stay info
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.bed_outlined,
+                        size: 14,
+                        color: colors.textSecondary,
+                      ),
+                      const SizedBox(width: SpacingTokens.xxs),
+                      Text(
+                        'Min. stay: $minNights ${minNights == 1 ? 'night' : 'nights'}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: SpacingTokens.m),
+                  // Color legend
+                  _buildColorLegend(colors),
+                ],
+              ),
+      ),
     );
   }
 

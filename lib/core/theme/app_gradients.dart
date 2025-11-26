@@ -22,11 +22,11 @@ class AppGradients extends ThemeExtension<AppGradients> {
     required this.sectionBorder,
   });
 
-  /// Screen body gradient (topLeft → bottomRight)
+  /// Screen body gradient (left → right, horizontal)
   /// Used for: main page backgrounds, scaffold bodies
   final LinearGradient pageBackground;
 
-  /// Section/Card gradient (topRight → bottomLeft)
+  /// Section/Card gradient (right → left, horizontal)
   /// Used for: cards, sections, elevated containers
   final LinearGradient sectionBackground;
 
@@ -65,14 +65,14 @@ class AppGradients extends ThemeExtension<AppGradients> {
   /// Light theme gradients
   static const AppGradients light = AppGradients(
     pageBackground: LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
       colors: [_lightStart, _lightEnd],
       stops: [0.0, 0.3],
     ),
     sectionBackground: LinearGradient(
-      begin: Alignment.topRight,
-      end: Alignment.bottomLeft,
+      begin: Alignment.centerRight,
+      end: Alignment.centerLeft,
       colors: [_lightStart, _lightEnd],
       stops: [0.0, 0.3],
     ),
@@ -87,14 +87,14 @@ class AppGradients extends ThemeExtension<AppGradients> {
   /// Dark theme gradients
   static const AppGradients dark = AppGradients(
     pageBackground: LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
       colors: [_darkStart, _darkEnd],
       stops: [0.0, 0.3],
     ),
     sectionBackground: LinearGradient(
-      begin: Alignment.topRight,
-      end: Alignment.bottomLeft,
+      begin: Alignment.centerRight,
+      end: Alignment.centerLeft,
       colors: [_darkStart, _darkEnd],
       stops: [0.0, 0.3],
     ),

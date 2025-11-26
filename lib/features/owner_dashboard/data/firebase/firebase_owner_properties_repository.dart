@@ -346,6 +346,57 @@ class FirebaseOwnerPropertiesRepository {
     }
   }
 
+  /// Watch owner properties (real-time stream)
+  Stream<List<PropertyModel>> watchOwnerProperties(String ownerId) {
+    return _firestore
+        .collection('properties')
+        .where('owner_id', isEqualTo: ownerId)
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final properties = <PropertyModel>[];
+      for (final doc in snapshot.docs) {
+        final propertyData = {...doc.data(), 'id': doc.id};
+
+        // Get units count for this property
+        final unitsSnapshot = await _firestore
+            .collection('properties')
+            .doc(doc.id)
+            .collection('units')
+            .get();
+
+        propertyData['units_count'] = unitsSnapshot.docs.length;
+        properties.add(PropertyModel.fromJson(propertyData));
+      }
+      return properties;
+    });
+  }
+
+  /// Watch all owner units (real-time stream using collection group)
+  Stream<List<UnitModel>> watchAllOwnerUnits(String ownerId) {
+    // First watch properties, then for each emit, get all units
+    return watchOwnerProperties(ownerId).asyncMap((properties) async {
+      final allUnits = <UnitModel>[];
+      for (final property in properties) {
+        final snapshot = await _firestore
+            .collection('properties')
+            .doc(property.id)
+            .collection('units')
+            .orderBy('created_at', descending: true)
+            .get();
+
+        for (final doc in snapshot.docs) {
+          allUnits.add(UnitModel.fromJson({
+            ...doc.data(),
+            'id': doc.id,
+            'property_id': property.id,
+          }));
+        }
+      }
+      return allUnits;
+    });
+  }
+
   /// Create unit (in property subcollection)
   Future<UnitModel> createUnit({
     required String propertyId,

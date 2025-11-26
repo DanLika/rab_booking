@@ -96,6 +96,7 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                       labelText: 'Razlog otkazivanja',
                       hintText: 'Unesite razlog...',
                       prefixIcon: const Icon(Icons.edit_note),
+                      context: context,
                     ),
                     maxLines: 3,
                   ),

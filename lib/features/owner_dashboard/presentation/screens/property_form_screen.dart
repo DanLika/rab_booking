@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,7 +9,6 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
-import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -135,6 +134,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                   labelText: 'Naziv nekretnine *',
                                   hintText: 'npr. Villa Mediteran',
                                   isMobile: isMobile,
+                                  context: context,
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -163,6 +163,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                       });
                                     },
                                   ),
+                                  context: context,
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -195,6 +196,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                   labelText: 'Naziv nekretnine *',
                                   hintText: 'npr. Villa Mediteran',
                                   isMobile: isMobile,
+                                  context: context,
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -225,6 +227,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                       });
                                     },
                                   ),
+                                  context: context,
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -253,6 +256,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                       decoration: InputDecorationHelper.buildDecoration(
                         labelText: 'Tip nekretnine *',
                         isMobile: isMobile,
+                        context: context,
                       ),
                       items: PropertyType.values.map((type) {
                         return DropdownMenuItem(
@@ -274,6 +278,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                         labelText: 'Opis *',
                         hintText: 'Detaljno opišite vašu nekretninu...',
                         isMobile: isMobile,
+                        context: context,
                       ),
                       maxLines: 5,
                       validator: (value) {
@@ -313,6 +318,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                   hintText: 'npr. Rab (grad), Otok Rab',
                                   prefixIcon: const Icon(Icons.location_on),
                                   isMobile: isMobile,
+                                  context: context,
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -329,6 +335,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                   hintText: 'Ulica i broj',
                                   prefixIcon: const Icon(Icons.home),
                                   isMobile: isMobile,
+                                  context: context,
                                 ),
                               ),
                             ],
@@ -347,6 +354,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                   hintText: 'npr. Rab (grad), Otok Rab',
                                   prefixIcon: const Icon(Icons.location_on),
                                   isMobile: isMobile,
+                                  context: context,
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -365,6 +373,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                   hintText: 'Ulica i broj',
                                   prefixIcon: const Icon(Icons.home),
                                   isMobile: isMobile,
+                                  context: context,
                                 ),
                               ),
                             ),
@@ -412,7 +421,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                         value: _isPublished,
                         onChanged: (value) =>
                             setState(() => _isPublished = value),
-                        thumbColor: WidgetStateProperty.all(Colors.transparent),
+                        activeThumbColor: Theme.of(context).colorScheme.primary,
+                        activeTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                       ),
                     ),
                   ],
@@ -625,66 +635,112 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
   }
 
   Widget _buildImagesSection() {
+    final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
     final totalImages = _existingImages.length + _selectedImages.length;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Existing images
-        if (_existingImages.isNotEmpty) ...[
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _existingImages.asMap().entries.map((entry) {
-              final index = entry.key;
-              final imageUrl = entry.value;
-              return _buildExistingImageCard(imageUrl, index);
-            }).toList(),
+    // Build the images grid (combines existing and new images)
+    Widget buildImagesGrid() {
+      if (totalImages == 0) {
+        return Center(
+          child: Column(
+            children: [
+              Icon(
+                Icons.photo_library_outlined,
+                size: 48,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Nema fotografija',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-        ],
+        );
+      }
 
-        // New images
-        if (_selectedImages.isNotEmpty) ...[
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _selectedImages.asMap().entries.map((entry) {
-              final index = entry.key;
-              final image = entry.value;
-              return _buildNewImageCard(image, index);
-            }).toList(),
-          ),
-          const SizedBox(height: 8),
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          // Existing images
+          ..._existingImages.asMap().entries.map((entry) {
+            final index = entry.key;
+            final imageUrl = entry.value;
+            return _buildExistingImageCard(imageUrl, index);
+          }),
+          // New images
+          ..._selectedImages.asMap().entries.map((entry) {
+            final index = entry.key;
+            final image = entry.value;
+            return _buildNewImageCard(image, index);
+          }),
         ],
+      );
+    }
 
-        // Add images button
-        OutlinedButton.icon(
-          onPressed: _pickImages,
-          icon: const Icon(Icons.add_photo_alternate),
-          label: Text(
-            totalImages == 0
-                ? 'Dodaj fotografije (min 3)'
-                : 'Dodaj još fotografija',
-          ),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    // Left controls widget
+    Widget buildLeftControls() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Add images button
+          ElevatedButton.icon(
+            onPressed: _pickImages,
+            icon: const Icon(Icons.add_photo_alternate, size: 20),
+            label: Text(
+              totalImages == 0 ? 'Dodaj Fotografije' : 'Dodaj Još',
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             ),
           ),
-        ),
+          const SizedBox(height: 12),
 
-        if (totalImages > 0)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
+          // Photo count
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Text(
-              'Ukupno: $totalImages fotografija',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: context.textColorSecondary,
+              '$totalImages fotografija',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
+        ],
+      );
+    }
+
+    if (isMobile) {
+      // Mobile: Vertical layout
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          buildLeftControls(),
+          const SizedBox(height: 16),
+          buildImagesGrid(),
+        ],
+      );
+    }
+
+    // Desktop: Horizontal layout - Left controls, Right images
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildLeftControls(),
+        const SizedBox(width: 24),
+        Expanded(child: buildImagesGrid()),
       ],
     );
   }
@@ -758,16 +814,42 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.file(
-              File(image.path),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Icon(
-                  Icons.broken_image,
-                  size: 40,
-                  color: theme.colorScheme.onSurface.withAlpha(
-                    (0.3 * 255).toInt(),
-                  ),
+            child: FutureBuilder<Uint8List>(
+              future: image.readAsBytes(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  );
+                }
+                if (snapshot.hasError || !snapshot.hasData) {
+                  return Icon(
+                    Icons.broken_image,
+                    size: 40,
+                    color: theme.colorScheme.onSurface.withAlpha(
+                      (0.3 * 255).toInt(),
+                    ),
+                  );
+                }
+                return Image.memory(
+                  snapshot.data!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.broken_image,
+                      size: 40,
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (0.3 * 255).toInt(),
+                      ),
+                    );
+                  },
                 );
               },
             ),

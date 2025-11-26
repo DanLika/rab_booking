@@ -980,6 +980,33 @@ if (_selectedMode == WidgetMode.bookingPending) {
 
 ## 🐛 NEDAVNI BUG FIX-EVI (Post 20.11.2025)
 
+### Auth System - Error Handling & Loading State
+
+**Datum**: 2025-11-26
+**Commit**: `bd4c9d3`
+
+#### Riješeni Problemi
+- Security logging i `sendEmailVerification()` wrapped u try-catch (non-blocking)
+- Social sign-in (Google/Apple/Anonymous) sada ima loading spinner
+- UI koristi `state.error` umjesto raw exception poruka
+- Error check prije success navigacije
+
+#### Ključni Pattern
+```dart
+// Provider: Non-blocking async operacije
+try {
+  await _security.logLogin(user, location: location);
+} catch (e) {
+  LoggingService.log('Security logging failed: $e', tag: 'AUTH_WARNING');
+}
+
+// UI: Prefer state.error
+final authState = ref.read(enhancedAuthProvider);
+final errorMessage = authState.error ?? e.toString();
+```
+
+---
+
 ### Timeline Calendar - Pill Bar Auto-Open Fix
 
 **Datum**: 2025-11-18-19  

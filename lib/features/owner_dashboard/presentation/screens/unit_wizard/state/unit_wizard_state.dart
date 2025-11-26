@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../../../../shared/models/unit_model.dart';
 
@@ -85,80 +84,6 @@ class UnitWizardDraft with _$UnitWizardDraft {
       widgetTheme: 'minimalist',
       isPublished: unit.isAvailable,
       createdAt: unit.createdAt,
-      lastSaved: DateTime.now(),
-    );
-  }
-}
-
-/// Extension for Firestore serialization
-extension UnitWizardDraftFirestore on UnitWizardDraft {
-  Map<String, dynamic> toFirestore() {
-    return {
-      'unit_id': unitId,
-      'current_step': currentStep,
-      'completed_steps': completedSteps.map((k, v) => MapEntry(k.toString(), v)),
-      'skipped_steps': skippedSteps.map((k, v) => MapEntry(k.toString(), v)),
-      'name': name,
-      'property_id': propertyId,
-      'description': description,
-      'slug': slug,
-      'bedrooms': bedrooms,
-      'bathrooms': bathrooms,
-      'max_guests': maxGuests,
-      'area_sqm': areaSqm,
-      'price_per_night': pricePerNight,
-      'min_stay_nights': minStayNights,
-      'seasons': seasons,
-      'available_year_round': availableYearRound,
-      'season_start_date': seasonStartDate != null ? Timestamp.fromDate(seasonStartDate!) : null,
-      'season_end_date': seasonEndDate != null ? Timestamp.fromDate(seasonEndDate!) : null,
-      'blocked_dates': blockedDates.map(Timestamp.fromDate).toList(),
-      'images': images,
-      'cover_image_url': coverImageUrl,
-      'widget_mode': widgetMode,
-      'widget_theme': widgetTheme,
-      'widget_settings': widgetSettings,
-      'ical_config': icalConfig,
-      'email_config': emailConfig,
-      'tax_legal_config': taxLegalConfig,
-      'is_published': isPublished,
-      'last_saved': Timestamp.now(),
-      'created_at': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
-    };
-  }
-
-  static UnitWizardDraft fromFirestore(Map<String, dynamic> data) {
-    return UnitWizardDraft(
-      unitId: data['unit_id'],
-      currentStep: data['current_step'] ?? 1,
-      completedSteps: (data['completed_steps'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(int.parse(k), v as bool)) ?? {},
-      skippedSteps: (data['skipped_steps'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(int.parse(k), v as bool)) ?? {},
-      name: data['name'],
-      propertyId: data['property_id'],
-      description: data['description'],
-      slug: data['slug'],
-      bedrooms: data['bedrooms'],
-      bathrooms: data['bathrooms'],
-      maxGuests: data['max_guests'],
-      areaSqm: data['area_sqm'],
-      pricePerNight: data['price_per_night'],
-      minStayNights: data['min_stay_nights'],
-      seasons: List<Map<String, dynamic>>.from(data['seasons'] ?? []),
-      availableYearRound: data['available_year_round'] ?? true,
-      seasonStartDate: data['season_start_date'] != null ? (data['season_start_date'] as Timestamp).toDate() : null,
-      seasonEndDate: data['season_end_date'] != null ? (data['season_end_date'] as Timestamp).toDate() : null,
-      blockedDates: (data['blocked_dates'] as List<dynamic>?)?.map((t) => (t as Timestamp).toDate()).toList() ?? [],
-      images: List<String>.from(data['images'] ?? []),
-      coverImageUrl: data['cover_image_url'],
-      widgetMode: data['widget_mode'],
-      widgetTheme: data['widget_theme'],
-      widgetSettings: data['widget_settings'],
-      icalConfig: data['ical_config'],
-      emailConfig: data['email_config'],
-      taxLegalConfig: data['tax_legal_config'],
-      isPublished: data['is_published'] ?? false,
-      lastSaved: data['last_saved'] != null ? (data['last_saved'] as Timestamp).toDate() : null,
-      createdAt: data['created_at'] != null ? (data['created_at'] as Timestamp).toDate() : null,
     );
   }
 }

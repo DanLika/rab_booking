@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,9 +20,7 @@ import 'steps/step_5_review.dart';
 ///
 /// Features:
 /// - 5-step wizard flow (Basic Info → Review & Publish)
-/// - Auto-save with draft persistence
 /// - Skip optional step (Photos)
-/// - Resume from draft
 /// - Responsive design (mobile + desktop)
 class UnitWizardScreen extends ConsumerStatefulWidget {
   final String? unitId; // null = new unit, non-null = edit existing
@@ -54,7 +53,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       curve: Curves.easeInOut,
     );
 
-    await ref.read(unitWizardNotifierProvider(widget.unitId).notifier).jumpToStep(step);
+    ref.read(unitWizardNotifierProvider(widget.unitId).notifier).jumpToStep(step);
   }
 
   /// Handle next button
@@ -73,11 +72,11 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
     }
 
     // Mark step as completed
-    await notifier.markStepCompleted(currentStep);
+    notifier.markStepCompleted(currentStep);
 
     // Move to next step
     if (currentStep < 5) {
-      await notifier.goToNextStep();
+      notifier.goToNextStep();
       unawaited(
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
@@ -91,9 +90,9 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
   }
 
   /// Handle back button
-  Future<void> _handleBack() async {
+  void _handleBack() {
     final notifier = ref.read(unitWizardNotifierProvider(widget.unitId).notifier);
-    await notifier.goToPreviousStep();
+    notifier.goToPreviousStep();
 
     unawaited(
       _pageController.previousPage(
@@ -104,15 +103,15 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
   }
 
   /// Handle skip button (optional steps only)
-  Future<void> _handleSkip() async {
+  void _handleSkip() {
     final notifier = ref.read(unitWizardNotifierProvider(widget.unitId).notifier);
     final currentState = ref.read(unitWizardNotifierProvider(widget.unitId)).value;
 
     if (currentState == null) return;
 
     // Mark as skipped
-    await notifier.markStepSkipped(currentState.currentStep);
-    await notifier.goToNextStep();
+    notifier.markStepSkipped(currentState.currentStep);
+    notifier.goToNextStep();
 
     unawaited(
       _pageController.nextPage(
@@ -258,9 +257,6 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
             );
       }
 
-      // Clear draft
-      await ref.read(unitWizardNotifierProvider(widget.unitId).notifier).clearDraft();
-
       // Invalidate units provider so Unit Hub refreshes its list
       ref.invalidate(ownerUnitsProvider);
 
@@ -327,37 +323,6 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
             gradient: GradientTokens.brandPrimary,
           ),
         ),
-        actions: [
-          // Auto-save indicator
-          wizardState.when(
-            data: (draft) => draft.lastSaved != null
-                ? Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.cloud_done,
-                            size: 18,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _getLastSavedText(draft.lastSaved!),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : const SizedBox.shrink(),
-            loading: () => const SizedBox.shrink(),
-            error: (error, stackTrace) => const SizedBox.shrink(),
-          ),
-        ],
       ),
       body: wizardState.when(
         data: (draft) => Column(
@@ -423,21 +388,5 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
         ),
       ),
     );
-  }
-
-  /// Format last saved timestamp
-  String _getLastSavedText(DateTime lastSaved) {
-    final now = DateTime.now();
-    final difference = now.difference(lastSaved);
-
-    if (difference.inSeconds < 60) {
-      return 'Saved just now';
-    } else if (difference.inMinutes < 60) {
-      return 'Saved ${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return 'Saved ${difference.inHours}h ago';
-    } else {
-      return 'Saved ${difference.inDays}d ago';
-    }
   }
 }

@@ -1,8 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 /// Utility for displaying user-friendly error messages
 /// Hides technical details (stack traces) from users in production
+///
+/// Snackbar color palette (Mediterranean theme):
+/// - Success: Emerald (#10B981) - White text
+/// - Error: Red (#EF4444) - White text
+/// - Warning: Amber (#F59E0B) - Dark text for contrast
+/// - Info: Primary Purple (#6B4CE6) - White text
 class ErrorDisplayUtils {
   ErrorDisplayUtils._(); // Private constructor
 
@@ -26,9 +34,9 @@ class ErrorDisplayUtils {
     messenger.showSnackBar(
       SnackBar(
         content: Text(displayMessage),
-        backgroundColor: const Color(0xFFEF5350), // Red
+        backgroundColor: AppColors.error, // Red (#EF4444)
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: duration,
         action: onRetry != null
             ? SnackBarAction(
@@ -55,9 +63,9 @@ class ErrorDisplayUtils {
     messenger.showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: const Color(0xFF66BB6A), // Green
+        backgroundColor: AppColors.success, // Emerald (#10B981)
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: duration,
       ),
     );
@@ -76,10 +84,13 @@ class ErrorDisplayUtils {
 
     messenger.showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFFFFA726), // Orange
+        content: Text(
+          message,
+          style: const TextStyle(color: Color(0xFF1C1917)), // Dark text for contrast
+        ),
+        backgroundColor: const Color(0xFFF59E0B), // Amber
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: duration,
       ),
     );
@@ -99,9 +110,9 @@ class ErrorDisplayUtils {
     messenger.showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: const Color(0xFF42A5F5), // Blue
+        backgroundColor: AppColors.primary, // Primary Purple (#6B4CE6)
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: duration,
       ),
     );
@@ -131,9 +142,9 @@ class ErrorDisplayUtils {
           ],
         ),
         duration: const Duration(seconds: 30), // Long duration, manually dismissed
-        backgroundColor: const Color(0xFF42A5F5),
+        backgroundColor: AppColors.primary, // Primary Purple (#6B4CE6)
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

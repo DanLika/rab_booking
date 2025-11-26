@@ -6,7 +6,6 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_color_extensions.dart';
-import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../auth/presentation/widgets/auth_logo_icon.dart';
@@ -161,7 +160,7 @@ class OwnerAppDrawer extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Divider(
                 height: 1,
-                color: context.borderColor.withValues(alpha: 0.5),
+                color: context.gradients.sectionBorder,
               ),
             ),
 
@@ -186,7 +185,7 @@ class OwnerAppDrawer extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Divider(
                 height: 1,
-                color: context.borderColor.withValues(alpha: 0.5),
+                color: context.gradients.sectionBorder,
               ),
             ),
 

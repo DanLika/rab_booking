@@ -90,6 +90,7 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
                       labelText: 'Razlog odbijanja',
                       hintText: 'Unesite razlog (opcionalno)...',
                       prefixIcon: const Icon(Icons.edit_note),
+                      context: context,
                     ),
                     maxLines: 3,
                   ),

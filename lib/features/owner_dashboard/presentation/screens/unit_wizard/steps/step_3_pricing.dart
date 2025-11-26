@@ -198,6 +198,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                           helperText: 'Osnovna cena za jednu noć',
                                           prefixIcon: const Icon(Icons.euro),
                                           isMobile: isMobile,
+                                          context: context,
                                         ),
                                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                         inputFormatters: [
@@ -224,6 +225,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                           helperText: 'Najmanje noći za rezervaciju',
                                           prefixIcon: const Icon(Icons.calendar_today),
                                           isMobile: isMobile,
+                                          context: context,
                                         ),
                                         keyboardType: TextInputType.number,
                                         inputFormatters: [
@@ -257,6 +259,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                           helperText: 'Osnovna cena za jednu noć',
                                           prefixIcon: const Icon(Icons.euro),
                                           isMobile: isMobile,
+                                          context: context,
                                         ),
                                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                         inputFormatters: [
@@ -285,6 +288,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                           helperText: 'Najmanje noći za rezervaciju',
                                           prefixIcon: const Icon(Icons.calendar_today),
                                           isMobile: isMobile,
+                                          context: context,
                                         ),
                                         keyboardType: TextInputType.number,
                                         inputFormatters: [
@@ -405,7 +409,8 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                       .read(unitWizardNotifierProvider(widget.unitId).notifier)
                                       .updateField('availableYearRound', value);
                                 },
-                                thumbColor: WidgetStateProperty.all(Colors.transparent),
+                                activeThumbColor: theme.colorScheme.primary,
+                                activeTrackColor: theme.colorScheme.primary.withValues(alpha: 0.5),
                               ),
                             ),
                           ],

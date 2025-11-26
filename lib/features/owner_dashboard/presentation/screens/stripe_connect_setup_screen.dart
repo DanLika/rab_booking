@@ -152,8 +152,6 @@ class _StripeConnectSetupScreenState
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
               colors: [gradientStart, gradientEnd],
             ),
           ),
@@ -189,8 +187,6 @@ class _StripeConnectSetupScreenState
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
             colors: [gradientStart, gradientEnd],
           ),
         ),

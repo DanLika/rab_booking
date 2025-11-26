@@ -232,6 +232,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                           hintText: 'npr. Apartman Prizemlje',
                                           prefixIcon: const Icon(Icons.meeting_room),
                                           isMobile: isMobile,
+                                          context: context,
                                         ),
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
@@ -254,6 +255,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                             onPressed: _regenerateSlug,
                                           ),
                                           isMobile: isMobile,
+                                          context: context,
                                         ),
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
@@ -281,6 +283,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                           hintText: 'npr. Apartman Prizemlje',
                                           prefixIcon: const Icon(Icons.meeting_room),
                                           isMobile: isMobile,
+                                          context: context,
                                         ),
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
@@ -305,6 +308,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                             onPressed: _regenerateSlug,
                                           ),
                                           isMobile: isMobile,
+                                          context: context,
                                         ),
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
@@ -407,6 +411,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                                 labelText: 'Opis (opcionalno)',
                                 hintText: 'Kratki opis jedinice...',
                                 isMobile: isMobile,
+                                context: context,
                               ).copyWith(
                                 counterText: '${_descriptionController.text.length}/500',
                               ),

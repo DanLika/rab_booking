@@ -256,7 +256,9 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
               hint: const Text('Izaberite jedinicu'), // Shown when null
               decoration: InputDecoration(
                 labelText: 'Jedinica',
-                border: const OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12), // Consistent with inputs
+                ),
                 prefixIcon: const Icon(Icons.meeting_room_outlined),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 14,
@@ -527,13 +529,13 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
     return Container(
       decoration: BoxDecoration(
         gradient: GradientTokens.brandPrimary,
-        borderRadius: BorderRadius.circular(10), // Same as input field
+        borderRadius: BorderRadius.circular(12), // Consistent with inputs
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: _isUpdatingBasePrice ? null : _updateBasePrice,
-          borderRadius: BorderRadius.circular(10), // Same as input field
+          borderRadius: BorderRadius.circular(12), // Consistent with inputs
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: 10, // Reduced from 20 (width -20px)

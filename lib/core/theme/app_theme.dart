@@ -26,6 +26,7 @@ class AppTheme {
       // Color scheme
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
+        onPrimary: Colors.white, // White text on primary color (chips, buttons)
         primaryContainer: AppColors.primaryLight,
         secondary: AppColors.secondary,
         onSecondary: Colors.white,
@@ -147,6 +148,7 @@ class AppTheme {
       ),
 
       // Input decoration theme - Border radius: 12px (modern), Height: 48px, Focus: accent color border
+      // UPDATED: Using warm beige border colors for Mediterranean theme consistency
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceLight,
@@ -155,11 +157,11 @@ class AppTheme {
           borderRadius: BorderRadius.circular(
             AppDimensions.radiusS,
           ), // 12px modern radius
-          borderSide: const BorderSide(color: AppColors.borderLight),
+          borderSide: const BorderSide(color: AppColors.borderWarmLight),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.borderLight),
+          borderSide: const BorderSide(color: AppColors.borderWarmLight),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
@@ -188,11 +190,16 @@ class AppTheme {
         ),
       ),
 
-      // Chip theme
+      // Chip theme - selected chips have white text
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceVariantLight,
         selectedColor: AppColors.primary,
-        labelStyle: AppTypography.textTheme.labelMedium,
+        labelStyle: AppTypography.textTheme.labelMedium?.copyWith(
+          color: AppColors.textPrimaryLight,
+        ),
+        secondaryLabelStyle: AppTypography.textTheme.labelMedium?.copyWith(
+          color: Colors.white, // White text when selected
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(
@@ -254,6 +261,28 @@ class AppTheme {
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.primary,
       ),
+
+      // Switch theme - Primary Purple selected, warm beige unselected
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary; // Purple when selected
+          }
+          return AppColors.borderWarmLight; // Warm beige when unselected
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary.withValues(alpha: 0.3); // Purple track when selected
+          }
+          return AppColors.borderWarmLight.withValues(alpha: 0.5); // Warm beige track
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.transparent;
+          }
+          return AppColors.borderWarmLight;
+        }),
+      ),
     );
   }
 
@@ -272,6 +301,7 @@ class AppTheme {
       // Color scheme
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primaryLight,
+        onPrimary: Colors.white, // White text on primary color (chips, buttons)
         primaryContainer: AppColors.primary,
         secondary: AppColors.secondaryLight,
         secondaryContainer: AppColors.secondary,
@@ -386,6 +416,7 @@ class AppTheme {
       ),
 
       // Input decoration theme - Border radius: 12px (modern), Height: 48px, Focus: accent color border
+      // UPDATED: Using warm gray border colors for Mediterranean theme consistency
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceVariantDark,
@@ -394,11 +425,11 @@ class AppTheme {
           borderRadius: BorderRadius.circular(
             AppDimensions.radiusS,
           ), // 12px modern radius
-          borderSide: const BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderWarmDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderWarmDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
@@ -427,11 +458,16 @@ class AppTheme {
         ),
       ),
 
-      // Chip theme
+      // Chip theme - selected chips have white text
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceVariantDark,
         selectedColor: AppColors.primaryLight,
-        labelStyle: AppTypography.textTheme.labelMedium,
+        labelStyle: AppTypography.textTheme.labelMedium?.copyWith(
+          color: AppColors.textPrimaryDark,
+        ),
+        secondaryLabelStyle: AppTypography.textTheme.labelMedium?.copyWith(
+          color: Colors.white, // White text when selected
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(
@@ -492,6 +528,28 @@ class AppTheme {
       // Progress indicator theme
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.primaryLight,
+      ),
+
+      // Switch theme - Primary Purple selected, warm gray unselected
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primaryLight; // Light Purple when selected
+          }
+          return AppColors.borderWarmDark; // Warm gray when unselected
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primaryLight.withValues(alpha: 0.4); // Purple track when selected
+          }
+          return AppColors.borderWarmDark.withValues(alpha: 0.5); // Warm gray track
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.transparent;
+          }
+          return AppColors.borderWarmDark;
+        }),
       ),
     );
   }

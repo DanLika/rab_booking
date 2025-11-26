@@ -5,7 +5,7 @@ class InputDecorationHelper {
   InputDecorationHelper._();
 
   /// Creates modern input decoration for form fields
-  /// Matches Cjenovnik tab styling: borderRadius 12, transparent background
+  /// Matches unit_pricing_screen styling: borderRadius 12, filled background
   static InputDecoration buildDecoration({
     required String labelText,
     String? hintText,
@@ -13,18 +13,20 @@ class InputDecorationHelper {
     Widget? prefixIcon,
     Widget? suffixIcon,
     bool isMobile = false,
+    required BuildContext context,
   }) {
+    final theme = Theme.of(context);
     return InputDecoration(
       labelText: labelText,
       hintText: hintText,
       helperText: helperText,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
-      // Match Cjenovnik tab: borderRadius 12, transparent background
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      filled: false,
+      filled: true,
+      fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       contentPadding: EdgeInsets.symmetric(
         horizontal: isMobile ? 12 : 16,
         vertical: isMobile ? 12 : 16,
@@ -37,11 +39,13 @@ class InputDecorationHelper {
     required String labelText,
     Widget? prefixIcon,
     bool isMobile = false,
+    required BuildContext context,
   }) {
     return buildDecoration(
       labelText: labelText,
       prefixIcon: prefixIcon,
       isMobile: isMobile,
+      context: context,
     );
   }
 }

@@ -64,8 +64,12 @@ class AppColors {
   /// Text tertiary - Light gray
   static const Color textTertiaryLight = Color(0xFF718096); // Light Gray
 
-  /// Border color - Light border
+  /// Border color - Light border (cool gray - legacy)
   static const Color borderLight = Color(0xFFE2E8F0); // Light Border
+
+  /// Border color - Warm beige (Mediterranean theme)
+  /// Used for: inputs, cards, sections - matches sectionBorder in AppGradients
+  static const Color borderWarmLight = Color(0xFFE8E5DC); // Warm Beige
 
   /// Divider color
   static const Color dividerLight = Color(0xFFF7FAFC); // Very Light Gray
@@ -101,6 +105,10 @@ class AppColors {
   /// Border color - Dark border (optimized for true black background)
   /// UPGRADED: Was 0xFF4A5568 → Now 0xFF2D3748 (better contrast with black)
   static const Color borderDark = Color(0xFF2D3748); // Dark border
+
+  /// Border color - Warm gray (Mediterranean theme)
+  /// Used for: inputs, cards, sections - matches sectionBorder in AppGradients
+  static const Color borderWarmDark = Color(0xFF3D3733); // Warm Gray
 
   /// Divider color (optimized for true black background)
   /// UPGRADED: Was 0xFF2D3748 → Now 0xFF1E1E1E (subtle, not harsh)

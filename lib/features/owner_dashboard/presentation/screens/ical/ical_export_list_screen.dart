@@ -74,8 +74,6 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
               colors: [gradientStart, gradientEnd],
             ),
           ),
@@ -111,8 +109,6 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
             colors: [gradientStart, gradientEnd],
           ),
         ),
@@ -161,7 +157,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       color: cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: borderColor, width: 1),
+        side: BorderSide(color: borderColor),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -173,7 +169,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                 color: confirmedGreen.withAlpha((0.2 * 255).toInt()),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.info_outline,
                 color: confirmedGreen,
                 size: 24,
@@ -226,7 +222,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: borderColor, width: 1),
+        side: BorderSide(color: borderColor),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -178,7 +178,7 @@ class _PriceListCalendarWidgetState
                 letterSpacing: 0.5,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10), // Same as Save button
+                borderRadius: BorderRadius.circular(12), // Consistent with inputs
               ),
             ),
           ),
@@ -195,7 +195,7 @@ class _PriceListCalendarWidgetState
                 letterSpacing: 0.5,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10), // Same as Save button
+                borderRadius: BorderRadius.circular(12), // Consistent with inputs
               ),
             ),
           ),
@@ -221,7 +221,7 @@ class _PriceListCalendarWidgetState
                 letterSpacing: 0.5,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10), // Same as Save button
+                borderRadius: BorderRadius.circular(12), // Consistent with inputs
               ),
             ),
           ),
@@ -241,7 +241,7 @@ class _PriceListCalendarWidgetState
                 letterSpacing: 0.5,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10), // Same as Save button
+                borderRadius: BorderRadius.circular(12), // Consistent with inputs
               ),
             ),
           ),
@@ -334,7 +334,7 @@ class _PriceListCalendarWidgetState
                             : null,
                         padding: const EdgeInsets.symmetric(vertical: 15), // Same as Save button
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10), // Same as Save button
+                          borderRadius: BorderRadius.circular(12), // Consistent with inputs
                         ),
                       ),
                     ),
@@ -410,7 +410,7 @@ class _PriceListCalendarWidgetState
                             vertical: 20, // Match dropdown height
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10), // Same as Save button
+                            borderRadius: BorderRadius.circular(12), // Consistent with inputs
                           ),
                         ),
                       ),
@@ -1316,12 +1316,15 @@ class _PriceListCalendarWidgetState
           },
         ),
       ).then((_) {
-        // Dispose all controllers when dialog closes to prevent memory leak
-        priceController.dispose();
-        weekendPriceController.dispose();
-        minNightsController.dispose();
-        maxNightsController.dispose();
-        notesController.dispose();
+        // Dispose controllers in next frame to avoid race condition
+        // when dialog is animating closed but widgets still reference controllers
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          priceController.dispose();
+          weekendPriceController.dispose();
+          minNightsController.dispose();
+          maxNightsController.dispose();
+          notesController.dispose();
+        });
       }),
     );
   }
@@ -1542,8 +1545,10 @@ class _PriceListCalendarWidgetState
         },
       ),
     ).then((_) {
-      // Dispose controller when dialog closes to prevent memory leak
-      priceController.dispose();
+      // Dispose controller in next frame to avoid race condition
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        priceController.dispose();
+      });
     });
   }
 

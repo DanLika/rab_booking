@@ -117,13 +117,13 @@ class Step5Review extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // Validation Warning (if incomplete) - responsive width
+                // Validation Warning (if incomplete) - responsive width (24px radius to match sections)
                 if (!allRequiredCompleted) ...[
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(
                         color: theme.colorScheme.error.withValues(alpha: 0.3),
                       ),
@@ -180,13 +180,13 @@ class Step5Review extends ConsumerWidget {
                 ],
                 const SizedBox(height: AppDimensions.spaceL),
 
-                // Success info card - responsive width
+                // Success info card - responsive width (24px radius to match sections)
                 if (allRequiredCompleted) ...[
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(
                         color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
                       ),

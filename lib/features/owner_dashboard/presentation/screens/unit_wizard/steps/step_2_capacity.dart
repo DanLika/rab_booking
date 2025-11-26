@@ -213,6 +213,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                       hintText: '1',
                                       prefixIcon: const Icon(Icons.bed),
                                       isMobile: isMobile,
+                                      context: context,
                                     ),
                                     keyboardType: TextInputType.number,
                                     inputFormatters: [
@@ -239,6 +240,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                       hintText: '1',
                                       prefixIcon: const Icon(Icons.bathroom),
                                       isMobile: isMobile,
+                                      context: context,
                                     ),
                                     keyboardType: TextInputType.number,
                                     inputFormatters: [
@@ -271,6 +273,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                       hintText: '2',
                                       prefixIcon: const Icon(Icons.people),
                                       isMobile: isMobile,
+                                      context: context,
                                     ),
                                     keyboardType: TextInputType.number,
                                     inputFormatters: [
@@ -297,6 +300,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                                       hintText: '50',
                                       prefixIcon: const Icon(Icons.square_foot),
                                       isMobile: isMobile,
+                                      context: context,
                                     ),
                                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                     inputFormatters: [
@@ -314,12 +318,12 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity> {
                 ),
                 const SizedBox(height: AppDimensions.spaceL),
 
-                // Info Card - Responsive width
+                // Info Card - Responsive width (24px radius to match sections)
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(24),
                     border: Border.all(
                       color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
                     ),

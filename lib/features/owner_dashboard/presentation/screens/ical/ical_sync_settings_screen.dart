@@ -41,8 +41,6 @@ class _IcalSyncSettingsScreenState
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
               colors: [gradientStart, gradientEnd],
             ),
           ),
@@ -78,8 +76,6 @@ class _IcalSyncSettingsScreenState
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
             colors: [gradientStart, gradientEnd],
           ),
         ),
@@ -953,7 +949,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                         : null;
 
                     return DropdownButtonFormField<String>(
-                      value: validUnitId,
+                      initialValue: validUnitId,
                       decoration: const InputDecoration(
                         labelText: 'Odaberi jedinicu *',
                         border: OutlineInputBorder(),
@@ -993,7 +989,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                         : 'booking_com';
 
                     return DropdownButtonFormField<String>(
-                      value: validPlatform,
+                      initialValue: validPlatform,
                       decoration: const InputDecoration(
                         labelText: 'Platforma *',
                         border: OutlineInputBorder(),

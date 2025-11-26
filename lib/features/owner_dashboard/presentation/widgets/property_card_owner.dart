@@ -348,7 +348,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                         Switch(
                           value: widget.property.isActive,
                           onChanged: widget.onTogglePublished,
-                          activeTrackColor: theme.colorScheme.tertiary,
+                          activeThumbColor: theme.colorScheme.primary,
+                          activeTrackColor: theme.colorScheme.primary.withValues(alpha: 0.5),
                         ),
                       ],
                     ),
@@ -438,7 +439,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                         Switch(
                           value: widget.property.isActive,
                           onChanged: widget.onTogglePublished,
-                          activeTrackColor: theme.colorScheme.tertiary,
+                          activeThumbColor: theme.colorScheme.primary,
+                          activeTrackColor: theme.colorScheme.primary.withValues(alpha: 0.5),
                         ),
                       ],
                     ),

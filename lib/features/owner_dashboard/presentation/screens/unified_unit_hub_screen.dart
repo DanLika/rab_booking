@@ -11,6 +11,8 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/property_model.dart';
 import '../providers/owner_properties_provider.dart';
+import '../../../../shared/providers/repository_providers.dart';
+import '../../../../core/utils/error_display_utils.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import 'unit_pricing_screen.dart';
@@ -484,7 +486,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(16), // Consistent sidebar padding
           itemCount: filteredProperties.length,
           itemBuilder: (context, index) {
             final property = filteredProperties[index];
@@ -533,7 +535,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: true,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4), // Consistent sidebar padding
           childrenPadding: const EdgeInsets.only(bottom: 8),
           leading: Container(
             padding: const EdgeInsets.all(8),
@@ -651,6 +653,69 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ),
     );
   }
+
+  /// Confirm and delete a unit
+  Future<void> _confirmDeleteUnit(BuildContext context, UnitModel unit) async {
+    final theme = Theme.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Obriši jedinicu'),
+        content: Text(
+          'Jeste li sigurni da želite obrisati "${unit.name}"?\n\n'
+          'Ova akcija se ne može poništiti.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Odustani'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Obriši'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await ref
+            .read(ownerPropertiesRepositoryProvider)
+            .deleteUnit(unit.propertyId, unit.id);
+
+        // Invalidate providers to refresh UI
+        ref.invalidate(ownerUnitsProvider);
+
+        // Reset selection if deleted unit was selected
+        if (_selectedUnit?.id == unit.id) {
+          setState(() {
+            _selectedUnit = null;
+            _selectedProperty = null;
+          });
+        }
+
+        if (mounted) {
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            'Jedinica "${unit.name}" je uspješno obrisana',
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            'Greška pri brisanju: $e',
+          );
+        }
+      }
+    }
+  }
+
   /// Unit list tile - single unit in master panel
   Widget _buildUnitListTile(
     ThemeData theme,
@@ -732,6 +797,25 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                                 : AppColors.error), // Red for unavailable
                         fontWeight: FontWeight.w600,
                       ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  // Delete button
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: IconButton(
+                      onPressed: () => _confirmDeleteUnit(context, unit),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        size: 16,
+                        color: isSelected
+                            ? Colors.white.withValues(alpha: 0.7)
+                            : theme.colorScheme.error,
+                      ),
+                      tooltip: 'Obriši jedinicu',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
                   ),
                 ],

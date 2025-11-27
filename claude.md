@@ -1876,6 +1876,144 @@ Ekstrahovana zajednička logika kalendara u centralizovani servis.
 **OBRISANO:**
 - **BlurConfig** - Nije se aktivno koristio, potpuno uklonjen (prethodni commit)
 
+### Shared Validators & SnackBarHelper Refactoring (2025-11-27)
+
+**Status**: ✅ COMPLETED
+**Commit**: `37c20af`
+
+Ekstraktovani shared utility fajlovi iz widget feature-a u centralizovanu lokaciju.
+
+#### Nova Folder Struktura
+
+```
+lib/shared/utils/
+├── ui/
+│   └── snackbar_helper.dart        ← Auto-theme detection
+└── validators/
+    ├── form_validators.dart        ← Name, Email, Phone validators
+    └── phone_config.dart           ← PhoneConfigs data map (20+ zemalja)
+```
+
+#### SnackBarHelper - Auto Theme Detection
+
+**PRIJE** (zahtijevao isDarkMode parametar):
+```dart
+SnackBarHelper.showSuccess(
+  context: context,
+  message: 'Uspješno!',
+  isDarkMode: isDarkMode,  // ← Morao se proslijediti
+);
+```
+
+**POSLIJE** (auto-detektuje temu):
+```dart
+SnackBarHelper.showSuccess(
+  context: context,
+  message: 'Uspješno!',
+  // isDarkMode se automatski detektuje iz context-a
+);
+```
+
+**Implementacija:**
+```dart
+static void showSuccess({...}) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;  // Auto-detect!
+  // ...
+}
+```
+
+#### PhoneConfigs - Data-Driven Phone Validation
+
+**Staro** (8 dupliciranih metoda za formatiranje):
+```dart
+String _formatCroatianPhone(String digits) { ... }
+String _formatGermanPhone(String digits) { ... }
+// 6 više istih metoda...
+```
+
+**Novo** (generička metoda + data map):
+```dart
+// phone_config.dart - Centralizovana konfiguracija
+class PhoneConfigs {
+  static const Map<String, PhoneCountryConfig> _configs = {
+    '+385': PhoneCountryConfig(minLength: 8, maxLength: 9, format: PhoneFormatPattern.croatian),
+    '+49': PhoneCountryConfig(minLength: 10, maxLength: 11, format: PhoneFormatPattern.german),
+    // 20+ zemalja...
+  };
+
+  static PhoneCountryConfig getConfig(String dialCode) => _configs[dialCode] ?? _defaultConfig;
+}
+
+// form_validators.dart - Generička metoda
+String _formatByPattern(String digits, List<int> groupSizes) {
+  // Jedna metoda zamjenjuje 8 dupliciranih!
+}
+```
+
+#### Podržane Zemlje (PhoneConfigs)
+
+| Dial Code | Zemlja | Min | Max | Format |
+|-----------|--------|-----|-----|--------|
+| +385 | Hrvatska | 8 | 9 | XX XXX XXX(X) |
+| +387 | BiH | 8 | 9 | XX XXX XXX |
+| +381 | Srbija | 9 | 10 | XX XXX XXXX |
+| +386 | Slovenija | 8 | 9 | XX XXX XXX |
+| +49 | Njemačka | 10 | 11 | XXXX XXXXXXX |
+| +43 | Austrija | 10 | 13 | XXX XXXXXXX |
+| +39 | Italija | 9 | 11 | XXX XXX XXXX |
+| +44 | UK | 10 | 11 | XXXX XXX XXX |
+| +1 | USA/Kanada | 10 | 10 | XXX XXX XXXX |
+| ... | 11+ više | ... | ... | ... |
+
+#### Ažurirani Fajlovi (14)
+
+Sve widget komponente sada koriste centralizovane importe:
+
+```dart
+// Stari import (OBRISAN):
+import '../../utils/form_validators.dart';
+import '../../utils/snackbar_helper.dart';
+
+// Novi import:
+import '../../../../../shared/utils/validators/form_validators.dart';
+import '../../../../../shared/utils/ui/snackbar_helper.dart';
+```
+
+**Lista ažuriranih fajlova:**
+- `booking_widget_screen.dart` - 5 SnackBarHelper poziva, 3 unused vars uklonjeno
+- `booking_details_screen.dart`
+- `booking_confirmation_screen.dart`
+- `bank_transfer_screen.dart`
+- `embed_calendar_screen.dart`
+- `bank_details_section.dart`
+- `booking_details_header.dart`
+- `copyable_text_field.dart`
+- `full_name_input_field.dart`
+- `email_input_field.dart`
+- `phone_input_field.dart`
+- `guest_details_section.dart`
+- `contact_info_pills.dart`
+- `form_section_card.dart`
+
+#### OBRISANO
+
+```
+lib/features/widget/presentation/utils/  ← Cijeli folder obrisan
+├── form_validators.dart                 ← Premješten u shared
+└── snackbar_helper.dart                 ← Premješten u shared
+```
+
+#### DO NOT:
+- ❌ **NE KORISTI** stare importe iz `presentation/utils/` (folder obrisan!)
+- ❌ **NE PROSLIJEĐUJ** `isDarkMode` parametar u SnackBarHelper (automatski se detektuje)
+- ❌ **NE DODAVAJ** nove phone formatting metode - koristi `PhoneConfigs`
+
+#### ALWAYS:
+- ✅ Import validators: `import 'package:.../shared/utils/validators/form_validators.dart';`
+- ✅ Import snackbar: `import 'package:.../shared/utils/ui/snackbar_helper.dart';`
+- ✅ Za novu zemlju: dodaj u `PhoneConfigs._configs` map
+
 ---
 
 ## 🐛 NEDAVNI BUG FIX-EVI (Post 20.11.2025)

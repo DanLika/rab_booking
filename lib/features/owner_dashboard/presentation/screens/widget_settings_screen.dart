@@ -486,7 +486,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             _existingSettings?.taxLegalConfig ??
             const TaxLegalConfig(enabled: false),
         themeOptions: _existingSettings?.themeOptions,
-        blurConfig: _existingSettings?.blurConfig,
         createdAt: _existingSettings?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );

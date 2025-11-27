@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/router_owner.dart';
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
-import 'features/widget/presentation/providers/blur_config_provider.dart';
 import 'features/widget/domain/models/widget_config.dart';
 import 'features/widget/domain/models/widget_settings.dart';
 import 'shared/providers/repository_providers.dart';
@@ -58,9 +57,6 @@ class BookingWidgetApp extends ConsumerWidget {
     // Get actual settings value (null if loading/error)
     final widgetSettings = widgetSettingsAsync?.valueOrNull;
 
-    // Get blur configuration from settings (or use defaults)
-    final blurConfig = widgetSettings?.blurConfig ?? const BlurConfig();
-
     // Determine theme mode (priority: URL > Firestore > default 'system')
     final String themeMode = widgetConfig.themeMode.isNotEmpty
         ? widgetConfig.themeMode
@@ -82,23 +78,19 @@ class BookingWidgetApp extends ConsumerWidget {
       brightness: Brightness.dark,
     );
 
-    // Override blur config provider with actual settings from Firestore
-    return ProviderScope(
-      overrides: [blurConfigProvider.overrideWithValue(blurConfig)],
-      child: MaterialApp.router(
-        title: 'Rab Booking Widget',
-        debugShowCheckedModeBanner: false,
+    return MaterialApp.router(
+      title: 'Rab Booking Widget',
+      debugShowCheckedModeBanner: false,
 
-        // Use Minimalist theme with dark mode support
-        theme: lightTheme,
-        darkTheme: darkTheme,
-        themeMode: themeModeEnum,
+      // Use Minimalist theme with dark mode support
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: themeModeEnum,
 
-        routerConfig: router,
+      routerConfig: router,
 
-        // Multi-language support via URL parameter (?language=hr/en/de/it)
-        // Translations handled in components via WidgetTranslations
-      ),
+      // Multi-language support via URL parameter (?language=hr/en/de/it)
+      // Translations handled in components via WidgetTranslations
     );
   }
 

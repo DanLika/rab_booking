@@ -64,9 +64,6 @@ class WidgetSettings {
   // Theming
   final ThemeOptions? themeOptions;
 
-  // Glassmorphism & Blur Effects
-  final BlurConfig? blurConfig;
-
   // Metadata
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -93,7 +90,6 @@ class WidgetSettings {
     this.icalExportLastGenerated,
     required this.taxLegalConfig,
     this.themeOptions,
-    this.blurConfig,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -143,9 +139,6 @@ class WidgetSettings {
       themeOptions: data['theme_options'] != null
           ? ThemeOptions.fromMap(data['theme_options'])
           : null,
-      blurConfig: data['blur_config'] != null
-          ? BlurConfig.fromMap(data['blur_config'])
-          : null,
       createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
@@ -176,7 +169,6 @@ class WidgetSettings {
           : null,
       'tax_legal_config': taxLegalConfig.toMap(),
       'theme_options': themeOptions?.toMap(),
-      'blur_config': blurConfig?.toMap(),
       'created_at': Timestamp.fromDate(createdAt),
       'updated_at': Timestamp.fromDate(updatedAt),
     };
@@ -270,7 +262,6 @@ class WidgetSettings {
     DateTime? icalExportLastGenerated,
     TaxLegalConfig? taxLegalConfig,
     ThemeOptions? themeOptions,
-    BlurConfig? blurConfig,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -301,7 +292,6 @@ class WidgetSettings {
           icalExportLastGenerated ?? this.icalExportLastGenerated,
       taxLegalConfig: taxLegalConfig ?? this.taxLegalConfig,
       themeOptions: themeOptions ?? this.themeOptions,
-      blurConfig: blurConfig ?? this.blurConfig,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -385,95 +375,6 @@ class ThemeOptions {
     );
   }
 }
-
-/// Glassmorphism & Blur Effects configuration
-class BlurConfig {
-  final bool enabled; // Enable/disable all blur effects
-  final String
-  intensity; // 'subtle', 'light', 'medium', 'strong', 'extra_strong'
-  final bool enableCardBlur; // Blur for cards
-  final bool enableAppBarBlur; // Blur for app bar
-  final bool enableModalBlur; // Blur for modals/dialogs
-  final bool enableOverlayBlur; // Blur for overlays
-
-  const BlurConfig({
-    this.enabled = true,
-    this.intensity = 'medium',
-    this.enableCardBlur = true,
-    this.enableAppBarBlur = true,
-    this.enableModalBlur = true,
-    this.enableOverlayBlur = true,
-  });
-
-  factory BlurConfig.fromMap(Map<String, dynamic> map) {
-    return BlurConfig(
-      enabled: map['enabled'] ?? true,
-      intensity: map['intensity'] ?? 'medium',
-      enableCardBlur: map['enable_card_blur'] ?? true,
-      enableAppBarBlur: map['enable_app_bar_blur'] ?? true,
-      enableModalBlur: map['enable_modal_blur'] ?? true,
-      enableOverlayBlur: map['enable_overlay_blur'] ?? true,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'enabled': enabled,
-      'intensity': intensity,
-      'enable_card_blur': enableCardBlur,
-      'enable_app_bar_blur': enableAppBarBlur,
-      'enable_modal_blur': enableModalBlur,
-      'enable_overlay_blur': enableOverlayBlur,
-    };
-  }
-
-  /// Get intensity as double (0.0 - 1.0)
-  double get intensityValue {
-    switch (intensity.toLowerCase()) {
-      case 'subtle':
-        return 0.2;
-      case 'light':
-        return 0.4;
-      case 'medium':
-        return 0.6;
-      case 'strong':
-        return 0.8;
-      case 'extra_strong':
-      case 'extrastrong':
-        return 1.0;
-      default:
-        return 0.6; // Default to medium
-    }
-  }
-
-  /// Check if any blur is enabled
-  bool get hasAnyBlurEnabled {
-    return enabled &&
-        (enableCardBlur ||
-            enableAppBarBlur ||
-            enableModalBlur ||
-            enableOverlayBlur);
-  }
-
-  BlurConfig copyWith({
-    bool? enabled,
-    String? intensity,
-    bool? enableCardBlur,
-    bool? enableAppBarBlur,
-    bool? enableModalBlur,
-    bool? enableOverlayBlur,
-  }) {
-    return BlurConfig(
-      enabled: enabled ?? this.enabled,
-      intensity: intensity ?? this.intensity,
-      enableCardBlur: enableCardBlur ?? this.enableCardBlur,
-      enableAppBarBlur: enableAppBarBlur ?? this.enableAppBarBlur,
-      enableModalBlur: enableModalBlur ?? this.enableModalBlur,
-      enableOverlayBlur: enableOverlayBlur ?? this.enableOverlayBlur,
-    );
-  }
-}
-
 
 /// External calendar integration configuration (e.g., Booking.com, Airbnb)
 class ExternalCalendarConfig {

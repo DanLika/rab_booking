@@ -1791,8 +1791,12 @@ lib/features/widget/presentation/widgets/
 └── bank_transfer/              ← 4 fajla
 
 lib/features/widget/domain/services/
+├── calendar_data_service.dart        ← NOVO (2025-11-27)
 ├── booking_validation_service.dart   ← NOVO
 └── price_lock_service.dart           ← NOVO
+
+lib/features/widget/domain/constants/
+└── calendar_constants.dart           ← NOVO (2025-11-27)
 ```
 
 ### Plan za Nastavak (Phase 2)
@@ -1841,8 +1845,36 @@ lib/features/widget/domain/models/settings/
 - **ThemeOptions** - Korisnik zadovoljan sa trenutnim bojama/temom
 - **ExternalCalendarConfig** - Čeka odluku o OAuth API integraciji sa Booking.com/Airbnb
 
+### Calendar Providers Refactoring (2025-11-27)
+
+**Status**: ✅ COMPLETED
+**Commit**: `27b1049`
+
+Ekstrahovana zajednička logika kalendara u centralizovani servis.
+
+| Fajl | Prije | Poslije | Promjena |
+|------|-------|---------|----------|
+| `year_calendar_provider.dart` | 487 | 43 | -91% |
+| `month_calendar_provider.dart` | 402 | 43 | -89% |
+| **UKUPNO** | 889 | 86 | **-90%** |
+
+**Novi Fajlovi:**
+- `calendar_data_service.dart` (~495 linija) - Centralizovana logika
+- `calendar_constants.dart` - Magic numbers ekstrahovani
+
+**Konsolidovani Provideri:**
+- `icalRepositoryProvider` - Premješten u `repository_providers.dart` (bila 2 duplikata)
+- `calendarDataServiceProvider` - Novi centralizovani provider
+
+**CalendarDataService funkcionalnosti:**
+- Gap blocking logika (minNights validation)
+- Pricing hijerarhija (daily_price > weekend_price > base_price)
+- Booking status (partial check-in/check-out)
+- iCal events integracija
+- Multi-tenant safe (unit_id isolation)
+
 **OBRISANO:**
-- **BlurConfig** - Nije se aktivno koristio, potpuno uklonjen
+- **BlurConfig** - Nije se aktivno koristio, potpuno uklonjen (prethodni commit)
 
 ---
 

@@ -25,6 +25,10 @@ import '../../features/widget/data/repositories/firebase_widget_settings_reposit
 import '../../core/services/booking_service.dart';
 import '../../core/services/stripe_service.dart';
 import '../../core/services/ical_export_service.dart';
+// iCal Repository
+import '../../features/owner_dashboard/data/firebase/firebase_ical_repository.dart';
+// Calendar Data Service
+import '../../features/widget/domain/services/calendar_data_service.dart';
 
 /// Firestore instance provider
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
@@ -140,5 +144,28 @@ final icalExportServiceProvider = Provider<IcalExportService>((ref) {
     bookingRepository: bookingRepository,
     settingsRepository: settingsRepository,
     storage: storage,
+  );
+});
+
+// ========== iCal Repository ==========
+
+/// iCal Repository provider (centralized - replaces duplicates in widget/owner_dashboard)
+final icalRepositoryProvider = Provider<FirebaseIcalRepository>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return FirebaseIcalRepository(firestore);
+});
+
+// ========== Calendar Data Service ==========
+
+/// Calendar Data Service provider
+/// Provides centralized calendar logic (gap blocking, price calculation, booking status)
+final calendarDataServiceProvider = Provider<CalendarDataService>((ref) {
+  final bookingRepository = ref.watch(bookingRepositoryProvider);
+  final dailyPriceRepository = ref.watch(dailyPriceRepositoryProvider);
+  final icalRepository = ref.watch(icalRepositoryProvider);
+  return CalendarDataService(
+    bookingRepository: bookingRepository,
+    dailyPriceRepository: dailyPriceRepository,
+    icalRepository: icalRepository,
   );
 });

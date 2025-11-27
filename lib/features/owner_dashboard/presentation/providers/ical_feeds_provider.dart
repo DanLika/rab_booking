@@ -1,14 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
-import '../../data/firebase/firebase_ical_repository.dart';
 import '../../domain/models/ical_feed.dart';
-
-/// Repository provider
-final icalRepositoryProvider = Provider<FirebaseIcalRepository>((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  return FirebaseIcalRepository(firestore);
-});
 
 /// Provider for all iCal feeds (real-time stream)
 final icalFeedsStreamProvider = StreamProvider<List<IcalFeed>>((ref) {

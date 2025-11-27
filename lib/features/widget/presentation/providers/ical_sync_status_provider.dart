@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/providers/repository_providers.dart';
-import '../../../owner_dashboard/data/firebase/firebase_ical_repository.dart';
 
 /// Model for iCal sync status information
 class IcalSyncStatus {
@@ -59,12 +58,6 @@ class IcalSyncStatus {
     );
   }
 }
-
-/// Provider for iCal repository
-final icalRepositoryProvider = Provider<FirebaseIcalRepository>((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  return FirebaseIcalRepository(firestore);
-});
 
 /// Provider for iCal sync status for a specific unit
 /// Bug #67 Fix: Track when external calendars (Airbnb/Booking.com) were last synced

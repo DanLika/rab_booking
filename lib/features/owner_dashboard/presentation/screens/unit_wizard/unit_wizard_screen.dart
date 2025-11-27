@@ -239,6 +239,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
         areaSqm: draft.areaSqm,
         images: draft.images,
         minStayNights: draft.minStayNights ?? 1,
+        maxStayNights: draft.maxStayNights, // null = no limit
         createdAt: draft.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );

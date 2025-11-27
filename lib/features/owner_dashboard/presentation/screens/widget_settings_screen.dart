@@ -441,7 +441,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
               )
             : null,
         allowPayOnArrival: _payOnArrivalEnabled,
-        requireOwnerApproval: _requireApproval,
+        // For bookingPending mode, approval is ALWAYS required (hardcoded true)
+        // For bookingInstant mode, use the user's selection
+        requireOwnerApproval: _selectedMode == WidgetMode.bookingPending
+            ? true
+            : _requireApproval,
         allowGuestCancellation: _allowCancellation,
         cancellationDeadlineHours: _cancellationHours,
         minNights: _minNights,
@@ -1330,58 +1334,92 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
             ),
             const SizedBox(height: 16),
             // Responsive Grid for Switches
+            // Note: For bookingPending mode, approval is ALWAYS required (hidden toggle)
+            // Only show approval toggle for bookingInstant mode
             LayoutBuilder(
               builder: (context, constraints) {
                 final isDesktop = constraints.maxWidth >= 600;
+                final isBookingPending = _selectedMode == WidgetMode.bookingPending;
 
+                // Build cancellation card (always shown)
+                final cancellationCard = _buildBehaviorSwitchCard(
+                  icon: Icons.event_busy,
+                  label: 'Dozvolite Otkazivanje',
+                  subtitle: 'Gosti mogu otkazati',
+                  value: _allowCancellation,
+                  onChanged: (val) =>
+                      setState(() => _allowCancellation = val),
+                );
+
+                // Build approval card (only for bookingInstant)
+                final approvalCard = _buildBehaviorSwitchCard(
+                  icon: Icons.approval,
+                  label: 'Zahtijeva Odobrenje',
+                  subtitle: 'Ručno odobravanje',
+                  value: _requireApproval,
+                  onChanged: (val) =>
+                      setState(() => _requireApproval = val),
+                );
+
+                // For bookingPending: only show cancellation (approval is always true)
+                if (isBookingPending) {
+                  return Column(
+                    children: [
+                      // Info banner explaining approval is automatic
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer
+                              .withAlpha((0.3 * 255).toInt()),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary
+                                .withAlpha((0.5 * 255).toInt()),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'U "Rezervacija bez plaćanja" modu sve rezervacije uvijek zahtijevaju vaše odobrenje.',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      cancellationCard,
+                    ],
+                  );
+                }
+
+                // For bookingInstant: show both cards
                 if (isDesktop) {
                   // Desktop: 2 columns
                   return Row(
                     children: [
-                      Expanded(
-                        child: _buildBehaviorSwitchCard(
-                          icon: Icons.approval,
-                          label: 'Zahtijeva Odobrenje',
-                          subtitle: 'Ručno odobravanje',
-                          value: _requireApproval,
-                          onChanged: (val) =>
-                              setState(() => _requireApproval = val),
-                        ),
-                      ),
+                      Expanded(child: approvalCard),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildBehaviorSwitchCard(
-                          icon: Icons.event_busy,
-                          label: 'Dozvolite Otkazivanje',
-                          subtitle: 'Gosti mogu otkazati',
-                          value: _allowCancellation,
-                          onChanged: (val) =>
-                              setState(() => _allowCancellation = val),
-                        ),
-                      ),
+                      Expanded(child: cancellationCard),
                     ],
                   );
                 } else {
                   // Mobile: Vertical
                   return Column(
                     children: [
-                      _buildBehaviorSwitchCard(
-                        icon: Icons.approval,
-                        label: 'Zahtijeva Odobrenje',
-                        subtitle: 'Ručno odobravanje',
-                        value: _requireApproval,
-                        onChanged: (val) =>
-                            setState(() => _requireApproval = val),
-                      ),
+                      approvalCard,
                       const SizedBox(height: 12),
-                      _buildBehaviorSwitchCard(
-                        icon: Icons.event_busy,
-                        label: 'Dozvolite Otkazivanje',
-                        subtitle: 'Gosti mogu otkazati',
-                        value: _allowCancellation,
-                        onChanged: (val) =>
-                            setState(() => _allowCancellation = val),
-                      ),
+                      cancellationCard,
                     ],
                   );
                 }

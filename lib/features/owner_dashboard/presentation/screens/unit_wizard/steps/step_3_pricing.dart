@@ -20,6 +20,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
   final _priceController = TextEditingController();
   final _weekendPriceController = TextEditingController();
   final _minStayController = TextEditingController();
+  final _maxStayController = TextEditingController();
 
   bool _isInitialized = false;
 
@@ -30,6 +31,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
     _priceController.addListener(_onPriceChanged);
     _weekendPriceController.addListener(_onWeekendPriceChanged);
     _minStayController.addListener(_onMinStayChanged);
+    _maxStayController.addListener(_onMaxStayChanged);
   }
 
   @override
@@ -38,9 +40,11 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
     _priceController.removeListener(_onPriceChanged);
     _weekendPriceController.removeListener(_onWeekendPriceChanged);
     _minStayController.removeListener(_onMinStayChanged);
+    _maxStayController.removeListener(_onMaxStayChanged);
     _priceController.dispose();
     _weekendPriceController.dispose();
     _minStayController.dispose();
+    _maxStayController.dispose();
     super.dispose();
   }
 
@@ -51,17 +55,20 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
     _priceController.removeListener(_onPriceChanged);
     _weekendPriceController.removeListener(_onWeekendPriceChanged);
     _minStayController.removeListener(_onMinStayChanged);
+    _maxStayController.removeListener(_onMaxStayChanged);
 
     // Set initial values
     _priceController.text = draft.pricePerNight?.toString() ?? '';
     _weekendPriceController.text = draft.weekendBasePrice?.toString() ?? '';
     _minStayController.text = draft.minStayNights?.toString() ?? '';
+    _maxStayController.text = draft.maxStayNights?.toString() ?? '';
     _isInitialized = true;
 
     // Re-attach listeners after setting initial values
     _priceController.addListener(_onPriceChanged);
     _weekendPriceController.addListener(_onWeekendPriceChanged);
     _minStayController.addListener(_onMinStayChanged);
+    _maxStayController.addListener(_onMaxStayChanged);
   }
 
   void _onPriceChanged() {
@@ -77,6 +84,11 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
   void _onMinStayChanged() {
     final value = int.tryParse(_minStayController.text);
     ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('minStayNights', value);
+  }
+
+  void _onMaxStayChanged() {
+    final value = int.tryParse(_maxStayController.text);
+    ref.read(unitWizardNotifierProvider(widget.unitId).notifier).updateField('maxStayNights', value);
   }
 
   @override
@@ -281,6 +293,38 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                           return null;
                                         },
                                       ),
+                                      const SizedBox(height: AppDimensions.spaceM),
+                                      // Max stay nights (optional)
+                                      TextFormField(
+                                        controller: _maxStayController,
+                                        decoration: InputDecorationHelper.buildDecoration(
+                                          labelText: 'Maksimalan Boravak (noći)',
+                                          hintText: '30',
+                                          helperText: 'Najviše noći (opcionalno)',
+                                          prefixIcon: const Icon(Icons.date_range),
+                                          isMobile: isMobile,
+                                          context: context,
+                                        ),
+                                        keyboardType: TextInputType.number,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.digitsOnly,
+                                        ],
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return null; // Max stay is optional
+                                          }
+                                          final number = int.tryParse(value);
+                                          if (number == null || number < 1) {
+                                            return 'Unesite ispravan broj';
+                                          }
+                                          // Check that max >= min
+                                          final minStay = int.tryParse(_minStayController.text) ?? 1;
+                                          if (number < minStay) {
+                                            return 'Max mora biti >= min ($minStay)';
+                                          }
+                                          return null;
+                                        },
+                                      ),
                                     ],
                                   );
                                 }
@@ -350,7 +394,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                       ],
                                     ),
                                     const SizedBox(height: AppDimensions.spaceM),
-                                    // Min stay nights - full width row
+                                    // Min/Max stay nights - side by side on desktop
                                     Row(
                                       children: [
                                         Expanded(
@@ -380,7 +424,39 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                                             },
                                           ),
                                         ),
-                                        const Spacer(), // Balance with empty space
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: TextFormField(
+                                            controller: _maxStayController,
+                                            decoration: InputDecorationHelper.buildDecoration(
+                                              labelText: 'Maksimalan Boravak (noći)',
+                                              hintText: '30',
+                                              helperText: 'Najviše noći (opcionalno)',
+                                              prefixIcon: const Icon(Icons.date_range),
+                                              isMobile: isMobile,
+                                              context: context,
+                                            ),
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.digitsOnly,
+                                            ],
+                                            validator: (value) {
+                                              if (value == null || value.isEmpty) {
+                                                return null; // Max stay is optional
+                                              }
+                                              final number = int.tryParse(value);
+                                              if (number == null || number < 1) {
+                                                return 'Unesite ispravan broj';
+                                              }
+                                              // Check that max >= min
+                                              final minStay = int.tryParse(_minStayController.text) ?? 1;
+                                              if (number < minStay) {
+                                                return 'Max mora biti >= min ($minStay)';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ],
@@ -494,6 +570,53 @@ class _Step3PricingState extends ConsumerState<Step3Pricing> {
                         ),
                       ),
                     ),
+                  ),
+                ),
+                const SizedBox(height: AppDimensions.spaceL),
+
+                // Info card about advanced pricing options in Cjenovnik tab
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.secondaryContainer.withAlpha((0.3 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: theme.colorScheme.secondary.withAlpha((0.3 * 255).toInt()),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.lightbulb_outline,
+                        color: theme.colorScheme.secondary,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Napredne opcije cijena',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.secondary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Nakon kreiranja jedinice, u Cjenovnik tabu možete podesiti napredne opcije '
+                              'kao što su min/max noći po datumu, blokiranje check-in/check-out dana, '
+                              'vikend dani i sezonske cijene.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppDimensions.spaceL),

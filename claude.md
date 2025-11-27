@@ -287,11 +287,11 @@ return Container(
 
 ### 🧙 Unit Creation Wizard - Multi-Step Form
 
-**Status**: ✅ PRODUCTION READY  
+**Status**: ✅ PRODUCTION READY
 **Folder**: `lib/features/owner_dashboard/presentation/screens/unit_wizard/`
 
 #### Svrha
-7-step wizard za kreiranje/editovanje smještajnih jedinica. Owner kreira novu jedinicu kroz guided flow sa validacijom na svakom koraku.
+5-step wizard za kreiranje/editovanje smještajnih jedinica. Owner kreira novu jedinicu kroz guided flow sa validacijom na svakom koraku.
 
 #### Structure
 ```
@@ -302,17 +302,15 @@ unit_wizard/
 │   ├── unit_wizard_provider.dart     # Riverpod state notifier
 │   └── unit_wizard_provider.g.dart   # Generated
 └── steps/
-    ├── step_1_basic_info.dart        # Name, Description, Max Guests
-    ├── step_2_capacity.dart          # Bedrooms, Bathrooms, etc.
-    ├── step_3_pricing.dart           # Price per night, Cleaning fee, Tax
-    ├── step_4_availability.dart      # Booking settings, Min/Max nights
-    ├── step_5_photos.dart            # Photo upload
-    ├── step_6_widget.dart            # Widget customization
-    └── step_7_advanced.dart          # Review & Publish
+    ├── step_1_basic_info.dart        # Name, Slug, Description
+    ├── step_2_capacity.dart          # Bedrooms, Bathrooms, Max Guests, Area
+    ├── step_3_pricing.dart           # Price per night, Weekend price, Min/Max Stay
+    ├── step_4_photos.dart            # Photo upload (OPTIONAL - can skip)
+    └── step_5_review.dart            # Review & Publish
 ```
 
 #### Key Features
-- ✅ **Progress Indicator** - Shows current step (1/7) sa visual progress bar
+- ✅ **Progress Indicator** - Shows current step (1/5) sa visual progress bar
 - ✅ **Form Validation** - Svaki step validira prije nego što dozvoli next
 - ✅ **State Persistence** - Wizard state se čuva u provider, survives hot reload
 - ✅ **Navigation** - Back/Next buttons, can jump to any completed step
@@ -348,8 +346,8 @@ Ako izostane bilo koji od ova 3 koraka, jedinica neće raditi kako treba!
 - ❌ Skip-uj bilo koji step u production modu
 
 **ALWAYS:**
-- ✅ Testiraj cijeli flow od step 1 do 7
-- ✅ Provjeri Firestore nakon publish-a (3 dokumenta moraju postojati)
+- ✅ Testiraj cijeli flow od step 1 do 5
+- ✅ Provjeri Firestore nakon publish-a (unit + widget_settings dokumenti moraju postojati)
 - ✅ Testiraj Edit mode (loadExistingUnit mora raditi)
 
 **Routes:**
@@ -633,6 +631,360 @@ items: BookingStatus.values.where((s) {
 - `skeleton_loader.dart` - BookingCardSkeleton i BookingTableSkeleton
 
 **Commit**: `31938c9` (2025-11-19)
+
+---
+
+## 🔌 WIDGET SYSTEM - KOMPLETNA DOKUMENTACIJA
+
+**Datum dokumentacije**: 2025-11-27
+**Status**: ✅ DEFINITIVNA REFERENCA - Koristi za sve widget-related izmjene
+
+### Widget Modovi (WidgetMode enum)
+
+```dart
+enum WidgetMode {
+  calendarOnly,    // Samo kalendar - bez rezervacija
+  bookingPending,  // Rezervacija bez plaćanja - čeka odobrenje
+  bookingInstant,  // Puna rezervacija sa plaćanjem
+}
+```
+
+#### 1. `calendarOnly` - Samo Kalendar
+
+**Svrha:** Gost vidi samo dostupnost, kontaktira vlasnika telefonom/emailom.
+
+| Aspekt | Vrijednost |
+|--------|------------|
+| Kalendar | ✅ View only (selekcija DISABLED) |
+| Date Selection | ❌ `onRangeSelected: null` |
+| Guest Form | ❌ NE prikazuje se |
+| Payment Methods | ❌ NE prikazuje se |
+| Contact Info | ✅ Pill card ispod kalendara |
+| Pill Bar | ❌ NE prikazuje se |
+
+**Owner Settings Screen:**
+- ✅ Widget Mode selector
+- ✅ Contact Options section
+- ❌ Payment Methods (sakriveno)
+- ❌ Booking Behavior (sakriveno)
+
+---
+
+#### 2. `bookingPending` - Bez Plaćanja
+
+**Svrha:** Gost kreira rezervaciju, owner odobrava, plaćanje se dogovara privatno.
+
+| Aspekt | Vrijednost |
+|--------|------------|
+| Kalendar | ✅ Sa selekcijom datuma |
+| Date Selection | ✅ Enabled |
+| Guest Form | ✅ Prikazuje se |
+| Payment Methods | ❌ **NIKAD** se ne prikazuje |
+| Info Card | ✅ "Čeka odobrenje vlasnika" |
+| Pill Bar | ✅ Floating, draggable |
+| Button Text | "Send Booking Request - X nights" |
+
+**Owner Settings Screen:**
+- ✅ Widget Mode selector
+- ✅ Info Card (zelena): "Rezervacija bez plaćanja"
+- ✅ Booking Behavior section (ali `requireOwnerApproval` SAKRIVENO jer je uvijek TRUE)
+- ✅ Contact Options section
+- ❌ Payment Methods (sakriveno)
+
+**Booking Creation:**
+```dart
+bookingService.createBooking(
+  paymentOption: 'none',
+  paymentMethod: 'none',
+  requireOwnerApproval: true,  // UVIJEK true, hardcoded!
+);
+// Status: 'pending'
+```
+
+**⚠️ KRITIČNO:**
+- `requireOwnerApproval` je **UVIJEK TRUE** za bookingPending
+- Toggle za odobrenje treba biti **SAKRIVEN** u owner settings za ovaj mod
+- Payment methods se **NIKAD** ne prikazuju gostu
+
+---
+
+#### 3. `bookingInstant` - Sa Plaćanjem
+
+**Svrha:** Gost rezerviše i plaća online. Potvrda zavisi od payment metode.
+
+| Aspekt | Vrijednost |
+|--------|------------|
+| Kalendar | ✅ Sa selekcijom datuma |
+| Date Selection | ✅ Enabled |
+| Guest Form | ✅ Prikazuje se |
+| Payment Methods | ✅ Stripe / Bank / Pay on Arrival |
+| Pill Bar | ✅ Floating, draggable |
+| Button Text | Zavisi od payment metode |
+
+**Owner Settings Screen:**
+- ✅ Widget Mode selector
+- ✅ Payment Methods section (SAMO ovdje!)
+- ✅ Booking Behavior section (uključujući `requireOwnerApproval` toggle)
+- ✅ Contact Options section
+
+---
+
+### Payment Methods - Detaljna Logika
+
+#### Validacija u Owner Settings
+
+```dart
+// bookingInstant MORA imati barem JEDAN payment method
+if (mode == WidgetMode.bookingInstant) {
+  if (!stripeEnabled && !bankTransferEnabled && !payOnArrivalEnabled) {
+    showError("Morate omogućiti barem jednu metodu plaćanja");
+    return; // Ne dozvoli save
+  }
+}
+```
+
+#### Bank Transfer - Bank Details Validacija
+
+```dart
+// Bank Transfer može biti enabled SAMO ako owner ima unesene bank details
+if (bankTransferEnabled && !ownerHasBankDetails) {
+  showWarning("Prvo unesite bankovne podatke");
+  // Link na: /owner/integrations/payments/bank-account
+  return;
+}
+```
+
+#### Payment Method Prioritet (Auto-Select)
+
+```dart
+// Ako je SAMO JEDAN payment method enabled:
+// → Auto-select i prikaži simplified UI (nema radio buttons)
+
+// Ako je VIŠE payment methods enabled:
+// → Prikaži radio button selector
+// → Default selection priority: Stripe > Bank Transfer > Pay on Arrival
+```
+
+#### Button Text po Payment Metodi
+
+| Payment Method | Button Text |
+|----------------|-------------|
+| `stripe` | "Pay with Stripe - X nights" |
+| `bank_transfer` | "Continue to Bank Transfer - X nights" |
+| `pay_on_arrival` | "Rezervisi - X nights" |
+
+---
+
+### Approval Logic po Payment Metodi
+
+| Payment Method | `requireOwnerApproval` | Preporuka |
+|----------------|------------------------|-----------|
+| **Stripe** | Konfigurabilan toggle | Može biti FALSE (auto-confirm nakon uplate) |
+| **Bank Transfer** | Konfigurabilan toggle | Preporučeno TRUE (owner potvrđuje prije uplate) |
+| **Pay on Arrival** | Konfigurabilan toggle | Preporučeno TRUE (owner potvrđuje) |
+| **bookingPending** | **UVIJEK TRUE** | Hardcoded, toggle SAKRIVEN |
+
+**UI Preporuka za Owner:**
+Prikazati info text: "Za Stripe plaćanje možete isključiti odobravanje jer je plaćeno unaprijed. Za Bank Transfer i Pay on Arrival preporučujemo da ostavite uključeno."
+
+---
+
+### Cancellation Policy
+
+#### Bank Transfer / Pay on Arrival
+```
+Gost šalje Cancellation REQUEST
+    → Owner odobrava ili odbija
+    → Refund se dogovara privatno
+```
+
+#### Stripe (plaćeno online)
+```
+Gost šalje Cancellation REQUEST
+    → Owner odobrava ili odbija
+    → Manual refund (za sada)
+    → [FUTURE] Automatski refund opcija
+```
+
+**⚠️ NAPOMENA:** Za sada SVE cancellation ide kroz REQUEST → Owner approval. Automatski self-service cancellation može se dodati kasnije.
+
+---
+
+### Deposit (Avans) - Jedinstvena Opcija
+
+```dart
+// JEDAN slider za deposit percentage
+// Primjenjuje se na SVE payment methods (Stripe + Bank Transfer)
+globalDepositPercentage: int  // 0-100%, default 20%
+```
+
+**⚠️ KRITIČNO:**
+- Koristi `globalDepositPercentage`, NE `stripeConfig.depositPercentage`
+- Legacy polja (`depositPercentage` u config-ima) postoje za backward compatibility
+- Pri save-u kopiraj globalnu vrijednost u oba config-a
+
+---
+
+### Pricing Hijerarhija (Airbnb-style)
+
+```
+KAKO WIDGET RAČUNA CIJENU ZA DATUM X:
+
+1. Da li postoji daily_prices[X].price?
+   └─ DA → Koristi tu cijenu (HIGHEST PRIORITY)
+   └─ NE → Idi na korak 2
+
+2. Da li je datum X vikend (prema unit.weekendDays)?
+   └─ DA → Da li postoji unit.weekendBasePrice?
+           └─ DA → Koristi vikend cijenu
+           └─ NE → Idi na korak 3
+   └─ NE → Idi na korak 3
+
+3. Koristi unit.pricePerNight (BASE FALLBACK)
+```
+
+**Primjer:**
+- Owner postavi base price: 50€, weekend price: 70€
+- U Cjenovnik tabu postavi za 25-31 Dec: 100€
+- Rezultat:
+  - 1-24 Dec (radni dan): 50€
+  - 1-24 Dec (vikend): 70€
+  - 25-31 Dec (svi dani): 100€ (override)
+  - 1 Jan+: Vraća se na base/weekend logiku
+
+---
+
+### Weekend Days - Konfiguracija
+
+**Trenutno stanje:**
+- Default: `[6, 7]` (Subota, Nedjelja) - ISO weekday format
+- **NEMA UI** za owner da odabere dane
+
+**Buduća implementacija (OPCIJA B - sve u Cjenovnik tab):**
+```
+☐ Petak
+☑ Subota  (default selected)
+☑ Nedjelja
+```
+
+**Napomena za vikend:**
+- Gledamo NOĆENJA, ne dnevni status
+- Petak + Subota ima više smisla za vikend cijenu jer:
+  - Petak = check-in u 15h
+  - Nedjelja = check-out u 10h
+  - Ponedjeljak = radni dan
+
+---
+
+### Step 3 Wizard vs Cjenovnik Tab (OPCIJA B)
+
+**Step 3 Wizard - GLOBALNE postavke:**
+| Polje | Status | Napomena |
+|-------|--------|----------|
+| Base Price | ✅ Required | `pricePerNight` |
+| Weekend Price | ❌ PREMJESTITI u Cjenovnik | Kompleksnije jer treba weekend days selector |
+| Min Stay | ✅ Required | `minStayNights` |
+| Max Stay | ✅ DODATI | `maxStayNights` sa objašnjenjem |
+
+**Cjenovnik Tab - PER-DAY postavke i BULK edit:**
+| Polje | Status | Napomena |
+|-------|--------|----------|
+| Daily Price | ✅ Postoji | Override za specifične dane |
+| Weekend Days Selector | ✅ DODATI | Multi-select za vikend dane |
+| Weekend Price | ✅ DODATI | Globalna vikend cijena (premjestiti iz wizard-a) |
+| Min Nights on Arrival | ✅ Postoji | Per-day override |
+| Max Nights on Arrival | ✅ Postoji | Per-day override |
+| Bulk Edit | ✅ Postoji | Za range datuma |
+
+---
+
+### Sekcije u Owner Widget Settings Screen
+
+```dart
+Widget build(BuildContext context) {
+  return ListView(
+    children: [
+      // UVIJEK PRIKAŽI
+      _buildWidgetModeSection(),
+
+      // SAMO ZA bookingInstant
+      if (_selectedMode == WidgetMode.bookingInstant) ...[
+        _buildPaymentMethodsSection(),
+        _buildBookingBehaviorSection(),  // Sa requireOwnerApproval toggle
+      ],
+
+      // SAMO ZA bookingPending
+      if (_selectedMode == WidgetMode.bookingPending) ...[
+        _buildInfoCard("Rezervacija bez plaćanja..."),
+        _buildBookingBehaviorSection(),  // BEZ requireOwnerApproval (sakriven)
+      ],
+
+      // UVIJEK PRIKAŽI (ali se koristi samo u calendarOnly)
+      _buildContactOptionsSection(),
+    ],
+  );
+}
+```
+
+---
+
+### Booking Widget Screen - Mode Handling
+
+```dart
+// Kalendar - date selection disabled za calendarOnly
+CalendarViewSwitcher(
+  onRangeSelected: widgetMode == WidgetMode.calendarOnly
+      ? null  // DISABLED
+      : (start, end) { ... },
+)
+
+// Pill Bar - NIKAD za calendarOnly
+if (widgetMode != WidgetMode.calendarOnly &&
+    _checkIn != null && _checkOut != null &&
+    _hasInteractedWithBookingFlow && !_pillBarDismissed)
+  _buildFloatingDraggablePillBar(...)
+
+// Contact Pill Card - SAMO za calendarOnly
+if (widgetMode == WidgetMode.calendarOnly)
+  _buildContactPillCard(...)
+
+// Payment Section - SAMO za bookingInstant
+if (widgetMode == WidgetMode.bookingInstant)
+  _buildPaymentMethodsInForm(...)
+
+// Info "čeka odobrenje" - SAMO za bookingPending
+if (widgetMode == WidgetMode.bookingPending)
+  InfoCardWidget(message: "Čeka odobrenje vlasnika")
+```
+
+---
+
+### DO NOT (Widget System)
+
+- ❌ **NE PRIKAZUJ** payment methods u `bookingPending` modu
+- ❌ **NE DOZVOLI** `requireOwnerApproval = false` za `bookingPending`
+- ❌ **NE KORISTI** `stripeConfig.depositPercentage` - koristi `globalDepositPercentage`
+- ❌ **NE DOZVOLI** save `bookingInstant` bez barem jednog payment method-a
+- ❌ **NE ENABLE** Bank Transfer ako owner nema bank details
+- ❌ **NE DOZVOLI** date selection u `calendarOnly` modu
+
+### ALWAYS (Widget System)
+
+- ✅ **UVIJEK** provjeri `widgetMode` prije prikaza sekcija
+- ✅ **UVIJEK** koristi `globalDepositPercentage` za deposit kalkulacije
+- ✅ **UVIJEK** validiraj payment methods pri save-u za `bookingInstant`
+- ✅ **UVIJEK** hardcode `requireOwnerApproval: true` za `bookingPending` bookings
+- ✅ **UVIJEK** prikaži Contact Info za `calendarOnly` mod
+- ✅ **UVIJEK** koristi pricing hijerarhiju: daily_price > weekend_price > base_price
+
+---
+
+### Lokalizacija (FUTURE)
+
+**Napomena:** U budućnosti će se aplikacija lokalizovati na hrvatski i engleski. Za sada:
+- Piši novi tekst na **hrvatskom**
+- Lokalizacija će biti zadnji korak prije produkcije
+- Ne dodavaj hardcoded engleski tekst u nove feature-e
 
 ---
 
@@ -1019,6 +1371,160 @@ if (_selectedMode == WidgetMode.bookingPending) {
 - `lib/features/widget/domain/models/widget_settings.dart` - Model
 - `lib/features/owner_dashboard/presentation/screens/widget_settings_screen.dart` - UI
 - `lib/features/widget/presentation/screens/booking_widget_screen.dart` - Widget logic
+
+---
+
+### Widget Mode Behavior - bookingPending Approval Toggle
+
+**Datum**: 2025-11-27
+**Status**: ✅ COMPLETED - Hidden approval toggle for bookingPending mode
+
+#### Problem
+
+`bookingPending` mod (rezervacija bez plaćanja) prikazivao je toggle za "Zahtijeva Odobrenje" iako je odobrenje u tom modu UVIJEK obavezno. Ovo je zbunjivalo owner-e.
+
+#### Rješenje
+
+1. **Hidden toggle**: U `bookingPending` modu, approval toggle je sakriven
+2. **Info banner**: Prikazan info banner koji objašnjava da je odobrenje uvijek potrebno
+3. **Hardcoded save**: Pri spremanju, `requireOwnerApproval` je UVIJEK `true` za `bookingPending`
+
+#### UI Logic
+```dart
+// widget_settings_screen.dart - Behavior switches section
+final isBookingPending = _selectedMode == WidgetMode.bookingPending;
+
+// For bookingPending: only show cancellation (approval is always true)
+if (isBookingPending) {
+  return Column(
+    children: [
+      // Info banner explaining approval is automatic
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(...),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, ...),
+            Expanded(
+              child: Text(
+                'U "Rezervacija bez plaćanja" modu sve rezervacije uvijek zahtijevaju vaše odobrenje.',
+                ...
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 12),
+      cancellationCard,  // Only cancellation toggle shown
+    ],
+  );
+}
+
+// For bookingInstant: show both approval + cancellation
+// ...
+```
+
+#### Save Logic
+```dart
+// Hardcoded approval for bookingPending mode
+requireOwnerApproval: _selectedMode == WidgetMode.bookingPending
+    ? true  // ALWAYS true for bookingPending
+    : _requireApproval,  // User's choice for bookingInstant
+```
+
+#### Widget Mode Summary
+
+| Mode | Approval Toggle | Approval Value |
+|------|-----------------|----------------|
+| `calendarOnly` | N/A | N/A (no bookings) |
+| `bookingPending` | **HIDDEN** | **ALWAYS true** |
+| `bookingInstant` | Visible | User's choice |
+
+#### DO NOT:
+- ❌ **NE PRIKAZUJ** approval toggle za `bookingPending` mod
+- ❌ **NE DOZVOLI** `requireOwnerApproval: false` za `bookingPending`
+
+#### ALWAYS:
+- ✅ Info banner za `bookingPending` koji objašnjava behavior
+- ✅ Hardcode `true` pri save-u za `bookingPending`
+- ✅ Samo `bookingInstant` ima configurable approval
+
+**Key Files:**
+- `lib/features/owner_dashboard/presentation/screens/widget_settings_screen.dart` - Lines 1360-1422
+
+---
+
+### Unit Wizard - Max Stay Nights Field
+
+**Datum**: 2025-11-27
+**Status**: ✅ COMPLETED - Added maxStayNights to Step 3 Pricing
+
+#### Svrha
+
+Dodano polje za maksimalan broj noći po rezervaciji u Step 3 (Cijena) Unit Wizard-a. Ovo omogućava owner-ima da ograniče dužinu boravka na nivou jedinice.
+
+#### Implementation
+
+**State Model** (`unit_wizard_state.dart`):
+```dart
+int? maxStayNights, // Maximum nights per booking (null = no limit)
+```
+
+**Provider Handler** (`unit_wizard_provider.dart`):
+```dart
+case 'maxStayNights':
+  return draft.copyWith(maxStayNights: value);
+```
+
+**UI Field** (`step_3_pricing.dart`):
+```dart
+TextFormField(
+  controller: _maxStayController,
+  decoration: InputDecorationHelper.buildDecoration(
+    labelText: 'Maksimalan Boravak (noći)',
+    hintText: '30',
+    helperText: 'Najviše noći (opcionalno)',
+    prefixIcon: const Icon(Icons.date_range),
+    ...
+  ),
+  validator: (value) {
+    if (value == null || value.isEmpty) return null; // Optional
+    final number = int.tryParse(value);
+    if (number == null || number < 1) return 'Unesite ispravan broj';
+    // Check that max >= min
+    final minStay = int.tryParse(_minStayController.text) ?? 1;
+    if (number < minStay) return 'Max mora biti >= min ($minStay)';
+    return null;
+  },
+)
+```
+
+**Publish** (`unit_wizard_screen.dart`):
+```dart
+final unit = UnitModel(
+  ...
+  maxStayNights: draft.maxStayNights, // null = no limit
+);
+```
+
+#### Validation Rules
+- ✅ **Optional field** - null = no maximum limit
+- ✅ **Must be ≥ 1** if provided
+- ✅ **Must be ≥ minStay** - cannot be less than minimum stay
+
+#### Info Banner
+
+Dodan info banner u Step 3 koji objašnjava napredne opcije dostupne u Cjenovnik tab-u nakon kreiranja jedinice:
+- Min/max noći po datumu
+- Blokiranje check-in/check-out dana
+- Vikend dani
+- Sezonske cijene
+
+**Key Files:**
+- `lib/features/owner_dashboard/presentation/screens/unit_wizard/state/unit_wizard_state.dart`
+- `lib/features/owner_dashboard/presentation/screens/unit_wizard/state/unit_wizard_provider.dart`
+- `lib/features/owner_dashboard/presentation/screens/unit_wizard/steps/step_3_pricing.dart`
+- `lib/features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart`
 
 ---
 
@@ -2153,9 +2659,9 @@ context.go(OwnerRoutes.icalExport);
 
 ---
 
-**Last Updated**: 2025-11-26
-**Version**: 2.2
-**Focus**: Real-Time Sync, Delete Unit, Controller Disposal Fix + Unit Hub, Calendar, Bookings
+**Last Updated**: 2025-11-27
+**Version**: 2.3
+**Focus**: Widget Mode bookingPending Approval + Unit Wizard Max Stay Field
 
 ---
 

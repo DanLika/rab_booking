@@ -32,6 +32,7 @@ class UnitWizardDraft with _$UnitWizardDraft {
     double? weekendBasePrice, // Weekend price (Sat-Sun by default)
     @Default([6, 7]) List<int> weekendDays, // Days considered weekend (1=Mon...7=Sun)
     int? minStayNights,
+    int? maxStayNights, // Maximum nights per booking (null = no limit)
     @Default([]) List<Map<String, dynamic>> seasons, // Seasonal pricing (simplified)
 
     // Step 4: Availability (REQUIRED)
@@ -82,6 +83,7 @@ class UnitWizardDraft with _$UnitWizardDraft {
       weekendBasePrice: unit.weekendBasePrice,
       weekendDays: unit.weekendDays ?? [6, 7],
       minStayNights: unit.minStayNights,
+      maxStayNights: unit.maxStayNights,
       images: unit.images,
       coverImageUrl: unit.images.isNotEmpty ? unit.images.first : null,
       widgetMode: 'bookingInstant',

@@ -143,6 +143,8 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
         return draft.copyWith(weekendDays: value);
       case 'minStayNights':
         return draft.copyWith(minStayNights: value);
+      case 'maxStayNights':
+        return draft.copyWith(maxStayNights: value);
       case 'seasons':
         return draft.copyWith(seasons: value);
       case 'availableYearRound':

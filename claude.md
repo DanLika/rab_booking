@@ -1761,6 +1761,54 @@ Dodan info banner u Step 3 koji objašnjava napredne opcije dostupne u Cjenovnik
 
 ---
 
+## 📦 WIDGET REFACTORING STATUS (2025-11-27)
+
+### Analiza Provedena
+
+Widget feature je **djelimično refaktorisan**. Glavni fajl `booking_widget_screen.dart` je smanjen sa 4,238 na 2,154 linija (-49%).
+
+### Trenutno Stanje Fajlova
+
+| Fajl | Linije | Status |
+|------|--------|--------|
+| `booking_widget_screen.dart` | 2,154 | ⚠️ Može bolje (<1000) |
+| `year_calendar_widget.dart` | 1,176 | ⚠️ Nije diran |
+| `month_calendar_widget.dart` | 1,142 | ⚠️ Nije diran |
+| `booking_confirmation_screen.dart` | 999 | ⚠️ Djelimično |
+| `booking_details_screen.dart` | 968 | ⚠️ Nije diran |
+| `bank_transfer_screen.dart` | 790 | ✅ Refaktorisan |
+
+### Nova Folder Struktura (Već Kreirana)
+
+```
+lib/features/widget/presentation/widgets/
+├── booking/                    ← 13 novih fajlova
+│   ├── guest_form/             ← 5 fajlova (email, phone, name, notes, count)
+│   └── payment/                ← 3 fajla
+├── common/                     ← 8 novih fajlova
+│   └── contact/                ← 2 fajla
+├── confirmation/               ← 2 fajla
+└── bank_transfer/              ← 4 fajla
+
+lib/features/widget/domain/services/
+├── booking_validation_service.dart   ← NOVO
+└── price_lock_service.dart           ← NOVO
+```
+
+### Plan za Nastavak (Phase 2)
+
+**Lokacija plana**: `~/.claude/plans/valiant-watching-peacock.md`
+
+**Cilj**: Smanjiti preostale velike fajlove na <500 linija
+
+**Procjena**: ~21 sat rada (3-4 dana)
+
+### Preporuka
+
+Widget **RADI BEZ BUGOVA** - refaktoring je opcija za poboljšanje maintainability-ja, nije hitno.
+
+---
+
 ## 🐛 NEDAVNI BUG FIX-EVI (Post 20.11.2025)
 
 ### Stripe Connect - Return URL Fixes

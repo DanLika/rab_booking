@@ -19,6 +19,7 @@ class StripeService {
   /// Parameters:
   /// - [bookingId]: The booking document ID in Firestore
   /// - [returnUrl]: URL to redirect after payment
+  /// - [guestEmail]: Guest's email for access validation (required for guest checkout)
   ///
   /// Returns:
   /// - sessionId: Stripe checkout session ID
@@ -26,6 +27,7 @@ class StripeService {
   Future<StripeCheckoutResult> createCheckoutSession({
     required String bookingId,
     String? returnUrl,
+    String? guestEmail,
   }) async {
     try {
       LoggingService.logOperation('[StripeService] Creating checkout session for booking: $bookingId');
@@ -35,6 +37,7 @@ class StripeService {
           .call({
         'bookingId': bookingId,
         'returnUrl': returnUrl,
+        if (guestEmail != null) 'guestEmail': guestEmail,
       });
 
       final data = result.data as Map<String, dynamic>;

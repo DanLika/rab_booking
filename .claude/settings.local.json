@@ -61,7 +61,9 @@
       "WebFetch(domain:github.com)",
       "Bash(claude mcp remove:*)",
       "Bash(claude mcp add:*)",
-      "Bash(claude mcp list:*)"
+      "Bash(claude mcp list:*)",
+      "Bash(sed:*)",
+      "Bash(tree:*)"
     ],
     "deny": [
       "Read(.env)",

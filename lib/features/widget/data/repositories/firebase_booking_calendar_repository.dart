@@ -7,12 +7,39 @@ import '../../domain/models/calendar_date_status.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/errors/app_exceptions.dart';
+import '../helpers/availability_checker.dart';
+import '../helpers/booking_price_calculator.dart';
+// CalendarDataBuilder available for testing or future extraction
+// ignore: unused_import
+import '../helpers/calendar_data_builder.dart';
+import '../../utils/date_key_generator.dart';
 
-/// Firebase repository for booking calendar with realtime updates and prices
+/// Firebase repository for booking calendar with realtime updates and prices.
+///
+/// ## Refactoring Notes (Phase 3)
+/// This repository delegates to extracted helper classes:
+/// - [AvailabilityChecker] - Availability checking logic
+/// - [BookingPriceCalculator] - Price calculation with hierarchy
+/// - [CalendarDataBuilder] - Available for testing/future use
+///
+/// The public API remains unchanged for backward compatibility.
+/// Calendar building remains inline (optimized with Bug #71 fixes).
 class FirebaseBookingCalendarRepository {
   final FirebaseFirestore _firestore;
 
-  FirebaseBookingCalendarRepository(this._firestore);
+  /// Helper for availability checking (lazy initialized).
+  late final AvailabilityChecker _availabilityChecker;
+
+  /// Helper for price calculation (lazy initialized).
+  late final BookingPriceCalculator _priceCalculator;
+
+  FirebaseBookingCalendarRepository(this._firestore) {
+    _availabilityChecker = AvailabilityChecker(_firestore);
+    _priceCalculator = BookingPriceCalculator(
+      firestore: _firestore,
+      availabilityChecker: _availabilityChecker,
+    );
+  }
 
   /// Get year-view calendar data with realtime updates and prices
   Stream<Map<DateTime, CalendarDateInfo>> watchYearCalendarData({
@@ -123,8 +150,7 @@ class FirebaseBookingCalendarRepository {
 
           try {
             final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-            final key =
-                '${price.date.year}-${price.date.month}-${price.date.day}';
+            final key = DateKeyGenerator.fromDate(price.date);
             priceMap[key] = price;
           } catch (e) {
             LoggingService.logError('Error parsing daily price', e);
@@ -261,8 +287,7 @@ class FirebaseBookingCalendarRepository {
 
           try {
             final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-            final key =
-                '${price.date.year}-${price.date.month}-${price.date.day}';
+            final key = DateKeyGenerator.fromDate(price.date);
             priceMap[key] = price;
           } catch (e) {
             LoggingService.logError('Error parsing daily price', e);
@@ -305,7 +330,7 @@ class FirebaseBookingCalendarRepository {
     // Initialize all days as available with prices
     for (int day = 1; day <= daysInMonth; day++) {
       final date = DateTime.utc(year, month, day);
-      final priceKey = '${date.year}-${date.month}-${date.day}';
+      final priceKey = DateKeyGenerator.fromDate(date);
       final priceModel = priceMap[priceKey];
 
       calendar[date] = CalendarDateInfo(
@@ -363,7 +388,7 @@ class FirebaseBookingCalendarRepository {
           }
 
           // Preserve price when updating status
-          final priceKey = '${current.year}-${current.month}-${current.day}';
+          final priceKey = DateKeyGenerator.fromDate(current);
           calendar[current] = CalendarDateInfo(
             date: current,
             status: status,
@@ -400,7 +425,7 @@ class FirebaseBookingCalendarRepository {
           while (current.isBefore(rangeEnd) ||
               current.isAtSameMomentAs(rangeEnd)) {
             // Mark as booked (from external source)
-            final priceKey = '${current.year}-${current.month}-${current.day}';
+            final priceKey = DateKeyGenerator.fromDate(current);
             calendar[current] = CalendarDateInfo(
               date: current,
               status: DateStatus.booked, // Always fully booked for iCal events
@@ -439,7 +464,7 @@ class FirebaseBookingCalendarRepository {
       final daysInMonth = DateTime(year, month + 1, 0).day;
       for (int day = 1; day <= daysInMonth; day++) {
         final date = DateTime(year, month, day);
-        final priceKey = '${date.year}-${date.month}-${date.day}';
+        final priceKey = DateKeyGenerator.fromDate(date);
         final priceModel = priceMap[priceKey];
 
         calendar[date] = CalendarDateInfo(
@@ -497,7 +522,7 @@ class FirebaseBookingCalendarRepository {
           }
 
           // Preserve price when updating status
-          final priceKey = '${current.year}-${current.month}-${current.day}';
+          final priceKey = DateKeyGenerator.fromDate(current);
           calendar[current] = CalendarDateInfo(
             date: current,
             status: status,
@@ -534,7 +559,7 @@ class FirebaseBookingCalendarRepository {
           while (current.isBefore(rangeEnd) ||
               current.isAtSameMomentAs(rangeEnd)) {
             // Mark as booked (from external source)
-            final priceKey = '${current.year}-${current.month}-${current.day}';
+            final priceKey = DateKeyGenerator.fromDate(current);
             calendar[current] = CalendarDateInfo(
               date: current,
               status: DateStatus.booked, // Always fully booked for iCal events
@@ -592,7 +617,7 @@ class FirebaseBookingCalendarRepository {
       final gapDays = gapEnd.difference(gapStart).inDays;
 
       // Get minNights from first day of gap (or use default)
-      final priceKey = '${gapStart.year}-${gapStart.month}-${gapStart.day}';
+      final priceKey = DateKeyGenerator.fromDate(gapStart);
       final priceModel = priceMap[priceKey];
       final minNights = priceModel?.minNightsOnArrival ?? defaultMinNights;
 
@@ -616,161 +641,47 @@ class FirebaseBookingCalendarRepository {
     }
   }
 
-  /// Check if date range is available for booking
-  /// Checks both regular bookings AND iCal events (Booking.com, Airbnb, etc.)
+  /// Check if date range is available for booking.
+  ///
+  /// Checks regular bookings, iCal events (Booking.com, Airbnb), and blocked dates.
+  /// Delegates to [AvailabilityChecker] for the actual logic.
   Future<bool> checkAvailability({
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
-  }) async {
-    try {
-      // Fetch all active bookings for this unit
-      // Note: Using client-side filtering to avoid Firestore limitation of
-      // whereIn + inequality filters requiring composite index
-      final bookingsSnapshot = await _firestore
-          .collection('bookings')
-          .where('unit_id', isEqualTo: unitId)
-          .where('status', whereIn: ['pending', 'confirmed', 'in_progress'])
-          .get();
-
-      // Check for overlap in memory (client-side)
-      for (final doc in bookingsSnapshot.docs) {
-        try {
-          final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
-
-          // Normalize booking dates to midnight (remove time component)
-          // to match turnover day logic: checkOut day can be checkIn for next booking
-          final bookingCheckIn = DateTime(
-            booking.checkIn.year,
-            booking.checkIn.month,
-            booking.checkIn.day,
-          );
-          final bookingCheckOut = DateTime(
-            booking.checkOut.year,
-            booking.checkOut.month,
-            booking.checkOut.day,
-          );
-
-          // Overlap logic with turnover day support:
-          // Conflict exists if: (bookingCheckOut > checkIn) AND (bookingCheckIn < checkOut)
-          // Using > (not >=) allows same-day turnover (checkOut = checkIn is OK)
-          if (bookingCheckOut.isAfter(checkIn) &&
-              bookingCheckIn.isBefore(checkOut)) {
-            LoggingService.log(
-              '❌ Booking conflict found: ${booking.id}',
-              tag: 'AVAILABILITY_CHECK',
-            );
-            return false; // Conflict with regular booking
-          }
-        } catch (e) {
-          unawaited(
-            LoggingService.logError('Error checking booking availability', e),
-          );
-        }
-      }
-
-      // Check iCal events (Booking.com, Airbnb, etc.)
-      // Note: Using client-side filtering to avoid Firestore index requirement for inequality filter
-      final icalEventsSnapshot = await _firestore
-          .collection('ical_events')
-          .where('unit_id', isEqualTo: unitId)
-          .get();
-
-      for (final doc in icalEventsSnapshot.docs) {
-        try {
-          final data = doc.data();
-          final eventStartDateRaw = (data['start_date'] as Timestamp).toDate();
-          final eventEndDateRaw = (data['end_date'] as Timestamp).toDate();
-
-          // Normalize iCal event dates to midnight (remove time component)
-          // to match turnover day logic: checkOut day can be checkIn for next booking
-          final eventStartDate = DateTime(
-            eventStartDateRaw.year,
-            eventStartDateRaw.month,
-            eventStartDateRaw.day,
-          );
-          final eventEndDate = DateTime(
-            eventEndDateRaw.year,
-            eventEndDateRaw.month,
-            eventEndDateRaw.day,
-          );
-
-          // Client-side filtering: Check if events overlap with the date range
-          // Overlap logic with turnover day support:
-          // Using > (not >=) allows same-day turnover (checkOut = checkIn is OK)
-          if (eventEndDate.isAfter(checkIn) &&
-              eventStartDate.isBefore(checkOut)) {
-            LoggingService.log(
-              '❌ iCal conflict found: ${data['source']} event from $eventStartDate to $eventEndDate',
-              tag: 'AVAILABILITY_CHECK',
-            );
-            return false; // Conflict with iCal event
-          }
-        } catch (e) {
-          unawaited(
-            LoggingService.logError(
-              'Error checking iCal event availability',
-              e,
-            ),
-          );
-        }
-      }
-
-      // Check blocked dates from daily_prices (available: false)
-      final blockedDatesSnapshot = await _firestore
-          .collection('daily_prices')
-          .where('unit_id', isEqualTo: unitId)
-          .where('available', isEqualTo: false)
-          .get();
-
-      for (final doc in blockedDatesSnapshot.docs) {
-        try {
-          final data = doc.data();
-          final blockedDateRaw = (data['date'] as Timestamp).toDate();
-
-          // Normalize blocked date to midnight
-          final blockedDate = DateTime(
-            blockedDateRaw.year,
-            blockedDateRaw.month,
-            blockedDateRaw.day,
-          );
-
-          // Check if blocked date falls within the requested range
-          // Blocked date is a conflict if: blockedDate >= checkIn AND blockedDate < checkOut
-          // (checkOut day is not counted as a night stay)
-          if ((blockedDate.isAfter(checkIn) ||
-                  blockedDate.isAtSameMomentAs(checkIn)) &&
-              blockedDate.isBefore(checkOut)) {
-            LoggingService.log(
-              '❌ Blocked date conflict found: $blockedDate',
-              tag: 'AVAILABILITY_CHECK',
-            );
-            return false; // Conflict with blocked date
-          }
-        } catch (e) {
-          unawaited(
-            LoggingService.logError('Error checking blocked date availability', e),
-          );
-        }
-      }
-
-      LoggingService.log(
-        '✅ No conflicts found for $checkIn to $checkOut',
-        tag: 'AVAILABILITY_CHECK',
-      );
-
-      return true; // No conflicts with bookings, iCal events, or blocked dates
-    } catch (e) {
-      unawaited(LoggingService.logError('Error checking availability', e));
-      return false;
-    }
+  }) {
+    return _availabilityChecker.isAvailable(
+      unitId: unitId,
+      checkIn: checkIn,
+      checkOut: checkOut,
+    );
   }
 
-  /// Calculate total price for date range
-  /// Uses price hierarchy: custom daily_price > weekendBasePrice (from unit) > basePrice
+  /// Check availability with detailed result.
+  ///
+  /// Returns [AvailabilityCheckResult] with conflict information if not available.
+  Future<AvailabilityCheckResult> checkAvailabilityDetailed({
+    required String unitId,
+    required DateTime checkIn,
+    required DateTime checkOut,
+  }) {
+    return _availabilityChecker.check(
+      unitId: unitId,
+      checkIn: checkIn,
+      checkOut: checkOut,
+    );
+  }
+
+  /// Calculate total price for date range.
+  ///
+  /// Uses price hierarchy: custom daily_price > weekendBasePrice (from unit) > basePrice.
+  /// Delegates to [BookingPriceCalculator] for the actual calculation.
+  ///
   /// [basePrice] - Unit's base price per night (required for fallback when no daily_price)
   /// [weekendBasePrice] - Unit's weekend base price (optional, for Sat-Sun by default)
   /// [weekendDays] - optional custom weekend days (1=Mon...7=Sun). Default: [6,7]
+  ///
+  /// Throws [DatesNotAvailableException] if dates are not available.
   Future<double> calculateBookingPrice({
     required String unitId,
     required DateTime checkIn,
@@ -779,74 +690,35 @@ class FirebaseBookingCalendarRepository {
     double? weekendBasePrice,
     List<int>? weekendDays,
   }) async {
-    try {
-      // Bug #73 Fix: Check availability BEFORE calculating price
-      // This prevents race condition where price is shown for dates being booked by another user
-      final isAvailable = await checkAvailability(
-        unitId: unitId,
-        checkIn: checkIn,
-        checkOut: checkOut,
-      );
+    final result = await _priceCalculator.calculate(
+      unitId: unitId,
+      checkIn: checkIn,
+      checkOut: checkOut,
+      basePrice: basePrice,
+      weekendBasePrice: weekendBasePrice,
+      weekendDays: weekendDays,
+    );
+    return result.totalPrice;
+  }
 
-      if (!isAvailable) {
-        LoggingService.log(
-          '⚠️ Price calculation skipped - dates not available',
-          tag: 'PRICE_CALCULATION',
-        );
-        throw const DatesNotAvailableException();
-      }
-
-      final pricesSnapshot = await _firestore
-          .collection('daily_prices')
-          .where('unit_id', isEqualTo: unitId)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(checkIn))
-          .where('date', isLessThan: Timestamp.fromDate(checkOut))
-          .get();
-
-      // Build a map of date -> DailyPriceModel for quick lookup
-      final Map<String, DailyPriceModel> priceMap = {};
-      for (final doc in pricesSnapshot.docs) {
-        final data = doc.data();
-        if (data['date'] == null) continue;
-
-        try {
-          final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
-          final key = '${price.date.year}-${price.date.month}-${price.date.day}';
-          priceMap[key] = price;
-        } catch (e) {
-          unawaited(LoggingService.logError('Error parsing price', e));
-        }
-      }
-
-      // Calculate total for each day in the range with fallback
-      final effectiveWeekendDays = weekendDays ?? [6, 7]; // Default: Sat=6, Sun=7
-      double total = 0.0;
-      DateTime current = checkIn;
-
-      while (current.isBefore(checkOut)) {
-        final key = '${current.year}-${current.month}-${current.day}';
-        final dailyPrice = priceMap[key];
-
-        if (dailyPrice != null) {
-          // Use daily_price with its getEffectivePrice logic
-          total += dailyPrice.getEffectivePrice(weekendDays: weekendDays);
-        } else {
-          // No daily_price → use fallback from unit
-          final isWeekend = effectiveWeekendDays.contains(current.weekday);
-          if (isWeekend && weekendBasePrice != null) {
-            total += weekendBasePrice;
-          } else {
-            total += basePrice;
-          }
-        }
-
-        current = current.add(const Duration(days: 1));
-      }
-
-      return total;
-    } catch (e) {
-      unawaited(LoggingService.logError('Error calculating booking price', e));
-      return 0.0;
-    }
+  /// Calculate booking price with detailed breakdown.
+  ///
+  /// Returns [PriceCalculationResult] with per-night breakdown.
+  Future<PriceCalculationResult> calculateBookingPriceDetailed({
+    required String unitId,
+    required DateTime checkIn,
+    required DateTime checkOut,
+    required double basePrice,
+    double? weekendBasePrice,
+    List<int>? weekendDays,
+  }) {
+    return _priceCalculator.calculate(
+      unitId: unitId,
+      checkIn: checkIn,
+      checkOut: checkOut,
+      basePrice: basePrice,
+      weekendBasePrice: weekendBasePrice,
+      weekendDays: weekendDays,
+    );
   }
 }

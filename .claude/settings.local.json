@@ -63,7 +63,8 @@
       "Bash(claude mcp add:*)",
       "Bash(claude mcp list:*)",
       "Bash(sed:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(sort:*)"
     ],
     "deny": [
       "Read(.env)",

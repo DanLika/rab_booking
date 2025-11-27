@@ -50,8 +50,11 @@ Future<void> downloadIcsFile(String content, String filename) async {
     // 5. Clean up - revoke the temporary URL to free memory
     // Important: Prevents memory leaks in long-running web apps
     html.Url.revokeObjectUrl(url);
-  } catch (e) {
-    // Wrap error with context for better debugging
+  } catch (e, stackTrace) {
+    // Log the full error with stack trace for debugging
+    // ignore: avoid_print
+    print('ICS Download Error: $e\n$stackTrace');
+    // Rethrow with context - original stack trace is logged above
     throw Exception('Failed to download ICS file in browser: $e');
   }
 }

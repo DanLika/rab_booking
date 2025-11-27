@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rab_booking/features/widget/domain/constants/widget_constants.dart';
 import 'package:rab_booking/features/widget/domain/services/price_lock_service.dart';
 import 'package:rab_booking/features/widget/presentation/providers/booking_price_provider.dart';
 
@@ -24,6 +25,235 @@ void main() {
 
     test('cancelled is third value', () {
       expect(PriceLockResult.values[2], equals(PriceLockResult.cancelled));
+    });
+  });
+
+  group('PriceChangeDialogConfig', () {
+    test('has correct default values', () {
+      const config = PriceChangeDialogConfig();
+
+      expect(config.increaseTitleText, '⚠️ Price Increased');
+      expect(config.decreaseTitleText, 'ℹ️ Price Decreased');
+      expect(config.cancelButtonText, 'Cancel');
+      expect(config.proceedButtonText, 'Proceed');
+      expect(config.increaseColor, Colors.orange);
+      expect(config.decreaseColor, Colors.blue);
+      expect(config.currencySymbol, '€');
+    });
+
+    test('defaultConfig is a const PriceChangeDialogConfig', () {
+      expect(
+        PriceChangeDialogConfig.defaultConfig,
+        isA<PriceChangeDialogConfig>(),
+      );
+    });
+
+    test('croatianConfig has Croatian text', () {
+      const config = PriceChangeDialogConfig.croatianConfig;
+
+      expect(config.increaseTitleText, '⚠️ Cijena Povećana');
+      expect(config.decreaseTitleText, 'ℹ️ Cijena Snižena');
+      expect(config.cancelButtonText, 'Odustani');
+      expect(config.proceedButtonText, 'Nastavi');
+    });
+
+    test('can be created with custom values', () {
+      const config = PriceChangeDialogConfig(
+        increaseTitleText: 'Custom Increase',
+        decreaseTitleText: 'Custom Decrease',
+        cancelButtonText: 'Back',
+        proceedButtonText: 'Continue',
+        increaseColor: Colors.red,
+        decreaseColor: Colors.green,
+        currencySymbol: r'$',
+      );
+
+      expect(config.increaseTitleText, 'Custom Increase');
+      expect(config.decreaseTitleText, 'Custom Decrease');
+      expect(config.cancelButtonText, 'Back');
+      expect(config.proceedButtonText, 'Continue');
+      expect(config.increaseColor, Colors.red);
+      expect(config.decreaseColor, Colors.green);
+      expect(config.currencySymbol, r'$');
+    });
+  });
+
+  group('PriceChangeDialogBuilder', () {
+    testWidgets('buildDialogWidget creates correct widget for price increase',
+        (tester) async {
+      bool cancelCalled = false;
+      bool proceedCalled = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PriceChangeDialogBuilder.buildDialogWidget(
+              priceIncreased: true,
+              changeAmount: 10.50,
+              originalPrice: 100.0,
+              currentPrice: 110.50,
+              onCancel: () => cancelCalled = true,
+              onProceed: () => proceedCalled = true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('⚠️ Price Increased'), findsOneWidget);
+      expect(find.textContaining('€10.50'), findsOneWidget);
+      expect(find.textContaining('Original: €100.00'), findsOneWidget);
+      expect(find.textContaining('Current: €110.50'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
+      expect(find.text('Proceed'), findsOneWidget);
+    });
+
+    testWidgets('buildDialogWidget creates correct widget for price decrease',
+        (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PriceChangeDialogBuilder.buildDialogWidget(
+              priceIncreased: false,
+              changeAmount: 15.0,
+              originalPrice: 100.0,
+              currentPrice: 85.0,
+              onCancel: () {},
+              onProceed: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('ℹ️ Price Decreased'), findsOneWidget);
+      expect(find.textContaining('Good news!'), findsOneWidget);
+      expect(find.textContaining('€15.00'), findsOneWidget);
+    });
+
+    testWidgets('buildDialogWidget respects custom config', (tester) async {
+      const config = PriceChangeDialogConfig(
+        increaseTitleText: 'Custom Title',
+        cancelButtonText: 'Back',
+        proceedButtonText: 'Go',
+        currencySymbol: r'$',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PriceChangeDialogBuilder.buildDialogWidget(
+              priceIncreased: true,
+              changeAmount: 5.0,
+              originalPrice: 50.0,
+              currentPrice: 55.0,
+              onCancel: () {},
+              onProceed: () {},
+              config: config,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Custom Title'), findsOneWidget);
+      expect(find.text('Back'), findsOneWidget);
+      expect(find.text('Go'), findsOneWidget);
+      expect(find.textContaining(r'$5.00'), findsOneWidget);
+    });
+
+    testWidgets('buildDialogWidget callbacks work', (tester) async {
+      bool cancelCalled = false;
+      bool proceedCalled = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PriceChangeDialogBuilder.buildDialogWidget(
+              priceIncreased: true,
+              changeAmount: 10.0,
+              originalPrice: 100.0,
+              currentPrice: 110.0,
+              onCancel: () => cancelCalled = true,
+              onProceed: () => proceedCalled = true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Cancel'));
+      expect(cancelCalled, isTrue);
+
+      await tester.tap(find.text('Proceed'));
+      expect(proceedCalled, isTrue);
+    });
+  });
+
+  group('PriceLockService', () {
+    test('defaultTolerance uses WidgetConstants.priceTolerance', () {
+      expect(
+        PriceLockService.defaultTolerance,
+        equals(WidgetConstants.priceTolerance),
+      );
+      expect(PriceLockService.defaultTolerance, equals(0.01));
+    });
+
+    group('pricesEqual', () {
+      test('returns true for exactly equal prices', () {
+        expect(PriceLockService.pricesEqual(100.0, 100.0), isTrue);
+      });
+
+      test('returns true for prices within default tolerance', () {
+        expect(PriceLockService.pricesEqual(100.0, 100.005), isTrue);
+        expect(PriceLockService.pricesEqual(100.0, 100.009), isTrue);
+        expect(PriceLockService.pricesEqual(100.0, 99.995), isTrue);
+      });
+
+      test('returns false for prices outside default tolerance', () {
+        expect(PriceLockService.pricesEqual(100.0, 100.02), isFalse);
+        expect(PriceLockService.pricesEqual(100.0, 99.98), isFalse);
+      });
+
+      test('respects custom tolerance', () {
+        expect(
+          PriceLockService.pricesEqual(100.0, 100.5, tolerance: 1.0),
+          isTrue,
+        );
+        expect(
+          PriceLockService.pricesEqual(100.0, 101.5, tolerance: 1.0),
+          isFalse,
+        );
+      });
+    });
+
+    group('calculatePriceDelta', () {
+      BookingPriceCalculation createCalc(double roomPrice) {
+        return BookingPriceCalculation(
+          roomPrice: roomPrice,
+          additionalServicesTotal: 0,
+          depositAmount: roomPrice * 0.2,
+          remainingAmount: roomPrice * 0.8,
+          nights: 2,
+        );
+      }
+
+      test('returns positive delta when price increased', () {
+        final current = createCalc(120.0);
+        final locked = createCalc(100.0);
+
+        expect(PriceLockService.calculatePriceDelta(current, locked), 20.0);
+      });
+
+      test('returns negative delta when price decreased', () {
+        final current = createCalc(80.0);
+        final locked = createCalc(100.0);
+
+        expect(PriceLockService.calculatePriceDelta(current, locked), -20.0);
+      });
+
+      test('returns zero for equal prices', () {
+        final current = createCalc(100.0);
+        final locked = createCalc(100.0);
+
+        expect(PriceLockService.calculatePriceDelta(current, locked), 0.0);
+      });
     });
   });
 
@@ -104,9 +334,7 @@ void main() {
     });
 
     test('copyWithServices updates services and recalculates deposit', () {
-      final original = createCalculation(
-        
-      );
+      final original = createCalculation();
       final withServices = original.copyWithServices(50.0, 20);
 
       expect(withServices.additionalServicesTotal, equals(50.0));
@@ -380,6 +608,77 @@ void main() {
 
       expect(capturedResult, equals(PriceLockResult.confirmedProceed));
       expect(lockUpdatedCalled, isTrue);
+    });
+
+    testWidgets('respects custom dialogConfig', (tester) async {
+      final current = createCalculation(roomPrice: 120.0);
+      final locked = createCalculation();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    PriceLockService.checkAndConfirmPriceChange(
+                      context: context,
+                      currentCalculation: current,
+                      lockedCalculation: locked,
+                      onLockUpdated: () {},
+                      dialogConfig: PriceChangeDialogConfig.croatianConfig,
+                    );
+                  },
+                  child: const Text('Test'),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Test'));
+      await tester.pumpAndSettle();
+
+      // Verify Croatian text is shown
+      expect(find.text('⚠️ Cijena Povećana'), findsOneWidget);
+      expect(find.text('Odustani'), findsOneWidget);
+      expect(find.text('Nastavi'), findsOneWidget);
+    });
+
+    testWidgets('respects custom tolerance', (tester) async {
+      final current = createCalculation(roomPrice: 100.5);
+      final locked = createCalculation(); // 100.0
+      PriceLockResult? result;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () async {
+                    result = await PriceLockService.checkAndConfirmPriceChange(
+                      context: context,
+                      currentCalculation: current,
+                      lockedCalculation: locked,
+                      onLockUpdated: () {},
+                      tolerance: 1.0, // Custom tolerance of €1
+                    );
+                  },
+                  child: const Text('Test'),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Test'));
+      await tester.pump();
+
+      // 0.5 is within 1.0 tolerance, so no change
+      expect(result, equals(PriceLockResult.noChange));
     });
   });
 }

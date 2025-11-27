@@ -59,8 +59,11 @@ Future<void> downloadIcsFile(String content, String filename) async {
 
     // Note: share_plus doesn't throw on user cancel
     // The share sheet will just close if user cancels
-  } catch (e) {
-    // Wrap error with context for better debugging
+  } catch (e, stackTrace) {
+    // Log the full error with stack trace for debugging
+    // ignore: avoid_print
+    print('ICS Download Error: $e\n$stackTrace');
+    // Rethrow with context - original stack trace is logged above
     throw Exception('Failed to share ICS file: $e');
   }
 }

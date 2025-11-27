@@ -1807,6 +1807,43 @@ lib/features/widget/domain/services/
 
 Widget **RADI BEZ BUGOVA** - refaktoring je opcija za poboljšanje maintainability-ja, nije hitno.
 
+### Widget Settings Model Refactoring (2025-11-27)
+
+**Status**: ✅ COMPLETED
+
+`widget_settings.dart` je refaktorisan - config klase ekstraktovane u zasebne fajlove.
+
+| Commit | Opis | Promjena |
+|--------|------|----------|
+| `37489af` | Payment configs (Stripe, BankTransfer) | Ekstraktovano |
+| `0285585` | EmailNotificationConfig, TaxLegalConfig, ContactOptions | -210 linija |
+| `b9e3b06` | BlurConfig removal | -87 linija (OBRISANO) |
+
+**Rezultat**: `widget_settings.dart` smanjen sa ~780 na ~480 linija.
+
+**Struktura settings/ foldera:**
+```
+lib/features/widget/domain/models/settings/
+├── settings.dart                    ← Barrel file
+├── payment/
+│   ├── payment.dart                 ← Payment barrel
+│   ├── stripe_payment_config.dart
+│   ├── bank_transfer_config.dart
+│   └── payment_config_base.dart     ← Shared mixin
+├── booking_behavior_config.dart
+├── ical_export_config.dart
+├── contact_options.dart
+├── email_notification_config.dart
+└── tax_legal_config.dart
+```
+
+**⚠️ NE DIRATI (odluka korisnika):**
+- **ThemeOptions** - Korisnik zadovoljan sa trenutnim bojama/temom
+- **ExternalCalendarConfig** - Čeka odluku o OAuth API integraciji sa Booking.com/Airbnb
+
+**OBRISANO:**
+- **BlurConfig** - Nije se aktivno koristio, potpuno uklonjen
+
 ---
 
 ## 🐛 NEDAVNI BUG FIX-EVI (Post 20.11.2025)

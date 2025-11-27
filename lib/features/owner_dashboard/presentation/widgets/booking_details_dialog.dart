@@ -191,7 +191,7 @@ class BookingDetailsDialog extends ConsumerWidget {
       ),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
-        // Left side - Edit and Email
+        // Left side - Edit, Email, and Resend
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -211,6 +211,12 @@ class BookingDetailsDialog extends ConsumerWidget {
               icon: const Icon(Icons.email_outlined, size: 18),
               label: const Text('Email'),
             ),
+            if (booking.status != BookingStatus.cancelled)
+              TextButton.icon(
+                onPressed: () => _resendConfirmationEmail(context, ref),
+                icon: const Icon(Icons.replay_outlined, size: 18),
+                label: const Text('Ponovo pošalji'),
+              ),
           ],
         ),
 
@@ -349,6 +355,102 @@ class BookingDetailsDialog extends ConsumerWidget {
     } catch (e) {
       // Silently fail - iCal regeneration is non-critical
       debugPrint('iCal regeneration failed: $e');
+    }
+  }
+
+  /// Resend the original booking confirmation email with View My Booking link
+  Future<void> _resendConfirmationEmail(BuildContext context, WidgetRef ref) async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ponovo pošalji email'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Želite li ponovo poslati email potvrde rezervacije gostu ${ownerBooking.guestName}?',
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Email: ${ownerBooking.guestEmail}',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.secondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.tertiary,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Email će sadržavati link "View My Booking" za pregled rezervacije.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Odustani'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.of(context).pop(true),
+            icon: const Icon(Icons.send, size: 18),
+            label: const Text('Pošalji'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      // Show loading
+      ErrorDisplayUtils.showLoadingSnackBar(
+        context,
+        'Slanje emaila...',
+      );
+
+      // Call Cloud Function
+      final functions = ref.read(firebaseFunctionsProvider);
+      final callable = functions.httpsCallable('resendBookingEmail');
+
+      await callable.call({
+        'bookingId': ownerBooking.booking.id,
+      });
+
+      if (context.mounted) {
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          'Email uspješno poslan na ${ownerBooking.guestEmail}',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: 'Greška pri slanju emaila',
+        );
+      }
     }
   }
 }

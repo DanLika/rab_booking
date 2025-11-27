@@ -49,3 +49,6 @@ export * from "./setupWidgetConfig";
 
 // Export guest booking cancellation function
 export * from "./guestCancelBooking";
+
+// Export resend booking email function
+export * from "./resendBookingEmail";

@@ -31,17 +31,60 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 
 ### MCP Serveri
 
-**Datum instalacije**: 2025-11-26
+**Datum instalacije**: 2025-11-27 (Updated)
 
 | Server | Svrha | Status |
 |--------|-------|--------|
 | **dart-flutter** | Live Dart analiza, Flutter widgets, pub.dev info | ✅ Aktivan |
 | **firebase** | Firestore operacije, Auth, Cloud Functions direktno iz Claude | ✅ Aktivan |
-| **github** | Issue/PR management, repo operacije | ✅ Aktivan (treba GITHUB_PERSONAL_ACCESS_TOKEN) |
-| **puppeteer** | Browser automation, screenshots, web scraping | ✅ Aktivan |
+| **github** | Issue/PR management, repo operacije | ✅ Aktivan |
 | **memory** | Pamćenje konteksta između Claude Code sesija | ✅ Aktivan |
-| **fetch** | HTTP requests, API testiranje | ✅ Aktivan |
-| **thinking** | Kompleksno razmišljanje za teške probleme | ✅ Aktivan |
+| **context7** | Up-to-date dokumentacija za bilo koju biblioteku | ✅ Aktivan |
+| **playwright** | Browser automation (za React/Next.js projekte, NE Flutter) | ✅ Aktivan |
+| **stripe** | Stripe API operacije - customers, payments, subscriptions, refunds | ✅ Aktivan |
+| **flutter-inspector** | Screenshots, AI-optimized errors, Hot Restart, Dynamic Tools | ✅ Aktivan |
+| **mobile-mcp** | Mobile testing - Android (ADB) i iOS (Simulator) automation | ✅ Aktivan |
+| **supabase** | Supabase DB operacije (za buduće projekte) | ⏳ Čeka config |
+
+**Napomena:** Puppeteer/Playwright NE rade sa Flutter Web jer Flutter renderuje na canvas. Zato koristimo **flutter-inspector** za visual debugging.
+
+**Flutter Inspector MCP** - Visual debugging za Flutter (UNIQUE features):
+```
+"Napravi screenshot aplikacije"        → view_screenshot
+"Pokaži greške u aplikaciji"           → get_app_errors (AI-optimized format)
+"Hot restart aplikaciju"               → hot_restart_flutter
+"Pokaži detalje view-a"                → get_view_details (screen size, pixel ratio)
+```
+
+**⚠️ VAŽNO:** Flutter Inspector zahtijeva da Flutter app radi u **debug mode** na portu 8181. Pokreni app sa:
+```bash
+flutter run -d chrome --web-port=8181
+```
+
+#### dart-flutter vs flutter-inspector - Komplementarni Sistem
+
+| Zadatak | dart-flutter | flutter-inspector |
+|---------|--------------|-------------------|
+| Code analysis | ✅ `analyze_files` | ❌ |
+| Hot Reload | ✅ `hot_reload` | ❌ |
+| Hot Restart | ❌ | ✅ `hot_restart_flutter` |
+| Screenshots | ❌ | ✅ `view_screenshot` |
+| Runtime errors | ✅ `get_runtime_errors` | ✅ `get_app_errors` (AI-optimized) |
+| Widget tree | ✅ `get_widget_tree` | ❌ |
+| View details | ❌ | ✅ `get_view_details` |
+| Tests | ✅ `run_tests` | ❌ |
+| Pub.dev search | ✅ `pub_dev_search` | ❌ |
+| Dynamic tools | ❌ | ✅ Runtime registration |
+
+**Preporuka:** Koristi **oba** - dart-flutter za code/tooling, flutter-inspector za visual debugging.
+
+**Stripe MCP** - Payment operacije:
+```
+"Pokaži mi sve kupce"
+"Kreiraj payment link za proizvod"
+"Vrati listu subscription-a"
+"Napravi refund za payment pi_xxx"
+```
 
 #### Korištenje MCP Servera
 
@@ -57,22 +100,17 @@ Ova dokumentacija pomaže budućim Claude Code sesijama da razumiju kritične di
 "Pokaži otvorene PR-ove"
 ```
 
-**Puppeteer MCP** - Browser automation:
-```
-"Napravi screenshot booking widgeta na localhost:5000"
-"Testiraj booking flow - odaberi datume i popuni formu"
-```
-
 **Memory MCP** - Perzistentna memorija:
 ```
 "Zapamti da radimo na refaktoringu widget feature-a"
 "Šta smo radili prošli put?"
 ```
 
-**Fetch MCP** - API testiranje:
+**Context7 MCP** - Dokumentacija biblioteka:
 ```
-"Testiraj POST request na Cloud Function createBookingAtomic"
-"Dohvati iCal feed sa ovog URL-a"
+"use context7 - Riverpod AsyncNotifier primjer"
+"use context7 - go_router redirect guard"
+"use context7 - Firebase Cloud Functions callable"
 ```
 
 #### Environment Varijable
@@ -150,33 +188,228 @@ test/
 └── helpers/       # Shared mocks
 ```
 
-### Existing Slash Commands
+#### `/stripe:*` - Stripe Operations
+
+Slash komande za Stripe MCP operacije.
 
 | Command | Svrha |
 |---------|-------|
-| `/init` | Initialize CLAUDE.md dokumentaciju |
-| `/review` | Code review za PR |
-| `/pr-comments` | Dohvati GitHub PR komentare |
-| `/security-review` | Security audit pending changes |
+| `/stripe:customer-lookup` | Pronađi kupca po email-u i prikaži detalje |
+| `/stripe:analyze-payments` | Analiziraj nedavna plaćanja i statistiku |
+| `/stripe:create-link` | Kreiraj payment link za proizvod |
+| `/stripe:subscriptions` | Lista i upravljanje subscription-ima |
+| `/stripe:refund` | Procesiraj refund za plaćanje |
+| `/stripe:account-info` | Prikaži info o Stripe računu i stanje |
 
-### Instalirani Plugini
+**Primjeri:**
+```bash
+/stripe:customer-lookup john@example.com
+/stripe:analyze-payments cus_xxx
+/stripe:subscriptions active
+/stripe:refund pi_xxx 50.00 requested_by_customer
+/stripe:create-link "Premium Plan" 99.00 EUR
+```
+
+#### `/experiment:debug` - Experiment-Driven Debugging
+
+Za kompleksne bugove koji zahtijevaju više pokušaja.
+
+**Workflow:**
+1. Kreira `EXPERIMENT_LOG.md` za tracking
+2. Za svaki pokušaj: hipoteza → minimalne izmjene → rezultat → učenje
+3. Max 5 pokušaja prije reassess-a
+
+**Primjer:**
+```bash
+/experiment:debug Calendar ne prikazuje blokirane datume - iCal sync problem
+```
+
+#### `/pr:resolve-comments` - PR Comment Resolution
+
+Sistematsko rješavanje review komentara na PR-u.
+
+**Workflow:**
+1. Fetch PR info i sve komentare
+2. Kategorizacija: code changes, questions, suggestions, nitpicks
+3. Process svaki komentar → implementiraj fix → reply
+
+**Primjer:**
+```bash
+/pr:resolve-comments 123
+```
+
+#### `/misc:summary` - Conversation Summary
+
+Generiše detaljan summary sesije za očuvanje konteksta.
+
+**Kada koristiti:**
+- Prije kraja duge sesije
+- Kada treba nastaviti rad u novom terminalu
+- Za dokumentovanje šta je urađeno
+
+**Primjer:**
+```bash
+/misc:summary
+```
+
+### Edmund's Claude Code Plugin
+
+**Datum instalacije**: 2025-11-27
+**Marketplace**: `edmund-io/edmunds-claude-code`
+
+#### Aktivne Slash Commands (za Flutter)
+
+| Command | Svrha | Status |
+|---------|-------|--------|
+| `/new-task` | Analiza kompleksnih taskova i planiranje | ✅ Aktivno |
+| `/misc:code-explain` | Detaljno objašnjenje koda sa dijagramima | ✅ Aktivno |
+| `/misc:code-optimize` | Optimizacija performansi | ✅ Aktivno |
+| `/misc:docs-generate` | Generisanje dokumentacije | ✅ Aktivno |
+| `/misc:feature-plan` | Planiranje implementacije feature-a | ✅ Aktivno |
+| `/flutter:code-cleanup` | Dart/Flutter refaktoring (PROJEKTNA) | ✅ Aktivno |
+
+#### Backup Commands (za buduće React projekte)
+
+Lokacija: `~/.claude/commands-react-backup/`
+
+| Command | Svrha |
+|---------|-------|
+| `/api:api-new` | Next.js API routes |
+| `/api:api-test` | API testiranje |
+| `/api:api-protect` | API security |
+| `/ui:component-new` | React komponente |
+| `/ui:page-new` | Next.js stranice |
+| `/supabase:*` | Supabase Edge Functions |
+| `/misc:code-cleanup` | JS/TS cleanup (React) |
+| `/misc:lint` | ESLint |
+
+**Restore za React projekat:** `cp -r ~/.claude/commands-react-backup/* ~/.claude/commands/`
+
+#### AI Agenti (18)
+
+**Lokacija**: `~/.claude/agents/`
+
+Agenti su specijalizirani knowledge provideri koji se aktiviraju automatski na osnovu konteksta pitanja. Za razliku od MCP servera (koji izvršavaju akcije), agenti pružaju **ekspertizu i smjernice**.
+
+##### Kako Agenti Rade
+
+1. **Automatska aktivacija** - Claude čita relevantne agente bazirano na kontekstu pitanja
+2. **Task tool** - Za kompleksne zadatke koristi `Task` tool sa `subagent_type` parametrom
+3. **Kombinacija** - Više agenata može biti aktivno istovremeno
+
+##### Primjeri Invokacije
+
+```
+# Automatski (kontekstualno)
+"Kako da optimizujem performanse ove Flutter liste?" → aktivira flutter-expert + performance-engineer
+
+# Eksplicitno traženje
+"Koristi stripe-expert da analiziraš moju payment integraciju"
+"Pozovi security-engineer da pregleda autentifikaciju"
+
+# Task tool (kompleksni zadaci)
+Task(subagent_type: "flutter-expert", prompt: "Refaktoriši BookingCard widget")
+```
+
+---
+
+**🚀 Specialist Experts (Tech Stack):**
+
+| Agent | Aktivira se kada... | Fokus |
+|-------|---------------------|-------|
+| `flutter-expert` | Radiš na Flutter kodu, widget dizajnu | Flutter SDK, Riverpod, Material 3, responsive |
+| `dart-expert` | Pišeš Dart kod, optimizacija | Idiomatic Dart, async/await, null safety |
+| `stripe-expert` | Stripe integracija, plaćanja | Stripe API, Connect, webhooks, PCI compliance |
+| `github-actions-expert` | CI/CD, automatizacija | GitHub Actions, workflows, matrix builds |
+| `bash-expert` | Shell skripte, automatizacija | Defensive scripting, POSIX, ShellCheck |
+| `docker-expert` | Kontejnerizacija, deployment | Dockerfile, Compose, networking, volumes |
+| `websocket-expert` | Real-time komunikacija | RFC 6455, WSS, connection lifecycle |
+
+---
+
+**🏗️ Architecture & Planning:**
+
+| Agent | Aktivira se kada... | Fokus |
+|-------|---------------------|-------|
+| `tech-stack-researcher` | Pitaš o izboru tehnologija | Evaluacija tehnologija, trade-offs |
+| `system-architect` | Pitaš o arhitekturi sistema | Skalabilnost, maintainability |
+| `backend-architect` | Pitaš o backend dizajnu | Data integrity, security, fault tolerance |
+| `frontend-architect` | Pitaš o frontend/UI dizajnu | UX, accessibility, modern frameworks |
+| `requirements-analyst` | Pitaš o specifikacijama | Requirements discovery, structured analysis |
+
+---
+
+**⚡ Code Quality & Performance:**
+
+| Agent | Aktivira se kada... | Fokus |
+|-------|---------------------|-------|
+| `refactoring-expert` | Pitaš o refaktoringu | Clean code, technical debt reduction |
+| `performance-engineer` | Pitaš o optimizaciji | Measurement-driven analysis, bottlenecks |
+| `security-engineer` | Pitaš o sigurnosti | Vulnerabilities, compliance, best practices |
+
+---
+
+**📚 Documentation & Research:**
+
+| Agent | Aktivira se kada... | Fokus |
+|-------|---------------------|-------|
+| `technical-writer` | Pitaš za dokumentaciju | Clear documentation, accessibility |
+| `learning-guide` | Pitaš za objašnjenje koncepta | Progressive learning, practical examples |
+| `deep-research-agent` | Pitaš za duboko istraživanje | Adaptive strategies, intelligent exploration |
+
+---
+
+##### Kada Koristiti Koji Agent
+
+**Za RabBooking projekat najčešće koristimo:**
+
+| Situacija | Agent(i) |
+|-----------|----------|
+| Widget styling/layout problemi | `flutter-expert` |
+| Provider/state management | `flutter-expert` + `dart-expert` |
+| Stripe Connect integracija | `stripe-expert` |
+| Cloud Functions debugging | `dart-expert` (TypeScript) |
+| CI/CD pipeline setup | `github-actions-expert` |
+| Performance optimizacija | `performance-engineer` + `flutter-expert` |
+| Security review | `security-engineer` |
+| Real-time features (chat, notifications) | `websocket-expert` |
+
+##### MCP vs Agenti - Komplementarni Sistem
+
+| Aspekt | MCP Serveri | Agenti |
+|--------|-------------|--------|
+| **Svrha** | Izvršavanje akcija | Pružanje ekspertize |
+| **Primjer** | `mcp__stripe__list_customers` | `stripe-expert` smjernice |
+| **Kada** | Trebam URADITI nešto | Trebam ZNATI kako |
+| **Output** | Konkretni podaci/rezultat | Smjernice/patterns/best practices |
+
+**Primjer kombinacije:**
+```
+User: "Kreiraj payment link za novi proizvod"
+
+1. stripe-expert aktivira se za best practices
+2. mcp__stripe__create_product izvršava kreiranje
+3. mcp__stripe__create_price postavlja cijenu
+4. mcp__stripe__create_payment_link vraća URL
+```
+
+### Ostali Plugini
 
 **Marketplace**: `jeremylongshore/claude-code-plugins-plus`
-**Datum instalacije**: 2025-11-26
 
 | Plugin | Svrha |
 |--------|-------|
-| `project-health-auditor` | Analizira code quality, dependencies, security issues, tech debt |
-| `git-commit-smart` | Auto-generira pametne commit poruke na osnovu staged diff-a |
+| `project-health-auditor` | Analizira code quality, dependencies, security issues |
+| `git-commit-smart` | Auto-generira pametne commit poruke |
 
-**Korištenje:**
-```bash
-# Health audit projekta
-/project-health-auditor
+### Hooks (Auto-akcije)
 
-# Smart commit (nakon git add)
-/git-commit-smart
-```
+Konfigurisano u `~/.claude/settings.json`:
+
+| Hook | Trigger | Akcija |
+|------|---------|--------|
+| `dart format` | Nakon svakog Edit | Auto-formatira Dart fajlove |
+| `flutter analyze` | Nakon svakog Edit | Provjerava greške |
 
 ---
 
@@ -2659,9 +2892,33 @@ context.go(OwnerRoutes.icalExport);
 
 ---
 
+## 🎯 FUTURE IMPROVEMENTS / NICE TO HAVE
+
+Ova sekcija sadrži pakete i alate koji nisu prioritet za MVP, ali bi mogli poboljšati UX/UI u budućnosti.
+
+### UI Packages
+
+| Package | Svrha | Link | Prioritet |
+|---------|-------|------|-----------|
+| **awesome_snackbar_content** | Fancy SnackBar notifikacije (Success/Error/Warning/Info sa ikonama i animacijama) | [GitHub](https://github.com/mhmzdev/awesome_snackbar_content) | ⭐ Low - Za UI polish |
+
+**awesome_snackbar_content** detalji:
+- 4 tipa: Success (zelena), Failure (crvena), Warning (žuta), Help (plava)
+- Custom ikone i animacije
+- Zamjena za trenutni `ErrorDisplayUtils`
+- **Kada dodati:** Nakon MVP-a, za "production polish" fazu
+
+### MCP Serveri (Za Buduće Projekte)
+
+| MCP Server | Svrha | Kada dodati |
+|------------|-------|-------------|
+| **figma-flutter-mcp** | Figma design tokens → Flutter kod | Kada koristimo Figma za dizajn |
+
+---
+
 **Last Updated**: 2025-11-27
-**Version**: 2.3
-**Focus**: Widget Mode bookingPending Approval + Unit Wizard Max Stay Field
+**Version**: 2.5
+**Focus**: MCP Serveri (10), Slash Commands (16), Agents dokumentacija
 
 ---
 

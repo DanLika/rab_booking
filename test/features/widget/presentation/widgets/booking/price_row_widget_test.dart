@@ -6,7 +6,7 @@ void main() {
   group('PriceRowWidget', () {
     testWidgets('renders label and amount', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceRowWidget(
               label: 'Room (3 nights)',
@@ -23,7 +23,7 @@ void main() {
 
     testWidgets('renders with bold style when isBold is true', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceRowWidget(
               label: 'Total',
@@ -41,7 +41,7 @@ void main() {
 
     testWidgets('renders with custom color', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceRowWidget(
               label: 'Additional Services',
@@ -59,7 +59,7 @@ void main() {
 
     testWidgets('renders in dark mode without errors', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceRowWidget(
               label: 'Room',
@@ -75,7 +75,7 @@ void main() {
 
     testWidgets('uses Row layout with spaceBetween', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceRowWidget(
               label: 'Test',

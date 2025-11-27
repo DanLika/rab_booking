@@ -12,7 +12,7 @@ void main() {
             children: [
               RotateDeviceOverlay(
                 isDarkMode: false,
-                colors: const MinimalistColorSchemeAdapter(dark: false),
+                colors: const MinimalistColorSchemeAdapter(),
                 onSwitchToMonthView: () {},
               ),
             ],
@@ -36,7 +36,7 @@ void main() {
             children: [
               RotateDeviceOverlay(
                 isDarkMode: false,
-                colors: const MinimalistColorSchemeAdapter(dark: false),
+                colors: const MinimalistColorSchemeAdapter(),
                 onSwitchToMonthView: () {},
               ),
             ],
@@ -58,7 +58,7 @@ void main() {
             children: [
               RotateDeviceOverlay(
                 isDarkMode: false,
-                colors: const MinimalistColorSchemeAdapter(dark: false),
+                colors: const MinimalistColorSchemeAdapter(),
                 onSwitchToMonthView: () {
                   wasCalled = true;
                 },
@@ -81,7 +81,7 @@ void main() {
             children: [
               RotateDeviceOverlay(
                 isDarkMode: false,
-                colors: const MinimalistColorSchemeAdapter(dark: false),
+                colors: const MinimalistColorSchemeAdapter(),
                 onSwitchToMonthView: () {},
               ),
             ],

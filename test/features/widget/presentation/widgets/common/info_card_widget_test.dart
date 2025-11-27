@@ -6,7 +6,7 @@ void main() {
   group('InfoCardWidget', () {
     testWidgets('renders message text', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: InfoCardWidget(
               message: 'Your booking is pending',
@@ -21,7 +21,7 @@ void main() {
 
     testWidgets('renders info icon by default', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: InfoCardWidget(
               message: 'Test message',
@@ -36,7 +36,7 @@ void main() {
 
     testWidgets('renders custom icon when provided', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: InfoCardWidget(
               message: 'Warning message',
@@ -52,7 +52,7 @@ void main() {
 
     testWidgets('renders title when provided', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: InfoCardWidget(
               message: 'Description text',
@@ -69,7 +69,7 @@ void main() {
 
     testWidgets('renders in dark mode without errors', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: InfoCardWidget(
               message: 'Dark mode message',
@@ -84,7 +84,7 @@ void main() {
 
     testWidgets('uses Row layout for icon and content', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: InfoCardWidget(
               message: 'Test',
@@ -99,7 +99,7 @@ void main() {
 
     testWidgets('wraps content in Container with decoration', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: InfoCardWidget(
               message: 'Test',
@@ -114,7 +114,7 @@ void main() {
 
     testWidgets('title is bold and message is not', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: InfoCardWidget(
               message: 'Description',

@@ -900,7 +900,6 @@ class _PriceListCalendarWidgetState
                           dividerColor: Colors.transparent,
                         ),
                         child: ExpansionTile(
-                          initiallyExpanded: false,
                           tilePadding: EdgeInsets.zero,
                           childrenPadding: EdgeInsets.only(
                             top: isMobile ? 8 : 12,
@@ -1560,9 +1559,7 @@ class _PriceListCalendarWidgetState
       ),
     ).then((_) {
       // Dispose controller after dialog close animation completes (~300ms)
-      Future.delayed(const Duration(milliseconds: 350), () {
-        priceController.dispose();
-      });
+      Future.delayed(const Duration(milliseconds: 350), priceController.dispose);
     });
   }
 

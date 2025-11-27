@@ -816,7 +816,46 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
         // Check minNights validation
         final selectedNights = end.difference(start).inDays;
-        if (selectedNights < minNights) {
+
+        // Get check-in date info for minNightsOnArrival/maxNightsOnArrival validation
+        final checkInDateInfo = data[_getDateKey(start)];
+
+        // Check minNightsOnArrival from check-in date (if set)
+        final minNightsOnArrival = checkInDateInfo?.minNightsOnArrival;
+        if (minNightsOnArrival != null && minNightsOnArrival > 0 && selectedNights < minNightsOnArrival) {
+          // Reset selection and show error
+          _rangeStart = null;
+          _rangeEnd = null;
+
+          // Show error message
+          SnackBarHelper.showError(
+            context: context,
+            message: 'Minimum stay for this arrival date is $minNightsOnArrival ${minNightsOnArrival == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
+            isDarkMode: isDarkMode,
+            duration: const Duration(seconds: 3),
+          );
+          return;
+        }
+
+        // Check maxNightsOnArrival from check-in date (if set)
+        final maxNightsOnArrival = checkInDateInfo?.maxNightsOnArrival;
+        if (maxNightsOnArrival != null && maxNightsOnArrival > 0 && selectedNights > maxNightsOnArrival) {
+          // Reset selection and show error
+          _rangeStart = null;
+          _rangeEnd = null;
+
+          // Show error message
+          SnackBarHelper.showError(
+            context: context,
+            message: 'Maximum stay for this arrival date is $maxNightsOnArrival ${maxNightsOnArrival == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
+            isDarkMode: isDarkMode,
+            duration: const Duration(seconds: 3),
+          );
+          return;
+        }
+
+        // Fallback to widget's minNights if no date-specific minNightsOnArrival
+        if ((minNightsOnArrival == null || minNightsOnArrival == 0) && selectedNights < minNights) {
           // Reset selection and show error
           _rangeStart = null;
           _rangeEnd = null;
@@ -1034,7 +1073,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         ),
         child: isNarrowScreen
             ? Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Min stay info
                   Row(

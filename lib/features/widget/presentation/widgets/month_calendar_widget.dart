@@ -895,7 +895,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
               context: context,
               message: 'Minimum ${checkInDateInfo.minNightsOnArrival} nights required for this check-in date. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
               isDarkMode: isDarkMode,
-              duration: const Duration(seconds: 4),
             );
             return; // Keep _rangeStart, don't set _rangeEnd
           }
@@ -908,7 +907,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
               context: context,
               message: 'Maximum ${checkInDateInfo.maxNightsOnArrival} nights allowed for this check-in date. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
               isDarkMode: isDarkMode,
-              duration: const Duration(seconds: 4),
             );
             return; // Keep _rangeStart, don't set _rangeEnd
           }
@@ -1038,7 +1036,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         ),
         child: isNarrowScreen
             ? Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Min stay info
                   Row(

@@ -44,7 +44,7 @@ void main() {
 
     testWidgets('renders CompactPillSummary when not showing guest form',
         (tester) async {
-      await tester.pumpWidget(buildTestWidget(showGuestForm: false));
+      await tester.pumpWidget(buildTestWidget());
 
       expect(find.byType(CompactPillSummary), findsOneWidget);
     });

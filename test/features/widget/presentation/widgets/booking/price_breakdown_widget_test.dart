@@ -7,7 +7,7 @@ void main() {
   group('PriceBreakdownWidget', () {
     testWidgets('renders room price row', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceBreakdownWidget(
               isDarkMode: false,
@@ -27,7 +27,7 @@ void main() {
 
     testWidgets('shows singular night for 1 night stay', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceBreakdownWidget(
               isDarkMode: false,
@@ -46,7 +46,7 @@ void main() {
 
     testWidgets('renders additional services when provided', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceBreakdownWidget(
               isDarkMode: false,
@@ -68,13 +68,12 @@ void main() {
 
     testWidgets('hides additional services when zero', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceBreakdownWidget(
               isDarkMode: false,
               nights: 2,
               formattedRoomPrice: '€200.00',
-              additionalServicesTotal: 0,
               formattedTotal: '€200.00',
               formattedDeposit: '€40.00',
               depositPercentage: 20,
@@ -88,7 +87,7 @@ void main() {
 
     testWidgets('renders total row', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceBreakdownWidget(
               isDarkMode: false,
@@ -108,7 +107,7 @@ void main() {
 
     testWidgets('renders deposit info', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceBreakdownWidget(
               isDarkMode: false,
@@ -127,7 +126,7 @@ void main() {
 
     testWidgets('renders in dark mode without errors', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceBreakdownWidget(
               isDarkMode: true,
@@ -146,7 +145,7 @@ void main() {
 
     testWidgets('contains multiple PriceRowWidgets', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PriceBreakdownWidget(
               isDarkMode: false,

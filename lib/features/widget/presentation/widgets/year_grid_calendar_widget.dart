@@ -393,13 +393,13 @@ class _YearGridCalendarWidgetState
                       : (details) => _handleDayTapDown(date, details, status),
                   onTapUp: isPastDate
                       ? null
-                      : (_) => _handleDayTapUp(date, status),
+                      : (_) => _handleDayTapUp(date, dateInfo),
                   onLongPressStart: isPastDate
                       ? null
                       : (details) => _handleDayLongPress(date, details),
                   onPanStart: isPastDate
                       ? null
-                      : (_) => _handleDragStart(date, status),
+                      : (_) => _handleDragStart(date, dateInfo),
                   onPanUpdate: isPastDate
                       ? null
                       : (_) => _handleDragUpdate(date),
@@ -501,8 +501,8 @@ class _YearGridCalendarWidgetState
     }
   }
 
-  void _handleDayTapUp(DateTime date, DateStatus status) {
-    _handleDayTap(date, status);
+  void _handleDayTapUp(DateTime date, CalendarDateInfo? dateInfo) {
+    _handleDayTap(date, dateInfo);
   }
 
   void _handleDayLongPress(DateTime date, LongPressStartDetails details) {
@@ -513,7 +513,9 @@ class _YearGridCalendarWidgetState
     });
   }
 
-  void _handleDayTap(DateTime date, DateStatus status) {
+  void _handleDayTap(DateTime date, CalendarDateInfo? dateInfo) {
+    final status = dateInfo?.status ?? DateStatus.available;
+
     // Don't allow selection of past dates
     final today = DateTime.now();
     final todayNormalized = DateTime(today.year, today.month, today.day);
@@ -528,11 +530,26 @@ class _YearGridCalendarWidgetState
 
     setState(() {
       if (_rangeStart == null || (_rangeStart != null && _rangeEnd != null)) {
-        // Start new selection
+        // Start new selection (this is check-in date)
+
+        // Check if check-in is blocked on this date
+        if (dateInfo?.blockCheckIn == true) {
+          if (mounted) {
+            final isDarkMode = ref.read(themeProvider);
+            SnackBarHelper.showError(
+              context: context,
+              message: 'Check-in is not allowed on this date.',
+              isDarkMode: isDarkMode,
+              duration: AnimationTokens.notification,
+            );
+          }
+          return;
+        }
+
         _rangeStart = date;
         _rangeEnd = null;
       } else if (_rangeStart != null && _rangeEnd == null) {
-        // Complete selection
+        // Complete selection (this is check-out date)
         DateTime tempStart = _rangeStart!;
         DateTime tempEnd = date;
 
@@ -541,9 +558,79 @@ class _YearGridCalendarWidgetState
           tempEnd = _rangeStart!;
         }
 
+        // Get check-in date info for minNightsOnArrival/maxNightsOnArrival validation
+        final calendarDataAsync = ref.read(
+          realtimeYearCalendarProvider(widget.unitId, _currentYear),
+        );
+
+        CalendarDateInfo? checkInDateInfo;
+        calendarDataAsync.whenData((data) {
+          checkInDateInfo = data[tempStart];
+        });
+
+        // Check if check-out is blocked on the end date
+        CalendarDateInfo? checkOutDateInfo;
+        calendarDataAsync.whenData((data) {
+          checkOutDateInfo = data[tempEnd];
+        });
+
+        if (checkOutDateInfo?.blockCheckOut == true) {
+          if (mounted) {
+            final isDarkMode = ref.read(themeProvider);
+            SnackBarHelper.showError(
+              context: context,
+              message: 'Check-out is not allowed on this date.',
+              isDarkMode: isDarkMode,
+              duration: AnimationTokens.notification,
+            );
+          }
+          // Reset selection
+          _rangeStart = null;
+          _rangeEnd = null;
+          return;
+        }
+
         // Validate minimum stay requirement
         final nights = tempEnd.difference(tempStart).inDays;
-        if (nights < widget.minStayNights) {
+
+        // Check minNightsOnArrival from check-in date (if set)
+        final minNightsOnArrival = checkInDateInfo?.minNightsOnArrival;
+        if (minNightsOnArrival != null && minNightsOnArrival > 0 && nights < minNightsOnArrival) {
+          if (mounted) {
+            final isDarkMode = ref.read(themeProvider);
+            SnackBarHelper.showError(
+              context: context,
+              message: 'Minimum stay for this arrival date is $minNightsOnArrival ${minNightsOnArrival == 1 ? 'night' : 'nights'}. You selected $nights ${nights == 1 ? 'night' : 'nights'}.',
+              isDarkMode: isDarkMode,
+              duration: AnimationTokens.notification,
+            );
+          }
+          // Reset selection
+          _rangeStart = null;
+          _rangeEnd = null;
+          return;
+        }
+
+        // Check maxNightsOnArrival from check-in date (if set)
+        final maxNightsOnArrival = checkInDateInfo?.maxNightsOnArrival;
+        if (maxNightsOnArrival != null && maxNightsOnArrival > 0 && nights > maxNightsOnArrival) {
+          if (mounted) {
+            final isDarkMode = ref.read(themeProvider);
+            SnackBarHelper.showError(
+              context: context,
+              message: 'Maximum stay for this arrival date is $maxNightsOnArrival ${maxNightsOnArrival == 1 ? 'night' : 'nights'}. You selected $nights ${nights == 1 ? 'night' : 'nights'}.',
+              isDarkMode: isDarkMode,
+              duration: AnimationTokens.notification,
+            );
+          }
+          // Reset selection
+          _rangeStart = null;
+          _rangeEnd = null;
+          return;
+        }
+
+        // Fallback to widget's minStayNights if no date-specific minNightsOnArrival
+        if ((minNightsOnArrival == null || minNightsOnArrival == 0) && nights < widget.minStayNights) {
           // Show error message
           if (mounted) {
             final isDarkMode = ref.read(themeProvider);
@@ -575,8 +662,24 @@ class _YearGridCalendarWidgetState
   // DRAG-TO-SELECT HANDLERS
   // ============================================================
 
-  void _handleDragStart(DateTime date, DateStatus status) {
+  void _handleDragStart(DateTime date, CalendarDateInfo? dateInfo) {
+    final status = dateInfo?.status ?? DateStatus.available;
+
     if (status == DateStatus.booked || status == DateStatus.blocked) {
+      return;
+    }
+
+    // Check if check-in is blocked on this date
+    if (dateInfo?.blockCheckIn == true) {
+      if (mounted) {
+        final isDarkMode = ref.read(themeProvider);
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Check-in is not allowed on this date.',
+          isDarkMode: isDarkMode,
+          duration: AnimationTokens.notification,
+        );
+      }
       return;
     }
 
@@ -614,8 +717,72 @@ class _YearGridCalendarWidgetState
 
       // Validate minimum stay requirement
       if (_rangeStart != null && _rangeEnd != null) {
+        // Get calendar data for validation
+        final calendarDataAsync = ref.read(
+          realtimeYearCalendarProvider(widget.unitId, _currentYear),
+        );
+
+        CalendarDateInfo? checkInDateInfo;
+        CalendarDateInfo? checkOutDateInfo;
+        calendarDataAsync.whenData((data) {
+          checkInDateInfo = data[_rangeStart!];
+          checkOutDateInfo = data[_rangeEnd!];
+        });
+
+        // Check if check-out is blocked on the end date
+        if (checkOutDateInfo?.blockCheckOut == true) {
+          if (mounted) {
+            final isDarkMode = ref.read(themeProvider);
+            SnackBarHelper.showError(
+              context: context,
+              message: 'Check-out is not allowed on this date.',
+              isDarkMode: isDarkMode,
+              duration: AnimationTokens.notification,
+            );
+          }
+          _rangeStart = null;
+          _rangeEnd = null;
+          return;
+        }
+
         final nights = _rangeEnd!.difference(_rangeStart!).inDays;
-        if (nights < widget.minStayNights) {
+
+        // Check minNightsOnArrival from check-in date (if set)
+        final minNightsOnArrival = checkInDateInfo?.minNightsOnArrival;
+        if (minNightsOnArrival != null && minNightsOnArrival > 0 && nights < minNightsOnArrival) {
+          if (mounted) {
+            final isDarkMode = ref.read(themeProvider);
+            SnackBarHelper.showError(
+              context: context,
+              message: 'Minimum stay for this arrival date is $minNightsOnArrival ${minNightsOnArrival == 1 ? 'night' : 'nights'}.',
+              isDarkMode: isDarkMode,
+              duration: AnimationTokens.notification,
+            );
+          }
+          _rangeStart = null;
+          _rangeEnd = null;
+          return;
+        }
+
+        // Check maxNightsOnArrival from check-in date (if set)
+        final maxNightsOnArrival = checkInDateInfo?.maxNightsOnArrival;
+        if (maxNightsOnArrival != null && maxNightsOnArrival > 0 && nights > maxNightsOnArrival) {
+          if (mounted) {
+            final isDarkMode = ref.read(themeProvider);
+            SnackBarHelper.showError(
+              context: context,
+              message: 'Maximum stay for this arrival date is $maxNightsOnArrival ${maxNightsOnArrival == 1 ? 'night' : 'nights'}.',
+              isDarkMode: isDarkMode,
+              duration: AnimationTokens.notification,
+            );
+          }
+          _rangeStart = null;
+          _rangeEnd = null;
+          return;
+        }
+
+        // Fallback to widget's minStayNights if no date-specific minNightsOnArrival
+        if ((minNightsOnArrival == null || minNightsOnArrival == 0) && nights < widget.minStayNights) {
           if (mounted) {
             final isDarkMode = ref.read(themeProvider);
             SnackBarHelper.showError(

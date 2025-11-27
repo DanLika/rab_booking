@@ -6,7 +6,7 @@ void main() {
   group('DetailRowWidget', () {
     testWidgets('renders label and value', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DetailRowWidget(
               label: 'Check-in',
@@ -23,7 +23,7 @@ void main() {
 
     testWidgets('displays label on left and value on right', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DetailRowWidget(
               label: 'Guest',
@@ -40,7 +40,7 @@ void main() {
 
     testWidgets('renders in dark mode without errors', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DetailRowWidget(
               label: 'Email',
@@ -57,7 +57,7 @@ void main() {
     testWidgets('applies highlighted style when isHighlighted is true',
         (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DetailRowWidget(
               label: 'Total',
@@ -76,13 +76,12 @@ void main() {
     testWidgets('applies normal style when isHighlighted is false',
         (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DetailRowWidget(
               label: 'Nights',
               value: '5',
               isDarkMode: false,
-              isHighlighted: false,
             ),
           ),
         ),
@@ -95,7 +94,7 @@ void main() {
     testWidgets('adds vertical padding when hasPadding is true',
         (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DetailRowWidget(
               label: 'Test',
@@ -112,13 +111,12 @@ void main() {
 
     testWidgets('no extra padding when hasPadding is false', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DetailRowWidget(
               label: 'Test',
               value: 'Value',
               isDarkMode: false,
-              hasPadding: false,
             ),
           ),
         ),
@@ -131,7 +129,7 @@ void main() {
 
     testWidgets('applies custom valueFontWeight', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DetailRowWidget(
               label: 'Guest',
@@ -149,7 +147,7 @@ void main() {
 
     testWidgets('highlighted overrides custom valueFontWeight', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DetailRowWidget(
               label: 'Total',

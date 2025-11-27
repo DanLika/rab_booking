@@ -82,7 +82,7 @@ void main() {
 
     test('returns success when enabled and accepted', () {
       final result = BookingValidationService.validateTaxLegal(
-        taxConfig: const TaxLegalConfig(enabled: true),
+        taxConfig: const TaxLegalConfig(),
         taxLegalAccepted: true,
       );
       expect(result.isValid, isTrue);
@@ -90,7 +90,7 @@ void main() {
 
     test('returns failure when enabled but not accepted', () {
       final result = BookingValidationService.validateTaxLegal(
-        taxConfig: const TaxLegalConfig(enabled: true),
+        taxConfig: const TaxLegalConfig(),
         taxLegalAccepted: false,
       );
       expect(result.isValid, isFalse);
@@ -183,7 +183,6 @@ void main() {
       return WidgetSettings(
         id: 'unit1',
         propertyId: 'prop1',
-        widgetMode: WidgetMode.bookingInstant,
         stripeConfig: StripePaymentConfig(enabled: stripeEnabled),
         bankTransferConfig: BankTransferConfig(enabled: bankTransferEnabled),
         allowPayOnArrival: allowPayOnArrival,
@@ -435,7 +434,7 @@ void main() {
         formKey: null, // Skip form validation in unit test
         requireEmailVerification: false,
         emailVerified: false,
-        taxConfig: const TaxLegalConfig(enabled: true),
+        taxConfig: const TaxLegalConfig(),
         taxLegalAccepted: false,
         checkIn: DateTime(2025, 1, 15),
         checkOut: DateTime(2025, 1, 20),

@@ -144,7 +144,6 @@ void main() {
               isDarkMode: false,
               deadlineHours: 48,
               bookingReference: 'REF123',
-              fromEmail: null,
             ),
           ),
         ),

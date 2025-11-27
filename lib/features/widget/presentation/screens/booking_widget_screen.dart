@@ -572,9 +572,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               children: [
                 // No-scroll content (embedded widget - host site scrolls)
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: horizontalPadding,
-                    vertical: verticalPadding,
+                  padding: EdgeInsets.only(
+                    left: horizontalPadding,
+                    right: horizontalPadding,
+                    top: verticalPadding,
+                    // No bottom padding - calendar/contact card goes to edge
                   ),
                   child: Column(
                     children: [
@@ -664,7 +666,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       if (widgetMode == WidgetMode.calendarOnly) ...[
                         const SizedBox(height: 8),
                         _buildContactPillCard(isDarkMode, screenWidth),
-                        const SizedBox(height: 8),
                       ],
                     ],
                   ),

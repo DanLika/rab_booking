@@ -26,7 +26,6 @@ class AppTheme {
       // Color scheme
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
-        onPrimary: Colors.white, // White text on primary color (chips, buttons)
         primaryContainer: AppColors.primaryLight,
         secondary: AppColors.secondary,
         onSecondary: Colors.white,

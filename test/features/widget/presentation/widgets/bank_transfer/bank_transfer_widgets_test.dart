@@ -137,11 +137,11 @@ void main() {
 
     testWidgets('does not render fields when null', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: BankDetailsSection(
               isDarkMode: false,
-              bankConfig: const BankTransferConfig(enabled: true),
+              bankConfig: BankTransferConfig(enabled: true),
             ),
           ),
         ),
@@ -343,7 +343,6 @@ void main() {
                 isDarkMode: false,
                 bankConfig: BankTransferConfig(
                   enabled: true,
-                  useCustomNotes: false,
                 ),
                 remainingAmount: '€120.00',
               ),

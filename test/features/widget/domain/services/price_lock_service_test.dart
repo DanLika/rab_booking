@@ -48,20 +48,18 @@ void main() {
 
     test('totalPrice equals roomPrice + additionalServicesTotal', () {
       final calc = createCalculation(
-        roomPrice: 100.0,
         additionalServicesTotal: 25.0,
       );
       expect(calc.totalPrice, equals(125.0));
     });
 
     test('hasPriceChanged returns false when lockedTotalPrice is null', () {
-      final calc = createCalculation(lockedTotalPrice: null);
+      final calc = createCalculation();
       expect(calc.hasPriceChanged, isFalse);
     });
 
     test('hasPriceChanged returns false when within tolerance', () {
       final calc = createCalculation(
-        roomPrice: 100.0,
         lockedTotalPrice: 100.005, // Within 1 cent tolerance
       );
       expect(calc.hasPriceChanged, isFalse);
@@ -69,14 +67,13 @@ void main() {
 
     test('hasPriceChanged returns true when outside tolerance', () {
       final calc = createCalculation(
-        roomPrice: 100.0,
         lockedTotalPrice: 98.0, // 2 EUR difference
       );
       expect(calc.hasPriceChanged, isTrue);
     });
 
     test('priceChangeDelta returns 0 when lockedTotalPrice is null', () {
-      final calc = createCalculation(lockedTotalPrice: null);
+      final calc = createCalculation();
       expect(calc.priceChangeDelta, equals(0.0));
     });
 
@@ -108,8 +105,7 @@ void main() {
 
     test('copyWithServices updates services and recalculates deposit', () {
       final original = createCalculation(
-        roomPrice: 100.0,
-        additionalServicesTotal: 0.0,
+        
       );
       final withServices = original.copyWithServices(50.0, 20);
 
@@ -122,7 +118,7 @@ void main() {
     });
 
     test('copyWithServices with 100% deposit', () {
-      final original = createCalculation(roomPrice: 100.0);
+      final original = createCalculation();
       final withServices = original.copyWithServices(0.0, 100);
 
       expect(withServices.depositAmount, equals(100.0));
@@ -130,7 +126,7 @@ void main() {
     });
 
     test('copyWithServices with 0% deposit', () {
-      final original = createCalculation(roomPrice: 100.0);
+      final original = createCalculation();
       final withServices = original.copyWithServices(0.0, 0);
 
       expect(withServices.depositAmount, equals(100.0));
@@ -200,7 +196,7 @@ void main() {
     });
 
     testWidgets('returns noChange when price within tolerance', (tester) async {
-      final current = createCalculation(roomPrice: 100.0);
+      final current = createCalculation();
       final locked = createCalculation(roomPrice: 100.005); // Within 1 cent
       PriceLockResult? result;
 
@@ -216,7 +212,6 @@ void main() {
                       currentCalculation: current,
                       lockedCalculation: locked,
                       onLockUpdated: () {},
-                      tolerance: 0.01,
                     );
                   },
                   child: const Text('Test'),
@@ -235,7 +230,7 @@ void main() {
 
     testWidgets('shows dialog when price increased', (tester) async {
       final current = createCalculation(roomPrice: 120.0);
-      final locked = createCalculation(roomPrice: 100.0);
+      final locked = createCalculation();
 
       await tester.pumpWidget(
         MaterialApp(
@@ -270,7 +265,7 @@ void main() {
 
     testWidgets('shows dialog when price decreased', (tester) async {
       final current = createCalculation(roomPrice: 80.0);
-      final locked = createCalculation(roomPrice: 100.0);
+      final locked = createCalculation();
 
       await tester.pumpWidget(
         MaterialApp(
@@ -304,7 +299,7 @@ void main() {
 
     testWidgets('returns cancelled when user taps Cancel', (tester) async {
       final current = createCalculation(roomPrice: 120.0);
-      final locked = createCalculation(roomPrice: 100.0);
+      final locked = createCalculation();
       PriceLockResult? capturedResult;
       bool lockUpdatedCalled = false;
 
@@ -347,7 +342,7 @@ void main() {
     testWidgets('returns confirmedProceed when user taps Proceed',
         (tester) async {
       final current = createCalculation(roomPrice: 120.0);
-      final locked = createCalculation(roomPrice: 100.0);
+      final locked = createCalculation();
       PriceLockResult? capturedResult;
       bool lockUpdatedCalled = false;
 

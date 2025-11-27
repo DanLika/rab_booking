@@ -86,7 +86,7 @@ void main() {
       // Find the container with width/height constraints
       final sizedContainer = containers.firstWhere(
         (c) => c.constraints?.maxWidth == 400 && c.constraints?.maxHeight == 300,
-        orElse: () => Container(),
+        orElse: Container.new,
       );
       expect(sizedContainer.constraints?.maxWidth, 400);
       expect(sizedContainer.constraints?.maxHeight, 300);

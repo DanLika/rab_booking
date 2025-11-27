@@ -65,8 +65,6 @@ class AppGradients extends ThemeExtension<AppGradients> {
   /// Light theme gradients
   static const AppGradients light = AppGradients(
     pageBackground: LinearGradient(
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
       colors: [_lightStart, _lightEnd],
       stops: [0.0, 0.3],
     ),
@@ -87,8 +85,6 @@ class AppGradients extends ThemeExtension<AppGradients> {
   /// Dark theme gradients
   static const AppGradients dark = AppGradients(
     pageBackground: LinearGradient(
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
       colors: [_darkStart, _darkEnd],
       stops: [0.0, 0.3],
     ),

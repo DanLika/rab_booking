@@ -44,6 +44,7 @@ class ContactItemWidget extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Row(
+          mainAxisSize: MainAxisSize.min, // CRITICAL: Prevent unbounded expansion
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(

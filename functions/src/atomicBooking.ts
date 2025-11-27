@@ -356,6 +356,36 @@ export const createBookingAtomic = onCall(async (request) => {
         bookingNights,
       });
 
+      // ====================================================================
+      // STEP 2.6: Validate unit's base minStayNights (if not overridden by daily_prices)
+      // ====================================================================
+      const unitDocRef = db.collection("units").doc(unitId);
+      const unitSnapshot = await transaction.get(unitDocRef);
+
+      if (unitSnapshot.exists) {
+        const unitData = unitSnapshot.data();
+        const unitMinStayNights = unitData?.min_stay_nights ?? 1;
+
+        if (bookingNights < unitMinStayNights) {
+          logError("[AtomicBooking] Unit minimum stay requirement not met", null, {
+            unitId,
+            minStayNights: unitMinStayNights,
+            bookingNights,
+          });
+
+          throw new HttpsError(
+            "failed-precondition",
+            `Minimum ${unitMinStayNights} nights required. You selected ${bookingNights} nights.`
+          );
+        }
+
+        logInfo("[AtomicBooking] Unit minStayNights validated", {
+          unitId,
+          unitMinStayNights,
+          bookingNights,
+        });
+      }
+
       // Step 3: No conflict - create booking atomically
       // Generate secure access token for booking lookup
       const { token: accessToken, hashedToken } = generateBookingAccessToken();

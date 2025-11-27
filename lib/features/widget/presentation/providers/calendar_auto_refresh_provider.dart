@@ -4,7 +4,7 @@ import 'month_calendar_provider.dart';
 import 'year_calendar_provider.dart';
 
 /// Bug #68 Fix: Auto-refresh calendar when booking status changes
-/// Watches booking changes for a unit and invalidates calendar providers
+/// Bug fix: Also watches daily_prices changes for availability updates
 
 /// Model to track booking IDs and their statuses
 class BookingStatusSnapshot {
@@ -51,8 +51,35 @@ final bookingStatusStreamProvider = StreamProvider.family<BookingStatusSnapshot,
       });
 });
 
+/// StreamProvider that watches daily_prices changes for a unit
+/// This ensures calendar refreshes when owner changes availability in Cjenovnik
+final dailyPricesStreamProvider = StreamProvider.family<int, String>((ref, unitId) {
+  final firestore = ref.watch(firestoreProvider);
+
+  // Watch daily_prices for this unit
+  return firestore
+      .collection('daily_prices')
+      .where('unit_id', isEqualTo: unitId)
+      .snapshots()
+      .map((snapshot) {
+        // Return count + hash of document IDs as change indicator
+        // This will trigger refresh when any daily_price is added/modified/deleted
+        var hash = 0;
+        for (final doc in snapshot.docs) {
+          hash ^= doc.id.hashCode;
+          // Include 'available' field in hash to detect availability changes
+          final data = doc.data();
+          if (data['available'] != null) {
+            hash ^= data['available'].hashCode;
+          }
+        }
+        return snapshot.docs.length + hash;
+      });
+});
+
 /// Provider to initialize calendar auto-refresh for a unit
-/// This watches booking status changes and invalidates calendar providers when needed
+/// This watches booking status changes AND daily_prices changes
+/// and invalidates calendar providers when needed
 final calendarAutoRefreshProvider = Provider.family<void, String>((ref, unitId) {
   // Watch the booking status stream
   ref.listen<AsyncValue<BookingStatusSnapshot>>(
@@ -70,6 +97,22 @@ final calendarAutoRefreshProvider = Provider.family<void, String>((ref, unitId) 
           ref.invalidate(monthCalendarDataProvider);
           ref.invalidate(yearCalendarDataProvider);
         }
+      }
+    },
+  );
+
+  // Bug fix: Also watch daily_prices stream for availability changes
+  // This ensures calendar refreshes when owner changes availability in Cjenovnik
+  ref.listen<AsyncValue<int>>(
+    dailyPricesStreamProvider(unitId),
+    (previous, next) {
+      final prevValue = previous?.value;
+      final nextValue = next.value;
+
+      if (prevValue != null && nextValue != null && prevValue != nextValue) {
+        // Daily prices changed - invalidate calendar providers
+        ref.invalidate(monthCalendarDataProvider);
+        ref.invalidate(yearCalendarDataProvider);
       }
     },
   );

@@ -619,8 +619,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                               : (start, end) {
                                   // Validate minimum nights requirement
                                   if (start != null && end != null) {
-                                    final minNights =
-                                        _widgetSettings?.minNights ?? 1;
+                                    // Use unit's minStayNights (source of truth), NOT widget_settings
+                                    final minNights = _unit?.minStayNights ?? 1;
                                     final selectedNights = end
                                         .difference(start)
                                         .inDays;
@@ -728,6 +728,22 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Build contact pill card for calendar-only mode (inline, below calendar)
   Widget _buildContactPillCard(bool isDarkMode, double screenWidth) {
     final contactOptions = _widgetSettings?.contactOptions;
+
+    // Check if there's anything to display
+    final hasEmail =
+        contactOptions?.showEmail == true &&
+        contactOptions?.emailAddress != null &&
+        contactOptions!.emailAddress!.isNotEmpty;
+    final hasPhone =
+        contactOptions?.showPhone == true &&
+        contactOptions?.phoneNumber != null &&
+        contactOptions!.phoneNumber!.isNotEmpty;
+
+    // If no contact options to display, return empty widget
+    if (!hasEmail && !hasPhone) {
+      return const SizedBox.shrink();
+    }
+
     // Only use column layout on very small screens (< 350px)
     final useRowLayout = screenWidth >= 350;
 
@@ -780,17 +796,24 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         contactOptions?.phoneNumber != null &&
         contactOptions!.phoneNumber!.isNotEmpty;
 
+    // Defensive check: if no items, return empty widget to avoid empty Row
+    if (!hasEmail && !hasPhone) {
+      return const SizedBox.shrink();
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // Email
         if (hasEmail)
-          ContactItemWidget(
-            icon: Icons.email,
-            value: contactOptions.emailAddress!,
-            onTap: () => _launchUrl('mailto:${contactOptions.emailAddress}'),
-            isDarkMode: isDarkMode,
+          Flexible(
+            child: ContactItemWidget(
+              icon: Icons.email,
+              value: contactOptions.emailAddress!,
+              onTap: () => _launchUrl('mailto:${contactOptions.emailAddress}'),
+              isDarkMode: isDarkMode,
+            ),
           ),
 
         // Vertical divider
@@ -806,11 +829,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         // Phone
         if (hasPhone)
-          ContactItemWidget(
-            icon: Icons.phone,
-            value: contactOptions.phoneNumber!,
-            onTap: () => _launchUrl('tel:${contactOptions.phoneNumber}'),
-            isDarkMode: isDarkMode,
+          Flexible(
+            child: ContactItemWidget(
+              icon: Icons.phone,
+              value: contactOptions.phoneNumber!,
+              onTap: () => _launchUrl('tel:${contactOptions.phoneNumber}'),
+              isDarkMode: isDarkMode,
+            ),
           ),
       ],
     );
@@ -830,6 +855,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         contactOptions?.showPhone == true &&
         contactOptions?.phoneNumber != null &&
         contactOptions!.phoneNumber!.isNotEmpty;
+
+    // Defensive check: if no items, return empty widget to avoid empty Column
+    if (!hasEmail && !hasPhone) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       children: [

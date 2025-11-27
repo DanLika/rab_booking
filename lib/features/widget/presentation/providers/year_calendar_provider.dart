@@ -97,10 +97,11 @@ final yearCalendarDataProvider = FutureProvider.family<Map<String, CalendarDateI
         final endDate = event['end_date'] as DateTime;
         // Include event if it overlaps with the extended range:
         // (endDate >= extendedStart) AND (startDate <= extendedEnd)
-        return endDate.isAfter(extendedStart) ||
-            endDate.isAtSameMomentAs(extendedStart) &&
-                startDate.isBefore(extendedEnd) ||
-            startDate.isAtSameMomentAs(extendedEnd);
+        // Bug fix: Added parentheses to fix operator precedence
+        return (endDate.isAfter(extendedStart) ||
+                endDate.isAtSameMomentAs(extendedStart)) &&
+            (startDate.isBefore(extendedEnd) ||
+                startDate.isAtSameMomentAs(extendedEnd));
       })
       .toList();
 

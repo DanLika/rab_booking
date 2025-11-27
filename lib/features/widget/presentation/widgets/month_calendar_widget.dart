@@ -15,7 +15,7 @@ import '../theme/responsive_helper.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/theme/custom_icons_tablericons.dart';
-import '../utils/snackbar_helper.dart';
+import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
 class MonthCalendarWidget extends ConsumerStatefulWidget {
   final String propertyId;
@@ -739,13 +739,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     WidgetColorScheme colors,
   ) {
-    final isDarkMode = ref.read(themeProvider);
     // Block past dates
     if (dateInfo.status == DateStatus.disabled) {
       SnackBarHelper.showError(
         context: context,
         message: 'Cannot select past dates.',
-        isDarkMode: isDarkMode,
         duration: const Duration(seconds: 3),
       );
       return;
@@ -768,8 +766,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         SnackBarHelper.showError(
           context: context,
           message: 'This date requires booking at least ${dateInfo.minDaysAdvance} days in advance.',
-          isDarkMode: isDarkMode,
-          duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
         );
         return;
       }
@@ -780,8 +777,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         SnackBarHelper.showError(
           context: context,
           message: 'This date can only be booked up to ${dateInfo.maxDaysAdvance} days in advance.',
-          isDarkMode: isDarkMode,
-          duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
         );
         return;
       }
@@ -792,7 +788,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       SnackBarHelper.showError(
         context: context,
         message: 'Check-in is not allowed on this date.',
-        isDarkMode: isDarkMode,
         duration: const Duration(seconds: 3),
       );
       return;
@@ -802,7 +797,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       SnackBarHelper.showError(
         context: context,
         message: 'Check-out is not allowed on this date.',
-        isDarkMode: isDarkMode,
         duration: const Duration(seconds: 3),
       );
       return;
@@ -821,7 +815,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       SnackBarHelper.showError(
         context: context,
         message: 'This date is not available for check-in. Please select an available date.',
-        isDarkMode: isDarkMode,
         duration: const Duration(seconds: 3),
       );
       return;
@@ -831,7 +824,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       SnackBarHelper.showError(
         context: context,
         message: 'This date is not available for check-out. Please select an available date.',
-        isDarkMode: isDarkMode,
         duration: const Duration(seconds: 3),
       );
       return;
@@ -875,8 +867,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           SnackBarHelper.showError(
             context: context,
             message: 'Minimum stay is $minNights ${minNights == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-            isDarkMode: isDarkMode,
-            duration: const Duration(seconds: 3),
+                duration: const Duration(seconds: 3),
           );
           return;
         }
@@ -894,8 +885,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             SnackBarHelper.showError(
               context: context,
               message: 'Minimum ${checkInDateInfo.minNightsOnArrival} nights required for this check-in date. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-              isDarkMode: isDarkMode,
-            );
+                  );
             return; // Keep _rangeStart, don't set _rangeEnd
           }
 
@@ -906,8 +896,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             SnackBarHelper.showError(
               context: context,
               message: 'Maximum ${checkInDateInfo.maxNightsOnArrival} nights allowed for this check-in date. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-              isDarkMode: isDarkMode,
-            );
+                  );
             return; // Keep _rangeStart, don't set _rangeEnd
           }
         }
@@ -926,7 +915,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     DateTime end,
     WidgetColorScheme colors,
   ) async {
-    final isDarkMode = ref.read(themeProvider);
     // Check availability using backend (works across all months)
     final isAvailable = await ref.read(
       checkDateAvailabilityProvider(
@@ -948,7 +936,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       SnackBarHelper.showError(
         context: context,
         message: 'Cannot select dates. There are already booked dates in this range.',
-        isDarkMode: isDarkMode,
         duration: const Duration(seconds: 3),
       );
       return;

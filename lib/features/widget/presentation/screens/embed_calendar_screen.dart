@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/year_grid_calendar_widget.dart';
 import '../providers/embed_booking_provider.dart';
-import '../utils/snackbar_helper.dart';
+import '../../../../shared/utils/ui/snackbar_helper.dart';
 
 /// Embedded calendar screen - public view for guests
 /// URL: /embed/units/:unitId

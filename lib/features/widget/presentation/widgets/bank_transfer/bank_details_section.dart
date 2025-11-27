@@ -4,7 +4,7 @@ import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../../domain/models/widget_settings.dart';
 import '../common/copyable_text_field.dart';
-import '../../utils/snackbar_helper.dart';
+import '../../../../../../shared/utils/ui/snackbar_helper.dart';
 
 /// Reusable bank details section for bank transfers
 /// Displays IBAN, SWIFT, account holder, bank name with copy functionality
@@ -145,7 +145,6 @@ class BankDetailsSection extends StatelessWidget {
     SnackBarHelper.showSuccess(
       context: context,
       message: message,
-      isDarkMode: isDarkMode,
       duration: const Duration(seconds: 2),
     );
   }

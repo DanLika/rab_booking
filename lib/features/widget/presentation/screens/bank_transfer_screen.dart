@@ -10,7 +10,7 @@ import '../../../widget/domain/models/widget_settings.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
-import '../utils/snackbar_helper.dart';
+import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../widgets/common/detail_row_widget.dart';
 import '../widgets/common/theme_colors_helper.dart';
 import '../widgets/bank_transfer/qr_code_payment_section.dart';
@@ -551,7 +551,6 @@ class BankTransferScreen extends ConsumerWidget {
                     SnackBarHelper.showSuccess(
                       context: context,
                       message: 'Referentni broj kopiran',
-                      isDarkMode: isDarkMode,
                       duration: const Duration(seconds: 2),
                     );
                   },

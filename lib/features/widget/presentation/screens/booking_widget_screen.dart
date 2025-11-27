@@ -49,7 +49,7 @@ import '../widgets/booking/payment/payment_method_card.dart';
 import '../widgets/booking/pill_bar_content.dart';
 import '../widgets/booking/booking_pill_bar.dart';
 import '../widgets/common/theme_colors_helper.dart';
-import '../utils/snackbar_helper.dart';
+import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/errors/app_exceptions.dart';
 
 /// Main booking widget screen that shows responsive calendar
@@ -490,7 +490,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   SnackBarHelper.showError(
                     context: context,
                     message: error.getUserMessage(),
-                    isDarkMode: isDarkMode,
                     duration: const Duration(seconds: 5),
                   );
                 }
@@ -1471,7 +1470,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 SnackBarHelper.showError(
                   context: context,
                   message: 'Please enter a valid email first',
-                  isDarkMode: isDarkMode,
                 );
                 return;
               }
@@ -1613,7 +1611,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   Future<void> _handleConfirmBooking(
     BookingPriceCalculation calculation,
   ) async {
-    final isDarkMode = ref.watch(themeProvider);
     final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
     // Run all blocking validations using BookingValidationService
@@ -1641,7 +1638,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         SnackBarHelper.showError(
           context: context,
           message: validationResult.errorMessage!,
-          isDarkMode: isDarkMode,
           duration: validationResult.snackBarDuration,
         );
       }
@@ -1675,7 +1671,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         SnackBarHelper.showWarning(
           context: context,
           message: sameDayResult.errorMessage!,
-          isDarkMode: isDarkMode,
           duration: sameDayResult.snackBarDuration,
         );
       }
@@ -1806,7 +1801,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         SnackBarHelper.showError(
           context: context,
           message: e.message,
-          isDarkMode: isDarkMode,
           duration: const Duration(seconds: 7),
         );
 
@@ -1822,7 +1816,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         SnackBarHelper.showError(
           context: context,
           message: 'Error creating booking: $e',
-          isDarkMode: isDarkMode,
         );
       }
     } finally {
@@ -1949,8 +1942,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     required String bookingReference,
     required String guestEmail,
   }) async {
-    final isDarkMode = ref.watch(themeProvider);
-
     try {
       final stripeService = ref.read(stripeServiceProvider);
 
@@ -1989,7 +1980,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         SnackBarHelper.showError(
           context: context,
           message: 'Error launching Stripe: $e',
-          isDarkMode: isDarkMode,
         );
       }
     }
@@ -2002,8 +1992,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     String guestEmail,
     String bookingId,
   ) async {
-    final isDarkMode = ref.watch(themeProvider);
-
     try {
       // Fetch booking from Firestore using booking ID
       final bookingRepo = ref.read(bookingRepositoryProvider);
@@ -2015,7 +2003,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             context: context,
             message:
                 'Booking not found. Please check your email for confirmation.',
-            isDarkMode: isDarkMode,
             duration: const Duration(seconds: 5),
           );
         }
@@ -2107,7 +2094,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         SnackBarHelper.showError(
           context: context,
           message: 'Error loading booking: $e',
-          isDarkMode: isDarkMode,
           duration: const Duration(seconds: 5),
         );
       }

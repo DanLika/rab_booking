@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/services/logging_service.dart';
-import '../utils/snackbar_helper.dart';
+import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
 /// Email Verification Dialog
 ///

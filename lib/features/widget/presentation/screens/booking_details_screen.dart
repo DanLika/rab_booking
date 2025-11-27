@@ -9,7 +9,7 @@ import '../../domain/models/booking_details_model.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../theme/responsive_helper.dart';
-import '../utils/snackbar_helper.dart';
+import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
 /// Booking Details Screen
 /// Displays complete booking information for guest
@@ -60,7 +60,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
 
   /// Handle booking cancellation
   Future<void> _handleCancelBooking() async {
-    final isDarkMode = ref.read(themeProvider);
+    final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
     // Show confirmation dialog
@@ -156,7 +156,6 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
           context: context,
           message: result.data['message'] ??
               'Booking cancelled successfully. You will receive a confirmation email.',
-          isDarkMode: isDarkMode,
           duration: const Duration(seconds: 5),
         );
 
@@ -172,7 +171,6 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
         SnackBarHelper.showError(
           context: context,
           message: 'Failed to cancel booking: ${e.toString()}',
-          isDarkMode: isDarkMode,
           duration: const Duration(seconds: 5),
         );
       }

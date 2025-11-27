@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import '../theme/minimalist_colors.dart';
 
 /// Centralized SnackBar helper for consistent styling and auto-dismiss functionality
-/// Uses theme-aware colors based on "booked" color scheme (#83e6bf)
+/// Uses theme-aware colors with automatic light/dark mode detection
 class SnackBarHelper {
-  // Keep track of current snackbar controller for auto-dismiss
-  static ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _currentSnackBar;
+  SnackBarHelper._();
 
   /// Show a success SnackBar with theme-aware colors
   /// Automatically dismisses any previous snackbar before showing the new one
@@ -13,39 +11,39 @@ class SnackBarHelper {
     required BuildContext context,
     required String message,
     Duration duration = const Duration(seconds: 3),
-    bool isDarkMode = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     _showSnackBar(
       context: context,
       message: message,
-      backgroundColor: isDarkMode
-          ? MinimalistColorsDark.statusAvailableBackground  // #83e6bf with dark mode adjustment
-          : MinimalistColors.statusAvailableBackground,      // #83e6bf
-      textColor: isDarkMode
-          ? MinimalistColorsDark.textPrimary
-          : MinimalistColors.textPrimary,
+      backgroundColor: isDark
+          ? const Color(0xFF2D5A47) // Dark green
+          : const Color(0xFFD4EDDA), // Light green
+      textColor: isDark ? Colors.white : const Color(0xFF155724),
       icon: Icons.check_circle_outline,
       duration: duration,
     );
   }
 
-  /// Show an error SnackBar with theme-aware colors (using booked color scheme)
+  /// Show an error SnackBar with theme-aware colors
   /// Automatically dismisses any previous snackbar before showing the new one
   static void showError({
     required BuildContext context,
     required String message,
     Duration duration = const Duration(seconds: 4),
-    bool isDarkMode = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     _showSnackBar(
       context: context,
       message: message,
-      backgroundColor: isDarkMode
-          ? MinimalistColorsDark.statusBookedBackground  // #ef4444 (red) for dark mode
-          : MinimalistColors.statusBookedBackground,      // #fba9aa (light pink/red) for light mode
-      textColor: isDarkMode
-          ? MinimalistColorsDark.textPrimary              // White text for dark mode
-          : MinimalistColors.textPrimary,                 // Black text for light mode
+      backgroundColor: isDark
+          ? const Color(0xFF5A2D2D) // Dark red
+          : const Color(0xFFF8D7DA), // Light red/pink
+      textColor: isDark ? Colors.white : const Color(0xFF721C24),
       icon: Icons.error_outline,
       duration: duration,
     );
@@ -57,17 +55,17 @@ class SnackBarHelper {
     required BuildContext context,
     required String message,
     Duration duration = const Duration(seconds: 3),
-    bool isDarkMode = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     _showSnackBar(
       context: context,
       message: message,
-      backgroundColor: isDarkMode
-          ? MinimalistColorsDark.backgroundCard
-          : MinimalistColors.backgroundCard,
-      textColor: isDarkMode
-          ? MinimalistColorsDark.textPrimary
-          : MinimalistColors.textPrimary,
+      backgroundColor: isDark
+          ? const Color(0xFF2D4A5A) // Dark blue
+          : const Color(0xFFD1ECF1), // Light blue
+      textColor: isDark ? Colors.white : const Color(0xFF0C5460),
       icon: Icons.info_outline,
       duration: duration,
     );
@@ -79,24 +77,24 @@ class SnackBarHelper {
     required BuildContext context,
     required String message,
     Duration duration = const Duration(seconds: 3),
-    bool isDarkMode = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     _showSnackBar(
       context: context,
       message: message,
-      backgroundColor: isDarkMode
-          ? MinimalistColorsDark.warning
-          : MinimalistColors.warning,
-      textColor: isDarkMode
-          ? MinimalistColorsDark.textPrimary
-          : MinimalistColors.textPrimary,
+      backgroundColor: isDark
+          ? const Color(0xFF5A4A2D) // Dark amber
+          : const Color(0xFFFFF3CD), // Light amber
+      textColor: isDark ? Colors.white : const Color(0xFF856404),
       icon: Icons.warning_amber_rounded,
       duration: duration,
     );
   }
 
   /// Internal helper to show SnackBar with consistent styling
-  /// Auto-dismisses previous snackbar before showing new one
+  /// Clears all snackbars before showing new one
   static void _showSnackBar({
     required BuildContext context,
     required String message,
@@ -106,12 +104,11 @@ class SnackBarHelper {
     required Duration duration,
   }) {
     try {
-      // Get root ScaffoldMessenger safely (using root navigator to avoid dialog context issues)
+      // Get ScaffoldMessenger safely
       final messenger = ScaffoldMessenger.maybeOf(context);
       if (messenger == null) {
         // If no ScaffoldMessenger available, print to console as fallback
-        // ignore: avoid_print
-        print('SnackBar message: $message');
+        debugPrint('SnackBar message: $message');
         return;
       }
 
@@ -119,8 +116,8 @@ class SnackBarHelper {
       // This fixes the issue where repeated taps wouldn't show the snackbar
       messenger.clearSnackBars();
 
-      // Show new snackbar
-      _currentSnackBar = messenger.showSnackBar(
+      // Show new snackbar - no need to track reference, ScaffoldMessenger handles lifecycle
+      messenger.showSnackBar(
         SnackBar(
           content: Row(
             children: [
@@ -155,14 +152,12 @@ class SnackBarHelper {
     } catch (e) {
       // Gracefully handle snackbar display errors (e.g., empty scaffold queue in dialogs)
       // This prevents "Bad state: No element" crashes when showing snackbars in dialog contexts
-      // ignore: avoid_print
-      print('SnackBar error: $e - Message was: $message');
+      debugPrint('SnackBar error: $e - Message was: $message');
     }
   }
 
-  /// Manually dismiss current snackbar if needed
-  static void dismiss() {
-    _currentSnackBar?.close();
-    _currentSnackBar = null;
+  /// Dismiss all current snackbars
+  static void dismissAll(BuildContext context) {
+    ScaffoldMessenger.maybeOf(context)?.clearSnackBars();
   }
 }

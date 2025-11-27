@@ -13,7 +13,7 @@ import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/theme/custom_icons_tablericons.dart';
 import 'calendar_hover_tooltip.dart';
-import '../utils/snackbar_helper.dart';
+import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
 class YearCalendarWidget extends ConsumerStatefulWidget {
   final String propertyId;
@@ -704,13 +704,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     WidgetColorScheme colors,
   ) {
-    final isDarkMode = ref.read(themeProvider);
     // Block past dates
     if (dateInfo.status == DateStatus.disabled) {
       SnackBarHelper.showError(
         context: context,
         message: 'Cannot select past dates.',
-        isDarkMode: isDarkMode,
         duration: const Duration(seconds: 3),
       );
       return;
@@ -733,8 +731,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         SnackBarHelper.showError(
           context: context,
           message: 'This date requires booking at least ${dateInfo.minDaysAdvance} days in advance.',
-          isDarkMode: isDarkMode,
-          duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
         );
         return;
       }
@@ -745,8 +742,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         SnackBarHelper.showError(
           context: context,
           message: 'This date can only be booked up to ${dateInfo.maxDaysAdvance} days in advance.',
-          isDarkMode: isDarkMode,
-          duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
         );
         return;
       }
@@ -757,7 +753,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       SnackBarHelper.showError(
         context: context,
         message: 'Check-in is not allowed on this date.',
-        isDarkMode: isDarkMode,
         duration: const Duration(seconds: 3),
       );
       return;
@@ -767,7 +762,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       SnackBarHelper.showError(
         context: context,
         message: 'Check-out is not allowed on this date.',
-        isDarkMode: isDarkMode,
         duration: const Duration(seconds: 3),
       );
       return;
@@ -831,8 +825,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           SnackBarHelper.showError(
             context: context,
             message: 'Minimum stay for this arrival date is $minNightsOnArrival ${minNightsOnArrival == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-            isDarkMode: isDarkMode,
-            duration: const Duration(seconds: 3),
+                duration: const Duration(seconds: 3),
           );
           return;
         }
@@ -848,8 +841,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           SnackBarHelper.showError(
             context: context,
             message: 'Maximum stay for this arrival date is $maxNightsOnArrival ${maxNightsOnArrival == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-            isDarkMode: isDarkMode,
-            duration: const Duration(seconds: 3),
+                duration: const Duration(seconds: 3),
           );
           return;
         }
@@ -864,8 +856,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           SnackBarHelper.showError(
             context: context,
             message: 'Minimum stay is $minNights ${minNights == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-            isDarkMode: isDarkMode,
-            duration: const Duration(seconds: 3),
+                duration: const Duration(seconds: 3),
           );
           return;
         }
@@ -880,8 +871,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           SnackBarHelper.showError(
             context: context,
             message: 'This selection would leave a gap smaller than the $minNights-night minimum stay. Please choose different dates or extend your stay.',
-            isDarkMode: isDarkMode,
-          );
+              );
           return;
         }
 
@@ -895,8 +885,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           SnackBarHelper.showError(
             context: context,
             message: 'Cannot select dates. There are already booked dates in this range.',
-            isDarkMode: isDarkMode,
-            duration: const Duration(seconds: 3),
+                duration: const Duration(seconds: 3),
           );
           return;
         }

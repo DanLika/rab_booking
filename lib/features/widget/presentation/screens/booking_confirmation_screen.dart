@@ -9,7 +9,7 @@ import '../../../../core/services/email_notification_service.dart';
 import '../../../../core/services/ical_generator.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../domain/models/widget_settings.dart';
-import '../utils/snackbar_helper.dart';
+import '../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../utils/ics_download.dart';
 import '../widgets/common/detail_row_widget.dart';
 import '../widgets/common/info_card_widget.dart';
@@ -132,24 +132,19 @@ class _BookingConfirmationScreenState
   Future<void> _copyToClipboard() async {
     await Clipboard.setData(ClipboardData(text: widget.bookingReference));
     if (mounted) {
-      final isDarkMode = ref.read(themeProvider);
       SnackBarHelper.showSuccess(
         context: context,
         message: 'Booking reference copied to clipboard!',
-        isDarkMode: isDarkMode,
         duration: const Duration(seconds: 2),
       );
     }
   }
 
   Future<void> _resendConfirmationEmail() async {
-    final isDarkMode = ref.read(themeProvider);
-
     if (widget.booking == null || widget.emailConfig == null) {
       SnackBarHelper.showError(
         context: context,
         message: 'Unable to resend email - missing configuration',
-        isDarkMode: isDarkMode,
       );
       return;
     }
@@ -161,7 +156,6 @@ class _BookingConfirmationScreenState
         context: context,
         message:
             'Email service is not enabled or configured. Please contact the property owner.',
-        isDarkMode: isDarkMode,
         duration: const Duration(seconds: 4),
       );
       return;
@@ -196,7 +190,6 @@ class _BookingConfirmationScreenState
         SnackBarHelper.showSuccess(
           context: context,
           message: 'Confirmation email sent successfully!',
-          isDarkMode: isDarkMode,
         );
       }
     } catch (e) {
@@ -208,7 +201,6 @@ class _BookingConfirmationScreenState
         SnackBarHelper.showError(
           context: context,
           message: 'Failed to send email: $e',
-          isDarkMode: isDarkMode,
           duration: const Duration(seconds: 5),
         );
       }
@@ -240,21 +232,17 @@ class _BookingConfirmationScreenState
 
       // Success feedback
       if (mounted) {
-        final isDarkMode = ref.read(themeProvider);
         SnackBarHelper.showSuccess(
           context: context,
           message: 'Calendar event downloaded! Check your downloads folder.',
-          isDarkMode: isDarkMode,
         );
       }
     } catch (e) {
       // Error handling
       if (mounted) {
-        final isDarkMode = ref.read(themeProvider);
         SnackBarHelper.showError(
           context: context,
           message: 'Failed to generate calendar file: $e',
-          isDarkMode: isDarkMode,
           duration: const Duration(seconds: 5),
         );
       }
@@ -973,11 +961,9 @@ class _BookingConfirmationScreenState
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: value));
                     if (mounted) {
-                      final isDarkMode = ref.read(themeProvider);
                       SnackBarHelper.showSuccess(
                         context: context,
                         message: '$label copied to clipboard',
-                        isDarkMode: isDarkMode,
                         duration: const Duration(seconds: 2),
                       );
                     }

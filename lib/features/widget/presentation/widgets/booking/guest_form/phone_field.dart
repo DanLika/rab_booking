@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
-import '../../../utils/form_validators.dart';
+import '../../../../../../shared/utils/validators/form_validators.dart';
 import '../../common/theme_colors_helper.dart';
 
 /// Phone number input field with country-specific formatting and validation.

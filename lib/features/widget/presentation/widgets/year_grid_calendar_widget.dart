@@ -7,7 +7,7 @@ import '../providers/theme_provider.dart';
 import 'split_day_calendar_painter.dart';
 import 'year_view_preloader.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
-import '../utils/snackbar_helper.dart';
+import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
 /// Year-view grid calendar widget inspired by BedBooking
 /// Shows 12 months × 31 days in a grid with diagonal splits for check-in/check-out
@@ -535,11 +535,9 @@ class _YearGridCalendarWidgetState
         // Check if check-in is blocked on this date
         if (dateInfo?.blockCheckIn == true) {
           if (mounted) {
-            final isDarkMode = ref.read(themeProvider);
             SnackBarHelper.showError(
               context: context,
               message: 'Check-in is not allowed on this date.',
-              isDarkMode: isDarkMode,
               duration: AnimationTokens.notification,
             );
           }
@@ -576,11 +574,9 @@ class _YearGridCalendarWidgetState
 
         if (checkOutDateInfo?.blockCheckOut == true) {
           if (mounted) {
-            final isDarkMode = ref.read(themeProvider);
             SnackBarHelper.showError(
               context: context,
               message: 'Check-out is not allowed on this date.',
-              isDarkMode: isDarkMode,
               duration: AnimationTokens.notification,
             );
           }
@@ -597,11 +593,9 @@ class _YearGridCalendarWidgetState
         final minNightsOnArrival = checkInDateInfo?.minNightsOnArrival;
         if (minNightsOnArrival != null && minNightsOnArrival > 0 && nights < minNightsOnArrival) {
           if (mounted) {
-            final isDarkMode = ref.read(themeProvider);
             SnackBarHelper.showError(
               context: context,
               message: 'Minimum stay for this arrival date is $minNightsOnArrival ${minNightsOnArrival == 1 ? 'night' : 'nights'}. You selected $nights ${nights == 1 ? 'night' : 'nights'}.',
-              isDarkMode: isDarkMode,
               duration: AnimationTokens.notification,
             );
           }
@@ -615,11 +609,9 @@ class _YearGridCalendarWidgetState
         final maxNightsOnArrival = checkInDateInfo?.maxNightsOnArrival;
         if (maxNightsOnArrival != null && maxNightsOnArrival > 0 && nights > maxNightsOnArrival) {
           if (mounted) {
-            final isDarkMode = ref.read(themeProvider);
             SnackBarHelper.showError(
               context: context,
               message: 'Maximum stay for this arrival date is $maxNightsOnArrival ${maxNightsOnArrival == 1 ? 'night' : 'nights'}. You selected $nights ${nights == 1 ? 'night' : 'nights'}.',
-              isDarkMode: isDarkMode,
               duration: AnimationTokens.notification,
             );
           }
@@ -633,11 +625,9 @@ class _YearGridCalendarWidgetState
         if ((minNightsOnArrival == null || minNightsOnArrival == 0) && nights < widget.minStayNights) {
           // Show error message
           if (mounted) {
-            final isDarkMode = ref.read(themeProvider);
             SnackBarHelper.showError(
               context: context,
               message: 'Minimum stay is ${widget.minStayNights} ${widget.minStayNights == 1 ? 'night' : 'nights'}. You selected $nights ${nights == 1 ? 'night' : 'nights'}.',
-              isDarkMode: isDarkMode,
               duration: AnimationTokens.notification,
             );
           }
@@ -672,11 +662,9 @@ class _YearGridCalendarWidgetState
     // Check if check-in is blocked on this date
     if (dateInfo?.blockCheckIn == true) {
       if (mounted) {
-        final isDarkMode = ref.read(themeProvider);
         SnackBarHelper.showError(
           context: context,
           message: 'Check-in is not allowed on this date.',
-          isDarkMode: isDarkMode,
           duration: AnimationTokens.notification,
         );
       }
@@ -732,11 +720,9 @@ class _YearGridCalendarWidgetState
         // Check if check-out is blocked on the end date
         if (checkOutDateInfo?.blockCheckOut == true) {
           if (mounted) {
-            final isDarkMode = ref.read(themeProvider);
             SnackBarHelper.showError(
               context: context,
               message: 'Check-out is not allowed on this date.',
-              isDarkMode: isDarkMode,
               duration: AnimationTokens.notification,
             );
           }
@@ -751,11 +737,9 @@ class _YearGridCalendarWidgetState
         final minNightsOnArrival = checkInDateInfo?.minNightsOnArrival;
         if (minNightsOnArrival != null && minNightsOnArrival > 0 && nights < minNightsOnArrival) {
           if (mounted) {
-            final isDarkMode = ref.read(themeProvider);
             SnackBarHelper.showError(
               context: context,
               message: 'Minimum stay for this arrival date is $minNightsOnArrival ${minNightsOnArrival == 1 ? 'night' : 'nights'}.',
-              isDarkMode: isDarkMode,
               duration: AnimationTokens.notification,
             );
           }
@@ -768,11 +752,9 @@ class _YearGridCalendarWidgetState
         final maxNightsOnArrival = checkInDateInfo?.maxNightsOnArrival;
         if (maxNightsOnArrival != null && maxNightsOnArrival > 0 && nights > maxNightsOnArrival) {
           if (mounted) {
-            final isDarkMode = ref.read(themeProvider);
             SnackBarHelper.showError(
               context: context,
               message: 'Maximum stay for this arrival date is $maxNightsOnArrival ${maxNightsOnArrival == 1 ? 'night' : 'nights'}.',
-              isDarkMode: isDarkMode,
               duration: AnimationTokens.notification,
             );
           }
@@ -784,11 +766,9 @@ class _YearGridCalendarWidgetState
         // Fallback to widget's minStayNights if no date-specific minNightsOnArrival
         if ((minNightsOnArrival == null || minNightsOnArrival == 0) && nights < widget.minStayNights) {
           if (mounted) {
-            final isDarkMode = ref.read(themeProvider);
             SnackBarHelper.showError(
               context: context,
               message: 'Minimum stay is ${widget.minStayNights} ${widget.minStayNights == 1 ? 'night' : 'nights'}.',
-              isDarkMode: isDarkMode,
               duration: AnimationTokens.fast,
             );
           }

@@ -129,6 +129,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final confirmationEmail = uri.queryParameters['email'];
     final bookingId = uri.queryParameters['bookingId'];
     final paymentType = uri.queryParameters['payment'];
+    final stripeStatus = uri.queryParameters['stripe_status'];
 
     // Validate unit and property immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -138,10 +139,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       await _loadFormData();
 
       // If we have confirmation parameters, show confirmation screen
+      // Check both old 'payment=stripe' and new 'stripe_status=success' params
+      final isStripeReturn = paymentType == 'stripe' || stripeStatus == 'success';
       if (confirmationRef != null &&
           confirmationEmail != null &&
           bookingId != null &&
-          paymentType == 'stripe') {
+          isStripeReturn) {
         await _showConfirmationFromUrl(
           confirmationRef,
           confirmationEmail,
@@ -1971,6 +1974,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       final checkoutResult = await stripeService.createCheckoutSession(
         bookingId: bookingId,
         returnUrl: returnUrl,
+        guestEmail: guestEmail, // Required for security validation
       );
 
       // Redirect to Stripe Checkout

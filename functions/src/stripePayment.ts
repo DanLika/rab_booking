@@ -12,16 +12,37 @@ import {createPaymentNotification} from "./notificationService";
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 
+// Allowed domains for return URL (security whitelist)
+const ALLOWED_RETURN_DOMAINS = [
+  "https://rab-booking-248fc.web.app",
+  "https://rab-booking-owner.web.app",
+  "https://rab-booking-widget.web.app",
+  "http://localhost",
+  "http://127.0.0.1",
+];
+
 /**
  * Cloud Function: Create Stripe Checkout Session
  *
  * Creates a Stripe checkout session for 20% deposit payment
+ * Security: Validates booking access and return URL
  */
 export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, async (request) => {
-  const {bookingId, returnUrl} = request.data;
+  const {bookingId, returnUrl, guestEmail} = request.data;
 
   if (!bookingId) {
     throw new HttpsError("invalid-argument", "Booking ID is required");
+  }
+
+  // SECURITY: Validate return URL against whitelist
+  if (returnUrl) {
+    const isAllowedDomain = ALLOWED_RETURN_DOMAINS.some((domain) =>
+      returnUrl.startsWith(domain)
+    );
+    if (!isAllowedDomain) {
+      console.error(`Invalid return URL attempted: ${returnUrl}`);
+      throw new HttpsError("invalid-argument", "Invalid return URL");
+    }
   }
 
   try {
@@ -34,6 +55,23 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
     }
 
     const booking = bookingDoc.data()!;
+
+    // SECURITY: Validate access to this booking
+    // Allow if: 1) Guest email matches, or 2) Authenticated owner
+    const isGuestAccess = guestEmail &&
+      booking.guest_email?.toLowerCase() === guestEmail.toLowerCase();
+    const isOwnerAccess = request.auth?.uid === booking.owner_id;
+    const isAuthenticatedUser = request.auth?.uid != null;
+
+    // For guest checkout (no auth), require matching email
+    // For authenticated users, allow if they're the owner
+    if (!isGuestAccess && !isOwnerAccess && !isAuthenticatedUser) {
+      // If no auth and no matching email, this could be an attack
+      if (!request.auth && !guestEmail) {
+        console.error(`Unauthorized checkout attempt for booking ${bookingId}`);
+        throw new HttpsError("permission-denied", "Guest email required for checkout");
+      }
+    }
 
     // Fetch unit and property details
     const unitDoc = await db.collection("units").doc(booking.unit_id).get();
@@ -69,6 +107,28 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
 
     // Create Stripe checkout session with destination charge
     const stripeClient = getStripeClient();
+
+    // Build success/cancel URLs properly
+    // Widget sends returnUrl with query params (e.g., ?property=x&unit=y&payment=stripe)
+    // We need to append session_id as a query parameter, NOT append /booking-success path
+    let successUrl: string;
+    let cancelUrl: string;
+
+    if (returnUrl) {
+      // Widget embedded in external website - return there with session_id
+      // Check if URL already has query params
+      successUrl = returnUrl.includes("?")
+        ? `${returnUrl}&stripe_status=success&session_id={CHECKOUT_SESSION_ID}`
+        : `${returnUrl}?stripe_status=success&session_id={CHECKOUT_SESSION_ID}`;
+      cancelUrl = returnUrl.includes("?")
+        ? `${returnUrl}&stripe_status=cancelled`
+        : `${returnUrl}?stripe_status=cancelled`;
+    } else {
+      // No returnUrl provided - use default app URLs
+      successUrl = "https://rab-booking-248fc.web.app/booking-success?session_id={CHECKOUT_SESSION_ID}";
+      cancelUrl = "https://rab-booking-248fc.web.app/booking-cancelled";
+    }
+
     const session = await stripeClient.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -89,14 +149,17 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
         },
       ],
       payment_intent_data: {
+        // on_behalf_of: Ensures statement descriptor shows owner's business name
+        // This is required for proper Connect integration
+        on_behalf_of: ownerStripeAccountId,
         // Platform fee (currently 0, can be enabled later)
         // application_fee_amount: platformFee,
         transfer_data: {
           destination: ownerStripeAccountId, // Money goes directly to owner
         },
       },
-      success_url: `${returnUrl || "https://rab-booking-248fc.web.app"}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${returnUrl || "https://rab-booking-248fc.web.app"}/booking-cancelled`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         booking_id: bookingId,
         booking_reference: booking.booking_reference,

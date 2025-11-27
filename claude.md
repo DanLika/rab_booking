@@ -1763,6 +1763,73 @@ Dodan info banner u Step 3 koji objašnjava napredne opcije dostupne u Cjenovnik
 
 ## 🐛 NEDAVNI BUG FIX-EVI (Post 20.11.2025)
 
+### Stripe Connect - Return URL Fixes
+
+**Datum**: 2025-11-27
+**Commits**: TBD
+
+#### Problem 1 - Owner Dashboard Return URL Missing Port
+
+**File**: `stripe_connect_setup_screen.dart`
+
+Stripe Connect onboarding vraćao je korisnika na `http://localhost/owner/stripe-return` umjesto `http://localhost:8181/owner/stripe-return`. Flutter `Uri.base.host` vraća samo hostname bez porta.
+
+**Fix**:
+```dart
+// PRIJE (bug):
+final baseUrl = '${currentUri.scheme}://${currentUri.host}';
+
+// POSLIJE (fix):
+final baseUrl = '${currentUri.scheme}://${currentUri.authority}';
+// authority = host:port (npr. localhost:8181)
+```
+
+#### Problem 2 - Widget Stripe Checkout Malformed Return URL
+
+**Files**: `stripePayment.ts`, `booking_widget_screen.dart`
+
+Widget je slao returnUrl sa query parametrima, a Cloud Function je dodavala `/booking-success?session_id=...`:
+```
+// Input:
+http://localhost:8181/?property=xxx&unit=yyy&payment=stripe
+
+// Result (BROKEN):
+http://localhost:8181/?property=xxx&payment=stripe/booking-success?session_id=...
+```
+
+**Fix u Cloud Function**:
+```typescript
+// Sada pravilno append-uje session_id kao query param
+if (returnUrl) {
+  successUrl = returnUrl.includes("?")
+    ? `${returnUrl}&stripe_status=success&session_id={CHECKOUT_SESSION_ID}`
+    : `${returnUrl}?stripe_status=success&session_id={CHECKOUT_SESSION_ID}`;
+}
+```
+
+**Fix u Widget**:
+```dart
+// Detekcija povratka sa Stripe-a
+final stripeStatus = uri.queryParameters['stripe_status'];
+final isStripeReturn = paymentType == 'stripe' || stripeStatus == 'success';
+```
+
+#### Stripe Connect Platform Setup
+
+**Odabrane opcije u Stripe Dashboard (Test Mode)**:
+- **Funds flow**: "You sell to buyers on behalf of sellers and send payouts" (Destination Charges)
+- **Payout method**: "Sellers will be paid out individually"
+- **Industry**: Travel (Airbnb/Booking.com model)
+- **Account creation**: "Onboarding hosted by Stripe" (Express)
+- **Account management**: "Express Dashboard"
+
+**Key Files**:
+- `functions/src/stripePayment.ts` - Checkout session creation (lines 108-130)
+- `lib/features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart` - Owner Stripe setup
+- `lib/features/widget/presentation/screens/booking_widget_screen.dart` - Widget payment flow
+
+---
+
 ### Weekend Base Price - Airbnb-Style Pricing
 
 **Datum**: 2025-11-26
@@ -2917,8 +2984,8 @@ Ova sekcija sadrži pakete i alate koji nisu prioritet za MVP, ali bi mogli pobo
 ---
 
 **Last Updated**: 2025-11-27
-**Version**: 2.5
-**Focus**: MCP Serveri (10), Slash Commands (16), Agents dokumentacija
+**Version**: 2.6
+**Focus**: Stripe Connect Return URL fixes, Widget payment flow
 
 ---
 

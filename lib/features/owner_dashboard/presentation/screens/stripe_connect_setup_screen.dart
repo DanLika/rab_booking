@@ -79,11 +79,11 @@ class _StripeConnectSetupScreenState
       final callable = functions.httpsCallable('createStripeConnectAccount');
 
       // Get current URL for return/refresh URLs
+      // Use authority (host:port) instead of just host to include port number
       final currentUri = Uri.base;
-      final returnUrl =
-          '${currentUri.scheme}://${currentUri.host}/owner/stripe-return';
-      final refreshUrl =
-          '${currentUri.scheme}://${currentUri.host}/owner/stripe-refresh';
+      final baseUrl = '${currentUri.scheme}://${currentUri.authority}';
+      final returnUrl = '$baseUrl/owner/stripe-return';
+      final refreshUrl = '$baseUrl/owner/stripe-refresh';
 
       final result = await callable.call({
         'returnUrl': returnUrl,

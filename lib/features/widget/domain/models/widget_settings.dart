@@ -1,8 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'widget_mode.dart';
+import 'settings/settings.dart';
+
+// Re-export payment configs for backward compatibility
+// (Files importing widget_settings.dart can still access these classes)
+export 'settings/settings.dart'
+    show StripePaymentConfig, BankTransferConfig, PaymentConfigBase;
 
 /// Widget settings stored in Firestore for each property/unit
 /// Path: properties/{propertyId}/widget_settings/{unitId}
+///
+/// ## Config Accessors (Phase 4 Refactoring)
+/// Helper getters provide grouped access to related settings:
+/// - [bookingBehavior] - Approval, cancellation, min/max nights, weekend days
+/// - [icalExport] - iCal feed export settings
+///
+/// The flat fields remain for backward compatibility.
 class WidgetSettings {
   final String id; // unitId
   final String propertyId;
@@ -179,6 +192,56 @@ class WidgetSettings {
     return count;
   }
 
+  // ============================================================
+  // CONFIG ACCESSORS (Phase 4 Refactoring)
+  // ============================================================
+
+  /// Grouped access to booking behavior settings.
+  ///
+  /// Returns a [BookingBehaviorConfig] constructed from flat fields.
+  /// Fields not present in WidgetSettings use defaults from [WidgetConstants].
+  ///
+  /// ## Example
+  /// ```dart
+  /// final settings = await widgetSettingsRepo.getSettings(unitId);
+  /// if (settings.bookingBehavior.isValidDuration(5)) {
+  ///   // 5 nights is valid
+  /// }
+  /// if (settings.bookingBehavior.canCancelForCheckIn(checkInDate)) {
+  ///   // Guest can still cancel
+  /// }
+  /// ```
+  BookingBehaviorConfig get bookingBehavior => BookingBehaviorConfig(
+        requireOwnerApproval: requireOwnerApproval,
+        allowGuestCancellation: allowGuestCancellation,
+        cancellationDeadlineHours: cancellationDeadlineHours,
+        minNights: minNights,
+        // maxNights not stored in WidgetSettings yet - use default
+        weekendDays: weekendDays,
+        // minDaysAdvance, maxDaysAdvance not stored - use defaults
+      );
+
+  /// Grouped access to iCal export settings.
+  ///
+  /// Returns an [ICalExportConfig] constructed from flat fields.
+  ///
+  /// ## Example
+  /// ```dart
+  /// final settings = await widgetSettingsRepo.getSettings(unitId);
+  /// if (settings.icalExport.isConfigured) {
+  ///   print('iCal URL: ${settings.icalExport.exportUrl}');
+  /// }
+  /// if (settings.icalExport.needsRegeneration) {
+  ///   // Time to regenerate the feed
+  /// }
+  /// ```
+  ICalExportConfig get icalExport => ICalExportConfig.fromFlatFields(
+        enabled: icalExportEnabled,
+        exportUrl: icalExportUrl,
+        exportToken: icalExportToken,
+        lastGenerated: icalExportLastGenerated,
+      );
+
   WidgetSettings copyWith({
     String? id,
     String? propertyId,
@@ -239,216 +302,16 @@ class WidgetSettings {
   }
 }
 
-/// Stripe payment configuration
-class StripePaymentConfig {
-  final bool enabled;
-  final int
-  depositPercentage; // 0-100 (0 = full payment, 100 = full payment as deposit)
-  final String? stripeAccountId; // Stripe Connect account ID
-
-  const StripePaymentConfig({
-    this.enabled = false,
-    this.depositPercentage = 20, // Default 20% deposit
-    this.stripeAccountId,
-  });
-
-  factory StripePaymentConfig.fromMap(Map<String, dynamic> map) {
-    return StripePaymentConfig(
-      enabled: map['enabled'] ?? false,
-      depositPercentage: (map['deposit_percentage'] ?? 20).clamp(0, 100),
-      stripeAccountId: map['stripe_account_id'],
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'enabled': enabled,
-      'deposit_percentage': depositPercentage,
-      'stripe_account_id': stripeAccountId,
-    };
-  }
-
-  /// Calculate deposit amount
-  double calculateDeposit(double totalAmount) {
-    if (depositPercentage == 0 || depositPercentage == 100) {
-      return totalAmount; // Full payment
-    }
-    return totalAmount * (depositPercentage / 100);
-  }
-
-  /// Calculate remaining amount
-  double calculateRemaining(double totalAmount) {
-    if (depositPercentage == 0 || depositPercentage == 100) {
-      return 0.0; // No remaining
-    }
-    return totalAmount * ((100 - depositPercentage) / 100);
-  }
-
-  StripePaymentConfig copyWith({
-    bool? enabled,
-    int? depositPercentage,
-    String? stripeAccountId,
-  }) {
-    return StripePaymentConfig(
-      enabled: enabled ?? this.enabled,
-      depositPercentage: depositPercentage ?? this.depositPercentage,
-      stripeAccountId: stripeAccountId ?? this.stripeAccountId,
-    );
-  }
-}
-
-/// Bank transfer payment configuration
-///
-/// Bank details are now centralized in owner's CompanyDetails profile.
-/// This config stores:
-/// - ownerId: Reference to owner for fetching bank details from profile
-/// - Widget-specific options: paymentDeadlineDays, enableQrCode, customNotes
-/// - Legacy fields: For backward compatibility with existing widgets
-class BankTransferConfig {
-  final bool enabled;
-  final int depositPercentage; // 0-100
-
-  /// Reference to owner's userId for fetching bank details from CompanyDetails
-  /// New widgets should use this instead of storing bank details per-unit
-  final String? ownerId;
-
-  // Widget-specific options (NOT bank details)
-  final int
-  paymentDeadlineDays; // Days until payment deadline (1-14, default: 3)
-  final bool enableQrCode; // Show EPC QR code for bank transfer
-  final String? customNotes; // Custom notes from owner (max 500 chars)
-  final bool
-  useCustomNotes; // If true, show customNotes; if false, show default legal notes
-
-  // LEGACY FIELDS - For backward compatibility with existing widgets
-  // New widgets should NOT write these fields, but still read them
-  final String? bankName;
-  final String? accountNumber;
-  final String? iban;
-  final String? swift;
-  final String? accountHolder;
-
-  const BankTransferConfig({
-    this.enabled = false,
-    this.depositPercentage = 20,
-    this.ownerId,
-    this.paymentDeadlineDays = 3,
-    this.enableQrCode = true,
-    this.customNotes,
-    this.useCustomNotes = false,
-    // Legacy fields
-    this.bankName,
-    this.accountNumber,
-    this.iban,
-    this.swift,
-    this.accountHolder,
-  });
-
-  factory BankTransferConfig.fromMap(Map<String, dynamic> map) {
-    return BankTransferConfig(
-      enabled: map['enabled'] ?? false,
-      depositPercentage: (map['deposit_percentage'] ?? 20).clamp(0, 100),
-      ownerId: map['owner_id'],
-      paymentDeadlineDays: (map['payment_deadline_days'] ?? 3).clamp(1, 14),
-      enableQrCode: map['enable_qr_code'] ?? true,
-      customNotes: map['custom_notes'],
-      useCustomNotes: map['use_custom_notes'] ?? false,
-      // Legacy fields - still read for backward compatibility
-      bankName: map['bank_name'],
-      accountNumber: map['account_number'],
-      iban: map['iban'],
-      swift: map['swift'],
-      accountHolder: map['account_holder'],
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'enabled': enabled,
-      'deposit_percentage': depositPercentage,
-      'owner_id': ownerId,
-      'payment_deadline_days': paymentDeadlineDays,
-      'enable_qr_code': enableQrCode,
-      'custom_notes': customNotes,
-      'use_custom_notes': useCustomNotes,
-      // Legacy fields - still write for backward compatibility with existing widgets
-      'bank_name': bankName,
-      'account_number': accountNumber,
-      'iban': iban,
-      'swift': swift,
-      'account_holder': accountHolder,
-    };
-  }
-
-  /// Check if this config has an ownerId for fetching bank details from profile
-  bool get hasOwnerId => ownerId != null && ownerId!.isNotEmpty;
-
-  /// Check if bank details are available (either from ownerId or legacy fields)
-  /// Widget should first check hasOwnerId, then fall back to legacy fields
-  bool get hasCompleteDetails {
-    // New approach: ownerId points to CompanyDetails
-    if (hasOwnerId) return true;
-    // Legacy approach: bank details stored in config
-    return bankName != null &&
-        accountHolder != null &&
-        (iban != null || accountNumber != null);
-  }
-
-  /// Check if this config has legacy bank details (for backward compatibility)
-  bool get hasLegacyBankDetails {
-    return bankName != null &&
-        bankName!.isNotEmpty &&
-        accountHolder != null &&
-        accountHolder!.isNotEmpty &&
-        (iban != null && iban!.isNotEmpty);
-  }
-
-  /// Calculate deposit amount
-  double calculateDeposit(double totalAmount) {
-    if (depositPercentage == 0 || depositPercentage == 100) {
-      return totalAmount;
-    }
-    return totalAmount * (depositPercentage / 100);
-  }
-
-  /// Calculate remaining amount
-  double calculateRemaining(double totalAmount) {
-    if (depositPercentage == 0 || depositPercentage == 100) {
-      return 0.0;
-    }
-    return totalAmount * ((100 - depositPercentage) / 100);
-  }
-
-  BankTransferConfig copyWith({
-    bool? enabled,
-    int? depositPercentage,
-    String? ownerId,
-    int? paymentDeadlineDays,
-    bool? enableQrCode,
-    String? customNotes,
-    bool? useCustomNotes,
-    String? bankName,
-    String? accountNumber,
-    String? iban,
-    String? swift,
-    String? accountHolder,
-  }) {
-    return BankTransferConfig(
-      enabled: enabled ?? this.enabled,
-      depositPercentage: depositPercentage ?? this.depositPercentage,
-      ownerId: ownerId ?? this.ownerId,
-      paymentDeadlineDays: paymentDeadlineDays ?? this.paymentDeadlineDays,
-      enableQrCode: enableQrCode ?? this.enableQrCode,
-      customNotes: customNotes ?? this.customNotes,
-      useCustomNotes: useCustomNotes ?? this.useCustomNotes,
-      bankName: bankName ?? this.bankName,
-      accountNumber: accountNumber ?? this.accountNumber,
-      iban: iban ?? this.iban,
-      swift: swift ?? this.swift,
-      accountHolder: accountHolder ?? this.accountHolder,
-    );
-  }
-}
+// ============================================================
+// PAYMENT CONFIGS - Extracted to settings/payment/
+// ============================================================
+// StripePaymentConfig and BankTransferConfig have been moved to:
+// - settings/payment/stripe_payment_config.dart
+// - settings/payment/bank_transfer_config.dart
+//
+// They are re-exported via settings/settings.dart, so imports
+// from this file will continue to work.
+// ============================================================
 
 /// Contact options for calendar_only mode
 class ContactOptions {

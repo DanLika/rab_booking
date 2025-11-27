@@ -219,13 +219,23 @@ export const createBookingAtomic = onCall(async (request) => {
 
       // ====================================================================
       // STEP 2.5: Validate daily_prices restrictions
-      // (available, blockCheckIn, blockCheckOut, min/maxNightsOnArrival)
+      // (available, blockCheckIn, blockCheckOut, min/maxNightsOnArrival,
+      //  min/maxDaysAdvance - SECURITY FIX 2025-11-27)
       // ====================================================================
 
       // Calculate booking nights for min/max validation
       const bookingNights = Math.ceil(
         (checkOutDate.toDate().getTime() - checkInDate.toDate().getTime()) /
           (1000 * 60 * 60 * 24)
+      );
+
+      // Calculate days in advance for min/max advance booking validation
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const checkInDateObj = checkInDate.toDate();
+      checkInDateObj.setHours(0, 0, 0, 0);
+      const daysInAdvance = Math.floor(
+        (checkInDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
       );
 
       // Query daily_prices for all dates in the booking range
@@ -323,9 +333,61 @@ export const createBookingAtomic = onCall(async (request) => {
             );
           }
         }
+
+        // Check 5: minDaysAdvance on check-in date (SECURITY FIX)
+        if (
+          isCheckInDate &&
+          priceData.min_days_advance != null &&
+          priceData.min_days_advance > 0
+        ) {
+          if (daysInAdvance < priceData.min_days_advance) {
+            logError(
+              "[AtomicBooking] Minimum days in advance requirement not met",
+              null,
+              {
+                unitId,
+                checkInDate: dateStr,
+                minDaysAdvanceRequired: priceData.min_days_advance,
+                daysInAdvance,
+              }
+            );
+
+            throw new HttpsError(
+              "failed-precondition",
+              `Must book at least ${priceData.min_days_advance} days in advance ` +
+                `for check-in on ${dateStr}. You are booking ${daysInAdvance} days ahead.`
+            );
+          }
+        }
+
+        // Check 6: maxDaysAdvance on check-in date (SECURITY FIX)
+        if (
+          isCheckInDate &&
+          priceData.max_days_advance != null &&
+          priceData.max_days_advance > 0
+        ) {
+          if (daysInAdvance > priceData.max_days_advance) {
+            logError(
+              "[AtomicBooking] Maximum days in advance requirement exceeded",
+              null,
+              {
+                unitId,
+                checkInDate: dateStr,
+                maxDaysAdvanceAllowed: priceData.max_days_advance,
+                daysInAdvance,
+              }
+            );
+
+            throw new HttpsError(
+              "failed-precondition",
+              `Can only book up to ${priceData.max_days_advance} days in advance ` +
+                `for check-in on ${dateStr}. You are booking ${daysInAdvance} days ahead.`
+            );
+          }
+        }
       }
 
-      // Check 5: Is check-out blocked on the check-out date?
+      // Check 7: Is check-out blocked on the check-out date?
       // (Check-out date is not in the range query above, need separate check)
       const checkOutPriceQuery = db
         .collection("daily_prices")

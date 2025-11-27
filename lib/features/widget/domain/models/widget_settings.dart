@@ -2,10 +2,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'widget_mode.dart';
 import 'settings/settings.dart';
 
-// Re-export payment configs for backward compatibility
+// Re-export configs for backward compatibility
 // (Files importing widget_settings.dart can still access these classes)
 export 'settings/settings.dart'
-    show StripePaymentConfig, BankTransferConfig, PaymentConfigBase;
+    show
+        StripePaymentConfig,
+        BankTransferConfig,
+        PaymentConfigBase,
+        ContactOptions,
+        EmailNotificationConfig,
+        TaxLegalConfig;
 
 /// Widget settings stored in Firestore for each property/unit
 /// Path: properties/{propertyId}/widget_settings/{unitId}
@@ -303,87 +309,23 @@ class WidgetSettings {
 }
 
 // ============================================================
-// PAYMENT CONFIGS - Extracted to settings/payment/
+// EXTRACTED CONFIGS - See settings/ folder
 // ============================================================
-// StripePaymentConfig and BankTransferConfig have been moved to:
-// - settings/payment/stripe_payment_config.dart
-// - settings/payment/bank_transfer_config.dart
+// The following configs have been extracted to dedicated files:
 //
-// They are re-exported via settings/settings.dart, so imports
-// from this file will continue to work.
+// Payment:
+// - StripePaymentConfig → settings/payment/stripe_payment_config.dart
+// - BankTransferConfig → settings/payment/bank_transfer_config.dart
+//
+// Contact & Communication:
+// - ContactOptions → settings/contact_options.dart
+// - EmailNotificationConfig → settings/email_notification_config.dart
+//
+// Legal & Compliance:
+// - TaxLegalConfig → settings/tax_legal_config.dart
+//
+// All are re-exported via settings/settings.dart for backward compatibility.
 // ============================================================
-
-/// Contact options for calendar_only mode
-class ContactOptions {
-  final bool showPhone;
-  final String? phoneNumber;
-  final bool showEmail;
-  final String? emailAddress;
-  final bool showWhatsApp;
-  final String? whatsAppNumber;
-  final String? customMessage; // Custom message to show to guests
-
-  const ContactOptions({
-    this.showPhone = true,
-    this.phoneNumber,
-    this.showEmail = true,
-    this.emailAddress,
-    this.showWhatsApp = false,
-    this.whatsAppNumber,
-    this.customMessage,
-  });
-
-  factory ContactOptions.fromMap(Map<String, dynamic> map) {
-    return ContactOptions(
-      showPhone: map['show_phone'] ?? true,
-      phoneNumber: map['phone_number'],
-      showEmail: map['show_email'] ?? true,
-      emailAddress: map['email_address'],
-      showWhatsApp: map['show_whatsapp'] ?? false,
-      whatsAppNumber: map['whatsapp_number'],
-      customMessage: map['custom_message'],
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'show_phone': showPhone,
-      'phone_number': phoneNumber,
-      'show_email': showEmail,
-      'email_address': emailAddress,
-      'show_whatsapp': showWhatsApp,
-      'whatsapp_number': whatsAppNumber,
-      'custom_message': customMessage,
-    };
-  }
-
-  /// Check if at least one contact method is available
-  bool get hasContactMethod {
-    return (showPhone && phoneNumber != null && phoneNumber!.isNotEmpty) ||
-        (showEmail && emailAddress != null && emailAddress!.isNotEmpty) ||
-        (showWhatsApp && whatsAppNumber != null && whatsAppNumber!.isNotEmpty);
-  }
-
-  ContactOptions copyWith({
-    bool? showPhone,
-    String? phoneNumber,
-    bool? showEmail,
-    String? emailAddress,
-    bool? showWhatsApp,
-    String? whatsAppNumber,
-    String? customMessage,
-  }) {
-    return ContactOptions(
-      showPhone: showPhone ?? this.showPhone,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      showEmail: showEmail ?? this.showEmail,
-      emailAddress: emailAddress ?? this.emailAddress,
-      showWhatsApp: showWhatsApp ?? this.showWhatsApp,
-      whatsAppNumber: whatsAppNumber ?? this.whatsAppNumber,
-      customMessage: customMessage ?? this.customMessage,
-    );
-  }
-}
 
 /// Theme customization options
 class ThemeOptions {
@@ -532,85 +474,6 @@ class BlurConfig {
   }
 }
 
-/// Email notification configuration
-class EmailNotificationConfig {
-  final bool enabled; // Master toggle for all email notifications
-  final bool sendBookingConfirmation; // Send confirmation email after booking
-  final bool sendPaymentReceipt; // Send receipt email after payment
-  final bool sendOwnerNotification; // Notify owner when new booking is created
-  final bool
-  requireEmailVerification; // Require email verification before booking
-  final String? resendApiKey; // Resend API key for sending emails
-  final String? fromEmail; // From email address (e.g., "noreply@example.com")
-  final String? fromName; // From name (e.g., "Property Name")
-
-  const EmailNotificationConfig({
-    this.enabled = false,
-    this.sendBookingConfirmation = true,
-    this.sendPaymentReceipt = true,
-    this.sendOwnerNotification = true,
-    this.requireEmailVerification = false,
-    this.resendApiKey,
-    this.fromEmail,
-    this.fromName,
-  });
-
-  factory EmailNotificationConfig.fromMap(Map<String, dynamic> map) {
-    return EmailNotificationConfig(
-      enabled: map['enabled'] ?? false,
-      sendBookingConfirmation: map['send_booking_confirmation'] ?? true,
-      sendPaymentReceipt: map['send_payment_receipt'] ?? true,
-      sendOwnerNotification: map['send_owner_notification'] ?? true,
-      requireEmailVerification: map['require_email_verification'] ?? false,
-      resendApiKey: map['resend_api_key'],
-      fromEmail: map['from_email'],
-      fromName: map['from_name'],
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'enabled': enabled,
-      'send_booking_confirmation': sendBookingConfirmation,
-      'send_payment_receipt': sendPaymentReceipt,
-      'send_owner_notification': sendOwnerNotification,
-      'require_email_verification': requireEmailVerification,
-      'resend_api_key': resendApiKey,
-      'from_email': fromEmail,
-      'from_name': fromName,
-    };
-  }
-
-  /// Check if email system is properly configured
-  bool get isConfigured {
-    return enabled && resendApiKey != null && fromEmail != null;
-  }
-
-  EmailNotificationConfig copyWith({
-    bool? enabled,
-    bool? sendBookingConfirmation,
-    bool? sendPaymentReceipt,
-    bool? sendOwnerNotification,
-    bool? requireEmailVerification,
-    String? resendApiKey,
-    String? fromEmail,
-    String? fromName,
-  }) {
-    return EmailNotificationConfig(
-      enabled: enabled ?? this.enabled,
-      sendBookingConfirmation:
-          sendBookingConfirmation ?? this.sendBookingConfirmation,
-      sendPaymentReceipt: sendPaymentReceipt ?? this.sendPaymentReceipt,
-      sendOwnerNotification:
-          sendOwnerNotification ?? this.sendOwnerNotification,
-      requireEmailVerification:
-          requireEmailVerification ?? this.requireEmailVerification,
-      resendApiKey: resendApiKey ?? this.resendApiKey,
-      fromEmail: fromEmail ?? this.fromEmail,
-      fromName: fromName ?? this.fromName,
-    );
-  }
-}
 
 /// External calendar integration configuration (e.g., Booking.com, Airbnb)
 class ExternalCalendarConfig {
@@ -706,75 +569,3 @@ class ExternalCalendarConfig {
   }
 }
 
-/// Tax and legal disclaimer configuration
-class TaxLegalConfig {
-  final bool enabled; // Master toggle - show disclaimer or not
-  final bool useDefaultText; // true = use default, false = use custom
-  final String? customText; // Custom text if useDefaultText = false
-
-  const TaxLegalConfig({
-    this.enabled = true, // Enabled by default for legal compliance
-    this.useDefaultText = true, // Use default Croatian tax text
-    this.customText,
-  });
-
-  factory TaxLegalConfig.fromMap(Map<String, dynamic> map) {
-    return TaxLegalConfig(
-      enabled: map['enabled'] ?? true,
-      useDefaultText: map['use_default_text'] ?? true,
-      customText: map['custom_text'],
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'enabled': enabled,
-      'use_default_text': useDefaultText,
-      'custom_text': customText,
-    };
-  }
-
-  /// Get the disclaimer text to display
-  String get disclaimerText {
-    if (!enabled) return '';
-
-    if (useDefaultText) {
-      return '''VAŽNO - Pravne i porezne informacije:
-
-• Boravišna pristojba: Gosti su dužni platiti boravišnu pristojbu prema Zakonu o boravišnoj pristojbi (NN 52/22). Iznos pristojbe ovisi o kategoriji smještaja i dobi gosta.
-
-• Fiskalizacija: Vlasnik smještajnog objekta je obvezan izdati fiskalizirani račun za pružene usluge prema Zakonu o fiskalizaciji (NN 115/16).
-
-• Prijavljivanje gostiju: Gosti moraju biti prijavljeni u eVisitor sustav u roku od 24 sata od dolaska prema Zakonu o ugostiteljskoj djelatnosti (NN 85/15).
-
-• Turistička naknada: Dodatno se naplaćuje turistička naknada prema odluci jedinice lokalne samouprave.
-
-• Odgovornost vlasnika: Vlasnik objekta je u potpunosti odgovoran za ispunjavanje svih zakonskih obveza vezanih uz iznajmljivanje smještaja, uključujući plaćanje poreza na dohodak.
-
-• Booking platforma: Ova platforma olakšava direktnu komunikaciju između vlasnika i gostiju. Ne preuzimamo odgovornost za porezne obveze vlasnika niti za pravnu usklađenost poslovanja.
-
-Rezervacijom prihvaćate gore navedene uvjete i obveze.''';
-    } else {
-      return customText ?? '';
-    }
-  }
-
-  /// Short version for emails (3-4 key points)
-  String get shortDisclaimerText {
-    if (!enabled) return '';
-
-    return '''Napomena: Boravišna pristojba i turistička naknada se naplaćuju dodatno prema hrvatskim zakonima. Vlasnik objekta je odgovoran za fiskalizaciju i prijavljivanje gostiju u eVisitor sustav.''';
-  }
-
-  TaxLegalConfig copyWith({
-    bool? enabled,
-    bool? useDefaultText,
-    String? customText,
-  }) {
-    return TaxLegalConfig(
-      enabled: enabled ?? this.enabled,
-      useDefaultText: useDefaultText ?? this.useDefaultText,
-      customText: customText ?? this.customText,
-    );
-  }
-}

@@ -16,6 +16,13 @@
 /// ### Calendar Export
 /// - [ICalExportConfig] - iCal feed export settings
 ///
+/// ### Contact & Communication
+/// - [ContactOptions] - Phone, email, WhatsApp contact settings
+/// - [EmailNotificationConfig] - Email notification settings
+///
+/// ### Legal & Compliance
+/// - [TaxLegalConfig] - Tax and legal disclaimer settings
+///
 /// ## Usage
 /// ```dart
 /// import 'package:rab_booking/features/widget/domain/models/settings/settings.dart';
@@ -24,9 +31,15 @@
 /// final bank = BankTransferConfig(enabled: true, ownerId: 'user_123');
 /// final booking = BookingBehaviorConfig(minNights: 2);
 /// final ical = ICalExportConfig(enabled: true);
+/// final contact = ContactOptions(showPhone: true, phoneNumber: '+385...');
+/// final email = EmailNotificationConfig(enabled: true);
+/// final tax = TaxLegalConfig(enabled: true);
 /// ```
 library;
 
 export 'payment/payment.dart';
 export 'booking_behavior_config.dart';
 export 'ical_export_config.dart';
+export 'contact_options.dart';
+export 'email_notification_config.dart';
+export 'tax_legal_config.dart';

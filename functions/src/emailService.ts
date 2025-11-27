@@ -27,6 +27,207 @@ const FROM_NAME = "Rab Booking";
 // Widget URL for booking lookup (configure in environment variables)
 const WIDGET_URL = process.env.WIDGET_URL || "https://rab-booking-widget.web.app";
 
+// ============================================================================
+// UNIFIED EMAIL DESIGN SYSTEM - Light Theme
+// Matches the Owner Dashboard / Unit Hub light theme design
+// ============================================================================
+
+// Color palette (matching app light theme)
+const COLORS = {
+  primary: "#6B4CE6", // Purple - main brand color
+  primaryLight: "#EDE9FE", // Light purple for backgrounds
+  success: "#22C55E", // Green
+  successLight: "#DCFCE7", // Light green background
+  warning: "#F59E0B", // Amber
+  warningLight: "#FEF3C7", // Light amber background
+  error: "#EF4444", // Red
+  errorLight: "#FEE2E2", // Light red background
+  background: "#FFFFFF", // White
+  sectionBg: "#F8FAFC", // Very light gray for sections
+  cardBg: "#FFFFFF", // White for cards
+  border: "#E2E8F0", // Light gray border
+  textPrimary: "#1E293B", // Dark slate
+  textSecondary: "#64748B", // Medium gray
+  textMuted: "#94A3B8", // Light gray text
+};
+
+/**
+ * Generate base email styles
+ */
+function getBaseStyles(): string {
+  return `
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: ${COLORS.textPrimary};
+      background-color: #F1F5F9;
+      margin: 0;
+      padding: 20px;
+    }
+    .email-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: ${COLORS.background};
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, ${COLORS.primary} 0%, #8B5CF6 100%);
+      color: white;
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .header p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    .header-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .content {
+      padding: 32px 24px;
+    }
+    .greeting {
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+    .section {
+      background-color: ${COLORS.sectionBg};
+      border: 1px solid ${COLORS.border};
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: ${COLORS.textSecondary};
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid ${COLORS.border};
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .detail-label {
+      color: ${COLORS.textSecondary};
+      font-size: 14px;
+    }
+    .detail-value {
+      font-weight: 600;
+      color: ${COLORS.textPrimary};
+      font-size: 14px;
+    }
+    .alert-box {
+      padding: 16px;
+      border-radius: 12px;
+      margin: 20px 0;
+      display: flex;
+      gap: 12px;
+    }
+    .alert-box.warning {
+      background-color: ${COLORS.warningLight};
+      border-left: 4px solid ${COLORS.warning};
+    }
+    .alert-box.success {
+      background-color: ${COLORS.successLight};
+      border-left: 4px solid ${COLORS.success};
+    }
+    .alert-box.error {
+      background-color: ${COLORS.errorLight};
+      border-left: 4px solid ${COLORS.error};
+    }
+    .alert-box.info {
+      background-color: ${COLORS.primaryLight};
+      border-left: 4px solid ${COLORS.primary};
+    }
+    .alert-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .alert-content {
+      flex: 1;
+    }
+    .alert-title {
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      font-size: 14px;
+    }
+    .alert-text {
+      margin: 0;
+      font-size: 13px;
+      color: ${COLORS.textSecondary};
+    }
+    .button {
+      display: inline-block;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, ${COLORS.primary} 0%, #8B5CF6 100%);
+      color: white !important;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .button:hover {
+      transform: translateY(-1px);
+    }
+    .button-container {
+      text-align: center;
+      margin: 28px 0;
+    }
+    .footer {
+      background-color: ${COLORS.sectionBg};
+      padding: 24px;
+      text-align: center;
+      border-top: 1px solid ${COLORS.border};
+    }
+    .footer p {
+      margin: 4px 0;
+      font-size: 12px;
+      color: ${COLORS.textMuted};
+    }
+    .footer-logo {
+      font-weight: 600;
+      color: ${COLORS.primary};
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .tip {
+      background-color: ${COLORS.primaryLight};
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: ${COLORS.textSecondary};
+      text-align: center;
+      margin: 16px 0;
+    }
+    .divider {
+      height: 1px;
+      background-color: ${COLORS.border};
+      margin: 24px 0;
+    }
+  `;
+}
+
 /**
  * Send booking confirmation email to guest
  */
@@ -43,104 +244,97 @@ export async function sendBookingConfirmationEmail(
   accessToken: string,
   ownerEmail?: string
 ): Promise<void> {
-  const subject = `[RabBooking] Potvrda rezervacije - ${bookingReference}`;
+  const subject = `Potvrda rezervacije - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #6B8E23; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-    .highlight { background: #fff9c4; padding: 15px; border-radius: 8px; margin: 15px 0; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
-    .button { display: inline-block; padding: 12px 24px; background: #6B8E23; color: white; text-decoration: none; border-radius: 6px; margin: 15px 0; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${getBaseStyles()}</style>
 </head>
 <body>
-  <div class="container">
+  <div class="email-wrapper">
     <div class="header">
-      <h1>Booking Confirmed!</h1>
-      <p>Reference: ${bookingReference}</p>
+      <div class="header-icon">✅</div>
+      <h1>Rezervacija potvrđena!</h1>
+      <p>Referenca: ${bookingReference}</p>
     </div>
 
     <div class="content">
-      <p>Dear ${guestName},</p>
-      <p>Thank you for your booking! Your reservation has been received and is awaiting payment confirmation.</p>
+      <p class="greeting">Poštovani/a ${guestName},</p>
+      <p>Hvala vam na rezervaciji! Vaša rezervacija je zaprimljena i čeka potvrdu uplate.</p>
 
-      <div class="booking-details">
-        <h3>Booking Details</h3>
+      <div class="section">
+        <div class="section-title">📋 Detalji rezervacije</div>
         <div class="detail-row">
-          <span>Property:</span>
-          <strong>${propertyName}</strong>
+          <span class="detail-label">Nekretnina</span>
+          <span class="detail-value">${propertyName}</span>
         </div>
         <div class="detail-row">
-          <span>Unit:</span>
-          <strong>${unitName}</strong>
+          <span class="detail-label">Jedinica</span>
+          <span class="detail-value">${unitName}</span>
         </div>
         <div class="detail-row">
-          <span>Check-in:</span>
-          <strong>${formatDate(checkIn)}</strong>
+          <span class="detail-label">Check-in</span>
+          <span class="detail-value">${formatDate(checkIn)}</span>
         </div>
         <div class="detail-row">
-          <span>Check-out:</span>
-          <strong>${formatDate(checkOut)}</strong>
+          <span class="detail-label">Check-out</span>
+          <span class="detail-value">${formatDate(checkOut)}</span>
         </div>
         <div class="detail-row">
-          <span>Reference:</span>
-          <strong>${bookingReference}</strong>
+          <span class="detail-label">Referenca</span>
+          <span class="detail-value">${bookingReference}</span>
         </div>
       </div>
 
-      <div class="booking-details">
-        <h3>Payment Details</h3>
+      <div class="section">
+        <div class="section-title">💳 Detalji plaćanja</div>
         <div class="detail-row">
-          <span>Total Amount:</span>
-          <strong>€${totalAmount.toFixed(2)}</strong>
+          <span class="detail-label">Ukupna cijena</span>
+          <span class="detail-value">€${totalAmount.toFixed(2)}</span>
         </div>
         <div class="detail-row">
-          <span>Deposit (20%):</span>
-          <strong>€${depositAmount.toFixed(2)}</strong>
+          <span class="detail-label">Avans</span>
+          <span class="detail-value">€${depositAmount.toFixed(2)}</span>
         </div>
         <div class="detail-row">
-          <span>Remaining (pay on arrival):</span>
-          <strong>€${(totalAmount - depositAmount).toFixed(2)}</strong>
+          <span class="detail-label">Ostatak (plaća se pri dolasku)</span>
+          <span class="detail-value">€${(totalAmount - depositAmount).toFixed(2)}</span>
         </div>
       </div>
 
-      <div class="highlight">
-        <h3>⚠️ Payment Instructions</h3>
-        <p><strong>Please transfer €${depositAmount.toFixed(2)} within 3 days</strong></p>
-        <p><strong>Account Holder:</strong> Your Business Name</p>
-        <p><strong>Bank:</strong> Your Bank</p>
-        <p><strong>IBAN:</strong> HR1234567890123456789</p>
-        <p><strong>Reference:</strong> ${bookingReference}</p>
-        <p style="font-size: 12px; margin-top: 10px;">⚠️ Important: Include the booking reference in the transfer description!</p>
+      <div class="alert-box warning">
+        <div class="alert-icon">💸</div>
+        <div class="alert-content">
+          <p class="alert-title">Upute za plaćanje</p>
+          <p class="alert-text">Molimo uplatite €${depositAmount.toFixed(2)} u roku od 3 dana.<br>
+          <strong>Poziv na broj:</strong> ${bookingReference}<br>
+          <em>Važno: Obavezno navedite referencu rezervacije u opisu uplate!</em></p>
+        </div>
       </div>
 
-      <p>Once we receive your payment, we will send you a confirmation email.</p>
+      <p>Kada primimo vašu uplatu, poslat ćemo vam email s potvrdom.</p>
 
-      <div style="text-align: center; margin: 25px 0;">
+      <div class="button-container">
         <a href="${WIDGET_URL}/view?ref=${encodeURIComponent(bookingReference)}&email=${encodeURIComponent(guestEmail)}&token=${encodeURIComponent(accessToken)}" class="button">
-          📋 View My Booking
+          📋 Pregledaj moju rezervaciju
         </a>
       </div>
 
-      <p style="font-size: 12px; color: #666; text-align: center;">
-        💡 Tip: Save this email to view your booking details anytime, or look up your booking manually using your email and booking reference.
-      </p>
+      <div class="tip">
+        💡 Savjet: Sačuvajte ovaj email kako biste u bilo kojem trenutku mogli pristupiti detaljima rezervacije.
+      </div>
 
-      <p>If you have any questions, please contact us.</p>
+      <p>Ako imate pitanja, slobodno nas kontaktirajte.</p>
     </div>
 
     <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
-      <p>This email was sent regarding your booking ${bookingReference}</p>
+      <div class="footer-logo">🏠 Rab Booking</div>
+      <p>© 2025 Rab Booking. Sva prava pridržana.</p>
+      <p>Ovaj email je poslan u vezi s vašom rezervacijom ${bookingReference}</p>
     </div>
   </div>
 </body>
@@ -175,49 +369,64 @@ export async function sendBookingApprovedEmail(
   propertyName: string,
   ownerEmail?: string
 ): Promise<void> {
-  const subject = `[RabBooking] Potvrda plaćanja - ${bookingReference}`;
+  const subject = `Uplata primljena - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .success-icon { font-size: 48px; margin: 20px 0; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${getBaseStyles()}
+    .header { background: linear-gradient(135deg, ${COLORS.success} 0%, #16A34A 100%); }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="email-wrapper">
     <div class="header">
-      <div class="success-icon">✅</div>
-      <h1>Payment Received!</h1>
-      <p>Your booking is confirmed</p>
+      <div class="header-icon">🎉</div>
+      <h1>Uplata primljena!</h1>
+      <p>Vaša rezervacija je potvrđena</p>
     </div>
 
     <div class="content">
-      <p>Dear ${guestName},</p>
-      <p>Great news! We have received your payment and your booking is now confirmed.</p>
+      <p class="greeting">Poštovani/a ${guestName},</p>
+      <p>Sjajne vijesti! Primili smo vašu uplatu i vaša rezervacija je sada potvrđena.</p>
 
-      <div class="booking-details">
-        <h3>Booking Confirmed</h3>
-        <p><strong>Property:</strong> ${propertyName}</p>
-        <p><strong>Check-in:</strong> ${formatDate(checkIn)}</p>
-        <p><strong>Check-out:</strong> ${formatDate(checkOut)}</p>
-        <p><strong>Reference:</strong> ${bookingReference}</p>
+      <div class="alert-box success">
+        <div class="alert-icon">✅</div>
+        <div class="alert-content">
+          <p class="alert-title">Rezervacija potvrđena</p>
+          <p class="alert-text">Radujemo se vašem dolasku!</p>
+        </div>
       </div>
 
-      <p>We look forward to welcoming you!</p>
-      <p>If you have any questions, please don't hesitate to contact us.</p>
+      <div class="section">
+        <div class="section-title">📋 Detalji rezervacije</div>
+        <div class="detail-row">
+          <span class="detail-label">Nekretnina</span>
+          <span class="detail-value">${propertyName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Check-in</span>
+          <span class="detail-value">${formatDate(checkIn)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Check-out</span>
+          <span class="detail-value">${formatDate(checkOut)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Referenca</span>
+          <span class="detail-value">${bookingReference}</span>
+        </div>
+      </div>
+
+      <p>Ako imate pitanja, slobodno nas kontaktirajte.</p>
     </div>
 
     <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
+      <div class="footer-logo">🏠 Rab Booking</div>
+      <p>© 2025 Rab Booking. Sva prava pridržana.</p>
     </div>
   </div>
 </body>
@@ -262,55 +471,85 @@ export async function sendOwnerNotificationEmail(
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .alert { background: #fff9c4; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FBC02D; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${getBaseStyles()}
+    .header { background: linear-gradient(135deg, ${COLORS.warning} 0%, #D97706 100%); }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="email-wrapper">
     <div class="header">
-      <h1>🔔 Nova rezervacija!</h1>
+      <div class="header-icon">🔔</div>
+      <h1>Nova rezervacija!</h1>
       <p>Čeka vašu potvrdu</p>
     </div>
 
     <div class="content">
-      <p>Poštovani ${ownerName},</p>
-      <p>Primili ste novu rezervaciju putem booking widget-a.</p>
+      <p class="greeting">Poštovani/a ${ownerName},</p>
+      <p>Primili ste novu rezervaciju putem booking widgeta.</p>
 
-      <div class="booking-details">
-        <h3>Detalji rezervacije</h3>
-        <p><strong>Jedinica:</strong> ${unitName}</p>
-        <p><strong>Gost:</strong> ${guestName}</p>
-        <p><strong>Email:</strong> ${guestEmail}</p>
-        <p><strong>Check-in:</strong> ${formatDate(checkIn)}</p>
-        <p><strong>Check-out:</strong> ${formatDate(checkOut)}</p>
-        <p><strong>Referenca:</strong> ${bookingReference}</p>
+      <div class="section">
+        <div class="section-title">📋 Detalji rezervacije</div>
+        <div class="detail-row">
+          <span class="detail-label">Jedinica</span>
+          <span class="detail-value">${unitName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Gost</span>
+          <span class="detail-value">${guestName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Email</span>
+          <span class="detail-value">${guestEmail}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Check-in</span>
+          <span class="detail-value">${formatDate(checkIn)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Check-out</span>
+          <span class="detail-value">${formatDate(checkOut)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Referenca</span>
+          <span class="detail-value">${bookingReference}</span>
+        </div>
       </div>
 
-      <div class="booking-details">
-        <h3>Plaćanje</h3>
-        <p><strong>Ukupno:</strong> €${totalAmount.toFixed(2)}</p>
-        <p><strong>Avans (20%):</strong> €${depositAmount.toFixed(2)}</p>
-        <p><strong>Ostatak:</strong> €${(totalAmount - depositAmount).toFixed(2)}</p>
+      <div class="section">
+        <div class="section-title">💳 Plaćanje</div>
+        <div class="detail-row">
+          <span class="detail-label">Ukupno</span>
+          <span class="detail-value">€${totalAmount.toFixed(2)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Avans</span>
+          <span class="detail-value">€${depositAmount.toFixed(2)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Ostatak</span>
+          <span class="detail-value">€${(totalAmount - depositAmount).toFixed(2)}</span>
+        </div>
       </div>
 
-      <div class="alert">
-        <p><strong>⚠️ Akcija potrebna:</strong></p>
-        <p>Gost će izvršiti bankovnu uplatu. Kada primite uplatu od €${depositAmount.toFixed(2)}
-        sa referencom <strong>${bookingReference}</strong>, prijavite se u dashboard i odobrite rezervaciju.</p>
+      <div class="alert-box warning">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <p class="alert-title">Akcija potrebna</p>
+          <p class="alert-text">Gost će izvršiti bankovnu uplatu. Kada primite uplatu od €${depositAmount.toFixed(2)} sa referencom <strong>${bookingReference}</strong>, prijavite se u dashboard i odobrite rezervaciju.</p>
+        </div>
       </div>
 
-      <p>Prijavite se u Owner Dashboard da biste upravljali rezervacijom.</p>
+      <div class="button-container">
+        <a href="https://rab-booking-owner.web.app" class="button">
+          🖥️ Otvori Dashboard
+        </a>
+      </div>
     </div>
 
     <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
+      <div class="footer-logo">🏠 Rab Booking</div>
+      <p>© 2025 Rab Booking. Sva prava pridržana.</p>
     </div>
   </div>
 </body>
@@ -342,37 +581,44 @@ export async function sendBookingCancellationEmail(
   reason: string,
   ownerEmail?: string
 ): Promise<void> {
-  const subject = `[RabBooking] Otkazana rezervacija - ${bookingReference}`;
+  const subject = `Rezervacija otkazana - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #f44336; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${getBaseStyles()}
+    .header { background: linear-gradient(135deg, ${COLORS.error} 0%, #DC2626 100%); }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="email-wrapper">
     <div class="header">
-      <h1>Booking Cancelled</h1>
-      <p>Reference: ${bookingReference}</p>
+      <div class="header-icon">❌</div>
+      <h1>Rezervacija otkazana</h1>
+      <p>Referenca: ${bookingReference}</p>
     </div>
 
     <div class="content">
-      <p>Dear ${guestName},</p>
-      <p>Your booking ${bookingReference} has been cancelled.</p>
-      <p><strong>Reason:</strong> ${reason}</p>
-      <p>If you have any questions, please contact us.</p>
+      <p class="greeting">Poštovani/a ${guestName},</p>
+      <p>Vaša rezervacija ${bookingReference} je otkazana.</p>
+
+      <div class="alert-box error">
+        <div class="alert-icon">ℹ️</div>
+        <div class="alert-content">
+          <p class="alert-title">Razlog otkazivanja</p>
+          <p class="alert-text">${reason}</p>
+        </div>
+      </div>
+
+      <p>Ako imate pitanja, slobodno nas kontaktirajte.</p>
     </div>
 
     <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
+      <div class="footer-logo">🏠 Rab Booking</div>
+      <p>© 2025 Rab Booking. Sva prava pridržana.</p>
     </div>
   </div>
 </body>
@@ -410,29 +656,35 @@ export async function sendCustomEmailToGuest(
 <!DOCTYPE html>
 <html>
 <head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #2c5282; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background-color: #f9f9f9; }
-    .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
-    .message { white-space: pre-wrap; }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${getBaseStyles()}
+    .message-content {
+      white-space: pre-wrap;
+      background-color: ${COLORS.sectionBg};
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid ${COLORS.border};
+      margin: 20px 0;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="email-wrapper">
     <div class="header">
+      <div class="header-icon">✉️</div>
       <h1>${subject}</h1>
     </div>
 
     <div class="content">
-      <p>Dear ${guestName},</p>
-      <div class="message">${message}</div>
-      <p>If you have any questions, please feel free to reply to this email.</p>
+      <p class="greeting">Poštovani/a ${guestName},</p>
+      <div class="message-content">${message}</div>
+      <p>Ako imate pitanja, slobodno odgovorite na ovaj email.</p>
     </div>
 
     <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
+      <div class="footer-logo">🏠 Rab Booking</div>
+      <p>© 2025 Rab Booking. Sva prava pridržana.</p>
     </div>
   </div>
 </body>
@@ -466,59 +718,79 @@ export async function sendSuspiciousActivityEmail(
   location: string | undefined,
   reason: string
 ): Promise<void> {
-  const subject = "[RabBooking] 🔒 Sigurnosno upozorenje - Nova prijava detektovana";
+  const subject = "🔒 Sigurnosno upozorenje - Nova prijava";
 
   const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #FF5722; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .alert-box { background: #fff3e0; border-left: 4px solid #FF9800; padding: 15px; margin: 15px 0; }
-    .info-box { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${getBaseStyles()}
+    .header { background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%); }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="email-wrapper">
     <div class="header">
-      <h1>🔒 Security Alert</h1>
-      <p>New login activity detected</p>
+      <div class="header-icon">🔒</div>
+      <h1>Sigurnosno upozorenje</h1>
+      <p>Nova prijava detektovana</p>
     </div>
 
     <div class="content">
-      <p>Hi ${userName},</p>
-      <p>We detected a login to your Rab Booking account from a ${reason === "new_device" ? "new device" : "new location"}.</p>
+      <p class="greeting">Poštovani/a ${userName},</p>
+      <p>Detektovali smo prijavu na vaš Rab Booking račun s ${reason === "new_device" ? "novog uređaja" : "nove lokacije"}.</p>
 
-      <div class="info-box">
-        <h3>Login Details</h3>
-        <p><strong>When:</strong> ${new Date().toLocaleString("en-GB")}</p>
-        ${deviceId ? `<p><strong>Device ID:</strong> ${deviceId}</p>` : ""}
-        ${location ? `<p><strong>Location:</strong> ${location}</p>` : ""}
-        <p><strong>Reason:</strong> ${reason === "new_device" ? "Login from new device" : "Login from new location"}</p>
+      <div class="section">
+        <div class="section-title">🔐 Detalji prijave</div>
+        <div class="detail-row">
+          <span class="detail-label">Vrijeme</span>
+          <span class="detail-value">${new Date().toLocaleString("hr-HR")}</span>
+        </div>
+        ${deviceId ? `
+        <div class="detail-row">
+          <span class="detail-label">ID uređaja</span>
+          <span class="detail-value">${deviceId}</span>
+        </div>` : ""}
+        ${location ? `
+        <div class="detail-row">
+          <span class="detail-label">Lokacija</span>
+          <span class="detail-value">${location}</span>
+        </div>` : ""}
+        <div class="detail-row">
+          <span class="detail-label">Razlog upozorenja</span>
+          <span class="detail-value">${reason === "new_device" ? "Prijava s novog uređaja" : "Prijava s nove lokacije"}</span>
+        </div>
       </div>
 
-      <div class="alert-box">
-        <h3>⚠️ Was this you?</h3>
-        <p>If you recognize this activity, you can safely ignore this email.</p>
-        <p><strong>If this wasn't you:</strong></p>
-        <ul>
-          <li>Change your password immediately</li>
-          <li>Review your account activity</li>
-          <li>Contact support if you see any suspicious changes</li>
-        </ul>
+      <div class="alert-box warning">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <p class="alert-title">Je li ovo bila vaša prijava?</p>
+          <p class="alert-text">Ako prepoznajete ovu aktivnost, možete sigurno ignorirati ovaj email.</p>
+        </div>
       </div>
 
-      <p>This is an automated security alert to keep your account safe.</p>
+      <div class="alert-box error">
+        <div class="alert-icon">🚨</div>
+        <div class="alert-content">
+          <p class="alert-title">Ako OVO NISTE bili vi:</p>
+          <p class="alert-text">
+            • Odmah promijenite lozinku<br>
+            • Pregledajte aktivnost svog računa<br>
+            • Kontaktirajte podršku ako primijetite sumnjive promjene
+          </p>
+        </div>
+      </div>
+
+      <p style="color: ${COLORS.textSecondary}; font-size: 13px;">Ovo je automatsko sigurnosno upozorenje za zaštitu vašeg računa.</p>
     </div>
 
     <div class="footer">
-      <p>© 2025 Rab Booking Security Team</p>
-      <p>This email cannot be replied to. For support, please log into your dashboard.</p>
+      <div class="footer-logo">🔒 Rab Booking Security</div>
+      <p>© 2025 Rab Booking. Sva prava pridržana.</p>
+      <p>Na ovaj email se ne može odgovoriti. Za podršku se prijavite u dashboard.</p>
     </div>
   </div>
 </body>
@@ -553,74 +825,72 @@ export async function sendPendingBookingRequestEmail(
   unitName: string,
   propertyName: string
 ): Promise<void> {
-  const subject = `[RabBooking] Zahtjev za rezervaciju primljen - ${bookingReference}`;
+  const subject = `Zahtjev za rezervaciju primljen - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-    .highlight { background: #fff9c4; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FBC02D; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${getBaseStyles()}
+    .header { background: linear-gradient(135deg, ${COLORS.warning} 0%, #D97706 100%); }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="email-wrapper">
     <div class="header">
-      <h1>📋 Booking Request Received</h1>
-      <p>Reference: ${bookingReference}</p>
+      <div class="header-icon">📋</div>
+      <h1>Zahtjev zaprimljen</h1>
+      <p>Referenca: ${bookingReference}</p>
     </div>
 
     <div class="content">
-      <p>Dear ${guestName},</p>
-      <p>Thank you for your booking request! We have received your reservation and it is pending approval from the property owner.</p>
+      <p class="greeting">Poštovani/a ${guestName},</p>
+      <p>Hvala vam na zahtjevu za rezervaciju! Vaš zahtjev je zaprimljen i čeka odobrenje vlasnika.</p>
 
-      <div class="booking-details">
-        <h3>Booking Details</h3>
+      <div class="section">
+        <div class="section-title">📋 Detalji rezervacije</div>
         <div class="detail-row">
-          <span>Property:</span>
-          <strong>${propertyName}</strong>
+          <span class="detail-label">Nekretnina</span>
+          <span class="detail-value">${propertyName}</span>
         </div>
         <div class="detail-row">
-          <span>Unit:</span>
-          <strong>${unitName}</strong>
+          <span class="detail-label">Jedinica</span>
+          <span class="detail-value">${unitName}</span>
         </div>
         <div class="detail-row">
-          <span>Check-in:</span>
-          <strong>${formatDate(checkIn)}</strong>
+          <span class="detail-label">Check-in</span>
+          <span class="detail-value">${formatDate(checkIn)}</span>
         </div>
         <div class="detail-row">
-          <span>Check-out:</span>
-          <strong>${formatDate(checkOut)}</strong>
+          <span class="detail-label">Check-out</span>
+          <span class="detail-value">${formatDate(checkOut)}</span>
         </div>
         <div class="detail-row">
-          <span>Reference:</span>
-          <strong>${bookingReference}</strong>
+          <span class="detail-label">Referenca</span>
+          <span class="detail-value">${bookingReference}</span>
         </div>
         <div class="detail-row">
-          <span>Total Amount:</span>
-          <strong>€${totalAmount.toFixed(2)}</strong>
+          <span class="detail-label">Ukupna cijena</span>
+          <span class="detail-value">€${totalAmount.toFixed(2)}</span>
         </div>
       </div>
 
-      <div class="highlight">
-        <p><strong>⏳ Pending Approval</strong></p>
-        <p>The property owner will review your booking request and contact you shortly with payment details if approved.</p>
-        <p>You will receive a confirmation email once your booking is approved.</p>
+      <div class="alert-box info">
+        <div class="alert-icon">⏳</div>
+        <div class="alert-content">
+          <p class="alert-title">Čeka se odobrenje</p>
+          <p class="alert-text">Vlasnik će pregledati vaš zahtjev i uskoro vas kontaktirati s detaljima plaćanja ako bude odobren. Primit ćete email s potvrdom kada vaša rezervacija bude odobrena.</p>
+        </div>
       </div>
 
-      <p>If you have any questions, please don't hesitate to contact the property owner.</p>
+      <p>Ako imate pitanja, slobodno kontaktirajte vlasnika.</p>
     </div>
 
     <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
+      <div class="footer-logo">🏠 Rab Booking</div>
+      <p>© 2025 Rab Booking. Sva prava pridržana.</p>
     </div>
   </div>
 </body>
@@ -666,59 +936,90 @@ export async function sendPendingBookingOwnerNotification(
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .alert { background: #fff9c4; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FBC02D; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
-    .action-btn { display: inline-block; padding: 12px 24px; background: #6B8E23; color: white; text-decoration: none; border-radius: 6px; margin: 10px 5px; }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${getBaseStyles()}
+    .header { background: linear-gradient(135deg, ${COLORS.warning} 0%, #D97706 100%); }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="email-wrapper">
     <div class="header">
-      <h1>🔔 Nova rezervacija za odobrenje!</h1>
-      <p>Čeka vašu potvrdu</p>
+      <div class="header-icon">🔔</div>
+      <h1>Nova rezervacija!</h1>
+      <p>Čeka vaše odobrenje</p>
     </div>
 
     <div class="content">
-      <p>Poštovani ${ownerName},</p>
+      <p class="greeting">Poštovani/a ${ownerName},</p>
       <p>Primili ste novu rezervaciju putem booking widgeta koja zahtijeva vaše odobrenje.</p>
 
-      <div class="booking-details">
-        <h3>Detalji rezervacije</h3>
-        <p><strong>Jedinica:</strong> ${unitName}</p>
-        <p><strong>Gost:</strong> ${guestName}</p>
-        <p><strong>Email:</strong> ${guestEmail}</p>
-        <p><strong>Telefon:</strong> ${guestPhone}</p>
-        <p><strong>Broj gostiju:</strong> ${guestCount}</p>
-        <p><strong>Check-in:</strong> ${formatDate(checkIn)}</p>
-        <p><strong>Check-out:</strong> ${formatDate(checkOut)}</p>
-        <p><strong>Referenca:</strong> ${bookingReference}</p>
-        ${notes ? `<p><strong>Napomena:</strong> ${notes}</p>` : ""}
+      <div class="section">
+        <div class="section-title">📋 Detalji rezervacije</div>
+        <div class="detail-row">
+          <span class="detail-label">Jedinica</span>
+          <span class="detail-value">${unitName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Gost</span>
+          <span class="detail-value">${guestName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Email</span>
+          <span class="detail-value">${guestEmail}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Telefon</span>
+          <span class="detail-value">${guestPhone}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Broj gostiju</span>
+          <span class="detail-value">${guestCount}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Check-in</span>
+          <span class="detail-value">${formatDate(checkIn)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Check-out</span>
+          <span class="detail-value">${formatDate(checkOut)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Referenca</span>
+          <span class="detail-value">${bookingReference}</span>
+        </div>
+        ${notes ? `
+        <div class="detail-row">
+          <span class="detail-label">Napomena</span>
+          <span class="detail-value">${notes}</span>
+        </div>` : ""}
       </div>
 
-      <div class="booking-details">
-        <h3>Cijena</h3>
-        <p><strong>Ukupno:</strong> €${totalAmount.toFixed(2)}</p>
+      <div class="section">
+        <div class="section-title">💳 Cijena</div>
+        <div class="detail-row">
+          <span class="detail-label">Ukupno</span>
+          <span class="detail-value">€${totalAmount.toFixed(2)}</span>
+        </div>
       </div>
 
-      <div class="alert">
-        <p><strong>⚠️ Akcija potrebna:</strong></p>
-        <p>Prijavite se u Owner Dashboard da odobrite ili odbijete ovu rezervaciju.</p>
-        <p>Nakon odobrenja, kontaktirajte gosta sa detaljima plaćanja.</p>
+      <div class="alert-box warning">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <p class="alert-title">Akcija potrebna</p>
+          <p class="alert-text">Prijavite se u Owner Dashboard da odobrite ili odbijete ovu rezervaciju. Nakon odobrenja, kontaktirajte gosta s detaljima plaćanja.</p>
+        </div>
       </div>
 
-      <p style="text-align: center;">
-        <a href="#" class="action-btn">Prijavite se u Dashboard</a>
-      </p>
+      <div class="button-container">
+        <a href="https://rab-booking-owner.web.app" class="button">
+          🖥️ Otvori Dashboard
+        </a>
+      </div>
     </div>
 
     <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
+      <div class="footer-logo">🏠 Rab Booking</div>
+      <p>© 2025 Rab Booking. Sva prava pridržana.</p>
     </div>
   </div>
 </body>
@@ -753,71 +1054,70 @@ export async function sendBookingRejectedEmail(
   propertyName: string,
   reason?: string
 ): Promise<void> {
-  const subject = `[RabBooking] Zahtjev za rezervaciju odbijen - ${bookingReference}`;
+  const subject = `Zahtjev za rezervaciju odbijen - ${bookingReference}`;
 
   const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #EF4444; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-    .highlight { background: #FEE2E2; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #EF4444; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>${getBaseStyles()}
+    .header { background: linear-gradient(135deg, ${COLORS.error} 0%, #DC2626 100%); }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="email-wrapper">
     <div class="header">
-      <h1>❌ Booking Request Declined</h1>
-      <p>Reference: ${bookingReference}</p>
+      <div class="header-icon">❌</div>
+      <h1>Zahtjev odbijen</h1>
+      <p>Referenca: ${bookingReference}</p>
     </div>
 
     <div class="content">
-      <p>Dear ${guestName},</p>
-      <p>We regret to inform you that your booking request has been declined by the property owner.</p>
+      <p class="greeting">Poštovani/a ${guestName},</p>
+      <p>Žao nam je, ali vaš zahtjev za rezervaciju je odbijen od strane vlasnika.</p>
 
-      <div class="booking-details">
-        <h3>Booking Details</h3>
+      <div class="section">
+        <div class="section-title">📋 Detalji rezervacije</div>
         <div class="detail-row">
-          <span>Property:</span>
-          <strong>${propertyName}</strong>
+          <span class="detail-label">Nekretnina</span>
+          <span class="detail-value">${propertyName}</span>
         </div>
         <div class="detail-row">
-          <span>Unit:</span>
-          <strong>${unitName}</strong>
+          <span class="detail-label">Jedinica</span>
+          <span class="detail-value">${unitName}</span>
         </div>
         <div class="detail-row">
-          <span>Check-in:</span>
-          <strong>${formatDate(checkIn)}</strong>
+          <span class="detail-label">Check-in</span>
+          <span class="detail-value">${formatDate(checkIn)}</span>
         </div>
         <div class="detail-row">
-          <span>Check-out:</span>
-          <strong>${formatDate(checkOut)}</strong>
+          <span class="detail-label">Check-out</span>
+          <span class="detail-value">${formatDate(checkOut)}</span>
         </div>
         <div class="detail-row">
-          <span>Reference:</span>
-          <strong>${bookingReference}</strong>
+          <span class="detail-label">Referenca</span>
+          <span class="detail-value">${bookingReference}</span>
         </div>
       </div>
 
       ${reason ? `
-      <div class="highlight">
-        <p><strong>Reason:</strong></p>
-        <p>${reason}</p>
+      <div class="alert-box error">
+        <div class="alert-icon">ℹ️</div>
+        <div class="alert-content">
+          <p class="alert-title">Razlog odbijanja</p>
+          <p class="alert-text">${reason}</p>
+        </div>
       </div>
       ` : ""}
 
-      <p>We apologize for any inconvenience. Please feel free to browse our other available properties or contact us for alternative dates.</p>
+      <p>Ispričavamo se na neugodnosti. Slobodno pretražite naše druge dostupne nekretnine ili nas kontaktirajte za alternativne termine.</p>
     </div>
 
     <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
+      <div class="footer-logo">🏠 Rab Booking</div>
+      <p>© 2025 Rab Booking. Sva prava pridržana.</p>
     </div>
   </div>
 </body>
@@ -878,15 +1178,15 @@ export async function sendEmailVerificationCode(
   guestEmail: string,
   verificationCode: string
 ): Promise<void> {
-  const subject = "Your Verification Code - Rab Booking";
+  const subject = "Vaš verifikacijski kod - Rab Booking";
 
   // Plain text version (for email clients that don't support HTML)
   const text = `
-Your verification code is: ${verificationCode}
+Vaš verifikacijski kod je: ${verificationCode}
 
-This code will expire in 10 minutes.
+Kod ističe za 10 minuta.
 
-If you didn't request this code, please ignore this email.
+Ako niste zatražili ovaj kod, molimo ignorirajte ovaj email.
 
 ---
 Rab Booking
@@ -897,99 +1197,66 @@ Rab Booking
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
-    .container {
-      background-color: white;
-      border-radius: 8px;
-      padding: 40px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .header {
+  <style>${getBaseStyles()}
+    .code-box {
+      background: linear-gradient(135deg, ${COLORS.primaryLight} 0%, #F3E8FF 100%);
+      border: 2px solid ${COLORS.primary};
+      border-radius: 16px;
+      padding: 32px;
       text-align: center;
-      margin-bottom: 30px;
+      margin: 28px 0;
     }
-    .header h1 {
-      color: #2563eb;
-      margin: 0;
-      font-size: 24px;
-    }
-    .code-container {
-      background-color: #f0f9ff;
-      border: 2px solid #2563eb;
-      border-radius: 8px;
-      padding: 24px;
-      text-align: center;
-      margin: 24px 0;
-    }
-    .code {
-      font-size: 36px;
-      font-weight: bold;
-      color: #2563eb;
-      letter-spacing: 8px;
+    .verification-code {
+      font-size: 42px;
+      font-weight: 700;
+      color: ${COLORS.primary};
+      letter-spacing: 12px;
       font-family: 'Courier New', monospace;
-    }
-    .expiry {
-      color: #666;
-      font-size: 14px;
-      margin-top: 12px;
-    }
-    .instructions {
-      background-color: #fef3c7;
-      border-left: 4px solid #f59e0b;
-      padding: 16px;
-      margin: 24px 0;
-      border-radius: 4px;
-    }
-    .instructions p {
       margin: 0;
-      color: #78350f;
     }
-    .footer {
-      text-align: center;
-      margin-top: 32px;
-      padding-top: 24px;
-      border-top: 1px solid #e5e7eb;
-      color: #6b7280;
-      font-size: 12px;
+    .code-expiry {
+      color: ${COLORS.textSecondary};
+      font-size: 14px;
+      margin-top: 16px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="email-wrapper">
     <div class="header">
-      <h1>🔐 Email Verification</h1>
-      <p>Complete your booking by verifying your email</p>
+      <div class="header-icon">🔐</div>
+      <h1>Verifikacija emaila</h1>
+      <p>Dovršite rezervaciju verifikacijom vašeg emaila</p>
     </div>
 
-    <p>Enter this verification code to continue with your booking:</p>
+    <div class="content">
+      <p class="greeting">Poštovani/a,</p>
+      <p>Unesite ovaj verifikacijski kod kako biste nastavili s rezervacijom:</p>
 
-    <div class="code-container">
-      <div class="code">${verificationCode}</div>
-      <div class="expiry">⏱️ Expires in 10 minutes</div>
+      <div class="code-box">
+        <p class="verification-code">${verificationCode}</p>
+        <p class="code-expiry">⏱️ Ističe za 10 minuta</p>
+      </div>
+
+      <div class="alert-box warning">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <p class="alert-title">Važno</p>
+          <p class="alert-text">Ako niste zatražili ovaj kod, molimo ignorirajte ovaj email. Vaša rezervacija neće biti kreirana bez unosa koda.</p>
+        </div>
+      </div>
+
+      <p style="color: ${COLORS.textSecondary}; font-size: 13px; text-align: center;">
+        Ovo je automatski sigurnosni email za zaštitu vaše rezervacije.
+      </p>
     </div>
-
-    <div class="instructions">
-      <p><strong>Important:</strong> If you didn't request this code, please ignore this email. Your booking will not be created without entering the code.</p>
-    </div>
-
-    <p style="color: #666; font-size: 14px; text-align: center;">
-      This is an automated security email to protect your booking.
-    </p>
 
     <div class="footer">
-      <p><strong>Rab Booking</strong></p>
-      <p>Secure booking verification system</p>
+      <div class="footer-logo">🔐 Rab Booking</div>
+      <p>Sigurni sustav verifikacije rezervacija</p>
+      <p>© 2025 Rab Booking. Sva prava pridržana.</p>
     </div>
   </div>
 </body>

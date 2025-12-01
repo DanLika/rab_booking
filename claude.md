@@ -1761,7 +1761,7 @@ Dodan info banner u Step 3 koji objašnjava napredne opcije dostupne u Cjenovnik
 
 ---
 
-## 📦 WIDGET REFACTORING STATUS (2025-11-27)
+## 📦 WIDGET REFACTORING STATUS (2025-12-01)
 
 ### Analiza Provedena
 
@@ -1771,23 +1771,119 @@ Widget feature je **djelimično refaktorisan**. Glavni fajl `booking_widget_scre
 
 | Fajl | Linije | Status |
 |------|--------|--------|
-| `booking_widget_screen.dart` | 2,154 | ⚠️ Može bolje (<1000) |
-| `year_calendar_widget.dart` | 1,176 | ⚠️ Nije diran |
-| `month_calendar_widget.dart` | 1,142 | ⚠️ Nije diran |
-| `booking_confirmation_screen.dart` | 999 | ⚠️ Djelimično |
-| `booking_details_screen.dart` | 968 | ⚠️ Nije diran |
+| `booking_widget_screen.dart` | 2,154 | ⚠️ Može bolje (<1000) - NE DIRAJ! |
+| `year_calendar_widget.dart` | 946 | ✅ Refaktorisan (-230 linija) |
+| `month_calendar_widget.dart` | 872 | ✅ Refaktorisan (-270 linija) |
+| `booking_confirmation_screen.dart` | 314 | ✅ Refaktorisan (-68%) |
+| `booking_details_screen.dart` | 423 | ✅ Refaktorisan (-56%) |
 | `bank_transfer_screen.dart` | 790 | ✅ Refaktorisan |
 
-### Nova Folder Struktura (Već Kreirana)
+### Calendar Widgets Refactoring (2025-12-01)
+
+**Status**: ✅ COMPLETED
+**Commit**: `b2ecd3a`
+
+Ekstraktovani zajednički komponenti iz `month_calendar_widget.dart` i `year_calendar_widget.dart`:
+
+| Novi Fajl | Linije | Svrha |
+|-----------|--------|-------|
+| `calendar_date_utils.dart` | 30 | Static utility metode (isSameDay, getDateKey, isDateInRange) |
+| `calendar_view_switcher_widget.dart` | 122 | Month/Year toggle widget |
+| `calendar_compact_legend.dart` | 129 | Min stay info + color legend |
+| **UKUPNO** | 281 | Ekstraktovano ~500 linija dupliciranog koda |
+
+**Rezultati:**
+- `month_calendar_widget.dart`: 1,142 → 872 linija (-270, -24%)
+- `year_calendar_widget.dart`: 1,176 → 946 linija (-230, -20%)
+- **Ukupno smanjenje**: ~500 linija dupliciranog koda eliminisano
+
+**Nova Struktura:**
+```
+lib/features/widget/presentation/widgets/calendar/
+├── calendar_date_utils.dart           ← Static utility class
+├── calendar_view_switcher_widget.dart ← Month/Year toggle (ConsumerWidget)
+└── calendar_compact_legend.dart       ← Legend widget (StatelessWidget)
+```
+
+### Booking Screens Refactoring (2025-12-01)
+
+**Status**: ✅ COMPLETED
+**Commit**: TBD
+
+Ekstraktovani widget komponenti iz `booking_confirmation_screen.dart` i `booking_details_screen.dart`.
+
+**Phase 1 - Confirmation Screen:**
+| Novi Fajl | Linije | Svrha |
+|-----------|--------|-------|
+| `confirmation_header.dart` | 66 | Success header sa ikonom i naslovom |
+| `booking_reference_card.dart` | 76 | Booking reference sa copy functionality |
+| `booking_summary_card.dart` | 145 | Property, dates, guests, total price |
+| `email_confirmation_card.dart` | 67 | Email potvrda info |
+| `email_spam_warning_card.dart` | 50 | Spam folder upozorenje |
+| `bank_transfer_instructions_card.dart` | 67 | Bank transfer instrukcije |
+| `calendar_export_button.dart` | 69 | Add to calendar button |
+
+**Rezultat Phase 1:** `booking_confirmation_screen.dart`: 985 → 314 linija (-68%)
+
+**Phase 2 - Details Screen:**
+| Novi Fajl | Linije | Svrha |
+|-----------|--------|-------|
+| `booking_status_banner.dart` | 98 | Status banner (Confirmed/Pending/Cancelled) |
+| `details_reference_card.dart` | 66 | Booking reference sa copy |
+| `property_info_card.dart` | 82 | Property i unit info |
+| `booking_dates_card.dart` | 111 | Check-in/out, nights, guests |
+| `payment_info_card.dart` | 248 | Payment details sa status chip |
+| `cancellation_policy_card.dart` | 112 | Cancellation policy info |
+| `contact_owner_card.dart` | 79 | Owner email/phone |
+| `booking_notes_card.dart` | 56 | Additional notes |
+
+**Rezultat Phase 2:** `booking_details_screen.dart`: 966 → 423 linija (-56%)
+
+**Ukupni Rezultat:**
+- 15 novih widget komponenti
+- ~1,200 linija ekstraktovanog koda
+- **-62% redukcija** (1,951 → 737 linija)
+
+**Nova Struktura:**
+```
+lib/features/widget/presentation/widgets/
+├── confirmation/                        ← 7 fajlova (Phase 1)
+│   ├── confirmation_header.dart
+│   ├── booking_reference_card.dart
+│   ├── booking_summary_card.dart
+│   ├── email_confirmation_card.dart
+│   ├── email_spam_warning_card.dart
+│   ├── bank_transfer_instructions_card.dart
+│   └── calendar_export_button.dart
+└── details/                             ← 8 fajlova (Phase 2)
+    ├── booking_status_banner.dart
+    ├── details_reference_card.dart
+    ├── property_info_card.dart
+    ├── booking_dates_card.dart
+    ├── payment_info_card.dart
+    ├── cancellation_policy_card.dart
+    ├── contact_owner_card.dart
+    └── booking_notes_card.dart
+```
+
+**Tehnički Detalji:**
+- Color type: `WidgetColorScheme` (from `ColorTokens.light`/`ColorTokens.dark`)
+- Design tokens: `SpacingTokens`, `TypographyTokens`, `BorderTokens`
+- Typography: `GoogleFonts.inter()`
+- Deprecation fix: `withOpacity()` → `withValues(alpha: x)`
+
+### Nova Folder Struktura (Ažurirano 2025-12-01)
 
 ```
 lib/features/widget/presentation/widgets/
-├── booking/                    ← 13 novih fajlova
+├── booking/                    ← 13 fajlova
 │   ├── guest_form/             ← 5 fajlova (email, phone, name, notes, count)
 │   └── payment/                ← 3 fajla
-├── common/                     ← 8 novih fajlova
+├── calendar/                   ← 3 fajla (date_utils, view_switcher, legend)
+├── common/                     ← 8 fajlova
 │   └── contact/                ← 2 fajla
-├── confirmation/               ← 2 fajla
+├── confirmation/               ← 7 fajlova (header, reference, summary, email, bank, calendar)
+├── details/                    ← 8 fajlova (status, reference, property, dates, payment, cancellation, contact, notes)
 └── bank_transfer/              ← 4 fajla
 
 lib/features/widget/domain/services/
@@ -1811,7 +1907,33 @@ lib/features/widget/domain/constants/
 
 Widget **RADI BEZ BUGOVA** - refaktoring je opcija za poboljšanje maintainability-ja, nije hitno.
 
-### Widget Settings Model Refactoring (2025-11-27)
+### Dead Code Cleanup (2025-12-01)
+
+**Status**: ✅ COMPLETED
+**Commit**: TBD
+
+Obrisano ~1,737 linija mrtvog koda vezanog za nekorištenu `/embed/units/:id` rutu.
+
+**OBRISANI FAJLOVI:**
+| Fajl | Linije | Razlog |
+|------|--------|--------|
+| `embed_calendar_screen.dart` | 306 | Ruta nikad nije pozivana |
+| `embed_booking_provider.dart` | 220 | Korišten samo od `EmbedCalendarScreen` |
+| `year_grid_calendar_widget.dart` | 1,111 | Korišten samo od `EmbedCalendarScreen` |
+| `year_view_preloader.dart` | ~100 | Korišten samo od `YearGridCalendarWidget` |
+
+**EDITOVANI FAJLOVI:**
+- `router_owner.dart` - Uklonjen import, ruta (`/embed/units/:id`), i konstanta `OwnerRoutes.embedUnit`
+
+**ŠTO JE OSTALO (AKTIVNO):**
+- `month_calendar_widget.dart` - Koristi `CalendarViewSwitcher` na glavnom `/calendar` route-u
+- `year_calendar_widget.dart` - Koristi `CalendarViewSwitcher` na glavnom `/calendar` route-u
+- `realtimeYearCalendarProvider` - Koristi `booking_widget_screen.dart` za cache invalidaciju
+
+**VERIFIKACIJA:**
+- `flutter analyze` - 0 grešaka
+
+### Widget Settings Model Refactoring (2025-11-27, Updated 2025-12-01)
 
 **Status**: ✅ COMPLETED
 
@@ -1823,7 +1945,7 @@ Widget **RADI BEZ BUGOVA** - refaktoring je opcija za poboljšanje maintainabili
 | `0285585` | EmailNotificationConfig, TaxLegalConfig, ContactOptions | -210 linija |
 | `b9e3b06` | BlurConfig removal | -87 linija (OBRISANO) |
 
-**Rezultat**: `widget_settings.dart` smanjen sa ~780 na ~480 linija.
+**Rezultat**: `widget_settings.dart` smanjen sa ~917 na ~473 linija (-49%).
 
 **Struktura settings/ foldera:**
 ```
@@ -1833,17 +1955,62 @@ lib/features/widget/domain/models/settings/
 │   ├── payment.dart                 ← Payment barrel
 │   ├── stripe_payment_config.dart
 │   ├── bank_transfer_config.dart
-│   └── payment_config_base.dart     ← Shared mixin
-├── booking_behavior_config.dart
-├── ical_export_config.dart
+│   └── payment_config_base.dart     ← Shared mixin (deposit calculation)
+├── booking_behavior_config.dart     ← Approval, cancellation, min/max nights
+├── ical_export_config.dart          ← iCal feed export settings
 ├── contact_options.dart
 ├── email_notification_config.dart
 └── tax_legal_config.dart
 ```
 
+**Deposit Calculation - Unified Mixin:**
+```dart
+// PaymentConfigBase mixin koriste oba payment config-a
+mixin PaymentConfigBase {
+  int get depositPercentage;
+  double calculateDeposit(double totalAmount) { ... }
+  double calculateRemaining(double totalAmount) { ... }
+}
+
+class StripePaymentConfig with PaymentConfigBase { ... }
+class BankTransferConfig with PaymentConfigBase { ... }
+```
+
 **⚠️ NE DIRATI (odluka korisnika):**
 - **ThemeOptions** - Korisnik zadovoljan sa trenutnim bojama/temom
 - **ExternalCalendarConfig** - Čeka odluku o OAuth API integraciji sa Booking.com/Airbnb
+
+### WidgetConfig Renamed to EmbedUrlParams (2025-12-01)
+
+**Status**: ✅ COMPLETED
+
+`WidgetConfig` preimenovan u `EmbedUrlParams` radi jasnoće:
+- `EmbedUrlParams` = URL query parameters (runtime, ephemeral)
+- `WidgetSettings` = Firestore document (persistent, owner-configured)
+
+**Nova Struktura:**
+```
+lib/features/widget/domain/models/
+├── embed_url_params.dart     ← NOVO (222 linija, full docs)
+├── widget_config.dart        ← DEPRECATED (re-export za backward compatibility)
+└── widget_settings.dart      ← Ostaje (Firestore config)
+```
+
+**Backward Compatibility:**
+```dart
+// Stari kod i dalje radi:
+import '.../widget_config.dart';
+final config = WidgetConfig.fromUrlParameters(uri);  // WidgetConfig je typedef
+
+// Novi kod koristi jasnije ime:
+import '.../embed_url_params.dart';
+final params = EmbedUrlParams.fromUrlParameters(uri);
+```
+
+**Fajlovi koji koriste (automatski rade zbog re-export-a):**
+- `widget_main.dart`
+- `widget_config_provider.dart`
+- `dynamic_theme_service.dart`
 
 ### Calendar Providers Refactoring (2025-11-27)
 
@@ -1985,7 +2152,6 @@ import '../../../../../shared/utils/ui/snackbar_helper.dart';
 - `booking_details_screen.dart`
 - `booking_confirmation_screen.dart`
 - `bank_transfer_screen.dart`
-- `embed_calendar_screen.dart`
 - `bank_details_section.dart`
 - `booking_details_header.dart`
 - `copyable_text_field.dart`
@@ -2183,7 +2349,7 @@ if (widget.showAppBar) {
 ### Calendar Legend/Footer Width Fix
 
 **Datum**: 2025-11-26
-**Files**: `month_calendar_widget.dart`, `year_calendar_widget.dart`, `year_grid_calendar_widget.dart`
+**Files**: `month_calendar_widget.dart`, `year_calendar_widget.dart`
 
 #### Problem
 Min. stay info i legenda bili su preširoki - nisu pratili širinu kalendara.

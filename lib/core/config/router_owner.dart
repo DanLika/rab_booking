@@ -42,7 +42,6 @@ import '../../features/owner_dashboard/presentation/screens/ical/ical_export_lis
 import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
-import '../../features/widget/presentation/screens/embed_calendar_screen.dart';
 import '../../features/widget/presentation/screens/booking_widget_screen.dart';
 import '../../features/widget/presentation/screens/booking_view_screen.dart';
 import '../../features/widget/presentation/screens/booking_details_screen.dart';
@@ -72,9 +71,6 @@ class GoRouterRefreshStream extends ChangeNotifier {
 
 /// Routes for Owner App + Public Widget Embed
 class OwnerRoutes {
-  // Public routes (no auth required)
-  static const String embedUnit = '/embed/units/:id';
-
   // Onboarding routes
   static const String onboardingWelcome = '/onboarding/welcome';
   static const String onboardingWizard = '/onboarding/wizard';
@@ -319,14 +315,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // PUBLIC ROUTES (No authentication required)
-      GoRoute(
-        path: '/embed/units/:id',
-        builder: (context, state) {
-          final unitId = state.pathParameters['id'] ?? '';
-          return EmbedCalendarScreen(unitId: unitId);
-        },
-      ),
-
       // Public booking widget (for iframe embedding)
       // URL: /?property=PROPERTY_ID&unit=UNIT_ID#/calendar
       GoRoute(

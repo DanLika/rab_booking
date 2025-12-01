@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/theme_provider.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
-import '../../../../core/services/email_notification_service.dart';
-import '../../../../core/services/ical_generator.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../domain/models/widget_settings.dart';
-import '../../../../../shared/utils/ui/snackbar_helper.dart';
-import '../../utils/ics_download.dart';
-import '../widgets/common/detail_row_widget.dart';
 import '../widgets/common/info_card_widget.dart';
-import '../widgets/confirmation/next_steps_section.dart';
+import '../widgets/confirmation/confirmation_header.dart';
+import '../widgets/confirmation/booking_reference_card.dart';
+import '../widgets/confirmation/email_spam_warning_card.dart';
+import '../widgets/confirmation/booking_summary_card.dart';
+import '../widgets/confirmation/calendar_export_button.dart';
+import '../widgets/confirmation/bank_transfer_instructions_card.dart';
+import '../widgets/confirmation/email_confirmation_card.dart';
 import '../widgets/confirmation/cancellation_policy_section.dart';
+import '../widgets/confirmation/next_steps_section.dart';
 
 /// Simplified Booking Confirmation Screen for Embedded Widget
 /// Shows booking confirmation with reference number and details
@@ -30,13 +29,10 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
   final int guests;
   final String propertyName;
   final String? unitName;
-  final String
-  paymentMethod; // 'stripe', 'bank_transfer', 'pay_on_arrival', 'pending'
-  final BookingModel? booking; // Optional - for resend email functionality
-  final EmailNotificationConfig?
-  emailConfig; // Optional - for resend email functionality
-  final WidgetSettings?
-  widgetSettings; // Optional - for cancellation policy display
+  final String paymentMethod;
+  final BookingModel? booking;
+  final EmailNotificationConfig? emailConfig;
+  final WidgetSettings? widgetSettings;
 
   const BookingConfirmationScreen({
     super.key,
@@ -67,9 +63,6 @@ class _BookingConfirmationScreenState
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-  bool _isResendingEmail = false;
-  bool _emailResent = false;
-  bool _isGeneratingIcs = false;
 
   @override
   void initState() {
@@ -96,185 +89,6 @@ class _BookingConfirmationScreenState
     super.dispose();
   }
 
-  String _getConfirmationMessage() {
-    switch (widget.paymentMethod) {
-      case 'stripe':
-        return 'Payment successful! Your booking is confirmed.';
-      case 'bank_transfer':
-        return 'Booking received! Please complete the bank transfer to confirm.';
-      case 'pay_on_arrival':
-        return 'Booking confirmed! You can pay at the property.';
-      case 'pending':
-        return 'Booking request sent! Waiting for owner approval.';
-      default:
-        return 'Your booking has been confirmed!';
-    }
-  }
-
-  Widget _getConfirmationIcon() {
-    final isDarkMode = ref.watch(themeProvider);
-    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-
-    switch (widget.paymentMethod) {
-      case 'stripe':
-        return Icon(Icons.check_circle, size: 80, color: colors.textPrimary);
-      case 'bank_transfer':
-        return Icon(Icons.schedule, size: 80, color: colors.textSecondary);
-      case 'pay_on_arrival':
-        return Icon(Icons.hotel, size: 80, color: colors.textPrimary);
-      case 'pending':
-        return Icon(Icons.pending, size: 80, color: colors.textSecondary);
-      default:
-        return Icon(Icons.check_circle, size: 80, color: colors.textPrimary);
-    }
-  }
-
-  Future<void> _copyToClipboard() async {
-    await Clipboard.setData(ClipboardData(text: widget.bookingReference));
-    if (mounted) {
-      SnackBarHelper.showSuccess(
-        context: context,
-        message: 'Booking reference copied to clipboard!',
-        duration: const Duration(seconds: 2),
-      );
-    }
-  }
-
-  Future<void> _resendConfirmationEmail() async {
-    if (widget.booking == null || widget.emailConfig == null) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Unable to resend email - missing configuration',
-      );
-      return;
-    }
-
-    // Bug #15: Check if email service is enabled and configured
-    if (widget.emailConfig!.enabled != true ||
-        widget.emailConfig!.isConfigured != true) {
-      SnackBarHelper.showWarning(
-        context: context,
-        message:
-            'Email service is not enabled or configured. Please contact the property owner.',
-        duration: const Duration(seconds: 4),
-      );
-      return;
-    }
-
-    setState(() {
-      _isResendingEmail = true;
-    });
-
-    try {
-      final emailService = EmailNotificationService();
-      await emailService.sendBookingConfirmationEmail(
-        booking: widget.booking!,
-        emailConfig: widget.emailConfig!,
-        propertyName: widget.propertyName,
-        bookingReference: widget.bookingReference,
-        allowGuestCancellation:
-            widget.widgetSettings?.allowGuestCancellation ?? false,
-        cancellationDeadlineHours:
-            widget.widgetSettings?.cancellationDeadlineHours,
-        ownerEmail: widget.widgetSettings?.contactOptions.emailAddress,
-        ownerPhone: widget.widgetSettings?.contactOptions.phoneNumber,
-        customLogoUrl: widget.widgetSettings?.themeOptions?.customLogoUrl,
-      );
-
-      setState(() {
-        _isResendingEmail = false;
-        _emailResent = true;
-      });
-
-      if (mounted) {
-        SnackBarHelper.showSuccess(
-          context: context,
-          message: 'Confirmation email sent successfully!',
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isResendingEmail = false;
-      });
-
-      if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Failed to send email: $e',
-          duration: const Duration(seconds: 5),
-        );
-      }
-    }
-  }
-
-  /// Handle "Add to Calendar" button click
-  /// Generates .ics file and triggers download
-  Future<void> _handleAddToCalendar() async {
-    setState(() => _isGeneratingIcs = true);
-
-    try {
-      // Validate booking data
-      final booking = widget.booking;
-      if (booking == null) {
-        throw Exception('Booking data not available');
-      }
-
-      // Generate .ics content using Terminal 2's IcalGenerator service
-      final unitName = widget.unitName ?? widget.propertyName;
-      final icsContent = IcalGenerator.generateBookingEvent(
-        booking: booking,
-        unitName: unitName,
-      );
-
-      // Download file (platform-specific)
-      final filename = 'booking-${widget.bookingReference}.ics';
-      await _downloadIcsFile(icsContent, filename);
-
-      // Success feedback
-      if (mounted) {
-        SnackBarHelper.showSuccess(
-          context: context,
-          message: 'Calendar event downloaded! Check your downloads folder.',
-        );
-      }
-    } catch (e) {
-      // Error handling
-      if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Failed to generate calendar file: $e',
-          duration: const Duration(seconds: 5),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isGeneratingIcs = false);
-      }
-    }
-  }
-
-  /// Downloads/shares ICS file using platform-specific implementation
-  ///
-  /// Web: Triggers browser download via Blob + Anchor element
-  /// Mobile/Desktop: Opens native share sheet via share_plus
-  ///
-  /// The implementation is automatically selected at compile-time
-  /// using conditional imports (see lib/features/widget/utils/ics_download.dart)
-  Future<void> _downloadIcsFile(String content, String filename) async {
-    try {
-      // Platform-specific implementation selected automatically at compile-time
-      await downloadIcsFile(content, filename);
-    } catch (e) {
-      // Show error to user if download/share fails
-      if (mounted) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'Failed to download calendar file: $e',
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
@@ -288,47 +102,8 @@ class _BookingConfirmationScreenState
           child: Column(
             children: [
               // Custom header with centered title and back button
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SpacingTokens.m,
-                  vertical: SpacingTokens.s,
-                ),
-                child: Row(
-                  children: [
-                    // Back button (aligned to the left)
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: colors.textPrimary,
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                    // Centered title with Expanded to take remaining space
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          'Booking Confirmation',
-                          style: TextStyle(
-                            fontSize: TypographyTokens.fontSizeXL,
-                            fontWeight: TypographyTokens.bold,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Invisible spacer to balance the back button width
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
-              // Divider
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: colors.borderDefault,
-              ),
+              _buildHeader(colors),
+              Divider(height: 1, thickness: 1, color: colors.borderDefault),
               // Content
               Expanded(
                 child: Center(
@@ -340,542 +115,129 @@ class _BookingConfirmationScreenState
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                  // Custom logo display (if configured)
-                  if (widget.widgetSettings?.themeOptions?.customLogoUrl !=
-                          null &&
-                      widget
-                          .widgetSettings!
-                          .themeOptions!
-                          .customLogoUrl!
-                          .isNotEmpty) ...[
-                    CachedNetworkImage(
-                      imageUrl:
-                          widget.widgetSettings!.themeOptions!.customLogoUrl!,
-                      height: 80,
-                      fit: BoxFit.contain,
-                      placeholder: (context, url) =>
-                          const SizedBox(height: 80, width: 80),
-                      errorWidget: (context, url, error) =>
-                          const SizedBox.shrink(),
-                    ),
-                    const SizedBox(height: SpacingTokens.l),
-                  ],
-
-                  // Success icon with animation
-                  ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: _getConfirmationIcon(),
-                  ),
-
-                  const SizedBox(height: SpacingTokens.l),
-
-                  // Confirmation message
-                  Text(
-                    _getConfirmationMessage(),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeXL,
-                      fontWeight: TypographyTokens.bold,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-
-                  const SizedBox(height: SpacingTokens.m),
-
-                  // Bug #40: Warning if payment still pending after Stripe webhook timeout
-                  if (widget.paymentMethod == 'stripe' &&
-                      widget.booking != null &&
-                      (widget.booking!.paymentStatus == 'pending' ||
-                          widget.booking!.status.value == 'pending')) ...[
-                    InfoCardWidget(
-                      title: 'Payment Verification in Progress',
-                      message:
-                          'Your payment was successful, but we\'re still verifying it with the payment provider. You will receive a confirmation email within a few minutes. If you don\'t receive it, please contact the property owner.',
-                      isDarkMode: isDarkMode,
-                    ),
-                    const SizedBox(height: SpacingTokens.m),
-                  ],
-
-                  // Booking reference card
-                  Container(
-                    padding: const EdgeInsets.all(SpacingTokens.m),
-                    decoration: BoxDecoration(
-                      color: colors.backgroundSecondary,
-                      borderRadius: BorderTokens.circularMedium,
-                      border: Border.all(
-                        color: colors.borderDefault,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Booking Reference',
-                          style: TextStyle(
-                            fontSize: TypographyTokens.fontSizeS,
-                            color: colors.textSecondary,
+                          // Animated header with icon and message
+                          ConfirmationHeader(
+                            paymentMethod: widget.paymentMethod,
+                            colors: colors,
+                            scaleAnimation: _scaleAnimation,
+                            customLogoUrl: widget
+                                .widgetSettings?.themeOptions?.customLogoUrl,
                           ),
-                        ),
-                        const SizedBox(height: SpacingTokens.xs),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              widget.bookingReference,
-                              style: TextStyle(
-                                fontSize: TypographyTokens.fontSizeXL,
-                                fontWeight: TypographyTokens.bold,
-                                letterSpacing: 2,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(width: SpacingTokens.s),
-                            IconButton(
-                              icon: Icon(
-                                Icons.copy,
-                                color: colors.textSecondary,
-                              ),
-                              onPressed: _copyToClipboard,
-                              tooltip: 'Copy reference',
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
 
-                  const SizedBox(height: SpacingTokens.m),
-
-                  // Bug #43: Email spam folder warning
-                  Container(
-                    padding: const EdgeInsets.all(SpacingTokens.m),
-                    decoration: BoxDecoration(
-                      color: colors.backgroundSecondary,
-                      borderRadius: BorderTokens.circularMedium,
-                      border: Border.all(
-                        color: colors.borderDefault,
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.mail_outline,
-                          color: colors.textSecondary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: SpacingTokens.s),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Confirmation Email Sent',
-                                style: TextStyle(
-                                  fontSize: TypographyTokens.fontSizeM,
-                                  fontWeight: TypographyTokens.semiBold,
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: SpacingTokens.xxs),
-                              Text(
-                                'Check your inbox for booking confirmation. If you don\'t see it within a few minutes, please check your spam or junk folder.',
-                                style: TextStyle(
-                                  fontSize: TypographyTokens.fontSizeS,
-                                  color: colors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: SpacingTokens.l),
-
-                  // Booking details card
-                  Container(
-                    padding: const EdgeInsets.all(SpacingTokens.m),
-                    decoration: BoxDecoration(
-                      color: colors.backgroundSecondary,
-                      borderRadius: BorderTokens.circularMedium,
-                      border: Border.all(
-                        color: colors.borderDefault,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Booking Details',
-                          style: TextStyle(
-                            fontSize: TypographyTokens.fontSizeL,
-                            fontWeight: TypographyTokens.bold,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: SpacingTokens.m),
-                        DetailRowWidget(
-                          label: 'Property',
-                          value: widget.unitName ?? widget.propertyName,
-                          isDarkMode: isDarkMode,
-                          hasPadding: true,
-                          valueFontWeight: FontWeight.w400,
-                        ),
-                        DetailRowWidget(
-                          label: 'Guest',
-                          value: widget.guestName,
-                          isDarkMode: isDarkMode,
-                          hasPadding: true,
-                          valueFontWeight: FontWeight.w400,
-                        ),
-                        DetailRowWidget(
-                          label: 'Email',
-                          value: widget.guestEmail,
-                          isDarkMode: isDarkMode,
-                          hasPadding: true,
-                          valueFontWeight: FontWeight.w400,
-                        ),
-                        const SizedBox(height: SpacingTokens.s),
-                        DetailRowWidget(
-                          label: 'Check-in',
-                          value: DateFormat(
-                            'EEEE, MMM dd, yyyy',
-                          ).format(widget.checkIn),
-                          isDarkMode: isDarkMode,
-                          hasPadding: true,
-                          valueFontWeight: FontWeight.w400,
-                        ),
-                        DetailRowWidget(
-                          label: 'Check-out',
-                          value: DateFormat(
-                            'EEEE, MMM dd, yyyy',
-                          ).format(widget.checkOut),
-                          isDarkMode: isDarkMode,
-                          hasPadding: true,
-                          valueFontWeight: FontWeight.w400,
-                        ),
-                        DetailRowWidget(
-                          label: 'Duration',
-                          value: '${widget.nights} ${widget.nights == 1 ? 'night' : 'nights'}',
-                          isDarkMode: isDarkMode,
-                          hasPadding: true,
-                          valueFontWeight: FontWeight.w400,
-                        ),
-                        DetailRowWidget(
-                          label: 'Guests',
-                          value: '${widget.guests} ${widget.guests == 1 ? 'guest' : 'guests'}',
-                          isDarkMode: isDarkMode,
-                          hasPadding: true,
-                          valueFontWeight: FontWeight.w400,
-                        ),
-                        const SizedBox(height: SpacingTokens.s),
-                        DetailRowWidget(
-                          label: 'Total Price',
-                          value: '€${widget.totalPrice.toStringAsFixed(2)}',
-                          isDarkMode: isDarkMode,
-                          hasPadding: true,
-                          isHighlighted: true,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: SpacingTokens.l),
-
-                  // Add to Calendar button (if booking data available and iCal export enabled)
-                  if (widget.booking != null &&
-                      (widget.widgetSettings?.icalExportEnabled ?? false))
-                    Container(
-                      margin: const EdgeInsets.only(bottom: SpacingTokens.l),
-                      child: ElevatedButton.icon(
-                        onPressed: _isGeneratingIcs
-                            ? null
-                            : _handleAddToCalendar,
-                        icon: Icon(
-                          _isGeneratingIcs
-                              ? Icons.hourglass_empty
-                              : Icons.calendar_today,
-                        ),
-                        label: Text(
-                          _isGeneratingIcs
-                              ? 'Generating...'
-                              : 'Add to My Calendar',
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colors.backgroundSecondary,
-                          foregroundColor: colors.textPrimary,
-                          minimumSize: const Size(double.infinity, 48),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              BorderTokens.radiusMedium,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  // Bank Transfer Instructions (if payment method is bank transfer)
-                  if (widget.paymentMethod == 'bank_transfer' &&
-                      widget
-                              .widgetSettings
-                              ?.bankTransferConfig
-                              ?.hasCompleteDetails ==
-                          true)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: SpacingTokens.l),
-                      padding: const EdgeInsets.all(SpacingTokens.m),
-                      decoration: BoxDecoration(
-                        color: colors.backgroundSecondary,
-                        borderRadius: BorderTokens.circularMedium,
-                        border: Border.all(
-                          color: colors.borderDefault,
-                          width: 2,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.account_balance,
-                                color: colors.textSecondary,
-                                size: 24,
-                              ),
-                              const SizedBox(width: SpacingTokens.s),
-                              Text(
-                                'Bank Transfer Instructions',
-                                style: TextStyle(
-                                  fontSize: TypographyTokens.fontSizeL,
-                                  fontWeight: TypographyTokens.bold,
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
                           const SizedBox(height: SpacingTokens.m),
-                          _buildBankTransferDetail(
-                            'Bank Name',
-                            widget
-                                .widgetSettings!
-                                .bankTransferConfig!
-                                .bankName!,
-                          ),
-                          const SizedBox(height: SpacingTokens.s),
-                          _buildBankTransferDetail(
-                            'Account Holder',
-                            widget
-                                .widgetSettings!
-                                .bankTransferConfig!
-                                .accountHolder!,
-                          ),
-                          const SizedBox(height: SpacingTokens.s),
-                          if (widget.widgetSettings!.bankTransferConfig!.iban !=
-                              null)
-                            _buildBankTransferDetail(
-                              'IBAN',
-                              widget.widgetSettings!.bankTransferConfig!.iban!,
-                              copyable: true,
-                            )
-                          else if (widget
-                                  .widgetSettings!
-                                  .bankTransferConfig!
-                                  .accountNumber !=
-                              null)
-                            _buildBankTransferDetail(
-                              'Account Number',
-                              widget
-                                  .widgetSettings!
-                                  .bankTransferConfig!
-                                  .accountNumber!,
-                              copyable: true,
+
+                          // Payment verification warning (Stripe pending)
+                          if (_shouldShowPaymentVerificationWarning)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(bottom: SpacingTokens.m),
+                              child: InfoCardWidget(
+                                title: 'Payment Verification in Progress',
+                                message:
+                                    'Your payment was successful, but we\'re still verifying it with the payment provider. You will receive a confirmation email within a few minutes. If you don\'t receive it, please contact the property owner.',
+                                isDarkMode: isDarkMode,
+                              ),
                             ),
-                          if (widget
-                                  .widgetSettings!
-                                  .bankTransferConfig!
-                                  .swift !=
-                              null) ...[
-                            const SizedBox(height: SpacingTokens.s),
-                            _buildBankTransferDetail(
-                              'SWIFT/BIC',
-                              widget.widgetSettings!.bankTransferConfig!.swift!,
-                              copyable: true,
-                            ),
-                          ],
-                          const SizedBox(height: SpacingTokens.s),
-                          _buildBankTransferDetail(
-                            'Reference',
-                            widget.bookingReference,
-                            copyable: true,
-                            highlight: true,
+
+                          // Booking reference card
+                          BookingReferenceCard(
+                            bookingReference: widget.bookingReference,
+                            colors: colors,
                           ),
+
                           const SizedBox(height: SpacingTokens.m),
-                          Container(
-                            padding: const EdgeInsets.all(SpacingTokens.s),
-                            decoration: BoxDecoration(
-                              color: colors.backgroundSecondary,
-                              borderRadius: BorderTokens.circularSmall,
+
+                          // Email spam folder warning
+                          EmailSpamWarningCard(colors: colors),
+
+                          const SizedBox(height: SpacingTokens.l),
+
+                          // Booking summary card
+                          BookingSummaryCard(
+                            propertyName: widget.propertyName,
+                            unitName: widget.unitName,
+                            guestName: widget.guestName,
+                            guestEmail: widget.guestEmail,
+                            checkIn: widget.checkIn,
+                            checkOut: widget.checkOut,
+                            nights: widget.nights,
+                            guests: widget.guests,
+                            totalPrice: widget.totalPrice,
+                            isDarkMode: isDarkMode,
+                            colors: colors,
+                          ),
+
+                          const SizedBox(height: SpacingTokens.l),
+
+                          // Calendar export button
+                          if (widget.booking != null &&
+                              (widget.widgetSettings?.icalExportEnabled ??
+                                  false))
+                            CalendarExportButton(
+                              booking: widget.booking!,
+                              unitName: widget.unitName ?? widget.propertyName,
+                              bookingReference: widget.bookingReference,
+                              colors: colors,
                             ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  size: 16,
-                                  color: colors.textSecondary,
-                                ),
-                                const SizedBox(width: SpacingTokens.xs),
-                                Expanded(
-                                  child: Text(
-                                    'Please complete the transfer within 3 days and include the reference number.',
-                                    style: TextStyle(
-                                      fontSize: TypographyTokens.fontSizeS,
-                                      color: colors.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                              ],
+
+                          // Bank transfer instructions
+                          if (widget.paymentMethod == 'bank_transfer' &&
+                              widget.widgetSettings?.bankTransferConfig
+                                      ?.hasCompleteDetails ==
+                                  true)
+                            BankTransferInstructionsCard(
+                              bankConfig:
+                                  widget.widgetSettings!.bankTransferConfig!,
+                              bookingReference: widget.bookingReference,
+                              colors: colors,
+                            ),
+
+                          // Email confirmation with resend option
+                          EmailConfirmationCard(
+                            guestEmail: widget.guestEmail,
+                            colors: colors,
+                            booking: widget.booking,
+                            emailConfig: widget.emailConfig,
+                            widgetSettings: widget.widgetSettings,
+                            propertyName: widget.propertyName,
+                            bookingReference: widget.bookingReference,
+                          ),
+
+                          // Cancellation policy
+                          if (widget.widgetSettings?.allowGuestCancellation ==
+                                  true &&
+                              widget.widgetSettings?.cancellationDeadlineHours !=
+                                  null)
+                            CancellationPolicySection(
+                              isDarkMode: isDarkMode,
+                              deadlineHours: widget
+                                  .widgetSettings!.cancellationDeadlineHours!,
+                              bookingReference: widget.bookingReference,
+                              fromEmail: widget.emailConfig?.fromEmail,
+                            ),
+
+                          // Next steps section
+                          NextStepsSection(
+                            isDarkMode: isDarkMode,
+                            paymentMethod: widget.paymentMethod,
+                          ),
+
+                          const SizedBox(height: SpacingTokens.xl),
+
+                          // Close button
+                          _buildCloseButton(colors),
+
+                          const SizedBox(height: SpacingTokens.m),
+
+                          // Helpful info
+                          Text(
+                            'Save this booking reference for your records. You can use it to check your booking status.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: TypographyTokens.fontSizeS,
+                              color: colors.textSecondary,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-
-                  // Email confirmation info
-                  Container(
-                    padding: const EdgeInsets.all(SpacingTokens.m),
-                    decoration: BoxDecoration(
-                      color: colors.backgroundSecondary,
-                      borderRadius: BorderTokens.circularMedium,
-                      border: Border.all(
-                        color: colors.borderDefault,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.email_outlined,
-                          color: colors.textPrimary,
-                        ),
-                        const SizedBox(width: SpacingTokens.s),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Confirmation Email Sent',
-                                style: TextStyle(
-                                  fontSize: TypographyTokens.fontSizeM,
-                                  fontWeight: TypographyTokens.semiBold,
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: SpacingTokens.xxs),
-                              Text(
-                                'Check your email at ${widget.guestEmail} for booking details.',
-                                style: TextStyle(
-                                  fontSize: TypographyTokens.fontSizeS,
-                                  color: colors.textSecondary,
-                                ),
-                              ),
-                              if (widget.emailConfig != null &&
-                                  widget.booking != null) ...[
-                                const SizedBox(height: SpacingTokens.xs),
-                                TextButton.icon(
-                                  onPressed: _isResendingEmail
-                                      ? null
-                                      : _resendConfirmationEmail,
-                                  icon: _isResendingEmail
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : Icon(
-                                          _emailResent
-                                              ? Icons.check
-                                              : Icons.refresh,
-                                          size: 16,
-                                        ),
-                                  label: Text(
-                                    _emailResent
-                                        ? 'Email sent!'
-                                        : 'Didn\'t receive? Resend email',
-                                  ),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: colors.textPrimary,
-                                    padding: EdgeInsets.zero,
-                                    minimumSize: Size.zero,
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Cancellation policy (if enabled)
-                  if (widget.widgetSettings?.allowGuestCancellation == true &&
-                      widget.widgetSettings?.cancellationDeadlineHours != null)
-                    CancellationPolicySection(
-                      isDarkMode: isDarkMode,
-                      deadlineHours: widget.widgetSettings!.cancellationDeadlineHours!,
-                      bookingReference: widget.bookingReference,
-                      fromEmail: widget.emailConfig?.fromEmail,
-                    ),
-
-                  // Next steps section
-                  NextStepsSection(
-                    isDarkMode: isDarkMode,
-                    paymentMethod: widget.paymentMethod,
-                  ),
-
-                  const SizedBox(height: SpacingTokens.xl),
-
-                  // Close button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colors.buttonPrimary,
-                        foregroundColor: colors.buttonPrimaryText,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: SpacingTokens.m,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderTokens.circularRounded,
-                        ),
-                      ),
-                      child: const Text(
-                        'Close',
-                        style: TextStyle(
-                          fontSize: TypographyTokens.fontSizeL,
-                          fontWeight: TypographyTokens.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: SpacingTokens.m),
-
-                  // Helpful info
-                  Text(
-                    'Save this booking reference for your records. You can use it to check your booking status.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeS,
-                      color: colors.textSecondary,
-                    ),
-                  ),
                         ],
                       ),
                     ),
@@ -889,97 +251,64 @@ class _BookingConfirmationScreenState
     );
   }
 
-  /// Build bank transfer detail row with optional copy functionality
-  Widget _buildBankTransferDetail(
-    String label,
-    String value, {
-    bool copyable = false,
-    bool highlight = false,
-  }) {
-    final isDarkMode = ref.read(themeProvider);
-    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+  bool get _shouldShowPaymentVerificationWarning {
+    return widget.paymentMethod == 'stripe' &&
+        widget.booking != null &&
+        (widget.booking!.paymentStatus == 'pending' ||
+            widget.booking!.status.value == 'pending');
+  }
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS,
-              fontWeight: TypographyTokens.semiBold,
-              color: colors.textSecondary,
-            ),
+  Widget _buildHeader(WidgetColorScheme colors) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingTokens.m,
+        vertical: SpacingTokens.s,
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: colors.textPrimary),
+            onPressed: () => Navigator.of(context).pop(),
           ),
-        ),
-        const SizedBox(width: SpacingTokens.s),
-        Expanded(
-          flex: 3,
-          child: Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: highlight
-                      ? const EdgeInsets.symmetric(
-                          horizontal: SpacingTokens.xs,
-                          vertical: SpacingTokens.xxs,
-                        )
-                      : null,
-                  decoration: highlight
-                      ? BoxDecoration(
-                          color: colors.backgroundSecondary,
-                          borderRadius: BorderTokens.circularSmall,
-                          border: Border.all(
-                            color: colors.borderDefault,
-                          ),
-                        )
-                      : null,
-                  child: Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeS,
-                      fontWeight: highlight
-                          ? TypographyTokens.bold
-                          : TypographyTokens.medium,
-                      color: highlight
-                          ? colors.textPrimary
-                          : colors.textPrimary,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
+          Expanded(
+            child: Center(
+              child: Text(
+                'Booking Confirmation',
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeXL,
+                  fontWeight: TypographyTokens.bold,
+                  color: colors.textPrimary,
                 ),
               ),
-              if (copyable) ...[
-                const SizedBox(width: SpacingTokens.xs),
-                IconButton(
-                  icon: Icon(
-                    Icons.copy,
-                    size: 16,
-                    color: colors.textSecondary,
-                  ),
-                  onPressed: () async {
-                    await Clipboard.setData(ClipboardData(text: value));
-                    if (mounted) {
-                      SnackBarHelper.showSuccess(
-                        context: context,
-                        message: '$label copied to clipboard',
-                        duration: const Duration(seconds: 2),
-                      );
-                    }
-                  },
-                  tooltip: 'Copy $label',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                ),
-              ],
-            ],
+            ),
+          ),
+          const SizedBox(width: 48), // Balance back button
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCloseButton(WidgetColorScheme colors) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () => Navigator.of(context).pop(),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colors.buttonPrimary,
+          foregroundColor: colors.buttonPrimaryText,
+          padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderTokens.circularRounded,
           ),
         ),
-      ],
+        child: const Text(
+          'Close',
+          style: TextStyle(
+            fontSize: TypographyTokens.fontSizeL,
+            fontWeight: TypographyTokens.bold,
+          ),
+        ),
+      ),
     );
   }
 }

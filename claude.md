@@ -1808,7 +1808,7 @@ lib/features/widget/presentation/widgets/calendar/
 ### Booking Screens Refactoring (2025-12-01)
 
 **Status**: ✅ COMPLETED
-**Commit**: TBD
+**Commit**: `db4523f`
 
 Ekstraktovani widget komponenti iz `booking_confirmation_screen.dart` i `booking_details_screen.dart`.
 

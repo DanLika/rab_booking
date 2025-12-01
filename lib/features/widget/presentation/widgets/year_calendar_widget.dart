@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/calendar_date_status.dart';
-import '../../domain/models/calendar_view_type.dart';
 import '../providers/year_calendar_provider.dart';
-import '../providers/calendar_view_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/widget_settings_provider.dart';
 import '../../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import '../theme/responsive_helper.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
-import '../../../../core/theme/custom_icons_tablericons.dart';
 import 'calendar_hover_tooltip.dart';
+import 'calendar/calendar_date_utils.dart';
+import 'calendar/calendar_view_switcher_widget.dart';
+import 'calendar/calendar_compact_legend.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
 class YearCalendarWidget extends ConsumerStatefulWidget {
@@ -78,7 +78,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             ),
             // Compact legend/info banner below calendar
             if (minNights > 1)
-              _buildCompactLegend(minNights, colors, isDarkMode),
+              CalendarCompactLegend(minNights: minNights, colors: colors),
           ],
         ),
         // Hover tooltip overlay (desktop) - highest z-index
@@ -89,114 +89,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             error: (error, stack) => const SizedBox.shrink(),
           ),
       ],
-    );
-  }
-
-  Widget _buildViewSwitcher(BuildContext context, WidgetColorScheme colors) {
-    final currentView = ref.watch(calendarViewProvider);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 400; // iPhone SE and similar
-    final isDarkMode = ref.watch(themeProvider);
-
-    return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 2 : 4),
-      decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(isSmallScreen ? 16 : 20),
-        border: Border.all(color: colors.borderLight),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Week view hidden but code kept for future use
-          // _buildViewTab('Week', TablerIcons.kviewWeek, CalendarViewType.week, currentView == CalendarViewType.week, isSmallScreen, colors, isDarkMode),
-          _buildViewTab(
-            'Month',
-            TablerIcons.ktableFilled,
-            CalendarViewType.month,
-            currentView == CalendarViewType.month,
-            isSmallScreen,
-            colors,
-            isDarkMode,
-          ),
-          SizedBox(width: isSmallScreen ? 2 : 4),
-          _buildViewTab(
-            'Year',
-            TablerIcons.ktableOptions,
-            CalendarViewType.year,
-            currentView == CalendarViewType.year,
-            isSmallScreen,
-            colors,
-            isDarkMode,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildViewTab(
-    String label,
-    IconData icon,
-    CalendarViewType viewType,
-    bool isSelected,
-    bool isSmallScreen,
-    WidgetColorScheme colors,
-    bool isDarkMode,
-  ) {
-    // Dark theme: selected button has white background with black text
-    // Light theme: selected button has black background with white text
-    final selectedBg = isDarkMode
-        ? ColorTokens.pureWhite
-        : ColorTokens.pureBlack;
-    final selectedText = isDarkMode
-        ? ColorTokens.pureBlack
-        : ColorTokens.pureWhite;
-
-    return Semantics(
-      label: '$label view',
-      button: true,
-      selected: isSelected,
-      child: InkWell(
-        onTap: () {
-          ref.read(calendarViewProvider.notifier).state = viewType;
-        },
-        borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: EdgeInsets.symmetric(
-            horizontal: isSmallScreen ? 8 : 12,
-            vertical: isSmallScreen ? 6 : 8,
-          ),
-          decoration: BoxDecoration(
-            color: isSelected ? selectedBg : Colors.transparent,
-            borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? selectedText : colors.textPrimary,
-                size: isSmallScreen ? 16 : IconSizeTokens.small,
-                semanticLabel: label,
-              ),
-              if (!isSmallScreen) ...[
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isSelected ? selectedText : colors.textPrimary,
-                    fontSize: TypographyTokens.fontSizeS2,
-                    fontWeight: isSelected
-                        ? TypographyTokens.semiBold
-                        : TypographyTokens.regular,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -225,7 +117,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // View Switcher
-            _buildViewSwitcher(context, colors),
+            CalendarViewSwitcherWidget(colors: colors, isDarkMode: isDarkMode),
             SizedBox(width: isSmallScreen ? 4 : SpacingTokens.xxs),
 
             // Theme Toggle Button
@@ -268,7 +160,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   ) {
     if (_hoveredDate == null) return const SizedBox.shrink();
 
-    final key = _getDateKey(_hoveredDate!);
+    final key = CalendarDateUtils.getDateKey(_hoveredDate!);
     final dateInfo = data[key];
 
     if (dateInfo == null) return const SizedBox.shrink();
@@ -526,7 +418,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         return _buildEmptyCell(cellSize, colors);
       }
 
-      final key = _getDateKey(date);
+      final key = CalendarDateUtils.getDateKey(date);
       final dateInfo = data[key];
 
       if (dateInfo == null) {
@@ -534,14 +426,14 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         return _buildEmptyCell(cellSize, colors);
       }
 
-      final isInRange = _isDateInRange(date);
+      final isInRange = CalendarDateUtils.isDateInRange(date, _rangeStart, _rangeEnd);
       final isRangeStart =
-          _rangeStart != null && _isSameDay(date, _rangeStart!);
-      final isRangeEnd = _rangeEnd != null && _isSameDay(date, _rangeEnd!);
-      final isHovered = _hoveredDate != null && _isSameDay(date, _hoveredDate!);
+          _rangeStart != null && CalendarDateUtils.isSameDay(date, _rangeStart!);
+      final isRangeEnd = _rangeEnd != null && CalendarDateUtils.isSameDay(date, _rangeEnd!);
+      final isHovered = _hoveredDate != null && CalendarDateUtils.isSameDay(date, _hoveredDate!);
       final today = DateTime.now();
       final todayNormalized = DateTime(today.year, today.month, today.day);
-      final isToday = _isSameDay(date, today);
+      final isToday = CalendarDateUtils.isSameDay(date, today);
       final isPast = date.isBefore(todayNormalized);
 
       // Determine if this is a check-in or check-out day
@@ -788,7 +680,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         _rangeEnd = null;
       } else if (_rangeStart != null && _rangeEnd == null) {
         // Cannot select same date as check-in and check-out
-        if (_isSameDay(date, _rangeStart!)) {
+        if (CalendarDateUtils.isSameDay(date, _rangeStart!)) {
           return; // Do nothing if clicking on the same date
         }
 
@@ -812,7 +704,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         final selectedNights = end.difference(start).inDays;
 
         // Get check-in date info for minNightsOnArrival/maxNightsOnArrival validation
-        final checkInDateInfo = data[_getDateKey(start)];
+        final checkInDateInfo = data[CalendarDateUtils.getDateKey(start)];
 
         // Check minNightsOnArrival from check-in date (if set)
         final minNightsOnArrival = checkInDateInfo?.minNightsOnArrival;
@@ -911,8 +803,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     Map<String, CalendarDateInfo> data,
   ) {
     DateTime current = start;
-    while (current.isBefore(end) || _isSameDay(current, end)) {
-      final key = _getDateKey(current);
+    while (current.isBefore(end) || CalendarDateUtils.isSameDay(current, end)) {
+      final key = CalendarDateUtils.getDateKey(current);
       final dateInfo = data[key];
 
       if (dateInfo != null) {
@@ -928,7 +820,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           // Allow partial dates only at the exact start or end points
           // This enables: check-in on a check-out day, and check-out on a check-in day
           final isEndpoint =
-              _isSameDay(current, start) || _isSameDay(current, end);
+              CalendarDateUtils.isSameDay(current, start) || CalendarDateUtils.isSameDay(current, end);
           final isPartialDate =
               dateInfo.status == DateStatus.partialCheckIn ||
               dateInfo.status == DateStatus.partialCheckOut;
@@ -960,7 +852,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     // Search up to 1 year ahead for the next blocked date
     final maxSearchDate = end.add(const Duration(days: 365));
     while (current.isBefore(maxSearchDate)) {
-      final key = _getDateKey(current);
+      final key = CalendarDateUtils.getDateKey(current);
       final dateInfo = data[key];
 
       if (dateInfo != null &&
@@ -989,7 +881,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     // Search up to 1 year back for the previous blocked date
     final minSearchDate = start.subtract(const Duration(days: 365));
     while (current.isAfter(minSearchDate)) {
-      final key = _getDateKey(current);
+      final key = CalendarDateUtils.getDateKey(current);
       final dateInfo = data[key];
 
       if (dateInfo != null &&
@@ -1012,155 +904,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     }
 
     return false; // No orphan gaps would be created
-  }
-
-  bool _isDateInRange(DateTime date) {
-    if (_rangeStart == null || _rangeEnd == null) return false;
-    return (date.isAfter(_rangeStart!) || _isSameDay(date, _rangeStart!)) &&
-        (date.isBefore(_rangeEnd!) || _isSameDay(date, _rangeEnd!));
-  }
-
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
-
-  String _getDateKey(DateTime date) {
-    return DateFormat('yyyy-MM-dd').format(date);
-  }
-
-  /// Build compact legend/info banner below calendar
-  /// Shows minimum stay requirement and color legend
-  Widget _buildCompactLegend(
-    int minNights,
-    WidgetColorScheme colors,
-    bool isDarkMode,
-  ) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isNarrowScreen = screenWidth < 600;
-    final isDesktop = screenWidth >= 1024;
-
-    // Match calendar width: 650px desktop, 600px mobile/tablet
-    final maxWidth = isDesktop ? 650.0 : 600.0;
-
-    return Center(
-      child: Container(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        margin: const EdgeInsets.only(
-          top: SpacingTokens.s,
-          bottom: SpacingTokens.xs,
-          left: SpacingTokens.xs,
-          right: SpacingTokens.xs,
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: SpacingTokens.s,
-          vertical: SpacingTokens.xs,
-        ),
-        decoration: BoxDecoration(
-          color: colors.backgroundSecondary,
-          borderRadius: BorderTokens.circularMedium,
-          border: Border.all(color: colors.borderLight),
-        ),
-        child: isNarrowScreen
-            ? Column(
-                children: [
-                  // Min stay info
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.bed_outlined,
-                        size: 14,
-                        color: colors.textSecondary,
-                      ),
-                      const SizedBox(width: SpacingTokens.xxs),
-                      Text(
-                        'Min. stay: $minNights ${minNights == 1 ? 'night' : 'nights'}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: SpacingTokens.xxs),
-                  // Color legend
-                  _buildColorLegend(colors),
-                ],
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Min stay info
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.bed_outlined,
-                        size: 14,
-                        color: colors.textSecondary,
-                      ),
-                      const SizedBox(width: SpacingTokens.xxs),
-                      Text(
-                        'Min. stay: $minNights ${minNights == 1 ? 'night' : 'nights'}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: SpacingTokens.m),
-                  // Color legend
-                  _buildColorLegend(colors),
-                ],
-              ),
-      ),
-    );
-  }
-
-  /// Build compact color legend with dots
-  Widget _buildColorLegend(WidgetColorScheme colors) {
-    return Wrap(
-      spacing: SpacingTokens.xs,
-      runSpacing: 4,
-      children: [
-        _buildLegendItem('Available', colors.statusAvailableBackground, colors),
-        _buildLegendItem('Booked', colors.statusBookedBackground, colors),
-        _buildLegendItem('Pending', colors.statusPendingBackground, colors),
-        _buildLegendItem('Unavailable', colors.backgroundTertiary, colors),
-      ],
-    );
-  }
-
-  /// Build a single legend item with colored dot
-  Widget _buildLegendItem(
-    String label,
-    Color dotColor,
-    WidgetColorScheme colors,
-  ) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: dotColor,
-            shape: BoxShape.circle,
-            border: Border.all(color: colors.borderDefault, width: 0.5),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: colors.textSecondary),
-        ),
-      ],
-    );
   }
 }
 

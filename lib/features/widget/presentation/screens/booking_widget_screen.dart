@@ -2049,12 +2049,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // Build return URL with confirmation parameters
       // Include full booking ID to fetch from Firestore after Stripe return
+      //
+      // IMPORTANT: Flutter Web uses hash routing (e.g., /#/calendar)
+      // Uri class doesn't support fragment in constructor properly, so we append it manually
       final baseUrl = Uri.base;
-      final returnUrl = Uri(
+      final returnUrlWithoutHash = Uri(
         scheme: baseUrl.scheme,
         host: baseUrl.host,
         port: baseUrl.port,
-        path: baseUrl.path,
         queryParameters: {
           ...baseUrl.queryParameters,
           'confirmation': bookingReference,
@@ -2063,6 +2065,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           'payment': 'stripe',
         },
       ).toString();
+      // Append hash fragment for Flutter's hash-based routing
+      // This ensures the app loads correctly when Stripe returns
+      final returnUrl = '$returnUrlWithoutHash#/calendar';
 
       final checkoutResult = await stripeService.createCheckoutSession(
         bookingId: bookingId,

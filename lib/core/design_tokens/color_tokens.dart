@@ -529,10 +529,10 @@ class DarkColorScheme implements WidgetColorScheme {
   Color get statusBookedBorder => ColorTokens.pink300; // Lighter border for contrast
   @override
   Color get statusBookedText => ColorTokens.pureWhite; // White text for good contrast
-  // Pending uses YELLOW background to distinguish from confirmed (red) bookings
+  // Pending uses GOLDEN YELLOW background to distinguish from confirmed (red) bookings
   // Diagonal pattern adds visual distinction while showing dates are blocked
   @override
-  Color get statusPendingBackground => const Color(0xFFFFD52E); // Bright yellow for dark theme
+  Color get statusPendingBackground => const Color(0xFFF5B800); // Elegant golden yellow for dark theme
   @override
   Color get statusPendingBorder => ColorTokens.amber500; // Medium yellow border
   @override

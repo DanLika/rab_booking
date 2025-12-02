@@ -323,12 +323,14 @@ class LightColorScheme implements WidgetColorScheme {
   Color get statusBookedBorder => ColorTokens.pink600; // Medium border
   @override
   Color get statusBookedText => ColorTokens.pink700; // Dark text for contrast
+  // Pending uses YELLOW background to distinguish from confirmed (red) bookings
+  // Diagonal pattern adds visual distinction while showing dates are blocked
   @override
-  Color get statusPendingBackground => ColorTokens.amber200;
+  Color get statusPendingBackground => ColorTokens.amber200; // Light yellow for pending
   @override
-  Color get statusPendingBorder => ColorTokens.amber500;
+  Color get statusPendingBorder => ColorTokens.amber500; // Medium yellow border
   @override
-  Color get statusPendingText => ColorTokens.amber600;
+  Color get statusPendingText => ColorTokens.amber600; // Dark amber text for contrast
   @override
   Color get statusSelectedBackground => ColorTokens.azure100;
   @override
@@ -527,12 +529,14 @@ class DarkColorScheme implements WidgetColorScheme {
   Color get statusBookedBorder => ColorTokens.pink300; // Lighter border for contrast
   @override
   Color get statusBookedText => ColorTokens.pureWhite; // White text for good contrast
+  // Pending uses YELLOW background to distinguish from confirmed (red) bookings
+  // Diagonal pattern adds visual distinction while showing dates are blocked
   @override
-  Color get statusPendingBackground => ColorTokens.amber900;
+  Color get statusPendingBackground => ColorTokens.amber600; // Warm amber - not too dark, good contrast
   @override
-  Color get statusPendingBorder => ColorTokens.amber500;
+  Color get statusPendingBorder => ColorTokens.amber400; // Lighter yellow border
   @override
-  Color get statusPendingText => ColorTokens.amber400;
+  Color get statusPendingText => ColorTokens.pureWhite; // White text for contrast
   @override
   Color get statusSelectedBackground => ColorTokens.azure900;
   @override

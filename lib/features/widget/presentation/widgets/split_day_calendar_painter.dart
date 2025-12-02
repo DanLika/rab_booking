@@ -10,6 +10,10 @@ class SplitDayCalendarPainter extends CustomPainter {
   final String? priceText; // Price to display in cell (e.g., "€50")
   final WidgetColorScheme colors;
   final bool isInRange; // Whether this date is in a selected range
+  final bool isPendingBooking; // Whether this date is from a pending booking (diagonal pattern)
+  // For partialBoth (turnover day) - track which half is pending
+  final bool isCheckOutPending; // Is the checkout half (top-left triangle) pending?
+  final bool isCheckInPending; // Is the checkin half (bottom-right triangle) pending?
 
   SplitDayCalendarPainter({
     required this.status,
@@ -17,6 +21,9 @@ class SplitDayCalendarPainter extends CustomPainter {
     this.priceText,
     required this.colors,
     this.isInRange = false,
+    this.isPendingBooking = false,
+    this.isCheckOutPending = false,
+    this.isCheckInPending = false,
   });
 
   @override
@@ -34,21 +41,31 @@ class SplitDayCalendarPainter extends CustomPainter {
         break;
 
       case DateStatus.booked:
-        // Solid booked color
-        paint.color = status.getColor(colors);
+        // Solid booked color (or pending yellow if isPendingBooking)
+        paint.color = isPendingBooking
+            ? colors.statusPendingBackground
+            : status.getColor(colors);
         canvas.drawRect(
           Rect.fromLTWH(0, 0, size.width, size.height),
           paint,
         );
+        // Draw diagonal pattern for pending bookings
+        if (isPendingBooking) {
+          _drawDiagonalPattern(canvas, size, DateStatus.pending.getPatternLineColor(colors));
+        }
         break;
 
       case DateStatus.pending:
-        // Solid pending color (orange)
+        // Pending uses RED background (same as booked) with diagonal pattern
+        // This visually indicates "blocks dates" while distinguishing from confirmed bookings
         paint.color = status.getColor(colors);
         canvas.drawRect(
           Rect.fromLTWH(0, 0, size.width, size.height),
           paint,
         );
+
+        // Draw diagonal line pattern on top
+        _drawDiagonalPattern(canvas, size, status.getPatternLineColor(colors));
         break;
 
       case DateStatus.blocked:
@@ -79,63 +96,101 @@ class SplitDayCalendarPainter extends CustomPainter {
         break;
 
       case DateStatus.partialCheckIn:
-        // Check-in day: Top-left triangle is available (green), bottom-right is booked (pink)
+        // Check-in day: Top-left triangle is available (green), bottom-right is booked (pink/pending)
         // This means: previous guest checks out, new guest checks in
 
-        // Draw bottom-right triangle (booked - pink)
-        paint.color = status.getDiagonalColor(colors); // Pink
-        final Path bookedPath = Path()
+        // Draw bottom-right triangle (booked - pink, or pending - red with pattern)
+        paint.color = isPendingBooking
+            ? colors.statusPendingBackground
+            : status.getDiagonalColor(colors); // Pink or pending red
+        final Path bookedPathCI = Path()
           ..moveTo(0, size.height) // Bottom-left
           ..lineTo(size.width, size.height) // Bottom-right
           ..lineTo(size.width, 0) // Top-right
           ..close();
-        canvas.drawPath(bookedPath, paint);
+        canvas.drawPath(bookedPathCI, paint);
 
         // Draw top-left triangle (available - green)
         paint.color = status.getColor(colors); // Green
-        final Path availablePath = Path()
+        final Path availablePathCI = Path()
           ..moveTo(0, 0) // Top-left
           ..lineTo(size.width, 0) // Top-right
           ..lineTo(0, size.height) // Bottom-left
           ..close();
-        canvas.drawPath(availablePath, paint);
+        canvas.drawPath(availablePathCI, paint);
 
-        // Diagonal line removed for cleaner visual - triangles are self-explanatory
+        // Draw diagonal pattern for pending bookings (only on booked half)
+        if (isPendingBooking) {
+          _drawDiagonalPatternClipped(canvas, size, DateStatus.pending.getPatternLineColor(colors), isCheckIn: true);
+        }
         break;
 
       case DateStatus.partialCheckOut:
-        // Check-out day: Top-left triangle is booked (pink), bottom-right is available (green)
+        // Check-out day: Top-left triangle is booked (pink/pending), bottom-right is available (green)
         // This means: current guest checks out, becomes available
 
-        // Draw top-left triangle (booked - pink)
-        paint.color = status.getDiagonalColor(colors); // Pink
-        final Path bookedPath = Path()
+        // Draw top-left triangle (booked - pink, or pending - red with pattern)
+        paint.color = isPendingBooking
+            ? colors.statusPendingBackground
+            : status.getDiagonalColor(colors); // Pink or pending red
+        final Path bookedPathCO = Path()
           ..moveTo(0, 0) // Top-left
           ..lineTo(size.width, 0) // Top-right
           ..lineTo(0, size.height) // Bottom-left
           ..close();
-        canvas.drawPath(bookedPath, paint);
+        canvas.drawPath(bookedPathCO, paint);
 
         // Draw bottom-right triangle (available - green)
         paint.color = status.getColor(colors); // Green
-        final Path availablePath = Path()
+        final Path availablePathCO = Path()
           ..moveTo(0, size.height) // Bottom-left
           ..lineTo(size.width, size.height) // Bottom-right
           ..lineTo(size.width, 0) // Top-right
           ..close();
-        canvas.drawPath(availablePath, paint);
+        canvas.drawPath(availablePathCO, paint);
 
-        // Diagonal line removed for cleaner visual - triangles are self-explanatory
+        // Draw diagonal pattern for pending bookings (only on booked half)
+        if (isPendingBooking) {
+          _drawDiagonalPatternClipped(canvas, size, DateStatus.pending.getPatternLineColor(colors), isCheckIn: false);
+        }
         break;
 
       case DateStatus.partialBoth:
         // Turnover day: Both check-out and check-in on same day
-        // Property is fully occupied - render as solid booked
-        paint.color = status.getColor(colors);
-        canvas.drawRect(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          paint,
-        );
+        // Top-left triangle = checkout (previous booking ends)
+        // Bottom-right triangle = checkin (new booking starts)
+
+        // Draw top-left triangle (checkout half)
+        paint.color = isCheckOutPending
+            ? colors.statusPendingBackground  // Yellow for pending checkout
+            : colors.statusBookedBackground;   // Red for confirmed checkout
+        final Path checkoutPath = Path()
+          ..moveTo(0, 0) // Top-left
+          ..lineTo(size.width, 0) // Top-right
+          ..lineTo(0, size.height) // Bottom-left
+          ..close();
+        canvas.drawPath(checkoutPath, paint);
+
+        // Draw bottom-right triangle (checkin half)
+        paint.color = isCheckInPending
+            ? colors.statusPendingBackground  // Yellow for pending checkin
+            : colors.statusBookedBackground;   // Red for confirmed checkin
+        final Path checkinPath = Path()
+          ..moveTo(0, size.height) // Bottom-left
+          ..lineTo(size.width, size.height) // Bottom-right
+          ..lineTo(size.width, 0) // Top-right
+          ..close();
+        canvas.drawPath(checkinPath, paint);
+
+        // Draw diagonal pattern for pending checkout (top-left triangle)
+        if (isCheckOutPending) {
+          _drawDiagonalPatternClipped(canvas, size, DateStatus.pending.getPatternLineColor(colors), isCheckIn: false);
+        }
+
+        // Draw diagonal pattern for pending checkin (bottom-right triangle)
+        if (isCheckInPending) {
+          _drawDiagonalPatternClipped(canvas, size, DateStatus.pending.getPatternLineColor(colors), isCheckIn: true);
+        }
         break;
     }
 
@@ -143,7 +198,7 @@ class SplitDayCalendarPainter extends CustomPainter {
     if (isInRange) {
       final overlayPaint = Paint()
         ..style = PaintingStyle.fill
-        ..color = colors.buttonPrimary.withOpacity(0.2);
+        ..color = colors.buttonPrimary.withValues(alpha: 0.2);
       canvas.drawRect(
         Rect.fromLTWH(0, 0, size.width, size.height),
         overlayPaint,
@@ -182,13 +237,69 @@ class SplitDayCalendarPainter extends CustomPainter {
     }
   }
 
+  /// Draw diagonal line pattern for pending status
+  /// Creates thin diagonal lines from top-left to bottom-right
+  void _drawDiagonalPattern(Canvas canvas, Size size, Color lineColor) {
+    final paint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    // Spacing between diagonal lines
+    const double spacing = 6.0;
+
+    // Draw diagonal lines from top-left to bottom-right
+    // Start from negative to cover the entire cell
+    for (double i = -size.height; i < size.width + size.height; i += spacing) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        paint,
+      );
+    }
+  }
+
+  /// Draw diagonal line pattern clipped to only the booked half of split day
+  /// isCheckIn: true = bottom-right triangle, false = top-left triangle
+  void _drawDiagonalPatternClipped(Canvas canvas, Size size, Color lineColor, {required bool isCheckIn}) {
+    canvas.save();
+
+    // Create clipping path for the booked triangle
+    final Path clipPath = Path();
+    if (isCheckIn) {
+      // Check-in day: clip to bottom-right triangle
+      clipPath
+        ..moveTo(0, size.height) // Bottom-left
+        ..lineTo(size.width, size.height) // Bottom-right
+        ..lineTo(size.width, 0) // Top-right
+        ..close();
+    } else {
+      // Check-out day: clip to top-left triangle
+      clipPath
+        ..moveTo(0, 0) // Top-left
+        ..lineTo(size.width, 0) // Top-right
+        ..lineTo(0, size.height) // Bottom-left
+        ..close();
+    }
+
+    canvas.clipPath(clipPath);
+
+    // Draw diagonal pattern (will be clipped to triangle)
+    _drawDiagonalPattern(canvas, size, lineColor);
+
+    canvas.restore();
+  }
+
   @override
   bool shouldRepaint(covariant SplitDayCalendarPainter oldDelegate) {
     return oldDelegate.status != status ||
            oldDelegate.borderColor != borderColor ||
            oldDelegate.priceText != priceText ||
            oldDelegate.colors != colors ||
-           oldDelegate.isInRange != isInRange;
+           oldDelegate.isInRange != isInRange ||
+           oldDelegate.isPendingBooking != isPendingBooking ||
+           oldDelegate.isCheckOutPending != isCheckOutPending ||
+           oldDelegate.isCheckInPending != isCheckInPending;
   }
 }
 

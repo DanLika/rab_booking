@@ -190,9 +190,12 @@ class CalendarDataService {
       endDate: end,
     );
 
-    // Filter out cancelled bookings - they should NOT block dates
+    // Filter out bookings that should NOT block dates
+    // Uses BookingStatus.blocksCalendarDates helper:
+    // - cancelled: Does NOT block
+    // - pending/confirmed/completed: BLOCKS dates
     return allBookings
-        .where((booking) => booking.status != BookingStatus.cancelled)
+        .where((booking) => booking.status.blocksCalendarDates)
         .toList();
   }
 
@@ -307,6 +310,9 @@ class CalendarDataService {
         booking.checkOut.day,
       );
 
+      // Check if booking is pending (awaiting owner approval)
+      final isPending = booking.status == BookingStatus.pending;
+
       DateTime current = checkIn;
       while (current.isBefore(checkOut) || isSameDay(current, checkOut)) {
         final key = getDateKey(current);
@@ -318,12 +324,41 @@ class CalendarDataService {
 
           final status = _calculateBookingStatus(
             isPast: isPast,
+            isPending: false, // Use normal status, isPendingBooking flag handles the pattern
             isCheckIn: isCheckIn,
             isCheckOut: isCheckOut,
             existingStatus: existingInfo.status,
           );
 
-          calendarData[key] = existingInfo.copyWith(status: status);
+          // Track pending status for each half of partialBoth (turnover day)
+          bool newIsCheckOutPending = existingInfo.isCheckOutPending;
+          bool newIsCheckInPending = existingInfo.isCheckInPending;
+
+          if (status == DateStatus.partialBoth) {
+            // Turnover day: one reservation checks out, another checks in
+            if (existingInfo.status == DateStatus.partialCheckOut) {
+              // Existing checkout, current booking is checking IN
+              // Keep existing isCheckOutPending, set isCheckInPending from current booking
+              newIsCheckInPending = isPending;
+            } else if (existingInfo.status == DateStatus.partialCheckIn) {
+              // Existing checkin, current booking is checking OUT
+              // Keep existing isCheckInPending, set isCheckOutPending from current booking
+              newIsCheckOutPending = isPending;
+            }
+          } else if (status == DateStatus.partialCheckIn) {
+            // This booking's checkin day
+            newIsCheckInPending = isPending;
+          } else if (status == DateStatus.partialCheckOut) {
+            // This booking's checkout day
+            newIsCheckOutPending = isPending;
+          }
+
+          calendarData[key] = existingInfo.copyWith(
+            status: status,
+            isPendingBooking: isPending, // Set flag for pending pattern overlay (full days)
+            isCheckOutPending: newIsCheckOutPending,
+            isCheckInPending: newIsCheckInPending,
+          );
         }
         current = current.add(const Duration(days: 1));
       }
@@ -359,6 +394,7 @@ class CalendarDataService {
 
           final status = _calculateBookingStatus(
             isPast: isPast,
+            isPending: false,
             isCheckIn: isCheckIn,
             isCheckOut: isCheckOut,
             existingStatus: existingInfo.status,
@@ -374,12 +410,18 @@ class CalendarDataService {
   /// Calculate booking status for a date
   DateStatus _calculateBookingStatus({
     required bool isPast,
+    required bool isPending,
     required bool isCheckIn,
     required bool isCheckOut,
     required DateStatus existingStatus,
   }) {
     if (isPast) {
       return DateStatus.pastReservation;
+    }
+
+    // Pending bookings show as RED with diagonal pattern (blocks dates)
+    if (isPending) {
+      return DateStatus.pending;
     }
 
     if (isCheckIn && isCheckOut) {

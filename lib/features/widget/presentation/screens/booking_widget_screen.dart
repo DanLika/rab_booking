@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html if (dart.library.io) 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -56,6 +58,14 @@ import '../widgets/booking/booking_pill_bar.dart';
 import '../widgets/common/theme_colors_helper.dart';
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/errors/app_exceptions.dart';
+
+/// Widget view state for state-based navigation
+/// Used for direct bookings (Pay on Arrival, Bank Transfer)
+/// Stripe uses URL params instead (redirect flow)
+enum WidgetViewState {
+  calendar,      // Initial view - calendar selection
+  confirmation,  // Booking confirmation (after successful direct booking)
+}
 
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size
@@ -114,6 +124,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   bool _pillBarDismissed = false; // Track if user clicked X to close pill bar
   bool _hasInteractedWithBookingFlow = false; // Track if user clicked Reserve button
 
+  // State-based view management (for direct bookings - Pay on Arrival, Bank Transfer)
+  // Stripe uses URL params instead (redirect flow)
+  WidgetViewState _viewState = WidgetViewState.calendar;
+  BookingModel? _completedBooking; // Booking to show in confirmation view
+  String? _completedPaymentMethod; // Payment method used for completed booking
+
   // Cross-tab communication for Stripe payments
   // When payment completes in one tab, other tabs are notified to update UI
   TabCommunicationService? _tabCommunicationService;
@@ -137,33 +153,60 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Initialize cross-tab communication for web platform
     _initTabCommunication();
 
-    // Check for Stripe return with confirmation parameters
+    // Check for booking confirmation parameters (all payment types)
     final confirmationRef = uri.queryParameters['confirmation'];
     final confirmationEmail = uri.queryParameters['email'];
     final bookingId = uri.queryParameters['bookingId'];
     final paymentType = uri.queryParameters['payment'];
     final stripeStatus = uri.queryParameters['stripe_status'];
+    final bookingStatus = uri.queryParameters['booking_status'];
+
+    // Check if this is a Stripe return (Tab B - opened by Stripe redirect)
+    final isStripeReturn = paymentType == 'stripe' || stripeStatus == 'success';
+    final hasStripeConfirmationParams = confirmationRef != null &&
+        confirmationEmail != null &&
+        bookingId != null &&
+        isStripeReturn;
+
+    // Check if this is a direct booking return (same tab - Pay on Arrival, Bank Transfer)
+    final isDirectBookingReturn = bookingStatus == 'success' &&
+        confirmationRef != null &&
+        bookingId != null &&
+        !isStripeReturn;
 
     // Validate unit and property immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _validateUnitAndProperty();
+      // If this is Tab B (Stripe return), skip normal initialization
+      // and go straight to showing the "close this tab" screen
+      if (hasStripeConfirmationParams) {
+        // Clear any cached form data first
+        await _clearFormData();
 
-      // Bug #53: Load saved form data if page was refreshed
-      await _loadFormData();
-
-      // If we have confirmation parameters, show confirmation screen
-      // Check both old 'payment=stripe' and new 'stripe_status=success' params
-      final isStripeReturn = paymentType == 'stripe' || stripeStatus == 'success';
-      if (confirmationRef != null &&
-          confirmationEmail != null &&
-          bookingId != null &&
-          isStripeReturn) {
         await _showConfirmationFromUrl(
           confirmationRef,
           confirmationEmail,
           bookingId,
         );
+        return; // Don't continue with normal initialization
       }
+
+      // If this is a direct booking return (same tab), show confirmation
+      if (isDirectBookingReturn) {
+        await _showConfirmationFromUrl(
+          confirmationRef,
+          confirmationEmail ?? '',
+          bookingId,
+          paymentMethod: paymentType,
+          isDirectBooking: true,
+        );
+        return; // Don't continue with normal initialization
+      }
+
+      // Normal initialization for fresh page load
+      await _validateUnitAndProperty();
+
+      // Bug #53: Load saved form data if page was refreshed
+      await _loadFormData();
     });
   }
 
@@ -238,6 +281,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       tag: 'TAB_COMM',
     );
 
+    // CRITICAL: Clear form data and reset state BEFORE showing confirmation
+    // This prevents the bug where pressing "back" shows old form data
+    await _clearFormData();
+    _resetFormState();
+
     // Navigate to confirmation screen
     // Use the same method as URL-based confirmation
     // Pass fromOtherTab: true to prevent circular broadcasting
@@ -249,6 +297,135 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         fromOtherTab: true,
       );
     }
+  }
+
+  /// Reset widget to calendar view (state-based navigation)
+  /// Called when user closes confirmation screen for direct bookings
+  void _resetToCalendarView() {
+    setState(() {
+      _viewState = WidgetViewState.calendar;
+      _completedBooking = null;
+      _completedPaymentMethod = null;
+    });
+
+    // Reset form state and invalidate calendar
+    _resetFormState();
+
+    // Clear URL params (remove booking confirmation params)
+    _clearBookingUrlParams();
+
+    LoggingService.log(
+      '[ViewState] Reset to calendar view',
+      tag: 'VIEW_STATE',
+    );
+  }
+
+  /// Clear booking-related URL params and reset to base URL
+  void _clearBookingUrlParams() {
+    if (!kIsWeb) return;
+
+    try {
+      final uri = Uri.base;
+      // Keep only property and unit params
+      final cleanParams = <String, String>{};
+      if (uri.queryParameters.containsKey('property')) {
+        cleanParams['property'] = uri.queryParameters['property']!;
+      }
+      if (uri.queryParameters.containsKey('unit')) {
+        cleanParams['unit'] = uri.queryParameters['unit']!;
+      }
+
+      final newUri = uri.replace(queryParameters: cleanParams);
+      html.window.history.replaceState(null, '', newUri.toString());
+
+      LoggingService.log(
+        '[URL] Cleared booking params, new URL: ${newUri.toString()}',
+        tag: 'URL_PARAMS',
+      );
+    } catch (e) {
+      LoggingService.log(
+        '[URL] Failed to clear URL params: $e',
+        tag: 'URL_PARAMS',
+      );
+    }
+  }
+
+  /// Add booking confirmation params to URL (for browser history support)
+  void _addBookingUrlParams({
+    required String bookingRef,
+    required String email,
+    required String bookingId,
+    required String paymentMethod,
+  }) {
+    if (!kIsWeb) return;
+
+    try {
+      final uri = Uri.base;
+      final newParams = Map<String, String>.from(uri.queryParameters);
+
+      // Add booking confirmation params
+      newParams['booking_status'] = 'success';
+      newParams['confirmation'] = bookingRef;
+      newParams['email'] = email;
+      newParams['bookingId'] = bookingId;
+      newParams['payment'] = paymentMethod;
+
+      final newUri = uri.replace(queryParameters: newParams);
+      // Use pushState to add to browser history (back button works)
+      html.window.history.pushState(null, '', newUri.toString());
+
+      LoggingService.log(
+        '[URL] Added booking params, new URL: ${newUri.toString()}',
+        tag: 'URL_PARAMS',
+      );
+    } catch (e) {
+      LoggingService.log(
+        '[URL] Failed to add URL params: $e',
+        tag: 'URL_PARAMS',
+      );
+    }
+  }
+
+  /// Reset form state to initial values (clear all user input)
+  void _resetFormState() {
+    setState(() {
+      // Clear text controllers
+      _firstNameController.clear();
+      _lastNameController.clear();
+      _emailController.clear();
+      _phoneController.clear();
+      _notesController.clear();
+
+      // Reset date selection
+      _checkIn = null;
+      _checkOut = null;
+
+      // Reset guest count
+      _adults = 2;
+      _children = 0;
+
+      // Reset booking flow state
+      _hasInteractedWithBookingFlow = false;
+      _pillBarDismissed = false;
+      _showGuestForm = false;
+
+      // Reset other state
+      _emailVerified = false;
+      _taxLegalAccepted = false;
+      _lockedPriceCalculation = null;
+    });
+
+    // Reset selected additional services (provider-based)
+    ref.invalidate(selectedAdditionalServicesProvider);
+
+    // Invalidate calendar to refresh availability
+    ref.invalidate(realtimeYearCalendarProvider);
+    ref.invalidate(realtimeMonthCalendarProvider);
+
+    LoggingService.log(
+      '[CrossTab] Form state reset after payment completion',
+      tag: 'TAB_COMM',
+    );
   }
 
   /// Validates that unit exists and fetches property/owner info
@@ -613,6 +790,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         isDarkMode: isDarkMode,
         errorMessage: _validationError!,
         onRetry: _validateUnitAndProperty,
+      );
+    }
+
+    // State-based view: Show confirmation screen for direct bookings
+    // (Pay on Arrival, Bank Transfer, Pending mode)
+    if (_viewState == WidgetViewState.confirmation &&
+        _completedBooking != null) {
+      return BookingConfirmationScreen(
+        bookingReference: _completedBooking!.id.substring(0, 8).toUpperCase(),
+        guestEmail: _completedBooking!.guestEmail ?? '',
+        guestName: _completedBooking!.guestName ?? 'Guest',
+        checkIn: _completedBooking!.checkIn,
+        checkOut: _completedBooking!.checkOut,
+        totalPrice: _completedBooking!.totalPrice,
+        nights: _completedBooking!.checkOut
+            .difference(_completedBooking!.checkIn)
+            .inDays,
+        guests: _completedBooking!.guestCount,
+        propertyName: _unit?.name ?? 'Property',
+        unitName: _unit?.name,
+        paymentMethod: _completedPaymentMethod ?? 'pending',
+        booking: _completedBooking,
+        emailConfig: _widgetSettings?.emailConfig,
+        widgetSettings: _widgetSettings,
+        propertyId: _propertyId,
+        unitId: _unitId,
+        // State-based close: reset widget state instead of URL navigation
+        onClose: _resetToCalendarView,
       );
     }
 
@@ -1790,7 +1995,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // For bookingPending mode - create booking without payment
       if (widgetMode == WidgetMode.bookingPending) {
-        final booking = await bookingService.createBooking(
+        // For bookingPending mode: Booking is created immediately (no Stripe)
+        final bookingResult = await bookingService.createBooking(
           unitId: _unitId,
           propertyId: _propertyId!,
           ownerId: _ownerId!,
@@ -1818,6 +2024,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               : null,
         );
 
+        // Non-Stripe flow: Booking was created
+        final booking = bookingResult.booking!;
+
         // Send email notifications
         _sendBookingEmails(
           booking: booking,
@@ -1833,7 +2042,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
 
       // For bookingInstant mode - create booking with payment
-      final booking = await bookingService.createBooking(
+      // NEW FLOW (2025-12-02):
+      // - For Stripe: Only validates availability, returns bookingData for checkout
+      // - For non-Stripe: Creates booking immediately
+      final bookingResult = await bookingService.createBooking(
         unitId: _unitId,
         propertyId: _propertyId!,
         ownerId: _ownerId!,
@@ -1860,7 +2072,26 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             : null,
       );
 
-      // Send booking confirmation email (pre-payment)
+      if (_selectedPaymentMethod == 'stripe') {
+        // STRIPE FLOW: No booking created yet - only validation passed
+        // Booking will be created by webhook after successful payment
+        if (!bookingResult.isStripeValidation ||
+            bookingResult.stripeBookingData == null) {
+          throw Exception('Invalid Stripe validation response');
+        }
+
+        await _handleStripePayment(
+          bookingData: bookingResult.stripeBookingData!,
+          guestEmail: _emailController.text.trim(),
+        );
+        // User redirected to Stripe - no further action here
+        return;
+      }
+
+      // NON-STRIPE FLOW: Booking was created, proceed with confirmation
+      final booking = bookingResult.booking!;
+
+      // Send booking confirmation email (pre-payment for bank transfer)
       // Calculate payment deadline for bank transfer (default 3 days)
       final paymentDeadlineDays =
           _widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
@@ -1876,15 +2107,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         paymentDeadline: dateFormat.format(paymentDeadline),
       );
 
-      if (_selectedPaymentMethod == 'stripe') {
-        // Stripe payment - redirect to checkout
-        // Pass booking details for return URL construction
-        await _handleStripePayment(
-          bookingId: booking.id,
-          bookingReference: booking.id.substring(0, 8).toUpperCase(),
-          guestEmail: booking.guestEmail!,
-        );
-      } else if (_selectedPaymentMethod == 'bank_transfer') {
+      if (_selectedPaymentMethod == 'bank_transfer') {
         // Bank transfer - navigate to confirmation screen
         await _navigateToConfirmationAndCleanup(
           booking: booking,
@@ -1929,58 +2152,50 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
   }
 
-  /// Helper method to navigate to confirmation screen and cleanup form
-  /// Reduces ~120 lines of duplicated code for pending/bank_transfer/pay_on_arrival
+  /// Helper method to show confirmation screen for direct bookings
+  /// Uses URL params for browser history support (back button works)
+  /// For pending/bank_transfer/pay_on_arrival modes
   Future<void> _navigateToConfirmationAndCleanup({
     required BookingModel booking,
     required String paymentMethod,
   }) async {
     if (!mounted) return;
 
-    // Reset form before navigation
+    // CRITICAL: Invalidate calendar cache BEFORE showing confirmation
+    // This ensures the calendar will show newly booked dates when user returns
+    ref.invalidate(realtimeYearCalendarProvider);
+    ref.invalidate(realtimeMonthCalendarProvider);
+
+    // Clear saved form data after successful booking
+    await _clearFormData();
+
+    // Add URL params for browser history support (back button works)
+    final bookingRef = booking.id.substring(0, 8).toUpperCase();
+    _addBookingUrlParams(
+      bookingRef: bookingRef,
+      email: booking.guestEmail ?? '',
+      bookingId: booking.id,
+      paymentMethod: paymentMethod,
+    );
+
+    // State-based navigation: Show confirmation screen
     setState(() {
+      _completedBooking = booking;
+      _completedPaymentMethod = paymentMethod;
+      _viewState = WidgetViewState.confirmation;
+
+      // Reset form fields (will be used when returning to calendar)
       _checkIn = null;
       _checkOut = null;
       _showGuestForm = false;
-      _firstNameController.clear();
-      _lastNameController.clear();
-      _emailController.clear();
-      _phoneController.clear();
-      _adults = 2;
-      _children = 0;
+      _pillBarDismissed = false;
+      _hasInteractedWithBookingFlow = false;
     });
 
-    // Navigate to confirmation screen
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BookingConfirmationScreen(
-          bookingReference: booking.id.substring(0, 8).toUpperCase(),
-          guestEmail: booking.guestEmail!,
-          guestName: booking.guestName!,
-          checkIn: booking.checkIn,
-          checkOut: booking.checkOut,
-          totalPrice: booking.totalPrice,
-          nights: booking.checkOut.difference(booking.checkIn).inDays,
-          guests: booking.guestCount,
-          propertyName: _unit?.name ?? 'Property',
-          unitName: _unit?.name,
-          paymentMethod: paymentMethod,
-          booking: booking,
-          emailConfig: _widgetSettings?.emailConfig,
-          widgetSettings: _widgetSettings,
-        ),
-      ),
+    LoggingService.log(
+      '[ViewState] Switched to confirmation view (payment: $paymentMethod)',
+      tag: 'VIEW_STATE',
     );
-
-    // CRITICAL: Invalidate calendar cache after booking
-    // This ensures the calendar refreshes and shows newly booked dates
-    if (mounted) {
-      ref.invalidate(realtimeYearCalendarProvider);
-      ref.invalidate(realtimeMonthCalendarProvider);
-
-      // Bug #53: Clear saved form data after successful booking
-      await _clearFormData();
-    }
   }
 
   /// Helper method to send booking confirmation emails
@@ -2039,19 +2254,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     emailService.dispose();
   }
 
+  /// Handle Stripe payment
+  ///
+  /// NEW FLOW (2025-12-02):
+  /// - No booking created yet - only validation passed
+  /// - Pass all booking data to Stripe checkout session
+  /// - Booking will be created by webhook after payment succeeds
   Future<void> _handleStripePayment({
-    required String bookingId,
-    required String bookingReference,
+    required Map<String, dynamic> bookingData,
     required String guestEmail,
   }) async {
     try {
       final stripeService = ref.read(stripeServiceProvider);
 
-      // Build return URL with confirmation parameters
-      // Include full booking ID to fetch from Firestore after Stripe return
-      //
+      // Build return URL for Stripe redirect
       // IMPORTANT: Flutter Web uses hash routing (e.g., /#/calendar)
-      // Uri class doesn't support fragment in constructor properly, so we append it manually
       final baseUrl = Uri.base;
       final returnUrlWithoutHash = Uri(
         scheme: baseUrl.scheme,
@@ -2059,28 +2276,33 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         port: baseUrl.port,
         queryParameters: {
           ...baseUrl.queryParameters,
-          'confirmation': bookingReference,
-          'bookingId': bookingId, // Full booking ID for Firestore fetch
           'email': guestEmail,
           'payment': 'stripe',
         },
       ).toString();
       // Append hash fragment for Flutter's hash-based routing
-      // This ensures the app loads correctly when Stripe returns
       final returnUrl = '$returnUrlWithoutHash#/calendar';
 
+      // Create Stripe checkout session with ALL booking data
+      // Booking will be created by webhook after successful payment
       final checkoutResult = await stripeService.createCheckoutSession(
-        bookingId: bookingId,
+        bookingData: bookingData,
         returnUrl: returnUrl,
-        guestEmail: guestEmail, // Required for security validation
       );
 
-      // Redirect to Stripe Checkout
-      final uri = Uri.parse(checkoutResult.checkoutUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      // Redirect to Stripe Checkout in SAME TAB
+      // This keeps everything in one tab - no cross-tab communication needed
+      if (kIsWeb) {
+        // Web: Use window.location.href for same-tab redirect
+        html.window.location.href = checkoutResult.checkoutUrl;
       } else {
-        throw 'Could not launch Stripe Checkout';
+        // Mobile: Use url_launcher (will open in browser)
+        final uri = Uri.parse(checkoutResult.checkoutUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          throw 'Could not launch Stripe Checkout';
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -2092,15 +2314,19 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
   }
 
-  /// Show confirmation screen after Stripe return
+  /// Show confirmation screen after return (Stripe redirect or direct booking URL)
   /// Fetches booking from Firestore using booking ID and displays confirmation
   ///
   /// [fromOtherTab] - if true, this was triggered by cross-tab message, don't broadcast back
+  /// [paymentMethod] - payment method used (stripe, pay_on_arrival, bank_transfer)
+  /// [isDirectBooking] - if true, this is same-tab return (direct booking), show inline
   Future<void> _showConfirmationFromUrl(
     String bookingReference,
     String guestEmail,
     String bookingId, {
     bool fromOtherTab = false,
+    String? paymentMethod,
+    bool isDirectBooking = false,
   }) async {
     try {
       // Fetch booking from Firestore using booking ID
@@ -2166,7 +2392,56 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Create local non-null variable for use in closure
       final confirmedBooking = booking;
 
-      // Navigate to confirmation screen
+      // Broadcast to other tabs (in case user has multiple tabs open)
+      // This is optional now since we redirect in same tab, but useful for edge cases
+      if (!fromOtherTab && _tabCommunicationService != null) {
+        _tabCommunicationService!.sendPaymentComplete(
+          bookingId: bookingId,
+          ref: bookingReference,
+          email: guestEmail,
+        );
+        LoggingService.log(
+          '[CrossTab] Broadcasted payment complete to other tabs',
+          tag: 'TAB_COMM',
+        );
+      }
+
+      // CRITICAL: Invalidate calendar cache BEFORE showing confirmation
+      // This ensures the calendar will show newly booked dates when user returns
+      ref.invalidate(realtimeYearCalendarProvider);
+      ref.invalidate(realtimeMonthCalendarProvider);
+
+      // Clear saved form data after successful booking
+      await _clearFormData();
+
+      // Determine actual payment method
+      final actualPaymentMethod = paymentMethod ?? confirmedBooking.paymentMethod ?? 'stripe';
+
+      // For direct bookings (Pay on Arrival, Bank Transfer), use state-based navigation
+      // This allows Close button to clear URL params and return to calendar
+      if (isDirectBooking && mounted) {
+        setState(() {
+          _completedBooking = confirmedBooking;
+          _completedPaymentMethod = actualPaymentMethod;
+          _viewState = WidgetViewState.confirmation;
+
+          // Reset form fields (will be used when returning to calendar)
+          _checkIn = null;
+          _checkOut = null;
+          _showGuestForm = false;
+          _pillBarDismissed = false;
+          _hasInteractedWithBookingFlow = false;
+        });
+
+        LoggingService.log(
+          '[ViewState] Switched to confirmation view from URL (payment: $actualPaymentMethod)',
+          tag: 'VIEW_STATE',
+        );
+        return;
+      }
+
+      // For Stripe returns (new tab), use Navigator.push
+      // User typically wants to close this tab after seeing confirmation
       if (mounted) {
         await Navigator.of(context).push(
           MaterialPageRoute(
@@ -2183,35 +2458,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               guests: confirmedBooking.guestCount,
               propertyName: _unit?.name ?? 'Property',
               unitName: _unit?.name,
-              paymentMethod: 'stripe',
+              paymentMethod: actualPaymentMethod,
               booking: confirmedBooking,
               emailConfig: _widgetSettings?.emailConfig,
               widgetSettings: _widgetSettings,
+              propertyId: _propertyId,
+              unitId: _unitId,
             ),
           ),
         );
-
-        // CRITICAL: Invalidate calendar cache after Stripe return
-        // This ensures the calendar refreshes and shows newly booked dates
-        ref.invalidate(realtimeYearCalendarProvider);
-        ref.invalidate(realtimeMonthCalendarProvider);
-
-        // Bug #53: Clear saved form data after successful booking
-        await _clearFormData();
-
-        // Broadcast payment completion to other tabs (Tab A with booking form)
-        // Only broadcast if this is the original Stripe return tab, not a forwarded message
-        if (!fromOtherTab && _tabCommunicationService != null) {
-          _tabCommunicationService!.sendPaymentComplete(
-            bookingId: bookingId,
-            ref: bookingReference,
-            email: guestEmail,
-          );
-          LoggingService.log(
-            '[CrossTab] Broadcasted payment complete to other tabs',
-            tag: 'TAB_COMM',
-          );
-        }
       }
     } catch (e) {
       if (mounted) {

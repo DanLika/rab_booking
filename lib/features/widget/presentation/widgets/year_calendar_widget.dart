@@ -439,6 +439,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       // Determine if this is a check-in or check-out day
       final isPartialCheckIn = dateInfo.status == DateStatus.partialCheckIn;
       final isPartialCheckOut = dateInfo.status == DateStatus.partialCheckOut;
+      final isPartialBoth = dateInfo.status == DateStatus.partialBoth;
 
       // Check if cell is interactive - only available dates can be selected
       // partialCheckIn, partialCheckOut, and pending are not selectable
@@ -509,8 +510,44 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                   Positioned.fill(
                     child: CustomPaint(
                       painter: _DiagonalLinePainter(
-                        diagonalColor: dateInfo.status.getDiagonalColor(colors),
+                        diagonalColor: dateInfo.isPendingBooking
+                            ? colors.statusPendingBackground
+                            : dateInfo.status.getDiagonalColor(colors),
                         isCheckIn: isPartialCheckIn,
+                        isPending: dateInfo.isPendingBooking,
+                        patternLineColor: dateInfo.isPendingBooking
+                            ? DateStatus.pending.getPatternLineColor(colors)
+                            : null,
+                      ),
+                    ),
+                  ),
+                // Split triangles for partialBoth (turnover day)
+                if (isPartialBoth)
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _PartialBothPainter(
+                        checkoutColor: dateInfo.isCheckOutPending
+                            ? colors.statusPendingBackground
+                            : colors.statusBookedBackground,
+                        checkinColor: dateInfo.isCheckInPending
+                            ? colors.statusPendingBackground
+                            : colors.statusBookedBackground,
+                        isCheckOutPending: dateInfo.isCheckOutPending,
+                        isCheckInPending: dateInfo.isCheckInPending,
+                        patternLineColor: DateStatus.pending.getPatternLineColor(colors),
+                      ),
+                    ),
+                  ),
+                // Pending pattern overlay for full booked days (not partial, not partialBoth)
+                if (dateInfo.isPendingBooking &&
+                    !isPartialCheckIn &&
+                    !isPartialCheckOut &&
+                    !isPartialBoth &&
+                    dateInfo.status == DateStatus.booked)
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _PendingPatternPainter(
+                        lineColor: DateStatus.pending.getPatternLineColor(colors),
                       ),
                     ),
                   ),
@@ -564,15 +601,29 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       // Match month calendar: available background + 20% black overlay
       final baseColor = colors.statusAvailableBackground;
       return Color.alphaBlend(
-        colors.buttonPrimary.withOpacity(0.2),
+        colors.buttonPrimary.withValues(alpha: 0.2),
         baseColor,
       );
+    }
+
+    // partialBoth is drawn with _PartialBothPainter, so return transparent
+    if (dateInfo.status == DateStatus.partialBoth) {
+      return Colors.transparent;
+    }
+
+    // Pending bookings use yellow background (for full booked days, not partial)
+    if (dateInfo.isPendingBooking && dateInfo.status == DateStatus.booked) {
+      if (isHovered && isInteractive) {
+        return Color.alphaBlend(
+            Colors.white.withValues(alpha: 0.3), colors.statusPendingBackground);
+      }
+      return colors.statusPendingBackground;
     }
 
     if (isHovered && isInteractive) {
       // Lighten the color slightly on hover
       final baseColor = dateInfo.status.getColor(colors);
-      return Color.alphaBlend(Colors.white.withOpacity(0.3), baseColor);
+      return Color.alphaBlend(Colors.white.withValues(alpha: 0.3), baseColor);
     }
 
     return dateInfo.status.getColor(colors);
@@ -911,8 +962,15 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 class _DiagonalLinePainter extends CustomPainter {
   final Color diagonalColor;
   final bool isCheckIn;
+  final bool isPending;
+  final Color? patternLineColor;
 
-  _DiagonalLinePainter({required this.diagonalColor, required this.isCheckIn});
+  _DiagonalLinePainter({
+    required this.diagonalColor,
+    required this.isCheckIn,
+    this.isPending = false,
+    this.patternLineColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -920,27 +978,172 @@ class _DiagonalLinePainter extends CustomPainter {
     paint.color = diagonalColor;
 
     if (isCheckIn) {
-      // Check-in: diagonal from bottom-left to top-right (green to pink)
+      // Check-in: diagonal from bottom-left to top-right (green to pink/pending)
       final path = Path()
         ..moveTo(0, size.height) // Bottom-left
         ..lineTo(size.width, 0) // Top-right
         ..lineTo(size.width, size.height) // Bottom-right
         ..close();
       canvas.drawPath(path, paint);
+
+      // Draw pending pattern on booked triangle
+      if (isPending && patternLineColor != null) {
+        canvas.save();
+        canvas.clipPath(path);
+        _drawDiagonalPattern(canvas, size, patternLineColor!);
+        canvas.restore();
+      }
     } else {
-      // Check-out: diagonal from top-left to bottom-right (pink to green)
+      // Check-out: diagonal from top-left to bottom-right (pink/pending to green)
       final path = Path()
         ..moveTo(0, 0) // Top-left
         ..lineTo(size.width, size.height) // Bottom-right
         ..lineTo(0, size.height) // Bottom-left
         ..close();
       canvas.drawPath(path, paint);
+
+      // Draw pending pattern on booked triangle
+      if (isPending && patternLineColor != null) {
+        canvas.save();
+        canvas.clipPath(path);
+        _drawDiagonalPattern(canvas, size, patternLineColor!);
+        canvas.restore();
+      }
+    }
+  }
+
+  void _drawDiagonalPattern(Canvas canvas, Size size, Color lineColor) {
+    final paint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    const double spacing = 4.0;
+    for (double i = -size.height; i < size.width + size.height; i += spacing) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        paint,
+      );
     }
   }
 
   @override
   bool shouldRepaint(_DiagonalLinePainter oldDelegate) {
     return oldDelegate.diagonalColor != diagonalColor ||
-        oldDelegate.isCheckIn != isCheckIn;
+        oldDelegate.isCheckIn != isCheckIn ||
+        oldDelegate.isPending != isPending ||
+        oldDelegate.patternLineColor != patternLineColor;
+  }
+}
+
+/// Painter for full-cell pending pattern (diagonal lines)
+class _PendingPatternPainter extends CustomPainter {
+  final Color lineColor;
+
+  _PendingPatternPainter({required this.lineColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    const double spacing = 4.0;
+    for (double i = -size.height; i < size.width + size.height; i += spacing) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_PendingPatternPainter oldDelegate) {
+    return oldDelegate.lineColor != lineColor;
+  }
+}
+
+/// Painter for partialBoth (turnover day) with split colors
+/// Top-left triangle = checkout, Bottom-right triangle = checkin
+class _PartialBothPainter extends CustomPainter {
+  final Color checkoutColor; // Top-left triangle color
+  final Color checkinColor; // Bottom-right triangle color
+  final bool isCheckOutPending;
+  final bool isCheckInPending;
+  final Color? patternLineColor;
+
+  _PartialBothPainter({
+    required this.checkoutColor,
+    required this.checkinColor,
+    this.isCheckOutPending = false,
+    this.isCheckInPending = false,
+    this.patternLineColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    // Draw top-left triangle (checkout)
+    final checkoutPath = Path()
+      ..moveTo(0, 0) // Top-left
+      ..lineTo(size.width, 0) // Top-right
+      ..lineTo(0, size.height) // Bottom-left
+      ..close();
+    paint.color = checkoutColor;
+    canvas.drawPath(checkoutPath, paint);
+
+    // Draw bottom-right triangle (checkin)
+    final checkinPath = Path()
+      ..moveTo(0, size.height) // Bottom-left
+      ..lineTo(size.width, size.height) // Bottom-right
+      ..lineTo(size.width, 0) // Top-right
+      ..close();
+    paint.color = checkinColor;
+    canvas.drawPath(checkinPath, paint);
+
+    // Draw pending pattern on checkout triangle if pending
+    if (isCheckOutPending && patternLineColor != null) {
+      canvas.save();
+      canvas.clipPath(checkoutPath);
+      _drawDiagonalPattern(canvas, size, patternLineColor!);
+      canvas.restore();
+    }
+
+    // Draw pending pattern on checkin triangle if pending
+    if (isCheckInPending && patternLineColor != null) {
+      canvas.save();
+      canvas.clipPath(checkinPath);
+      _drawDiagonalPattern(canvas, size, patternLineColor!);
+      canvas.restore();
+    }
+  }
+
+  void _drawDiagonalPattern(Canvas canvas, Size size, Color lineColor) {
+    final paint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    const double spacing = 4.0;
+    for (double i = -size.height; i < size.width + size.height; i += spacing) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_PartialBothPainter oldDelegate) {
+    return oldDelegate.checkoutColor != checkoutColor ||
+        oldDelegate.checkinColor != checkinColor ||
+        oldDelegate.isCheckOutPending != isCheckOutPending ||
+        oldDelegate.isCheckInPending != isCheckInPending ||
+        oldDelegate.patternLineColor != patternLineColor;
   }
 }

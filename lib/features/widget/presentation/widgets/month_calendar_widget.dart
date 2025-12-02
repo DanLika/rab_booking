@@ -500,16 +500,20 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 borderRadius: BorderTokens.calendarCell,
                 child: CustomPaint(
                   painter: SplitDayCalendarPainter(
-                    // Preserve partialCheckIn/Out status even when in range
+                    // Preserve partialCheckIn/Out/Both status even when in range
                     status:
                         isInRange &&
                             dateInfo.status != DateStatus.partialCheckIn &&
-                            dateInfo.status != DateStatus.partialCheckOut
+                            dateInfo.status != DateStatus.partialCheckOut &&
+                            dateInfo.status != DateStatus.partialBoth
                         ? DateStatus.available
                         : dateInfo.status,
                     borderColor: dateInfo.status.getBorderColor(colors),
                     colors: colors,
                     isInRange: isInRange,
+                    isPendingBooking: dateInfo.isPendingBooking,
+                    isCheckOutPending: dateInfo.isCheckOutPending,
+                    isCheckInPending: dateInfo.isCheckInPending,
                   ),
                   child: const SizedBox.expand(),
                 ),

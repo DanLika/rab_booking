@@ -5,7 +5,7 @@ import '../../../../core/design_tokens/design_tokens.dart';
 enum DateStatus {
   available,
   booked,
-  pending, // Pending approval - shown in orange
+  pending, // Pending approval - shown in RED with diagonal pattern (blocks dates like booked)
   blocked,
   partialCheckIn,
   partialCheckOut,
@@ -101,6 +101,24 @@ extension DateStatusExtension on DateStatus {
         return 'Past Reservation';
     }
   }
+
+  /// Whether this status should show a diagonal pattern overlay
+  /// Pending uses diagonal pattern to distinguish from solid booked dates
+  bool get needsDiagonalPattern {
+    return this == DateStatus.pending;
+  }
+
+  /// Get the pattern line color for diagonal pattern overlay
+  /// Returns a contrasting color for the diagonal lines
+  Color getPatternLineColor(WidgetColorScheme colors) {
+    switch (this) {
+      case DateStatus.pending:
+        // White/light lines on red background for contrast
+        return colors.backgroundPrimary.withValues(alpha: 0.4);
+      default:
+        return Colors.transparent;
+    }
+  }
 }
 
 /// Model for a calendar date with status
@@ -116,6 +134,10 @@ class CalendarDateInfo {
   final int? maxDaysAdvance; // Maximum days in advance to book
   final int? minNightsOnArrival; // Minimum nights required when arriving on this date
   final int? maxNightsOnArrival; // Maximum nights allowed when arriving on this date
+  final bool isPendingBooking; // Whether this date belongs to a pending (awaiting approval) booking
+  // For partialBoth (turnover day) - track which half is pending
+  final bool isCheckOutPending; // Is the checkout half (top-left triangle) from a pending booking?
+  final bool isCheckInPending; // Is the checkin half (bottom-right triangle) from a pending booking?
 
   const CalendarDateInfo({
     required this.date,
@@ -129,6 +151,9 @@ class CalendarDateInfo {
     this.maxDaysAdvance,
     this.minNightsOnArrival,
     this.maxNightsOnArrival,
+    this.isPendingBooking = false,
+    this.isCheckOutPending = false,
+    this.isCheckInPending = false,
   });
 
   CalendarDateInfo copyWith({
@@ -143,6 +168,9 @@ class CalendarDateInfo {
     int? maxDaysAdvance,
     int? minNightsOnArrival,
     int? maxNightsOnArrival,
+    bool? isPendingBooking,
+    bool? isCheckOutPending,
+    bool? isCheckInPending,
   }) {
     return CalendarDateInfo(
       date: date ?? this.date,
@@ -156,6 +184,9 @@ class CalendarDateInfo {
       maxDaysAdvance: maxDaysAdvance ?? this.maxDaysAdvance,
       minNightsOnArrival: minNightsOnArrival ?? this.minNightsOnArrival,
       maxNightsOnArrival: maxNightsOnArrival ?? this.maxNightsOnArrival,
+      isPendingBooking: isPendingBooking ?? this.isPendingBooking,
+      isCheckOutPending: isCheckOutPending ?? this.isCheckOutPending,
+      isCheckInPending: isCheckInPending ?? this.isCheckInPending,
     );
   }
 

@@ -117,20 +117,34 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
     const stripeClient = getStripeClient();
 
     // Build success/cancel URLs properly
-    // Widget sends returnUrl with query params (e.g., ?property=x&unit=y&payment=stripe)
-    // We need to append session_id as a query parameter, NOT append /booking-success path
+    // Widget sends returnUrl with query params (e.g., ?property=x&unit=y&payment=stripe#/calendar)
+    // We need to append session_id as a query parameter BEFORE the hash fragment
+    //
+    // IMPORTANT: Flutter Web uses hash routing (#/calendar), so hash must be at the END
+    // Example input:  http://localhost:8181/?property=xxx#/calendar
+    // Example output: http://localhost:8181/?property=xxx&stripe_status=success&session_id=...#/calendar
     let successUrl: string;
     let cancelUrl: string;
 
     if (returnUrl) {
-      // Widget embedded in external website - return there with session_id
-      // Check if URL already has query params
-      successUrl = returnUrl.includes("?")
-        ? `${returnUrl}&stripe_status=success&session_id={CHECKOUT_SESSION_ID}`
-        : `${returnUrl}?stripe_status=success&session_id={CHECKOUT_SESSION_ID}`;
-      cancelUrl = returnUrl.includes("?")
-        ? `${returnUrl}&stripe_status=cancelled`
-        : `${returnUrl}?stripe_status=cancelled`;
+      // Check if URL has a hash fragment (e.g., #/calendar for Flutter Web)
+      const hashIndex = returnUrl.indexOf("#");
+      let baseUrl: string;
+      let hashFragment: string;
+
+      if (hashIndex !== -1) {
+        // Split URL at hash - params go BEFORE hash, fragment stays at END
+        baseUrl = returnUrl.substring(0, hashIndex);
+        hashFragment = returnUrl.substring(hashIndex);
+      } else {
+        baseUrl = returnUrl;
+        hashFragment = "";
+      }
+
+      // Add query params to base URL, then re-append hash fragment
+      const separator = baseUrl.includes("?") ? "&" : "?";
+      successUrl = `${baseUrl}${separator}stripe_status=success&session_id={CHECKOUT_SESSION_ID}${hashFragment}`;
+      cancelUrl = `${baseUrl}${separator}stripe_status=cancelled${hashFragment}`;
     } else {
       // No returnUrl provided - use default app URLs
       successUrl = "https://rab-booking-248fc.web.app/booking-success?session_id={CHECKOUT_SESSION_ID}";

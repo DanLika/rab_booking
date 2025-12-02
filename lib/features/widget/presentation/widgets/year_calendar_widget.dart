@@ -186,13 +186,16 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     xPosition = xPosition.clamp(20, screenWidth - tooltipWidth - 20);
     yPosition = yPosition.clamp(20, screenHeight - tooltipHeight - 20);
 
+    // For pending bookings, show "Pending" status instead of "Booked"
+    final effectiveStatus = dateInfo.isPendingBooking ? DateStatus.pending : dateInfo.status;
+
     return Positioned(
       left: xPosition,
       top: yPosition,
       child: CalendarHoverTooltip(
         date: _hoveredDate!,
         price: dateInfo.price,
-        status: dateInfo.status,
+        status: effectiveStatus,
         position: Offset(xPosition, yPosition),
         colors: colors,
       ),

@@ -532,11 +532,11 @@ class DarkColorScheme implements WidgetColorScheme {
   // Pending uses YELLOW background to distinguish from confirmed (red) bookings
   // Diagonal pattern adds visual distinction while showing dates are blocked
   @override
-  Color get statusPendingBackground => ColorTokens.amber600; // Warm amber - not too dark, good contrast
+  Color get statusPendingBackground => const Color(0xFFFFD52E); // Bright yellow for dark theme
   @override
-  Color get statusPendingBorder => ColorTokens.amber400; // Lighter yellow border
+  Color get statusPendingBorder => ColorTokens.amber500; // Medium yellow border
   @override
-  Color get statusPendingText => ColorTokens.pureWhite; // White text for contrast
+  Color get statusPendingText => ColorTokens.grey900; // Dark text for contrast on light yellow
   @override
   Color get statusSelectedBackground => ColorTokens.azure900;
   @override

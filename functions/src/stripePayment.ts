@@ -8,6 +8,10 @@ import {
 import {admin, db} from "./firebase";
 import {getStripeClient, stripeSecretKey} from "./stripe";
 import {createPaymentNotification} from "./notificationService";
+import {
+  generateBookingAccessToken,
+  calculateTokenExpiration,
+} from "./bookingAccessToken";
 
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
@@ -321,6 +325,10 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
         const bookingId = db.collection("bookings").doc().id;
         const bookingDocRef = db.collection("bookings").doc(bookingId);
 
+        // Generate secure access token for "View my reservation" email link
+        const {token: accessToken, hashedToken} = generateBookingAccessToken();
+        const tokenExpiration = calculateTokenExpiration(checkOutTimestamp);
+
         const bookingData = {
           user_id: null, // Widget bookings are unauthenticated
           unit_id: unitId,
@@ -349,6 +357,9 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
           // Stripe payment details
           stripe_session_id: session.id,
           stripe_payment_intent: session.payment_intent,
+          // Booking lookup security (for "View my reservation" link)
+          access_token: hashedToken,
+          token_expires_at: tokenExpiration,
           paid_at: admin.firestore.FieldValue.serverTimestamp(),
           created_at: admin.firestore.FieldValue.serverTimestamp(),
           updated_at: admin.firestore.FieldValue.serverTimestamp(),
@@ -356,7 +367,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
         transaction.set(bookingDocRef, bookingData);
 
-        return { bookingId, bookingData };
+        return { bookingId, bookingData, accessToken };
       });
 
       console.log(`Booking ${result.bookingId} created after Stripe payment`);
@@ -367,7 +378,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       const propertyDoc = await db.collection("properties").doc(propertyId).get();
       const propertyData = propertyDoc.data();
 
-      // Send confirmation email to guest
+      // Send confirmation email to guest (with "View my reservation" button)
       try {
         await sendBookingApprovedEmail(
           guestEmail,
@@ -376,7 +387,10 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
           checkIn,
           checkOut,
           propertyData?.name || "Property",
-          propertyData?.contact_email
+          propertyData?.contact_email,
+          result.accessToken, // Plaintext token for email link
+          totalPrice,
+          depositAmount
         );
         console.log(`Confirmation email sent to ${guestEmail}`);
       } catch (error) {
@@ -399,7 +413,10 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
             checkOut,
             totalPrice,
             depositAmount,
-            unitData?.name || "Unit"
+            unitData?.name || "Unit",
+            guestPhone || undefined, // Pass guest phone to owner
+            guestCount, // Pass guest count to owner
+            notes || undefined // Pass notes to owner
           );
           console.log(`Owner notification sent to ${ownerData.email}`);
         }

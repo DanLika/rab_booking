@@ -231,6 +231,28 @@ Future<void> _handleStripeReturnWithSessionId(String sessionId) async {
 
 ## 🐛 BUG FIX-EVI (2025-12-02)
 
+### Owner Email Always Sent (Bug #2 Fix)
+**File**: `functions/src/atomicBooking.ts`
+**Status**: ✅ FIXED & DEPLOYED
+
+**Problem**: Owner email za nove bookinge se nije slao ako je `shouldSendEmailNotification` vraćao `false` (tj. ako je owner isključio notifikacije u settings-u).
+
+**Zahtjev korisnika**: Owner UVIJEK mora primiti email za novu rezervaciju, bez obzira na notification settings.
+
+**Rješenje**: Uklonjen conditional check `shouldSendEmailNotification` za owner email:
+```typescript
+// PRIJE (conditional - LOŠE)
+const shouldSend = await shouldSendEmailNotification(ownerId, "bookings");
+if (shouldSend) {
+  await sendOwnerNotificationEmail(...);
+}
+
+// POSLIJE (always send - DOBRO)
+await sendOwnerNotificationEmail(...);
+```
+
+**NE VRAĆAJ conditional check** - owner MORA znati za svaku novu rezervaciju!
+
 ### Calendar Pending Status - Diagonal Pattern & Colors
 **Files**: `split_day_calendar_painter.dart`, `calendar_date_status.dart`
 
@@ -323,4 +345,4 @@ _clearBookingUrlParams();
 ---
 
 **Last Updated**: 2025-12-02
-**Version**: 3.1 (Bug fixes: Stripe session_id, Navigator.push, pending pattern)
+**Version**: 3.2 (Bug #2 fix: Owner email always sent)

@@ -25,30 +25,33 @@ const FROM_EMAIL = "onboarding@resend.dev"; // TEST MODE - update when you have 
 const FROM_NAME = "Rab Booking";
 
 // Widget URL for booking lookup (configure in environment variables)
+// NOTE: This should be the deployed widget URL where guests can view their bookings
+// The /view route exists at: WIDGET_URL/view?ref=BOOKING_REF&email=EMAIL&token=TOKEN
 const WIDGET_URL = process.env.WIDGET_URL || "https://rab-booking-widget.web.app";
 
 // ============================================================================
-// UNIFIED EMAIL DESIGN SYSTEM - Light Theme
-// Matches the Owner Dashboard / Unit Hub light theme design
+// UNIFIED EMAIL DESIGN SYSTEM - Minimalist Theme
+// Matches the embedded booking widget's clean, minimal aesthetic
+// User preference: Minimalist colors, not colorful (2025-12-02)
 // ============================================================================
 
-// Color palette (matching app light theme)
+// Color palette (minimalist - matching widget design)
 const COLORS = {
-  primary: "#6B4CE6", // Purple - main brand color
-  primaryLight: "#EDE9FE", // Light purple for backgrounds
-  success: "#22C55E", // Green
-  successLight: "#DCFCE7", // Light green background
-  warning: "#F59E0B", // Amber
-  warningLight: "#FEF3C7", // Light amber background
-  error: "#EF4444", // Red
-  errorLight: "#FEE2E2", // Light red background
+  primary: "#6B4CE6", // Purple - main brand color (subtle use)
+  primaryLight: "#F5F3FF", // Very light purple for backgrounds
+  success: "#10B981", // Emerald green (subtle)
+  successLight: "#ECFDF5", // Very light green background
+  warning: "#F59E0B", // Amber (subtle)
+  warningLight: "#FFFBEB", // Very light amber background
+  error: "#EF4444", // Red (subtle)
+  errorLight: "#FEF2F2", // Very light red background
   background: "#FFFFFF", // White
-  sectionBg: "#F8FAFC", // Very light gray for sections
+  sectionBg: "#FAFAFA", // Very light gray for sections
   cardBg: "#FFFFFF", // White for cards
-  border: "#E2E8F0", // Light gray border
-  textPrimary: "#1E293B", // Dark slate
-  textSecondary: "#64748B", // Medium gray
-  textMuted: "#94A3B8", // Light gray text
+  border: "#E5E7EB", // Light gray border
+  textPrimary: "#111827", // Near black
+  textSecondary: "#6B7280", // Medium gray
+  textMuted: "#9CA3AF", // Light gray text
 };
 
 /**
@@ -358,7 +361,9 @@ export async function sendBookingConfirmationEmail(
 }
 
 /**
- * Send booking approved email to guest
+ * Send booking approved email to guest (Stripe payment confirmed)
+ * NOTE: This is the ONLY email sent for successful Stripe payments
+ * Includes "View my reservation" button if accessToken is provided
  */
 export async function sendBookingApprovedEmail(
   guestEmail: string,
@@ -367,9 +372,46 @@ export async function sendBookingApprovedEmail(
   checkIn: Date,
   checkOut: Date,
   propertyName: string,
-  ownerEmail?: string
+  ownerEmail?: string,
+  accessToken?: string,
+  totalAmount?: number,
+  depositAmount?: number
 ): Promise<void> {
-  const subject = `Uplata primljena - ${bookingReference}`;
+  const subject = `Rezervacija potvrđena - ${bookingReference}`;
+
+  // Build the "View my reservation" button HTML if token is provided
+  const viewBookingButton = accessToken ? `
+      <div class="button-container">
+        <a href="${WIDGET_URL}/view?ref=${encodeURIComponent(bookingReference)}&email=${encodeURIComponent(guestEmail)}&token=${encodeURIComponent(accessToken)}" class="button">
+          📋 Pregledaj moju rezervaciju
+        </a>
+      </div>
+
+      <div class="tip">
+        💡 Savjet: Sačuvajte ovaj email kako biste u bilo kojem trenutku mogli pristupiti detaljima rezervacije.
+      </div>
+  ` : "";
+
+  // Build payment details section if amounts are provided
+  const paymentSection = (totalAmount && depositAmount) ? `
+      <div class="section">
+        <div class="section-title">💳 Detalji plaćanja</div>
+        <div class="detail-row">
+          <span class="detail-label">Uplaćeno</span>
+          <span class="detail-value">€${depositAmount.toFixed(2)}</span>
+        </div>
+        ${totalAmount > depositAmount ? `
+        <div class="detail-row">
+          <span class="detail-label">Ostatak (plaća se pri dolasku)</span>
+          <span class="detail-value">€${(totalAmount - depositAmount).toFixed(2)}</span>
+        </div>
+        ` : ""}
+        <div class="detail-row">
+          <span class="detail-label">Ukupna cijena</span>
+          <span class="detail-value">€${totalAmount.toFixed(2)}</span>
+        </div>
+      </div>
+  ` : "";
 
   const html = `
 <!DOCTYPE html>
@@ -385,13 +427,13 @@ export async function sendBookingApprovedEmail(
   <div class="email-wrapper">
     <div class="header">
       <div class="header-icon">🎉</div>
-      <h1>Uplata primljena!</h1>
-      <p>Vaša rezervacija je potvrđena</p>
+      <h1>Rezervacija potvrđena!</h1>
+      <p>Referenca: ${bookingReference}</p>
     </div>
 
     <div class="content">
       <p class="greeting">Poštovani/a ${guestName},</p>
-      <p>Sjajne vijesti! Primili smo vašu uplatu i vaša rezervacija je sada potvrđena.</p>
+      <p>Sjajne vijesti! Vaša rezervacija je uspješno potvrđena.</p>
 
       <div class="alert-box success">
         <div class="alert-icon">✅</div>
@@ -421,12 +463,17 @@ export async function sendBookingApprovedEmail(
         </div>
       </div>
 
+      ${paymentSection}
+
+      ${viewBookingButton}
+
       <p>Ako imate pitanja, slobodno nas kontaktirajte.</p>
     </div>
 
     <div class="footer">
       <div class="footer-logo">🏠 Rab Booking</div>
       <p>© 2025 Rab Booking. Sva prava pridržana.</p>
+      <p>Ovaj email je poslan u vezi s vašom rezervacijom ${bookingReference}</p>
     </div>
   </div>
 </body>
@@ -451,6 +498,8 @@ export async function sendBookingApprovedEmail(
 
 /**
  * Send new booking notification to owner
+ * NOTE: This email contains MORE details than guest email (phone, notes, guest count)
+ * Used for: Bank transfer, Pay on Arrival auto-confirmed bookings
  */
 export async function sendOwnerNotificationEmail(
   ownerEmail: string,
@@ -462,7 +511,10 @@ export async function sendOwnerNotificationEmail(
   checkOut: Date,
   totalAmount: number,
   depositAmount: number,
-  unitName: string
+  unitName: string,
+  guestPhone?: string,
+  guestCount?: number,
+  notes?: string
 ): Promise<void> {
   const subject = `Nova rezervacija - ${bookingReference}`;
 
@@ -489,18 +541,32 @@ export async function sendOwnerNotificationEmail(
       <p>Primili ste novu rezervaciju putem booking widgeta.</p>
 
       <div class="section">
-        <div class="section-title">📋 Detalji rezervacije</div>
+        <div class="section-title">👤 Podaci o gostu</div>
         <div class="detail-row">
-          <span class="detail-label">Jedinica</span>
-          <span class="detail-value">${unitName}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Gost</span>
+          <span class="detail-label">Ime i prezime</span>
           <span class="detail-value">${guestName}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Email</span>
           <span class="detail-value">${guestEmail}</span>
+        </div>
+        ${guestPhone ? `
+        <div class="detail-row">
+          <span class="detail-label">Telefon</span>
+          <span class="detail-value">${guestPhone}</span>
+        </div>` : ""}
+        ${guestCount ? `
+        <div class="detail-row">
+          <span class="detail-label">Broj gostiju</span>
+          <span class="detail-value">${guestCount}</span>
+        </div>` : ""}
+      </div>
+
+      <div class="section">
+        <div class="section-title">📋 Detalji rezervacije</div>
+        <div class="detail-row">
+          <span class="detail-label">Jedinica</span>
+          <span class="detail-value">${unitName}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Check-in</span>
@@ -514,6 +580,11 @@ export async function sendOwnerNotificationEmail(
           <span class="detail-label">Referenca</span>
           <span class="detail-value">${bookingReference}</span>
         </div>
+        ${notes ? `
+        <div class="detail-row">
+          <span class="detail-label">Napomena gosta</span>
+          <span class="detail-value">${notes}</span>
+        </div>` : ""}
       </div>
 
       <div class="section">

@@ -11,7 +11,8 @@ import {
   sendOwnerNotificationEmail,
   sendPendingBookingOwnerNotification,
 } from "./emailService";
-import { shouldSendEmailNotification } from "./notificationPreferences";
+// BUG #2 FIX: Removed shouldSendEmailNotification import
+// Owner email is now ALWAYS sent for new bookings (user requirement B1: 1)
 
 /**
  * Cloud Function: Create Booking with Atomic Availability Check
@@ -732,39 +733,32 @@ export const createBookingAtomic = onCall(async (request) => {
             ownerData: ownerData ? Object.keys(ownerData) : "null",
           });
         } else {
-          // Check notification preferences before sending
-          const shouldSend = await shouldSendEmailNotification(
-            ownerId,
-            "bookings"
+          // BUG #2 FIX: Owner email is ALWAYS sent for new bookings
+          // Removed conditional check - owner must always know about new reservations
+          // User requirement (B1: 1): "DA - uvijek, bez obzira na settings"
+          logInfo("[AtomicBooking] Sending owner notification to", {
+            email: ownerData.email,
+          });
+
+          await sendOwnerNotificationEmail(
+            ownerData.email,
+            ownerData.displayName || ownerData.first_name || "Owner",
+            guestName,
+            guestEmail,
+            result.bookingReference,
+            checkInDate.toDate(),
+            checkOutDate.toDate(),
+            totalPrice,
+            depositAmount,
+            unitData?.name || "Unit",
+            guestPhone || undefined, // Pass guest phone to owner
+            guestCount, // Pass guest count to owner
+            notes || undefined // Pass notes to owner
           );
 
-          if (shouldSend) {
-            logInfo("[AtomicBooking] Sending owner notification to", {
-              email: ownerData.email,
-            });
-
-            await sendOwnerNotificationEmail(
-              ownerData.email,
-              ownerData.displayName || ownerData.first_name || "Owner",
-              guestName,
-              guestEmail,
-              result.bookingReference,
-              checkInDate.toDate(),
-              checkOutDate.toDate(),
-              totalPrice,
-              depositAmount,
-              unitData?.name || "Unit"
-            );
-
-            logSuccess("[AtomicBooking] Owner notification email sent", {
-              email: ownerData.email,
-            });
-          } else {
-            logInfo("[AtomicBooking] Owner has disabled booking email notifications", {
-              ownerId,
-              email: ownerData.email,
-            });
-          }
+          logSuccess("[AtomicBooking] Owner notification email sent", {
+            email: ownerData.email,
+          });
         }
       }
     } catch (emailError) {

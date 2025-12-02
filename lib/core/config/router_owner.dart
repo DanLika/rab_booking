@@ -198,7 +198,16 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Allow public access to embed, booking, calendar, and view routes (no auth required)
       // Also allow root path OR /login with widget query params (property, unit, confirmation)
       // This handles Stripe return URLs which may have #/login hash but widget params in query string
-      final hasWidgetParams = state.uri.queryParameters.containsKey('property') ||
+      //
+      // IMPORTANT: With hash-based routing, query params BEFORE the # are NOT in state.uri.queryParameters
+      // URL: http://localhost:8181/?property=xxx#/login
+      //      ^^^^^^^^^^^^^^^^^^^^^^^^ Uri.base  ^^^^^^ state.uri (GoRouter)
+      // So we must check Uri.base for widget params from Stripe return URLs
+      final browserUri = Uri.base;
+      final hasWidgetParams = browserUri.queryParameters.containsKey('property') ||
+          browserUri.queryParameters.containsKey('unit') ||
+          browserUri.queryParameters.containsKey('confirmation') ||
+          state.uri.queryParameters.containsKey('property') ||
           state.uri.queryParameters.containsKey('unit') ||
           state.uri.queryParameters.containsKey('confirmation');
       final isPublicRoute =
@@ -309,7 +318,12 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: '/',
         builder: (context, state) {
           // Check if this is a widget URL (has property/unit/confirmation params)
-          final hasWidgetParams = state.uri.queryParameters.containsKey('property') ||
+          // IMPORTANT: With hash routing, query params are BEFORE the #, so use Uri.base
+          final browserUri = Uri.base;
+          final hasWidgetParams = browserUri.queryParameters.containsKey('property') ||
+              browserUri.queryParameters.containsKey('unit') ||
+              browserUri.queryParameters.containsKey('confirmation') ||
+              state.uri.queryParameters.containsKey('property') ||
               state.uri.queryParameters.containsKey('unit') ||
               state.uri.queryParameters.containsKey('confirmation');
 
@@ -401,7 +415,13 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           // Check if this is a Stripe return URL with widget params
           // URL: /?property=...&confirmation=...#/login
           // In this case, show the booking widget instead of login
-          final hasWidgetParams = state.uri.queryParameters.containsKey('property') ||
+          //
+          // IMPORTANT: With hash routing, query params are BEFORE the #, so use Uri.base
+          final browserUri = Uri.base;
+          final hasWidgetParams = browserUri.queryParameters.containsKey('property') ||
+              browserUri.queryParameters.containsKey('unit') ||
+              browserUri.queryParameters.containsKey('confirmation') ||
+              state.uri.queryParameters.containsKey('property') ||
               state.uri.queryParameters.containsKey('unit') ||
               state.uri.queryParameters.containsKey('confirmation');
 

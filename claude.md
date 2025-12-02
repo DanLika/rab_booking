@@ -163,9 +163,61 @@ Vidi [CLAUDE_WIDGET_SYSTEM.md](./CLAUDE_WIDGET_SYSTEM.md) za detalje.
 - `isLoading` check KRITIČAN (sprječava flash nakon registracije)
 - Widget params na `/login` route prikazuju `BookingWidgetScreen` (Stripe return fix)
 
-### Cross-Tab Communication (2025-12-02)
+### Same-Tab Stripe Checkout (2025-12-02, Updated)
+**File**: `booking_widget_screen.dart`
+**Svrha**: Stripe plaćanje se otvara u ISTOM tabu, booking se kreira webhook-om NAKON plaćanja.
+
+**Implementacija:**
+```dart
+// Web: Use window.location.href for same-tab redirect
+if (kIsWeb) {
+  html.window.location.href = checkoutResult.checkoutUrl;
+} else {
+  // Mobile: Use url_launcher (will open in browser)
+  await launchUrl(uri, mode: LaunchMode.externalApplication);
+}
+```
+
+**Flow (NEW - Webhook Creates Booking):**
+```
+1. User klikne "Pay with Stripe"
+2. Form data se BRIŠE (sprječava conflict na povratku)
+3. Isti tab prelazi na Stripe Checkout
+4. User plaća
+5. Stripe webhook kreira booking u Firestore sa stripe_session_id
+6. Stripe redirect-a natrag sa ?stripe_status=success&session_id=cs_xxx
+7. Widget poll-uje za booking koristeći session_id (max 30s)
+8. Kad nađe booking, prikaže confirmation screen
+```
+
+**KRITIČNO - session_id Lookup (BUG FIX 2025-12-02):**
+```dart
+// Problem: URL nema bookingId jer webhook kreira booking NAKON redirect-a
+// Rješenje: Poll Firestore po stripe_session_id
+
+Future<void> _handleStripeReturnWithSessionId(String sessionId) async {
+  // Poll max 15 attempts × 2s = 30 seconds
+  for (var i = 0; i < 15; i++) {
+    booking = await bookingRepo.fetchBookingByStripeSessionId(sessionId);
+    if (booking != null) break;
+    await Future.delayed(Duration(seconds: 2));
+  }
+  // Navigate to confirmation
+}
+```
+
+**Model Fields Added:**
+- `BookingModel.stripeSessionId` - za webhook lookup
+- `BookingModel.bookingReference` - human-readable referenca (BK-xxx)
+
+**Prednosti:**
+- Nema popup-ova ili novih tabova
+- Booking se kreira tek nakon USPJEŠNOG plaćanja
+- Cross-tab komunikacija zadržana kao fallback
+
+### Cross-Tab Communication (Optional Fallback)
 **Files**: `tab_communication_service.dart`, `tab_communication_service_web.dart`
-**Svrha**: Kada Stripe plaćanje završi u Tab B, Tab A (originalni widget) automatski prikaže confirmation screen.
+**Svrha**: Fallback mehanizam - šalje broadcast drugim tabovima kada plaćanje završi.
 
 - **BroadcastChannel API** sa localStorage fallback
 - Channel: `rab-booking-stripe`
@@ -173,10 +225,73 @@ Vidi [CLAUDE_WIDGET_SYSTEM.md](./CLAUDE_WIDGET_SYSTEM.md) za detalje.
 - Inicijalizacija u `booking_widget_screen.dart` → `_initTabCommunication()`
 - `fromOtherTab` parametar sprječava circular broadcasting
 
-**Flow:**
+**Napomena:** Od 2025-12-02, same-tab redirect je primarni flow. Cross-tab komunikacija je zadržana samo kao fallback za slučaj da user ima više tabova otvorenih.
+
+---
+
+## 🐛 BUG FIX-EVI (2025-12-02)
+
+### Calendar Pending Status - Diagonal Pattern & Colors
+**Files**: `split_day_calendar_painter.dart`, `calendar_date_status.dart`
+
+**Problem**: Dijagonalne linije na turnover days (pending bookings) bile teško vidljive, pogotovo u light theme.
+
+**Rješenje**:
+1. **Povećana debljina linije**: `strokeWidth` 1.5 → 2.0
+2. **Nova boja**: Tamno zlatna/smeđa `#6B4C00` sa 60% opacity (umjesto `backgroundPrimary @ 40%`)
+
+```dart
+// calendar_date_status.dart - getPatternLineColor()
+case DateStatus.pending:
+  return const Color(0xFF6B4C00).withValues(alpha: 0.6); // Dark gold/brown
 ```
-Tab A (form) ← BroadcastChannel ← Tab B (Stripe return broadcasts paymentComplete)
+
+**Pending Status u Kalendaru - NE MIJENJAJ:**
+- `DateStatus.pending` - žuta pozadina sa dijagonalnim uzorkom
+- `needsDiagonalPattern` - vraća `true` samo za `pending`
+- Split day (turnover) koristi `SplitDayCalendarPainter` za dijagonale
+- `isCheckOutPending` / `isCheckInPending` - prati koja polovica je pending
+
+### Booking Confirmation Navigation Fix
+**File**: `booking_widget_screen.dart`, `booking_confirmation_screen.dart`
+
+**Problem**: Back/Close dugmad na confirmation screen nisu radili za Pay on Arrival/Bank Transfer jer:
+- State-based navigacija (`WidgetViewState`) držala isti URL
+- Klik na Back/Close nije imao vizualni feedback
+
+**Rješenje**: Refaktorisano na `Navigator.push()` za SVE payment flowove:
+
+```dart
+// PRIJE (state-based - LOŠE)
+setState(() => _viewState = WidgetViewState.confirmation);
+
+// POSLIJE (Navigator.push - DOBRO)
+await Navigator.of(context).push(
+  MaterialPageRoute(builder: (context) => BookingConfirmationScreen(...)),
+);
+// Nakon pop-a, reset form state
+_resetFormState();
+_clearBookingUrlParams();
 ```
+
+**Uklonjeno:**
+- `WidgetViewState` enum
+- `_viewState`, `_completedBooking`, `_completedPaymentMethod` state
+- `_resetToCalendarView()` metoda
+
+### Stripe Return - Calendar Instead of Confirmation
+**Root Cause**: Stripe webhook kreira booking NAKON redirect-a, URL nema `bookingId`.
+
+**Simptomi**:
+- URL: `?stripe_status=success&session_id=cs_xxx` (bez `bookingId`)
+- Cached form data se učita sa datumima koji su sada rezervisani
+- Widget prikaže "conflict" umjesto confirmation
+
+**Rješenje**:
+1. **Clear form data PRIJE redirect-a na Stripe** (u `_handleStripePayment`)
+2. **Nova metoda `fetchBookingByStripeSessionId()`** u repository
+3. **Nova metoda `_handleStripeReturnWithSessionId()`** - poll-uje za booking
+4. **Nova polja u `BookingModel`**: `stripeSessionId`, `bookingReference`
 
 ---
 
@@ -189,6 +304,8 @@ Tab A (form) ← BroadcastChannel ← Tab B (Stripe return broadcasts paymentCom
 4. Input field borderRadius 12px
 5. Gradient direkcija topLeft → bottomRight
 6. Provider invalidation POSLIJE save-a
+7. **Calendar Pending Status** - diagonal pattern, boje, `DateStatus.pending` logika
+8. **Navigator.push za confirmation** - NE vraćaj state-based navigaciju!
 
 ### UVIJEK KORISTI:
 1. `theme.colorScheme.*` (ne AppColors)
@@ -206,4 +323,4 @@ Tab A (form) ← BroadcastChannel ← Tab B (Stripe return broadcasts paymentCom
 ---
 
 **Last Updated**: 2025-12-02
-**Version**: 3.0 (Refaktorisan)
+**Version**: 3.1 (Bug fixes: Stripe session_id, Navigator.push, pending pattern)

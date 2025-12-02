@@ -19,7 +19,9 @@ class BookingService {
 
   /// Create a new booking in Firestore
   ///
-  /// This should be called BEFORE initiating Stripe payment
+  /// IMPORTANT: For Stripe payments, this method does NOT create a booking!
+  /// Instead, it validates availability and returns booking data for Stripe checkout.
+  /// The actual booking is created by the Stripe webhook after payment succeeds.
   ///
   /// Parameters:
   /// - [unitId]: The unit being booked
@@ -38,8 +40,9 @@ class BookingService {
   /// - [notes]: Special requests/notes (optional)
   /// - [taxLegalAccepted]: If guest accepted tax/legal disclaimer (for compliance)
   ///
-  /// Returns: BookingModel with generated ID and booking reference
-  Future<BookingModel> createBooking({
+  /// Returns: BookingResult containing either BookingModel (for non-Stripe)
+  /// or booking data for Stripe checkout
+  Future<BookingResult> createBooking({
     required String unitId,
     required String propertyId,
     required String ownerId,
@@ -64,25 +67,6 @@ class BookingService {
       LoggingService.logDebug('   Total: €$totalPrice');
       LoggingService.logDebug('   Payment: $paymentOption via $paymentMethod');
 
-      // Determine initial status based on widget mode and payment method
-      BookingStatus status;
-      String paymentStatusValue;
-
-      if (requireOwnerApproval || paymentMethod == 'none') {
-        // bookingPending mode or no payment - requires owner approval
-        status = BookingStatus.pending;
-        paymentStatusValue =
-            'not_required'; // Payment not required for pending bookings
-      } else if (paymentMethod == 'bank_transfer') {
-        // Bank transfer - pending payment confirmation
-        status = BookingStatus.pending;
-        paymentStatusValue = 'pending';
-      } else {
-        // Stripe payment - pending Stripe checkout completion
-        status = BookingStatus.pending;
-        paymentStatusValue = 'pending';
-      }
-
       // Call atomic Cloud Function to prevent race conditions
       LoggingService.logDebug('   Calling createBookingAtomic Cloud Function...');
 
@@ -105,13 +89,47 @@ class BookingService {
         'taxLegalAccepted': taxLegalAccepted,
       });
 
-      // Extract booking ID and reference from Cloud Function response
       final responseData = result.data;
+
+      // Check if this is a Stripe validation (no booking created yet)
+      final isStripeValidation = responseData['isStripeValidation'] == true;
+
+      if (isStripeValidation) {
+        // For Stripe: Return validation result with booking data
+        // No booking was created - webhook will create it after payment
+        final bookingData =
+            responseData['bookingData'] as Map<String, dynamic>;
+        final depositAmount = (bookingData['depositAmount'] as num).toDouble();
+
+        LoggingService.logSuccess(
+          '[BookingService] Stripe validation passed - proceeding to checkout',
+        );
+        LoggingService.logDebug('   Deposit: €${depositAmount.toStringAsFixed(2)}');
+
+        return BookingResult.stripeValidation(
+          bookingData: bookingData,
+          depositAmount: depositAmount,
+        );
+      }
+
+      // For non-Stripe: Booking was created, return BookingModel
       final createdBookingId = responseData['bookingId'] as String;
       final createdBookingRef = responseData['bookingReference'] as String;
-      final createdDepositAmount = (responseData['depositAmount'] as num).toDouble();
+      final createdDepositAmount =
+          (responseData['depositAmount'] as num).toDouble();
 
-      // Create booking model with returned data
+      // Determine status based on payment method
+      BookingStatus status;
+      String paymentStatusValue;
+
+      if (requireOwnerApproval || paymentMethod == 'none') {
+        status = BookingStatus.pending;
+        paymentStatusValue = 'not_required';
+      } else {
+        status = BookingStatus.pending;
+        paymentStatusValue = 'pending';
+      }
+
       final booking = BookingModel(
         id: createdBookingId,
         unitId: unitId,
@@ -134,13 +152,10 @@ class BookingService {
       );
 
       LoggingService.logSuccess(
-        '[BookingService] Booking created atomically: $createdBookingRef (ID: $createdBookingId)',
-      );
-      LoggingService.logDebug(
-        '   Deposit amount: €${createdDepositAmount.toStringAsFixed(2)}',
+        '[BookingService] Booking created: $createdBookingRef (ID: $createdBookingId)',
       );
 
-      return booking;
+      return BookingResult.booking(booking);
     } on FirebaseFunctionsException catch (e) {
       // Handle race condition - dates no longer available
       if (e.code == 'already-exists') {
@@ -285,4 +300,46 @@ class BookingConflictException implements Exception {
 
   @override
   String toString() => 'BookingConflictException: $message';
+}
+
+/// Result of createBooking - either a created booking or Stripe validation data
+class BookingResult {
+  /// The created booking (for non-Stripe payments)
+  final BookingModel? booking;
+
+  /// Booking data for Stripe checkout (no booking created yet)
+  final Map<String, dynamic>? stripeBookingData;
+
+  /// Deposit amount for Stripe
+  final double? depositAmount;
+
+  /// Whether this is a Stripe validation result (no booking created)
+  final bool isStripeValidation;
+
+  BookingResult._({
+    this.booking,
+    this.stripeBookingData,
+    this.depositAmount,
+    required this.isStripeValidation,
+  });
+
+  /// Create result for a created booking (non-Stripe)
+  factory BookingResult.booking(BookingModel booking) {
+    return BookingResult._(
+      booking: booking,
+      isStripeValidation: false,
+    );
+  }
+
+  /// Create result for Stripe validation (no booking created)
+  factory BookingResult.stripeValidation({
+    required Map<String, dynamic> bookingData,
+    required double depositAmount,
+  }) {
+    return BookingResult._(
+      stripeBookingData: bookingData,
+      depositAmount: depositAmount,
+      isStripeValidation: true,
+    );
+  }
 }

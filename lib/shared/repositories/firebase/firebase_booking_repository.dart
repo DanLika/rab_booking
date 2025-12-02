@@ -27,6 +27,18 @@ class FirebaseBookingRepository implements BookingRepository {
   }
 
   @override
+  Future<BookingModel?> fetchBookingByStripeSessionId(String sessionId) async {
+    final snapshot = await _firestore
+        .collection('bookings')
+        .where('stripe_session_id', isEqualTo: sessionId)
+        .limit(1)
+        .get();
+    if (snapshot.docs.isEmpty) return null;
+    final doc = snapshot.docs.first;
+    return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+  }
+
+  @override
   Future<BookingModel> createBooking(BookingModel booking) async {
     final docRef = await _firestore.collection('bookings').add(booking.toJson());
     return booking.copyWith(id: docRef.id);

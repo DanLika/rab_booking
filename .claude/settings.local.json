@@ -64,7 +64,17 @@
       "Bash(claude mcp list:*)",
       "Bash(sed:*)",
       "Bash(tree:*)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__firebase__firestore_list_collections",
+      "mcp__firebase__firestore_query_collection",
+      "mcp__stripe__get_stripe_account_info",
+      "mcp__firebase__firestore_get_documents",
+      "mcp__stripe__search_stripe_documentation",
+      "Bash(stripe events resend:*)",
+      "Bash(stripe webhook_endpoints delete:*)",
+      "SlashCommand(/misc:feature-plan ultrathink)",
+      "SlashCommand(/misc:code-explain)"
     ],
     "deny": [
       "Read(.env)",

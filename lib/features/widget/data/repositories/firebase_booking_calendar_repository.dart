@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/daily_price_model.dart';
@@ -46,6 +47,8 @@ class FirebaseBookingCalendarRepository {
     required String unitId,
     required int year,
   }) {
+    debugPrint('[CalendarRepo] watchYearCalendarData CALLED for unit=$unitId, year=$year');
+
     // Bug #65 Fix: Use UTC for DST-safe date handling
     final startDate = DateTime.utc(year);
     final endDate = DateTime.utc(year, 12, 31, 23, 59, 59);
@@ -183,6 +186,8 @@ class FirebaseBookingCalendarRepository {
     required int year,
     required int month,
   }) {
+    debugPrint('[CalendarRepo] watchCalendarData (MONTH) CALLED for unit=$unitId, year=$year, month=$month');
+
     // Bug #65 Fix: Use UTC for DST-safe date handling
     final startDate = DateTime.utc(year, month);
     final endDate = DateTime.utc(year, month + 1, 0, 23, 59, 59);
@@ -345,6 +350,12 @@ class FirebaseBookingCalendarRepository {
     final monthStart = DateTime.utc(year, month);
     final monthEnd = DateTime.utc(year, month, daysInMonth);
 
+    // DEBUG: Log bookings being processed
+    debugPrint('[CalendarRepo] _buildCalendarMap: Processing ${bookings.length} bookings for $year-$month');
+    for (final booking in bookings) {
+      debugPrint('[CalendarRepo] Booking ${booking.id.substring(0, 8)}: status=${booking.status}, isPending=${booking.status == BookingStatus.pending}');
+    }
+
     for (final booking in bookings) {
       final checkIn = DateTime.utc(
         booking.checkIn.year,
@@ -479,6 +490,12 @@ class FirebaseBookingCalendarRepository {
     // Bug #71 Fix: Optimize for long-term bookings by calculating date range intersection
     final yearStart = DateTime(year);
     final yearEnd = DateTime(year, 12, 31);
+
+    // DEBUG: Log bookings being processed in YEAR view
+    debugPrint('[CalendarRepo] _buildYearCalendarMap: Processing ${bookings.length} bookings for year $year');
+    for (final booking in bookings) {
+      debugPrint('[CalendarRepo] YEAR Booking ${booking.id.substring(0, 8)}: status=${booking.status}, isPending=${booking.status == BookingStatus.pending}');
+    }
 
     for (final booking in bookings) {
       final checkIn = DateTime(

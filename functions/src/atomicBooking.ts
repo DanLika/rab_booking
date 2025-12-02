@@ -159,24 +159,153 @@ export const createBookingAtomic = onCall(async (request) => {
       totalPrice,
     });
 
-    // Determine booking status
+    // ========================================================================
+    // STRIPE PAYMENT: Do NOT create booking here!
+    // For Stripe payments, we only validate availability and return success.
+    // The actual booking will be created by the webhook after payment confirms.
+    // This prevents "ghost bookings" that block calendar but were never paid.
+    // ========================================================================
+    if (paymentMethod === "stripe") {
+      // For Stripe, we need to validate availability within transaction
+      // but NOT create the booking yet
+      await db.runTransaction(async (transaction) => {
+        // Query conflicting bookings
+        const conflictingBookingsQuery = db
+          .collection("bookings")
+          .where("unit_id", "==", unitId)
+          .where("status", "in", ["pending", "confirmed"])
+          .where("check_in", "<", checkOutDate)
+          .where("check_out", ">", checkInDate);
+
+        const conflictingBookings =
+          await transaction.get(conflictingBookingsQuery);
+
+        if (!conflictingBookings.empty) {
+          throw new HttpsError(
+            "already-exists",
+            "Dates no longer available. Select different dates."
+          );
+        }
+
+        // Validate daily_prices restrictions (same as below)
+        const bookingNights = Math.ceil(
+          (checkOutDate.toDate().getTime() - checkInDate.toDate().getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
+
+        const dailyPricesQuery = db
+          .collection("daily_prices")
+          .where("unit_id", "==", unitId)
+          .where("date", ">=", checkInDate)
+          .where("date", "<", checkOutDate);
+
+        const dailyPricesSnapshot = await transaction.get(dailyPricesQuery);
+
+        for (const doc of dailyPricesSnapshot.docs) {
+          const priceData = doc.data();
+          const dateTimestamp = priceData.date as admin.firestore.Timestamp;
+          const dateStr = dateTimestamp.toDate().toISOString().split("T")[0];
+
+          if (priceData.available === false) {
+            throw new HttpsError(
+              "failed-precondition",
+              `Date ${dateStr} is not available for booking.`
+            );
+          }
+
+          const isCheckInDate =
+            dateTimestamp.toMillis() === checkInDate.toMillis();
+          if (isCheckInDate && priceData.block_checkin === true) {
+            throw new HttpsError(
+              "failed-precondition",
+              `Check-in is not allowed on ${dateStr}.`
+            );
+          }
+
+          if (
+            isCheckInDate &&
+            priceData.min_nights_on_arrival != null &&
+            priceData.min_nights_on_arrival > 0 &&
+            bookingNights < priceData.min_nights_on_arrival
+          ) {
+            throw new HttpsError(
+              "failed-precondition",
+              `Minimum ${priceData.min_nights_on_arrival} nights required.`
+            );
+          }
+        }
+
+        // Validate unit's base minStayNights
+        const unitDocRef = db.collection("units").doc(unitId);
+        const unitSnapshot = await transaction.get(unitDocRef);
+
+        if (unitSnapshot.exists) {
+          const unitData = unitSnapshot.data();
+          const unitMinStayNights = unitData?.min_stay_nights ?? 1;
+
+          if (bookingNights < unitMinStayNights) {
+            throw new HttpsError(
+              "failed-precondition",
+              `Minimum ${unitMinStayNights} nights required.`
+            );
+          }
+        }
+
+        return { valid: true, bookingNights };
+      });
+
+      logSuccess("[AtomicBooking] Stripe validation passed - no booking created yet", {
+        unitId,
+        checkIn,
+        checkOut,
+        guestEmail,
+      });
+
+      // Return validation success with all data needed for Stripe checkout
+      // The actual booking will be created by handleStripeWebhook after payment
+      return {
+        success: true,
+        isStripeValidation: true, // Flag to indicate this is just validation
+        bookingData: {
+          unitId,
+          propertyId,
+          ownerId,
+          checkIn,
+          checkOut,
+          guestName,
+          guestEmail,
+          guestPhone: guestPhone || null,
+          guestCount,
+          totalPrice,
+          depositAmount,
+          paymentOption,
+          notes: notes || null,
+          taxLegalAccepted: taxLegalAccepted || null,
+          icalExportEnabled,
+        },
+        message: "Dates available. Proceed to Stripe payment.",
+      };
+    }
+
+    // Determine booking status for NON-STRIPE payments
+    // pending = awaiting owner approval (BLOCKS calendar dates)
+    // confirmed = auto-confirmed (no approval needed)
     let status: string;
     let paymentStatus: string;
 
     if (requireOwnerApproval) {
-      // Requires manual owner approval - always pending
+      // Requires manual owner approval
+      // pending status BLOCKS calendar dates until owner approves or rejects
       status = "pending";
       paymentStatus = paymentMethod === "none" ? "not_required" : "pending";
     } else {
-      // Auto-confirmed (no approval needed)
+      // Auto-confirmed (no approval needed, non-Stripe payment)
       status = "confirmed";
 
       if (paymentMethod === "bank_transfer") {
         paymentStatus = "pending"; // Awaiting bank transfer
-      } else if (paymentMethod === "stripe") {
-        paymentStatus = "pending"; // Stripe will update via webhook
       } else {
-        paymentStatus = "not_required"; // Pay on arrival
+        paymentStatus = "not_required"; // Pay on arrival or no payment
       }
     }
 
@@ -187,6 +316,9 @@ export const createBookingAtomic = onCall(async (request) => {
       // Step 1: Query conflicting bookings INSIDE transaction
       // Bug #77 Fix: Changed "check_out" >= to > to allow same-day turnover
       // (checkout = 15 should allow new checkin = 15, no conflict)
+      //
+      // NOTE: pending bookings BLOCK calendar dates (awaiting owner approval)
+      // Only pending and confirmed statuses block - cancelled does not.
       const conflictingBookingsQuery = db
         .collection("bookings")
         .where("unit_id", "==", unitId)

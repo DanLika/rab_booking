@@ -108,14 +108,8 @@ class CalendarHoverTooltip extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: statusColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+                  // Status dot - with pattern for pending
+                  _buildStatusDot(status, statusColor),
                   const SizedBox(width: SpacingTokens.xxs),
                   Text(
                     statusLabel,
@@ -158,6 +152,40 @@ class CalendarHoverTooltip extends StatelessWidget {
           ),
         ),
       );
+  }
+
+  /// Build status dot - with diagonal pattern for pending status
+  Widget _buildStatusDot(DateStatus status, Color statusColor) {
+    if (status == DateStatus.pending) {
+      // Pending shows red dot with diagonal pattern
+      return Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: colors.borderDefault, width: 0.5),
+        ),
+        child: ClipOval(
+          child: CustomPaint(
+            size: const Size(10, 10),
+            painter: _TooltipPendingPatternPainter(
+              backgroundColor: colors.statusPendingBackground,
+              lineColor: colors.backgroundPrimary.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Regular solid dot for other statuses
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: statusColor,
+        shape: BoxShape.circle,
+      ),
+    );
   }
 
   String _getStatusLabel(DateStatus status) {
@@ -203,5 +231,46 @@ class CalendarHoverTooltip extends StatelessWidget {
       case DateStatus.pastReservation:
         return colors.textPrimary; // Theme-aware: black for light, white for dark
     }
+  }
+}
+
+/// Custom painter for pending pattern in tooltip status dot
+class _TooltipPendingPatternPainter extends CustomPainter {
+  final Color backgroundColor;
+  final Color lineColor;
+
+  _TooltipPendingPatternPainter({
+    required this.backgroundColor,
+    required this.lineColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Fill background with red
+    final bgPaint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
+
+    // Draw diagonal lines
+    final linePaint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    const spacing = 3.0;
+    for (double i = -size.height; i < size.width + size.height; i += spacing) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        linePaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _TooltipPendingPatternPainter oldDelegate) {
+    return oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.lineColor != lineColor;
   }
 }

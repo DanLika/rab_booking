@@ -80,6 +80,12 @@ class BookingModel with _$BookingModel {
     /// Stripe payment intent ID
     @JsonKey(name: 'payment_intent_id') String? paymentIntentId,
 
+    /// Stripe checkout session ID (for webhook-created bookings)
+    @JsonKey(name: 'stripe_session_id') String? stripeSessionId,
+
+    /// Human-readable booking reference (e.g., BK-1234567890-1234)
+    @JsonKey(name: 'booking_reference') String? bookingReference,
+
     /// Booking creation timestamp
     @TimestampConverter()
     @JsonKey(name: 'created_at') required DateTime createdAt,

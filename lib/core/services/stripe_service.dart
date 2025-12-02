@@ -16,28 +16,33 @@ class StripeService {
   ///
   /// Calls the existing Cloud Function: createStripeCheckoutSession
   ///
+  /// NEW FLOW (2025-12-02):
+  /// - Booking is NOT created before Stripe checkout
+  /// - All booking data is passed to create the checkout session
+  /// - Booking will be created by webhook AFTER payment succeeds
+  ///
   /// Parameters:
-  /// - [bookingId]: The booking document ID in Firestore
+  /// - [bookingData]: All booking data (from createBooking validation result)
   /// - [returnUrl]: URL to redirect after payment
-  /// - [guestEmail]: Guest's email for access validation (required for guest checkout)
   ///
   /// Returns:
   /// - sessionId: Stripe checkout session ID
   /// - checkoutUrl: URL to redirect user to Stripe checkout
+  /// - bookingReference: Generated booking reference for UI display
   Future<StripeCheckoutResult> createCheckoutSession({
-    required String bookingId,
+    required Map<String, dynamic> bookingData,
     String? returnUrl,
-    String? guestEmail,
   }) async {
     try {
-      LoggingService.logOperation('[StripeService] Creating checkout session for booking: $bookingId');
+      LoggingService.logOperation(
+        '[StripeService] Creating checkout session for: ${bookingData['guestEmail']}',
+      );
 
       final result = await _functions
           .httpsCallable('createStripeCheckoutSession')
           .call({
-        'bookingId': bookingId,
+        'bookingData': bookingData,
         'returnUrl': returnUrl,
-        if (guestEmail != null) 'guestEmail': guestEmail,
       });
 
       final data = result.data as Map<String, dynamic>;
@@ -49,15 +54,21 @@ class StripeService {
         );
       }
 
-      LoggingService.logSuccess('[StripeService] Checkout session created: ${data['sessionId']}');
+      LoggingService.logSuccess(
+        '[StripeService] Checkout session created: ${data['sessionId']}',
+      );
 
       return StripeCheckoutResult(
         success: true,
         sessionId: data['sessionId'] as String,
         checkoutUrl: data['checkoutUrl'] as String,
+        bookingReference: data['bookingReference'] as String?,
       );
     } on FirebaseFunctionsException catch (e) {
-      await LoggingService.logError('[StripeService] Firebase Functions error: ${e.code} - ${e.message}', e);
+      await LoggingService.logError(
+        '[StripeService] Firebase Functions error: ${e.code} - ${e.message}',
+        e,
+      );
       throw StripeServiceException(
         'Failed to create checkout session: ${e.message}',
         e.code,
@@ -181,10 +192,14 @@ class StripeCheckoutResult {
   final String sessionId;
   final String checkoutUrl;
 
+  /// Booking reference generated for UI display (booking created after payment)
+  final String? bookingReference;
+
   StripeCheckoutResult({
     required this.success,
     required this.sessionId,
     required this.checkoutUrl,
+    this.bookingReference,
   });
 }
 

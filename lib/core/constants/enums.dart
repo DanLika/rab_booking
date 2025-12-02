@@ -304,9 +304,17 @@ enum PropertyType {
 /// Booking status
 @JsonEnum(valueField: 'value')
 enum BookingStatus {
+  /// Awaiting owner approval (for bookingPending mode or requireOwnerApproval=true)
+  /// These dates ARE blocked on calendar until owner approves or rejects
   pending('pending'),
+
+  /// Booking confirmed and paid (or approved for non-payment modes)
   confirmed('confirmed'),
+
+  /// Booking was cancelled (by guest, owner, or system)
   cancelled('cancelled'),
+
+  /// Booking completed (guest checked out)
   completed('completed');
 
   const BookingStatus(this.value);
@@ -315,7 +323,7 @@ enum BookingStatus {
   String get displayName {
     switch (this) {
       case BookingStatus.pending:
-        return 'Pending';
+        return 'Pending Approval';
       case BookingStatus.confirmed:
         return 'Confirmed';
       case BookingStatus.cancelled:
@@ -326,10 +334,12 @@ enum BookingStatus {
   }
 
   /// Get color for booking status
+  /// Note: On calendar, pending uses RED with diagonal pattern (same as booked)
+  /// This color is used in owner dashboard badges
   Color get color {
     switch (this) {
       case BookingStatus.pending:
-        return const Color(0xFFFFA726); // Orange
+        return const Color(0xFFFFA726); // Orange - for dashboard badge
       case BookingStatus.confirmed:
         return const Color(0xFF66BB6A); // Green
       case BookingStatus.cancelled:
@@ -349,9 +359,29 @@ enum BookingStatus {
     return this == BookingStatus.confirmed;
   }
 
+  /// Check if booking blocks calendar dates
+  /// pending BLOCKS dates (waiting for owner approval)
+  /// confirmed BLOCKS dates
+  /// completed BLOCKS dates (historical)
+  /// cancelled does NOT block dates
+  bool get blocksCalendarDates {
+    return this != BookingStatus.cancelled;
+  }
+
   /// Check if booking is in final state (cannot be modified)
   bool get isFinal {
     return this == BookingStatus.completed || this == BookingStatus.cancelled;
+  }
+
+  /// Check if booking needs owner action (approval)
+  /// Used in owner dashboard to show bookings that need attention
+  bool get needsOwnerAction {
+    return this == BookingStatus.pending;
+  }
+
+  /// Check if booking is pending approval
+  bool get isPending {
+    return this == BookingStatus.pending;
   }
 
   static BookingStatus fromString(String value) {

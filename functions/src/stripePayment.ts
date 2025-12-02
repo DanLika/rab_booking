@@ -24,22 +24,53 @@ const ALLOWED_RETURN_DOMAINS = [
 /**
  * Cloud Function: Create Stripe Checkout Session
  *
- * Creates a Stripe checkout session for 20% deposit payment
- * Security: Validates booking access and return URL
+ * NEW FLOW (2025-12-02):
+ * - Booking is NOT created before Stripe checkout
+ * - All booking data is passed in session metadata
+ * - Booking is created by webhook AFTER successful payment
+ * - This prevents "ghost bookings" that block dates but were never paid
+ *
+ * Security: Validates return URL against whitelist
  */
 export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, async (request) => {
-  const {bookingId, returnUrl, guestEmail} = request.data;
+  const {
+    // Booking data (from atomicBooking validation result)
+    bookingData,
+    returnUrl,
+  } = request.data;
 
   // Debug logging
   console.log("createStripeCheckoutSession called with:", {
-    bookingId,
+    hasBookingData: !!bookingData,
     returnUrl: returnUrl ? "provided" : "not provided",
-    guestEmail: guestEmail || "NOT PROVIDED",
     hasAuth: !!request.auth,
   });
 
-  if (!bookingId) {
-    throw new HttpsError("invalid-argument", "Booking ID is required");
+  if (!bookingData) {
+    throw new HttpsError("invalid-argument", "Booking data is required");
+  }
+
+  const {
+    unitId,
+    propertyId,
+    ownerId,
+    checkIn,
+    checkOut,
+    guestName,
+    guestEmail,
+    guestPhone,
+    guestCount,
+    totalPrice,
+    depositAmount,
+    paymentOption,
+    notes,
+    taxLegalAccepted,
+  } = bookingData;
+
+  // Validate required fields
+  if (!unitId || !propertyId || !ownerId || !checkIn || !checkOut ||
+      !guestName || !guestEmail || !totalPrice) {
+    throw new HttpsError("invalid-argument", "Missing required booking fields");
   }
 
   // SECURITY: Validate return URL against whitelist
@@ -54,48 +85,13 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
   }
 
   try {
-    // Fetch booking details
-    const bookingRef = db.collection("bookings").doc(bookingId);
-    const bookingDoc = await bookingRef.get();
-
-    if (!bookingDoc.exists) {
-      throw new HttpsError("not-found", "Booking not found");
-    }
-
-    const booking = bookingDoc.data()!;
-
-    // SECURITY: Validate access to this booking
-    // Allow if: 1) Guest email matches, or 2) Authenticated owner
-    const isGuestAccess = guestEmail &&
-      booking.guest_email?.toLowerCase() === guestEmail.toLowerCase();
-    const isOwnerAccess = request.auth?.uid === booking.owner_id;
-    const isAuthenticatedUser = request.auth?.uid != null;
-
-    // For guest checkout (no auth), require matching email
-    // For authenticated users, allow if they're the owner
-    if (!isGuestAccess && !isOwnerAccess && !isAuthenticatedUser) {
-      // If no auth and no matching email, this could be an attack
-      if (!request.auth && !guestEmail) {
-        console.error(`Unauthorized checkout attempt for booking ${bookingId}`);
-        throw new HttpsError("permission-denied", "Guest email required for checkout");
-      }
-    }
-
     // Fetch unit and property details
-    const unitDoc = await db.collection("units").doc(booking.unit_id).get();
+    const unitDoc = await db.collection("units").doc(unitId).get();
     const unitData = unitDoc.data();
-    const propertyDoc = await db
-      .collection("properties")
-      .doc(booking.property_id)
-      .get();
+    const propertyDoc = await db.collection("properties").doc(propertyId).get();
     const propertyData = propertyDoc.data();
 
     // Get owner's Stripe Connect account ID
-    const ownerId = propertyData?.owner_id;
-    if (!ownerId) {
-      throw new HttpsError("not-found", "Property owner not found");
-    }
-
     const ownerDoc = await db.collection("users").doc(ownerId).get();
     const ownerStripeAccountId = ownerDoc.data()?.stripe_account_id;
 
@@ -106,12 +102,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
       );
     }
 
-    const depositAmountInCents = Math.round(booking.deposit_amount * 100);
-
-    // Note: Platform fee is 0 for now (as requested)
-    // To add platform fee later, uncomment these lines:
-    // const platformFeePercent = 0.10; // 10%
-    // const platformFee = Math.round(depositAmountInCents * platformFeePercent);
+    const depositAmountInCents = Math.round(depositAmount * 100);
 
     // Create Stripe checkout session with destination charge
     const stripeClient = getStripeClient();
@@ -121,19 +112,15 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
     // We need to append session_id as a query parameter BEFORE the hash fragment
     //
     // IMPORTANT: Flutter Web uses hash routing (#/calendar), so hash must be at the END
-    // Example input:  http://localhost:8181/?property=xxx#/calendar
-    // Example output: http://localhost:8181/?property=xxx&stripe_status=success&session_id=...#/calendar
     let successUrl: string;
     let cancelUrl: string;
 
     if (returnUrl) {
-      // Check if URL has a hash fragment (e.g., #/calendar for Flutter Web)
       const hashIndex = returnUrl.indexOf("#");
       let baseUrl: string;
       let hashFragment: string;
 
       if (hashIndex !== -1) {
-        // Split URL at hash - params go BEFORE hash, fragment stays at END
         baseUrl = returnUrl.substring(0, hashIndex);
         hashFragment = returnUrl.substring(hashIndex);
       } else {
@@ -141,26 +128,28 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
         hashFragment = "";
       }
 
-      // Add query params to base URL, then re-append hash fragment
       const separator = baseUrl.includes("?") ? "&" : "?";
       successUrl = `${baseUrl}${separator}stripe_status=success&session_id={CHECKOUT_SESSION_ID}${hashFragment}`;
       cancelUrl = `${baseUrl}${separator}stripe_status=cancelled${hashFragment}`;
     } else {
-      // No returnUrl provided - use default app URLs
       successUrl = "https://rab-booking-248fc.web.app/booking-success?session_id={CHECKOUT_SESSION_ID}";
       cancelUrl = "https://rab-booking-248fc.web.app/booking-cancelled";
     }
 
+    // Generate booking reference for display
+    const bookingRef = `BK-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+
     const session = await stripeClient.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
+      // Stripe session expires in 24 hours (default, user approved)
       line_items: [
         {
           price_data: {
             currency: "eur",
             unit_amount: depositAmountInCents,
             product_data: {
-              name: `Booking Deposit - ${booking.booking_reference}`,
+              name: `Booking Deposit - ${bookingRef}`,
               description: `${propertyData?.name || "Property"} - ${unitData?.name || "Unit"}`,
               images: propertyData?.images?.[0] ?
                 [propertyData.images[0]] :
@@ -171,38 +160,47 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
         },
       ],
       payment_intent_data: {
-        // on_behalf_of: Ensures statement descriptor shows owner's business name
-        // This is required for proper Connect integration
         on_behalf_of: ownerStripeAccountId,
-        // Platform fee (currently 0, can be enabled later)
-        // application_fee_amount: platformFee,
         transfer_data: {
-          destination: ownerStripeAccountId, // Money goes directly to owner
+          destination: ownerStripeAccountId,
         },
       },
       success_url: successUrl,
       cancel_url: cancelUrl,
+      // CRITICAL: Store ALL booking data in metadata for webhook to create booking
       metadata: {
-        booking_id: bookingId,
-        booking_reference: booking.booking_reference,
-        unit_id: booking.unit_id,
-        property_id: booking.property_id,
+        // Booking identifiers
+        booking_reference: bookingRef,
+        unit_id: unitId,
+        property_id: propertyId,
         owner_id: ownerId,
+        // Dates (ISO strings)
+        check_in: checkIn,
+        check_out: checkOut,
+        // Guest info
+        guest_name: guestName,
+        guest_email: guestEmail,
+        guest_phone: guestPhone || "",
+        guest_count: String(guestCount),
+        // Payment info
+        total_price: String(totalPrice),
+        deposit_amount: String(depositAmount),
+        payment_option: paymentOption,
+        // Optional fields
+        notes: notes || "",
+        tax_legal_accepted: taxLegalAccepted ? "true" : "false",
       },
-      customer_email: booking.guest_email,
+      customer_email: guestEmail,
     });
 
-    // Update booking with Stripe session ID
-    await bookingRef.update({
-      stripe_session_id: session.id,
-      stripe_account_id: ownerStripeAccountId,
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    console.log(`Stripe checkout session created: ${session.id}`);
+    console.log(`Booking will be created by webhook after payment success`);
 
     return {
       success: true,
       sessionId: session.id,
       checkoutUrl: session.url,
+      bookingReference: bookingRef, // Return for UI display
     };
   } catch (error: any) {
     console.error("Error creating Stripe checkout session:", error);
@@ -216,7 +214,11 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
 /**
  * Cloud Function: Handle Stripe Webhook
  *
- * Listens for payment success events from Stripe and updates booking status
+ * NEW FLOW (2025-12-02):
+ * - Creates booking AFTER successful Stripe payment
+ * - Reads all booking data from session metadata
+ * - Uses atomic transaction to prevent race conditions
+ * - No more "ghost bookings" - only paid bookings exist
  */
 export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeWebhookSecret]}, async (req, res) => {
   const sig = req.headers["stripe-signature"];
@@ -252,89 +254,154 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
   // Handle the event
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const bookingId = session.metadata?.booking_id;
+    const metadata = session.metadata;
 
-    if (!bookingId) {
-      console.error("No booking_id in session metadata");
-      res.status(400).send("Missing booking_id");
+    // Validate required metadata
+    if (!metadata?.unit_id || !metadata?.property_id || !metadata?.owner_id) {
+      console.error("Missing required metadata in session:", metadata);
+      res.status(400).send("Missing required booking metadata");
       return;
     }
 
     try {
-      const bookingRef = db.collection("bookings").doc(bookingId);
-      const bookingDoc = await bookingRef.get();
+      // Extract all booking data from metadata
+      const unitId = metadata.unit_id;
+      const propertyId = metadata.property_id;
+      const ownerId = metadata.owner_id;
+      const bookingReference = metadata.booking_reference;
+      const checkIn = new Date(metadata.check_in);
+      const checkOut = new Date(metadata.check_out);
+      const guestName = metadata.guest_name;
+      const guestEmail = metadata.guest_email;
+      const guestPhone = metadata.guest_phone || null;
+      const guestCount = parseInt(metadata.guest_count) || 1;
+      const totalPrice = parseFloat(metadata.total_price);
+      const depositAmount = parseFloat(metadata.deposit_amount);
+      const paymentOption = metadata.payment_option;
+      const notes = metadata.notes || null;
+      const taxLegalAccepted = metadata.tax_legal_accepted === "true";
 
-      if (!bookingDoc.exists) {
-        console.error(`Booking ${bookingId} not found`);
-        res.status(404).send("Booking not found");
-        return;
-      }
+      console.log(`Processing Stripe webhook for booking: ${bookingReference}`);
+      console.log(`Unit: ${unitId}, CheckIn: ${checkIn}, CheckOut: ${checkOut}`);
 
-      const booking = bookingDoc.data()!;
+      // Convert to Firestore timestamps
+      const checkInTimestamp = admin.firestore.Timestamp.fromDate(checkIn);
+      const checkOutTimestamp = admin.firestore.Timestamp.fromDate(checkOut);
 
-      // Update booking status to confirmed
-      await bookingRef.update({
-        status: "confirmed",
-        payment_status: "paid",
-        payment_method: "stripe",
-        paid_amount: booking.deposit_amount,
-        stripe_payment_intent: session.payment_intent,
-        paid_at: admin.firestore.FieldValue.serverTimestamp(),
-        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      // CRITICAL: Use transaction to ensure atomic booking creation
+      // This prevents race condition where dates could be double-booked
+      const result = await db.runTransaction(async (transaction) => {
+        // Re-check availability within transaction
+        const conflictingBookingsQuery = db
+          .collection("bookings")
+          .where("unit_id", "==", unitId)
+          .where("status", "in", ["pending", "confirmed"])
+          .where("check_in", "<", checkOutTimestamp)
+          .where("check_out", ">", checkInTimestamp);
+
+        const conflictingBookings = await transaction.get(conflictingBookingsQuery);
+
+        if (!conflictingBookings.empty) {
+          // This should be rare - dates were available at checkout time
+          // but someone else booked in between
+          console.error("Date conflict detected during webhook processing:", {
+            unitId,
+            checkIn: metadata.check_in,
+            checkOut: metadata.check_out,
+            conflictingCount: conflictingBookings.size,
+          });
+
+          // We still need to handle this gracefully
+          // The payment was successful, so we should refund
+          // For now, log error - manual intervention needed
+          throw new Error("DATE_CONFLICT: Dates were booked by another user. Manual refund required.");
+        }
+
+        // Create booking document
+        const bookingId = db.collection("bookings").doc().id;
+        const bookingDocRef = db.collection("bookings").doc(bookingId);
+
+        const bookingData = {
+          user_id: null, // Widget bookings are unauthenticated
+          unit_id: unitId,
+          property_id: propertyId,
+          owner_id: ownerId,
+          guest_name: guestName,
+          guest_email: guestEmail,
+          guest_phone: guestPhone,
+          check_in: checkInTimestamp,
+          check_out: checkOutTimestamp,
+          guest_count: guestCount,
+          total_price: totalPrice,
+          advance_amount: depositAmount,
+          deposit_amount: depositAmount,
+          remaining_amount: totalPrice - depositAmount,
+          paid_amount: depositAmount,
+          payment_method: "stripe",
+          payment_option: paymentOption,
+          payment_status: "paid",
+          status: "confirmed", // Stripe payments are always confirmed (paid)
+          booking_reference: bookingReference,
+          source: "widget",
+          notes: notes,
+          require_owner_approval: false, // Stripe = no approval needed
+          tax_legal_accepted: taxLegalAccepted,
+          // Stripe payment details
+          stripe_session_id: session.id,
+          stripe_payment_intent: session.payment_intent,
+          paid_at: admin.firestore.FieldValue.serverTimestamp(),
+          created_at: admin.firestore.FieldValue.serverTimestamp(),
+          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        transaction.set(bookingDocRef, bookingData);
+
+        return { bookingId, bookingData };
       });
 
-      console.log(`Booking ${bookingId} confirmed after Stripe payment`);
+      console.log(`Booking ${result.bookingId} created after Stripe payment`);
 
       // Fetch unit and property details for emails
-      const unitDoc = await db
-        .collection("units")
-        .doc(booking.unit_id)
-        .get();
+      const unitDoc = await db.collection("units").doc(unitId).get();
       const unitData = unitDoc.data();
-      const propertyDoc = await db
-        .collection("properties")
-        .doc(booking.property_id)
-        .get();
+      const propertyDoc = await db.collection("properties").doc(propertyId).get();
       const propertyData = propertyDoc.data();
 
       // Send confirmation email to guest
       try {
         await sendBookingApprovedEmail(
-          booking.guest_email || "",
-          booking.guest_name || "Guest",
-          booking.booking_reference,
-          booking.check_in.toDate(),
-          booking.check_out.toDate(),
+          guestEmail,
+          guestName,
+          bookingReference,
+          checkIn,
+          checkOut,
           propertyData?.name || "Property",
           propertyData?.contact_email
         );
-        console.log(`Confirmation email sent to ${booking.guest_email}`);
+        console.log(`Confirmation email sent to ${guestEmail}`);
       } catch (error) {
         console.error("Failed to send confirmation email to guest:", error);
       }
 
       // Send notification email to owner
       try {
-        const ownerId = propertyData?.owner_id;
-        if (ownerId) {
-          const ownerDoc = await db.collection("users").doc(ownerId).get();
-          const ownerData = ownerDoc.data();
+        const ownerDoc = await db.collection("users").doc(ownerId).get();
+        const ownerData = ownerDoc.data();
 
-          if (ownerData?.email) {
-            await sendOwnerNotificationEmail(
-              ownerData.email,
-              ownerData.name || "Owner",
-              booking.guest_name || "Guest",
-              booking.guest_email || "",
-              booking.booking_reference,
-              booking.check_in.toDate(),
-              booking.check_out.toDate(),
-              booking.total_price,
-              booking.deposit_amount || 0,
-              unitData?.name || "Unit"
-            );
-            console.log(`Owner notification sent to ${ownerData.email}`);
-          }
+        if (ownerData?.email) {
+          await sendOwnerNotificationEmail(
+            ownerData.email,
+            ownerData.name || "Owner",
+            guestName,
+            guestEmail,
+            bookingReference,
+            checkIn,
+            checkOut,
+            totalPrice,
+            depositAmount,
+            unitData?.name || "Unit"
+          );
+          console.log(`Owner notification sent to ${ownerData.email}`);
         }
       } catch (error) {
         console.error("Failed to send notification email to owner:", error);
@@ -342,22 +409,23 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
       // Create in-app payment notification for owner
       try {
-        const ownerId = propertyData?.owner_id;
-        if (ownerId) {
-          await createPaymentNotification(
-            ownerId,
-            bookingId,
-            booking.guest_name || "Guest",
-            booking.deposit_amount || 0
-          );
-          console.log(`In-app payment notification created for owner ${ownerId}`);
-        }
+        await createPaymentNotification(
+          ownerId,
+          result.bookingId,
+          guestName,
+          depositAmount
+        );
+        console.log(`In-app payment notification created for owner ${ownerId}`);
       } catch (notificationError) {
         console.error("Failed to create in-app payment notification:", notificationError);
-        // Continue - notification failure shouldn't break the flow
       }
 
-      res.json({received: true, booking_id: bookingId, status: "confirmed"});
+      res.json({
+        received: true,
+        booking_id: result.bookingId,
+        booking_reference: bookingReference,
+        status: "confirmed",
+      });
     } catch (error: any) {
       console.error("Error processing webhook:", error);
       res.status(500).send(`Error: ${error.message}`);

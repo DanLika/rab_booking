@@ -109,12 +109,13 @@ extension DateStatusExtension on DateStatus {
   }
 
   /// Get the pattern line color for diagonal pattern overlay
-  /// Returns a contrasting color for the diagonal lines
+  /// Returns a contrasting color for the diagonal lines on yellow pending background
   Color getPatternLineColor(WidgetColorScheme colors) {
     switch (this) {
       case DateStatus.pending:
-        // White/light lines on red background for contrast
-        return colors.backgroundPrimary.withValues(alpha: 0.4);
+        // Dark brown lines for good contrast on yellow/golden pending background
+        // Works well on both light (#FDE68A) and dark (#F5B800) theme pending colors
+        return const Color(0xFF6B4C00).withValues(alpha: 0.6); // Dark gold/brown
       default:
         return Colors.transparent;
     }

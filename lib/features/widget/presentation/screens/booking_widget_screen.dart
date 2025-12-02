@@ -59,14 +59,6 @@ import '../widgets/common/theme_colors_helper.dart';
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/errors/app_exceptions.dart';
 
-/// Widget view state for state-based navigation
-/// Used for direct bookings (Pay on Arrival, Bank Transfer)
-/// Stripe uses URL params instead (redirect flow)
-enum WidgetViewState {
-  calendar,      // Initial view - calendar selection
-  confirmation,  // Booking confirmation (after successful direct booking)
-}
-
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size
 class BookingWidgetScreen extends ConsumerStatefulWidget {
@@ -124,12 +116,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   bool _pillBarDismissed = false; // Track if user clicked X to close pill bar
   bool _hasInteractedWithBookingFlow = false; // Track if user clicked Reserve button
 
-  // State-based view management (for direct bookings - Pay on Arrival, Bank Transfer)
-  // Stripe uses URL params instead (redirect flow)
-  WidgetViewState _viewState = WidgetViewState.calendar;
-  BookingModel? _completedBooking; // Booking to show in confirmation view
-  String? _completedPaymentMethod; // Payment method used for completed booking
-
   // Cross-tab communication for Stripe payments
   // When payment completes in one tab, other tabs are notified to update UI
   TabCommunicationService? _tabCommunicationService;
@@ -159,27 +145,39 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final bookingId = uri.queryParameters['bookingId'];
     final paymentType = uri.queryParameters['payment'];
     final stripeStatus = uri.queryParameters['stripe_status'];
+    final stripeSessionId = uri.queryParameters['session_id'];
     final bookingStatus = uri.queryParameters['booking_status'];
 
-    // Check if this is a Stripe return (Tab B - opened by Stripe redirect)
-    final isStripeReturn = paymentType == 'stripe' || stripeStatus == 'success';
-    final hasStripeConfirmationParams = confirmationRef != null &&
+    // Check if this is a Stripe return (NEW FLOW - booking created by webhook)
+    // URL has: stripe_status=success&session_id=cs_xxx but NO bookingId
+    // We need to poll for booking using session_id
+    final isStripeReturn = stripeStatus == 'success' && stripeSessionId != null;
+
+    // Legacy Stripe return (old flow - booking created before checkout)
+    final hasLegacyStripeParams = confirmationRef != null &&
         confirmationEmail != null &&
         bookingId != null &&
-        isStripeReturn;
+        (paymentType == 'stripe' || stripeStatus == 'success');
 
     // Check if this is a direct booking return (same tab - Pay on Arrival, Bank Transfer)
     final isDirectBookingReturn = bookingStatus == 'success' &&
         confirmationRef != null &&
-        bookingId != null &&
-        !isStripeReturn;
+        bookingId != null;
 
     // Validate unit and property immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // If this is Tab B (Stripe return), skip normal initialization
-      // and go straight to showing the "close this tab" screen
-      if (hasStripeConfirmationParams) {
-        // Clear any cached form data first
+      // NEW: Stripe return with session_id (webhook creates booking)
+      // This is the new flow where booking doesn't exist at checkout time
+      if (isStripeReturn && !hasLegacyStripeParams) {
+        // Clear any cached form data first (prevents conflict with booked dates)
+        await _clearFormData();
+
+        await _handleStripeReturnWithSessionId(stripeSessionId);
+        return; // Don't continue with normal initialization
+      }
+
+      // Legacy Stripe return (old flow with bookingId in URL)
+      if (hasLegacyStripeParams) {
         await _clearFormData();
 
         await _showConfirmationFromUrl(
@@ -299,27 +297,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
   }
 
-  /// Reset widget to calendar view (state-based navigation)
-  /// Called when user closes confirmation screen for direct bookings
-  void _resetToCalendarView() {
-    setState(() {
-      _viewState = WidgetViewState.calendar;
-      _completedBooking = null;
-      _completedPaymentMethod = null;
-    });
-
-    // Reset form state and invalidate calendar
-    _resetFormState();
-
-    // Clear URL params (remove booking confirmation params)
-    _clearBookingUrlParams();
-
-    LoggingService.log(
-      '[ViewState] Reset to calendar view',
-      tag: 'VIEW_STATE',
-    );
-  }
-
   /// Clear booking-related URL params and reset to base URL
   void _clearBookingUrlParams() {
     if (!kIsWeb) return;
@@ -426,6 +403,147 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       '[CrossTab] Form state reset after payment completion',
       tag: 'TAB_COMM',
     );
+  }
+
+  /// Handle Stripe return when booking is created by webhook (NEW FLOW)
+  /// URL has: stripe_status=success&session_id=cs_xxx but NO bookingId
+  /// We need to poll Firestore until webhook creates the booking
+  Future<void> _handleStripeReturnWithSessionId(String sessionId) async {
+    LoggingService.log(
+      '[STRIPE_RETURN] Handling Stripe return with session_id: $sessionId',
+      tag: 'STRIPE_SESSION',
+    );
+
+    // Show loading state while we wait for webhook
+    setState(() {
+      _isValidating = true;
+      _validationError = null;
+    });
+
+    try {
+      final bookingRepo = ref.read(bookingRepositoryProvider);
+      BookingModel? booking;
+
+      // Poll for booking created by webhook (max 30 seconds)
+      // Webhook typically arrives within 1-5 seconds
+      const maxAttempts = 15;
+      const pollInterval = Duration(seconds: 2);
+
+      for (var i = 0; i < maxAttempts; i++) {
+        LoggingService.log(
+          '[STRIPE_RETURN] Polling for booking (attempt ${i + 1}/$maxAttempts)...',
+          tag: 'STRIPE_SESSION',
+        );
+
+        // Try to find booking by stripe_session_id
+        booking = await bookingRepo.fetchBookingByStripeSessionId(sessionId);
+
+        if (booking != null) {
+          LoggingService.log(
+            '[STRIPE_RETURN] ✅ Found booking: ${booking.id} (ref: ${booking.bookingReference})',
+            tag: 'STRIPE_SESSION',
+          );
+          break;
+        }
+
+        // Not found yet, wait and try again
+        if (i < maxAttempts - 1) {
+          await Future.delayed(pollInterval);
+        }
+      }
+
+      // Hide loading state
+      if (mounted) {
+        setState(() {
+          _isValidating = false;
+        });
+      }
+
+      if (booking == null) {
+        // Webhook didn't create booking in time - show error
+        LoggingService.log(
+          '[STRIPE_RETURN] ❌ Booking not found after ${maxAttempts * pollInterval.inSeconds} seconds',
+          tag: 'STRIPE_SESSION',
+        );
+
+        if (mounted) {
+          SnackBarHelper.showWarning(
+            context: context,
+            message:
+                'Payment successful but booking confirmation is delayed. '
+                'Please check your email or contact the property owner.',
+            duration: const Duration(seconds: 10),
+          );
+
+          // Clear URL params and show calendar
+          _clearBookingUrlParams();
+          await _validateUnitAndProperty();
+        }
+        return;
+      }
+
+      // Found booking! Load unit data if not already loaded
+      if (_unit == null && _propertyId != null) {
+        await _validateUnitAndProperty();
+      }
+
+      // Invalidate calendar cache
+      ref.invalidate(realtimeYearCalendarProvider);
+      ref.invalidate(realtimeMonthCalendarProvider);
+
+      // Navigate to confirmation screen using Navigator.push
+      if (mounted) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => BookingConfirmationScreen(
+              bookingReference: booking!.bookingReference ?? booking.id,
+              guestEmail: booking.guestEmail ?? '',
+              guestName: booking.guestName ?? 'Guest',
+              checkIn: booking.checkIn,
+              checkOut: booking.checkOut,
+              totalPrice: booking.totalPrice,
+              nights: booking.checkOut.difference(booking.checkIn).inDays,
+              guests: booking.guestCount,
+              propertyName: _unit?.name ?? 'Property',
+              unitName: _unit?.name,
+              paymentMethod: 'stripe',
+              booking: booking,
+              emailConfig: _widgetSettings?.emailConfig,
+              widgetSettings: _widgetSettings,
+              propertyId: _propertyId,
+              unitId: _unitId,
+            ),
+          ),
+        );
+
+        // After Navigator.pop (user closed confirmation), reset form state
+        if (mounted) {
+          _resetFormState();
+          _clearBookingUrlParams();
+        }
+      }
+    } catch (e) {
+      LoggingService.log(
+        '[STRIPE_RETURN] ❌ Error: $e',
+        tag: 'STRIPE_SESSION',
+      );
+
+      if (mounted) {
+        setState(() {
+          _isValidating = false;
+        });
+
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Error loading booking: $e',
+          duration: const Duration(seconds: 5),
+        );
+
+        // Show calendar anyway
+        _clearBookingUrlParams();
+        await _validateUnitAndProperty();
+      }
+    }
   }
 
   /// Validates that unit exists and fetches property/owner info
@@ -790,34 +908,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         isDarkMode: isDarkMode,
         errorMessage: _validationError!,
         onRetry: _validateUnitAndProperty,
-      );
-    }
-
-    // State-based view: Show confirmation screen for direct bookings
-    // (Pay on Arrival, Bank Transfer, Pending mode)
-    if (_viewState == WidgetViewState.confirmation &&
-        _completedBooking != null) {
-      return BookingConfirmationScreen(
-        bookingReference: _completedBooking!.id.substring(0, 8).toUpperCase(),
-        guestEmail: _completedBooking!.guestEmail ?? '',
-        guestName: _completedBooking!.guestName ?? 'Guest',
-        checkIn: _completedBooking!.checkIn,
-        checkOut: _completedBooking!.checkOut,
-        totalPrice: _completedBooking!.totalPrice,
-        nights: _completedBooking!.checkOut
-            .difference(_completedBooking!.checkIn)
-            .inDays,
-        guests: _completedBooking!.guestCount,
-        propertyName: _unit?.name ?? 'Property',
-        unitName: _unit?.name,
-        paymentMethod: _completedPaymentMethod ?? 'pending',
-        booking: _completedBooking,
-        emailConfig: _widgetSettings?.emailConfig,
-        widgetSettings: _widgetSettings,
-        propertyId: _propertyId,
-        unitId: _unitId,
-        // State-based close: reset widget state instead of URL navigation
-        onClose: _resetToCalendarView,
       );
     }
 
@@ -2153,7 +2243,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   }
 
   /// Helper method to show confirmation screen for direct bookings
-  /// Uses URL params for browser history support (back button works)
+  /// Uses Navigator.push for proper back navigation and transition animation
   /// For pending/bank_transfer/pay_on_arrival modes
   Future<void> _navigateToConfirmationAndCleanup({
     required BookingModel booking,
@@ -2178,23 +2268,39 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       paymentMethod: paymentMethod,
     );
 
-    // State-based navigation: Show confirmation screen
-    setState(() {
-      _completedBooking = booking;
-      _completedPaymentMethod = paymentMethod;
-      _viewState = WidgetViewState.confirmation;
+    // Navigator.push for proper back navigation and transition animation
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BookingConfirmationScreen(
+          bookingReference: bookingRef,
+          guestEmail: booking.guestEmail ?? '',
+          guestName: booking.guestName ?? 'Guest',
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          totalPrice: booking.totalPrice,
+          nights: booking.checkOut.difference(booking.checkIn).inDays,
+          guests: booking.guestCount,
+          propertyName: _unit?.name ?? 'Property',
+          unitName: _unit?.name,
+          paymentMethod: paymentMethod,
+          booking: booking,
+          emailConfig: _widgetSettings?.emailConfig,
+          widgetSettings: _widgetSettings,
+          propertyId: _propertyId,
+          unitId: _unitId,
+        ),
+      ),
+    );
 
-      // Reset form fields (will be used when returning to calendar)
-      _checkIn = null;
-      _checkOut = null;
-      _showGuestForm = false;
-      _pillBarDismissed = false;
-      _hasInteractedWithBookingFlow = false;
-    });
+    // After Navigator.pop (user closed confirmation), reset form state
+    if (mounted) {
+      _resetFormState();
+      _clearBookingUrlParams();
+    }
 
     LoggingService.log(
-      '[ViewState] Switched to confirmation view (payment: $paymentMethod)',
-      tag: 'VIEW_STATE',
+      '[Navigation] Confirmation screen closed (payment: $paymentMethod)',
+      tag: 'NAV',
     );
   }
 
@@ -2289,6 +2395,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         bookingData: bookingData,
         returnUrl: returnUrl,
       );
+
+      // CRITICAL: Clear form data BEFORE redirect
+      // This prevents the bug where cached form data loads on return
+      // with dates that are now booked, causing false "conflict" error
+      await _clearFormData();
 
       // Redirect to Stripe Checkout in SAME TAB
       // This keeps everything in one tab - no cross-tab communication needed
@@ -2417,31 +2528,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Determine actual payment method
       final actualPaymentMethod = paymentMethod ?? confirmedBooking.paymentMethod ?? 'stripe';
 
-      // For direct bookings (Pay on Arrival, Bank Transfer), use state-based navigation
-      // This allows Close button to clear URL params and return to calendar
-      if (isDirectBooking && mounted) {
-        setState(() {
-          _completedBooking = confirmedBooking;
-          _completedPaymentMethod = actualPaymentMethod;
-          _viewState = WidgetViewState.confirmation;
-
-          // Reset form fields (will be used when returning to calendar)
-          _checkIn = null;
-          _checkOut = null;
-          _showGuestForm = false;
-          _pillBarDismissed = false;
-          _hasInteractedWithBookingFlow = false;
-        });
-
-        LoggingService.log(
-          '[ViewState] Switched to confirmation view from URL (payment: $actualPaymentMethod)',
-          tag: 'VIEW_STATE',
-        );
-        return;
-      }
-
-      // For Stripe returns (new tab), use Navigator.push
-      // User typically wants to close this tab after seeing confirmation
+      // Use Navigator.push for ALL booking confirmations
+      // This provides proper back navigation and transition animation
       if (mounted) {
         await Navigator.of(context).push(
           MaterialPageRoute(
@@ -2467,6 +2555,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             ),
           ),
         );
+
+        // After Navigator.pop (user closed confirmation), reset form state
+        if (mounted) {
+          _resetFormState();
+          _clearBookingUrlParams();
+        }
       }
     } catch (e) {
       if (mounted) {

@@ -98,7 +98,7 @@ class CalendarCompactLegend extends StatelessWidget {
       children: [
         _buildLegendItem('Available', colors.statusAvailableBackground),
         _buildLegendItem('Booked', colors.statusBookedBackground),
-        _buildLegendItem('Pending', colors.statusPendingBackground),
+        _buildPendingLegendItem('Pending'),
         _buildLegendItem('Unavailable', colors.backgroundTertiary),
       ],
     );
@@ -125,5 +125,78 @@ class CalendarCompactLegend extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Build legend item for pending status with diagonal pattern
+  /// Shows red dot with white diagonal lines to match calendar appearance
+  Widget _buildPendingLegendItem(String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: colors.borderDefault, width: 0.5),
+          ),
+          child: ClipOval(
+            child: CustomPaint(
+              size: const Size(8, 8),
+              painter: _PendingPatternPainter(
+                backgroundColor: colors.statusPendingBackground,
+                lineColor: colors.backgroundPrimary.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, color: colors.textSecondary),
+        ),
+      ],
+    );
+  }
+}
+
+/// Custom painter for pending pattern in legend
+class _PendingPatternPainter extends CustomPainter {
+  final Color backgroundColor;
+  final Color lineColor;
+
+  _PendingPatternPainter({
+    required this.backgroundColor,
+    required this.lineColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Fill background
+    final bgPaint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
+
+    // Draw diagonal lines
+    final linePaint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    const spacing = 2.5;
+    for (double i = -size.height; i < size.width + size.height; i += spacing) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        linePaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PendingPatternPainter oldDelegate) {
+    return oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.lineColor != lineColor;
   }
 }

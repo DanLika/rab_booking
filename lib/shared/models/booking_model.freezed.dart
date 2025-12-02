@@ -111,6 +111,14 @@ mixin _$BookingModel {
   @JsonKey(name: 'payment_intent_id')
   String? get paymentIntentId => throw _privateConstructorUsedError;
 
+  /// Stripe checkout session ID (for webhook-created bookings)
+  @JsonKey(name: 'stripe_session_id')
+  String? get stripeSessionId => throw _privateConstructorUsedError;
+
+  /// Human-readable booking reference (e.g., BK-1234567890-1234)
+  @JsonKey(name: 'booking_reference')
+  String? get bookingReference => throw _privateConstructorUsedError;
+
   /// Booking creation timestamp
   @TimestampConverter()
   @JsonKey(name: 'created_at')
@@ -175,6 +183,8 @@ abstract class $BookingModelCopyWith<$Res> {
     String? notes,
     @JsonKey(name: 'tax_legal_accepted') bool? taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') String? paymentIntentId,
+    @JsonKey(name: 'stripe_session_id') String? stripeSessionId,
+    @JsonKey(name: 'booking_reference') String? bookingReference,
     @TimestampConverter() @JsonKey(name: 'created_at') DateTime createdAt,
     @NullableTimestampConverter()
     @JsonKey(name: 'updated_at')
@@ -225,6 +235,8 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
     Object? notes = freezed,
     Object? taxLegalAccepted = freezed,
     Object? paymentIntentId = freezed,
+    Object? stripeSessionId = freezed,
+    Object? bookingReference = freezed,
     Object? createdAt = null,
     Object? updatedAt = freezed,
     Object? cancellationReason = freezed,
@@ -325,6 +337,14 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
                 ? _value.paymentIntentId
                 : paymentIntentId // ignore: cast_nullable_to_non_nullable
                       as String?,
+            stripeSessionId: freezed == stripeSessionId
+                ? _value.stripeSessionId
+                : stripeSessionId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            bookingReference: freezed == bookingReference
+                ? _value.bookingReference
+                : bookingReference // ignore: cast_nullable_to_non_nullable
+                      as String?,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -384,6 +404,8 @@ abstract class _$$BookingModelImplCopyWith<$Res>
     String? notes,
     @JsonKey(name: 'tax_legal_accepted') bool? taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') String? paymentIntentId,
+    @JsonKey(name: 'stripe_session_id') String? stripeSessionId,
+    @JsonKey(name: 'booking_reference') String? bookingReference,
     @TimestampConverter() @JsonKey(name: 'created_at') DateTime createdAt,
     @NullableTimestampConverter()
     @JsonKey(name: 'updated_at')
@@ -433,6 +455,8 @@ class __$$BookingModelImplCopyWithImpl<$Res>
     Object? notes = freezed,
     Object? taxLegalAccepted = freezed,
     Object? paymentIntentId = freezed,
+    Object? stripeSessionId = freezed,
+    Object? bookingReference = freezed,
     Object? createdAt = null,
     Object? updatedAt = freezed,
     Object? cancellationReason = freezed,
@@ -533,6 +557,14 @@ class __$$BookingModelImplCopyWithImpl<$Res>
             ? _value.paymentIntentId
             : paymentIntentId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        stripeSessionId: freezed == stripeSessionId
+            ? _value.stripeSessionId
+            : stripeSessionId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        bookingReference: freezed == bookingReference
+            ? _value.bookingReference
+            : bookingReference // ignore: cast_nullable_to_non_nullable
+                  as String?,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -585,6 +617,8 @@ class _$BookingModelImpl extends _BookingModel {
     this.notes,
     @JsonKey(name: 'tax_legal_accepted') this.taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') this.paymentIntentId,
+    @JsonKey(name: 'stripe_session_id') this.stripeSessionId,
+    @JsonKey(name: 'booking_reference') this.bookingReference,
     @TimestampConverter() @JsonKey(name: 'created_at') required this.createdAt,
     @NullableTimestampConverter() @JsonKey(name: 'updated_at') this.updatedAt,
     @JsonKey(name: 'cancellation_reason') this.cancellationReason,
@@ -710,6 +744,16 @@ class _$BookingModelImpl extends _BookingModel {
   @JsonKey(name: 'payment_intent_id')
   final String? paymentIntentId;
 
+  /// Stripe checkout session ID (for webhook-created bookings)
+  @override
+  @JsonKey(name: 'stripe_session_id')
+  final String? stripeSessionId;
+
+  /// Human-readable booking reference (e.g., BK-1234567890-1234)
+  @override
+  @JsonKey(name: 'booking_reference')
+  final String? bookingReference;
+
   /// Booking creation timestamp
   @override
   @TimestampConverter()
@@ -740,7 +784,7 @@ class _$BookingModelImpl extends _BookingModel {
 
   @override
   String toString() {
-    return 'BookingModel(id: $id, unitId: $unitId, userId: $userId, guestId: $guestId, ownerId: $ownerId, guestName: $guestName, guestEmail: $guestEmail, guestPhone: $guestPhone, checkIn: $checkIn, checkInTime: $checkInTime, checkOutTime: $checkOutTime, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, advanceAmount: $advanceAmount, paymentMethod: $paymentMethod, paymentStatus: $paymentStatus, source: $source, guestCount: $guestCount, notes: $notes, taxLegalAccepted: $taxLegalAccepted, paymentIntentId: $paymentIntentId, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt, cancelledBy: $cancelledBy)';
+    return 'BookingModel(id: $id, unitId: $unitId, userId: $userId, guestId: $guestId, ownerId: $ownerId, guestName: $guestName, guestEmail: $guestEmail, guestPhone: $guestPhone, checkIn: $checkIn, checkInTime: $checkInTime, checkOutTime: $checkOutTime, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, advanceAmount: $advanceAmount, paymentMethod: $paymentMethod, paymentStatus: $paymentStatus, source: $source, guestCount: $guestCount, notes: $notes, taxLegalAccepted: $taxLegalAccepted, paymentIntentId: $paymentIntentId, stripeSessionId: $stripeSessionId, bookingReference: $bookingReference, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt, cancelledBy: $cancelledBy)';
   }
 
   @override
@@ -785,6 +829,10 @@ class _$BookingModelImpl extends _BookingModel {
                 other.taxLegalAccepted == taxLegalAccepted) &&
             (identical(other.paymentIntentId, paymentIntentId) ||
                 other.paymentIntentId == paymentIntentId) &&
+            (identical(other.stripeSessionId, stripeSessionId) ||
+                other.stripeSessionId == stripeSessionId) &&
+            (identical(other.bookingReference, bookingReference) ||
+                other.bookingReference == bookingReference) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -824,6 +872,8 @@ class _$BookingModelImpl extends _BookingModel {
     notes,
     taxLegalAccepted,
     paymentIntentId,
+    stripeSessionId,
+    bookingReference,
     createdAt,
     updatedAt,
     cancellationReason,
@@ -874,6 +924,8 @@ abstract class _BookingModel extends BookingModel {
     final String? notes,
     @JsonKey(name: 'tax_legal_accepted') final bool? taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') final String? paymentIntentId,
+    @JsonKey(name: 'stripe_session_id') final String? stripeSessionId,
+    @JsonKey(name: 'booking_reference') final String? bookingReference,
     @TimestampConverter()
     @JsonKey(name: 'created_at')
     required final DateTime createdAt,
@@ -1003,6 +1055,16 @@ abstract class _BookingModel extends BookingModel {
   @override
   @JsonKey(name: 'payment_intent_id')
   String? get paymentIntentId;
+
+  /// Stripe checkout session ID (for webhook-created bookings)
+  @override
+  @JsonKey(name: 'stripe_session_id')
+  String? get stripeSessionId;
+
+  /// Human-readable booking reference (e.g., BK-1234567890-1234)
+  @override
+  @JsonKey(name: 'booking_reference')
+  String? get bookingReference;
 
   /// Booking creation timestamp
   @override

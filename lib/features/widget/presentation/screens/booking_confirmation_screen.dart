@@ -33,6 +33,13 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
   final BookingModel? booking;
   final EmailNotificationConfig? emailConfig;
   final WidgetSettings? widgetSettings;
+  /// Property ID for clean URL redirect when closing confirmation
+  final String? propertyId;
+  /// Unit ID for clean URL redirect when closing confirmation
+  final String? unitId;
+  /// Optional callback for state-based close (direct bookings)
+  /// If provided, this is called instead of URL navigation
+  final VoidCallback? onClose;
 
   const BookingConfirmationScreen({
     super.key,
@@ -50,6 +57,9 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
     this.booking,
     this.emailConfig,
     this.widgetSettings,
+    this.propertyId,
+    this.unitId,
+    this.onClose,
   });
 
   @override
@@ -87,6 +97,27 @@ class _BookingConfirmationScreenState
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  /// Navigate back to calendar
+  /// Uses Navigator.pop() which works for:
+  /// - Direct bookings (Pay on Arrival, Bank Transfer) - pushed via Navigator
+  /// - Stripe returns - also pushed via Navigator
+  /// The parent widget handles form reset and URL cleanup after pop
+  void _navigateToCleanCalendar() {
+    debugPrint('[ConfirmationScreen] _navigateToCleanCalendar called');
+    debugPrint('[ConfirmationScreen] onClose=${widget.onClose != null}');
+
+    // Priority 1: Custom close callback (if provided)
+    if (widget.onClose != null) {
+      debugPrint('[ConfirmationScreen] Using custom onClose callback');
+      widget.onClose!();
+      return;
+    }
+
+    // Priority 2: Navigator.pop() - works for all Navigator.push scenarios
+    debugPrint('[ConfirmationScreen] Using Navigator.pop()');
+    Navigator.of(context).pop();
   }
 
   @override
@@ -268,7 +299,7 @@ class _BookingConfirmationScreenState
         children: [
           IconButton(
             icon: Icon(Icons.arrow_back, color: colors.textPrimary),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: _navigateToCleanCalendar,
           ),
           Expanded(
             child: Center(
@@ -292,7 +323,7 @@ class _BookingConfirmationScreenState
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: _navigateToCleanCalendar,
         style: ElevatedButton.styleFrom(
           backgroundColor: colors.buttonPrimary,
           foregroundColor: colors.buttonPrimaryText,

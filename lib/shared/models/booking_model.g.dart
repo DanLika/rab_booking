@@ -31,6 +31,8 @@ _$BookingModelImpl _$$BookingModelImplFromJson(Map<String, dynamic> json) =>
       notes: json['notes'] as String?,
       taxLegalAccepted: json['tax_legal_accepted'] as bool?,
       paymentIntentId: json['payment_intent_id'] as String?,
+      stripeSessionId: json['stripe_session_id'] as String?,
+      bookingReference: json['booking_reference'] as String?,
       createdAt: const TimestampConverter().fromJson(json['created_at']),
       updatedAt: const NullableTimestampConverter().fromJson(
         json['updated_at'],
@@ -68,6 +70,8 @@ Map<String, dynamic> _$$BookingModelImplToJson(
   'notes': instance.notes,
   'tax_legal_accepted': instance.taxLegalAccepted,
   'payment_intent_id': instance.paymentIntentId,
+  'stripe_session_id': instance.stripeSessionId,
+  'booking_reference': instance.bookingReference,
   'created_at': const TimestampConverter().toJson(instance.createdAt),
   'updated_at': const NullableTimestampConverter().toJson(instance.updatedAt),
   'cancellation_reason': instance.cancellationReason,

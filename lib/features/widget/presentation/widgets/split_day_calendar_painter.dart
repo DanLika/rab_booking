@@ -243,7 +243,7 @@ class SplitDayCalendarPainter extends CustomPainter {
     final paint = Paint()
       ..color = lineColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+      ..strokeWidth = 2.0; // Increased from 1.5 for better visibility
 
     // Spacing between diagonal lines
     const double spacing = 6.0;

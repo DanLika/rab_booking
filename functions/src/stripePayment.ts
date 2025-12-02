@@ -30,6 +30,14 @@ const ALLOWED_RETURN_DOMAINS = [
 export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, async (request) => {
   const {bookingId, returnUrl, guestEmail} = request.data;
 
+  // Debug logging
+  console.log("createStripeCheckoutSession called with:", {
+    bookingId,
+    returnUrl: returnUrl ? "provided" : "not provided",
+    guestEmail: guestEmail || "NOT PROVIDED",
+    hasAuth: !!request.auth,
+  });
+
   if (!bookingId) {
     throw new HttpsError("invalid-argument", "Booking ID is required");
   }

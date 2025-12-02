@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../repositories/booking_repository.dart';
+// Tab Communication Service (cross-tab communication for Stripe payments)
+import '../../core/services/tab_communication_service.dart';
 import '../repositories/daily_price_repository.dart';
 import '../repositories/property_repository.dart';
 import '../repositories/unit_repository.dart';
@@ -168,4 +170,21 @@ final calendarDataServiceProvider = Provider<CalendarDataService>((ref) {
     dailyPriceRepository: dailyPriceRepository,
     icalRepository: icalRepository,
   );
+});
+
+// ========== Tab Communication Service ==========
+
+/// Tab Communication Service provider
+/// Provides cross-tab communication for Stripe payment flow
+/// When payment completes in one tab, other tabs are notified to update UI
+///
+/// On web: Uses BroadcastChannel API (with localStorage fallback)
+/// On mobile/desktop: Returns stub (no cross-tab communication needed)
+///
+/// NOTE: The actual web implementation is created directly in booking_widget_screen.dart
+/// using conditional imports to avoid dart:html issues on non-web platforms.
+final tabCommunicationServiceProvider = Provider<TabCommunicationService>((ref) {
+  // Return stub - actual implementation created in widget screen
+  // This is because conditional imports for dart:html are tricky with providers
+  return TabCommunicationServiceStub();
 });

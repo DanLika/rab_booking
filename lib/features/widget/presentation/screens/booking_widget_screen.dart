@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+// Cross-tab communication service (conditional import for web)
+import '../../../../core/services/tab_communication_service.dart';
+import '../../../../core/services/tab_communication_service_web.dart'
+    if (dart.library.io) '../../../../core/services/tab_communication_service.dart';
 import '../widgets/calendar_view_switcher.dart';
 import '../widgets/additional_services_widget.dart';
 import '../widgets/tax_legal_disclaimer_widget.dart';
@@ -109,6 +114,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   bool _pillBarDismissed = false; // Track if user clicked X to close pill bar
   bool _hasInteractedWithBookingFlow = false; // Track if user clicked Reserve button
 
+  // Cross-tab communication for Stripe payments
+  // When payment completes in one tab, other tabs are notified to update UI
+  TabCommunicationService? _tabCommunicationService;
+  StreamSubscription<TabMessage>? _tabMessageSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -123,6 +133,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _emailController.addListener(_saveFormData);
     _phoneController.addListener(_saveFormData);
     _notesController.addListener(_saveFormData);
+
+    // Initialize cross-tab communication for web platform
+    _initTabCommunication();
 
     // Check for Stripe return with confirmation parameters
     final confirmationRef = uri.queryParameters['confirmation'];
@@ -152,6 +165,90 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         );
       }
     });
+  }
+
+  /// Initialize cross-tab communication service for Stripe payment notifications
+  /// Only runs on web platform - uses BroadcastChannel API
+  void _initTabCommunication() {
+    if (!kIsWeb) return; // Only on web platform
+
+    try {
+      // Create web-specific service instance directly
+      // (conditional import handles this at compile time)
+      _tabCommunicationService = TabCommunicationServiceWeb();
+
+      // Listen for messages from other tabs
+      _tabMessageSubscription =
+          _tabCommunicationService!.messageStream.listen(_handleTabMessage);
+
+      LoggingService.log(
+        '[CrossTab] Initialized cross-tab communication listener',
+        tag: 'TAB_COMM',
+      );
+    } catch (e) {
+      LoggingService.log(
+        '[CrossTab] Failed to initialize: $e',
+        tag: 'TAB_COMM_ERROR',
+      );
+    }
+  }
+
+  /// Handle messages received from other browser tabs
+  /// When payment completes in Tab B, this tab (Tab A) receives the notification
+  void _handleTabMessage(TabMessage message) {
+    LoggingService.log(
+      '[CrossTab] Received message: ${message.type}',
+      tag: 'TAB_COMM',
+    );
+
+    switch (message.type) {
+      case TabMessageType.paymentComplete:
+        _handlePaymentCompleteFromOtherTab(message);
+        break;
+      case TabMessageType.bookingCancelled:
+        // Refresh calendar when booking is cancelled in another tab
+        ref.invalidate(realtimeYearCalendarProvider);
+        ref.invalidate(realtimeMonthCalendarProvider);
+        break;
+      case TabMessageType.calendarRefresh:
+        // Refresh calendar data
+        ref.invalidate(realtimeYearCalendarProvider);
+        ref.invalidate(realtimeMonthCalendarProvider);
+        break;
+    }
+  }
+
+  /// Handle payment completion notification from another tab
+  /// This is called when Tab B (Stripe return) broadcasts that payment is complete
+  Future<void> _handlePaymentCompleteFromOtherTab(TabMessage message) async {
+    final bookingId = message.bookingId;
+    final bookingRef = message.bookingRef;
+    final email = message.email;
+
+    if (bookingId == null || bookingRef == null || email == null) {
+      LoggingService.log(
+        '[CrossTab] Invalid payment complete message - missing params',
+        tag: 'TAB_COMM_ERROR',
+      );
+      return;
+    }
+
+    LoggingService.log(
+      '[CrossTab] Payment complete received for booking: $bookingRef',
+      tag: 'TAB_COMM',
+    );
+
+    // Navigate to confirmation screen
+    // Use the same method as URL-based confirmation
+    // Pass fromOtherTab: true to prevent circular broadcasting
+    if (mounted) {
+      await _showConfirmationFromUrl(
+        bookingRef,
+        email,
+        bookingId,
+        fromOtherTab: true,
+      );
+    }
   }
 
   /// Validates that unit exists and fetches property/owner info
@@ -451,6 +548,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
+
+    // Dispose cross-tab communication resources
+    _tabMessageSubscription?.cancel();
+    _tabCommunicationService?.dispose();
+
     super.dispose();
   }
 
@@ -1987,11 +2089,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
   /// Show confirmation screen after Stripe return
   /// Fetches booking from Firestore using booking ID and displays confirmation
+  ///
+  /// [fromOtherTab] - if true, this was triggered by cross-tab message, don't broadcast back
   Future<void> _showConfirmationFromUrl(
     String bookingReference,
     String guestEmail,
-    String bookingId,
-  ) async {
+    String bookingId, {
+    bool fromOtherTab = false,
+  }) async {
     try {
       // Fetch booking from Firestore using booking ID
       final bookingRepo = ref.read(bookingRepositoryProvider);
@@ -2088,6 +2193,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         // Bug #53: Clear saved form data after successful booking
         await _clearFormData();
+
+        // Broadcast payment completion to other tabs (Tab A with booking form)
+        // Only broadcast if this is the original Stripe return tab, not a forwarded message
+        if (!fromOtherTab && _tabCommunicationService != null) {
+          _tabCommunicationService!.sendPaymentComplete(
+            bookingId: bookingId,
+            ref: bookingReference,
+            email: guestEmail,
+          );
+          LoggingService.log(
+            '[CrossTab] Broadcasted payment complete to other tabs',
+            tag: 'TAB_COMM',
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

@@ -196,14 +196,21 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       }
 
       // Allow public access to embed, booking, calendar, and view routes (no auth required)
+      // Also allow root path OR /login with widget query params (property, unit, confirmation)
+      // This handles Stripe return URLs which may have #/login hash but widget params in query string
+      final hasWidgetParams = state.uri.queryParameters.containsKey('property') ||
+          state.uri.queryParameters.containsKey('unit') ||
+          state.uri.queryParameters.containsKey('confirmation');
       final isPublicRoute =
           state.matchedLocation.startsWith('/embed/') ||
           state.matchedLocation.startsWith('/booking') ||
           state.matchedLocation == '/calendar' ||
-          state.matchedLocation.startsWith('/view');
+          state.matchedLocation.startsWith('/view') ||
+          (state.matchedLocation == '/' && hasWidgetParams) ||
+          (state.matchedLocation == '/login' && hasWidgetParams);
       if (isPublicRoute) {
         if (kDebugMode) {
-          LoggingService.log('  → Allowing public route', tag: 'ROUTER');
+          LoggingService.log('  → Allowing public route (hasWidgetParams: $hasWidgetParams, matchedLocation: ${state.matchedLocation})', tag: 'ROUTER');
         }
         return null; // Allow access
       }
@@ -297,10 +304,20 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // ROOT ROUTE - Shows loader while redirect logic determines destination
+      // ROOT ROUTE - Shows widget if has params, otherwise loader for redirect
       GoRoute(
         path: '/',
         builder: (context, state) {
+          // Check if this is a widget URL (has property/unit/confirmation params)
+          final hasWidgetParams = state.uri.queryParameters.containsKey('property') ||
+              state.uri.queryParameters.containsKey('unit') ||
+              state.uri.queryParameters.containsKey('confirmation');
+
+          if (hasWidgetParams) {
+            // Show booking widget for embed URLs and Stripe return URLs
+            return const BookingWidgetScreen();
+          }
+
           // Show skeleton loader while redirect determines where to go
           // (prevents 404 flash during Login → Dashboard transition)
           return const Scaffold(
@@ -380,7 +397,21 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Auth routes
       GoRoute(
         path: OwnerRoutes.login,
-        builder: (context, state) => const EnhancedLoginScreen(),
+        builder: (context, state) {
+          // Check if this is a Stripe return URL with widget params
+          // URL: /?property=...&confirmation=...#/login
+          // In this case, show the booking widget instead of login
+          final hasWidgetParams = state.uri.queryParameters.containsKey('property') ||
+              state.uri.queryParameters.containsKey('unit') ||
+              state.uri.queryParameters.containsKey('confirmation');
+
+          if (hasWidgetParams) {
+            // Show booking widget for Stripe return URLs
+            return const BookingWidgetScreen();
+          }
+
+          return const EnhancedLoginScreen();
+        },
       ),
       GoRoute(
         path: OwnerRoutes.register,

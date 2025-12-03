@@ -407,14 +407,13 @@ class FirebaseBookingCalendarRepository {
           final isCheckIn = current.isAtSameMomentAs(checkIn);
           final isCheckOut = current.isAtSameMomentAs(checkOut);
 
-          // Check if booking is pending to show orange/amber color
+          // Check if booking is pending to show pending indicator
           final isPending = booking.status == BookingStatus.pending;
 
+          // FIX: Pending bookings should still show split days with pending indicator
+          // Use partialCheckIn/partialCheckOut status and mark isPendingBooking = true
           DateStatus status;
-          if (isPending) {
-            // Pending bookings always show as orange regardless of check-in/out
-            status = DateStatus.pending;
-          } else if (isCheckIn && isCheckOut) {
+          if (isCheckIn && isCheckOut) {
             status = DateStatus.booked;
           } else if (isCheckIn) {
             status = DateStatus.partialCheckIn;
@@ -424,12 +423,35 @@ class FirebaseBookingCalendarRepository {
             status = DateStatus.booked;
           }
 
+          // Check for turnover day (partialBoth) - another booking on same day
+          final existingInfo = calendar[current];
+          bool isCheckOutPending = false;
+          bool isCheckInPending = false;
+
+          if (existingInfo != null &&
+              (existingInfo.status == DateStatus.partialCheckIn ||
+                  existingInfo.status == DateStatus.partialCheckOut)) {
+            // This is a turnover day
+            status = DateStatus.partialBoth;
+            // Track which half is pending
+            if (isCheckOut) {
+              isCheckOutPending = isPending;
+              isCheckInPending = existingInfo.isPendingBooking;
+            } else if (isCheckIn) {
+              isCheckInPending = isPending;
+              isCheckOutPending = existingInfo.isPendingBooking;
+            }
+          }
+
           // Preserve price when updating status
           final priceKey = DateKeyGenerator.fromDate(current);
           calendar[current] = CalendarDateInfo(
             date: current,
             status: status,
             price: priceMap[priceKey]?.price,
+            isPendingBooking: isPending,
+            isCheckOutPending: isCheckOutPending,
+            isCheckInPending: isCheckInPending,
           );
 
           current = current.add(const Duration(days: 1));
@@ -439,6 +461,7 @@ class FirebaseBookingCalendarRepository {
 
     // Mark booked dates from iCal events (Booking.com, Airbnb, etc.)
     // Bug #71 Fix: Same optimization as bookings
+    // FIX: iCal events should also show split days (check-in/check-out)
     if (icalEvents != null) {
       for (final event in icalEvents) {
         final checkIn = DateTime(
@@ -461,12 +484,46 @@ class FirebaseBookingCalendarRepository {
           DateTime current = rangeStart;
           while (current.isBefore(rangeEnd) ||
               current.isAtSameMomentAs(rangeEnd)) {
-            // Mark as booked (from external source)
+            final isCheckIn = current.isAtSameMomentAs(checkIn);
+            final isCheckOut = current.isAtSameMomentAs(checkOut);
+
+            // FIX: Apply same check-in/check-out logic as regular bookings
+            DateStatus status;
+            if (isCheckIn && isCheckOut) {
+              status = DateStatus.booked;
+            } else if (isCheckIn) {
+              status = DateStatus.partialCheckIn;
+            } else if (isCheckOut) {
+              status = DateStatus.partialCheckOut;
+            } else {
+              status = DateStatus.booked;
+            }
+
+            // Check for turnover day (partialBoth) - another booking on same day
+            final existingInfo = calendar[current];
+            bool isCheckOutPending = false;
+            bool isCheckInPending = false;
+
+            if (existingInfo != null &&
+                (existingInfo.status == DateStatus.partialCheckIn ||
+                    existingInfo.status == DateStatus.partialCheckOut)) {
+              // This is a turnover day
+              status = DateStatus.partialBoth;
+              // iCal events are not pending, so inherit from existing
+              if (isCheckOut) {
+                isCheckInPending = existingInfo.isPendingBooking;
+              } else if (isCheckIn) {
+                isCheckOutPending = existingInfo.isPendingBooking;
+              }
+            }
+
             final priceKey = DateKeyGenerator.fromDate(current);
             calendar[current] = CalendarDateInfo(
               date: current,
-              status: DateStatus.booked, // Always fully booked for iCal events
+              status: status,
               price: priceMap[priceKey]?.price,
+              isCheckOutPending: isCheckOutPending,
+              isCheckInPending: isCheckInPending,
             );
 
             current = current.add(const Duration(days: 1));
@@ -547,14 +604,13 @@ class FirebaseBookingCalendarRepository {
           final isCheckIn = current.isAtSameMomentAs(checkIn);
           final isCheckOut = current.isAtSameMomentAs(checkOut);
 
-          // Check if booking is pending to show orange/amber color
+          // Check if booking is pending to show pending indicator
           final isPending = booking.status == BookingStatus.pending;
 
+          // FIX: Pending bookings should still show split days with pending indicator
+          // Use partialCheckIn/partialCheckOut status and mark isPendingBooking = true
           DateStatus status;
-          if (isPending) {
-            // Pending bookings always show as orange regardless of check-in/out
-            status = DateStatus.pending;
-          } else if (isCheckIn && isCheckOut) {
+          if (isCheckIn && isCheckOut) {
             status = DateStatus.booked;
           } else if (isCheckIn) {
             status = DateStatus.partialCheckIn;
@@ -564,12 +620,35 @@ class FirebaseBookingCalendarRepository {
             status = DateStatus.booked;
           }
 
+          // Check for turnover day (partialBoth) - another booking on same day
+          final existingInfo = calendar[current];
+          bool isCheckOutPending = false;
+          bool isCheckInPending = false;
+
+          if (existingInfo != null &&
+              (existingInfo.status == DateStatus.partialCheckIn ||
+                  existingInfo.status == DateStatus.partialCheckOut)) {
+            // This is a turnover day
+            status = DateStatus.partialBoth;
+            // Track which half is pending
+            if (isCheckOut) {
+              isCheckOutPending = isPending;
+              isCheckInPending = existingInfo.isPendingBooking;
+            } else if (isCheckIn) {
+              isCheckInPending = isPending;
+              isCheckOutPending = existingInfo.isPendingBooking;
+            }
+          }
+
           // Preserve price when updating status
           final priceKey = DateKeyGenerator.fromDate(current);
           calendar[current] = CalendarDateInfo(
             date: current,
             status: status,
             price: priceMap[priceKey]?.price,
+            isPendingBooking: isPending,
+            isCheckOutPending: isCheckOutPending,
+            isCheckInPending: isCheckInPending,
           );
 
           current = current.add(const Duration(days: 1));
@@ -579,6 +658,7 @@ class FirebaseBookingCalendarRepository {
 
     // Mark booked dates from iCal events (Booking.com, Airbnb, etc.)
     // Bug #71 Fix: Same optimization as bookings
+    // FIX: iCal events should also show split days (check-in/check-out)
     if (icalEvents != null) {
       for (final event in icalEvents) {
         final checkIn = DateTime(
@@ -601,12 +681,46 @@ class FirebaseBookingCalendarRepository {
           DateTime current = rangeStart;
           while (current.isBefore(rangeEnd) ||
               current.isAtSameMomentAs(rangeEnd)) {
-            // Mark as booked (from external source)
+            final isCheckIn = current.isAtSameMomentAs(checkIn);
+            final isCheckOut = current.isAtSameMomentAs(checkOut);
+
+            // FIX: Apply same check-in/check-out logic as regular bookings
+            DateStatus status;
+            if (isCheckIn && isCheckOut) {
+              status = DateStatus.booked;
+            } else if (isCheckIn) {
+              status = DateStatus.partialCheckIn;
+            } else if (isCheckOut) {
+              status = DateStatus.partialCheckOut;
+            } else {
+              status = DateStatus.booked;
+            }
+
+            // Check for turnover day (partialBoth) - another booking on same day
+            final existingInfo = calendar[current];
+            bool isCheckOutPending = false;
+            bool isCheckInPending = false;
+
+            if (existingInfo != null &&
+                (existingInfo.status == DateStatus.partialCheckIn ||
+                    existingInfo.status == DateStatus.partialCheckOut)) {
+              // This is a turnover day
+              status = DateStatus.partialBoth;
+              // iCal events are not pending, so inherit from existing
+              if (isCheckOut) {
+                isCheckInPending = existingInfo.isPendingBooking;
+              } else if (isCheckIn) {
+                isCheckOutPending = existingInfo.isPendingBooking;
+              }
+            }
+
             final priceKey = DateKeyGenerator.fromDate(current);
             calendar[current] = CalendarDateInfo(
               date: current,
-              status: DateStatus.booked, // Always fully booked for iCal events
+              status: status,
               price: priceMap[priceKey]?.price,
+              isCheckOutPending: isCheckOutPending,
+              isCheckInPending: isCheckInPending,
             );
 
             current = current.add(const Duration(days: 1));

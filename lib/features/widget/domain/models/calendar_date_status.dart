@@ -26,7 +26,7 @@ extension DateStatusExtension on DateStatus {
       case DateStatus.pending:
         return colors.statusPendingBackground;
       case DateStatus.blocked:
-        return colors.backgroundTertiary;
+        return colors.statusBlockedBackground;
       case DateStatus.partialCheckIn:
         return colors.statusAvailableBackground;
       case DateStatus.partialCheckOut:
@@ -49,7 +49,7 @@ extension DateStatusExtension on DateStatus {
       case DateStatus.pending:
         return colors.statusPendingBorder;
       case DateStatus.blocked:
-        return colors.borderDefault;
+        return colors.statusBlockedBorder;
       case DateStatus.partialCheckIn:
         return colors.statusAvailableBorder;
       case DateStatus.partialCheckOut:

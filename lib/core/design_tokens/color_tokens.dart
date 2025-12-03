@@ -102,6 +102,14 @@ class ColorTokens {
   static const Color cancelLight = Color(0xFFFBA9AA); // Light pink/red for light theme
   static const Color cancelDark = Color(0xFFEF4444); // Bright red for dark theme
 
+  // Status colors - Blocked (distinct grey with pattern indicator)
+  static const Color blockedLight = Color(0xFFD1D5DB); // Medium grey for light theme
+  static const Color blockedDark = Color(0xFF4B5563); // Darker grey for dark theme
+
+  // Status colors - Past Reservation (red with reduced visibility)
+  static const Color pastReservationLight = Color(0xFFFECACA); // Light coral/red for light theme
+  static const Color pastReservationDark = Color(0xFF991B1B); // Deep red for dark theme
+
   // Slate (for dark mode)
   static const Color slate100 = Color(0xFFF1F5F9);
   static const Color slate300 = Color(0xFFCBD5E1);
@@ -196,6 +204,8 @@ abstract class WidgetColorScheme {
   Color get statusPendingBackground;
   Color get statusPendingBorder;
   Color get statusPendingText;
+  Color get statusBlockedBackground;
+  Color get statusBlockedBorder;
   Color get statusSelectedBackground;
   Color get statusSelectedBorder;
   Color get statusHoverBackground;
@@ -338,6 +348,10 @@ class LightColorScheme implements WidgetColorScheme {
   @override
   Color get statusPendingText => ColorTokens.amber600; // Dark amber text for contrast
   @override
+  Color get statusBlockedBackground => ColorTokens.blockedLight;
+  @override
+  Color get statusBlockedBorder => ColorTokens.grey400;
+  @override
   Color get statusSelectedBackground => ColorTokens.azure100;
   @override
   Color get statusSelectedBorder => ColorTokens.azure500;
@@ -352,11 +366,9 @@ class LightColorScheme implements WidgetColorScheme {
   @override
   Color get statusDisabledText => ColorTokens.grey300;
   @override
-  Color get statusPastReservationBackground =>
-      ColorTokens.pink500.withValues(alpha: 0.1); // Very light - 10% opacity
+  Color get statusPastReservationBackground => ColorTokens.pastReservationLight;
   @override
-  Color get statusPastReservationBorder =>
-      ColorTokens.pink500.withValues(alpha: 0.1); // Very light border - 10% opacity
+  Color get statusPastReservationBorder => ColorTokens.pink300;
   @override
   Color get statusCancelledBackground => ColorTokens.cancelLight;
   @override
@@ -548,6 +560,10 @@ class DarkColorScheme implements WidgetColorScheme {
   @override
   Color get statusPendingText => ColorTokens.grey900; // Dark text for contrast on light yellow
   @override
+  Color get statusBlockedBackground => ColorTokens.blockedDark;
+  @override
+  Color get statusBlockedBorder => ColorTokens.slate500;
+  @override
   Color get statusSelectedBackground => ColorTokens.azure900;
   @override
   Color get statusSelectedBorder => ColorTokens.azure400;
@@ -562,11 +578,9 @@ class DarkColorScheme implements WidgetColorScheme {
   @override
   Color get statusDisabledText => ColorTokens.grey600;
   @override
-  Color get statusPastReservationBackground =>
-      ColorTokens.pink500.withValues(alpha: 0.1); // Very light - 10% opacity
+  Color get statusPastReservationBackground => ColorTokens.pastReservationDark;
   @override
-  Color get statusPastReservationBorder =>
-      ColorTokens.pink500.withValues(alpha: 0.1); // Very light border - 10% opacity
+  Color get statusPastReservationBorder => ColorTokens.pink700;
   @override
   Color get statusCancelledBackground => ColorTokens.cancelDark;
   @override

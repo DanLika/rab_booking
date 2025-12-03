@@ -92,6 +92,12 @@ class MinimalistColors {
   /// Pending date - amber text
   static const Color statusPendingText = Color(0xFFD97706); // Amber 600
 
+  /// Blocked date - distinct grey background
+  static const Color statusBlockedBackground = Color(0xFFD1D5DB); // Grey 300
+
+  /// Blocked date - border
+  static const Color statusBlockedBorder = Color(0xFF9CA3AF); // Grey 400
+
   // ==================== SHADOW COLORS ====================
   // Black-based shadows for subtle depth
 
@@ -256,6 +262,12 @@ class MinimalistColorsDark {
 
   /// Pending date - amber text
   static const Color statusPendingText = Color(0xFFFDE68A);
+
+  /// Blocked date - distinct dark grey background
+  static const Color statusBlockedBackground = Color(0xFF4B5563); // Grey 600
+
+  /// Blocked date - border
+  static const Color statusBlockedBorder = Color(0xFF64748B); // Slate 500
 
   // ==================== SHADOW COLORS ====================
   // White-based shadows for dark theme
@@ -559,6 +571,12 @@ class MinimalistColorSchemeAdapter implements WidgetColorScheme {
 
   @override
   Color get statusPendingText => dark ? MinimalistColorsDark.statusPendingText : MinimalistColors.statusPendingText;
+
+  @override
+  Color get statusBlockedBackground => dark ? MinimalistColorsDark.statusBlockedBackground : MinimalistColors.statusBlockedBackground;
+
+  @override
+  Color get statusBlockedBorder => dark ? MinimalistColorsDark.statusBlockedBorder : MinimalistColors.statusBlockedBorder;
 
   @override
   Color get statusSelectedBackground => dark ? MinimalistColorsDark.backgroundTertiary : MinimalistColors.backgroundTertiary;

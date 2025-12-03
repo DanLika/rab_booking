@@ -85,6 +85,14 @@ mixin _$BookingModel {
   @JsonKey(name: 'advance_amount')
   double? get advanceAmount => throw _privateConstructorUsedError;
 
+  /// Deposit amount (same as advance, used by webhook)
+  @JsonKey(name: 'deposit_amount')
+  double? get depositAmount => throw _privateConstructorUsedError;
+
+  /// Remaining amount to be paid (totalPrice - depositAmount)
+  @JsonKey(name: 'remaining_amount')
+  double? get remainingAmount => throw _privateConstructorUsedError;
+
   /// Payment method (bank_transfer, stripe, cash, other)
   @JsonKey(name: 'payment_method')
   String? get paymentMethod => throw _privateConstructorUsedError;
@@ -176,6 +184,8 @@ abstract class $BookingModelCopyWith<$Res> {
     @JsonKey(name: 'total_price') double totalPrice,
     @JsonKey(name: 'paid_amount') double paidAmount,
     @JsonKey(name: 'advance_amount') double? advanceAmount,
+    @JsonKey(name: 'deposit_amount') double? depositAmount,
+    @JsonKey(name: 'remaining_amount') double? remainingAmount,
     @JsonKey(name: 'payment_method') String? paymentMethod,
     @JsonKey(name: 'payment_status') String? paymentStatus,
     String? source,
@@ -228,6 +238,8 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
     Object? totalPrice = null,
     Object? paidAmount = null,
     Object? advanceAmount = freezed,
+    Object? depositAmount = freezed,
+    Object? remainingAmount = freezed,
     Object? paymentMethod = freezed,
     Object? paymentStatus = freezed,
     Object? source = freezed,
@@ -308,6 +320,14 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
             advanceAmount: freezed == advanceAmount
                 ? _value.advanceAmount
                 : advanceAmount // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            depositAmount: freezed == depositAmount
+                ? _value.depositAmount
+                : depositAmount // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            remainingAmount: freezed == remainingAmount
+                ? _value.remainingAmount
+                : remainingAmount // ignore: cast_nullable_to_non_nullable
                       as double?,
             paymentMethod: freezed == paymentMethod
                 ? _value.paymentMethod
@@ -397,6 +417,8 @@ abstract class _$$BookingModelImplCopyWith<$Res>
     @JsonKey(name: 'total_price') double totalPrice,
     @JsonKey(name: 'paid_amount') double paidAmount,
     @JsonKey(name: 'advance_amount') double? advanceAmount,
+    @JsonKey(name: 'deposit_amount') double? depositAmount,
+    @JsonKey(name: 'remaining_amount') double? remainingAmount,
     @JsonKey(name: 'payment_method') String? paymentMethod,
     @JsonKey(name: 'payment_status') String? paymentStatus,
     String? source,
@@ -448,6 +470,8 @@ class __$$BookingModelImplCopyWithImpl<$Res>
     Object? totalPrice = null,
     Object? paidAmount = null,
     Object? advanceAmount = freezed,
+    Object? depositAmount = freezed,
+    Object? remainingAmount = freezed,
     Object? paymentMethod = freezed,
     Object? paymentStatus = freezed,
     Object? source = freezed,
@@ -528,6 +552,14 @@ class __$$BookingModelImplCopyWithImpl<$Res>
         advanceAmount: freezed == advanceAmount
             ? _value.advanceAmount
             : advanceAmount // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        depositAmount: freezed == depositAmount
+            ? _value.depositAmount
+            : depositAmount // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        remainingAmount: freezed == remainingAmount
+            ? _value.remainingAmount
+            : remainingAmount // ignore: cast_nullable_to_non_nullable
                   as double?,
         paymentMethod: freezed == paymentMethod
             ? _value.paymentMethod
@@ -610,6 +642,8 @@ class _$BookingModelImpl extends _BookingModel {
     @JsonKey(name: 'total_price') this.totalPrice = 0.0,
     @JsonKey(name: 'paid_amount') this.paidAmount = 0.0,
     @JsonKey(name: 'advance_amount') this.advanceAmount,
+    @JsonKey(name: 'deposit_amount') this.depositAmount,
+    @JsonKey(name: 'remaining_amount') this.remainingAmount,
     @JsonKey(name: 'payment_method') this.paymentMethod,
     @JsonKey(name: 'payment_status') this.paymentStatus,
     this.source,
@@ -711,6 +745,16 @@ class _$BookingModelImpl extends _BookingModel {
   @JsonKey(name: 'advance_amount')
   final double? advanceAmount;
 
+  /// Deposit amount (same as advance, used by webhook)
+  @override
+  @JsonKey(name: 'deposit_amount')
+  final double? depositAmount;
+
+  /// Remaining amount to be paid (totalPrice - depositAmount)
+  @override
+  @JsonKey(name: 'remaining_amount')
+  final double? remainingAmount;
+
   /// Payment method (bank_transfer, stripe, cash, other)
   @override
   @JsonKey(name: 'payment_method')
@@ -784,7 +828,7 @@ class _$BookingModelImpl extends _BookingModel {
 
   @override
   String toString() {
-    return 'BookingModel(id: $id, unitId: $unitId, userId: $userId, guestId: $guestId, ownerId: $ownerId, guestName: $guestName, guestEmail: $guestEmail, guestPhone: $guestPhone, checkIn: $checkIn, checkInTime: $checkInTime, checkOutTime: $checkOutTime, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, advanceAmount: $advanceAmount, paymentMethod: $paymentMethod, paymentStatus: $paymentStatus, source: $source, guestCount: $guestCount, notes: $notes, taxLegalAccepted: $taxLegalAccepted, paymentIntentId: $paymentIntentId, stripeSessionId: $stripeSessionId, bookingReference: $bookingReference, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt, cancelledBy: $cancelledBy)';
+    return 'BookingModel(id: $id, unitId: $unitId, userId: $userId, guestId: $guestId, ownerId: $ownerId, guestName: $guestName, guestEmail: $guestEmail, guestPhone: $guestPhone, checkIn: $checkIn, checkInTime: $checkInTime, checkOutTime: $checkOutTime, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, advanceAmount: $advanceAmount, depositAmount: $depositAmount, remainingAmount: $remainingAmount, paymentMethod: $paymentMethod, paymentStatus: $paymentStatus, source: $source, guestCount: $guestCount, notes: $notes, taxLegalAccepted: $taxLegalAccepted, paymentIntentId: $paymentIntentId, stripeSessionId: $stripeSessionId, bookingReference: $bookingReference, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt, cancelledBy: $cancelledBy)';
   }
 
   @override
@@ -817,6 +861,10 @@ class _$BookingModelImpl extends _BookingModel {
                 other.paidAmount == paidAmount) &&
             (identical(other.advanceAmount, advanceAmount) ||
                 other.advanceAmount == advanceAmount) &&
+            (identical(other.depositAmount, depositAmount) ||
+                other.depositAmount == depositAmount) &&
+            (identical(other.remainingAmount, remainingAmount) ||
+                other.remainingAmount == remainingAmount) &&
             (identical(other.paymentMethod, paymentMethod) ||
                 other.paymentMethod == paymentMethod) &&
             (identical(other.paymentStatus, paymentStatus) ||
@@ -865,6 +913,8 @@ class _$BookingModelImpl extends _BookingModel {
     totalPrice,
     paidAmount,
     advanceAmount,
+    depositAmount,
+    remainingAmount,
     paymentMethod,
     paymentStatus,
     source,
@@ -917,6 +967,8 @@ abstract class _BookingModel extends BookingModel {
     @JsonKey(name: 'total_price') final double totalPrice,
     @JsonKey(name: 'paid_amount') final double paidAmount,
     @JsonKey(name: 'advance_amount') final double? advanceAmount,
+    @JsonKey(name: 'deposit_amount') final double? depositAmount,
+    @JsonKey(name: 'remaining_amount') final double? remainingAmount,
     @JsonKey(name: 'payment_method') final String? paymentMethod,
     @JsonKey(name: 'payment_status') final String? paymentStatus,
     final String? source,
@@ -1022,6 +1074,16 @@ abstract class _BookingModel extends BookingModel {
   @override
   @JsonKey(name: 'advance_amount')
   double? get advanceAmount;
+
+  /// Deposit amount (same as advance, used by webhook)
+  @override
+  @JsonKey(name: 'deposit_amount')
+  double? get depositAmount;
+
+  /// Remaining amount to be paid (totalPrice - depositAmount)
+  @override
+  @JsonKey(name: 'remaining_amount')
+  double? get remainingAmount;
 
   /// Payment method (bank_transfer, stripe, cash, other)
   @override

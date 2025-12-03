@@ -59,6 +59,12 @@ class BookingModel with _$BookingModel {
     /// Advance payment amount (20% of total)
     @JsonKey(name: 'advance_amount') double? advanceAmount,
 
+    /// Deposit amount (same as advance, used by webhook)
+    @JsonKey(name: 'deposit_amount') double? depositAmount,
+
+    /// Remaining amount to be paid (totalPrice - depositAmount)
+    @JsonKey(name: 'remaining_amount') double? remainingAmount,
+
     /// Payment method (bank_transfer, stripe, cash, other)
     @JsonKey(name: 'payment_method') String? paymentMethod,
 

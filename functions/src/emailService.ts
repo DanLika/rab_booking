@@ -1,8 +1,6 @@
 import {Resend} from "resend";
-import * as admin from "firebase-admin";
+import {db} from "./firebase";
 import {logError, logSuccess, logInfo} from "./logger";
-
-const db = admin.firestore();
 
 // Lazy initialize Resend (to avoid deployment errors)
 let resend: Resend | null = null;

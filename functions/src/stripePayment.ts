@@ -306,8 +306,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
         const conflictingBookings = await transaction.get(conflictingBookingsQuery);
 
         if (!conflictingBookings.empty) {
-          // This should be rare - dates were available at checkout time
-          // but someone else booked in between
+          // Date conflict detected - someone else booked between checkout and webhook
           console.error("Date conflict detected during webhook processing:", {
             unitId,
             checkIn: metadata.check_in,
@@ -315,10 +314,32 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
             conflictingCount: conflictingBookings.size,
           });
 
-          // We still need to handle this gracefully
-          // The payment was successful, so we should refund
-          // For now, log error - manual intervention needed
-          throw new Error("DATE_CONFLICT: Dates were booked by another user. Manual refund required.");
+          // AUTO-REFUND: Payment was successful, but dates are no longer available
+          // We must refund the customer automatically
+          const paymentIntentId = session.payment_intent as string;
+
+          if (paymentIntentId) {
+            const stripeClient = getStripeClient();
+            try {
+              await stripeClient.refunds.create({
+                payment_intent: paymentIntentId,
+                reason: "requested_by_customer", // Stripe requires this for bookings
+                metadata: {
+                  reason: "DATE_CONFLICT",
+                  booking_reference: bookingReference,
+                  unit_id: unitId,
+                  check_in: metadata.check_in,
+                  check_out: metadata.check_out,
+                },
+              });
+              console.log(`Auto-refund issued for date conflict: ${paymentIntentId}`);
+            } catch (refundError) {
+              console.error("Failed to issue auto-refund:", refundError);
+              // Log for manual intervention
+            }
+          }
+
+          throw new Error(`DATE_CONFLICT: Dates were booked by another user. Refund issued for payment ${paymentIntentId}.`);
         }
 
         // Create booking document

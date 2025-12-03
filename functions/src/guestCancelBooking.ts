@@ -65,9 +65,22 @@ export const guestCancelBooking = onCall(async (request) => {
     }
 
     // Get widget settings to check cancellation policy
+    // Widget settings are stored as subcollection: properties/{propertyId}/widget_settings/{unitId}
+    const propertyId = booking.property_id;
+    const unitId = booking.unit_id;
+
+    if (!propertyId || !unitId) {
+      throw new HttpsError(
+        "internal",
+        "Booking is missing property_id or unit_id"
+      );
+    }
+
     const widgetSettingsRef = db
+      .collection("properties")
+      .doc(propertyId)
       .collection("widget_settings")
-      .doc(booking.unit_id);
+      .doc(unitId);
     const widgetSettingsDoc = await widgetSettingsRef.get();
 
     if (!widgetSettingsDoc.exists) {

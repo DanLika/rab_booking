@@ -100,10 +100,19 @@ export const createBookingAtomic = onCall(async (request) => {
     const unitData = unitDoc.data();
     const maxGuests = unitData?.max_guests ?? 10; // Default max 10 if not set
 
-    if (guestCount && guestCount > maxGuests) {
+    // Validate guest count is a valid positive integer
+    const guestCountNum = Number(guestCount);
+    if (!guestCount || !Number.isInteger(guestCountNum) || guestCountNum < 1) {
       throw new HttpsError(
         "invalid-argument",
-        `Maximum ${maxGuests} guests allowed for this unit. You requested ${guestCount}.`
+        "Guest count must be at least 1"
+      );
+    }
+
+    if (guestCountNum > maxGuests) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Maximum ${maxGuests} guests allowed for this unit. You requested ${guestCountNum}.`
       );
     }
 

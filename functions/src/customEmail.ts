@@ -26,9 +26,28 @@ export const sendCustomEmailToGuestFunction = onCall(async (request) => {
     );
   }
 
-  // Basic email validation
+  // Input length limits (RFC 5321 compliant + practical limits)
+  const MAX_EMAIL_LENGTH = 254;
+  const MAX_NAME_LENGTH = 100;
+  const MAX_SUBJECT_LENGTH = 998; // RFC 5321
+  const MAX_MESSAGE_LENGTH = 50000; // ~50KB message body
+
+  if (typeof guestEmail !== "string" || guestEmail.length > MAX_EMAIL_LENGTH) {
+    throw new HttpsError("invalid-argument", "Email address too long");
+  }
+  if (typeof guestName !== "string" || guestName.length > MAX_NAME_LENGTH) {
+    throw new HttpsError("invalid-argument", "Guest name too long");
+  }
+  if (typeof subject !== "string" || subject.length > MAX_SUBJECT_LENGTH) {
+    throw new HttpsError("invalid-argument", "Subject too long");
+  }
+  if (typeof message !== "string" || message.length > MAX_MESSAGE_LENGTH) {
+    throw new HttpsError("invalid-argument", "Message too long (max 50KB)");
+  }
+
+  // Basic email validation (improved regex)
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(guestEmail)) {
+  if (!emailRegex.test(guestEmail) || guestEmail.includes("..")) {
     throw new HttpsError(
       "invalid-argument",
       "Invalid email address"

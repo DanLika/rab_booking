@@ -19,6 +19,21 @@ function getResendClient(): Resend {
   return resend;
 }
 
+/**
+ * Escape HTML to prevent XSS attacks in email content
+ * SECURITY: Always use this for any user-provided content in emails
+ */
+function escapeHtml(text: string): string {
+  const htmlEscapeMap: { [key: string]: string } = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#039;",
+  };
+  return text.replace(/[&<>"']/g, (char) => htmlEscapeMap[char]);
+}
+
 // Email sender address
 // TEST MODE: Uses onboarding@resend.dev (emails only go to Resend account owner)
 // PRODUCTION: Change to your verified domain (e.g., "noreply@yourdomain.com" or duskolicanin1234@gmail.com)
@@ -822,12 +837,12 @@ export async function sendCustomEmailToGuest(
   <div class="email-wrapper">
     <div class="header">
       <div class="header-icon">✉️</div>
-      <h1>${subject}</h1>
+      <h1>${escapeHtml(subject)}</h1>
     </div>
 
     <div class="content">
-      <p class="greeting">Poštovani/a ${guestName},</p>
-      <div class="message-content">${message}</div>
+      <p class="greeting">Poštovani/a ${escapeHtml(guestName)},</p>
+      <div class="message-content">${escapeHtml(message)}</div>
       <p>Ako imate pitanja, slobodno odgovorite na ovaj email.</p>
     </div>
 

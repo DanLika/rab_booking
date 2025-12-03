@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html if (dart.library.io) 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -7,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 // Cross-tab communication service (conditional import for web)
 import '../../../../core/services/tab_communication_service.dart';
+import '../../utils/email_notification_helper.dart';
+import '../../services/form_persistence_service.dart';
+import '../../state/booking_form_state.dart';
 import '../../../../core/services/tab_communication_service_web.dart'
     if (dart.library.io) '../../../../core/services/tab_communication_service.dart';
 import '../widgets/calendar_view_switcher.dart';
@@ -33,7 +34,7 @@ import '../../../../shared/models/booking_model.dart';
 import '../../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
-import '../../../../core/services/email_notification_service.dart';
+// EmailNotificationService now used via EmailNotificationHelper
 import '../../../../core/services/booking_service.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/constants/enums.dart';
@@ -43,7 +44,6 @@ import '../widgets/email_verification_dialog.dart';
 import '../widgets/common/rotate_device_overlay.dart';
 import '../widgets/common/loading_screen.dart';
 import '../widgets/common/error_screen.dart';
-import '../widgets/common/contact/contact_item_widget.dart';
 import '../widgets/booking/payment/payment_option_widget.dart';
 import '../widgets/booking/guest_form/guest_count_picker.dart';
 import '../widgets/common/info_card_widget.dart';
@@ -55,6 +55,7 @@ import '../widgets/booking/payment/no_payment_info.dart';
 import '../widgets/booking/payment/payment_method_card.dart';
 import '../widgets/booking/pill_bar_content.dart';
 import '../widgets/booking/booking_pill_bar.dart';
+import '../widgets/booking/contact_pill_card_widget.dart';
 import '../widgets/common/theme_colors_helper.dart';
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/errors/app_exceptions.dart';
@@ -70,52 +71,66 @@ class BookingWidgetScreen extends ConsumerStatefulWidget {
 }
 
 class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
-  DateTime? _checkIn;
-  DateTime? _checkOut;
+  // ============================================
+  // UNIT & PROPERTY DATA
+  // ============================================
   late String _unitId;
   String? _propertyId;
   String? _ownerId;
   UnitModel? _unit; // Store unit data for guest validation
+  WidgetSettings? _widgetSettings; // Widget settings (loaded from Firestore)
 
-  // Widget settings (loaded from Firestore)
-  WidgetSettings? _widgetSettings;
-
-  // Validation state
+  // ============================================
+  // VALIDATION STATE
+  // ============================================
   bool _isValidating = true;
   String? _validationError;
 
-  // Guest info form
-  final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _notesController = TextEditingController(); // Special requests
-  Country _selectedCountry = defaultCountry; // Default to Croatia
+  // ============================================
+  // FORM STATE (centralized in BookingFormState)
+  // ============================================
+  final _formState = BookingFormState();
 
-  // Guest count
-  int _adults = 2;
-  int _children = 0;
+  // Convenience getters for backward compatibility during refactoring
+  DateTime? get _checkIn => _formState.checkIn;
+  set _checkIn(DateTime? value) => _formState.checkIn = value;
+  DateTime? get _checkOut => _formState.checkOut;
+  set _checkOut(DateTime? value) => _formState.checkOut = value;
+  GlobalKey<FormState> get _formKey => _formState.formKey;
+  TextEditingController get _firstNameController => _formState.firstNameController;
+  TextEditingController get _lastNameController => _formState.lastNameController;
+  TextEditingController get _emailController => _formState.emailController;
+  TextEditingController get _phoneController => _formState.phoneController;
+  TextEditingController get _notesController => _formState.notesController;
+  Country get _selectedCountry => _formState.selectedCountry;
+  set _selectedCountry(Country value) => _formState.selectedCountry = value;
+  int get _adults => _formState.adults;
+  set _adults(int value) => _formState.adults = value;
+  int get _children => _formState.children;
+  set _children(int value) => _formState.children = value;
+  bool get _showGuestForm => _formState.showGuestForm;
+  set _showGuestForm(bool value) => _formState.showGuestForm = value;
+  String get _selectedPaymentMethod => _formState.selectedPaymentMethod;
+  set _selectedPaymentMethod(String value) => _formState.selectedPaymentMethod = value;
+  String get _selectedPaymentOption => _formState.selectedPaymentOption;
+  bool get _isProcessing => _formState.isProcessing;
+  set _isProcessing(bool value) => _formState.isProcessing = value;
+  bool get _emailVerified => _formState.emailVerified;
+  set _emailVerified(bool value) => _formState.emailVerified = value;
+  bool get _taxLegalAccepted => _formState.taxLegalAccepted;
+  set _taxLegalAccepted(bool value) => _formState.taxLegalAccepted = value;
+  BookingPriceCalculation? get _lockedPriceCalculation => _formState.lockedPriceCalculation;
+  set _lockedPriceCalculation(BookingPriceCalculation? value) => _formState.lockedPriceCalculation = value;
+  Offset? get _pillBarPosition => _formState.pillBarPosition;
+  set _pillBarPosition(Offset? value) => _formState.pillBarPosition = value;
+  bool get _pillBarDismissed => _formState.pillBarDismissed;
+  set _pillBarDismissed(bool value) => _formState.pillBarDismissed = value;
+  bool get _hasInteractedWithBookingFlow => _formState.hasInteractedWithBookingFlow;
+  set _hasInteractedWithBookingFlow(bool value) => _formState.hasInteractedWithBookingFlow = value;
 
-  // UI state
-  bool _showGuestForm = false;
-  String _selectedPaymentMethod = 'stripe'; // 'stripe' or 'bank_transfer'
-  final String _selectedPaymentOption =
-      'deposit'; // 'deposit' or 'full' - Bug #12: Made mutable so users can choose
-  bool _isProcessing = false;
-  bool _emailVerified = false; // Email verification status (OTP)
-  bool _taxLegalAccepted = false; // Bug #68: Tax/Legal disclaimer acceptance
-
-  // Bug #64: Price locking to prevent payment mismatches
-  BookingPriceCalculation? _lockedPriceCalculation;
-
-  // Draggable pill bar state
-  Offset? _pillBarPosition; // null = default bottom center position
-
-  // Bug Fix: Pill bar dismissed state (auto-open fix)
-  bool _pillBarDismissed = false; // Track if user clicked X to close pill bar
-  bool _hasInteractedWithBookingFlow = false; // Track if user clicked Reserve button
-
+  // ============================================
+  // CROSS-TAB COMMUNICATION
+  // ============================================
   // Cross-tab communication for Stripe payments
   // When payment completes in one tab, other tabs are notified to update UI
   TabCommunicationService? _tabCommunicationService;
@@ -366,30 +381,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Reset form state to initial values (clear all user input)
   void _resetFormState() {
     setState(() {
-      // Clear text controllers
-      _firstNameController.clear();
-      _lastNameController.clear();
-      _emailController.clear();
-      _phoneController.clear();
-      _notesController.clear();
-
-      // Reset date selection
-      _checkIn = null;
-      _checkOut = null;
-
-      // Reset guest count
-      _adults = 2;
-      _children = 0;
-
-      // Reset booking flow state
-      _hasInteractedWithBookingFlow = false;
-      _pillBarDismissed = false;
-      _showGuestForm = false;
-
-      // Reset other state
-      _emailVerified = false;
-      _taxLegalAccepted = false;
-      _lockedPriceCalculation = null;
+      _formState.resetState();
     });
 
     // Reset selected additional services (provider-based)
@@ -693,140 +685,68 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
   }
 
-  // Bug #53: Form data persistence methods
-  static const String _formDataKey = 'booking_widget_form_data';
+  // Bug #53: Form data persistence - delegates to FormPersistenceService
+
+  /// Build PersistedFormData from current state
+  PersistedFormData _buildPersistedFormData() {
+    return PersistedFormData(
+      unitId: _unitId,
+      propertyId: _propertyId,
+      checkIn: _checkIn,
+      checkOut: _checkOut,
+      firstName: _firstNameController.text,
+      lastName: _lastNameController.text,
+      email: _emailController.text,
+      phone: _phoneController.text,
+      countryCode: _selectedCountry.dialCode,
+      adults: _adults,
+      children: _children,
+      notes: _notesController.text,
+      paymentMethod: _selectedPaymentMethod,
+      pillBarDismissed: _pillBarDismissed,
+      hasInteractedWithBookingFlow: _hasInteractedWithBookingFlow,
+      timestamp: DateTime.now(),
+    );
+  }
 
   /// Save current form data to localStorage
   Future<void> _saveFormData() async {
-    if (_unitId.isEmpty) return; // Don't save if no unit selected
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final formData = {
-        'unitId': _unitId,
-        'propertyId': _propertyId,
-        'checkIn': _checkIn?.toIso8601String(),
-        'checkOut': _checkOut?.toIso8601String(),
-        'firstName': _firstNameController.text,
-        'lastName': _lastNameController.text,
-        'email': _emailController.text,
-        'phone': _phoneController.text,
-        'countryCode': _selectedCountry.dialCode,
-        'adults': _adults,
-        'children': _children,
-        'notes': _notesController.text,
-        'paymentMethod': _selectedPaymentMethod,
-        'timestamp': DateTime.now().toIso8601String(),
-        // Bug Fix: Auto-open fix - track dismissed and interaction state
-        'pillBarDismissed': _pillBarDismissed,
-        'hasInteractedWithBookingFlow': _hasInteractedWithBookingFlow,
-      };
-
-      await prefs.setString('${_formDataKey}_$_unitId', jsonEncode(formData));
-    } catch (e) {
-      // Silent fail - persistence is not critical
-      LoggingService.log(
-        'Failed to save form data: $e',
-        tag: 'FORM_PERSISTENCE',
-      );
-    }
+    await FormPersistenceService.saveFormData(
+      _unitId,
+      _buildPersistedFormData(),
+    );
   }
 
   /// Load saved form data from localStorage
   Future<void> _loadFormData() async {
-    if (_unitId.isEmpty) return;
+    final formData = await FormPersistenceService.loadFormData(_unitId);
+    if (formData == null) return;
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final savedData = prefs.getString('${_formDataKey}_$_unitId');
-
-      if (savedData == null) return;
-
-      final formData = jsonDecode(savedData) as Map<String, dynamic>;
-
-      // Check if data is not too old (max 24 hours)
-      final timestamp = DateTime.parse(formData['timestamp'] as String);
-      if (DateTime.now().difference(timestamp).inHours > 24) {
-        await _clearFormData(); // Clear old data
-        return;
-      }
-
-      // Restore form data
-      if (mounted) {
-        setState(() {
-          // Only restore if same unit
-          if (formData['unitId'] == _unitId) {
-            if (formData['checkIn'] != null) {
-              _checkIn = DateTime.parse(formData['checkIn'] as String);
-            }
-            if (formData['checkOut'] != null) {
-              _checkOut = DateTime.parse(formData['checkOut'] as String);
-            }
-
-            _firstNameController.text = formData['firstName'] as String? ?? '';
-            _lastNameController.text = formData['lastName'] as String? ?? '';
-            _emailController.text = formData['email'] as String? ?? '';
-            _phoneController.text = formData['phone'] as String? ?? '';
-
-            // Restore country code
-            final savedCountryCode = formData['countryCode'] as String?;
-            if (savedCountryCode != null) {
-              final country = countries.firstWhere(
-                (c) => c.dialCode == savedCountryCode,
-                orElse: () => defaultCountry,
-              );
-              _selectedCountry = country;
-            }
-
-            _adults = formData['adults'] as int? ?? 2;
-            _children = formData['children'] as int? ?? 0;
-            _notesController.text = formData['notes'] as String? ?? '';
-
-            // Restore payment method if valid
-            final savedPayment = formData['paymentMethod'] as String?;
-            if (savedPayment != null) {
-              _selectedPaymentMethod = savedPayment;
-            }
-
-            // Bug Fix: Restore dismissed and interaction state
-            _pillBarDismissed = formData['pillBarDismissed'] as bool? ?? false;
-            _hasInteractedWithBookingFlow = formData['hasInteractedWithBookingFlow'] as bool? ?? false;
-
-            // Bug Fix: Don't auto-show guest form from cache
-            // User should explicitly select dates or click to open booking flow
-            // Cached data is available but form stays hidden until user action
-          }
-        });
-
-        LoggingService.log(
-          '✅ Form data restored from cache (dismissed: $_pillBarDismissed, interacted: $_hasInteractedWithBookingFlow)',
-          tag: 'FORM_PERSISTENCE',
-        );
-      }
-    } catch (e) {
-      // Silent fail - just log
-      LoggingService.log(
-        'Failed to load form data: $e',
-        tag: 'FORM_PERSISTENCE',
-      );
+    // Restore form data
+    if (mounted) {
+      setState(() {
+        _checkIn = formData.checkIn;
+        _checkOut = formData.checkOut;
+        _firstNameController.text = formData.firstName;
+        _lastNameController.text = formData.lastName;
+        _emailController.text = formData.email;
+        _phoneController.text = formData.phone;
+        _selectedCountry = formData.country;
+        _adults = formData.adults;
+        _children = formData.children;
+        _notesController.text = formData.notes;
+        _selectedPaymentMethod = formData.paymentMethod;
+        _pillBarDismissed = formData.pillBarDismissed;
+        _hasInteractedWithBookingFlow = formData.hasInteractedWithBookingFlow;
+        // Bug Fix: Don't auto-show guest form from cache
+        // User should explicitly select dates or click to open booking flow
+      });
     }
   }
 
   /// Clear saved form data from localStorage
   Future<void> _clearFormData() async {
-    if (_unitId.isEmpty) return;
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('${_formDataKey}_$_unitId');
-      LoggingService.log('🗑️ Form data cleared', tag: 'FORM_PERSISTENCE');
-    } catch (e) {
-      // Silent fail
-      LoggingService.log(
-        'Failed to clear form data: $e',
-        tag: 'FORM_PERSISTENCE',
-      );
-    }
+    await FormPersistenceService.clearFormData(_unitId);
   }
 
   @override
@@ -838,11 +758,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _phoneController.removeListener(_saveFormData);
     _notesController.removeListener(_saveFormData);
 
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _notesController.dispose();
+    // Dispose all form controllers via centralized state
+    _formState.dispose();
 
     // Dispose cross-tab communication resources
     _tabMessageSubscription?.cancel();
@@ -1064,7 +981,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       // Contact pill card (calendar only mode - inline, below calendar)
                       if (widgetMode == WidgetMode.calendarOnly) ...[
                         const SizedBox(height: 8),
-                        _buildContactPillCard(isDarkMode, screenWidth),
+                        ContactPillCardWidget(
+                          contactOptions: _widgetSettings?.contactOptions,
+                          isDarkMode: isDarkMode,
+                          screenWidth: screenWidth,
+                        ),
                       ],
                     ],
                   ),
@@ -1114,183 +1035,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           },
         ),
       ),
-    );
-  }
-
-  /// Helper to launch URLs (phone, email, WhatsApp)
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-
-  /// Build contact pill card for calendar-only mode (inline, below calendar)
-  Widget _buildContactPillCard(bool isDarkMode, double screenWidth) {
-    final contactOptions = _widgetSettings?.contactOptions;
-
-    // Check if there's anything to display
-    final hasEmail =
-        contactOptions?.showEmail == true &&
-        contactOptions?.emailAddress != null &&
-        contactOptions!.emailAddress!.isNotEmpty;
-    final hasPhone =
-        contactOptions?.showPhone == true &&
-        contactOptions?.phoneNumber != null &&
-        contactOptions!.phoneNumber!.isNotEmpty;
-
-    // If no contact options to display, return empty widget
-    if (!hasEmail && !hasPhone) {
-      return const SizedBox.shrink();
-    }
-
-    // Only use column layout on very small screens (< 350px)
-    final useRowLayout = screenWidth >= 350;
-
-    // Dynamic max width: allow row layout on most screens
-    final maxWidth = useRowLayout ? 500.0 : 200.0;
-
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDarkMode
-                ? MinimalistColorsDark.backgroundSecondary
-                : MinimalistColors.backgroundSecondary,
-            borderRadius: BorderRadius.circular(12), // Pill style
-            border: Border.all(
-              color: isDarkMode
-                  ? MinimalistColorsDark.borderDefault
-                  : MinimalistColors.borderDefault,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: useRowLayout
-              ? _buildDesktopContactRow(contactOptions, isDarkMode)
-              : _buildMobileContactColumn(contactOptions, isDarkMode),
-        ),
-      ),
-    );
-  }
-
-  /// Desktop layout: email + phone in same row with divider
-  Widget _buildDesktopContactRow(
-    ContactOptions? contactOptions,
-    bool isDarkMode,
-  ) {
-    final hasEmail =
-        contactOptions?.showEmail == true &&
-        contactOptions?.emailAddress != null &&
-        contactOptions!.emailAddress!.isNotEmpty;
-
-    final hasPhone =
-        contactOptions?.showPhone == true &&
-        contactOptions?.phoneNumber != null &&
-        contactOptions!.phoneNumber!.isNotEmpty;
-
-    // Defensive check: if no items, return empty widget to avoid empty Row
-    if (!hasEmail && !hasPhone) {
-      return const SizedBox.shrink();
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Email
-        if (hasEmail)
-          Flexible(
-            child: ContactItemWidget(
-              icon: Icons.email,
-              value: contactOptions.emailAddress!,
-              onTap: () => _launchUrl('mailto:${contactOptions.emailAddress}'),
-              isDarkMode: isDarkMode,
-            ),
-          ),
-
-        // Vertical divider
-        if (hasEmail && hasPhone)
-          Container(
-            height: 24,
-            width: 1,
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-            color: isDarkMode
-                ? MinimalistColorsDark.borderDefault
-                : MinimalistColors.borderDefault,
-          ),
-
-        // Phone
-        if (hasPhone)
-          Flexible(
-            child: ContactItemWidget(
-              icon: Icons.phone,
-              value: contactOptions.phoneNumber!,
-              onTap: () => _launchUrl('tel:${contactOptions.phoneNumber}'),
-              isDarkMode: isDarkMode,
-            ),
-          ),
-      ],
-    );
-  }
-
-  /// Mobile layout: email and phone stacked vertically
-  Widget _buildMobileContactColumn(
-    ContactOptions? contactOptions,
-    bool isDarkMode,
-  ) {
-    final hasEmail =
-        contactOptions?.showEmail == true &&
-        contactOptions?.emailAddress != null &&
-        contactOptions!.emailAddress!.isNotEmpty;
-
-    final hasPhone =
-        contactOptions?.showPhone == true &&
-        contactOptions?.phoneNumber != null &&
-        contactOptions!.phoneNumber!.isNotEmpty;
-
-    // Defensive check: if no items, return empty widget to avoid empty Column
-    if (!hasEmail && !hasPhone) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      children: [
-        // Email
-        if (hasEmail)
-          ContactItemWidget(
-            icon: Icons.email,
-            value: contactOptions.emailAddress!,
-            onTap: () => _launchUrl('mailto:${contactOptions.emailAddress}'),
-            isDarkMode: isDarkMode,
-          ),
-
-        // Horizontal divider between email and phone
-        if (hasEmail && hasPhone)
-          Divider(
-            color: isDarkMode
-                ? MinimalistColorsDark.borderDefault
-                : MinimalistColors.borderDefault,
-            height: 12,
-            thickness: 1,
-          ),
-
-        // Phone
-        if (hasPhone)
-          ContactItemWidget(
-            icon: Icons.phone,
-            value: contactOptions.phoneNumber!,
-            onTap: () => _launchUrl('tel:${contactOptions.phoneNumber}'),
-            isDarkMode: isDarkMode,
-          ),
-      ],
     );
   }
 
@@ -2305,59 +2049,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   }
 
   /// Helper method to send booking confirmation emails
-  /// Reduces ~100 lines of duplicated code between pending/instant modes
+  /// Delegates to EmailNotificationHelper for cleaner code
   void _sendBookingEmails({
     required BookingModel booking,
     required bool requiresApproval,
     String? paymentMethod,
     String? paymentDeadline,
   }) {
-    final emailConfig = _widgetSettings?.emailConfig;
-    if (emailConfig?.enabled != true || emailConfig?.isConfigured != true) {
-      return;
-    }
-
-    final emailService = EmailNotificationService();
-    final bookingReference = booking.id.substring(0, 8).toUpperCase();
-    final propertyName = _unit?.name ?? 'Vacation Rental';
-
-    // Send guest confirmation email
-    unawaited(
-      emailService.sendBookingConfirmationEmail(
-        booking: booking,
-        emailConfig: _widgetSettings!.emailConfig,
-        propertyName: propertyName,
-        bookingReference: bookingReference,
-        paymentDeadline: paymentDeadline,
-        paymentMethod: paymentMethod,
-        bankTransferConfig: _widgetSettings!.bankTransferConfig,
-        allowGuestCancellation: _widgetSettings!.allowGuestCancellation,
-        cancellationDeadlineHours: _widgetSettings!.cancellationDeadlineHours,
-        ownerEmail: _widgetSettings!.contactOptions.emailAddress,
-        ownerPhone: _widgetSettings!.contactOptions.phoneNumber,
-        customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
-      ),
+    EmailNotificationHelper.sendBookingEmails(
+      booking: booking,
+      requiresApproval: requiresApproval,
+      widgetSettings: _widgetSettings,
+      unit: _unit,
+      paymentMethod: paymentMethod,
+      paymentDeadline: paymentDeadline,
     );
-
-    // Send owner notification (if enabled)
-    if (_widgetSettings!.emailConfig.sendOwnerNotification) {
-      final ownerEmail = _widgetSettings!.emailConfig.fromEmail;
-      if (ownerEmail != null) {
-        unawaited(
-          emailService.sendOwnerNotificationEmail(
-            booking: booking,
-            emailConfig: _widgetSettings!.emailConfig,
-            propertyName: propertyName,
-            bookingReference: bookingReference,
-            ownerEmail: ownerEmail,
-            requiresApproval: requiresApproval,
-            customLogoUrl: _widgetSettings!.themeOptions?.customLogoUrl,
-          ),
-        );
-      }
-    }
-
-    emailService.dispose();
   }
 
   /// Handle Stripe payment

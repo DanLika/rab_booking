@@ -13,6 +13,7 @@ import 'calendar_hover_tooltip.dart';
 import 'calendar/calendar_date_utils.dart';
 import 'calendar/calendar_compact_legend.dart';
 import 'calendar/calendar_combined_header_widget.dart';
+import 'calendar/calendar_date_selection_validator.dart';
 import 'calendar/year_calendar_painters.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
@@ -593,80 +594,17 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     WidgetColorScheme colors,
   ) {
-    // Block past dates
-    if (dateInfo.status == DateStatus.disabled) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Cannot select past dates.',
-        duration: const Duration(seconds: 3),
-      );
-      return;
-    }
+    final validator = CalendarDateSelectionValidator(context: context);
 
-    // Determine if this is check-in or check-out selection
-    final isSelectingCheckIn =
-        _rangeStart == null || (_rangeStart != null && _rangeEnd != null);
-    final isSelectingCheckOut = _rangeStart != null && _rangeEnd == null;
-
-    // Check advance booking window (only for check-in selection)
-    if (isSelectingCheckIn) {
-      final today = DateTime.now();
-      final todayNormalized = DateTime(today.year, today.month, today.day);
-      final daysInAdvance = date.difference(todayNormalized).inDays;
-
-      // Check minDaysAdvance
-      if (dateInfo.minDaysAdvance != null &&
-          daysInAdvance < dateInfo.minDaysAdvance!) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'This date requires booking at least ${dateInfo.minDaysAdvance} days in advance.',
-            duration: const Duration(seconds: 3),
-        );
-        return;
-      }
-
-      // Check maxDaysAdvance
-      if (dateInfo.maxDaysAdvance != null &&
-          daysInAdvance > dateInfo.maxDaysAdvance!) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'This date can only be booked up to ${dateInfo.maxDaysAdvance} days in advance.',
-            duration: const Duration(seconds: 3),
-        );
-        return;
-      }
-    }
-
-    // Check blockCheckIn/blockCheckOut restrictions
-    if (isSelectingCheckIn && dateInfo.blockCheckIn) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Check-in is not allowed on this date.',
-        duration: const Duration(seconds: 3),
-      );
-      return;
-    }
-
-    if (isSelectingCheckOut && dateInfo.blockCheckOut) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Check-out is not allowed on this date.',
-        duration: const Duration(seconds: 3),
-      );
-      return;
-    }
-
-    // For check-in: allow available and partialCheckOut (checkout day of previous booking)
-    // For check-out: allow available and partialCheckIn (checkin day of next booking)
-    final canSelectForCheckIn =
-        dateInfo.status == DateStatus.available ||
-        dateInfo.status == DateStatus.partialCheckOut;
-    final canSelectForCheckOut =
-        dateInfo.status == DateStatus.available ||
-        dateInfo.status == DateStatus.partialCheckIn;
-
-    if ((isSelectingCheckIn && !canSelectForCheckIn) ||
-        (isSelectingCheckOut && !canSelectForCheckOut)) {
+    // Pre-selection validation (past date, advance booking, restrictions)
+    final preResult = validator.validatePreSelection(
+      date: date,
+      dateInfo: dateInfo,
+      rangeStart: _rangeStart,
+      rangeEnd: _rangeEnd,
+    );
+    if (!preResult.isValid) {
+      validator.showError(preResult);
       return;
     }
 
@@ -678,108 +616,60 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       } else if (_rangeStart != null && _rangeEnd == null) {
         // Cannot select same date as check-in and check-out
         if (CalendarDateUtils.isSameDay(date, _rangeStart!)) {
-          return; // Do nothing if clicking on the same date
+          return;
         }
 
-        // Complete range - validate no booked dates in between
-        final DateTime start = date.isBefore(_rangeStart!)
-            ? date
-            : _rangeStart!;
+        // Determine start/end order
+        final DateTime start = date.isBefore(_rangeStart!) ? date : _rangeStart!;
         final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
 
-        // Get minNights from widget settings (default to 1 if not set)
-        final minNights =
-            ref
-                .read(
-                  widgetSettingsProvider((widget.propertyId, widget.unitId)),
-                )
-                .value
-                ?.minNights ??
-            1;
+        // Get minNights from widget settings
+        final minNights = ref
+            .read(widgetSettingsProvider((widget.propertyId, widget.unitId)))
+            .value
+            ?.minNights ?? 1;
 
-        // Check minNights validation
-        final selectedNights = end.difference(start).inDays;
-
-        // Get check-in date info for minNightsOnArrival/maxNightsOnArrival validation
+        // Get check-in date info for validation
         final checkInDateInfo = data[CalendarDateUtils.getDateKey(start)];
 
-        // Check minNightsOnArrival from check-in date (if set)
-        final minNightsOnArrival = checkInDateInfo?.minNightsOnArrival;
-        if (minNightsOnArrival != null && minNightsOnArrival > 0 && selectedNights < minNightsOnArrival) {
-          // Reset selection and show error
+        // Range validation (minNights, minNightsOnArrival, maxNightsOnArrival)
+        final rangeResult = validator.validateRange(
+          start: start,
+          end: end,
+          minNights: minNights,
+          checkInDateInfo: checkInDateInfo,
+        );
+        if (!rangeResult.isValid) {
           _rangeStart = null;
           _rangeEnd = null;
-
-          // Show error message
-          SnackBarHelper.showError(
-            context: context,
-            message: 'Minimum stay for this arrival date is $minNightsOnArrival ${minNightsOnArrival == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-                duration: const Duration(seconds: 3),
-          );
+          validator.showError(rangeResult);
           return;
         }
 
-        // Check maxNightsOnArrival from check-in date (if set)
-        final maxNightsOnArrival = checkInDateInfo?.maxNightsOnArrival;
-        if (maxNightsOnArrival != null && maxNightsOnArrival > 0 && selectedNights > maxNightsOnArrival) {
-          // Reset selection and show error
-          _rangeStart = null;
-          _rangeEnd = null;
-
-          // Show error message
-          SnackBarHelper.showError(
-            context: context,
-            message: 'Maximum stay for this arrival date is $maxNightsOnArrival ${maxNightsOnArrival == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-                duration: const Duration(seconds: 3),
-          );
-          return;
-        }
-
-        // Fallback to widget's minNights if no date-specific minNightsOnArrival
-        if ((minNightsOnArrival == null || minNightsOnArrival == 0) && selectedNights < minNights) {
-          // Reset selection and show error
-          _rangeStart = null;
-          _rangeEnd = null;
-
-          // Show error message
-          SnackBarHelper.showError(
-            context: context,
-            message: 'Minimum stay is $minNights ${minNights == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-                duration: const Duration(seconds: 3),
-          );
-          return;
-        }
-
-        // Check if this selection would create an orphan gap (gap < minNights)
+        // Year calendar specific: Check orphan gap
         if (_wouldCreateOrphanGap(start, end, data, minNights)) {
-          // Reset selection and show error
           _rangeStart = null;
           _rangeEnd = null;
-
-          // Show error message
           SnackBarHelper.showError(
             context: context,
             message: 'This selection would leave a gap smaller than the $minNights-night minimum stay. Please choose different dates or extend your stay.',
-              );
-          return;
-        }
-
-        // Check if there are any booked/pending dates in the range
-        if (_hasBlockedDatesInRange(start, end, data)) {
-          // Reset selection and show error
-          _rangeStart = null;
-          _rangeEnd = null;
-
-          // Show error message
-          SnackBarHelper.showError(
-            context: context,
-            message: 'Cannot select dates. There are already booked dates in this range.',
-                duration: const Duration(seconds: 3),
           );
           return;
         }
 
-        // No blocked dates, set the range
+        // Year calendar specific: Check blocked dates in range
+        if (_hasBlockedDatesInRange(start, end, data)) {
+          _rangeStart = null;
+          _rangeEnd = null;
+          SnackBarHelper.showError(
+            context: context,
+            message: 'Cannot select dates. There are already booked dates in this range.',
+            duration: const Duration(seconds: 3),
+          );
+          return;
+        }
+
+        // Set the range
         if (date.isBefore(_rangeStart!)) {
           _rangeEnd = _rangeStart;
           _rangeStart = date;

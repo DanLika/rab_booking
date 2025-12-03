@@ -12,6 +12,7 @@ import 'calendar_hover_tooltip.dart';
 import 'calendar/calendar_date_utils.dart';
 import 'calendar/calendar_compact_legend.dart';
 import 'calendar/calendar_combined_header_widget.dart';
+import 'calendar/calendar_date_selection_validator.dart';
 import '../theme/responsive_helper.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
@@ -582,93 +583,17 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     WidgetColorScheme colors,
   ) {
-    // Block past dates
-    if (dateInfo.status == DateStatus.disabled) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Cannot select past dates.',
-        duration: const Duration(seconds: 3),
-      );
-      return;
-    }
+    final validator = CalendarDateSelectionValidator(context: context);
 
-    // Determine if this is check-in or check-out selection
-    final isSelectingCheckIn =
-        _rangeStart == null || (_rangeStart != null && _rangeEnd != null);
-    final isSelectingCheckOut = _rangeStart != null && _rangeEnd == null;
-
-    // Check advance booking window (only for check-in selection)
-    if (isSelectingCheckIn) {
-      final today = DateTime.now();
-      final todayNormalized = DateTime(today.year, today.month, today.day);
-      final daysInAdvance = date.difference(todayNormalized).inDays;
-
-      // Check minDaysAdvance
-      if (dateInfo.minDaysAdvance != null &&
-          daysInAdvance < dateInfo.minDaysAdvance!) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'This date requires booking at least ${dateInfo.minDaysAdvance} days in advance.',
-            duration: const Duration(seconds: 3),
-        );
-        return;
-      }
-
-      // Check maxDaysAdvance
-      if (dateInfo.maxDaysAdvance != null &&
-          daysInAdvance > dateInfo.maxDaysAdvance!) {
-        SnackBarHelper.showError(
-          context: context,
-          message: 'This date can only be booked up to ${dateInfo.maxDaysAdvance} days in advance.',
-            duration: const Duration(seconds: 3),
-        );
-        return;
-      }
-    }
-
-    // Check blockCheckIn/blockCheckOut restrictions
-    if (isSelectingCheckIn && dateInfo.blockCheckIn) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Check-in is not allowed on this date.',
-        duration: const Duration(seconds: 3),
-      );
-      return;
-    }
-
-    if (isSelectingCheckOut && dateInfo.blockCheckOut) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Check-out is not allowed on this date.',
-        duration: const Duration(seconds: 3),
-      );
-      return;
-    }
-
-    // For check-in: allow available and partialCheckOut (checkout day of previous booking)
-    // For check-out: allow available and partialCheckIn (checkin day of next booking)
-    final canSelectForCheckIn =
-        dateInfo.status == DateStatus.available ||
-        dateInfo.status == DateStatus.partialCheckOut;
-    final canSelectForCheckOut =
-        dateInfo.status == DateStatus.available ||
-        dateInfo.status == DateStatus.partialCheckIn;
-
-    if (isSelectingCheckIn && !canSelectForCheckIn) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'This date is not available for check-in. Please select an available date.',
-        duration: const Duration(seconds: 3),
-      );
-      return;
-    }
-
-    if (isSelectingCheckOut && !canSelectForCheckOut) {
-      SnackBarHelper.showError(
-        context: context,
-        message: 'This date is not available for check-out. Please select an available date.',
-        duration: const Duration(seconds: 3),
-      );
+    // Pre-selection validation (past date, advance booking, restrictions)
+    final preResult = validator.validatePreSelection(
+      date: date,
+      dateInfo: dateInfo,
+      rangeStart: _rangeStart,
+      rangeEnd: _rangeEnd,
+    );
+    if (!preResult.isValid) {
+      validator.showError(preResult);
       return;
     }
 
@@ -680,72 +605,37 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       } else if (_rangeStart != null && _rangeEnd == null) {
         // Cannot select same date as check-in and check-out
         if (CalendarDateUtils.isSameDay(date, _rangeStart!)) {
-          return; // Do nothing if clicking on the same date
-        }
-
-        // Complete range - validate no booked dates in between
-        final DateTime start = date.isBefore(_rangeStart!)
-            ? date
-            : _rangeStart!;
-        final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
-
-        // Get minNights from widget settings (default to 1 if not set)
-        final minNights =
-            ref
-                .read(
-                  widgetSettingsProvider((widget.propertyId, widget.unitId)),
-                )
-                .value
-                ?.minNights ??
-            1;
-
-        // Check minNights validation (global from widget settings)
-        final selectedNights = end.difference(start).inDays;
-        if (selectedNights < minNights) {
-          // Reset selection and show error
-          _rangeStart = null;
-          _rangeEnd = null;
-
-          // Show error message
-          SnackBarHelper.showError(
-            context: context,
-            message: 'Minimum stay is $minNights ${minNights == 1 ? 'night' : 'nights'}. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-                duration: const Duration(seconds: 3),
-          );
           return;
         }
 
-        // Check minNightsOnArrival/maxNightsOnArrival from daily_prices
-        // Get the check-in date info from calendar data
+        // Determine start/end order
+        final DateTime start = date.isBefore(_rangeStart!) ? date : _rangeStart!;
+        final DateTime end = date.isBefore(_rangeStart!) ? _rangeStart! : date;
+
+        // Get minNights from widget settings
+        final minNights = ref
+            .read(widgetSettingsProvider((widget.propertyId, widget.unitId)))
+            .value
+            ?.minNights ?? 1;
+
+        // Get check-in date info for validation
         final startKey = DateFormat('yyyy-MM-dd').format(start);
         final checkInDateInfo = data[startKey];
 
-        if (checkInDateInfo != null) {
-          // Validate minNightsOnArrival (per-date minimum stay requirement)
-          if (checkInDateInfo.minNightsOnArrival != null &&
-              selectedNights < checkInDateInfo.minNightsOnArrival!) {
-            // Keep check-in selected, don't set checkout - show snackbar
-            SnackBarHelper.showError(
-              context: context,
-              message: 'Minimum ${checkInDateInfo.minNightsOnArrival} nights required for this check-in date. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-                  );
-            return; // Keep _rangeStart, don't set _rangeEnd
-          }
-
-          // Validate maxNightsOnArrival (per-date maximum stay limit)
-          if (checkInDateInfo.maxNightsOnArrival != null &&
-              selectedNights > checkInDateInfo.maxNightsOnArrival!) {
-            // Keep check-in selected, don't set checkout - show snackbar
-            SnackBarHelper.showError(
-              context: context,
-              message: 'Maximum ${checkInDateInfo.maxNightsOnArrival} nights allowed for this check-in date. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
-                  );
-            return; // Keep _rangeStart, don't set _rangeEnd
-          }
+        // Range validation (minNights, minNightsOnArrival, maxNightsOnArrival)
+        final rangeResult = validator.validateRange(
+          start: start,
+          end: end,
+          minNights: minNights,
+          checkInDateInfo: checkInDateInfo,
+        );
+        if (!rangeResult.isValid) {
+          // For month calendar: keep check-in selected, just show error
+          validator.showError(rangeResult);
+          return;
         }
 
-        // Bug #72 Fix: Use backend availability check for cross-month validation
-        // Local data map only contains current month - cannot validate dates in other months
+        // Month calendar specific: Use backend availability check for cross-month validation
         _validateAndSetRange(start, end, colors);
       }
     });

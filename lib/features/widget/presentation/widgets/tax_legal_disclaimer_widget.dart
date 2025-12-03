@@ -5,7 +5,6 @@ import '../providers/widget_settings_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../domain/models/widget_settings.dart';
-import 'common/theme_colors_helper.dart';
 
 /// Widget for Tax & Legal Disclaimer (Croatian boravišna pristojba, fiskalizacija, eVisitor)
 /// Bug #68: Tax disclaimer with required acceptance before booking
@@ -34,9 +33,7 @@ class _TaxLegalDisclaimerWidgetState
   @override
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
-
-    // Helper function to get theme-aware colors
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     // Get tax/legal config from Firestore (Sync Point 1 integration)
     final widgetSettingsAsync = ref.watch(
@@ -52,7 +49,7 @@ class _TaxLegalDisclaimerWidgetState
           return const SizedBox.shrink();
         }
 
-        return _buildDisclaimerUI(context, taxConfig, isDarkMode, getColor);
+        return _buildDisclaimerUI(context, taxConfig, isDarkMode, colors);
       },
       loading: () => const SizedBox.shrink(), // Don't show while loading
       error: (error, stackTrace) => const SizedBox.shrink(), // Don't show on error
@@ -63,7 +60,7 @@ class _TaxLegalDisclaimerWidgetState
     BuildContext context,
     TaxLegalConfig taxConfig,
     bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
   ) {
     return Container(
       margin: const EdgeInsets.only(
@@ -72,15 +69,9 @@ class _TaxLegalDisclaimerWidgetState
         top: SpacingTokens.m,
       ),
       decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        color: colors.backgroundSecondary,
         border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
+          color: colors.borderDefault,
         ),
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
         boxShadow: isDarkMode
@@ -101,10 +92,7 @@ class _TaxLegalDisclaimerWidgetState
                 children: [
                   Icon(
                     Icons.info_outline,
-                    color: getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
+                    color: colors.textSecondary,
                   ),
                   const SizedBox(width: SpacingTokens.m),
                   Expanded(
@@ -113,20 +101,14 @@ class _TaxLegalDisclaimerWidgetState
                       style: TextStyle(
                         fontSize: TypographyTokens.fontSizeL,
                         fontWeight: FontWeight.w600,
-                        color: getColor(
-                          MinimalistColors.textPrimary,
-                          MinimalistColorsDark.textPrimary,
-                        ),
+                        color: colors.textPrimary,
                         fontFamily: 'Manrope',
                       ),
                     ),
                   ),
                   Icon(
                     _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
+                    color: colors.textSecondary,
                   ),
                 ],
               ),
@@ -137,10 +119,7 @@ class _TaxLegalDisclaimerWidgetState
           if (_isExpanded) ...[
             Divider(
               height: 1,
-              color: getColor(
-                MinimalistColors.borderDefault,
-                MinimalistColorsDark.borderDefault,
-              ),
+              color: colors.borderDefault,
             ),
             Container(
               constraints: const BoxConstraints(maxHeight: 200),
@@ -150,10 +129,7 @@ class _TaxLegalDisclaimerWidgetState
                   taxConfig.disclaimerText,
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeS,
-                    color: getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
+                    color: colors.textSecondary,
                     height: 1.5,
                     fontFamily: 'Manrope',
                   ),
@@ -164,10 +140,7 @@ class _TaxLegalDisclaimerWidgetState
 
           Divider(
             height: 1,
-            color: getColor(
-              MinimalistColors.borderDefault,
-              MinimalistColorsDark.borderDefault,
-            ),
+            color: colors.borderDefault,
           ),
 
           // Accept checkbox
@@ -183,27 +156,15 @@ class _TaxLegalDisclaimerWidgetState
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeS,
                 fontWeight: FontWeight.w500,
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
                 fontFamily: 'Manrope',
               ),
             ),
             controlAffinity: ListTileControlAffinity.leading,
-            activeColor: getColor(
-              MinimalistColors.buttonPrimary,
-              MinimalistColorsDark.buttonPrimary,
-            ),
-            checkColor: getColor(
-              MinimalistColors.backgroundPrimary,
-              MinimalistColorsDark.backgroundPrimary,
-            ),
+            activeColor: colors.buttonPrimary,
+            checkColor: colors.backgroundPrimary,
             side: BorderSide(
-              color: getColor(
-                MinimalistColors.borderDefault,
-                MinimalistColorsDark.borderDefault,
-              ),
+              color: colors.borderDefault,
             ),
             dense: true,
           ),

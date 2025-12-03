@@ -6,7 +6,6 @@ import '../providers/theme_provider.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
-import 'common/theme_colors_helper.dart';
 
 class AdditionalServicesWidget extends ConsumerWidget {
   final String unitId;
@@ -24,9 +23,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final servicesAsync = ref.watch(unitAdditionalServicesProvider(unitId));
     final isDarkMode = ref.watch(themeProvider);
-
-    // Helper function to get theme-aware colors
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return servicesAsync.when(
       data: (services) {
@@ -35,7 +32,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
-        return _buildServicesWidget(context, ref, services, isDarkMode, getColor);
+        return _buildServicesWidget(context, ref, services, isDarkMode, colors);
       },
       loading: () => const SizedBox.shrink(),
       error: (error, stackTrace) => const SizedBox.shrink(),
@@ -47,21 +44,15 @@ class AdditionalServicesWidget extends ConsumerWidget {
     WidgetRef ref,
     List<AdditionalServiceModel> services,
     bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
   ) {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundPrimary,
-          MinimalistColorsDark.backgroundPrimary,
-        ),
+        color: colors.backgroundPrimary,
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
+          color: colors.borderDefault,
         ),
         boxShadow: isDarkMode
             ? MinimalistShadows.medium
@@ -75,10 +66,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
             children: [
               Icon(
                 Icons.add_circle,
-                color: getColor(
-                  MinimalistColors.buttonPrimary,
-                  MinimalistColorsDark.buttonPrimary,
-                ),
+                color: colors.buttonPrimary,
               ),
               const SizedBox(width: SpacingTokens.xs),
               Text(
@@ -86,10 +74,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeL,
                   fontWeight: FontWeight.bold,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                   fontFamily: 'Manrope',
                 ),
               ),
@@ -103,19 +88,15 @@ class AdditionalServicesWidget extends ConsumerWidget {
                   context,
                   ref,
                   service,
-                  isDarkMode,
-                  getColor,
+                  colors,
                 ),
               ),
               const SizedBox(height: SpacingTokens.m),
               Divider(
-                color: getColor(
-                  MinimalistColors.borderDefault,
-                  MinimalistColorsDark.borderDefault,
-                ),
+                color: colors.borderDefault,
               ),
               const SizedBox(height: SpacingTokens.xs),
-              _buildServicesTotal(ref, services, isDarkMode, getColor),
+              _buildServicesTotal(ref, services, colors),
             ],
           ),
         ],
@@ -127,8 +108,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     AdditionalServiceModel service,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
   ) {
     final selectedServices = ref.watch(selectedAdditionalServicesProvider);
     final quantity = selectedServices[service.id] ?? 0;
@@ -140,26 +120,14 @@ class AdditionalServicesWidget extends ConsumerWidget {
       decoration: BoxDecoration(
         border: Border.all(
           color: isSelected
-              ? getColor(
-                  MinimalistColors.statusAvailableBorder,
-                  MinimalistColorsDark.statusAvailableBorder,
-                )
-              : getColor(
-                  MinimalistColors.borderDefault,
-                  MinimalistColorsDark.borderDefault,
-                ),
+              ? colors.statusAvailableBorder
+              : colors.borderDefault,
           width: isSelected ? BorderTokens.widthMedium : BorderTokens.widthThin,
         ),
         borderRadius: BorderTokens.circularSmall,
         color: isSelected
-            ? getColor(
-                MinimalistColors.statusAvailableBackground,
-                MinimalistColorsDark.statusAvailableBackground,
-              )
-            : getColor(
-                MinimalistColors.backgroundPrimary,
-                MinimalistColorsDark.backgroundPrimary,
-              ),
+            ? colors.statusAvailableBackground
+            : colors.backgroundPrimary,
       ),
       child: Row(
         children: [
@@ -196,10 +164,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeM,
                     fontWeight: FontWeight.bold,
-                    color: getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
+                    color: colors.textPrimary,
                     fontFamily: 'Manrope',
                   ),
                 ),
@@ -211,10 +176,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                       service.description!,
                       style: TextStyle(
                         fontSize: TypographyTokens.fontSizeXS,
-                        color: getColor(
-                          MinimalistColors.textSecondary,
-                          MinimalistColorsDark.textSecondary,
-                        ),
+                        color: colors.textSecondary,
                         fontFamily: 'Manrope',
                       ),
                     ),
@@ -225,10 +187,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeS,
                     fontWeight: FontWeight.w600,
-                    color: getColor(
-                      MinimalistColors.statusAvailableBorder,
-                      MinimalistColorsDark.statusAvailableBorder,
-                    ),
+                    color: colors.statusAvailableBorder,
                     fontFamily: 'Manrope',
                   ),
                 ),
@@ -241,10 +200,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
             Container(
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: getColor(
-                    MinimalistColors.borderDefault,
-                    MinimalistColorsDark.borderDefault,
-                  ),
+                  color: colors.borderDefault,
                 ),
                 borderRadius: BorderTokens.circularSmall,
               ),
@@ -255,10 +211,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                     icon: Icon(
                       Icons.remove,
                       size: 16,
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
+                      color: colors.textPrimary,
                     ),
                     onPressed: quantity > 1
                         ? () {
@@ -286,10 +239,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: TypographyTokens.fontSizeS,
                         fontWeight: FontWeight.bold,
-                        color: getColor(
-                          MinimalistColors.textPrimary,
-                          MinimalistColorsDark.textPrimary,
-                        ),
+                        color: colors.textPrimary,
                         fontFamily: 'Manrope',
                       ),
                     ),
@@ -298,10 +248,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                     icon: Icon(
                       Icons.add,
                       size: 16,
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
+                      color: colors.textPrimary,
                     ),
                     onPressed: () {
                       // Check max quantity
@@ -338,8 +285,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
   Widget _buildServicesTotal(
     WidgetRef ref,
     List<AdditionalServiceModel> services,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
   ) {
     final selectedServices = ref.watch(selectedAdditionalServicesProvider);
     final total = ref.watch(
@@ -363,10 +309,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeM,
             fontWeight: FontWeight.bold,
-            color: getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
+            color: colors.textPrimary,
             fontFamily: 'Manrope',
           ),
         ),
@@ -375,10 +318,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeL,
             fontWeight: FontWeight.bold,
-            color: getColor(
-              MinimalistColors.statusAvailableBorder,
-              MinimalistColorsDark.statusAvailableBorder,
-            ),
+            color: colors.statusAvailableBorder,
             fontFamily: 'Manrope',
           ),
         ),

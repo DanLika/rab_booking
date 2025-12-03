@@ -282,6 +282,18 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       const totalPrice = parseFloat(metadata.total_price);
       const depositAmount = parseFloat(metadata.deposit_amount);
       const paymentOption = metadata.payment_option;
+
+      // Validate numeric values to prevent NaN issues
+      if (isNaN(totalPrice) || isNaN(depositAmount)) {
+        console.error("Invalid numeric metadata:", {
+          total_price: metadata.total_price,
+          deposit_amount: metadata.deposit_amount,
+          parsed_totalPrice: totalPrice,
+          parsed_depositAmount: depositAmount,
+        });
+        res.status(400).send("Invalid price metadata");
+        return;
+      }
       const notes = metadata.notes || null;
       const taxLegalAccepted = metadata.tax_legal_accepted === "true";
 
@@ -334,12 +346,34 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
               });
               console.log(`Auto-refund issued for date conflict: ${paymentIntentId}`);
             } catch (refundError) {
-              console.error("Failed to issue auto-refund:", refundError);
-              // Log for manual intervention
+              console.error("CRITICAL: Failed to issue auto-refund:", refundError);
+              // Store failed refund for manual intervention
+              try {
+                await db.collection("refund_pending").add({
+                  payment_intent_id: paymentIntentId,
+                  stripe_session_id: session.id,
+                  reason: "DATE_CONFLICT",
+                  booking_reference: bookingReference,
+                  unit_id: unitId,
+                  property_id: propertyId,
+                  owner_id: ownerId,
+                  guest_email: guestEmail,
+                  guest_name: guestName,
+                  amount: depositAmount,
+                  check_in: metadata.check_in,
+                  check_out: metadata.check_out,
+                  error_message: String(refundError),
+                  status: "requires_manual_refund",
+                  created_at: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                console.log(`Created refund_pending record for manual intervention`);
+              } catch (dbError) {
+                console.error("Failed to create refund_pending record:", dbError);
+              }
             }
           }
 
-          throw new Error(`DATE_CONFLICT: Dates were booked by another user. Refund issued for payment ${paymentIntentId}.`);
+          throw new Error(`DATE_CONFLICT: Dates were booked by another user. Refund ${paymentIntentId ? "attempted" : "skipped (no payment intent)"}`);
         }
 
         // Create booking document

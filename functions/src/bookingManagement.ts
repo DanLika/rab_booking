@@ -245,7 +245,11 @@ export const approvePendingBooking = onCall(async (request) => {
         booking.check_in.toDate(),
         booking.check_out.toDate(),
         propertyData2?.name || "Property",
-        propertyData2?.contact_email
+        propertyData2?.contact_email,
+        undefined, // accessToken not available for approval flow
+        booking.total_price,
+        booking.deposit_amount || 0,
+        propertyId // For subdomain in email links
       );
     } catch (error) {
       logError("Failed to send approval email to guest", error);

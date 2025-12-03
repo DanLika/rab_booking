@@ -16,10 +16,20 @@ export interface NotificationData {
 
 /**
  * Create a notification in Firestore
+ * Uses idempotency key to prevent duplicate notifications from Cloud Function retries
  */
 export async function createNotification(data: NotificationData): Promise<void> {
   try {
-    await db.collection("notifications").add({
+    // Generate idempotency key to prevent duplicates
+    // Format: {ownerId}_{type}_{bookingId}_{timestamp_minute}
+    // Timestamp rounded to minute to allow same-minute retries to deduplicate
+    const timestampMinute = Math.floor(Date.now() / 60000); // Round to minute
+    const bookingPart = data.bookingId || "general";
+    const idempotencyKey = `${data.ownerId}_${data.type}_${bookingPart}_${timestampMinute}`;
+
+    // Use set() with merge:false to prevent duplicates
+    // If document already exists, this will overwrite (idempotent behavior)
+    await db.collection("notifications").doc(idempotencyKey).set({
       ownerId: data.ownerId,
       type: data.type,
       title: data.title,

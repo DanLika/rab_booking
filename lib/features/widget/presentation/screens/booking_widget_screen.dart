@@ -286,6 +286,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Handle messages received from other browser tabs
   /// When payment completes in Tab B, this tab (Tab A) receives the notification
   void _handleTabMessage(TabMessage message) {
+    // SAFETY: Check mounted before handling tab messages
+    // Stream may fire after widget disposal
+    if (!mounted) return;
+
     LoggingService.log(
       '[CrossTab] Received message: ${message.type}',
       tag: 'TAB_COMM',

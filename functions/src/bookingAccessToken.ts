@@ -33,6 +33,7 @@ export function calculateTokenExpiration(
 
 /**
  * Verify if access token matches stored hash
+ * SECURITY: Uses constant-time comparison to prevent timing attacks
  */
 export function verifyAccessToken(
   providedToken: string,
@@ -43,5 +44,15 @@ export function verifyAccessToken(
     .update(providedToken)
     .digest("hex");
 
-  return hashedProvidedToken === storedHash;
+  // Use constant-time comparison to prevent timing attacks
+  // Both buffers must be same length for timingSafeEqual
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(hashedProvidedToken, "hex"),
+      Buffer.from(storedHash, "hex")
+    );
+  } catch {
+    // If buffers have different lengths, comparison fails
+    return false;
+  }
 }

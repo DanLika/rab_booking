@@ -90,10 +90,16 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
 
   try {
     // Fetch unit and property details
-    const unitDoc = await db.collection("units").doc(unitId).get();
-    const unitData = unitDoc.data();
+    // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
     const propertyDoc = await db.collection("properties").doc(propertyId).get();
     const propertyData = propertyDoc.data();
+    const unitDoc = await db
+      .collection("properties")
+      .doc(propertyId)
+      .collection("units")
+      .doc(unitId)
+      .get();
+    const unitData = unitDoc.data();
 
     // Get owner's Stripe Connect account ID
     const ownerDoc = await db.collection("users").doc(ownerId).get();
@@ -447,10 +453,16 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       console.log(`Booking ${result.bookingId} created after Stripe payment`);
 
       // Fetch unit and property details for emails
-      const unitDoc = await db.collection("units").doc(unitId).get();
-      const unitData = unitDoc.data();
+      // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
       const propertyDoc = await db.collection("properties").doc(propertyId).get();
       const propertyData = propertyDoc.data();
+      const unitDoc = await db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("units")
+        .doc(unitId)
+        .get();
+      const unitData = unitDoc.data();
 
       // Send confirmation email to guest (with "View my reservation" button)
       try {

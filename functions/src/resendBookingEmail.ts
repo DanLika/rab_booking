@@ -56,7 +56,17 @@ export const resendBookingEmail = onCall(async (request) => {
     const booking = bookingDoc.data()!;
 
     // Get unit to verify ownership
-    const unitDoc = await db.collection("units").doc(booking.unit_id).get();
+    // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
+    if (!booking.property_id) {
+      throw new HttpsError("not-found", "Property ID not found in booking");
+    }
+
+    const unitDoc = await db
+      .collection("properties")
+      .doc(booking.property_id)
+      .collection("units")
+      .doc(booking.unit_id)
+      .get();
     if (!unitDoc.exists) {
       throw new HttpsError(
         "not-found",
@@ -65,8 +75,8 @@ export const resendBookingEmail = onCall(async (request) => {
     }
     const unitData = unitDoc.data()!;
 
-    // Verify ownership
-    if (unitData.owner_id !== request.auth.uid) {
+    // Verify ownership - check owner_id from booking instead of unit
+    if (booking.owner_id !== request.auth.uid) {
       logError("[ResendBookingEmail] Unauthorized - not the owner", {
         requesterId: request.auth.uid,
         ownerId: unitData.owner_id,

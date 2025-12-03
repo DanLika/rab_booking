@@ -117,7 +117,11 @@ export const verifyBookingAccess = onCall(async (request) => {
       .get();
     const property = propertyDoc.data();
 
-    const unitDoc = await db.collection("units")
+    // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
+    const unitDoc = await db
+      .collection("properties")
+      .doc(booking.property_id)
+      .collection("units")
       .doc(booking.unit_id)
       .get();
     const unit = unitDoc.data();

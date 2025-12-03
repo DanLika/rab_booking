@@ -189,12 +189,22 @@ export const approvePendingBooking = onCall(async (request) => {
     const booking = bookingDoc.data()!;
 
     // Verify that current user is the property owner
-    const unitDoc = await db.collection("units").doc(booking.unit_id).get();
+    // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
+    const propertyId = booking.property_id;
+    if (!propertyId) {
+      throw new HttpsError("not-found", "Property ID not found in booking");
+    }
+
+    const unitDoc = await db
+      .collection("properties")
+      .doc(propertyId)
+      .collection("units")
+      .doc(booking.unit_id)
+      .get();
     if (!unitDoc.exists) {
       throw new HttpsError("not-found", "Unit not found");
     }
 
-    const propertyId = unitDoc.data()!.property_id;
     const propertyDoc = await db
       .collection("properties")
       .doc(propertyId)
@@ -382,14 +392,20 @@ export const onBookingCreated = onDocumentCreated(
 
     try {
       // Fetch unit and property details
-      const unitDoc = await db.collection("units").doc(booking.unit_id).get();
-      const unitData = unitDoc.data();
-
+      // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
       const propertyDoc = await db
         .collection("properties")
         .doc(booking.property_id)
         .get();
       const propertyData = propertyDoc.data();
+
+      const unitDoc = await db
+        .collection("properties")
+        .doc(booking.property_id)
+        .collection("units")
+        .doc(booking.unit_id)
+        .get();
+      const unitData = unitDoc.data();
 
       // Fetch owner details
       const ownerId = propertyData?.owner_id;
@@ -538,14 +554,20 @@ export const onBookingStatusChange = onDocumentUpdated(
 
         try {
           // Fetch unit and property details
-          const unitDoc = await db.collection("units").doc(after.unit_id).get();
-          const unitData = unitDoc.data();
-
+          // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
           const propertyDoc = await db
             .collection("properties")
             .doc(after.property_id)
             .get();
           const propertyData = propertyDoc.data();
+
+          const unitDoc = await db
+            .collection("properties")
+            .doc(after.property_id)
+            .collection("units")
+            .doc(after.unit_id)
+            .get();
+          const unitData = unitDoc.data();
 
           // Send booking rejected email to guest
           await sendBookingRejectedEmail(

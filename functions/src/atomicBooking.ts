@@ -92,8 +92,14 @@ export const createBookingAtomic = onCall(async (request) => {
 
     // ========================================================================
     // STEP 1.5: Validate guest count against unit's max_guests
+    // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
     // ========================================================================
-    const unitDoc = await db.collection("units").doc(unitId).get();
+    const unitDoc = await db
+      .collection("properties")
+      .doc(propertyId)
+      .collection("units")
+      .doc(unitId)
+      .get();
     if (!unitDoc.exists) {
       throw new HttpsError("not-found", "Unit not found");
     }
@@ -263,7 +269,12 @@ export const createBookingAtomic = onCall(async (request) => {
         }
 
         // Validate unit's base minStayNights
-        const unitDocRef = db.collection("units").doc(unitId);
+        // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
+        const unitDocRef = db
+          .collection("properties")
+          .doc(propertyId)
+          .collection("units")
+          .doc(unitId);
         const unitSnapshot = await transaction.get(unitDocRef);
 
         if (unitSnapshot.exists) {
@@ -579,8 +590,13 @@ export const createBookingAtomic = onCall(async (request) => {
 
       // ====================================================================
       // STEP 2.6: Validate unit's base minStayNights (if not overridden by daily_prices)
+      // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
       // ====================================================================
-      const unitDocRef = db.collection("units").doc(unitId);
+      const unitDocRef = db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("units")
+        .doc(unitId);
       const unitSnapshot = await transaction.get(unitDocRef);
 
       if (unitSnapshot.exists) {
@@ -676,10 +692,16 @@ export const createBookingAtomic = onCall(async (request) => {
     // Send emails for ALL payment methods (not just bank_transfer)
     try {
       // Fetch property and unit data for email
+      // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
       const propertyDoc =
         await db.collection("properties").doc(propertyId).get();
       const unitDoc =
-        await db.collection("units").doc(unitId).get();
+        await db
+          .collection("properties")
+          .doc(propertyId)
+          .collection("units")
+          .doc(unitId)
+          .get();
       const propertyData = propertyDoc.data();
       const unitData = unitDoc.data();
 

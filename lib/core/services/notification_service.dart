@@ -87,6 +87,7 @@ class NotificationService {
   }
 
   /// Mark all notifications as read for owner
+  /// Note: Handles Firestore batch limit of 500 operations
   Future<void> markAllAsRead(String ownerId) async {
     try {
       final snapshot = await _firestore
@@ -95,13 +96,21 @@ class NotificationService {
           .where('isRead', isEqualTo: false)
           .get();
 
-      final batch = _firestore.batch();
+      // Firestore batch limit is 500 operations
+      const batchLimit = 500;
+      final docs = snapshot.docs;
 
-      for (final doc in snapshot.docs) {
-        batch.update(doc.reference, {'isRead': true});
+      // Process in chunks to avoid batch limit
+      for (var i = 0; i < docs.length; i += batchLimit) {
+        final batch = _firestore.batch();
+        final end = (i + batchLimit < docs.length) ? i + batchLimit : docs.length;
+
+        for (var j = i; j < end; j++) {
+          batch.update(docs[j].reference, {'isRead': true});
+        }
+
+        await batch.commit();
       }
-
-      await batch.commit();
     } catch (e) {
       throw Exception('Failed to mark all notifications as read: $e');
     }
@@ -117,6 +126,7 @@ class NotificationService {
   }
 
   /// Delete all notifications for owner
+  /// Note: Handles Firestore batch limit of 500 operations
   Future<void> deleteAllNotifications(String ownerId) async {
     try {
       final snapshot = await _firestore
@@ -124,13 +134,21 @@ class NotificationService {
           .where('ownerId', isEqualTo: ownerId)
           .get();
 
-      final batch = _firestore.batch();
+      // Firestore batch limit is 500 operations
+      const batchLimit = 500;
+      final docs = snapshot.docs;
 
-      for (final doc in snapshot.docs) {
-        batch.delete(doc.reference);
+      // Process in chunks to avoid batch limit
+      for (var i = 0; i < docs.length; i += batchLimit) {
+        final batch = _firestore.batch();
+        final end = (i + batchLimit < docs.length) ? i + batchLimit : docs.length;
+
+        for (var j = i; j < end; j++) {
+          batch.delete(docs[j].reference);
+        }
+
+        await batch.commit();
       }
-
-      await batch.commit();
     } catch (e) {
       throw Exception('Failed to delete all notifications: $e');
     }

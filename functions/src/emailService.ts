@@ -773,7 +773,7 @@ export async function sendBookingCancellationEmail(
         <div class="alert-icon">ℹ️</div>
         <div class="alert-content">
           <p class="alert-title">Razlog otkazivanja</p>
-          <p class="alert-text">${reason}</p>
+          <p class="alert-text">${escapeHtml(reason)}</p>
         </div>
       </div>
 
@@ -1271,7 +1271,7 @@ export async function sendBookingRejectedEmail(
         <div class="alert-icon">ℹ️</div>
         <div class="alert-content">
           <p class="alert-title">Razlog odbijanja</p>
-          <p class="alert-text">${reason}</p>
+          <p class="alert-text">${escapeHtml(reason)}</p>
         </div>
       </div>
       ` : ""}

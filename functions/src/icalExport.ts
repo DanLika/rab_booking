@@ -1,6 +1,33 @@
 import {onRequest} from "firebase-functions/v2/https";
+import * as crypto from "crypto";
 import {admin} from "./firebase";
 import {logInfo, logError} from "./logger";
+
+/**
+ * Verify iCal export token using timing-safe comparison
+ * SECURITY: Prevents timing attacks when comparing tokens
+ */
+function verifyIcalToken(providedToken: string, storedToken: string): boolean {
+  // Ensure both are strings and have reasonable length
+  if (typeof providedToken !== "string" || typeof storedToken !== "string") {
+    return false;
+  }
+
+  // Use Buffer comparison for timing-safe check
+  // Pad to same length to prevent length-based timing attacks
+  const maxLength = Math.max(providedToken.length, storedToken.length);
+  const paddedProvided = providedToken.padEnd(maxLength, "\0");
+  const paddedStored = storedToken.padEnd(maxLength, "\0");
+
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(paddedProvided, "utf8"),
+      Buffer.from(paddedStored, "utf8")
+    );
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Public iCal Feed Endpoint
@@ -72,8 +99,8 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       return;
     }
 
-    // Verify token
-    if (widgetSettings.ical_export_token !== token) {
+    // Verify token using timing-safe comparison (prevents timing attacks)
+    if (!verifyIcalToken(token, widgetSettings.ical_export_token || "")) {
       logError("[iCal Feed] Invalid token", {propertyId, unitId});
       response.status(403).send("Invalid token");
       return;

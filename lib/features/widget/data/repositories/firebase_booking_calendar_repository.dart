@@ -464,12 +464,13 @@ class FirebaseBookingCalendarRepository {
     // FIX: iCal events should also show split days (check-in/check-out)
     if (icalEvents != null) {
       for (final event in icalEvents) {
-        final checkIn = DateTime(
+        // Bug #65 Fix: Use UTC for DST-safe date handling (consistent with calendar keys)
+        final checkIn = DateTime.utc(
           event['start_date'].year,
           event['start_date'].month,
           event['start_date'].day,
         );
-        final checkOut = DateTime(
+        final checkOut = DateTime.utc(
           event['end_date'].year,
           event['end_date'].month,
           event['end_date'].day,

@@ -54,7 +54,7 @@ class DetailsReferenceCard extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: TypographyTokens.fontSizeXXL,
                     fontWeight: TypographyTokens.bold,
-                    color: colors.primary,
+                    color: colors.textPrimary, // Minimalist: use text color instead of primary
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -66,7 +66,7 @@ class DetailsReferenceCard extends StatelessWidget {
                       ClipboardData(text: bookingReference),
                     );
                   },
-                  color: colors.primary,
+                  color: colors.textSecondary, // Minimalist: subtle color
                   tooltip: 'Copy reference',
                 ),
               ],

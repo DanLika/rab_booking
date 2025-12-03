@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/enums.dart';
 import '../../core/utils/geopoint_converter.dart';
 import '../../core/utils/timestamp_converter.dart';
+import 'property_branding_model.dart';
 
 part 'property_model.freezed.dart';
 part 'property_model.g.dart';
@@ -22,6 +23,18 @@ class PropertyModel with _$PropertyModel {
 
     /// URL-friendly slug (e.g., "villa-marija")
     String? slug,
+
+    /// Unique subdomain for widget URLs (e.g., "jasko-rab")
+    /// Used for email links: {subdomain}.rabbooking.com/view?ref=XXX
+    /// Must be unique across all properties, validated by Cloud Function
+    String? subdomain,
+
+    /// Custom branding configuration for widget appearance
+    PropertyBranding? branding,
+
+    /// Custom domain for enterprise clients (e.g., "booking.villamarija.com")
+    /// Reserved for future implementation
+    @JsonKey(name: 'custom_domain') String? customDomain,
 
     /// Detailed description
     required String description,
@@ -157,4 +170,20 @@ class PropertyModel with _$PropertyModel {
 
   /// Check if property has complete info (for quick info display)
   bool get hasCompleteInfo => maxGuests != null && bedrooms != null && bathrooms != null;
+
+  /// Check if property has a subdomain configured
+  bool get hasSubdomain => subdomain != null && subdomain!.isNotEmpty;
+
+  /// Check if property has custom branding
+  bool get hasCustomBranding => branding != null && branding!.hasCustomBranding;
+
+  /// Get display name (branding display name or property name)
+  String get displayName => branding?.displayName ?? name;
+
+  /// Get subdomain URL for widget (for testing without custom domain)
+  /// Returns: widget.web.app/view?subdomain=xxx&ref=...
+  String? getSubdomainTestUrl(String baseUrl) {
+    if (!hasSubdomain) return null;
+    return '$baseUrl?subdomain=$subdomain';
+  }
 }

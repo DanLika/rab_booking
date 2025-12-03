@@ -74,7 +74,16 @@
       "Bash(stripe events resend:*)",
       "Bash(stripe webhook_endpoints delete:*)",
       "SlashCommand(/misc:feature-plan ultrathink)",
-      "SlashCommand(/misc:code-explain)"
+      "SlashCommand(/misc:code-explain)",
+      "Bash(python3:*)",
+      "mcp__firebase__firebase_get_environment",
+      "mcp__context7__get-library-docs",
+      "WebFetch(domain:rab-booking-widget.web.app)",
+      "SlashCommand(/misc:code-explain ultrathink)",
+      "mcp__firebase__firebase_get_project",
+      "mcp__firebase__firebase_list_apps",
+      "WebFetch(domain:console.firebase.google.com)",
+      "Bash(grep:*)"
     ],
     "deny": [
       "Read(.env)",

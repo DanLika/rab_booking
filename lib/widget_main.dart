@@ -1,8 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
-import 'core/config/router_owner.dart';
+import 'core/config/router_widget.dart';
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'features/widget/domain/models/widget_config.dart';
@@ -28,6 +29,11 @@ import 'firebase_options.dart';
 /// <iframe src="https://rab-booking-widget.web.app/?unit=UNIT_ID"
 ///         width="100%" height="900px" frameborder="0"></iframe>
 void main() async {
+  // Use path-based URL strategy (clean URLs without #)
+  // This allows email links like /view?ref=XXX to work correctly
+  // Firebase hosting rewrites are already configured to support this
+  usePathUrlStrategy();
+
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
@@ -43,7 +49,7 @@ class BookingWidgetApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Use minimal widget router (NO auth, NO owner dashboard routes)
-    final router = ref.watch(ownerRouterProvider);
+    final router = ref.watch(widgetRouterProvider);
 
     // Get widget config from URL parameters
     final widgetConfig = ref.watch(widgetConfigProvider);

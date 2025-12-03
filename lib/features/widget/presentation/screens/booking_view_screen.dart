@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/theme_provider.dart';
 import '../providers/booking_lookup_provider.dart';
+import '../providers/subdomain_provider.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../shared/providers/repository_providers.dart';
+import '../../domain/services/subdomain_service.dart';
+import 'subdomain_not_found_screen.dart';
 
 /// Booking View Screen (Auto-lookup from URL params)
 /// Automatically fetches booking using ref, email, token from query params
@@ -29,11 +32,41 @@ class BookingViewScreen extends ConsumerStatefulWidget {
 class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
   bool _isLoading = true;
   String? _errorMessage;
+  SubdomainContext? _subdomainContext;
+  bool _subdomainNotFound = false;
 
   @override
   void initState() {
     super.initState();
-    _autoLookupBooking();
+    _resolveSubdomainAndLookupBooking();
+  }
+
+  Future<void> _resolveSubdomainAndLookupBooking() async {
+    // Step 1: Check for subdomain in URL
+    final subdomainService = ref.read(subdomainServiceProvider);
+    final context = await subdomainService.resolveCurrentContext();
+
+    if (context != null && !context.found) {
+      // Subdomain was present but property not found
+      if (mounted) {
+        setState(() {
+          _subdomainNotFound = true;
+          _subdomainContext = context;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
+    // Store context for branding (may be null if no subdomain)
+    if (mounted) {
+      setState(() {
+        _subdomainContext = context;
+      });
+    }
+
+    // Step 2: Proceed with booking lookup
+    await _autoLookupBooking();
   }
 
   Future<void> _autoLookupBooking() async {
@@ -95,6 +128,13 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+
+    // Show SubdomainNotFoundScreen if subdomain was present but not found
+    if (_subdomainNotFound && _subdomainContext != null) {
+      return SubdomainNotFoundScreen(
+        subdomain: _subdomainContext!.subdomain,
+      );
+    }
 
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,

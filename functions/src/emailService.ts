@@ -1,5 +1,8 @@
 import {Resend} from "resend";
-import {logError, logSuccess} from "./logger";
+import * as admin from "firebase-admin";
+import {logError, logSuccess, logInfo} from "./logger";
+
+const db = admin.firestore();
 
 // Lazy initialize Resend (to avoid deployment errors)
 let resend: Resend | null = null;
@@ -28,6 +31,65 @@ const FROM_NAME = "Rab Booking";
 // NOTE: This should be the deployed widget URL where guests can view their bookings
 // The /view route exists at: WIDGET_URL/view?ref=BOOKING_REF&email=EMAIL&token=TOKEN
 const WIDGET_URL = process.env.WIDGET_URL || "https://rab-booking-widget.web.app";
+
+// Optional: Custom booking domain (set when domain is purchased)
+// When set, links will use: {subdomain}.{BOOKING_DOMAIN}/view?ref=XXX
+// When not set, links will use: WIDGET_URL/view?subdomain=XXX&ref=XXX
+const BOOKING_DOMAIN = process.env.BOOKING_DOMAIN || null;
+
+/**
+ * Generate view booking URL with subdomain support
+ *
+ * If BOOKING_DOMAIN is configured (production):
+ *   Returns: https://{subdomain}.{BOOKING_DOMAIN}/view?ref=XXX&email=XXX&token=XXX
+ *
+ * If BOOKING_DOMAIN is not set (testing/development):
+ *   Returns: https://widget.web.app/view?subdomain=XXX&ref=XXX&email=XXX&token=XXX
+ *
+ * If subdomain is not set:
+ *   Returns: https://widget.web.app/view?ref=XXX&email=XXX&token=XXX (fallback)
+ */
+async function generateViewBookingUrl(
+  bookingReference: string,
+  guestEmail: string,
+  accessToken: string,
+  propertyId?: string
+): Promise<string> {
+  const params = new URLSearchParams();
+  params.set("ref", bookingReference);
+  params.set("email", guestEmail);
+  params.set("token", accessToken);
+
+  // Try to get subdomain from property
+  let subdomain: string | null = null;
+  if (propertyId) {
+    try {
+      const propertyDoc = await db.collection("properties").doc(propertyId).get();
+      if (propertyDoc.exists) {
+        subdomain = propertyDoc.data()?.subdomain || null;
+      }
+    } catch (error) {
+      logError("Failed to fetch property subdomain for email", error);
+    }
+  }
+
+  // Generate URL based on configuration
+  if (subdomain) {
+    if (BOOKING_DOMAIN) {
+      // Production: subdomain.domain.com/view?ref=XXX
+      logInfo("Generating production subdomain URL", {subdomain, domain: BOOKING_DOMAIN});
+      return `https://${subdomain}.${BOOKING_DOMAIN}/view?${params.toString()}`;
+    } else {
+      // Testing: widget.web.app/view?subdomain=XXX&ref=XXX
+      params.set("subdomain", subdomain);
+      logInfo("Generating test subdomain URL", {subdomain});
+      return `${WIDGET_URL}/view?${params.toString()}`;
+    }
+  }
+
+  // Fallback: no subdomain
+  return `${WIDGET_URL}/view?${params.toString()}`;
+}
 
 // ============================================================================
 // UNIFIED EMAIL DESIGN SYSTEM - Minimalist Theme
@@ -245,9 +307,18 @@ export async function sendBookingConfirmationEmail(
   unitName: string,
   propertyName: string,
   accessToken: string,
-  ownerEmail?: string
+  ownerEmail?: string,
+  propertyId?: string
 ): Promise<void> {
   const subject = `Potvrda rezervacije - ${bookingReference}`;
+
+  // Generate view booking URL with subdomain support
+  const viewBookingUrl = await generateViewBookingUrl(
+    bookingReference,
+    guestEmail,
+    accessToken,
+    propertyId
+  );
 
   const html = `
 <!DOCTYPE html>
@@ -322,7 +393,7 @@ export async function sendBookingConfirmationEmail(
       <p>Kada primimo vašu uplatu, poslat ćemo vam email s potvrdom.</p>
 
       <div class="button-container">
-        <a href="${WIDGET_URL}/view?ref=${encodeURIComponent(bookingReference)}&email=${encodeURIComponent(guestEmail)}&token=${encodeURIComponent(accessToken)}" class="button">
+        <a href="${viewBookingUrl}" class="button">
           📋 Pregledaj moju rezervaciju
         </a>
       </div>
@@ -375,14 +446,23 @@ export async function sendBookingApprovedEmail(
   ownerEmail?: string,
   accessToken?: string,
   totalAmount?: number,
-  depositAmount?: number
+  depositAmount?: number,
+  propertyId?: string
 ): Promise<void> {
   const subject = `Rezervacija potvrđena - ${bookingReference}`;
 
+  // Generate view booking URL with subdomain support
+  const viewBookingUrl = accessToken ? await generateViewBookingUrl(
+    bookingReference,
+    guestEmail,
+    accessToken,
+    propertyId
+  ) : null;
+
   // Build the "View my reservation" button HTML if token is provided
-  const viewBookingButton = accessToken ? `
+  const viewBookingButton = viewBookingUrl ? `
       <div class="button-container">
-        <a href="${WIDGET_URL}/view?ref=${encodeURIComponent(bookingReference)}&email=${encodeURIComponent(guestEmail)}&token=${encodeURIComponent(accessToken)}" class="button">
+        <a href="${viewBookingUrl}" class="button">
           📋 Pregledaj moju rezervaciju
         </a>
       </div>

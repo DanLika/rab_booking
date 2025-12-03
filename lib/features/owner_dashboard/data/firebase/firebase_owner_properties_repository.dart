@@ -142,6 +142,7 @@ class FirebaseOwnerPropertiesRepository {
     required String propertyType,
     required String location,
     String? slug,
+    String? subdomain,
     String? address,
     double? latitude,
     double? longitude,
@@ -155,6 +156,7 @@ class FirebaseOwnerPropertiesRepository {
         'owner_id': ownerId,
         'name': name,
         'slug': slug,
+        'subdomain': subdomain,
         'description': description,
         'property_type': propertyType,
         'location': location,
@@ -184,6 +186,7 @@ class FirebaseOwnerPropertiesRepository {
     required String propertyId,
     String? name,
     String? slug,
+    String? subdomain,
     String? description,
     String? propertyType,
     String? location,
@@ -199,6 +202,7 @@ class FirebaseOwnerPropertiesRepository {
       final updates = <String, dynamic>{};
       if (name != null) updates['name'] = name;
       if (slug != null) updates['slug'] = slug;
+      if (subdomain != null) updates['subdomain'] = subdomain;
       if (description != null) updates['description'] = description;
       if (propertyType != null) updates['property_type'] = propertyType;
       if (location != null) {

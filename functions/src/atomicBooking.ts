@@ -710,7 +710,8 @@ export const createBookingAtomic = onCall(async (request) => {
           unitData?.name || "Unit",
           propertyData?.name || "Property",
           result.accessToken, // Plaintext token for email link
-          propertyData?.contact_email
+          propertyData?.contact_email,
+          propertyId // For subdomain in email links
         );
 
         logSuccess("[AtomicBooking] Booking confirmation email sent to guest", {

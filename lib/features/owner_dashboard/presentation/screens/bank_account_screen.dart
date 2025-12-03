@@ -101,6 +101,9 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
           .read(userProfileNotifierProvider.notifier)
           .updateCompany(userId, updatedCompany);
 
+      // Invalidate provider to refresh UI with new data
+      ref.invalidate(userDataProvider);
+
       if (mounted) {
         setState(() {
           _isDirty = false;

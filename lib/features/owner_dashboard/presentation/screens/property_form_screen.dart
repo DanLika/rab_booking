@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:typed_data';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -30,6 +32,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _slugController = TextEditingController();
+  final _subdomainController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
   final _addressController = TextEditingController();
@@ -41,6 +44,14 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
   bool _isPublished = false;
   bool _isLoading = false;
   bool _isManualSlugEdit = false;
+
+  // Subdomain state
+  bool _isManualSubdomainEdit = false;
+  bool _isCheckingSubdomain = false;
+  bool? _isSubdomainAvailable;
+  String? _subdomainError;
+  String? _subdomainSuggestion;
+  Timer? _subdomainDebounceTimer;
 
   bool get _isEditing => widget.property != null;
 
@@ -56,6 +67,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
     final property = widget.property!;
     _nameController.text = property.name;
     _slugController.text = property.slug ?? generateSlug(property.name);
+    _subdomainController.text = property.subdomain ?? '';
     _descriptionController.text = property.description;
     _selectedType = property.propertyType;
     _locationController.text = property.location;
@@ -64,21 +76,146 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
     _existingImages = property.images.toList();
     _isPublished = property.isActive;
     _isManualSlugEdit = property.slug != null;
+    _isManualSubdomainEdit = property.subdomain != null && property.subdomain!.isNotEmpty;
+
+    // Check existing subdomain availability (should be valid, but good UX feedback)
+    if (_subdomainController.text.isNotEmpty) {
+      _checkSubdomainAvailability(_subdomainController.text);
+    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _slugController.dispose();
+    _subdomainController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
     _addressController.dispose();
+    _subdomainDebounceTimer?.cancel();
     super.dispose();
   }
 
   void _autoGenerateSlug() {
     if (!_isManualSlugEdit && _nameController.text.isNotEmpty) {
       _slugController.text = generateSlug(_nameController.text);
+    }
+  }
+
+  /// Auto-generate subdomain from property name (with debounce)
+  void _autoGenerateSubdomain() {
+    if (!_isManualSubdomainEdit && _nameController.text.isNotEmpty) {
+      _generateSubdomainFromName(_nameController.text);
+    }
+  }
+
+  /// Generate subdomain from name using Cloud Function
+  Future<void> _generateSubdomainFromName(String propertyName) async {
+    if (propertyName.isEmpty) return;
+
+    setState(() {
+      _isCheckingSubdomain = true;
+      _isSubdomainAvailable = null;
+      _subdomainError = null;
+      _subdomainSuggestion = null;
+    });
+
+    try {
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('generateSubdomainFromName');
+      final result = await callable.call<Map<String, dynamic>>({
+        'propertyName': propertyName,
+        'propertyId': _isEditing ? widget.property!.id : null,
+      });
+
+      if (mounted) {
+        final data = result.data;
+        final generatedSubdomain = data['subdomain'] as String;
+
+        setState(() {
+          _subdomainController.text = generatedSubdomain;
+          _isCheckingSubdomain = false;
+          _isSubdomainAvailable = true;
+          _subdomainError = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isCheckingSubdomain = false;
+          _subdomainError = 'Greška pri generiranju: ${e.toString().replaceFirst('Exception: ', '')}';
+        });
+      }
+    }
+  }
+
+  /// Check subdomain availability with debounce
+  void _onSubdomainChanged(String value) {
+    _subdomainDebounceTimer?.cancel();
+
+    if (value.isEmpty) {
+      setState(() {
+        _isSubdomainAvailable = null;
+        _subdomainError = null;
+        _subdomainSuggestion = null;
+        _isCheckingSubdomain = false;
+      });
+      return;
+    }
+
+    // Mark as manual edit
+    setState(() {
+      _isManualSubdomainEdit = true;
+      _isCheckingSubdomain = true;
+      _isSubdomainAvailable = null;
+    });
+
+    // Debounce the availability check (500ms)
+    _subdomainDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _checkSubdomainAvailability(value);
+    });
+  }
+
+  /// Check subdomain availability using Cloud Function
+  Future<void> _checkSubdomainAvailability(String subdomain) async {
+    if (subdomain.isEmpty) return;
+
+    try {
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('checkSubdomainAvailability');
+      final result = await callable.call<Map<String, dynamic>>({
+        'subdomain': subdomain,
+        'propertyId': _isEditing ? widget.property!.id : null,
+      });
+
+      if (mounted) {
+        final data = result.data;
+        setState(() {
+          _isCheckingSubdomain = false;
+          _isSubdomainAvailable = data['available'] as bool;
+          _subdomainError = data['error'] as String?;
+          _subdomainSuggestion = data['suggestion'] as String?;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isCheckingSubdomain = false;
+          _isSubdomainAvailable = false;
+          _subdomainError = 'Greška pri provjeri: ${e.toString().replaceFirst('Exception: ', '')}';
+        });
+      }
+    }
+  }
+
+  /// Apply suggested subdomain
+  void _applySuggestion() {
+    if (_subdomainSuggestion != null) {
+      setState(() {
+        _subdomainController.text = _subdomainSuggestion!;
+        _isManualSubdomainEdit = true;
+      });
+      _checkSubdomainAvailability(_subdomainSuggestion!);
     }
   }
 
@@ -142,7 +279,10 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                   }
                                   return null;
                                 },
-                                onChanged: (value) => _autoGenerateSlug(),
+                                onChanged: (value) {
+                                  _autoGenerateSlug();
+                                  _autoGenerateSubdomain();
+                                },
                               ),
                               const SizedBox(height: AppDimensions.spaceM),
                               // URL Slug
@@ -180,6 +320,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                   }
                                 },
                               ),
+                              const SizedBox(height: AppDimensions.spaceM),
+                              // Subdomain
+                              _buildSubdomainField(isMobile),
                             ],
                           );
                         }
@@ -204,7 +347,10 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                                   }
                                   return null;
                                 },
-                                onChanged: (value) => _autoGenerateSlug(),
+                                onChanged: (value) {
+                                  _autoGenerateSlug();
+                                  _autoGenerateSubdomain();
+                                },
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -249,6 +395,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                         );
                       },
                     ),
+                    const SizedBox(height: AppDimensions.spaceM),
+                    // Subdomain field (full width)
+                    _buildSubdomainField(isMobile),
                     const SizedBox(height: AppDimensions.spaceM),
                     // Property Type
                     DropdownButtonFormField<PropertyType>(
@@ -579,6 +728,167 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Build the subdomain input field with availability indicator
+  Widget _buildSubdomainField(bool isMobile) {
+    final theme = Theme.of(context);
+
+    // Determine suffix icon based on state
+    Widget? suffixIcon;
+    if (_isCheckingSubdomain) {
+      suffixIcon = const SizedBox(
+        width: 20,
+        height: 20,
+        child: Padding(
+          padding: EdgeInsets.all(2),
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    } else if (_isSubdomainAvailable == true) {
+      suffixIcon = Icon(Icons.check_circle, color: theme.colorScheme.primary);
+    } else if (_isSubdomainAvailable == false) {
+      suffixIcon = Icon(Icons.error, color: theme.colorScheme.error);
+    } else {
+      suffixIcon = IconButton(
+        icon: const Icon(Icons.auto_fix_high),
+        tooltip: 'Generiši iz naziva',
+        onPressed: () {
+          setState(() => _isManualSubdomainEdit = false);
+          _autoGenerateSubdomain();
+        },
+      );
+    }
+
+    // Build helper text with suggestion
+    String? helperText = 'URL za email linkove: {subdomain}.rabbooking.com';
+    if (_subdomainSuggestion != null && _isSubdomainAvailable == false) {
+      helperText = null; // We'll show error + suggestion separately
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          controller: _subdomainController,
+          decoration: InputDecorationHelper.buildDecoration(
+            labelText: 'Subdomena (za email linkove)',
+            hintText: 'npr. villa-mediteran',
+            helperText: helperText,
+            isMobile: isMobile,
+            suffixIcon: suffixIcon,
+            prefixIcon: const Icon(Icons.link),
+            context: context,
+          ),
+          onChanged: _onSubdomainChanged,
+        ),
+        // Show error and suggestion if subdomain is not available
+        if (_subdomainError != null && !_isCheckingSubdomain) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: theme.colorScheme.error.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: theme.colorScheme.error,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _subdomainError!,
+                        style: TextStyle(
+                          color: theme.colorScheme.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (_subdomainSuggestion != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Text(
+                        'Predlog: ',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                      InkWell(
+                        onTap: _applySuggestion,
+                        borderRadius: BorderRadius.circular(4),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            _subdomainSuggestion!,
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton.icon(
+                        onPressed: _applySuggestion,
+                        icon: const Icon(Icons.check, size: 16),
+                        label: const Text('Koristi'),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+        // Show success message when available
+        if (_isSubdomainAvailable == true && !_isCheckingSubdomain && _subdomainController.text.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                color: theme.colorScheme.primary,
+                size: 14,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Subdomena je dostupna',
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 
@@ -1003,11 +1313,17 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
 
       final allImages = [..._existingImages, ...uploadedImageUrls];
 
+      // Get subdomain value (only if available or empty string)
+      final subdomainValue = _subdomainController.text.trim().isEmpty
+          ? null
+          : _subdomainController.text.trim().toLowerCase();
+
       if (_isEditing) {
         await repository.updateProperty(
           propertyId: widget.property!.id,
           name: _nameController.text,
           slug: _slugController.text,
+          subdomain: subdomainValue,
           description: _descriptionController.text,
           propertyType: _selectedType.value,
           location: _locationController.text,
@@ -1024,6 +1340,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           ownerId: ownerId,
           name: _nameController.text,
           slug: _slugController.text,
+          subdomain: subdomainValue,
           description: _descriptionController.text,
           propertyType: _selectedType.value,
           location: _locationController.text,

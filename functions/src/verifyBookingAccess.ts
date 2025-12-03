@@ -143,7 +143,10 @@ export const verifyBookingAccess = onCall(async (request) => {
       checkIn: booking.check_in.toDate().toISOString(),
       checkOut: booking.check_out.toDate().toISOString(),
       nights: nights,
-      guestCount: booking.guest_count || {adults: 1, children: 0},
+      // Handle both formats: int (legacy) or object {adults, children}
+      guestCount: typeof booking.guest_count === "number"
+        ? {adults: booking.guest_count, children: 0}
+        : (booking.guest_count || {adults: 1, children: 0}),
       totalPrice: booking.total_price,
       depositAmount: booking.deposit_amount || booking.advance_amount || 0,
       remainingAmount: booking.remaining_amount || 0,

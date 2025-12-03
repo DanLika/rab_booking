@@ -18,7 +18,11 @@ import '../widgets/details/cancellation_policy_card.dart';
 import '../widgets/details/booking_notes_card.dart';
 
 /// Booking Details Screen
-/// Displays complete booking information for guest
+/// Displays complete booking information for guest (accessed from email link)
+///
+/// This screen is separate from BookingConfirmationScreen which shows
+/// immediately after booking is created. This screen is for guests
+/// returning to view/manage their booking.
 class BookingDetailsScreen extends ConsumerStatefulWidget {
   final BookingDetailsModel booking;
   final WidgetSettings? widgetSettings;
@@ -39,14 +43,19 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
 
   /// Check if booking can be cancelled based on cancellation deadline
   bool _canCancelBooking() {
-    if (widget.widgetSettings == null ||
-        !widget.widgetSettings!.allowGuestCancellation) {
-      return false;
-    }
-
     // Only confirmed, approved, or pending bookings can be cancelled
     final status = widget.booking.status.toLowerCase();
     if (status != 'confirmed' && status != 'pending' && status != 'approved') {
+      return false;
+    }
+
+    // If widget settings not available, allow cancellation (owner can decide)
+    if (widget.widgetSettings == null) {
+      return true;
+    }
+
+    // Check if guest cancellation is enabled
+    if (!widget.widgetSettings!.allowGuestCancellation) {
       return false;
     }
 
@@ -58,6 +67,34 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
     final hoursUntilCheckIn = checkInDate.difference(now).inHours;
 
     return hoursUntilCheckIn >= deadlineHours;
+  }
+
+  /// Get reason why booking cannot be cancelled (for tooltip)
+  String? _getCancelDisabledReason() {
+    final status = widget.booking.status.toLowerCase();
+    if (status == 'cancelled') {
+      return 'This booking is already cancelled';
+    }
+    if (status != 'confirmed' && status != 'pending' && status != 'approved') {
+      return 'This booking cannot be cancelled';
+    }
+
+    if (widget.widgetSettings != null &&
+        !widget.widgetSettings!.allowGuestCancellation) {
+      return 'Guest cancellation is not enabled for this property';
+    }
+
+    final deadlineHours =
+        widget.widgetSettings?.cancellationDeadlineHours ?? 48;
+    final checkInDate = DateTime.parse(widget.booking.checkIn);
+    final now = DateTime.now();
+    final hoursUntilCheckIn = checkInDate.difference(now).inHours;
+
+    if (hoursUntilCheckIn < deadlineHours) {
+      return 'Cancellation deadline has passed ($deadlineHours hours before check-in)';
+    }
+
+    return null;
   }
 
   /// Handle booking cancellation
@@ -97,10 +134,11 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
           duration: const Duration(seconds: 5),
         );
 
-        // Navigate back after short delay
+        // Reload page to show updated status
         await Future.delayed(const Duration(seconds: 2));
         if (mounted) {
-          Navigator.of(context).pop();
+          // Just rebuild to show cancelled state
+          setState(() => _isCancelling = false);
         }
       }
     } catch (e) {
@@ -115,54 +153,20 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
     }
   }
 
-  void _showContactDialog(BuildContext context, WidgetColorScheme colors) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Contact Property Owner',
-          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (widget.booking.ownerEmail != null)
-              ListTile(
-                leading: const Icon(Icons.email),
-                title: const Text('Send Email'),
-                subtitle: Text(widget.booking.ownerEmail!),
-                onTap: () => Navigator.pop(context),
-              ),
-            if (widget.booking.ownerPhone != null)
-              ListTile(
-                leading: const Icon(Icons.phone),
-                title: const Text('Call'),
-                subtitle: Text(widget.booking.ownerPhone!),
-                onTap: () => Navigator.pop(context),
-              ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-    final isMobile = ResponsiveHelper.isMobile(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 900;
+    final isTablet = screenWidth >= 600 && screenWidth < 900;
 
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,
+      // AppBar without back button (no navigation from email link)
       appBar: AppBar(
         title: Text(
-          'Booking Details',
+          'My Booking',
           style: GoogleFonts.inter(
             color: colors.textPrimary,
             fontWeight: FontWeight.w600,
@@ -170,170 +174,262 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> {
         ),
         backgroundColor: colors.backgroundPrimary,
         elevation: 0,
-        iconTheme: IconThemeData(color: colors.textPrimary),
+        automaticallyImplyLeading: false, // No back button
+        centerTitle: true,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            constraints: BoxConstraints(
-              maxWidth: isMobile ? double.infinity : 700,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              padding: EdgeInsets.all(isDesktop ? 32 : (isTablet ? 24 : 16)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Status banner - full width
+                  BookingStatusBanner(
+                    status: widget.booking.status,
+                    colors: colors,
+                  ),
+
+                  const SizedBox(height: SpacingTokens.l),
+
+                  // Booking reference - full width, prominent
+                  DetailsReferenceCard(
+                    bookingReference: widget.booking.bookingReference,
+                    colors: colors,
+                  ),
+
+                  const SizedBox(height: SpacingTokens.l),
+
+                  // Responsive grid: 2 columns on desktop, 1 on mobile
+                  if (isDesktop || isTablet)
+                    _buildDesktopLayout(colors)
+                  else
+                    _buildMobileLayout(colors),
+
+                  const SizedBox(height: SpacingTokens.l),
+
+                  // Action buttons - full width
+                  _buildActionButtons(colors),
+                ],
+              ),
             ),
-            padding: EdgeInsets.all(isMobile ? 16 : 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Status banner
-                BookingStatusBanner(
-                  status: widget.booking.status,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Desktop/Tablet layout with 2 columns
+  Widget _buildDesktopLayout(WidgetColorScheme colors) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left column - Property & Dates
+        Expanded(
+          child: Column(
+            children: [
+              PropertyInfoCard(
+                propertyName: widget.booking.propertyName,
+                unitName: widget.booking.unitName,
+                colors: colors,
+              ),
+              const SizedBox(height: SpacingTokens.m),
+              BookingDatesCard(
+                checkIn: widget.booking.checkIn,
+                checkOut: widget.booking.checkOut,
+                nights: widget.booking.nights,
+                adults: widget.booking.guestCount.adults,
+                children: widget.booking.guestCount.children,
+                colors: colors,
+              ),
+              // Notes (if any)
+              if (widget.booking.notes != null &&
+                  widget.booking.notes!.isNotEmpty) ...[
+                const SizedBox(height: SpacingTokens.m),
+                BookingNotesCard(
+                  notes: widget.booking.notes!,
                   colors: colors,
                 ),
-
-                const SizedBox(height: SpacingTokens.l),
-
-                // Booking reference card
-                DetailsReferenceCard(
-                  bookingReference: widget.booking.bookingReference,
-                  colors: colors,
-                ),
-
-                const SizedBox(height: SpacingTokens.m),
-
-                // Property & Unit info
-                PropertyInfoCard(
-                  propertyName: widget.booking.propertyName,
-                  unitName: widget.booking.unitName,
-                  colors: colors,
-                ),
-
-                const SizedBox(height: SpacingTokens.m),
-
-                // Dates & Guest info
-                BookingDatesCard(
-                  checkIn: widget.booking.checkIn,
-                  checkOut: widget.booking.checkOut,
-                  nights: widget.booking.nights,
-                  adults: widget.booking.guestCount.adults,
-                  children: widget.booking.guestCount.children,
-                  colors: colors,
-                ),
-
-                const SizedBox(height: SpacingTokens.m),
-
-                // Payment info
-                PaymentInfoCard(
-                  totalPrice: widget.booking.totalPrice,
-                  depositAmount: widget.booking.depositAmount,
-                  paidAmount: widget.booking.paidAmount,
-                  remainingAmount: widget.booking.remainingAmount,
-                  paymentStatus: widget.booking.paymentStatus,
-                  paymentMethod: widget.booking.paymentMethod,
-                  paymentDeadline: widget.booking.paymentDeadline,
-                  colors: colors,
-                ),
-
-                const SizedBox(height: SpacingTokens.m),
-
-                // Contact info
-                if (widget.booking.ownerEmail != null ||
-                    widget.booking.ownerPhone != null)
-                  ContactOwnerCard(
-                    ownerEmail: widget.booking.ownerEmail,
-                    ownerPhone: widget.booking.ownerPhone,
-                    colors: colors,
-                  ),
-
-                const SizedBox(height: SpacingTokens.m),
-
-                // Cancellation policy (if enabled)
-                if (widget.widgetSettings != null &&
-                    widget.widgetSettings!.allowGuestCancellation)
-                  CancellationPolicyCard(
-                    deadlineHours:
-                        widget.widgetSettings!.cancellationDeadlineHours ?? 48,
-                    checkIn: widget.booking.checkIn,
-                    colors: colors,
-                  ),
-
-                const SizedBox(height: SpacingTokens.m),
-
-                // Additional notes
-                if (widget.booking.notes != null &&
-                    widget.booking.notes!.isNotEmpty)
-                  BookingNotesCard(
-                    notes: widget.booking.notes!,
-                    colors: colors,
-                  ),
-
-                const SizedBox(height: SpacingTokens.l),
-
-                // Cancel Booking Button (if allowed and within deadline)
-                if (_canCancelBooking())
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: SpacingTokens.m),
-                    child: _buildCancelButton(colors),
-                  ),
-
-                // Contact owner button
-                _buildContactButton(context, colors),
               ],
+            ],
+          ),
+        ),
+
+        const SizedBox(width: SpacingTokens.l),
+
+        // Right column - Payment & Contact
+        Expanded(
+          child: Column(
+            children: [
+              PaymentInfoCard(
+                totalPrice: widget.booking.totalPrice,
+                depositAmount: widget.booking.depositAmount,
+                paidAmount: widget.booking.paidAmount,
+                remainingAmount: widget.booking.remainingAmount,
+                paymentStatus: widget.booking.paymentStatus,
+                paymentMethod: widget.booking.paymentMethod,
+                paymentDeadline: widget.booking.paymentDeadline,
+                colors: colors,
+              ),
+              const SizedBox(height: SpacingTokens.m),
+              // Contact info
+              if (widget.booking.ownerEmail != null ||
+                  widget.booking.ownerPhone != null)
+                ContactOwnerCard(
+                  ownerEmail: widget.booking.ownerEmail,
+                  ownerPhone: widget.booking.ownerPhone,
+                  colors: colors,
+                ),
+              // Cancellation policy
+              if (widget.widgetSettings != null &&
+                  widget.widgetSettings!.allowGuestCancellation) ...[
+                const SizedBox(height: SpacingTokens.m),
+                CancellationPolicyCard(
+                  deadlineHours:
+                      widget.widgetSettings!.cancellationDeadlineHours ?? 48,
+                  checkIn: widget.booking.checkIn,
+                  colors: colors,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Mobile layout with single column
+  Widget _buildMobileLayout(WidgetColorScheme colors) {
+    return Column(
+      children: [
+        PropertyInfoCard(
+          propertyName: widget.booking.propertyName,
+          unitName: widget.booking.unitName,
+          colors: colors,
+        ),
+        const SizedBox(height: SpacingTokens.m),
+        BookingDatesCard(
+          checkIn: widget.booking.checkIn,
+          checkOut: widget.booking.checkOut,
+          nights: widget.booking.nights,
+          adults: widget.booking.guestCount.adults,
+          children: widget.booking.guestCount.children,
+          colors: colors,
+        ),
+        const SizedBox(height: SpacingTokens.m),
+        PaymentInfoCard(
+          totalPrice: widget.booking.totalPrice,
+          depositAmount: widget.booking.depositAmount,
+          paidAmount: widget.booking.paidAmount,
+          remainingAmount: widget.booking.remainingAmount,
+          paymentStatus: widget.booking.paymentStatus,
+          paymentMethod: widget.booking.paymentMethod,
+          paymentDeadline: widget.booking.paymentDeadline,
+          colors: colors,
+        ),
+        // Contact info
+        if (widget.booking.ownerEmail != null ||
+            widget.booking.ownerPhone != null) ...[
+          const SizedBox(height: SpacingTokens.m),
+          ContactOwnerCard(
+            ownerEmail: widget.booking.ownerEmail,
+            ownerPhone: widget.booking.ownerPhone,
+            colors: colors,
+          ),
+        ],
+        // Cancellation policy
+        if (widget.widgetSettings != null &&
+            widget.widgetSettings!.allowGuestCancellation) ...[
+          const SizedBox(height: SpacingTokens.m),
+          CancellationPolicyCard(
+            deadlineHours:
+                widget.widgetSettings!.cancellationDeadlineHours ?? 48,
+            checkIn: widget.booking.checkIn,
+            colors: colors,
+          ),
+        ],
+        // Notes
+        if (widget.booking.notes != null &&
+            widget.booking.notes!.isNotEmpty) ...[
+          const SizedBox(height: SpacingTokens.m),
+          BookingNotesCard(
+            notes: widget.booking.notes!,
+            colors: colors,
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Action buttons (Cancel booking if allowed)
+  Widget _buildActionButtons(WidgetColorScheme colors) {
+    final canCancel = _canCancelBooking();
+    final cancelReason = _getCancelDisabledReason();
+    final status = widget.booking.status.toLowerCase();
+    final isCancelled = status == 'cancelled';
+
+    return Column(
+      children: [
+        // Cancel button (if booking is active)
+        if (!isCancelled)
+          Tooltip(
+            message: cancelReason ?? '',
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: canCancel && !_isCancelling
+                    ? _handleCancelBooking
+                    : null,
+                icon: _isCancelling
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colors.error,
+                        ),
+                      )
+                    : Icon(
+                        Icons.cancel_outlined,
+                        color: canCancel ? colors.error : colors.textTertiary,
+                      ),
+                label: Text(
+                  _isCancelling ? 'Cancelling...' : 'Cancel Booking',
+                  style: GoogleFonts.inter(
+                    fontSize: TypographyTokens.fontSizeM,
+                    fontWeight: TypographyTokens.semiBold,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: canCancel ? colors.error : colors.textTertiary,
+                  side: BorderSide(
+                    color: canCancel
+                        ? colors.error
+                        : colors.borderDefault,
+                    width: 1.5,
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderTokens.circularMedium,
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildCancelButton(WidgetColorScheme colors) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _isCancelling ? null : _handleCancelBooking,
-        icon: _isCancelling
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.cancel_outlined),
-        label: Text(
-          _isCancelling ? 'Cancelling...' : 'Cancel This Booking',
+        // Help text
+        const SizedBox(height: SpacingTokens.m),
+        Text(
+          'Need help? Contact the property owner using the information above.',
+          textAlign: TextAlign.center,
           style: GoogleFonts.inter(
-            fontSize: TypographyTokens.fontSizeM,
-            fontWeight: TypographyTokens.semiBold,
+            fontSize: TypographyTokens.fontSizeS,
+            color: colors.textTertiary,
           ),
         ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: colors.error,
-          side: BorderSide(color: colors.error, width: 2),
-          padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderTokens.circularMedium,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContactButton(BuildContext context, WidgetColorScheme colors) {
-    return ElevatedButton.icon(
-      onPressed: () => _showContactDialog(context, colors),
-      icon: const Icon(Icons.contact_support),
-      label: Text(
-        'Contact Property Owner',
-        style: GoogleFonts.inter(
-          fontSize: TypographyTokens.fontSizeM,
-          fontWeight: TypographyTokens.semiBold,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: colors.primary,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderTokens.circularMedium,
-        ),
-        elevation: 0,
-      ),
+      ],
     );
   }
 }
@@ -351,9 +447,22 @@ class _CancelConfirmationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(
-        'Cancel Booking',
-        style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+      backgroundColor: colors.backgroundPrimary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderTokens.circularLarge,
+      ),
+      title: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: colors.error, size: 28),
+          const SizedBox(width: SpacingTokens.s),
+          Text(
+            'Cancel Booking',
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
+          ),
+        ],
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -361,30 +470,55 @@ class _CancelConfirmationDialog extends StatelessWidget {
         children: [
           Text(
             'Are you sure you want to cancel this booking?',
-            style: GoogleFonts.inter(fontSize: 16),
-          ),
-          const SizedBox(height: SpacingTokens.s),
-          Text(
-            'Booking Reference: $bookingReference',
             style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: colors.primary,
+              fontSize: 16,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: SpacingTokens.m),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(SpacingTokens.m),
+            decoration: BoxDecoration(
+              color: colors.backgroundSecondary,
+              borderRadius: BorderTokens.circularMedium,
+              border: Border.all(color: colors.borderDefault),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Booking Reference',
+                  style: GoogleFonts.inter(
+                    fontSize: TypographyTokens.fontSizeXS,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: SpacingTokens.xxs),
+                Text(
+                  bookingReference,
+                  style: GoogleFonts.inter(
+                    fontSize: TypographyTokens.fontSizeM,
+                    fontWeight: TypographyTokens.bold,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
           Container(
             padding: const EdgeInsets.all(SpacingTokens.s),
             decoration: BoxDecoration(
-              color: colors.warning.withValues(alpha: 0.1),
+              color: colors.error.withValues(alpha: 0.08),
               borderRadius: BorderTokens.circularSmall,
               border: Border.all(
-                color: colors.warning.withValues(alpha: 0.3),
+                color: colors.error.withValues(alpha: 0.2),
               ),
             ),
             child: Row(
               children: [
-                Icon(Icons.warning_amber, color: colors.warning, size: 20),
+                Icon(Icons.info_outline, color: colors.error, size: 18),
                 const SizedBox(width: SpacingTokens.xs),
                 Expanded(
                   child: Text(
@@ -405,7 +539,10 @@ class _CancelConfirmationDialog extends StatelessWidget {
           onPressed: () => Navigator.pop(context, false),
           child: Text(
             'Keep Booking',
-            style: GoogleFonts.inter(color: colors.textSecondary),
+            style: GoogleFonts.inter(
+              color: colors.textSecondary,
+              fontWeight: TypographyTokens.medium,
+            ),
           ),
         ),
         ElevatedButton(
@@ -413,8 +550,15 @@ class _CancelConfirmationDialog extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: colors.error,
             foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderTokens.circularMedium,
+            ),
           ),
-          child: const Text('Cancel Booking'),
+          child: Text(
+            'Cancel Booking',
+            style: GoogleFonts.inter(fontWeight: TypographyTokens.semiBold),
+          ),
         ),
       ],
     );

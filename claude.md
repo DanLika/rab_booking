@@ -130,6 +130,22 @@ Vidi [CLAUDE_WIDGET_SYSTEM.md](./CLAUDE_WIDGET_SYSTEM.md) za detalje.
 
 ---
 
+## 🔮 FUTURE FEATURES (Low Priority)
+
+### Additional Services / Booking Add-ons
+**Status**: Prepared, not integrated
+**Files**:
+- `shared/models/additional_service_model.dart`
+- `shared/models/booking_service_model.dart` (junction table)
+- `shared/repositories/additional_services_repository.dart`
+- `features/widget/presentation/widgets/additional_services_widget.dart`
+
+**Opis**: Sistem za dodatne usluge (parking, doručak, transfer) koje se mogu dodati uz booking.
+
+**Kada implementirati**: Nakon stabilizacije core booking flowa. Nije hitno.
+
+---
+
 ## 📦 WIDGET REFACTORING (2025-12-01)
 
 | Fajl | Linije | Status |
@@ -226,6 +242,99 @@ Future<void> _handleStripeReturnWithSessionId(String sessionId) async {
 - `fromOtherTab` parametar sprječava circular broadcasting
 
 **Napomena:** Od 2025-12-02, same-tab redirect je primarni flow. Cross-tab komunikacija je zadržana samo kao fallback za slučaj da user ima više tabova otvorenih.
+
+---
+
+## 🔗 SUBDOMAIN SYSTEM (2025-12-03)
+**Status**: ✅ COMPLETED (Bug #3 Fix - "View my reservation" button in emails)
+
+### Problem
+Email dugme "View my reservation" nije radilo jer:
+- Widget se hostao na Firebase Hosting (statički URL)
+- Nije bilo načina da se poveže booking sa pravim property-em
+- Email linkovi nisu imali kontekst property-a
+
+### Rješenje - Subdomain Architecture
+Svaki property ima jedinstveni subdomain (npr. `villa-marija`) koji omogućuje:
+- Production URL: `villa-marija.rabbooking.com/view?ref=XXX&email=YYY`
+- Testing URL: `localhost:5000/view?subdomain=villa-marija&ref=XXX&email=YYY`
+
+### Komponente
+
+| Komponenta | File | Status |
+|------------|------|--------|
+| PropertyModel subdomain field | `property_model.dart` | ✅ |
+| PropertyBranding model | `property_branding_model.dart` | ✅ |
+| Cloud Function: checkSubdomainAvailability | `subdomainService.ts` | ✅ |
+| Cloud Function: generateSubdomainFromName | `subdomainService.ts` | ✅ |
+| Cloud Function: setPropertySubdomain | `subdomainService.ts` | ✅ |
+| Email URL generation | `emailService.ts` | ✅ |
+| Flutter SubdomainService | `subdomain_service.dart` | ✅ |
+| Riverpod providers | `subdomain_provider.dart` | ✅ |
+| BookingViewScreen integration | `booking_view_screen.dart` | ✅ |
+| SubdomainNotFoundScreen | `subdomain_not_found_screen.dart` | ✅ |
+| Owner Dashboard UI | `property_form_screen.dart` | ✅ |
+| Repository CRUD | `firebase_owner_properties_repository.dart` | ✅ |
+
+### Kako Radi
+
+**1. Owner kreira subdomain:**
+```dart
+// property_form_screen.dart
+// Auto-generira subdomain iz property naziva
+// Debounced availability check (500ms)
+// Prikazuje sugestije ako subdomain zauzet
+```
+
+**2. Email generira URL:**
+```typescript
+// emailService.ts - generateViewBookingUrl()
+async function generateViewBookingUrl(
+  bookingReference: string,
+  guestEmail: string,
+  accessToken: string,
+  propertyId?: string
+): Promise<string> {
+  // 1. Fetch property subdomain from Firestore
+  // 2. Build URL based on environment (prod vs dev)
+  // 3. Return full URL with query params
+}
+```
+
+**3. Widget parsira subdomain:**
+```dart
+// subdomain_service.dart
+// Priority 1: ?subdomain=xxx query param (testing)
+// Priority 2: Parse hostname xxx.rabbooking.com (production)
+```
+
+**4. Widget učitava property branding:**
+```dart
+// booking_view_screen.dart
+final context = await subdomainService.resolveCurrentContext();
+if (context != null && !context.found) {
+  // Show SubdomainNotFoundScreen
+} else {
+  // Use context.property and context.branding
+}
+```
+
+### Reserved Subdomains
+```typescript
+const RESERVED_SUBDOMAINS = [
+  'www', 'app', 'api', 'admin', 'dashboard', 'widget',
+  'booking', 'bookings', 'owner', 'owners', 'guest', 'guests',
+  'help', 'support', 'docs', 'blog', 'mail', 'smtp', 'ftp',
+  'cdn', 'static', 'assets', 'images', 'test', 'dev', 'staging',
+  'prod', 'production', 'demo', 'beta', 'alpha', 'rab', 'rabbooking'
+];
+```
+
+### KRITIČNO - NE MIJENJAJ:
+1. `generateViewBookingUrl()` - logika za kreiranje email URL-ova
+2. Subdomain validation regex: `/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/`
+3. Query param prioritet preko hostname parsinga
+4. Reserved subdomains lista
 
 ---
 
@@ -328,6 +437,7 @@ _clearBookingUrlParams();
 6. Provider invalidation POSLIJE save-a
 7. **Calendar Pending Status** - diagonal pattern, boje, `DateStatus.pending` logika
 8. **Navigator.push za confirmation** - NE vraćaj state-based navigaciju!
+9. **Subdomain System** - `generateViewBookingUrl()`, validation regex, reserved subdomains
 
 ### UVIJEK KORISTI:
 1. `theme.colorScheme.*` (ne AppColors)
@@ -344,5 +454,5 @@ _clearBookingUrlParams();
 
 ---
 
-**Last Updated**: 2025-12-02
-**Version**: 3.2 (Bug #2 fix: Owner email always sent)
+**Last Updated**: 2025-12-03
+**Version**: 3.3 (Bug #3 fix: Subdomain System - "View my reservation" email links)

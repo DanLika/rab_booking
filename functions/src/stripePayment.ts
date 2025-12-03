@@ -390,7 +390,8 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
           propertyData?.contact_email,
           result.accessToken, // Plaintext token for email link
           totalPrice,
-          depositAmount
+          depositAmount,
+          propertyId // For subdomain in email links
         );
         console.log(`Confirmation email sent to ${guestEmail}`);
       } catch (error) {

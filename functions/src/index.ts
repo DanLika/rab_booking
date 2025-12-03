@@ -52,3 +52,6 @@ export * from "./guestCancelBooking";
 
 // Export resend booking email function
 export * from "./resendBookingEmail";
+
+// Export subdomain management functions
+export * from "./subdomainService";

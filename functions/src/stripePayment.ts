@@ -377,7 +377,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
           tax_legal_accepted: taxLegalAccepted,
           // Stripe payment details
           stripe_session_id: session.id,
-          stripe_payment_intent: session.payment_intent,
+          payment_intent_id: session.payment_intent,
           // Booking lookup security (for "View my reservation" link)
           access_token: hashedToken,
           token_expires_at: tokenExpiration,

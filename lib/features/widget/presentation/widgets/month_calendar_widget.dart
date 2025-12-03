@@ -51,6 +51,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     // Use realtime stream provider for automatic updates when bookings change
     final calendarData = ref.watch(
       realtimeMonthCalendarProvider(
+        widget.propertyId,
         widget.unitId,
         _currentMonth.year,
         _currentMonth.month,

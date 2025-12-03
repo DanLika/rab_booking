@@ -44,10 +44,11 @@ class FirebaseBookingCalendarRepository {
 
   /// Get year-view calendar data with realtime updates and prices
   Stream<Map<DateTime, CalendarDateInfo>> watchYearCalendarData({
+    required String propertyId,
     required String unitId,
     required int year,
   }) {
-    debugPrint('[CalendarRepo] watchYearCalendarData CALLED for unit=$unitId, year=$year');
+    debugPrint('[CalendarRepo] watchYearCalendarData CALLED for property=$propertyId, unit=$unitId, year=$year');
 
     // Bug #65 Fix: Use UTC for DST-safe date handling
     final startDate = DateTime.utc(year);
@@ -59,7 +60,7 @@ class FirebaseBookingCalendarRepository {
     final bookingsStream = _firestore
         .collection('bookings')
         .where('unit_id', isEqualTo: unitId)
-        .where('status', whereIn: ['pending', 'confirmed', 'in_progress'])
+        .where('status', whereIn: ['pending', 'confirmed'])
         .snapshots();
 
     // Stream prices
@@ -78,7 +79,10 @@ class FirebaseBookingCalendarRepository {
         .snapshots();
 
     // Stream widget settings to get minNights
+    // FIXED: Use correct subcollection path: properties/{propertyId}/widget_settings/{unitId}
     final widgetSettingsStream = _firestore
+        .collection('properties')
+        .doc(propertyId)
         .collection('widget_settings')
         .doc(unitId)
         .snapshots();
@@ -182,11 +186,12 @@ class FirebaseBookingCalendarRepository {
   /// Get month-view calendar data with realtime updates and prices
   /// UPDATED: Now includes iCal events (Booking.com, Airbnb, etc.)
   Stream<Map<DateTime, CalendarDateInfo>> watchCalendarData({
+    required String propertyId,
     required String unitId,
     required int year,
     required int month,
   }) {
-    debugPrint('[CalendarRepo] watchCalendarData (MONTH) CALLED for unit=$unitId, year=$year, month=$month');
+    debugPrint('[CalendarRepo] watchCalendarData (MONTH) CALLED for property=$propertyId, unit=$unitId, year=$year, month=$month');
 
     // Bug #65 Fix: Use UTC for DST-safe date handling
     final startDate = DateTime.utc(year, month);
@@ -198,7 +203,7 @@ class FirebaseBookingCalendarRepository {
     final bookingsStream = _firestore
         .collection('bookings')
         .where('unit_id', isEqualTo: unitId)
-        .where('status', whereIn: ['pending', 'confirmed', 'in_progress'])
+        .where('status', whereIn: ['pending', 'confirmed'])
         .snapshots();
 
     // Stream prices
@@ -217,7 +222,10 @@ class FirebaseBookingCalendarRepository {
         .snapshots();
 
     // Stream widget settings to get minNights
+    // FIXED: Use correct subcollection path: properties/{propertyId}/widget_settings/{unitId}
     final widgetSettingsStream = _firestore
+        .collection('properties')
+        .doc(propertyId)
         .collection('widget_settings')
         .doc(unitId)
         .snapshots();

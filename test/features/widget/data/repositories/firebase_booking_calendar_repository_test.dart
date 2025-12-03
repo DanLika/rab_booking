@@ -230,6 +230,7 @@ void main() {
         });
 
         final stream = repository.watchCalendarData(
+          propertyId: 'property123',
           unitId: 'unit123',
           year: 2024,
           month: 1,
@@ -262,6 +263,7 @@ void main() {
         });
 
         final stream = repository.watchCalendarData(
+          propertyId: 'property123',
           unitId: 'unit123',
           year: 2024,
           month: 1,
@@ -287,6 +289,7 @@ void main() {
         });
 
         final stream = repository.watchCalendarData(
+          propertyId: 'property123',
           unitId: 'unit123',
           year: 2024,
           month: 1,
@@ -323,6 +326,7 @@ void main() {
         });
 
         final stream = repository.watchYearCalendarData(
+          propertyId: 'property123',
           unitId: 'unit123',
           year: 2024,
         );
@@ -374,6 +378,7 @@ void main() {
         });
 
         final stream = repository.watchCalendarData(
+          propertyId: 'property123',
           unitId: 'unit123',
           year: 2024,
           month: 1,

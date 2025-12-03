@@ -24,11 +24,16 @@ FirebaseBookingCalendarRepository bookingCalendarRepository(
 @riverpod
 Stream<Map<String, CalendarDateInfo>> realtimeYearCalendar(
   Ref ref,
+  String propertyId,
   String unitId,
   int year,
 ) {
   final repository = ref.watch(bookingCalendarRepositoryProvider);
-  return repository.watchYearCalendarData(unitId: unitId, year: year).map(
+  return repository.watchYearCalendarData(
+    propertyId: propertyId,
+    unitId: unitId,
+    year: year,
+  ).map(
     (dateTimeMap) => dateTimeMap.map(
       (date, info) => MapEntry(_dateToKey(date), info),
     ),
@@ -40,6 +45,7 @@ Stream<Map<String, CalendarDateInfo>> realtimeYearCalendar(
 @riverpod
 Stream<Map<String, CalendarDateInfo>> realtimeMonthCalendar(
   Ref ref,
+  String propertyId,
   String unitId,
   int year,
   int month,
@@ -47,6 +53,7 @@ Stream<Map<String, CalendarDateInfo>> realtimeMonthCalendar(
   final repository = ref.watch(bookingCalendarRepositoryProvider);
   return repository
       .watchCalendarData(
+        propertyId: propertyId,
         unitId: unitId,
         year: year,
         month: month,

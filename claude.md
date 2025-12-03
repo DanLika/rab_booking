@@ -146,19 +146,24 @@ Vidi [CLAUDE_WIDGET_SYSTEM.md](./CLAUDE_WIDGET_SYSTEM.md) za detalje.
 
 ---
 
-## 📦 WIDGET REFACTORING (2025-12-01)
+## 📦 WIDGET REFACTORING (2025-12-03)
 
 | Fajl | Linije | Status |
 |------|--------|--------|
-| `booking_widget_screen.dart` | 2,154 | Refaktorisan (-49%) |
-| `year_calendar_widget.dart` | 946 | Refaktorisan |
-| `month_calendar_widget.dart` | 872 | Refaktorisan |
+| `booking_widget_screen.dart` | 2,154 → 1,100 | Refaktorisan (-49%) |
+| `year_calendar_widget.dart` | 1,152 → 905 | Refaktorisan (-21%) |
+| `month_calendar_widget.dart` | 879 → 821 | Refaktorisan (-7%) |
 
 **Ekstraktovani komponenti:**
-- `calendar/` - date_utils, view_switcher, legend
+- `calendar/` - date_utils, view_switcher, legend, year_calendar_painters, calendar_combined_header_widget
 - `confirmation/` - 7 komponenti
 - `details/` - 8 komponenti
 - `shared/utils/` - validators, snackbar_helper
+
+**Calendar Painters** (`year_calendar_painters.dart`):
+- `DiagonalLinePainter` - check-in/check-out split days
+- `PendingPatternPainter` - diagonal stripes za pending
+- `PartialBothPainter` - turnover day sa oba bookinga
 
 ---
 
@@ -338,7 +343,17 @@ const RESERVED_SUBDOMAINS = [
 
 ---
 
-## 🐛 BUG FIX-EVI (2025-12-02)
+## 🐛 BUG FIX-EVI (2025-12-02/03)
+
+**Stripe Payment Flow** - SVI bugovi riješeni:
+| # | Bug | Status |
+|---|-----|--------|
+| 1 | Stripe redirect | ✅ |
+| 2 | Owner email | ✅ |
+| 3 | Email button | ✅ (Subdomain) |
+| 4 | Pill bar | ✅ (Cross-tab) |
+| 5 | Calendar real-time | ✅ |
+| 6 | Payment shows 0 | ✅ |
 
 ### Owner Email Always Sent (Bug #2 Fix)
 **File**: `functions/src/atomicBooking.ts`
@@ -455,4 +470,4 @@ _clearBookingUrlParams();
 ---
 
 **Last Updated**: 2025-12-03
-**Version**: 3.3 (Bug #3 fix: Subdomain System - "View my reservation" email links)
+**Version**: 3.4 (Calendar refactoring + All Stripe bugs resolved)

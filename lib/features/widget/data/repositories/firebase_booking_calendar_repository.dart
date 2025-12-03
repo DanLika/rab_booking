@@ -180,7 +180,7 @@ class FirebaseBookingCalendarRepository {
           icalEvents,
         );
       },
-    ).handleError((error, stackTrace) {
+    ).onErrorReturnWith((error, stackTrace) {
       // Log error but don't crash the UI
       LoggingService.logError(
         '[CalendarRepo] Year calendar stream error',
@@ -189,6 +189,7 @@ class FirebaseBookingCalendarRepository {
       );
       // Return empty calendar - UI will show available dates
       // This prevents crashes on network errors or permission issues
+      return <DateTime, CalendarDateInfo>{};
     });
   }
 
@@ -333,7 +334,7 @@ class FirebaseBookingCalendarRepository {
           icalEvents,
         );
       },
-    ).handleError((error, stackTrace) {
+    ).onErrorReturnWith((error, stackTrace) {
       // Log error but don't crash the UI
       LoggingService.logError(
         '[CalendarRepo] Month calendar stream error',
@@ -342,6 +343,7 @@ class FirebaseBookingCalendarRepository {
       );
       // Return empty calendar - UI will show available dates
       // This prevents crashes on network errors or permission issues
+      return <DateTime, CalendarDateInfo>{};
     });
   }
 
@@ -428,18 +430,34 @@ class FirebaseBookingCalendarRepository {
           bool isCheckOutPending = false;
           bool isCheckInPending = false;
 
-          if (existingInfo != null &&
-              (existingInfo.status == DateStatus.partialCheckIn ||
-                  existingInfo.status == DateStatus.partialCheckOut)) {
-            // This is a turnover day
-            status = DateStatus.partialBoth;
-            // Track which half is pending
-            if (isCheckOut) {
-              isCheckOutPending = isPending;
-              isCheckInPending = existingInfo.isPendingBooking;
-            } else if (isCheckIn) {
-              isCheckInPending = isPending;
-              isCheckOutPending = existingInfo.isPendingBooking;
+          if (existingInfo != null) {
+            // Bug fix: Handle all booked statuses for turnover detection
+            // A day can be overwritten by a booking that spans through it (status=booked)
+            // or already be a partialBoth from two previous bookings
+            if (existingInfo.status == DateStatus.partialCheckIn ||
+                existingInfo.status == DateStatus.partialCheckOut ||
+                existingInfo.status == DateStatus.booked ||
+                existingInfo.status == DateStatus.partialBoth) {
+              // This is a turnover day (or day with existing booking)
+              if (isCheckIn || isCheckOut) {
+                status = DateStatus.partialBoth;
+                // Track which half is pending
+                if (isCheckOut) {
+                  isCheckOutPending = isPending;
+                  // Inherit check-in pending status from existing
+                  isCheckInPending = existingInfo.isCheckInPending ||
+                      (existingInfo.status == DateStatus.partialCheckIn &&
+                          existingInfo.isPendingBooking);
+                } else if (isCheckIn) {
+                  isCheckInPending = isPending;
+                  // Inherit check-out pending status from existing
+                  isCheckOutPending = existingInfo.isCheckOutPending ||
+                      (existingInfo.status == DateStatus.partialCheckOut &&
+                          existingInfo.isPendingBooking);
+                }
+              }
+              // If current booking spans through (not check-in/out), keep existing status
+              // unless it's more restrictive (booked wins over partial)
             }
           }
 
@@ -505,16 +523,26 @@ class FirebaseBookingCalendarRepository {
             bool isCheckOutPending = false;
             bool isCheckInPending = false;
 
-            if (existingInfo != null &&
-                (existingInfo.status == DateStatus.partialCheckIn ||
-                    existingInfo.status == DateStatus.partialCheckOut)) {
-              // This is a turnover day
-              status = DateStatus.partialBoth;
-              // iCal events are not pending, so inherit from existing
-              if (isCheckOut) {
-                isCheckInPending = existingInfo.isPendingBooking;
-              } else if (isCheckIn) {
-                isCheckOutPending = existingInfo.isPendingBooking;
+            if (existingInfo != null) {
+              // Bug fix: Handle all booked statuses for turnover detection
+              if (existingInfo.status == DateStatus.partialCheckIn ||
+                  existingInfo.status == DateStatus.partialCheckOut ||
+                  existingInfo.status == DateStatus.booked ||
+                  existingInfo.status == DateStatus.partialBoth) {
+                // This is a turnover day (or day with existing booking)
+                if (isCheckIn || isCheckOut) {
+                  status = DateStatus.partialBoth;
+                  // iCal events are not pending, so inherit from existing
+                  if (isCheckOut) {
+                    isCheckInPending = existingInfo.isCheckInPending ||
+                        (existingInfo.status == DateStatus.partialCheckIn &&
+                            existingInfo.isPendingBooking);
+                  } else if (isCheckIn) {
+                    isCheckOutPending = existingInfo.isCheckOutPending ||
+                        (existingInfo.status == DateStatus.partialCheckOut &&
+                            existingInfo.isPendingBooking);
+                  }
+                }
               }
             }
 
@@ -631,18 +659,34 @@ class FirebaseBookingCalendarRepository {
           bool isCheckOutPending = false;
           bool isCheckInPending = false;
 
-          if (existingInfo != null &&
-              (existingInfo.status == DateStatus.partialCheckIn ||
-                  existingInfo.status == DateStatus.partialCheckOut)) {
-            // This is a turnover day
-            status = DateStatus.partialBoth;
-            // Track which half is pending
-            if (isCheckOut) {
-              isCheckOutPending = isPending;
-              isCheckInPending = existingInfo.isPendingBooking;
-            } else if (isCheckIn) {
-              isCheckInPending = isPending;
-              isCheckOutPending = existingInfo.isPendingBooking;
+          if (existingInfo != null) {
+            // Bug fix: Handle all booked statuses for turnover detection
+            // A day can be overwritten by a booking that spans through it (status=booked)
+            // or already be a partialBoth from two previous bookings
+            if (existingInfo.status == DateStatus.partialCheckIn ||
+                existingInfo.status == DateStatus.partialCheckOut ||
+                existingInfo.status == DateStatus.booked ||
+                existingInfo.status == DateStatus.partialBoth) {
+              // This is a turnover day (or day with existing booking)
+              if (isCheckIn || isCheckOut) {
+                status = DateStatus.partialBoth;
+                // Track which half is pending
+                if (isCheckOut) {
+                  isCheckOutPending = isPending;
+                  // Inherit check-in pending status from existing
+                  isCheckInPending = existingInfo.isCheckInPending ||
+                      (existingInfo.status == DateStatus.partialCheckIn &&
+                          existingInfo.isPendingBooking);
+                } else if (isCheckIn) {
+                  isCheckInPending = isPending;
+                  // Inherit check-out pending status from existing
+                  isCheckOutPending = existingInfo.isCheckOutPending ||
+                      (existingInfo.status == DateStatus.partialCheckOut &&
+                          existingInfo.isPendingBooking);
+                }
+              }
+              // If current booking spans through (not check-in/out), keep existing status
+              // unless it's more restrictive (booked wins over partial)
             }
           }
 
@@ -708,16 +752,26 @@ class FirebaseBookingCalendarRepository {
             bool isCheckOutPending = false;
             bool isCheckInPending = false;
 
-            if (existingInfo != null &&
-                (existingInfo.status == DateStatus.partialCheckIn ||
-                    existingInfo.status == DateStatus.partialCheckOut)) {
-              // This is a turnover day
-              status = DateStatus.partialBoth;
-              // iCal events are not pending, so inherit from existing
-              if (isCheckOut) {
-                isCheckInPending = existingInfo.isPendingBooking;
-              } else if (isCheckIn) {
-                isCheckOutPending = existingInfo.isPendingBooking;
+            if (existingInfo != null) {
+              // Bug fix: Handle all booked statuses for turnover detection
+              if (existingInfo.status == DateStatus.partialCheckIn ||
+                  existingInfo.status == DateStatus.partialCheckOut ||
+                  existingInfo.status == DateStatus.booked ||
+                  existingInfo.status == DateStatus.partialBoth) {
+                // This is a turnover day (or day with existing booking)
+                if (isCheckIn || isCheckOut) {
+                  status = DateStatus.partialBoth;
+                  // iCal events are not pending, so inherit from existing
+                  if (isCheckOut) {
+                    isCheckInPending = existingInfo.isCheckInPending ||
+                        (existingInfo.status == DateStatus.partialCheckIn &&
+                            existingInfo.isPendingBooking);
+                  } else if (isCheckIn) {
+                    isCheckOutPending = existingInfo.isCheckOutPending ||
+                        (existingInfo.status == DateStatus.partialCheckOut &&
+                            existingInfo.isPendingBooking);
+                  }
+                }
               }
             }
 
@@ -812,12 +866,13 @@ class FirebaseBookingCalendarRepository {
       final currentBooking = sortedBookings[i];
       final nextBooking = sortedBookings[i + 1];
 
-      final checkOutCurrent = DateTime(
+      // Bug #65 Fix: Use UTC for consistent map key lookup
+      final checkOutCurrent = DateTime.utc(
         currentBooking.checkOut.year,
         currentBooking.checkOut.month,
         currentBooking.checkOut.day,
       );
-      final checkInNext = DateTime(
+      final checkInNext = DateTime.utc(
         nextBooking.checkIn.year,
         nextBooking.checkIn.month,
         nextBooking.checkIn.day,

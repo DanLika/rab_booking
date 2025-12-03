@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -18,6 +17,37 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import 'unit_pricing_screen.dart';
 import 'widget_settings_screen.dart';
 import 'widget_advanced_settings_screen.dart';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/// Master panel width for desktop layout
+const double _kMasterPanelWidth = 320.0;
+
+/// Breakpoint for desktop layout (consistent with CLAUDE.md: Desktop ≥1200px)
+const double _kDesktopBreakpoint = 900.0; // Using 900 for this screen per existing behavior
+
+/// Breakpoint for mobile layout
+const double _kMobileBreakpoint = 600.0;
+
+/// Available status color
+const Color _kAvailableColor = Color(0xFF66BB6A);
+
+/// Unavailable status color
+const Color _kUnavailableColor = Color(0xFFEF5350);
+
+/// Croatian pluralization for "jedinica" (unit)
+/// 1 -> jedinica, 2-4 -> jedinice, 0/5+ -> jedinica
+String _pluralizeJedinica(int count) {
+  if (count == 1) return 'jedinica';
+  final lastDigit = count % 10;
+  final lastTwoDigits = count % 100;
+  if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 12 || lastTwoDigits > 14)) {
+    return 'jedinice';
+  }
+  return 'jedinica';
+}
 
 /// Unified Unit Hub - Centralno mjesto za sve unit operacije
 /// Master-Detail layout sa tab navigacijom
@@ -94,50 +124,49 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     super.dispose();
   }
 
+  /// Handle units data changes - auto-select first unit or sync selected unit
+  Future<void> _handleUnitsChanged(List<UnitModel> units) async {
+    if (units.isNotEmpty && _selectedUnit == null) {
+      // Auto-select first unit when none is selected
+      final firstUnit = units.first;
+      final property = await ref.read(
+        propertyByIdProvider(firstUnit.propertyId).future,
+      );
+      if (mounted) {
+        setState(() {
+          _selectedUnit = firstUnit;
+          _selectedProperty = property;
+        });
+      }
+    } else if (_selectedUnit != null) {
+      // Update selected unit with fresh data from stream
+      final updatedUnit = units.firstWhere(
+        (u) => u.id == _selectedUnit!.id,
+        orElse: () => _selectedUnit!,
+      );
+      // Only update if data actually changed
+      if (updatedUnit != _selectedUnit && mounted) {
+        setState(() {
+          _selectedUnit = updatedUnit;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 900;
+    final isDesktop = screenWidth >= _kDesktopBreakpoint;
 
-    // Auto-select first unit when units are loaded, or update selected unit when data changes
-    final unitsAsync = ref.watch(ownerUnitsProvider);
-    unitsAsync.whenData((units) {
-      if (units.isNotEmpty && _selectedUnit == null) {
-        // Auto-select first unit when none is selected
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          if (mounted && _selectedUnit == null) {
-            final firstUnit = units.first;
-            final property = await ref.read(
-              propertyByIdProvider(firstUnit.propertyId).future,
-            );
-            if (mounted) {
-              setState(() {
-                _selectedUnit = firstUnit;
-                _selectedProperty = property;
-              });
-            }
-          }
-        });
-      } else if (_selectedUnit != null) {
-        // Update selected unit with fresh data from stream
-        final updatedUnit = units.firstWhere(
-          (u) => u.id == _selectedUnit!.id,
-          orElse: () => _selectedUnit!,
-        );
-        // Only update if data actually changed
-        if (updatedUnit != _selectedUnit) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() {
-                _selectedUnit = updatedUnit;
-              });
-            }
-          });
-        }
-      }
-    });
+    // Listen for units changes and handle side effects (auto-selection, sync)
+    ref.listen<AsyncValue<List<UnitModel>>>(
+      ownerUnitsProvider,
+      (previous, next) {
+        next.whenData(_handleUnitsChanged);
+      },
+    );
 
     return Scaffold(
       key: _scaffoldKey,
@@ -174,7 +203,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       // EndDrawer for mobile/tablet - shows master panel
       endDrawer: !isDesktop
           ? Drawer(
-              width: 320,
+              width: _kMasterPanelWidth,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: context.gradients.sectionBackground,
@@ -215,7 +244,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
         // Master panel (right) - Units list
         Container(
-          width: 320,
+          width: _kMasterPanelWidth,
           decoration: BoxDecoration(
             gradient: context.gradients.sectionBackground,
             border: Border(
@@ -573,7 +602,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             ),
           ),
           subtitle: Text(
-            '${units.length} ${units.length == 1 ? 'jedinica' : 'jedinica'}',
+            '${units.length} ${_pluralizeJedinica(units.length)}',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -672,11 +701,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }
 
   /// Confirm and delete a unit
-  Future<void> _confirmDeleteUnit(BuildContext context, UnitModel unit) async {
-    final theme = Theme.of(context);
+  Future<void> _confirmDeleteUnit(BuildContext dialogContext, UnitModel unit) async {
+    final theme = Theme.of(dialogContext);
 
     final confirmed = await showDialog<bool>(
-      context: context,
+      context: dialogContext,
       builder: (ctx) => AlertDialog(
         title: const Text('Obriši jedinicu'),
         content: Text(
@@ -717,6 +746,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         }
 
         if (mounted) {
+          // ignore: use_build_context_synchronously - State.context is safe after mounted check
           ErrorDisplayUtils.showSuccessSnackBar(
             context,
             'Jedinica "${unit.name}" je uspješno obrisana',
@@ -724,6 +754,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         }
       } catch (e) {
         if (mounted) {
+          // ignore: use_build_context_synchronously - State.context is safe after mounted check
           ErrorDisplayUtils.showErrorSnackBar(
             context,
             'Greška pri brisanju: $e',
@@ -800,18 +831,18 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     ),
                     decoration: BoxDecoration(
                       color: unit.isAvailable
-                          ? const Color(0xFF66BB6A).withAlpha((0.2 * 255).toInt()) // Same as Confirmed badge
-                          : AppColors.error.withAlpha((0.2 * 255).toInt()),
+                          ? _kAvailableColor.withAlpha((0.2 * 255).toInt())
+                          : _kUnavailableColor.withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       unit.isAvailable ? 'Dostupan' : 'Nedostupan',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: isSelected
-                            ? Colors.white // White text when unit is selected
+                            ? Colors.white
                             : (unit.isAvailable
-                                ? const Color(0xFF66BB6A) // Green for available
-                                : AppColors.error), // Red for unavailable
+                                ? _kAvailableColor
+                                : _kUnavailableColor),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -928,11 +959,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             indicatorSize: TabBarIndicatorSize.label,
             // Tab bar left padding: smaller for mobile
             padding: EdgeInsets.only(
-              left: screenWidth < 600 ? 4 : 16,
+              left: screenWidth < _kMobileBreakpoint ? 4 : 16,
             ),
             // Responsive padding: smaller for mobile, larger for desktop
             labelPadding: EdgeInsets.symmetric(
-              horizontal: screenWidth < 600 ? 8 : 20,
+              horizontal: screenWidth < _kMobileBreakpoint ? 8 : 20,
             ),
             labelStyle: const TextStyle(
               fontSize: 14,
@@ -964,10 +995,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           child: TabBarView(
             controller: _tabController,
             children: [
-              _buildTab1_BasicInfo(theme, isDark),
-              _buildTab2_Pricing(theme, isDark),
-              _buildTab3_Widget(theme, isDark),
-              _buildTab4_Advanced(theme, isDark),
+              _buildBasicInfoTab(theme, isDark),
+              _buildPricingTab(theme, isDark),
+              _buildWidgetTab(theme, isDark),
+              _buildAdvancedTab(theme, isDark),
             ],
           ),
         ),
@@ -1007,12 +1038,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }
 
   // Tab content builders
-  Widget _buildTab1_BasicInfo(ThemeData theme, bool isDark) {
+  Widget _buildBasicInfoTab(ThemeData theme, bool isDark) {
     if (_selectedUnit == null) return const SizedBox.shrink();
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 900;
-    final isMobile = screenWidth < 600;
+    final isDesktop = screenWidth >= _kDesktopBreakpoint;
+    final isMobile = screenWidth < _kMobileBreakpoint;
 
     // Build individual cards as widgets for flex layout
     final informacijeCard = _buildInfoCard(
@@ -1030,8 +1061,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           'Status',
           _selectedUnit!.isAvailable ? 'Dostupan' : 'Nedostupan',
           valueColor: _selectedUnit!.isAvailable
-              ? AppColors.success
-              : AppColors.error,
+              ? _kAvailableColor
+              : _kUnavailableColor,
         ),
       ],
     );
@@ -1169,52 +1200,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   title: 'Fotografije',
                   icon: Icons.photo_library_outlined,
                   isMobile: isMobile,
-                  children: [
-                    if (_selectedUnit!.images.isNotEmpty) ...[
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _selectedUnit!.images.take(6).map((imageUrl) {
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              imageUrl,
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 80,
-                                  height: 80,
-                                  color: theme.colorScheme.surfaceContainerHighest,
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      if (_selectedUnit!.images.length > 6)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            '+${_selectedUnit!.images.length - 6} više',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                    ] else
-                      Text(
-                        'Nema fotografija',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                  ],
+                  children: _buildImageGridContent(theme, imageSize: 80),
                 ),
               ),
             ],
@@ -1227,59 +1213,20 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           const SizedBox(height: 16),
           cijenaCard,
           // Images Section for mobile
-          if (_selectedUnit!.images.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            _buildInfoCard(
-              theme,
-              title: 'Fotografije',
-              icon: Icons.photo_library_outlined,
-              isMobile: isMobile,
-              children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _selectedUnit!.images.take(6).map((imageUrl) {
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        imageUrl,
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 100,
-                            height: 100,
-                            color: theme.colorScheme.surfaceContainerHighest,
-                            child: Icon(
-                              Icons.broken_image,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  }).toList(),
-                ),
-                if (_selectedUnit!.images.length > 6)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      '+${_selectedUnit!.images.length - 6} više',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
+          const SizedBox(height: 16),
+          _buildInfoCard(
+            theme,
+            title: 'Fotografije',
+            icon: Icons.photo_library_outlined,
+            isMobile: isMobile,
+            children: _buildImageGridContent(theme, imageSize: 100),
+          ),
         ],
       ],
     );
   }
 
-  Widget _buildTab2_Pricing(ThemeData theme, bool isDark) {
+  Widget _buildPricingTab(ThemeData theme, bool isDark) {
     if (_selectedUnit == null) return const SizedBox.shrink();
 
     // Embed UnitPricingScreen content WITHOUT app bar
@@ -1291,7 +1238,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
   }
 
-  Widget _buildTab3_Widget(ThemeData theme, bool isDark) {
+  Widget _buildWidgetTab(ThemeData theme, bool isDark) {
     if (_selectedUnit == null || _selectedProperty == null) {
       return const SizedBox.shrink();
     }
@@ -1306,7 +1253,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
   }
 
-  Widget _buildTab4_Advanced(ThemeData theme, bool isDark) {
+  Widget _buildAdvancedTab(ThemeData theme, bool isDark) {
     if (_selectedUnit == null || _selectedProperty == null) {
       return const SizedBox.shrink();
     }
@@ -1418,5 +1365,62 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ],
       ),
     );
+  }
+
+  /// Builds the image grid for unit photos
+  /// [imageSize] - Size of each image thumbnail (desktop: 80, mobile: 100)
+  List<Widget> _buildImageGridContent(ThemeData theme, {required double imageSize}) {
+    if (_selectedUnit == null) return [];
+
+    final images = _selectedUnit!.images;
+    if (images.isEmpty) {
+      return [
+        Text(
+          'Nema fotografija',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ];
+    }
+
+    return [
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: images.take(6).map((imageUrl) {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              imageUrl,
+              width: imageSize,
+              height: imageSize,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: imageSize,
+                  height: imageSize,
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.broken_image,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                );
+              },
+            ),
+          );
+        }).toList(),
+      ),
+      if (images.length > 6)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            '+${images.length - 6} više',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+    ];
   }
 }

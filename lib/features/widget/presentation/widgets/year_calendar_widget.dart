@@ -699,7 +699,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           (dateInfo.status == DateStatus.booked ||
               dateInfo.status == DateStatus.pending ||
               dateInfo.status == DateStatus.blocked ||
-              dateInfo.status == DateStatus.partialCheckIn)) {
+              dateInfo.status == DateStatus.partialCheckIn ||
+              dateInfo.status == DateStatus.partialBoth)) {
         nextBlockedDate = current;
         break;
       }
@@ -728,7 +729,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           (dateInfo.status == DateStatus.booked ||
               dateInfo.status == DateStatus.pending ||
               dateInfo.status == DateStatus.blocked ||
-              dateInfo.status == DateStatus.partialCheckOut)) {
+              dateInfo.status == DateStatus.partialCheckOut ||
+              dateInfo.status == DateStatus.partialBoth)) {
         prevBlockedDate = current;
         break;
       }

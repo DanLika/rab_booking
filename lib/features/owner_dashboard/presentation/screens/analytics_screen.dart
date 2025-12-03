@@ -14,6 +14,27 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/custom_date_range_picker.dart';
 import '../widgets/owner_app_drawer.dart';
 
+/// Helper function to create purple shade variations (1-6, darkest to lightest).
+/// Uses fixed purple shades for consistent colors in light and dark mode.
+Color _getPurpleShade(int level) {
+  switch (level) {
+    case 1: // Darkest purple
+      return const Color(0xFF4A3A8C); // Dark violet
+    case 2: // Dark purple
+      return const Color(0xFF5B4BA8); // Medium violet
+    case 3: // Original purple (primary-like)
+      return const Color(0xFF6B4CE6); // Standard purple
+    case 4: // Light purple
+      return const Color(0xFF8B6FF5); // Light purple
+    case 5: // Lighter purple
+      return const Color(0xFFA08BFF); // Very light purple
+    case 6: // Lightest purple (more desaturated)
+      return const Color(0xFFB8A8FF); // Pastel purple
+    default:
+      return const Color(0xFF6B4CE6); // Default to standard purple
+  }
+}
+
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
 
@@ -182,7 +203,7 @@ class _FilterChip extends StatelessWidget {
       side: BorderSide(
         color: selected
             ? theme.colorScheme.primary
-            : theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+            : theme.colorScheme.outline.withValues(alpha: 0.3),
         width: selected ? 2 : 1,
       ),
       labelStyle: TextStyle(
@@ -394,28 +415,6 @@ class _MetricCardsGrid extends StatelessWidget {
     return 'Last 30 days';
   }
 
-  // Helper method to create purple shade variations (1-6, darkest to lightest)
-  // Uses fixed purple shades for consistent colors in light and dark mode
-  Color _getPurpleShade(BuildContext context, int level) {
-    // Fixed purple shades - same in both light and dark mode
-    switch (level) {
-      case 1: // Darkest purple
-        return const Color(0xFF4A3A8C); // Dark violet
-      case 2: // Dark purple
-        return const Color(0xFF5B4BA8); // Medium violet
-      case 3: // Original purple (primary-like)
-        return const Color(0xFF6B4CE6); // Standard purple
-      case 4: // Light purple
-        return const Color(0xFF8B6FF5); // Light purple
-      case 5: // Lighter purple
-        return const Color(0xFFA08BFF); // Very light purple
-      case 6: // Lightest purple (more desaturated)
-        return const Color(0xFFB8A8FF); // Pastel purple
-      default:
-        return const Color(0xFF6B4CE6); // Default to standard purple
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -433,7 +432,7 @@ class _MetricCardsGrid extends StatelessWidget {
           subtitle:
               '${_getRecentPeriodLabel()}: \$${analytics.monthlyRevenue.toStringAsFixed(2)}',
           icon: Icons.euro_rounded,
-          gradientColor: _getPurpleShade(context, 3), // Original purple
+          gradientColor: _getPurpleShade(3), // Original purple
           isMobile: isMobile,
           isTablet: isTablet,
         ),
@@ -442,7 +441,7 @@ class _MetricCardsGrid extends StatelessWidget {
           value: '${analytics.totalBookings}',
           subtitle: '${_getRecentPeriodLabel()}: ${analytics.monthlyBookings}',
           icon: Icons.calendar_today_rounded,
-          gradientColor: _getPurpleShade(context, 4), // Light purple
+          gradientColor: _getPurpleShade(4), // Light purple
           isMobile: isMobile,
           isTablet: isTablet,
         ),
@@ -452,7 +451,7 @@ class _MetricCardsGrid extends StatelessWidget {
           subtitle:
               '${analytics.activeProperties}/${analytics.totalProperties} properties active',
           icon: Icons.analytics_rounded,
-          gradientColor: _getPurpleShade(context, 5), // Lighter purple
+          gradientColor: _getPurpleShade(5), // Lighter purple
           isMobile: isMobile,
           isTablet: isTablet,
         ),
@@ -462,7 +461,7 @@ class _MetricCardsGrid extends StatelessWidget {
           subtitle:
               'Cancellation: ${analytics.cancellationRate.toStringAsFixed(1)}%',
           icon: Icons.trending_up_rounded,
-          gradientColor: _getPurpleShade(context, 2), // Dark purple
+          gradientColor: _getPurpleShade(2), // Dark purple
           isMobile: isMobile,
           isTablet: isTablet,
         ),
@@ -518,7 +517,7 @@ class _MetricCard extends StatelessWidget {
     // Theme-aware text and icon colors - white on gradient
     const textColor = Colors.white;
     const iconColor = Colors.white;
-    final iconBgColor = Colors.white.withAlpha((0.2 * 255).toInt());
+    final iconBgColor = Colors.white.withValues(alpha: 0.2);
 
     return Container(
       width: cardWidth,
@@ -528,7 +527,7 @@ class _MetricCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withAlpha((0.12 * 255).toInt()),
+            color: primaryColor.withValues(alpha: 0.12),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -593,7 +592,7 @@ class _MetricCard extends StatelessWidget {
               Text(
                 subtitle,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: textColor.withAlpha((0.9 * 255).toInt()),
+                  color: textColor.withValues(alpha: 0.9),
                   height: 1.2,
                   fontSize: isMobile ? 10 : 11,
                 ),
@@ -683,7 +682,7 @@ class _RevenueChart extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -872,7 +871,7 @@ class _BookingsChart extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -1055,7 +1054,7 @@ class _TopPropertiesList extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -1091,7 +1090,7 @@ class _TopPropertiesList extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: properties.length > 3 ? 3 : properties.length, // Limit to Top 3
-        separatorBuilder: (_, _) => const Divider(),
+        separatorBuilder: (context, index) => const Divider(),
         itemBuilder: (context, index) {
           final property = properties[index];
           return ListTile(
@@ -1218,7 +1217,7 @@ class _WidgetAnalyticsCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -1388,43 +1387,21 @@ class _BookingsBySourceChart extends StatelessWidget {
     }
   }
 
-  // Helper method to create purple shade variations (1-6, darkest to lightest)
-  // Uses fixed purple shades for consistent colors in light and dark mode
-  Color _getPurpleShade(BuildContext context, int level) {
-    // Fixed purple shades - same in both light and dark mode
-    switch (level) {
-      case 1: // Darkest purple
-        return const Color(0xFF4A3A8C); // Dark violet
-      case 2: // Dark purple
-        return const Color(0xFF5B4BA8); // Medium violet
-      case 3: // Original purple (primary-like)
-        return const Color(0xFF6B4CE6); // Standard purple
-      case 4: // Light purple
-        return const Color(0xFF8B6FF5); // Light purple
-      case 5: // Lighter purple
-        return const Color(0xFFA08BFF); // Very light purple
-      case 6: // Lightest purple (more desaturated)
-        return const Color(0xFFB8A8FF); // Pastel purple
-      default:
-        return const Color(0xFF6B4CE6); // Default to standard purple
-    }
-  }
-
-  Color _getSourceColor(BuildContext context, String source, int index) {
+  Color _getSourceColor(String source) {
     switch (source.toLowerCase()) {
       case 'widget':
-        return _getPurpleShade(context, 3); // Original purple
+        return _getPurpleShade(3); // Original purple
       case 'admin':
-        return _getPurpleShade(context, 2); // Dark purple
+        return _getPurpleShade(2); // Dark purple
       case 'direct':
-        return _getPurpleShade(context, 4); // Light purple
+        return _getPurpleShade(4); // Light purple
       case 'booking.com':
       case 'booking_com':
-        return _getPurpleShade(context, 1); // Darkest purple
+        return _getPurpleShade(1); // Darkest purple
       case 'airbnb':
-        return _getPurpleShade(context, 5); // Lighter purple
+        return _getPurpleShade(5); // Lighter purple
       default:
-        return _getPurpleShade(context, 6); // Lightest purple (desaturated)
+        return _getPurpleShade(6); // Lightest purple (desaturated)
     }
   }
 
@@ -1500,7 +1477,7 @@ class _BookingsBySourceChart extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -1530,15 +1507,13 @@ class _BookingsBySourceChart extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 20),
-            ...displayEntries.asMap().entries.map((entry) {
-              final index = entry.key;
-              final sourceEntry = entry.value;
+            ...displayEntries.map((sourceEntry) {
               final source = sourceEntry.key;
               final count = sourceEntry.value;
               final percentage = totalCount > 0
                   ? (count / totalCount * 100).toStringAsFixed(1)
                   : '0.0';
-              final color = _getSourceColor(context, source, index);
+              final color = _getSourceColor(source);
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12), // Compact spacing (was 16)

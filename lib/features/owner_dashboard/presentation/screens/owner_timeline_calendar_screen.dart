@@ -34,7 +34,8 @@ class _OwnerTimelineCalendarScreenState
     with CalendarCommonMethodsMixin {
   late DateRangeSelection _currentRange;
   bool _showSummary = false;
-  int _visibleDays = 30; // Default to 30 days, will be updated based on screen size
+  int _visibleDays =
+      30; // Default to 30 days, will be updated based on screen size
   int _calendarRebuildCounter = 0; // Force rebuild counter for Today button
 
   @override
@@ -49,12 +50,17 @@ class _OwnerTimelineCalendarScreenState
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Update visible days based on screen width
-    final newVisibleDays = CalendarGridCalculator.getTimelineVisibleDays(context);
+    final newVisibleDays = CalendarGridCalculator.getTimelineVisibleDays(
+      context,
+    );
     if (newVisibleDays != _visibleDays) {
       setState(() {
         _visibleDays = newVisibleDays;
         // Recreate range with new day count
-        _currentRange = DateRangeSelection.days(_currentRange.startDate, _visibleDays);
+        _currentRange = DateRangeSelection.days(
+          _currentRange.startDate,
+          _visibleDays,
+        );
       });
     }
   }
@@ -63,17 +69,18 @@ class _OwnerTimelineCalendarScreenState
   Widget build(BuildContext context) {
     return Shortcuts(
       shortcuts: <ShortcutActivator, Intent>{
-        LogicalKeySet(LogicalKeyboardKey.arrowLeft): const _PreviousPeriodIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowLeft):
+            const _PreviousPeriodIntent(),
         LogicalKeySet(LogicalKeyboardKey.arrowRight): const _NextPeriodIntent(),
         LogicalKeySet(LogicalKeyboardKey.keyT): const _TodayIntent(),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
           _PreviousPeriodIntent: CallbackAction<_PreviousPeriodIntent>(
-            onInvoke: (_) => _goToPreviousMonth(),
+            onInvoke: (_) => _goToPreviousPeriod(),
           ),
           _NextPeriodIntent: CallbackAction<_NextPeriodIntent>(
-            onInvoke: (_) => _goToNextMonth(),
+            onInvoke: (_) => _goToNextPeriod(),
           ),
           _TodayIntent: CallbackAction<_TodayIntent>(
             onInvoke: (_) => _goToToday(),
@@ -82,7 +89,8 @@ class _OwnerTimelineCalendarScreenState
         child: Focus(
           autofocus: true,
           child: Scaffold(
-            backgroundColor: Colors.transparent, // Transparent to show gradient background
+            backgroundColor:
+                Colors.transparent, // Transparent to show gradient background
             appBar: CommonAppBar(
               title: 'Kalendar',
               leadingIcon: Icons.menu,
@@ -108,71 +116,80 @@ class _OwnerTimelineCalendarScreenState
               ),
               child: Column(
                 children: [
-          // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
-          Consumer(
-            builder: (context, ref, child) {
-              final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
-              final multiSelectState = ref.watch(multiSelectProvider);
+                  // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final unreadCountAsync = ref.watch(
+                        unreadNotificationsCountProvider,
+                      );
+                      final multiSelectState = ref.watch(multiSelectProvider);
 
-              return CalendarTopToolbar(
-                dateRange: _currentRange,
-                isWeekView: false,
-                onPreviousPeriod: _goToPreviousMonth,
-                onNextPeriod: _goToNextMonth,
-                onToday: _goToToday,
-                onDatePickerTap: _showDatePicker,
-                onSearchTap: showSearchDialog,
-                onRefresh: refreshCalendarData,
-                onFilterTap: showFiltersPanel,
-                notificationCount: unreadCountAsync.when(
-                  data: (count) => count,
-                  loading: () => 0,
-                  error: (error, stackTrace) => 0,
-                ),
-                onNotificationsTap: showNotificationsPanel,
-                // Use higher breakpoint for toolbar to prevent overflow
-                isCompact: MediaQuery.of(context).size.width < 1100,
-                // ENHANCED: Analytics toggle integrated in single row
-                showSummaryToggle: true,
-                isSummaryVisible: _showSummary,
-                onSummaryToggleChanged: (value) {
-                  setState(() {
-                    _showSummary = value;
-                  });
-                },
-                // ENHANCED: Multi-select mode toggle
-                showMultiSelectToggle: true,
-                isMultiSelectActive: multiSelectState.isEnabled,
-                onMultiSelectToggle: () {
-                  if (multiSelectState.isEnabled) {
-                    ref.read(multiSelectProvider.notifier).disableMultiSelect();
-                  } else {
-                    ref.read(multiSelectProvider.notifier).enableMultiSelect();
-                  }
-                },
-              );
-            },
-          ),
+                      return CalendarTopToolbar(
+                        dateRange: _currentRange,
+                        isWeekView: false,
+                        onPreviousPeriod: _goToPreviousPeriod,
+                        onNextPeriod: _goToNextPeriod,
+                        onToday: _goToToday,
+                        onDatePickerTap: _showDatePicker,
+                        onSearchTap: showSearchDialog,
+                        onRefresh: refreshCalendarData,
+                        onFilterTap: showFiltersPanel,
+                        notificationCount: unreadCountAsync.when(
+                          data: (count) => count,
+                          loading: () => 0,
+                          error: (error, stackTrace) => 0,
+                        ),
+                        onNotificationsTap: showNotificationsPanel,
+                        // Use higher breakpoint for toolbar to prevent overflow
+                        isCompact: MediaQuery.of(context).size.width < 1100,
+                        // ENHANCED: Analytics toggle integrated in single row
+                        showSummaryToggle: true,
+                        isSummaryVisible: _showSummary,
+                        onSummaryToggleChanged: (value) {
+                          setState(() {
+                            _showSummary = value;
+                          });
+                        },
+                        // ENHANCED: Multi-select mode toggle
+                        showMultiSelectToggle: true,
+                        isMultiSelectActive: multiSelectState.isEnabled,
+                        onMultiSelectToggle: () {
+                          if (multiSelectState.isEnabled) {
+                            ref
+                                .read(multiSelectProvider.notifier)
+                                .disableMultiSelect();
+                          } else {
+                            ref
+                                .read(multiSelectProvider.notifier)
+                                .enableMultiSelect();
+                          }
+                        },
+                      );
+                    },
+                  ),
 
-          // Filter chips (from shared widget)
-          const CalendarFilterChips(),
+                  // Filter chips (from shared widget)
+                  const CalendarFilterChips(),
 
-          // Timeline calendar widget (it fetches its own data via providers)
-          Expanded(
-            child: TimelineCalendarWidget(
-              key: ValueKey('${_currentRange.startDate}_$_calendarRebuildCounter'), // Rebuild on date change + counter
-              initialScrollToDate: _currentRange.startDate, // Scroll to selected date
-              showSummary: _showSummary,
-              onCellLongPress: (date, unit) => _showCreateBookingDialog(
-                initialCheckIn: date,
-                unitId: unit.id,
-              ),
-              onUnitNameTap: _showUnitFutureBookings,
-            ),
-          ),
+                  // Timeline calendar widget (it fetches its own data via providers)
+                  Expanded(
+                    child: TimelineCalendarWidget(
+                      key: ValueKey(
+                        '${_currentRange.startDate}_$_calendarRebuildCounter',
+                      ), // Rebuild on date change + counter
+                      initialScrollToDate:
+                          _currentRange.startDate, // Scroll to selected date
+                      showSummary: _showSummary,
+                      onCellLongPress: (date, unit) => _showCreateBookingDialog(
+                        initialCheckIn: date,
+                        unitId: unit.id,
+                      ),
+                      onUnitNameTap: _showUnitFutureBookings,
+                    ),
+                  ),
 
-          // Multi-select action bar (bottom)
-          const MultiSelectActionBar(),
+                  // Multi-select action bar (bottom)
+                  const MultiSelectActionBar(),
                 ],
               ), // Column
             ), // Container with gradient background
@@ -210,14 +227,14 @@ class _OwnerTimelineCalendarScreenState
   }
 
   /// Go to previous period (moves back by visible days count)
-  void _goToPreviousMonth() {
+  void _goToPreviousPeriod() {
     setState(() {
       _currentRange = _currentRange.previous(isWeek: false);
     });
   }
 
   /// Go to next period (moves forward by visible days count)
-  void _goToNextMonth() {
+  void _goToNextPeriod() {
     setState(() {
       _currentRange = _currentRange.next(isWeek: false);
     });
@@ -290,10 +307,8 @@ class _OwnerTimelineCalendarScreenState
   }) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => BookingCreateDialog(
-        initialCheckIn: initialCheckIn,
-        unitId: unitId,
-      ),
+      builder: (context) =>
+          BookingCreateDialog(initialCheckIn: initialCheckIn, unitId: unitId),
     );
 
     // If booking was created successfully, refresh calendar

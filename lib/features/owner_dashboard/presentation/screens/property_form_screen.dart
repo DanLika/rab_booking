@@ -913,7 +913,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           onSelected: (selected) {
             debugPrint('🎯 [AMENITY] Chip tapped: ${amenity.displayName}');
             debugPrint('📊 [AMENITY] Selected: $selected (was: $isSelected)');
-            debugPrint($
+            debugPrint(
               '📋 [AMENITY] Current set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}',
             );
 
@@ -927,7 +927,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                   ..remove(amenity);
                 debugPrint('❌ [AMENITY] Removed ${amenity.displayName}');
               }
-              debugPrint($
+              debugPrint(
                 '📊 [AMENITY] New set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}',
               );
             });
@@ -1238,7 +1238,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
       // Upload new images to Firebase Storage
       final List<String> uploadedImageUrls = [];
       if (_selectedImages.isNotEmpty) {
-        debugPrint($
+        debugPrint(
           '🔍 [UPLOAD] Starting upload for ${_selectedImages.length} images',
         );
 
@@ -1251,7 +1251,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
 
           for (int i = 0; i < _selectedImages.length; i++) {
             final image = _selectedImages[i];
-            debugPrint($
+            debugPrint(
               '📸 [UPLOAD] Image ${i + 1}/${_selectedImages.length} - Path: ${image.path}',
             );
 

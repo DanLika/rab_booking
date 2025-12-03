@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 
 /// Service for handling Firebase Storage operations
 class StorageService {

@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +13,32 @@ import '../../../domain/models/ical_feed.dart';
 import '../../providers/ical_feeds_provider.dart';
 import '../../providers/owner_properties_provider.dart';
 import '../../widgets/owner_app_drawer.dart';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/// AppBar preferred height
+const double _kAppBarHeight = 56.0;
+
+/// Gradient colors for header
+const Color _kGradientStart = Color(0xFF6B4CE6); // Purple
+const Color _kGradientEnd = Color(0xFF7E5FEE); // Lighter purple
+
+/// Status indicator colors (matching BookingStatus badge colors)
+const Color _kStatusActiveColor = Color(0xFF66BB6A); // Green
+const Color _kStatusPausedColor = Color(0xFFFFA726); // Orange
+const Color _kStatusErrorColor = Color(0xFFEF5350); // Red
+
+/// Card colors
+const Color _kCardColorDark = Color(0xFF2D2D2D);
+
+/// Content padding
+const EdgeInsets _kContentPadding = EdgeInsets.fromLTRB(24, 100, 24, 24);
+
+/// Dialog width constraints
+const double _kDialogMaxWidth = 500.0;
+const double _kDialogWidthFactor = 0.9;
 
 /// Screen for managing iCal calendar sync feeds
 class IcalSyncSettingsScreen extends ConsumerStatefulWidget {
@@ -31,19 +57,13 @@ class _IcalSyncSettingsScreenState
     final statsAsync = ref.watch(icalStatisticsProvider);
     final theme = Theme.of(context);
 
-    // Hardcoded horizontal gradient colors (left → right)
-    const gradientStart = Color(0xFF6B4CE6); // Purple
-    const gradientEnd = Color(0xFF7E5FEE); // Lighter purple
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(56),
+        preferredSize: const Size.fromHeight(_kAppBarHeight),
         child: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [gradientStart, gradientEnd],
-            ),
+            gradient: LinearGradient(colors: [_kGradientStart, _kGradientEnd]),
           ),
           child: AppBar(
             title: Text(
@@ -76,16 +96,12 @@ class _IcalSyncSettingsScreenState
       drawer: const OwnerAppDrawer(currentRoute: 'integrations/ical'),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [gradientStart, gradientEnd],
-          ),
+          gradient: LinearGradient(colors: [_kGradientStart, _kGradientEnd]),
         ),
         child: statsAsync.when(
           data: (stats) => _buildContent(context, feedsAsync, stats, theme),
           loading: () => const Center(
-            child: CircularProgressIndicator(
-              color: Colors.white,
-            ),
+            child: CircularProgressIndicator(color: Colors.white),
           ),
           error: (error, stackTrace) =>
               _buildContent(context, feedsAsync, null, theme),
@@ -101,7 +117,7 @@ class _IcalSyncSettingsScreenState
     ThemeData theme,
   ) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
+      padding: _kContentPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -124,19 +140,14 @@ class _IcalSyncSettingsScreenState
               return _buildFeedsList(feeds);
             },
             loading: () => const Center(
-              child: CircularProgressIndicator(
-                color: Colors.white,
-              ),
+              child: CircularProgressIndicator(color: Colors.white),
             ),
             error: (error, stack) => const Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
                   'Greška pri učitavanju feedova',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -153,15 +164,10 @@ class _IcalSyncSettingsScreenState
           // Help link
           TextButton.icon(
             onPressed: () => context.go(OwnerRoutes.icalGuide),
-            icon: const Icon(
-              Icons.help_outline,
-              color: Colors.white,
-            ),
+            icon: const Icon(Icons.help_outline, color: Colors.white),
             label: const Text(
               'Kako funkcionira iCal sinhronizacija?',
-              style: TextStyle(
-                color: Colors.white,
-              ),
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -176,12 +182,6 @@ class _IcalSyncSettingsScreenState
     final errorFeeds = stats?['error_feeds'] as int? ?? 0;
     final totalFeeds = stats?['total_feeds'] as int? ?? 0;
 
-    // Dark theme colors
-    const cardColorDark = Color(0xFF2D2D2D);
-    const confirmedGreen = Color(0xFF66BB6A);
-    const pendingOrange = Color(0xFFFFA726);
-    const cancelledRed = Color(0xFFEF5350);
-
     // Determine status
     Color statusColor;
     IconData statusIcon;
@@ -194,25 +194,27 @@ class _IcalSyncSettingsScreenState
       statusTitle = 'Nema feedova';
       statusDescription = 'Dodajte prvi iCal feed da započnete sinhronizaciju';
     } else if (errorFeeds > 0) {
-      statusColor = cancelledRed;
+      statusColor = _kStatusErrorColor;
       statusIcon = Icons.error;
       statusTitle = 'Greška u sinhronizaciji';
       statusDescription = '$errorFeeds od $totalFeeds feedova ima grešku';
     } else if (activeFeeds > 0) {
-      statusColor = confirmedGreen;
+      statusColor = _kStatusActiveColor;
       statusIcon = Icons.check_circle;
       statusTitle = 'Sinhronizacija aktivna';
       statusDescription = '$activeFeeds feedova aktivno sinhronizovano';
     } else {
-      statusColor = pendingOrange;
+      statusColor = _kStatusPausedColor;
       statusIcon = Icons.pause_circle;
       statusTitle = 'Svi feedovi pauzirani';
       statusDescription = 'Nema aktivnih feedova';
     }
 
-    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final cardColor = isDark ? _kCardColorDark : AppColors.surfaceLight;
     final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
+    final textSecondary = isDark
+        ? Colors.white70
+        : AppColors.textSecondaryLight;
 
     return Card(
       color: cardColor,
@@ -249,10 +251,7 @@ class _IcalSyncSettingsScreenState
                   const SizedBox(height: 4),
                   Text(
                     statusDescription,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 13, color: textSecondary),
                   ),
                 ],
               ),
@@ -340,16 +339,14 @@ class _IcalSyncSettingsScreenState
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Dark theme colors
-    const cardColorDark = Color(0xFF2D2D2D);
-    const confirmedGreen = Color(0xFF66BB6A);
-
-    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final cardColor = isDark ? _kCardColorDark : AppColors.surfaceLight;
     final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
-    final iconColor = isDark ? confirmedGreen : AppColors.primary;
+    final textSecondary = isDark
+        ? Colors.white70
+        : AppColors.textSecondaryLight;
+    final iconColor = isDark ? _kStatusActiveColor : AppColors.primary;
     final iconBgColor = isDark
-        ? confirmedGreen.withAlpha((0.15 * 255).toInt())
+        ? _kStatusActiveColor.withAlpha((0.15 * 255).toInt())
         : AppColors.primary.withAlpha((0.1 * 255).toInt());
 
     return Card(
@@ -359,7 +356,7 @@ class _IcalSyncSettingsScreenState
         borderRadius: BorderRadius.circular(12),
         side: isDark
             ? BorderSide(
-                color: confirmedGreen.withAlpha((0.3 * 255).toInt()),
+                color: _kStatusActiveColor.withAlpha((0.3 * 255).toInt()),
                 width: 1.5,
               )
             : BorderSide.none,
@@ -375,11 +372,7 @@ class _IcalSyncSettingsScreenState
                 shape: BoxShape.circle,
                 color: iconBgColor,
               ),
-              child: Icon(
-                Icons.sync_disabled,
-                size: 40,
-                color: iconColor,
-              ),
+              child: Icon(Icons.sync_disabled, size: 40, color: iconColor),
             ),
             const SizedBox(height: 16),
             Text(
@@ -395,10 +388,7 @@ class _IcalSyncSettingsScreenState
             Text(
               'Dodajte iCal feed da sinhronizujete rezervacije sa booking platformama',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: textSecondary),
             ),
           ],
         ),
@@ -410,18 +400,16 @@ class _IcalSyncSettingsScreenState
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Dark theme colors
-    const cardColorDark = Color(0xFF2D2D2D);
-    const confirmedGreen = Color(0xFF66BB6A);
-
-    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final cardColor = isDark ? _kCardColorDark : AppColors.surfaceLight;
     final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
-    final iconColor = isDark ? confirmedGreen : AppColors.primary;
+    final textSecondary = isDark
+        ? Colors.white70
+        : AppColors.textSecondaryLight;
+    final iconColor = isDark ? _kStatusActiveColor : AppColors.primary;
     final iconBgColor = isDark
-        ? confirmedGreen.withAlpha((0.15 * 255).toInt())
+        ? _kStatusActiveColor.withAlpha((0.15 * 255).toInt())
         : AppColors.primary.withAlpha((0.1 * 255).toInt());
-    final buttonBgColor = isDark ? confirmedGreen : AppColors.primary;
+    final buttonBgColor = isDark ? _kStatusActiveColor : AppColors.primary;
 
     return Card(
       color: cardColor,
@@ -430,7 +418,7 @@ class _IcalSyncSettingsScreenState
         borderRadius: BorderRadius.circular(12),
         side: isDark
             ? BorderSide(
-                color: confirmedGreen.withAlpha((0.3 * 255).toInt()),
+                color: _kStatusActiveColor.withAlpha((0.3 * 255).toInt()),
                 width: 1.5,
               )
             : BorderSide.none,
@@ -446,11 +434,7 @@ class _IcalSyncSettingsScreenState
                 shape: BoxShape.circle,
                 color: iconBgColor,
               ),
-              child: Icon(
-                Icons.add_circle_outline,
-                size: 28,
-                color: iconColor,
-              ),
+              child: Icon(Icons.add_circle_outline, size: 28, color: iconColor),
             ),
             const SizedBox(height: 16),
             Text(
@@ -466,10 +450,7 @@ class _IcalSyncSettingsScreenState
             Text(
               'Povežite kalendar sa Booking.com, Airbnb ili druge platforme',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: textSecondary,
-              ),
+              style: TextStyle(fontSize: 13, color: textSecondary),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
@@ -480,7 +461,10 @@ class _IcalSyncSettingsScreenState
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 backgroundColor: buttonBgColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -523,12 +507,11 @@ class _IcalSyncSettingsScreenState
     final statusColor = _getStatusColor(feed.status, theme);
     final statusIcon = _getStatusIcon(feed.status);
 
-    // Dark theme colors
-    const cardColorDark = Color(0xFF2D2D2D);
-
-    final cardColor = isDark ? cardColorDark : AppColors.surfaceLight;
+    final cardColor = isDark ? _kCardColorDark : AppColors.surfaceLight;
     final textPrimary = isDark ? Colors.white : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? Colors.white70 : AppColors.textSecondaryLight;
+    final textSecondary = isDark
+        ? Colors.white70
+        : AppColors.textSecondaryLight;
     final textTertiary = isDark ? Colors.white54 : AppColors.textTertiaryLight;
 
     return Card(
@@ -553,10 +536,7 @@ class _IcalSyncSettingsScreenState
         ),
         title: Text(
           feed.platformDisplayName,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: textPrimary,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: textPrimary),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
         ),
@@ -566,10 +546,7 @@ class _IcalSyncSettingsScreenState
             const SizedBox(height: 4),
             Text(
               'Zadnje sinhronizovano: ${feed.getTimeSinceLastSync()}',
-              style: TextStyle(
-                fontSize: 12,
-                color: textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: textSecondary),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
@@ -582,10 +559,7 @@ class _IcalSyncSettingsScreenState
               ),
             Text(
               '${feed.eventCount} rezervacija • ${feed.syncCount} sinhronizacija',
-              style: TextStyle(
-                fontSize: 12,
-                color: textTertiary,
-              ),
+              style: TextStyle(fontSize: 12, color: textTertiary),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
@@ -647,20 +621,15 @@ class _IcalSyncSettingsScreenState
   }
 
   Color _getStatusColor(String status, ThemeData theme) {
-    // Use BookingStatus badge colors for consistency
-    const confirmedGreen = Color(0xFF66BB6A);
-    const pendingOrange = Color(0xFFFFA726);
-    const cancelledRed = Color(0xFFEF5350);
-
     switch (status) {
       case 'active':
-        return confirmedGreen; // Green for active (same as confirmed badge)
+        return _kStatusActiveColor;
       case 'error':
-        return cancelledRed; // Red for errors (same as cancelled badge)
+        return _kStatusErrorColor;
       case 'paused':
-        return pendingOrange; // Orange for paused (same as pending badge)
+        return _kStatusPausedColor;
       default:
-        return theme.colorScheme.outline; // Theme-aware neutral color
+        return theme.colorScheme.outline;
     }
   }
 
@@ -891,7 +860,9 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   Widget build(BuildContext context) {
     final unitsAsync = ref.watch(ownerUnitsProvider);
     final screenWidth = MediaQuery.of(context).size.width;
-    final dialogWidth = screenWidth > 500 ? 500.0 : screenWidth * 0.9;
+    final dialogWidth = screenWidth > _kDialogMaxWidth
+        ? _kDialogMaxWidth
+        : screenWidth * _kDialogWidthFactor;
 
     return AlertDialog(
       backgroundColor: AppColors.surfaceLight,
@@ -902,10 +873,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [
-                  AppColors.primary,
-                  AppColors.authSecondary,
-                ],
+                colors: [AppColors.primary, AppColors.authSecondary],
               ),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -938,14 +906,13 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                     if (units.isEmpty) {
                       return const Text(
                         'Nemate kreiranih jedinica. Prvo kreirajte apartman.',
-                        style: TextStyle(
-                          color: AppColors.error,
-                        ),
+                        style: TextStyle(color: AppColors.error),
                       );
                     }
 
                     // Validate that selected unit exists in the list
-                    final validUnitId = units.any((u) => u.id == _selectedUnitId)
+                    final validUnitId =
+                        units.any((u) => u.id == _selectedUnitId)
                         ? _selectedUnitId
                         : null;
 
@@ -985,7 +952,8 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                 Builder(
                   builder: (context) {
                     const validPlatforms = ['booking_com', 'airbnb', 'other'];
-                    final validPlatform = validPlatforms.contains(_selectedPlatform)
+                    final validPlatform =
+                        validPlatforms.contains(_selectedPlatform)
                         ? _selectedPlatform
                         : 'booking_com';
 
@@ -1000,8 +968,14 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                           value: 'booking_com',
                           child: Text('Booking.com'),
                         ),
-                        DropdownMenuItem(value: 'airbnb', child: Text('Airbnb')),
-                        DropdownMenuItem(value: 'other', child: Text('Druga platforma (iCal)')),
+                        DropdownMenuItem(
+                          value: 'airbnb',
+                          child: Text('Airbnb'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'other',
+                          child: Text('Druga platforma (iCal)'),
+                        ),
                       ],
                       onChanged: (value) {
                         setState(() {

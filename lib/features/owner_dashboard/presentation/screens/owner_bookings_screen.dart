@@ -611,7 +611,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 ),
                 child: Icon(
                   Icons.event_available_outlined,
@@ -638,9 +638,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 child: Text(
                   'Ovdje će se prikazati sve rezervacije za vaše objekte. Kreirajte prvu rezervaciju ili pričekajte rezervacije gostiju.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 3,
@@ -675,7 +673,7 @@ class _BookingCard extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: theme.colorScheme.outline.withAlpha((0.08 * 255).toInt()),
+          color: theme.colorScheme.outline.withValues(alpha: 0.08),
           width: 0.5,
         ),
       ),
@@ -955,7 +953,7 @@ class _InfoRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+            color: theme.colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Icon(icon, size: 20, color: theme.colorScheme.primary),
@@ -994,7 +992,7 @@ class _ViewModeButton extends StatelessWidget {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: isSelected
-                ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+                ? theme.colorScheme.primary.withValues(alpha: 0.15)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),

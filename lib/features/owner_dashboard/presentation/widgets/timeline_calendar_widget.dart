@@ -22,6 +22,48 @@ import 'timeline/timeline_unit_name_cell.dart';
 import 'timeline/timeline_summary_cell.dart';
 import 'timeline/timeline_booking_stacker.dart';
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/// Initial days before/after today for dynamic date range
+const int _kInitialDaysOffset = 15;
+
+/// Days to prepend/append when scrolling near edge
+const int _kDaysToExtend = 30;
+
+/// Max days in past/future (1 year)
+const int _kMaxDaysLimit = 365;
+
+/// Days from edge before triggering infinite scroll
+const int _kEdgeThresholdDays = 5;
+
+/// Threshold for visible range update (avoid excessive rebuilds)
+const int _kVisibleRangeUpdateThreshold = 10;
+
+/// Scroll retry delay in milliseconds
+const int _kScrollRetryDelayMs = 100;
+
+/// Max scroll retry attempts
+const int _kMaxScrollRetryAttempts = 10;
+
+/// Initial visible window (days before + after initial date)
+const int _kInitialWindowDaysBefore = 60;
+const int _kInitialWindowDaysTotal = 120;
+
+/// Responsive breakpoints for header height
+const double _kMobileBreakpoint = 600.0;
+const double _kTabletBreakpoint = 900.0;
+
+/// Header heights by screen size
+const double _kMobileHeaderHeight = 60.0;
+const double _kTabletHeaderHeight = 70.0;
+const double _kDesktopHeaderHeight = 80.0;
+
+/// Header proportions
+const double _kMonthHeaderProportion = 0.35;
+const double _kDayHeaderProportion = 0.65;
+
 /// BedBooking-style Timeline Calendar
 /// Gantt/Timeline layout: Units vertical, Dates horizontal
 /// Starts from today, horizontal scroll, pinch-to-zoom support
@@ -30,7 +72,8 @@ class TimelineCalendarWidget extends ConsumerStatefulWidget {
   final Function(DateTime date, UnitModel unit)? onCellLongPress;
   final DateTime?
   initialScrollToDate; // Date to scroll to on init (null = today)
-  final Function(UnitModel unit)? onUnitNameTap; // Callback when unit name is tapped (to show future bookings dialog)
+  final Function(UnitModel unit)?
+  onUnitNameTap; // Callback when unit name is tapped (to show future bookings dialog)
 
   const TimelineCalendarWidget({
     super.key,
@@ -69,10 +112,15 @@ class _TimelineCalendarWidgetState
   int _visibleDayCount = 90; // Render 90 days at a time
   static const int _bufferDays = 30; // Extra days before/after visible area
 
-  // Infinite scroll - dynamic date range (initially 15+15 days)
-  DateTime _dynamicStartDate = DateTime.now().subtract(const Duration(days: 15));
-  DateTime _dynamicEndDate = DateTime.now().add(const Duration(days: 15));
-  bool _isInitialScrolling = true; // Prevent infinite scroll during initial scroll to today
+  // Infinite scroll - dynamic date range (initially offset days before/after)
+  DateTime _dynamicStartDate = DateTime.now().subtract(
+    const Duration(days: _kInitialDaysOffset),
+  );
+  DateTime _dynamicEndDate = DateTime.now().add(
+    const Duration(days: _kInitialDaysOffset),
+  );
+  bool _isInitialScrolling =
+      true; // Prevent infinite scroll during initial scroll to today
 
   // Responsive dimensions based on screen size and accessibility settings
   // Using CalendarGridCalculator for consistency
@@ -120,15 +168,12 @@ class _TimelineCalendarWidgetState
     // Responsive header height based on screen width
     final screenWidth = MediaQuery.of(context).size.width;
 
-    if (screenWidth < 600) {
-      // Mobile: smaller header
-      return 60.0; // 20px month + 40px day
-    } else if (screenWidth < 900) {
-      // Tablet: medium header
-      return 70.0; // 24px month + 46px day
+    if (screenWidth < _kMobileBreakpoint) {
+      return _kMobileHeaderHeight;
+    } else if (screenWidth < _kTabletBreakpoint) {
+      return _kTabletHeaderHeight;
     } else {
-      // Desktop: standard header
-      return 80.0; // 28px month + 52px day
+      return _kDesktopHeaderHeight;
     }
   }
 
@@ -145,10 +190,10 @@ class _TimelineCalendarWidgetState
     // FIXED: Use initialScrollToDate to initialize windowing (Bug #5 fix)
     final initialDate = widget.initialScrollToDate ?? DateTime.now();
     final initialDateIndex = initialDate.difference(_getStartDate()).inDays;
-    _visibleStartIndex = (initialDateIndex - 60)
+    _visibleStartIndex = (initialDateIndex - _kInitialWindowDaysBefore)
         .clamp(0, double.infinity)
-        .toInt(); // Start 60 days before initial date
-    _visibleDayCount = 120; // Show 120 days initially (60 before + 60 after)
+        .toInt();
+    _visibleDayCount = _kInitialWindowDaysTotal;
 
     // Create optimized scroll sync listener
     // Uses post-frame callback and sync guard to prevent circular updates and lag
@@ -233,33 +278,43 @@ class _TimelineCalendarWidgetState
     final newDayCount = daysInViewport + (2 * _bufferDays);
 
     // Only update state if range changed significantly (avoid excessive rebuilds)
-    if ((newStartIndex - _visibleStartIndex).abs() > 10 ||
-        (newDayCount - _visibleDayCount).abs() > 10) {
+    if ((newStartIndex - _visibleStartIndex).abs() >
+            _kVisibleRangeUpdateThreshold ||
+        (newDayCount - _visibleDayCount).abs() >
+            _kVisibleRangeUpdateThreshold) {
       setState(() {
         _visibleStartIndex = newStartIndex;
         _visibleDayCount = newDayCount;
       });
     }
 
-    // Infinite scroll: Add more days when near edge (5 days buffer)
+    // Infinite scroll: Add more days when near edge
     // Skip edge detection during initial scroll to today to prevent unwanted date range expansion
     if (!_isInitialScrolling) {
-      final edgeThreshold = dayWidth * 5; // 5 days from edge
+      final edgeThreshold = dayWidth * _kEdgeThresholdDays;
       final maxScroll = _horizontalScrollController.position.maxScrollExtent;
 
-      // Near start edge? Prepend 30 days (max 1 year in past)
+      // Near start edge? Prepend days (max 1 year in past)
       if (scrollOffset < edgeThreshold &&
-          _dynamicStartDate.isAfter(DateTime.now().subtract(const Duration(days: 365)))) {
+          _dynamicStartDate.isAfter(
+            DateTime.now().subtract(const Duration(days: _kMaxDaysLimit)),
+          )) {
         setState(() {
-          _dynamicStartDate = _dynamicStartDate.subtract(const Duration(days: 30));
+          _dynamicStartDate = _dynamicStartDate.subtract(
+            const Duration(days: _kDaysToExtend),
+          );
         });
       }
 
-      // Near end edge? Append 30 days (max 1 year in future)
+      // Near end edge? Append days (max 1 year in future)
       if (scrollOffset > maxScroll - edgeThreshold &&
-          _dynamicEndDate.isBefore(DateTime.now().add(const Duration(days: 365)))) {
+          _dynamicEndDate.isBefore(
+            DateTime.now().add(const Duration(days: _kMaxDaysLimit)),
+          )) {
         setState(() {
-          _dynamicEndDate = _dynamicEndDate.add(const Duration(days: 30));
+          _dynamicEndDate = _dynamicEndDate.add(
+            const Duration(days: _kDaysToExtend),
+          );
         });
       }
     }
@@ -284,15 +339,13 @@ class _TimelineCalendarWidgetState
   /// Scroll to today with retry logic
   /// FIXED: Wait for scroll controller to have clients before scrolling
   void _scrollToTodayWithRetry({int retryCount = 0}) {
-    // Max 10 retries (100ms each = 1 second total)
-    if (retryCount >= 10) {
+    if (retryCount >= _kMaxScrollRetryAttempts) {
       return;
     }
 
     // Check if scroll controller is ready
     if (!_horizontalScrollController.hasClients) {
-      // Retry after 100ms
-      Future.delayed(const Duration(milliseconds: 100), () {
+      Future.delayed(const Duration(milliseconds: _kScrollRetryDelayMs), () {
         if (mounted) {
           _scrollToTodayWithRetry(retryCount: retryCount + 1);
         }
@@ -327,18 +380,20 @@ class _TimelineCalendarWidgetState
     final targetScroll = (scrollPosition - (visibleWidth / 2) + (dayWidth / 2))
         .clamp(0.0, maxScroll);
 
-    _horizontalScrollController.animateTo(
-      targetScroll,
-      duration: AppDimensions.animationSlow,
-      curve: Curves.easeInOut,
-    ).then((_) {
-      // Reset flag after scroll animation completes to allow infinite scroll for user scrolling
-      if (mounted) {
-        setState(() {
-          _isInitialScrolling = false;
+    _horizontalScrollController
+        .animateTo(
+          targetScroll,
+          duration: AppDimensions.animationSlow,
+          curve: Curves.easeInOut,
+        )
+        .then((_) {
+          // Reset flag after scroll animation completes to allow infinite scroll for user scrolling
+          if (mounted) {
+            setState(() {
+              _isInitialScrolling = false;
+            });
+          }
         });
-      }
-    });
   }
 
   DateTime _getStartDate() {
@@ -584,8 +639,8 @@ class _TimelineCalendarWidgetState
   Widget _buildDateHeaders(List<DateTime> dates, double offsetWidth) {
     final unitColumnWidth = _getUnitColumnWidth(context);
     final headerHeight = _getHeaderHeight(context);
-    final monthHeaderHeight = headerHeight * 0.35; // ~35% for month header
-    final dayHeaderHeight = headerHeight * 0.65; // ~65% for day header
+    final monthHeaderHeight = headerHeight * _kMonthHeaderProportion;
+    final dayHeaderHeight = headerHeight * _kDayHeaderProportion;
 
     return SizedBox(
       height: headerHeight,
@@ -705,7 +760,9 @@ class _TimelineCalendarWidgetState
         children: units.map((unit) {
           // Calculate dynamic height for this unit based on booking stacks
           final bookings = bookingsByUnit[unit.id] ?? [];
-          final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(bookings);
+          final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(
+            bookings,
+          );
           final dynamicHeight = baseRowHeight * maxStackCount;
 
           return TimelineUnitNameCell(
@@ -755,7 +812,9 @@ class _TimelineCalendarWidgetState
 
     // Calculate stack levels for overlapping bookings
     final stackLevels = TimelineBookingStacker.assignStackLevels(bookings);
-    final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(bookings);
+    final maxStackCount = TimelineBookingStacker.calculateMaxStackCount(
+      bookings,
+    );
 
     // Dynamic height: base height × number of stacks
     final unitRowHeight = baseRowHeight * maxStackCount;
@@ -971,15 +1030,11 @@ class _TimelineCalendarWidgetState
   }
 
   void _showReservationDetails(BookingModel booking) async {
-    final result = await showDialog<bool>(
+    // Dialog handles its own refresh via provider invalidation
+    await showDialog<bool>(
       context: context,
       builder: (context) => BookingInlineEditDialog(booking: booking),
     );
-
-    // If edited successfully, result will be true
-    if (result == true && mounted) {
-      // Calendar already refreshed by dialog
-    }
   }
 
   /// Show booking action menu (short tap)
@@ -1100,5 +1155,4 @@ class _TimelineCalendarWidgetState
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
-
 }

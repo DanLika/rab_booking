@@ -10,8 +10,8 @@ import '../../../owner_dashboard/presentation/providers/owner_properties_provide
 import 'split_day_calendar_painter.dart';
 import 'calendar_hover_tooltip.dart';
 import 'calendar/calendar_date_utils.dart';
-import 'calendar/calendar_view_switcher_widget.dart';
 import 'calendar/calendar_compact_legend.dart';
+import 'calendar/calendar_combined_header_widget.dart';
 import '../theme/responsive_helper.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
@@ -67,7 +67,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     return Column(
       children: [
         // Combined header - explicitly outside any GestureDetector
-        _buildCombinedHeader(context, colors, isDarkMode),
+        CalendarCombinedHeaderWidget(
+          colors: colors,
+          isDarkMode: isDarkMode,
+          navigationWidget: _buildCompactMonthNavigation(colors),
+        ),
         const SizedBox(height: SpacingTokens.xs),
 
         // Calendar and tooltip in Stack for overlay positioning
@@ -117,68 +121,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildCombinedHeader(
-    BuildContext context,
-    WidgetColorScheme colors,
-    bool isDarkMode,
-  ) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 400; // iPhone SE and similar
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
-          vertical: SpacingTokens.xxs,
-        ),
-        decoration: BoxDecoration(
-          color: colors.backgroundSecondary,
-          borderRadius: BorderTokens.circularRounded,
-          boxShadow: ShadowTokens.light,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // View Switcher
-            CalendarViewSwitcherWidget(colors: colors, isDarkMode: isDarkMode),
-            SizedBox(width: isSmallScreen ? 4 : SpacingTokens.xxs),
-
-            // Theme Toggle Button
-            IconButton(
-              icon: Icon(
-                isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                size: isSmallScreen ? 16 : IconSizeTokens.small,
-                color: colors.textPrimary,
-              ),
-              onPressed: () {
-                ref.read(themeProvider.notifier).state = !isDarkMode;
-              },
-              tooltip: isDarkMode
-                  ? 'Switch to Light Mode'
-                  : 'Switch to Dark Mode',
-              padding: EdgeInsets.zero,
-              constraints: BoxConstraints(
-                minWidth: isSmallScreen
-                    ? 28
-                    : ConstraintTokens.iconContainerSmall,
-                minHeight: isSmallScreen
-                    ? 28
-                    : ConstraintTokens.iconContainerSmall,
-              ),
-            ),
-
-            SizedBox(width: isSmallScreen ? 4 : SpacingTokens.xxs),
-
-            // Compact Navigation
-            _buildCompactMonthNavigation(colors),
-          ],
-        ),
-      ),
     );
   }
 

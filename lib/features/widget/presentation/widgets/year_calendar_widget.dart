@@ -11,8 +11,9 @@ import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import 'calendar_hover_tooltip.dart';
 import 'calendar/calendar_date_utils.dart';
-import 'calendar/calendar_view_switcher_widget.dart';
 import 'calendar/calendar_compact_legend.dart';
+import 'calendar/calendar_combined_header_widget.dart';
+import 'calendar/year_calendar_painters.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
 class YearCalendarWidget extends ConsumerStatefulWidget {
@@ -35,8 +36,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
   int _currentYear = DateTime.now().year;
-  DateTime? _hoveredDate; // For hover tooltip (desktop)
-  Offset _mousePosition = Offset.zero; // Track mouse position for tooltip
+  DateTime? _hoveredDate;
+  Offset _mousePosition = Offset.zero;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +67,11 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         Column(
           children: [
             // Combined header matching month/week view layout
-            _buildCombinedHeader(context, colors, isDarkMode),
+            CalendarCombinedHeaderWidget(
+              colors: colors,
+              isDarkMode: isDarkMode,
+              navigationWidget: _buildCompactYearNavigation(colors),
+            ),
             const SizedBox(height: SpacingTokens.m),
             Expanded(
               child: calendarData.when(
@@ -89,68 +94,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             error: (error, stack) => const SizedBox.shrink(),
           ),
       ],
-    );
-  }
-
-  Widget _buildCombinedHeader(
-    BuildContext context,
-    WidgetColorScheme colors,
-    bool isDarkMode,
-  ) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 400; // iPhone SE and similar
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
-          vertical: SpacingTokens.xxs,
-        ),
-        decoration: BoxDecoration(
-          color: colors.backgroundSecondary,
-          borderRadius: BorderTokens.circularRounded,
-          boxShadow: ShadowTokens.light,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // View Switcher
-            CalendarViewSwitcherWidget(colors: colors, isDarkMode: isDarkMode),
-            SizedBox(width: isSmallScreen ? 4 : SpacingTokens.xxs),
-
-            // Theme Toggle Button
-            IconButton(
-              icon: Icon(
-                isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                size: isSmallScreen ? 16 : IconSizeTokens.small,
-                color: colors.textPrimary,
-              ),
-              onPressed: () {
-                ref.read(themeProvider.notifier).state = !isDarkMode;
-              },
-              tooltip: isDarkMode
-                  ? 'Switch to Light Mode'
-                  : 'Switch to Dark Mode',
-              padding: EdgeInsets.zero,
-              constraints: BoxConstraints(
-                minWidth: isSmallScreen
-                    ? 28
-                    : ConstraintTokens.iconContainerSmall,
-                minHeight: isSmallScreen
-                    ? 28
-                    : ConstraintTokens.iconContainerSmall,
-              ),
-            ),
-
-            SizedBox(width: isSmallScreen ? 4 : SpacingTokens.xxs),
-
-            // Compact Navigation
-            _buildCompactYearNavigation(colors),
-          ],
-        ),
-      ),
     );
   }
 
@@ -512,7 +455,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                 if (isPartialCheckIn || isPartialCheckOut)
                   Positioned.fill(
                     child: CustomPaint(
-                      painter: _DiagonalLinePainter(
+                      painter: DiagonalLinePainter(
                         diagonalColor: dateInfo.isPendingBooking
                             ? colors.statusPendingBackground
                             : dateInfo.status.getDiagonalColor(colors),
@@ -528,7 +471,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                 if (isPartialBoth)
                   Positioned.fill(
                     child: CustomPaint(
-                      painter: _PartialBothPainter(
+                      painter: PartialBothPainter(
                         checkoutColor: dateInfo.isCheckOutPending
                             ? colors.statusPendingBackground
                             : colors.statusBookedBackground,
@@ -549,7 +492,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                     dateInfo.status == DateStatus.booked)
                   Positioned.fill(
                     child: CustomPaint(
-                      painter: _PendingPatternPainter(
+                      painter: PendingPatternPainter(
                         lineColor: DateStatus.pending.getPatternLineColor(colors),
                       ),
                     ),
@@ -958,195 +901,5 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     }
 
     return false; // No orphan gaps would be created
-  }
-}
-
-/// Simple painter for diagonal lines on check-in/check-out days
-class _DiagonalLinePainter extends CustomPainter {
-  final Color diagonalColor;
-  final bool isCheckIn;
-  final bool isPending;
-  final Color? patternLineColor;
-
-  _DiagonalLinePainter({
-    required this.diagonalColor,
-    required this.isCheckIn,
-    this.isPending = false,
-    this.patternLineColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    paint.color = diagonalColor;
-
-    if (isCheckIn) {
-      // Check-in: diagonal from bottom-left to top-right (green to pink/pending)
-      final path = Path()
-        ..moveTo(0, size.height) // Bottom-left
-        ..lineTo(size.width, 0) // Top-right
-        ..lineTo(size.width, size.height) // Bottom-right
-        ..close();
-      canvas.drawPath(path, paint);
-
-      // Draw pending pattern on booked triangle
-      if (isPending && patternLineColor != null) {
-        canvas.save();
-        canvas.clipPath(path);
-        _drawDiagonalPattern(canvas, size, patternLineColor!);
-        canvas.restore();
-      }
-    } else {
-      // Check-out: diagonal from top-left to bottom-right (pink/pending to green)
-      final path = Path()
-        ..moveTo(0, 0) // Top-left
-        ..lineTo(size.width, size.height) // Bottom-right
-        ..lineTo(0, size.height) // Bottom-left
-        ..close();
-      canvas.drawPath(path, paint);
-
-      // Draw pending pattern on booked triangle
-      if (isPending && patternLineColor != null) {
-        canvas.save();
-        canvas.clipPath(path);
-        _drawDiagonalPattern(canvas, size, patternLineColor!);
-        canvas.restore();
-      }
-    }
-  }
-
-  void _drawDiagonalPattern(Canvas canvas, Size size, Color lineColor) {
-    final paint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    const double spacing = 4.0;
-    for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DiagonalLinePainter oldDelegate) {
-    return oldDelegate.diagonalColor != diagonalColor ||
-        oldDelegate.isCheckIn != isCheckIn ||
-        oldDelegate.isPending != isPending ||
-        oldDelegate.patternLineColor != patternLineColor;
-  }
-}
-
-/// Painter for full-cell pending pattern (diagonal lines)
-class _PendingPatternPainter extends CustomPainter {
-  final Color lineColor;
-
-  _PendingPatternPainter({required this.lineColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    const double spacing = 4.0;
-    for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_PendingPatternPainter oldDelegate) {
-    return oldDelegate.lineColor != lineColor;
-  }
-}
-
-/// Painter for partialBoth (turnover day) with split colors
-/// Top-left triangle = checkout, Bottom-right triangle = checkin
-class _PartialBothPainter extends CustomPainter {
-  final Color checkoutColor; // Top-left triangle color
-  final Color checkinColor; // Bottom-right triangle color
-  final bool isCheckOutPending;
-  final bool isCheckInPending;
-  final Color? patternLineColor;
-
-  _PartialBothPainter({
-    required this.checkoutColor,
-    required this.checkinColor,
-    this.isCheckOutPending = false,
-    this.isCheckInPending = false,
-    this.patternLineColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-
-    // Draw top-left triangle (checkout)
-    final checkoutPath = Path()
-      ..moveTo(0, 0) // Top-left
-      ..lineTo(size.width, 0) // Top-right
-      ..lineTo(0, size.height) // Bottom-left
-      ..close();
-    paint.color = checkoutColor;
-    canvas.drawPath(checkoutPath, paint);
-
-    // Draw bottom-right triangle (checkin)
-    final checkinPath = Path()
-      ..moveTo(0, size.height) // Bottom-left
-      ..lineTo(size.width, size.height) // Bottom-right
-      ..lineTo(size.width, 0) // Top-right
-      ..close();
-    paint.color = checkinColor;
-    canvas.drawPath(checkinPath, paint);
-
-    // Draw pending pattern on checkout triangle if pending
-    if (isCheckOutPending && patternLineColor != null) {
-      canvas.save();
-      canvas.clipPath(checkoutPath);
-      _drawDiagonalPattern(canvas, size, patternLineColor!);
-      canvas.restore();
-    }
-
-    // Draw pending pattern on checkin triangle if pending
-    if (isCheckInPending && patternLineColor != null) {
-      canvas.save();
-      canvas.clipPath(checkinPath);
-      _drawDiagonalPattern(canvas, size, patternLineColor!);
-      canvas.restore();
-    }
-  }
-
-  void _drawDiagonalPattern(Canvas canvas, Size size, Color lineColor) {
-    final paint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    const double spacing = 4.0;
-    for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_PartialBothPainter oldDelegate) {
-    return oldDelegate.checkoutColor != checkoutColor ||
-        oldDelegate.checkinColor != checkinColor ||
-        oldDelegate.isCheckOutPending != isCheckOutPending ||
-        oldDelegate.isCheckInPending != isCheckInPending ||
-        oldDelegate.patternLineColor != patternLineColor;
   }
 }

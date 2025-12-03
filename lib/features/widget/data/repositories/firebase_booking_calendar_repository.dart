@@ -180,7 +180,16 @@ class FirebaseBookingCalendarRepository {
           icalEvents,
         );
       },
-    );
+    ).handleError((error, stackTrace) {
+      // Log error but don't crash the UI
+      LoggingService.logError(
+        '[CalendarRepo] Year calendar stream error',
+        error,
+        stackTrace,
+      );
+      // Return empty calendar - UI will show available dates
+      // This prevents crashes on network errors or permission issues
+    });
   }
 
   /// Get month-view calendar data with realtime updates and prices
@@ -324,7 +333,16 @@ class FirebaseBookingCalendarRepository {
           icalEvents,
         );
       },
-    );
+    ).handleError((error, stackTrace) {
+      // Log error but don't crash the UI
+      LoggingService.logError(
+        '[CalendarRepo] Month calendar stream error',
+        error,
+        stackTrace,
+      );
+      // Return empty calendar - UI will show available dates
+      // This prevents crashes on network errors or permission issues
+    });
   }
 
   /// Build calendar map for a specific month

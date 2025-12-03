@@ -10,6 +10,7 @@ _$BookingModelImpl _$$BookingModelImplFromJson(Map<String, dynamic> json) =>
     _$BookingModelImpl(
       id: json['id'] as String,
       unitId: json['unit_id'] as String,
+      propertyId: json['property_id'] as String?,
       userId: json['user_id'] as String?,
       guestId: json['guest_id'] as String?,
       ownerId: json['owner_id'] as String?,
@@ -28,6 +29,8 @@ _$BookingModelImpl _$$BookingModelImplFromJson(Map<String, dynamic> json) =>
       remainingAmount: (json['remaining_amount'] as num?)?.toDouble(),
       paymentMethod: json['payment_method'] as String?,
       paymentStatus: json['payment_status'] as String?,
+      paymentOption: json['payment_option'] as String?,
+      requireOwnerApproval: json['require_owner_approval'] as bool?,
       source: json['source'] as String?,
       guestCount: (json['guest_count'] as num?)?.toInt() ?? 1,
       notes: json['notes'] as String?,
@@ -51,6 +54,7 @@ Map<String, dynamic> _$$BookingModelImplToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'unit_id': instance.unitId,
+  'property_id': instance.propertyId,
   'user_id': instance.userId,
   'guest_id': instance.guestId,
   'owner_id': instance.ownerId,
@@ -69,6 +73,8 @@ Map<String, dynamic> _$$BookingModelImplToJson(
   'remaining_amount': instance.remainingAmount,
   'payment_method': instance.paymentMethod,
   'payment_status': instance.paymentStatus,
+  'payment_option': instance.paymentOption,
+  'require_owner_approval': instance.requireOwnerApproval,
   'source': instance.source,
   'guest_count': instance.guestCount,
   'notes': instance.notes,

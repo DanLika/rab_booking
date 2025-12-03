@@ -300,6 +300,25 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       console.log(`Processing Stripe webhook for booking: ${bookingReference}`);
       console.log(`Unit: ${unitId}, CheckIn: ${checkIn}, CheckOut: ${checkOut}`);
 
+      // IDEMPOTENCY CHECK: Prevent duplicate bookings if webhook fires twice
+      const existingBookingQuery = await db.collection("bookings")
+        .where("stripe_session_id", "==", session.id)
+        .limit(1)
+        .get();
+
+      if (!existingBookingQuery.empty) {
+        const existingBooking = existingBookingQuery.docs[0];
+        console.log(`Webhook already processed - booking ${existingBooking.id} exists for session ${session.id}`);
+        res.json({
+          received: true,
+          booking_id: existingBooking.id,
+          booking_reference: existingBooking.data().booking_reference,
+          status: "already_processed",
+          message: "Booking already created for this session",
+        });
+        return;
+      }
+
       // Convert to Firestore timestamps
       const checkInTimestamp = admin.firestore.Timestamp.fromDate(checkIn);
       const checkOutTimestamp = admin.firestore.Timestamp.fromDate(checkOut);

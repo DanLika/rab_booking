@@ -15,6 +15,9 @@ class BookingModel with _$BookingModel {
     /// Unit being booked
     @JsonKey(name: 'unit_id') required String unitId,
 
+    /// Property ID (denormalized for queries)
+    @JsonKey(name: 'property_id') String? propertyId,
+
     /// Guest user ID (nullable for anonymous widget bookings)
     @JsonKey(name: 'user_id') String? userId,
 
@@ -70,6 +73,12 @@ class BookingModel with _$BookingModel {
 
     /// Payment status (pending, paid, refunded)
     @JsonKey(name: 'payment_status') String? paymentStatus,
+
+    /// Payment option (deposit, full_payment)
+    @JsonKey(name: 'payment_option') String? paymentOption,
+
+    /// Whether booking requires owner approval
+    @JsonKey(name: 'require_owner_approval') bool? requireOwnerApproval,
 
     /// Booking source (widget, admin, direct, api)
     String? source,

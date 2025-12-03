@@ -42,7 +42,7 @@ export 'dropdown.dart';
 export 'date_picker.dart';
 export 'tab_bar.dart';
 export 'snackbar.dart';
-export 'dialog.dart';
+// export 'dialog.dart'; // REMOVED - unused, file deleted
 export 'bottom_sheet.dart';
 export 'image.dart';
 export 'avatar.dart';
@@ -57,7 +57,6 @@ export 'animations/animated_button.dart';
 export 'animations/animated_input.dart';
 export 'animations/animated_card.dart';
 export 'animations/animated_icon.dart';
-export 'animations/scroll_effects.dart';
 export 'animations/gesture_widgets.dart';
 export 'animations/skeleton_loader.dart';
 export 'animations/hero_image.dart';
@@ -69,4 +68,4 @@ export 'animations/hero_image.dart';
 export 'price_text.dart';
 
 // Network & Connectivity
-export 'offline_banner.dart';
+// export 'offline_banner.dart'; // REMOVED - unused

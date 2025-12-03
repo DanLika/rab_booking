@@ -90,6 +90,23 @@ export const createBookingAtomic = onCall(async (request) => {
     const icalExportEnabled =
       widgetSettings?.ical_export_enabled ?? false;
 
+    // ========================================================================
+    // STEP 1.5: Validate guest count against unit's max_guests
+    // ========================================================================
+    const unitDoc = await db.collection("units").doc(unitId).get();
+    if (!unitDoc.exists) {
+      throw new HttpsError("not-found", "Unit not found");
+    }
+    const unitData = unitDoc.data();
+    const maxGuests = unitData?.max_guests ?? 10; // Default max 10 if not set
+
+    if (guestCount && guestCount > maxGuests) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Maximum ${maxGuests} guests allowed for this unit. You requested ${guestCount}.`
+      );
+    }
+
     // Validate payment method is enabled in settings
     const isStripeDisabled =
       paymentMethod === "stripe" && (!stripeConfig || !stripeConfig.enabled);

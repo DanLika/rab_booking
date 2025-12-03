@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/calendar_date_status.dart';
-import '../providers/month_calendar_provider.dart';
+import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/widget_settings_provider.dart';
-import '../providers/realtime_booking_calendar_provider.dart';
 import '../../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import 'split_day_calendar_painter.dart';
 import 'calendar/calendar_date_utils.dart';
@@ -44,23 +43,18 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // Get unit data for pricing and minNights (gap blocking)
+    // Get unit data for minNights (gap blocking) - used in legend
     final unitAsync = ref.watch(unitByIdProvider(widget.propertyId, widget.unitId));
     final unit = unitAsync.valueOrNull;
-    final basePrice = unit?.pricePerNight ?? 0.0;
-    final weekendBasePrice = unit?.weekendBasePrice;
-    final weekendDays = unit?.weekendDays;
-    final minNights = unit?.minStayNights ?? 1; // Read from UnitModel, not WidgetSettings
+    final minNights = unit?.minStayNights ?? 1;
 
+    // Use realtime stream provider for automatic updates when bookings change
     final calendarData = ref.watch(
-      monthCalendarDataProvider((
-        unitId: widget.unitId,
-        monthStart: _currentMonth,
-        minNights: minNights,
-        basePrice: basePrice,
-        weekendBasePrice: weekendBasePrice,
-        weekendDays: weekendDays,
-      )),
+      realtimeMonthCalendarProvider(
+        widget.unitId,
+        _currentMonth.year,
+        _currentMonth.month,
+      ),
     );
     final isDarkMode = ref.watch(themeProvider);
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/calendar_view_provider.dart';
-import '../providers/realtime_calendar_provider.dart';
-import '../providers/calendar_auto_refresh_provider.dart';
 import '../../domain/models/calendar_view_type.dart';
 import 'year_calendar_widget.dart';
 import 'month_calendar_widget.dart';
@@ -41,13 +39,10 @@ class _CalendarViewSwitcherState extends ConsumerState<CalendarViewSwitcher> {
   Widget build(BuildContext context) {
     final currentView = ref.watch(calendarViewProvider);
 
-    // Watch for real-time updates
-    ref.watch(realtimeCalendarDataProvider(widget.unitId));
+    // Calendar widgets now use realtime stream providers directly
+    // (realtimeYearCalendarProvider / realtimeMonthCalendarProvider)
+    // No additional watchers needed here
 
-    // Bug #68 Fix: Initialize auto-refresh to watch booking status changes
-    ref.watch(calendarAutoRefreshProvider(widget.unitId));
-
-    // No longer use Column with Expanded - parent now controls height via SizedBox
     return _buildCalendarView(currentView);
   }
 

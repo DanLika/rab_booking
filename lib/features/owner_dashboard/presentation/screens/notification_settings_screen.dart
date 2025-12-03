@@ -246,7 +246,7 @@ class _NotificationSettingsScreenState
                     'Master switch for all notification types',
                     style: TextStyle(
                       fontSize: 13,
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   secondary: Container(
@@ -469,7 +469,7 @@ class _NotificationSettingsScreenState
                 Text(
                   error.toString(),
                   style: TextStyle(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
@@ -502,7 +502,7 @@ class _NotificationSettingsScreenState
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.3),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
         ),
         boxShadow: AppShadows.getElevation(1, isDark: isDark),
       ),
@@ -546,7 +546,7 @@ class _NotificationSettingsScreenState
               description,
               style: TextStyle(
                 fontSize: 13,
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -656,7 +656,7 @@ class _NotificationSettingsScreenState
               fontSize: 14,
               color: enabled
                   ? theme.colorScheme.onSurface
-                  : theme.colorScheme.onSurface.withOpacity(0.4),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
           ),
           subtitle: Text(
@@ -664,8 +664,8 @@ class _NotificationSettingsScreenState
             style: TextStyle(
               fontSize: 12,
               color: enabled
-                  ? theme.colorScheme.onSurface.withOpacity(0.6)
-                  : theme.colorScheme.onSurface.withOpacity(0.3),
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ),
           secondary: Container(

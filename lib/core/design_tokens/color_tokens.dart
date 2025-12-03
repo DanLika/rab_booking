@@ -119,7 +119,7 @@ class ColorTokens {
 
   /// Get color with custom opacity (0.0 to 1.0)
   static Color withOpacity(Color color, double opacity) {
-    return color.withOpacity(opacity);
+    return color.withValues(alpha: opacity);
   }
 
   /// Get grey shade by percentage (0.0 = black, 1.0 = white)
@@ -347,10 +347,10 @@ class LightColorScheme implements WidgetColorScheme {
   Color get statusDisabledText => ColorTokens.grey300;
   @override
   Color get statusPastReservationBackground =>
-      ColorTokens.pink500.withOpacity(0.1); // Very light - 10% opacity
+      ColorTokens.pink500.withValues(alpha: 0.1); // Very light - 10% opacity
   @override
   Color get statusPastReservationBorder =>
-      ColorTokens.pink500.withOpacity(0.1); // Very light border - 10% opacity
+      ColorTokens.pink500.withValues(alpha: 0.1); // Very light border - 10% opacity
 
   // Buttons - Black primary
   @override
@@ -553,10 +553,10 @@ class DarkColorScheme implements WidgetColorScheme {
   Color get statusDisabledText => ColorTokens.grey600;
   @override
   Color get statusPastReservationBackground =>
-      ColorTokens.pink500.withOpacity(0.1); // Very light - 10% opacity
+      ColorTokens.pink500.withValues(alpha: 0.1); // Very light - 10% opacity
   @override
   Color get statusPastReservationBorder =>
-      ColorTokens.pink500.withOpacity(0.1); // Very light border - 10% opacity
+      ColorTokens.pink500.withValues(alpha: 0.1); // Very light border - 10% opacity
 
   // Buttons
   @override

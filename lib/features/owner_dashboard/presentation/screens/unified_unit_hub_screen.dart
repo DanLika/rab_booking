@@ -220,7 +220,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             gradient: context.gradients.sectionBackground,
             border: Border(
               left: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.2),
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
               ),
             ),
           ),
@@ -254,7 +254,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.2),
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
               ),
             ),
           ),
@@ -487,7 +487,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                   Icon(
                     Icons.search_off,
                     size: 64,
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -845,7 +845,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 propertyName,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: isSelected
-                      ? (isDark ? Colors.white.withOpacity(0.7) : theme.colorScheme.onPrimaryContainer.withOpacity(0.7))
+                      ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
                       : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -859,7 +859,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     Icons.people_outline,
                     size: 16,
                     color: isSelected
-                        ? (isDark ? Colors.white.withOpacity(0.7) : theme.colorScheme.onPrimaryContainer.withOpacity(0.7))
+                        ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
                         : theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
@@ -867,7 +867,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     '${unit.maxGuests}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isSelected
-                          ? (isDark ? Colors.white.withOpacity(0.7) : theme.colorScheme.onPrimaryContainer.withOpacity(0.7))
+                          ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
                           : theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -876,7 +876,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     Icons.euro_outlined,
                     size: 16,
                     color: isSelected
-                        ? (isDark ? Colors.white.withOpacity(0.7) : theme.colorScheme.onPrimaryContainer.withOpacity(0.7))
+                        ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
                         : theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
@@ -884,7 +884,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     '${unit.pricePerNight.toStringAsFixed(0)}/noć',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isSelected
-                          ? (isDark ? Colors.white.withOpacity(0.7) : theme.colorScheme.onPrimaryContainer.withOpacity(0.7))
+                          ? (isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7))
                           : theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),
@@ -912,7 +912,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             color: Colors.transparent,
             border: Border(
               bottom: BorderSide(
-                color: context.borderColor.withOpacity(0.5),
+                color: context.borderColor.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -946,8 +946,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             ),
             // Theme-aware divider color (lighter for light theme, darker for dark theme)
             dividerColor: isDark
-                ? Colors.white.withOpacity(0.15)
-                : Colors.black.withOpacity(0.1),
+                ? Colors.white.withValues(alpha: 0.15)
+                : Colors.black.withValues(alpha: 0.1),
             indicator: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
@@ -984,7 +984,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           Icon(
             Icons.home_work_outlined,
             size: 80,
-            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 24),
           Text(
@@ -997,7 +997,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           Text(
             'Odaberite jedinicu iz liste da vidite detalje',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
             textAlign: TextAlign.center,
           ),

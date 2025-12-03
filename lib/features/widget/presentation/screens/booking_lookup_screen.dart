@@ -199,10 +199,10 @@ class _BookingLookupScreenState extends ConsumerState<BookingLookupScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
+                                  color: Colors.red.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: Colors.red.withOpacity(0.3),
+                                    color: Colors.red.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: Row(
@@ -289,7 +289,7 @@ class _BookingLookupScreenState extends ConsumerState<BookingLookupScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: colors.primary.withOpacity(0.1),
+            color: colors.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(Icons.search, size: 48, color: colors.primary),
@@ -324,9 +324,9 @@ class _BookingLookupScreenState extends ConsumerState<BookingLookupScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colors.backgroundSecondary.withOpacity(0.5),
+        color: colors.backgroundSecondary.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.borderDefault.withOpacity(0.3)),
+        border: Border.all(color: colors.borderDefault.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

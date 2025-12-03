@@ -326,43 +326,4 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, Object error) {
-    return Center(
-      child: Card(
-        color: AppColors.surfaceLight,
-        margin: const EdgeInsets.all(24),
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: AppColors.error,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Greška pri učitavanju',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimaryLight,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondaryLight,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

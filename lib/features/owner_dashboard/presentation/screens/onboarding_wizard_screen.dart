@@ -19,7 +19,7 @@ class OnboardingWizardScreen extends ConsumerWidget {
 
     return Scaffold(
       body: Container(
-        color: Colors.black.withOpacity(0.5), // Overlay background
+        color: Colors.black.withValues(alpha: 0.5), // Overlay background
         child: SafeArea(
           child: Center(
             child: Container(
@@ -30,7 +30,7 @@ class OnboardingWizardScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 20,
                     spreadRadius: 5,
                   ),

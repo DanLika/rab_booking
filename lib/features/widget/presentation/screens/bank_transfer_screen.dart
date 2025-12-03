@@ -409,7 +409,7 @@ class BankTransferScreen extends ConsumerWidget {
               color: getColor(
                 MinimalistColors.success,
                 MinimalistColorsDark.success,
-              ).withOpacity(0.1),
+              ).withValues(alpha: 0.1),
               shape: BoxShape.circle,
               border: Border.all(
                 color: getColor(
@@ -680,7 +680,7 @@ class BankTransferScreen extends ConsumerWidget {
               color: getColor(
                 MinimalistColors.buttonPrimary,
                 MinimalistColorsDark.buttonPrimary,
-              ).withOpacity(0.1),
+              ).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
               border: Border.all(
                 color: getColor(

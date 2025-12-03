@@ -91,10 +91,10 @@ class SubdomainNotFoundScreen extends StatelessWidget {
                   // Explanation
                   Text(
                     "We couldn't find a property associated with this address. "
-                    "This could happen if:\n\n"
-                    "- The property link has expired\n"
-                    "- The address was typed incorrectly\n"
-                    "- The property is no longer available",
+                    'This could happen if:\n\n'
+                    '- The property link has expired\n'
+                    '- The address was typed incorrectly\n'
+                    '- The property is no longer available',
                     style: GoogleFonts.inter(
                       fontSize: TypographyTokens.fontSizeM,
                       color: colors.textSecondary,

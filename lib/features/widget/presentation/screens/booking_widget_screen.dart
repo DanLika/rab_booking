@@ -1,5 +1,5 @@
 import 'dart:async';
-// ignore: avoid_web_libraries_in_flutter
+// ignore: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:html' as html if (dart.library.io) 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -129,6 +129,18 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   set _hasInteractedWithBookingFlow(bool value) => _formState.hasInteractedWithBookingFlow = value;
 
   // ============================================
+  // THEME DETECTION
+  // ============================================
+  // Flag to track if system theme has been detected (prevents override after manual toggle)
+  bool _hasDetectedSystemTheme = false;
+
+  // ============================================
+  // FORM PERSISTENCE (debounced to prevent race conditions)
+  // ============================================
+  Timer? _saveDebounce;
+  bool _isDisposed = false;
+
+  // ============================================
   // CROSS-TAB COMMUNICATION
   // ============================================
   // Cross-tab communication for Stripe payments
@@ -144,12 +156,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _propertyId = uri.queryParameters['property'];
     _unitId = uri.queryParameters['unit'] ?? '';
 
-    // Bug #53: Add listeners to text controllers for auto-save
-    _firstNameController.addListener(_saveFormData);
-    _lastNameController.addListener(_saveFormData);
-    _emailController.addListener(_saveFormData);
-    _phoneController.addListener(_saveFormData);
-    _notesController.addListener(_saveFormData);
+    // Bug #53: Add listeners to text controllers for auto-save (debounced)
+    _firstNameController.addListener(_saveFormDataDebounced);
+    _lastNameController.addListener(_saveFormDataDebounced);
+    _emailController.addListener(_saveFormDataDebounced);
+    _phoneController.addListener(_saveFormDataDebounced);
+    _notesController.addListener(_saveFormDataDebounced);
 
     // Initialize cross-tab communication for web platform
     _initTabCommunication();
@@ -223,12 +235,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Detect system theme on first load (only once to preserve manual toggle)
+    if (!_hasDetectedSystemTheme) {
+      _hasDetectedSystemTheme = true;
+      final brightness = MediaQuery.of(context).platformBrightness;
+      final isSystemDark = brightness == Brightness.dark;
+      // Set theme provider to match system theme
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(themeProvider.notifier).state = isSystemDark;
+        }
+      });
+    }
+  }
+
   /// Initialize cross-tab communication service for Stripe payment notifications
   /// Only runs on web platform - uses BroadcastChannel API
   void _initTabCommunication() {
     if (!kIsWeb) return; // Only on web platform
 
     try {
+      // LOW: Cancel any existing subscription to prevent memory leak
+      // (safety measure in case this method is called multiple times)
+      _tabMessageSubscription?.cancel();
+      _tabCommunicationService?.dispose();
+
       // Create web-specific service instance directly
       // (conditional import handles this at compile time)
       _tabCommunicationService = TabCommunicationServiceWeb();
@@ -312,6 +346,117 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
   }
 
+  /// Show dialog when Stripe payment succeeded but booking confirmation is delayed
+  /// This provides clear instructions to the user instead of a dismissable snackbar
+  Future<void> _showPaymentDelayedDialog() async {
+    final isDarkMode = ref.read(themeProvider);
+    final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
+    final dialogBg = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must acknowledge
+      builder: (context) => AlertDialog(
+        backgroundColor: dialogBg,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderTokens.circularLarge,
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: colors.success, size: 28),
+            const SizedBox(width: SpacingTokens.s),
+            Expanded(
+              child: Text(
+                'Payment Successful',
+                style: TextStyle(
+                  fontWeight: TypographyTokens.bold,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your payment was processed successfully, but the booking confirmation is taking longer than expected.',
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeM,
+                color: colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: SpacingTokens.m),
+            Container(
+              padding: const EdgeInsets.all(SpacingTokens.m),
+              decoration: BoxDecoration(
+                color: colors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderTokens.circularMedium,
+                border: Border.all(
+                  color: colors.warning.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'What to do next:',
+                    style: TextStyle(
+                      fontSize: TypographyTokens.fontSizeS,
+                      fontWeight: TypographyTokens.bold,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: SpacingTokens.xs),
+                  _buildInstructionItem(
+                    '1. Check your email for a confirmation within a few minutes',
+                    colors,
+                  ),
+                  _buildInstructionItem(
+                    '2. Check your spam/junk folder',
+                    colors,
+                  ),
+                  _buildInstructionItem(
+                    '3. If no email arrives within 15 minutes, contact the property owner',
+                    colors,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colors.buttonPrimary,
+              foregroundColor: colors.buttonPrimaryText,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderTokens.circularMedium,
+              ),
+            ),
+            child: const Text('I Understand'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper to build instruction items for the payment delayed dialog
+  Widget _buildInstructionItem(String text, WidgetColorScheme colors) {
+    return Padding(
+      padding: const EdgeInsets.only(top: SpacingTokens.xs),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: TypographyTokens.fontSizeS,
+          color: colors.textSecondary,
+        ),
+      ),
+    );
+  }
+
   /// Clear booking-related URL params and reset to base URL
   void _clearBookingUrlParams() {
     if (!kIsWeb) return;
@@ -380,9 +525,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
   /// Reset form state to initial values (clear all user input)
   void _resetFormState() {
-    setState(() {
-      _formState.resetState();
-    });
+    setState(_formState.resetState);
 
     // Reset selected additional services (provider-based)
     ref.invalidate(selectedAdditionalServicesProvider);
@@ -441,6 +584,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Not found yet, wait and try again
         if (i < maxAttempts - 1) {
           await Future.delayed(pollInterval);
+          // CRITICAL: Check mounted after delay - widget may be disposed during polling
+          if (!mounted) return;
         }
       }
 
@@ -452,20 +597,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
 
       if (booking == null) {
-        // Webhook didn't create booking in time - show error
+        // Webhook didn't create booking in time - show prominent dialog
         LoggingService.log(
           '[STRIPE_RETURN] ❌ Booking not found after ${maxAttempts * pollInterval.inSeconds} seconds',
           tag: 'STRIPE_SESSION',
         );
 
         if (mounted) {
-          SnackBarHelper.showWarning(
-            context: context,
-            message:
-                'Payment successful but booking confirmation is delayed. '
-                'Please check your email or contact the property owner.',
-            duration: const Duration(seconds: 10),
-          );
+          // Show dialog with clear instructions instead of snackbar
+          await _showPaymentDelayedDialog();
 
           // Clear URL params and show calendar
           _clearBookingUrlParams();
@@ -570,6 +710,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         propertyByIdProvider(_propertyId!).future,
       );
 
+      // HIGH: Check mounted after async operation before setState
+      if (!mounted) return;
+
       if (property == null) {
         setState(() {
           _validationError = 'Property not found.\n\nProperty ID: $_propertyId';
@@ -582,6 +725,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       final unit = await ref.read(
         unitByIdProvider(_propertyId!, _unitId).future,
       );
+
+      // HIGH: Check mounted after async operation before setState
+      if (!mounted) return;
 
       if (unit == null) {
         setState(() {
@@ -609,11 +755,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Load widget settings
       await _loadWidgetSettings(unit.propertyId, unit.id);
 
+      // HIGH: Check mounted after async operation before setState
+      if (!mounted) return;
+
       setState(() {
         _isValidating = false;
         _validationError = null;
       });
     } catch (e) {
+      // HIGH: Check mounted in catch block before setState
+      if (!mounted) return;
       setState(() {
         _validationError = 'Error loading unit data:\n\n$e';
         _isValidating = false;
@@ -709,8 +860,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     );
   }
 
+  /// Debounced save - prevents race conditions when user types quickly
+  /// Called by text controller listeners
+  void _saveFormDataDebounced() {
+    if (_isDisposed) return;
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (!_isDisposed && mounted) {
+        _saveFormData();
+      }
+    });
+  }
+
   /// Save current form data to localStorage
   Future<void> _saveFormData() async {
+    if (_isDisposed) return;
     await FormPersistenceService.saveFormData(
       _unitId,
       _buildPersistedFormData(),
@@ -751,12 +915,18 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
   @override
   void dispose() {
+    // MEDIUM: Set disposed flag first to prevent async operations after dispose
+    _isDisposed = true;
+
+    // Cancel debounce timer to prevent saves after dispose
+    _saveDebounce?.cancel();
+
     // Bug #53: Remove listeners before disposing
-    _firstNameController.removeListener(_saveFormData);
-    _lastNameController.removeListener(_saveFormData);
-    _emailController.removeListener(_saveFormData);
-    _phoneController.removeListener(_saveFormData);
-    _notesController.removeListener(_saveFormData);
+    _firstNameController.removeListener(_saveFormDataDebounced);
+    _lastNameController.removeListener(_saveFormDataDebounced);
+    _emailController.removeListener(_saveFormDataDebounced);
+    _phoneController.removeListener(_saveFormDataDebounced);
+    _notesController.removeListener(_saveFormDataDebounced);
 
     // Dispose all form controllers via centralized state
     _formState.dispose();
@@ -1001,7 +1171,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         });
                       },
                       child: Container(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                       ),
                     ),
                   ),
@@ -1238,7 +1408,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                               );
                             },
                             loading: () => const SizedBox.shrink(),
-                            error: (_, __) => const SizedBox.shrink(),
+                            error: (_, _) => const SizedBox.shrink(),
                           );
                         },
                       ),
@@ -1644,7 +1814,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 borderColor: getColor(
                   MinimalistColors.textSecondary,
                   MinimalistColorsDark.textSecondary,
-                ).withOpacity(0.3),
+                ).withValues(alpha: 0.3),
               ),
               const SizedBox(width: SpacingTokens.s),
               // Phone number input
@@ -2002,6 +2172,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Clear saved form data after successful booking
     await _clearFormData();
+
+    // Check mounted after async gap
+    if (!mounted) return;
 
     // Add URL params for browser history support (back button works)
     final bookingRef = booking.id.substring(0, 8).toUpperCase();

@@ -258,7 +258,7 @@ class PropertiesScreen extends ConsumerWidget {
     WidgetRef ref,
     String propertyId,
   ) async {
-    print('🚀 [DELETE] _confirmDelete called for property: $propertyId');
+    debugPrint('🚀 [DELETE] _confirmDelete called for property: $propertyId');
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -271,14 +271,14 @@ class PropertiesScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () {
-              print('ℹ️ [DELETE] User clicked Odustani');
+              debugPrint('ℹ️ [DELETE] User clicked Odustani');
               Navigator.of(dialogContext).pop(false);
             },
             child: const Text('Odustani'),
           ),
           FilledButton(
             onPressed: () {
-              print('✅ [DELETE] User clicked Obriši');
+              debugPrint('✅ [DELETE] User clicked Obriši');
               Navigator.of(dialogContext).pop(true);
             },
             style: FilledButton.styleFrom(
@@ -290,51 +290,51 @@ class PropertiesScreen extends ConsumerWidget {
       ),
     );
 
-    print('🔍 [DELETE] Dialog returned confirmed = $confirmed');
-    print('🔍 [DELETE] Context mounted after dialog = ${context.mounted}');
+    debugPrint('🔍 [DELETE] Dialog returned confirmed = $confirmed');
+    debugPrint('🔍 [DELETE] Context mounted after dialog = ${context.mounted}');
 
     // Handle cancellation
     if (confirmed != true) {
-      print('⏸️ [DELETE] Deletion cancelled by user or dialog dismissed');
+      debugPrint('⏸️ [DELETE] Deletion cancelled by user or dialog dismissed');
       return;
     }
 
     // Check context BEFORE proceeding
     if (!context.mounted) {
-      print(
+      debugPrint(
         '❌ [DELETE] ERROR: Context not mounted after dialog! Cannot proceed.',
       );
       return;
     }
 
-    print('▶️ [DELETE] Proceeding with deletion for property: $propertyId');
+    debugPrint('▶️ [DELETE] Proceeding with deletion for property: $propertyId');
 
     try {
-      print('🗑️ [DELETE] Calling repository.deleteProperty()...');
+      debugPrint('🗑️ [DELETE] Calling repository.deleteProperty()...');
 
       // Actually delete the property from Firestore
       await ref
           .read(ownerPropertiesRepositoryProvider)
           .deleteProperty(propertyId);
 
-      print('✅ [DELETE] Property deleted successfully from Firestore');
+      debugPrint('✅ [DELETE] Property deleted successfully from Firestore');
 
       // Refresh the list
       ref.invalidate(ownerPropertiesProvider);
-      print('✅ [DELETE] Provider invalidated, list will refresh');
+      debugPrint('✅ [DELETE] Provider invalidated, list will refresh');
 
       if (context.mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
           'Nekretnina uspješno obrisana',
         );
-        print('✅ [DELETE] Success snackbar shown');
+        debugPrint('✅ [DELETE] Success snackbar shown');
       } else {
-        print('⚠️ [DELETE] Context not mounted, skipped success snackbar');
+        debugPrint('⚠️ [DELETE] Context not mounted, skipped success snackbar');
       }
     } catch (e) {
-      print('❌ [DELETE] Error deleting property: $e');
-      print('❌ [DELETE] Error type: ${e.runtimeType}');
+      debugPrint('❌ [DELETE] Error deleting property: $e');
+      debugPrint('❌ [DELETE] Error type: ${e.runtimeType}');
 
       if (context.mounted) {
         ErrorDisplayUtils.showErrorSnackBar(
@@ -342,9 +342,9 @@ class PropertiesScreen extends ConsumerWidget {
           e,
           userMessage: 'Greška pri brisanju nekretnine',
         );
-        print('✅ [DELETE] Error snackbar shown');
+        debugPrint('✅ [DELETE] Error snackbar shown');
       } else {
-        print('⚠️ [DELETE] Context not mounted, skipped error snackbar');
+        debugPrint('⚠️ [DELETE] Context not mounted, skipped error snackbar');
       }
     }
   }

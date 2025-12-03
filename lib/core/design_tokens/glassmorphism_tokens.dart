@@ -180,7 +180,7 @@ class GlassmorphismTokens {
     final opacity = customOpacity ?? preset.opacity;
 
     return BoxDecoration(
-      color: baseColor.withOpacity(opacity),
+      color: baseColor.withValues(alpha: opacity),
       borderRadius: borderRadius ?? BorderRadius.circular(12),
       border: Border.all(
         color: (isDark ? Colors.white : Colors.black).withValues(
@@ -191,7 +191,7 @@ class GlassmorphismTokens {
           shadows ??
           [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),

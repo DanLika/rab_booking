@@ -64,6 +64,31 @@ class NotesField extends StatelessWidget {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderTokens.circularMedium,
+          borderSide: BorderSide(
+            color: getColor(
+              MinimalistColors.textSecondary,
+              MinimalistColorsDark.textSecondary,
+            ),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderTokens.circularMedium,
+          borderSide: BorderSide(
+            color: getColor(
+              MinimalistColors.textSecondary,
+              MinimalistColorsDark.textSecondary,
+            ),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderTokens.circularMedium,
+          borderSide: BorderSide(
+            color: getColor(
+              MinimalistColors.textPrimary,
+              MinimalistColorsDark.textPrimary,
+            ),
+            width: 2,
+          ),
         ),
         prefixIcon: Icon(
           Icons.notes,

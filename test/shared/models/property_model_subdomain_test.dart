@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_redundant_argument_values
+// Note: Explicit default values kept in tests for documentation clarity
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rab_booking/shared/models/property_model.dart';
 import 'package:rab_booking/shared/models/property_branding_model.dart';

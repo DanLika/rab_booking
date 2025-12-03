@@ -151,7 +151,7 @@ class _AnimatedTextFieldState extends State<AnimatedTextField>
                 boxShadow: _isFocused
                     ? [
                         BoxShadow(
-                          color: focusColor.withOpacity(0.2),
+                          color: focusColor.withValues(alpha: 0.2),
                           blurRadius: 8 * _borderAnimation.value,
                         ),
                       ]
@@ -425,7 +425,7 @@ class _AnimatedTextAreaState extends State<AnimatedTextArea> {
             boxShadow: _isFocused
                 ? [
                     BoxShadow(
-                      color: focusColor.withOpacity(0.2),
+                      color: focusColor.withValues(alpha: 0.2),
                       blurRadius: 8,
                     ),
                   ]

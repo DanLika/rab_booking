@@ -12,8 +12,7 @@
 /// 5. Cleans up by revoking the temporary URL
 library;
 
-// ignore: avoid_web_libraries_in_flutter
-// ignore: deprecated_member_use
+// ignore: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:html' as html;
 import 'dart:convert';
 

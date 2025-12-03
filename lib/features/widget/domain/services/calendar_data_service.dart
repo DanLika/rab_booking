@@ -249,7 +249,7 @@ class CalendarDataService {
     double? weekendBasePrice,
     required List<int> weekendDays,
   }) {
-    DateTime current = DateTime.utc(startDate.year, startDate.month, 1);
+    DateTime current = DateTime.utc(startDate.year, startDate.month);
     final lastDay = DateTime.utc(endDate.year, endDate.month + 1, 0);
 
     while (!current.isAfter(lastDay)) {

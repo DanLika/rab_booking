@@ -497,7 +497,7 @@ class AppTypography {
 
   /// Get text style with opacity
   static TextStyle withOpacity(TextStyle style, double opacity) {
-    return style.copyWith(color: style.color?.withOpacity(opacity));
+    return style.copyWith(color: style.color?.withValues(alpha: opacity));
   }
 
   /// Get bold variant of text style

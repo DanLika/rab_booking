@@ -180,8 +180,6 @@ class IcalGenerator {
         return 'CANCELLED';
       case BookingStatus.completed:
         return 'CONFIRMED';
-      default:
-        return 'TENTATIVE';
     }
   }
 

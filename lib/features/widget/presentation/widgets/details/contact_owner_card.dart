@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// Card displaying property owner contact information.
@@ -33,33 +32,34 @@ class ContactOwnerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderTokens.circularLarge,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(SpacingTokens.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Property Owner Contact',
-              style: GoogleFonts.inter(
-                fontSize: TypographyTokens.fontSizeM,
-                fontWeight: TypographyTokens.bold,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: SpacingTokens.m),
-            if (ownerEmail != null)
-              _buildInfoRow('Email', ownerEmail!, Icons.email),
-            if (ownerPhone != null) ...[
-              if (ownerEmail != null) const SizedBox(height: SpacingTokens.s),
-              _buildInfoRow('Phone', ownerPhone!, Icons.phone),
-            ],
-          ],
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderTokens.circularMedium,
+        border: Border.all(
+          color: colors.borderDefault,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Property Owner Contact',
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeM,
+              fontWeight: TypographyTokens.bold,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: SpacingTokens.m),
+          if (ownerEmail != null)
+            _buildInfoRow('Email', ownerEmail!, Icons.email),
+          if (ownerPhone != null) ...[
+            if (ownerEmail != null) const SizedBox(height: SpacingTokens.s),
+            _buildInfoRow('Phone', ownerPhone!, Icons.phone),
+          ],
+        ],
       ),
     );
   }
@@ -75,14 +75,14 @@ class ContactOwnerCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: GoogleFonts.inter(
+                style: TextStyle(
                   fontSize: TypographyTokens.fontSizeXS,
                   color: colors.textSecondary,
                 ),
               ),
               Text(
                 value,
-                style: GoogleFonts.inter(
+                style: TextStyle(
                   fontSize: TypographyTokens.fontSizeM,
                   fontWeight: TypographyTokens.medium,
                   color: colors.textPrimary,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// Card displaying additional booking notes.
@@ -28,41 +27,42 @@ class BookingNotesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderTokens.circularLarge,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(SpacingTokens.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.notes, size: 20, color: colors.textSecondary),
-                const SizedBox(width: SpacingTokens.xs),
-                Text(
-                  'Additional Notes',
-                  style: GoogleFonts.inter(
-                    fontSize: TypographyTokens.fontSizeM,
-                    fontWeight: TypographyTokens.bold,
-                    color: colors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: SpacingTokens.s),
-            Text(
-              notes,
-              style: GoogleFonts.inter(
-                fontSize: TypographyTokens.fontSizeS,
-                color: colors.textSecondary,
-                height: 1.5,
-              ),
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderTokens.circularMedium,
+        border: Border.all(
+          color: colors.borderDefault,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.notes, size: 20, color: colors.textSecondary),
+              const SizedBox(width: SpacingTokens.xs),
+              Text(
+                'Additional Notes',
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeM,
+                  fontWeight: TypographyTokens.bold,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SpacingTokens.s),
+          Text(
+            notes,
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeS,
+              color: colors.textSecondary,
+              height: 1.5,
+            ),
+          ),
+        ],
       ),
     );
   }

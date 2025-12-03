@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// Card displaying cancellation policy information.
@@ -40,81 +39,82 @@ class CancellationPolicyCard extends StatelessWidget {
 
     final statusColor = canCancel ? colors.success : colors.warning;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderTokens.circularLarge,
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderTokens.circularMedium,
+        border: Border.all(
+          color: colors.borderDefault,
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(SpacingTokens.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  canCancel ? Icons.event_available : Icons.event_busy,
-                  size: 20,
-                  color: statusColor,
-                ),
-                const SizedBox(width: SpacingTokens.xs),
-                Text(
-                  'Cancellation Policy',
-                  style: GoogleFonts.inter(
-                    fontSize: TypographyTokens.fontSizeM,
-                    fontWeight: TypographyTokens.bold,
-                    color: colors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: SpacingTokens.s),
-            Container(
-              padding: const EdgeInsets.all(SpacingTokens.s),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.1),
-                borderRadius: BorderTokens.circularSmall,
-                border: Border.all(
-                  color: statusColor.withValues(alpha: 0.3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                canCancel ? Icons.event_available : Icons.event_busy,
+                size: 20,
+                color: statusColor,
+              ),
+              const SizedBox(width: SpacingTokens.xs),
+              Text(
+                'Cancellation Policy',
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeM,
+                  fontWeight: TypographyTokens.bold,
+                  color: colors.textPrimary,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    canCancel
-                        ? '✓ Free cancellation available'
-                        : '✗ Cancellation deadline passed',
-                    style: GoogleFonts.inter(
-                      fontSize: TypographyTokens.fontSizeS,
-                      fontWeight: TypographyTokens.semiBold,
-                      color: statusColor,
-                    ),
+            ],
+          ),
+          const SizedBox(height: SpacingTokens.s),
+          Container(
+            padding: const EdgeInsets.all(SpacingTokens.s),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.1),
+              borderRadius: BorderTokens.circularSmall,
+              border: Border.all(
+                color: statusColor.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  canCancel
+                      ? '✓ Free cancellation available'
+                      : '✗ Cancellation deadline passed',
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeS,
+                    fontWeight: TypographyTokens.semiBold,
+                    color: statusColor,
                   ),
+                ),
+                const SizedBox(height: SpacingTokens.xs),
+                Text(
+                  'You can cancel free of charge up to $deadlineHours hours before check-in.',
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeS,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                if (!canCancel) ...[
                   const SizedBox(height: SpacingTokens.xs),
                   Text(
-                    'You can cancel free of charge up to $deadlineHours hours before check-in.',
-                    style: GoogleFonts.inter(
+                    'The cancellation deadline has passed. Please contact the property owner if you need to cancel.',
+                    style: TextStyle(
                       fontSize: TypographyTokens.fontSizeS,
-                      color: colors.textSecondary,
+                      color: colors.warning,
+                      fontWeight: TypographyTokens.medium,
                     ),
                   ),
-                  if (!canCancel) ...[
-                    const SizedBox(height: SpacingTokens.xs),
-                    Text(
-                      'The cancellation deadline has passed. Please contact the property owner if you need to cancel.',
-                      style: GoogleFonts.inter(
-                        fontSize: TypographyTokens.fontSizeS,
-                        color: colors.warning,
-                        fontWeight: TypographyTokens.medium,
-                      ),
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

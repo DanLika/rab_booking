@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_redundant_argument_values, prefer_const_constructors
+// Note: Explicit default values kept in tests for documentation clarity
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rab_booking/features/widget/domain/models/settings/booking_behavior_config.dart';
 import 'package:rab_booking/features/widget/domain/constants/widget_constants.dart';

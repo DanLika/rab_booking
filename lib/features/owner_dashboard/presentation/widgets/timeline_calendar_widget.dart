@@ -386,7 +386,7 @@ class _TimelineCalendarWidgetState
               horizontal: AppDimensions.spaceS,
               vertical: AppDimensions.spaceXXS,
             ),
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

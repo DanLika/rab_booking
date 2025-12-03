@@ -130,8 +130,6 @@ class SubdomainService {
       return SubdomainContext(
         subdomain: subdomain,
         found: false,
-        property: null,
-        branding: null,
       );
     }
 

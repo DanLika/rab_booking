@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_redundant_argument_values
+// Note: Explicit default values kept in tests for documentation clarity
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';

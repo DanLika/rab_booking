@@ -911,9 +911,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           ),
           selected: isSelected,
           onSelected: (selected) {
-            print('🎯 [AMENITY] Chip tapped: ${amenity.displayName}');
-            print('📊 [AMENITY] Selected: $selected (was: $isSelected)');
-            print(
+            debugPrint('🎯 [AMENITY] Chip tapped: ${amenity.displayName}');
+            debugPrint('📊 [AMENITY] Selected: $selected (was: $isSelected)');
+            debugPrint($
               '📋 [AMENITY] Current set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}',
             );
 
@@ -921,13 +921,13 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
               // Force create new Set to trigger rebuild
               if (selected) {
                 _selectedAmenities = {..._selectedAmenities, amenity};
-                print('✅ [AMENITY] Added ${amenity.displayName}');
+                debugPrint('✅ [AMENITY] Added ${amenity.displayName}');
               } else {
                 _selectedAmenities = Set.from(_selectedAmenities)
                   ..remove(amenity);
-                print('❌ [AMENITY] Removed ${amenity.displayName}');
+                debugPrint('❌ [AMENITY] Removed ${amenity.displayName}');
               }
-              print(
+              debugPrint($
                 '📊 [AMENITY] New set (${_selectedAmenities.length} items): ${_selectedAmenities.map((a) => a.displayName).join(", ")}',
               );
             });
@@ -1238,7 +1238,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
       // Upload new images to Firebase Storage
       final List<String> uploadedImageUrls = [];
       if (_selectedImages.isNotEmpty) {
-        print(
+        debugPrint($
           '🔍 [UPLOAD] Starting upload for ${_selectedImages.length} images',
         );
 
@@ -1247,24 +1247,24 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
               ? widget.property!.id
               : 'temp-${DateTime.now().millisecondsSinceEpoch}';
 
-          print('📦 [UPLOAD] PropertyId: $propertyId');
+          debugPrint('📦 [UPLOAD] PropertyId: $propertyId');
 
           for (int i = 0; i < _selectedImages.length; i++) {
             final image = _selectedImages[i];
-            print(
+            debugPrint($
               '📸 [UPLOAD] Image ${i + 1}/${_selectedImages.length} - Path: ${image.path}',
             );
 
             final bytes = await image.readAsBytes();
-            print('✅ [UPLOAD] Read ${bytes.length} bytes');
+            debugPrint('✅ [UPLOAD] Read ${bytes.length} bytes');
 
-            print('☁️ [UPLOAD] Calling uploadPropertyImage...');
+            debugPrint('☁️ [UPLOAD] Calling uploadPropertyImage...');
             final imageUrl = await repository.uploadPropertyImage(
               propertyId: propertyId,
               filePath: image.path,
               bytes: bytes,
             );
-            print('✅ [UPLOAD] Success! URL: $imageUrl');
+            debugPrint('✅ [UPLOAD] Success! URL: $imageUrl');
 
             uploadedImageUrls.add(imageUrl);
 
@@ -1277,10 +1277,10 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
             }
           }
 
-          print('🎉 [UPLOAD] All images uploaded successfully!');
+          debugPrint('🎉 [UPLOAD] All images uploaded successfully!');
         } catch (e, stackTrace) {
-          print('❌ [UPLOAD ERROR] $e');
-          print('📚 [STACK TRACE] $stackTrace');
+          debugPrint('❌ [UPLOAD ERROR] $e');
+          debugPrint('📚 [STACK TRACE] $stackTrace');
 
           if (mounted) {
             // Direct SnackBar for guaranteed visibility
@@ -1293,7 +1293,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
                   label: 'Detalji',
                   textColor: Colors.white,
                   onPressed: () {
-                    print('💥 [FULL ERROR] $e\n$stackTrace');
+                    debugPrint('💥 [FULL ERROR] $e\n$stackTrace');
                   },
                 ),
               ),

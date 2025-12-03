@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
@@ -53,41 +52,42 @@ class BookingDatesCard extends StatelessWidget {
     final checkOutDate = DateTime.parse(checkOut);
     final formatter = DateFormat('MMM d, yyyy');
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderTokens.circularLarge,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(SpacingTokens.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInfoRow(
-              'Check-in',
-              formatter.format(checkInDate),
-              Icons.login,
-            ),
-            const SizedBox(height: SpacingTokens.s),
-            _buildInfoRow(
-              'Check-out',
-              formatter.format(checkOutDate),
-              Icons.logout,
-            ),
-            const SizedBox(height: SpacingTokens.s),
-            _buildInfoRow(
-              'Nights',
-              '$nights night${nights > 1 ? 's' : ''}',
-              Icons.nights_stay,
-            ),
-            const SizedBox(height: SpacingTokens.s),
-            _buildInfoRow(
-              'Guests',
-              _formatGuestCount(),
-              Icons.people,
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderTokens.circularMedium,
+        border: Border.all(
+          color: colors.borderDefault,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInfoRow(
+            'Check-in',
+            formatter.format(checkInDate),
+            Icons.login,
+          ),
+          const SizedBox(height: SpacingTokens.s),
+          _buildInfoRow(
+            'Check-out',
+            formatter.format(checkOutDate),
+            Icons.logout,
+          ),
+          const SizedBox(height: SpacingTokens.s),
+          _buildInfoRow(
+            'Nights',
+            '$nights night${nights > 1 ? 's' : ''}',
+            Icons.nights_stay,
+          ),
+          const SizedBox(height: SpacingTokens.s),
+          _buildInfoRow(
+            'Guests',
+            _formatGuestCount(),
+            Icons.people,
+          ),
+        ],
       ),
     );
   }
@@ -111,14 +111,14 @@ class BookingDatesCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: GoogleFonts.inter(
+                style: TextStyle(
                   fontSize: TypographyTokens.fontSizeXS,
                   color: colors.textSecondary,
                 ),
               ),
               Text(
                 value,
-                style: GoogleFonts.inter(
+                style: TextStyle(
                   fontSize: TypographyTokens.fontSizeM,
                   fontWeight: TypographyTokens.medium,
                   color: colors.textPrimary,

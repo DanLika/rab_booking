@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/services/rate_limit_service.dart';
 import '../../core/services/security_events_service.dart';
@@ -111,14 +111,14 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         final data = doc.data()!;
 
         // Print ALL field types to console for debugging
-        print('=== FIRESTORE USER DATA DEBUG ===');
-        print('Total fields: ${data.length}');
+        debugPrint('=== FIRESTORE USER DATA DEBUG ===');
+        debugPrint('Total fields: ${data.length}');
         data.forEach((key, value) {
-          print(
+          debugPrint(
             'Field: $key | Type: ${value.runtimeType} | Value: ${value.toString().length > 100 ? '${value.toString().substring(0, 100)}...' : value}',
           );
         });
-        print('=== END DEBUG ===');
+        debugPrint('=== END DEBUG ===');
 
         UserModel userModel;
         try {
@@ -148,7 +148,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           });
 
           // Create fallback UserModel instead of crashing
-          print('=== CREATING FALLBACK USER MODEL ===');
+          debugPrint('=== CREATING FALLBACK USER MODEL ===');
           try {
             userModel = UserModel(
               id: doc.id,
@@ -170,11 +170,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
               avatarUrl: data['avatar_url'] as String?,
               createdAt: DateTime.now(), // Fallback
             );
-            print(
+            debugPrint(
               'Fallback UserModel created successfully for ${userModel.email}',
             );
           } catch (fallbackError) {
-            print('Fallback also failed: $fallbackError');
+            debugPrint('Fallback also failed: $fallbackError');
             rethrow;
           }
         }

@@ -51,17 +51,17 @@ class DynamicThemeService {
         brightness: brightness,
         primary: primaryColor,
         onPrimary: _getContrastColor(primaryColor),
-        primaryContainer: primaryColor.withOpacity(0.1),
+        primaryContainer: primaryColor.withValues(alpha: 0.1),
         onPrimaryContainer: primaryColor,
 
         secondary: accentColor,
         onSecondary: _getContrastColor(accentColor),
-        secondaryContainer: accentColor.withOpacity(0.1),
+        secondaryContainer: accentColor.withValues(alpha: 0.1),
         onSecondaryContainer: accentColor,
 
         tertiary: accentColor,
         onTertiary: _getContrastColor(accentColor),
-        tertiaryContainer: accentColor.withOpacity(0.1),
+        tertiaryContainer: accentColor.withValues(alpha: 0.1),
         onTertiaryContainer: accentColor,
 
         error: baseTheme.colorScheme.error,
@@ -72,14 +72,14 @@ class DynamicThemeService {
         surface: backgroundColor,
         onSurface: textColor,
         surfaceContainerHighest: brightness == Brightness.light
-            ? backgroundColor.withOpacity(0.95)
+            ? backgroundColor.withValues(alpha: 0.95)
             : _lighten(backgroundColor, 0.05),
 
-        outline: textColor.withOpacity(0.2),
-        outlineVariant: textColor.withOpacity(0.1),
+        outline: textColor.withValues(alpha: 0.2),
+        outlineVariant: textColor.withValues(alpha: 0.1),
 
-        shadow: Colors.black.withOpacity(0.12),
-        scrim: Colors.black.withOpacity(0.5),
+        shadow: Colors.black.withValues(alpha: 0.12),
+        scrim: Colors.black.withValues(alpha: 0.5),
         inverseSurface: brightness == Brightness.light ? Colors.black : Colors.white,
         onInverseSurface: brightness == Brightness.light ? Colors.white : Colors.black,
         inversePrimary: brightness == Brightness.light ? Colors.white : Colors.black,

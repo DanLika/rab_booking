@@ -377,7 +377,7 @@ class _PulseIconState extends State<PulseIcon>
                 child: Icon(
                   widget.icon,
                   size: widget.size,
-                  color: iconColor.withOpacity(_opacityAnimation.value),
+                  color: iconColor.withValues(alpha: _opacityAnimation.value),
                 ),
               ),
 

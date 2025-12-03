@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// Banner displaying booking status with appropriate color and icon.
@@ -48,14 +47,14 @@ class BookingStatusBanner extends StatelessWidget {
               children: [
                 Text(
                   'Booking Status',
-                  style: GoogleFonts.inter(
+                  style: TextStyle(
                     fontSize: TypographyTokens.fontSizeXS,
                     color: colors.textSecondary,
                   ),
                 ),
                 Text(
                   statusInfo.text,
-                  style: GoogleFonts.inter(
+                  style: TextStyle(
                     fontSize: TypographyTokens.fontSizeL,
                     fontWeight: TypographyTokens.bold,
                     color: statusInfo.color,

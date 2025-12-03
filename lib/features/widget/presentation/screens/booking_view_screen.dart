@@ -35,10 +35,30 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
   SubdomainContext? _subdomainContext;
   bool _subdomainNotFound = false;
 
+  // Theme detection flag (prevents override after initial detection)
+  bool _hasDetectedSystemTheme = false;
+
   @override
   void initState() {
     super.initState();
     _resolveSubdomainAndLookupBooking();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Detect system theme on first load (only once to preserve manual toggle)
+    if (!_hasDetectedSystemTheme) {
+      _hasDetectedSystemTheme = true;
+      final brightness = MediaQuery.of(context).platformBrightness;
+      final isSystemDark = brightness == Brightness.dark;
+      // Set theme provider to match system theme
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(themeProvider.notifier).state = isSystemDark;
+        }
+      });
+    }
   }
 
   Future<void> _resolveSubdomainAndLookupBooking() async {

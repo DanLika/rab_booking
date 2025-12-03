@@ -147,13 +147,13 @@ extension ThemeColors on BuildContext {
 
   /// Get theme-aware shadow color for subtle shadows
   Color get shadowColor => isDarkMode
-      ? Colors.black.withOpacity(0.3)
-      : Colors.black.withOpacity(0.1);
+      ? Colors.black.withValues(alpha: 0.3)
+      : Colors.black.withValues(alpha: 0.1);
 
   /// Get theme-aware shadow color for prominent shadows
   Color get shadowColorProminent => isDarkMode
-      ? Colors.black.withOpacity(0.5)
-      : Colors.black.withOpacity(0.2);
+      ? Colors.black.withValues(alpha: 0.5)
+      : Colors.black.withValues(alpha: 0.2);
 
   // ============================================================================
   // SCRIM & OVERLAY COLORS
@@ -210,17 +210,17 @@ extension ThemeColors on BuildContext {
   /// color: context.getColorWithOpacity(context.textColor, 0.5)
   /// ```
   Color getColorWithOpacity(Color color, double opacity) {
-    return color.withOpacity(opacity);
+    return color.withValues(alpha: opacity);
   }
 
   /// Get theme-aware text color with opacity
   Color textWithOpacity(double opacity) {
-    return textColor.withOpacity(opacity);
+    return textColor.withValues(alpha: opacity);
   }
 
   /// Get theme-aware surface color with opacity
   Color surfaceWithOpacity(double opacity) {
-    return surfaceColor.withOpacity(opacity);
+    return surfaceColor.withValues(alpha: opacity);
   }
 }
 

@@ -349,10 +349,10 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: widget.colors.error.withOpacity(0.1),
+                    color: widget.colors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: widget.colors.error.withOpacity(0.3),
+                      color: widget.colors.error.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -467,7 +467,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: widget.colors.primary.withOpacity(0.1),
+                  color: widget.colors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(

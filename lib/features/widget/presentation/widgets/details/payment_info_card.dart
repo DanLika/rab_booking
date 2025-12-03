@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
@@ -59,48 +58,49 @@ class PaymentInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderTokens.circularLarge,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(SpacingTokens.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Payment Information',
-              style: GoogleFonts.inter(
-                fontSize: TypographyTokens.fontSizeM,
-                fontWeight: TypographyTokens.bold,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: SpacingTokens.m),
-            _buildPaymentRow('Total', totalPrice, bold: true),
-            const SizedBox(height: SpacingTokens.xs),
-            _buildPaymentRow('Deposit', depositAmount),
-            const SizedBox(height: SpacingTokens.xs),
-            _buildPaymentRow('Paid', paidAmount, color: colors.success),
-            const SizedBox(height: SpacingTokens.xs),
-            _buildPaymentRow(
-              'Remaining',
-              remainingAmount,
-              color: remainingAmount > 0 ? colors.error : colors.success,
-            ),
-            const SizedBox(height: SpacingTokens.s),
-            Divider(color: colors.borderDefault),
-            const SizedBox(height: SpacingTokens.s),
-            _buildStatusRow(),
-            const SizedBox(height: SpacingTokens.xs),
-            _buildMethodRow(),
-            if (paymentDeadline != null) ...[
-              const SizedBox(height: SpacingTokens.xs),
-              _buildDeadlineRow(),
-            ],
-          ],
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderTokens.circularMedium,
+        border: Border.all(
+          color: colors.borderDefault,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Payment Information',
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeM,
+              fontWeight: TypographyTokens.bold,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: SpacingTokens.m),
+          _buildPaymentRow('Total', totalPrice, bold: true),
+          const SizedBox(height: SpacingTokens.xs),
+          _buildPaymentRow('Deposit', depositAmount),
+          const SizedBox(height: SpacingTokens.xs),
+          _buildPaymentRow('Paid', paidAmount, color: colors.success),
+          const SizedBox(height: SpacingTokens.xs),
+          _buildPaymentRow(
+            'Remaining',
+            remainingAmount,
+            color: remainingAmount > 0 ? colors.error : colors.success,
+          ),
+          const SizedBox(height: SpacingTokens.s),
+          Divider(color: colors.borderDefault),
+          const SizedBox(height: SpacingTokens.s),
+          _buildStatusRow(),
+          const SizedBox(height: SpacingTokens.xs),
+          _buildMethodRow(),
+          if (paymentDeadline != null) ...[
+            const SizedBox(height: SpacingTokens.xs),
+            _buildDeadlineRow(),
+          ],
+        ],
       ),
     );
   }
@@ -116,17 +116,21 @@ class PaymentInfoCard extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: bold ? TypographyTokens.fontSizeM : TypographyTokens.fontSizeS,
-            fontWeight: bold ? TypographyTokens.bold : TypographyTokens.regular,
+          style: TextStyle(
+            fontSize:
+                bold ? TypographyTokens.fontSizeM : TypographyTokens.fontSizeS,
+            fontWeight:
+                bold ? TypographyTokens.bold : TypographyTokens.regular,
             color: color ?? colors.textSecondary,
           ),
         ),
         Text(
           '€${amount.toStringAsFixed(2)}',
-          style: GoogleFonts.inter(
-            fontSize: bold ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeM,
-            fontWeight: bold ? TypographyTokens.bold : TypographyTokens.semiBold,
+          style: TextStyle(
+            fontSize:
+                bold ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeM,
+            fontWeight:
+                bold ? TypographyTokens.bold : TypographyTokens.semiBold,
             color: color ?? colors.textPrimary,
           ),
         ),
@@ -140,7 +144,7 @@ class PaymentInfoCard extends StatelessWidget {
       children: [
         Text(
           'Payment Status',
-          style: GoogleFonts.inter(
+          style: TextStyle(
             fontSize: TypographyTokens.fontSizeS,
             color: colors.textSecondary,
           ),
@@ -156,14 +160,14 @@ class PaymentInfoCard extends StatelessWidget {
       children: [
         Text(
           'Payment Method',
-          style: GoogleFonts.inter(
+          style: TextStyle(
             fontSize: TypographyTokens.fontSizeS,
             color: colors.textSecondary,
           ),
         ),
         Text(
           _formatPaymentMethod(),
-          style: GoogleFonts.inter(
+          style: TextStyle(
             fontSize: TypographyTokens.fontSizeS,
             fontWeight: TypographyTokens.medium,
             color: colors.textPrimary,
@@ -179,14 +183,14 @@ class PaymentInfoCard extends StatelessWidget {
       children: [
         Text(
           'Payment Deadline',
-          style: GoogleFonts.inter(
+          style: TextStyle(
             fontSize: TypographyTokens.fontSizeS,
             color: colors.textSecondary,
           ),
         ),
         Text(
           DateFormat('MMM d, yyyy').format(DateTime.parse(paymentDeadline!)),
-          style: GoogleFonts.inter(
+          style: TextStyle(
             fontSize: TypographyTokens.fontSizeS,
             fontWeight: TypographyTokens.semiBold,
             color: colors.error,
@@ -232,7 +236,7 @@ class PaymentInfoCard extends StatelessWidget {
       ),
       child: Text(
         statusText,
-        style: GoogleFonts.inter(
+        style: TextStyle(
           fontSize: TypographyTokens.fontSizeXS,
           fontWeight: TypographyTokens.semiBold,
           color: statusColor,

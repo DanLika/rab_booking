@@ -49,7 +49,7 @@ class StorageService {
       await ref.delete();
     } catch (e) {
       // If delete fails, it's not critical - log and continue
-      print('Failed to delete profile image: $e');
+      debugPrint('Failed to delete profile image: $e');
     }
   }
 

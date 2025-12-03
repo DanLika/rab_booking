@@ -19,7 +19,7 @@ class OnboardingWelcomeScreen extends ConsumerWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppColors.authPrimary.withOpacity(0.1),
+              AppColors.authPrimary.withValues(alpha: 0.1),
               Colors.white,
             ],
           ),

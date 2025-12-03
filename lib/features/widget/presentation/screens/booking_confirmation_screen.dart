@@ -74,6 +74,9 @@ class _BookingConfirmationScreenState
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
 
+  // Theme detection flag (prevents override after initial detection)
+  bool _hasDetectedSystemTheme = false;
+
   @override
   void initState() {
     super.initState();
@@ -91,6 +94,23 @@ class _BookingConfirmationScreenState
     );
 
     _animationController.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Detect system theme on first load (only once to preserve manual toggle)
+    if (!_hasDetectedSystemTheme) {
+      _hasDetectedSystemTheme = true;
+      final brightness = MediaQuery.of(context).platformBrightness;
+      final isSystemDark = brightness == Brightness.dark;
+      // Set theme provider to match system theme
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(themeProvider.notifier).state = isSystemDark;
+        }
+      });
+    }
   }
 
   @override
@@ -125,8 +145,12 @@ class _BookingConfirmationScreenState
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
+    // Use pure black background for dark theme in widget
+    final backgroundColor =
+        isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
+
     return Scaffold(
-      backgroundColor: colors.backgroundPrimary,
+      backgroundColor: backgroundColor,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SafeArea(
@@ -256,7 +280,7 @@ class _BookingConfirmationScreenState
                           const SizedBox(height: SpacingTokens.xl),
 
                           // Close button
-                          _buildCloseButton(colors),
+                          _buildCloseButton(colors, isDark: isDarkMode),
 
                           const SizedBox(height: SpacingTokens.m),
 
@@ -283,10 +307,13 @@ class _BookingConfirmationScreenState
   }
 
   bool get _shouldShowPaymentVerificationWarning {
-    return widget.paymentMethod == 'stripe' &&
-        widget.booking != null &&
-        (widget.booking!.paymentStatus == 'pending' ||
-            widget.booking!.status.value == 'pending');
+    if (widget.paymentMethod != 'stripe' || widget.booking == null) {
+      return false;
+    }
+    // Defensive null checks for payment status and booking status
+    final paymentStatus = widget.booking!.paymentStatus;
+    final bookingStatus = widget.booking!.status.value;
+    return paymentStatus == 'pending' || bookingStatus == 'pending';
   }
 
   Widget _buildHeader(WidgetColorScheme colors) {
@@ -319,14 +346,18 @@ class _BookingConfirmationScreenState
     );
   }
 
-  Widget _buildCloseButton(WidgetColorScheme colors) {
+  Widget _buildCloseButton(WidgetColorScheme colors, {required bool isDark}) {
+    // Use white button with black text for dark theme
+    final buttonBg = isDark ? ColorTokens.pureWhite : colors.buttonPrimary;
+    final buttonText = isDark ? ColorTokens.pureBlack : colors.buttonPrimaryText;
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: _navigateToCleanCalendar,
         style: ElevatedButton.styleFrom(
-          backgroundColor: colors.buttonPrimary,
-          foregroundColor: colors.buttonPrimaryText,
+          backgroundColor: buttonBg,
+          foregroundColor: buttonText,
           padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
           shape: RoundedRectangleBorder(
             borderRadius: BorderTokens.circularRounded,

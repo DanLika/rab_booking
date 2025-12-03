@@ -379,7 +379,7 @@ class _PriceListCalendarWidgetState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.primaryColor.withOpacity(0.1),
+        color: context.primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: context.primaryColor, width: 2),
       ),
@@ -533,7 +533,7 @@ class _PriceListCalendarWidgetState
 
                   const SizedBox(height: 8),
                   Divider(
-                    color: context.borderColor.withOpacity(0.5),
+                    color: context.borderColor.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 8),
 

@@ -13,11 +13,7 @@ export 'animated_icon.dart';
 export 'animated_input.dart';
 export 'hero_image.dart';
 export 'skeleton_loader.dart';
-export 'scroll_effects.dart';
 export 'gesture_widgets.dart';
-
-// Legacy widgets still in use
-export 'micro_animations.dart';  // Contains AnimatedFavoriteIcon
 
 // Deprecated - use new widgets above
 // export 'hover_scale_card.dart';  // Replaced by animated_card.dart

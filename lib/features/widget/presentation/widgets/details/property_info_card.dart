@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 
 /// Card displaying property and unit information.
@@ -33,29 +32,30 @@ class PropertyInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderTokens.circularLarge,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(SpacingTokens.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInfoRow(
-              'Property',
-              propertyName,
-              Icons.apartment,
-            ),
-            const SizedBox(height: SpacingTokens.s),
-            _buildInfoRow(
-              'Unit',
-              unitName,
-              Icons.home,
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderTokens.circularMedium,
+        border: Border.all(
+          color: colors.borderDefault,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInfoRow(
+            'Property',
+            propertyName,
+            Icons.apartment,
+          ),
+          const SizedBox(height: SpacingTokens.s),
+          _buildInfoRow(
+            'Unit',
+            unitName,
+            Icons.home,
+          ),
+        ],
       ),
     );
   }
@@ -71,14 +71,14 @@ class PropertyInfoCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: GoogleFonts.inter(
+                style: TextStyle(
                   fontSize: TypographyTokens.fontSizeXS,
                   color: colors.textSecondary,
                 ),
               ),
               Text(
                 value,
-                style: GoogleFonts.inter(
+                style: TextStyle(
                   fontSize: TypographyTokens.fontSizeM,
                   fontWeight: TypographyTokens.medium,
                   color: colors.textPrimary,

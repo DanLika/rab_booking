@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../models/additional_service_model.dart';
 import '../additional_services_repository.dart';
@@ -7,7 +8,7 @@ part 'firebase_additional_services_repository.g.dart';
 
 @riverpod
 AdditionalServicesRepository additionalServicesRepository(
-  AdditionalServicesRepositoryRef ref,
+  Ref ref,
 ) {
   return FirebaseAdditionalServicesRepository(
     FirebaseFirestore.instance,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../../shared/utils/ui/snackbar_helper.dart';
 
 /// Card displaying booking reference with copy functionality.
 ///
@@ -27,52 +27,62 @@ class DetailsReferenceCard extends StatelessWidget {
     required this.colors,
   });
 
+  Future<void> _copyToClipboard(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: bookingReference));
+    if (context.mounted) {
+      SnackBarHelper.showSuccess(
+        context: context,
+        message: 'Booking reference copied to clipboard!',
+        duration: const Duration(seconds: 2),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderTokens.circularLarge,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(SpacingTokens.l),
-        child: Column(
-          children: [
-            Text(
-              'Booking Reference',
-              style: GoogleFonts.inter(
-                fontSize: TypographyTokens.fontSizeS,
-                color: colors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: SpacingTokens.xs),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  bookingReference,
-                  style: GoogleFonts.inter(
-                    fontSize: TypographyTokens.fontSizeXXL,
-                    fontWeight: TypographyTokens.bold,
-                    color: colors.textPrimary, // Minimalist: use text color instead of primary
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(width: SpacingTokens.xs),
-                IconButton(
-                  icon: const Icon(Icons.copy, size: 20),
-                  onPressed: () {
-                    Clipboard.setData(
-                      ClipboardData(text: bookingReference),
-                    );
-                  },
-                  color: colors.textSecondary, // Minimalist: subtle color
-                  tooltip: 'Copy reference',
-                ),
-              ],
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(SpacingTokens.m),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderTokens.circularMedium,
+        border: Border.all(
+          color: colors.borderDefault,
         ),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Booking Reference',
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeS,
+              color: colors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: SpacingTokens.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                bookingReference,
+                style: TextStyle(
+                  fontSize: TypographyTokens.fontSizeXL,
+                  fontWeight: TypographyTokens.bold,
+                  letterSpacing: 2,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(width: SpacingTokens.s),
+              IconButton(
+                icon: Icon(
+                  Icons.copy,
+                  color: colors.textSecondary,
+                ),
+                onPressed: () => _copyToClipboard(context),
+                tooltip: 'Copy reference',
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

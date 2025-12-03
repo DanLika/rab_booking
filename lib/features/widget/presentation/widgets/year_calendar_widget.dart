@@ -9,11 +9,11 @@ import '../../../owner_dashboard/presentation/providers/owner_properties_provide
 import '../theme/responsive_helper.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
-import 'calendar_hover_tooltip.dart';
 import 'calendar/calendar_date_utils.dart';
 import 'calendar/calendar_compact_legend.dart';
 import 'calendar/calendar_combined_header_widget.dart';
 import 'calendar/calendar_date_selection_validator.dart';
+import 'calendar/calendar_tooltip_builder.dart';
 import 'calendar/year_calendar_painters.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
@@ -90,59 +90,17 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         // Hover tooltip overlay (desktop) - highest z-index
         if (_hoveredDate != null)
           calendarData.when(
-            data: (data) => _buildHoverTooltip(data, colors),
+            data: (data) => CalendarTooltipBuilder.build(
+              context: context,
+              hoveredDate: _hoveredDate,
+              mousePosition: _mousePosition,
+              data: data,
+              colors: colors,
+            ),
             loading: () => const SizedBox.shrink(),
             error: (error, stack) => const SizedBox.shrink(),
           ),
       ],
-    );
-  }
-
-  Widget _buildHoverTooltip(
-    Map<String, CalendarDateInfo> data,
-    WidgetColorScheme colors,
-  ) {
-    if (_hoveredDate == null) return const SizedBox.shrink();
-
-    final key = CalendarDateUtils.getDateKey(_hoveredDate!);
-    final dateInfo = data[key];
-
-    if (dateInfo == null) return const SizedBox.shrink();
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    const tooltipWidth = 200.0;
-    const tooltipHeight = 150.0;
-
-    // Position tooltip near mouse cursor
-    double xPosition = _mousePosition.dx + 10;
-    double yPosition = _mousePosition.dy - tooltipHeight - 10;
-
-    // Adjust if tooltip goes off screen
-    if (xPosition + tooltipWidth > screenWidth) {
-      xPosition = _mousePosition.dx - tooltipWidth - 10;
-    }
-    if (yPosition < 20) {
-      yPosition = _mousePosition.dy + 20;
-    }
-
-    xPosition = xPosition.clamp(20, screenWidth - tooltipWidth - 20);
-    yPosition = yPosition.clamp(20, screenHeight - tooltipHeight - 20);
-
-    // For pending bookings, show "Pending" status instead of "Booked"
-    final effectiveStatus = dateInfo.isPendingBooking ? DateStatus.pending : dateInfo.status;
-
-    return Positioned(
-      left: xPosition,
-      top: yPosition,
-      child: CalendarHoverTooltip(
-        date: _hoveredDate!,
-        price: dateInfo.price,
-        status: effectiveStatus,
-        position: Offset(xPosition, yPosition),
-        colors: colors,
-      ),
     );
   }
 

@@ -8,11 +8,11 @@ import '../providers/widget_settings_provider.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import 'split_day_calendar_painter.dart';
-import 'calendar_hover_tooltip.dart';
 import 'calendar/calendar_date_utils.dart';
 import 'calendar/calendar_compact_legend.dart';
 import 'calendar/calendar_combined_header_widget.dart';
 import 'calendar/calendar_date_selection_validator.dart';
+import 'calendar/calendar_tooltip_builder.dart';
 import '../theme/responsive_helper.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
@@ -113,7 +113,15 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 // Hover tooltip overlay (desktop) - highest z-index
                 if (_hoveredDate != null)
                   calendarData.when(
-                    data: (data) => _buildHoverTooltip(data, colors),
+                    data: (data) => CalendarTooltipBuilder.build(
+                      context: context,
+                      hoveredDate: _hoveredDate,
+                      mousePosition: _mousePosition,
+                      data: data,
+                      colors: colors,
+                      tooltipHeight: 120.0,
+                      ignorePointer: true,
+                    ),
                     loading: () => const SizedBox.shrink(),
                     error: (_, stackTrace) => const SizedBox.shrink(),
                   ),
@@ -520,59 +528,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       child: const Opacity(
         opacity: OpacityTokens.mostlyVisible,
         child: SizedBox.expand(),
-      ),
-    );
-  }
-
-  Widget _buildHoverTooltip(
-    Map<String, CalendarDateInfo> data,
-    WidgetColorScheme colors,
-  ) {
-    if (_hoveredDate == null) return const SizedBox.shrink();
-
-    final key = CalendarDateUtils.getDateKey(_hoveredDate!);
-    final dateInfo = data[key];
-
-    if (dateInfo == null) return const SizedBox.shrink();
-
-    // Use actual mouse position for tooltip
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    // Position tooltip near mouse, offset slightly to avoid cursor overlap
-    // Tooltip width is ~200px, height is ~120px
-    final tooltipWidth = 200.0;
-    final tooltipHeight = 120.0;
-
-    // Offset tooltip to the right and up from cursor
-    double xPosition = _mousePosition.dx + 10;
-    double yPosition = _mousePosition.dy - tooltipHeight - 10;
-
-    // Keep tooltip within screen bounds
-    if (xPosition + tooltipWidth > screenWidth) {
-      xPosition = _mousePosition.dx - tooltipWidth - 10; // Show on left instead
-    }
-    if (yPosition < 20) {
-      yPosition = _mousePosition.dy + 20; // Show below cursor instead
-    }
-
-    xPosition = xPosition.clamp(20, screenWidth - tooltipWidth - 20);
-    yPosition = yPosition.clamp(20, screenHeight - tooltipHeight - 20);
-
-    // For pending bookings, show "Pending" status instead of "Booked"
-    final effectiveStatus = dateInfo.isPendingBooking ? DateStatus.pending : dateInfo.status;
-
-    return Positioned(
-      left: xPosition,
-      top: yPosition,
-      child: IgnorePointer(
-        child: CalendarHoverTooltip(
-          date: _hoveredDate!,
-          price: dateInfo.price,
-          status: effectiveStatus,
-          position: Offset(xPosition, yPosition),
-          colors: colors,
-        ),
       ),
     );
   }

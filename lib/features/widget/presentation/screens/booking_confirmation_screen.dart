@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
+import '../mixins/theme_detection_mixin.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../domain/models/widget_settings.dart';
@@ -69,13 +70,10 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
 
 class _BookingConfirmationScreenState
     extends ConsumerState<BookingConfirmationScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, ThemeDetectionMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-
-  // Theme detection flag (prevents override after initial detection)
-  bool _hasDetectedSystemTheme = false;
 
   @override
   void initState() {
@@ -100,17 +98,7 @@ class _BookingConfirmationScreenState
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Detect system theme on first load (only once to preserve manual toggle)
-    if (!_hasDetectedSystemTheme) {
-      _hasDetectedSystemTheme = true;
-      final brightness = MediaQuery.of(context).platformBrightness;
-      final isSystemDark = brightness == Brightness.dark;
-      // Set theme provider to match system theme
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ref.read(themeProvider.notifier).state = isSystemDark;
-        }
-      });
-    }
+    detectSystemTheme();
   }
 
   @override

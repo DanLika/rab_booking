@@ -587,6 +587,12 @@ class MinimalistColorSchemeAdapter implements WidgetColorScheme {
   @override
   Color get statusPastReservationBorder => dark ? MinimalistColorsDark.statusPastReservationBorder : MinimalistColors.statusPastReservationBorder;
 
+  @override
+  Color get statusCancelledBackground => dark ? ColorTokens.cancelDark : ColorTokens.cancelLight;
+
+  @override
+  Color get statusCancelledBorder => dark ? ColorTokens.pink700 : ColorTokens.pink400;
+
   // Buttons
   @override
   Color get buttonPrimary => dark ? MinimalistColorsDark.buttonPrimary : MinimalistColors.buttonPrimary;

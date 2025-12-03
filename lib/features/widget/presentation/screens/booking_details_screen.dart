@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../providers/theme_provider.dart';
+import '../mixins/theme_detection_mixin.dart';
 import '../../domain/models/booking_details_model.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
@@ -14,6 +15,7 @@ import '../widgets/details/payment_info_card.dart';
 import '../widgets/details/contact_owner_card.dart';
 import '../widgets/details/cancellation_policy_card.dart';
 import '../widgets/details/booking_notes_card.dart';
+import '../widgets/details/cancel_confirmation_dialog.dart';
 
 /// Booking Details Screen
 /// Displays complete booking information for guest (accessed from email link)
@@ -37,21 +39,14 @@ class BookingDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, ThemeDetectionMixin {
   bool _isCancelling = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  // Theme detection flag (prevents override after initial detection)
-  bool _hasDetectedSystemTheme = false;
-
   // Local state for booking status (updated after cancellation)
   // This allows UI to reflect cancelled state without refetching from Firestore
   late String _currentStatus;
-
-  // Cancel button colors (matching booked days on calendar)
-  static const Color _cancelColorLight = Color(0xFFFBA9AA);
-  static const Color _cancelColorDark = Color(0xFFEF4444);
 
   @override
   void initState() {
@@ -75,17 +70,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Detect system theme on first load (only once to preserve manual toggle)
-    if (!_hasDetectedSystemTheme) {
-      _hasDetectedSystemTheme = true;
-      final brightness = MediaQuery.of(context).platformBrightness;
-      final isSystemDark = brightness == Brightness.dark;
-      // Set theme provider to match system theme
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ref.read(themeProvider.notifier).state = isSystemDark;
-        }
-      });
-    }
+    detectSystemTheme();
   }
 
   @override
@@ -172,7 +157,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => _CancelConfirmationDialog(
+      builder: (context) => CancelConfirmationDialog(
         bookingReference: widget.booking.bookingReference,
         colors: colors,
         isDarkMode: isDarkMode,
@@ -391,8 +376,8 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     final status = _currentStatus.toLowerCase();
     final isCancelled = status == 'cancelled';
 
-    // Cancel button colors based on theme
-    final cancelBg = isDarkMode ? _cancelColorDark : _cancelColorLight;
+    // Cancel button colors based on theme (from ColorTokens)
+    final cancelBg = colors.statusCancelledBackground;
     final cancelText = isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
 
     // If booking is cancelled, don't show cancel button
@@ -438,143 +423,6 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Confirmation dialog for cancellation
-class _CancelConfirmationDialog extends StatelessWidget {
-  final String bookingReference;
-  final WidgetColorScheme colors;
-  final bool isDarkMode;
-
-  const _CancelConfirmationDialog({
-    required this.bookingReference,
-    required this.colors,
-    required this.isDarkMode,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Use pure black background for dark theme
-    final dialogBg =
-        isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
-
-    return AlertDialog(
-      backgroundColor: dialogBg,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderTokens.circularLarge,
-      ),
-      title: Row(
-        children: [
-          Icon(Icons.warning_amber_rounded, color: colors.error, size: 28),
-          const SizedBox(width: SpacingTokens.s),
-          Text(
-            'Cancel Booking',
-            style: TextStyle(
-              fontWeight: TypographyTokens.bold,
-              color: colors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Are you sure you want to cancel this booking?',
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
-              color: colors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: SpacingTokens.m),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(SpacingTokens.m),
-            decoration: BoxDecoration(
-              color: colors.backgroundSecondary,
-              borderRadius: BorderTokens.circularMedium,
-              border: Border.all(color: colors.borderDefault),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Booking Reference',
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeXS,
-                    color: colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: SpacingTokens.xxs),
-                Text(
-                  bookingReference,
-                  style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeM,
-                    fontWeight: TypographyTokens.bold,
-                    color: colors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: SpacingTokens.m),
-          Container(
-            padding: const EdgeInsets.all(SpacingTokens.s),
-            decoration: BoxDecoration(
-              color: colors.error.withValues(alpha: 0.08),
-              borderRadius: BorderTokens.circularSmall,
-              border: Border.all(
-                color: colors.error.withValues(alpha: 0.2),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, color: colors.error, size: 18),
-                const SizedBox(width: SpacingTokens.xs),
-                Expanded(
-                  child: Text(
-                    'This action cannot be undone. You will receive a cancellation confirmation email.',
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeXS,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(
-            'Keep Booking',
-            style: TextStyle(
-              color: colors.textSecondary,
-              fontWeight: TypographyTokens.medium,
-            ),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context, true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colors.error,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderTokens.circularMedium,
-            ),
-          ),
-          child: const Text(
-            'Cancel Booking',
-            style: TextStyle(fontWeight: TypographyTokens.semiBold),
-          ),
-        ),
-      ],
     );
   }
 }

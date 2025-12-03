@@ -98,6 +98,10 @@ class ColorTokens {
   static const Color emerald600 = Color(0xFF059669);
   static const Color emerald900 = Color(0xFF064E3B);
 
+  // Status colors - Cancel (Red variants for cancelled booking status)
+  static const Color cancelLight = Color(0xFFFBA9AA); // Light pink/red for light theme
+  static const Color cancelDark = Color(0xFFEF4444); // Bright red for dark theme
+
   // Slate (for dark mode)
   static const Color slate100 = Color(0xFFF1F5F9);
   static const Color slate300 = Color(0xFFCBD5E1);
@@ -201,6 +205,8 @@ abstract class WidgetColorScheme {
   Color get statusDisabledText;
   Color get statusPastReservationBackground;
   Color get statusPastReservationBorder;
+  Color get statusCancelledBackground;
+  Color get statusCancelledBorder;
 
   // Buttons
   Color get buttonPrimary;
@@ -351,6 +357,10 @@ class LightColorScheme implements WidgetColorScheme {
   @override
   Color get statusPastReservationBorder =>
       ColorTokens.pink500.withValues(alpha: 0.1); // Very light border - 10% opacity
+  @override
+  Color get statusCancelledBackground => ColorTokens.cancelLight;
+  @override
+  Color get statusCancelledBorder => ColorTokens.pink400;
 
   // Buttons - Black primary
   @override
@@ -557,6 +567,10 @@ class DarkColorScheme implements WidgetColorScheme {
   @override
   Color get statusPastReservationBorder =>
       ColorTokens.pink500.withValues(alpha: 0.1); // Very light border - 10% opacity
+  @override
+  Color get statusCancelledBackground => ColorTokens.cancelDark;
+  @override
+  Color get statusCancelledBorder => ColorTokens.pink700;
 
   // Buttons
   @override

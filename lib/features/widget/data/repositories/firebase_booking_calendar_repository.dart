@@ -540,6 +540,9 @@ class FirebaseBookingCalendarRepository {
     // Apply gap blocking based on minimum nights requirement
     _applyMinNightsGapBlocking(calendar, bookings, priceMap, minNights);
 
+    // Mark past dates as disabled or pastReservation
+    _markPastDates(calendar);
+
     return calendar;
   }
 
@@ -554,10 +557,11 @@ class FirebaseBookingCalendarRepository {
     final Map<DateTime, CalendarDateInfo> calendar = {};
 
     // Initialize all days in year as available with prices
+    // Bug #65 Fix: Use UTC for DST-safe date handling (consistent with month view)
     for (int month = 1; month <= 12; month++) {
-      final daysInMonth = DateTime(year, month + 1, 0).day;
+      final daysInMonth = DateTime.utc(year, month + 1, 0).day;
       for (int day = 1; day <= daysInMonth; day++) {
-        final date = DateTime(year, month, day);
+        final date = DateTime.utc(year, month, day);
         final priceKey = DateKeyGenerator.fromDate(date);
         final priceModel = priceMap[priceKey];
 
@@ -571,8 +575,8 @@ class FirebaseBookingCalendarRepository {
 
     // Mark booked dates from regular bookings
     // Bug #71 Fix: Optimize for long-term bookings by calculating date range intersection
-    final yearStart = DateTime(year);
-    final yearEnd = DateTime(year, 12, 31);
+    final yearStart = DateTime.utc(year);
+    final yearEnd = DateTime.utc(year, 12, 31);
 
     // DEBUG: Log bookings being processed in YEAR view
     debugPrint('[CalendarRepo] _buildYearCalendarMap: Processing ${bookings.length} bookings for year $year');
@@ -581,12 +585,13 @@ class FirebaseBookingCalendarRepository {
     }
 
     for (final booking in bookings) {
-      final checkIn = DateTime(
+      // Bug #65 Fix: Use UTC for DST-safe date handling
+      final checkIn = DateTime.utc(
         booking.checkIn.year,
         booking.checkIn.month,
         booking.checkIn.day,
       );
-      final checkOut = DateTime(
+      final checkOut = DateTime.utc(
         booking.checkOut.year,
         booking.checkOut.month,
         booking.checkOut.day,
@@ -661,12 +666,13 @@ class FirebaseBookingCalendarRepository {
     // FIX: iCal events should also show split days (check-in/check-out)
     if (icalEvents != null) {
       for (final event in icalEvents) {
-        final checkIn = DateTime(
+        // Bug #65 Fix: Use UTC for DST-safe date handling
+        final checkIn = DateTime.utc(
           event['start_date'].year,
           event['start_date'].month,
           event['start_date'].day,
         );
-        final checkOut = DateTime(
+        final checkOut = DateTime.utc(
           event['end_date'].year,
           event['end_date'].month,
           event['end_date'].day,
@@ -737,7 +743,55 @@ class FirebaseBookingCalendarRepository {
     // Apply gap blocking based on minimum nights requirement
     _applyMinNightsGapBlocking(calendar, bookings, priceMap, minNights);
 
+    // Mark past dates as disabled or pastReservation
+    _markPastDates(calendar);
+
     return calendar;
+  }
+
+  /// Mark past dates appropriately
+  /// - Past available dates → disabled (cannot be selected)
+  /// - Past booked/partialCheckIn/partialCheckOut/partialBoth dates → pastReservation
+  /// - Past blocked dates → keep as blocked (already not selectable)
+  void _markPastDates(Map<DateTime, CalendarDateInfo> calendar) {
+    final now = DateTime.now();
+    final today = DateTime.utc(now.year, now.month, now.day);
+
+    final datesToUpdate = <DateTime, CalendarDateInfo>{};
+
+    for (final entry in calendar.entries) {
+      final date = entry.key;
+      final info = entry.value;
+
+      // Only process dates before today
+      if (date.isBefore(today)) {
+        switch (info.status) {
+          case DateStatus.available:
+            // Past available → disabled
+            datesToUpdate[date] = info.copyWith(status: DateStatus.disabled);
+
+          case DateStatus.booked:
+          case DateStatus.partialCheckIn:
+          case DateStatus.partialCheckOut:
+          case DateStatus.partialBoth:
+            // Past booked → pastReservation
+            datesToUpdate[date] = info.copyWith(status: DateStatus.pastReservation);
+
+          case DateStatus.pending:
+            // Past pending → pastReservation (shouldn't happen, but handle it)
+            datesToUpdate[date] = info.copyWith(status: DateStatus.pastReservation);
+
+          case DateStatus.blocked:
+          case DateStatus.disabled:
+          case DateStatus.pastReservation:
+            // Already correct status, no change needed
+            break;
+        }
+      }
+    }
+
+    // Apply updates
+    calendar.addAll(datesToUpdate);
   }
 
   /// Apply gap blocking based on minimum nights requirement

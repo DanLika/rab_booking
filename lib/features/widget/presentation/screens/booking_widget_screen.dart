@@ -56,7 +56,7 @@ import '../widgets/booking/payment/payment_method_card.dart';
 import '../widgets/booking/pill_bar_content.dart';
 import '../widgets/booking/booking_pill_bar.dart';
 import '../widgets/booking/contact_pill_card_widget.dart';
-import '../widgets/common/theme_colors_helper.dart';
+// MinimalistColorSchemeAdapter is already imported via minimalist_colors.dart
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/errors/app_exceptions.dart';
 
@@ -946,9 +946,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-
-    // Helper function to get theme-aware colors
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final minimalistColors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     // Bug #73: Listen for price calculation errors (dates no longer available)
     // Only listen if dates are selected to avoid unnecessary provider calls
@@ -1007,10 +1005,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true, // Bug #46: Resize when keyboard appears
-      backgroundColor: getColor(
-        MinimalistColors.backgroundPrimary,
-        MinimalistColorsDark.backgroundPrimary,
-      ),
+      backgroundColor: minimalistColors.backgroundPrimary,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -1083,9 +1078,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: isDarkMode
-                                  ? MinimalistColorsDark.textPrimary
-                                  : MinimalistColors.textPrimary,
+                              color: minimalistColors.textPrimary,
                               fontFamily: 'Manrope',
                             ),
                             maxLines: 2,
@@ -1127,7 +1120,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                             'Minimum $minNights ${minNights == 1 ? 'night' : 'nights'} required. You selected $selectedNights ${selectedNights == 1 ? 'night' : 'nights'}.',
                                           ),
                                           backgroundColor:
-                                              MinimalistColors.error,
+                                              minimalistColors.error,
                                           duration: const Duration(seconds: 3),
                                         ),
                                       );
@@ -1434,9 +1427,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Build payment section (payment options + confirm button)
   Widget _buildPaymentSection(BookingPriceCalculation calculation) {
     final isDarkMode = ref.watch(themeProvider);
-
-    // Helper function to get theme-aware colors
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final minimalistColors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     // Safety check: At least one payment method must be available
     final hasAnyPaymentMethod =
@@ -1540,10 +1531,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: getColor(
-                          MinimalistColors.textPrimary,
-                          MinimalistColorsDark.textPrimary,
-                        ),
+                        color: minimalistColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: SpacingTokens.s),
@@ -1571,10 +1559,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
+                      color: minimalistColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: SpacingTokens.s),
@@ -1679,14 +1664,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 ? null
                 : () => _handleConfirmBooking(calculation),
             style: ElevatedButton.styleFrom(
-              backgroundColor: getColor(
-                MinimalistColors.buttonPrimary,
-                MinimalistColorsDark.buttonPrimary,
-              ),
-              foregroundColor: getColor(
-                MinimalistColors.buttonPrimaryText,
-                MinimalistColorsDark.buttonPrimaryText,
-              ),
+              backgroundColor: minimalistColors.buttonPrimary,
+              foregroundColor: minimalistColors.buttonPrimaryText,
               padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderTokens.circularMedium,
@@ -1699,10 +1678,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        getColor(
-                          MinimalistColors.buttonPrimaryText,
-                          MinimalistColorsDark.buttonPrimaryText,
-                        ),
+                        minimalistColors.buttonPrimaryText,
                       ),
                     ),
                   )
@@ -1715,10 +1691,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: getColor(
-                          MinimalistColors.buttonPrimaryText,
-                          MinimalistColorsDark.buttonPrimaryText,
-                        ),
+                        color: minimalistColors.buttonPrimaryText,
                       ),
                     ),
                   ),
@@ -1733,9 +1706,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     bool showButton = true,
   }) {
     final isDarkMode = ref.watch(themeProvider);
-
-    // Helper function to get theme-aware colors
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final minimalistColors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Form(
       key: _formKey,
@@ -1748,10 +1719,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
+              color: minimalistColors.textPrimary,
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
@@ -1807,18 +1775,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     _formKey.currentState?.validate();
                   });
                 },
-                textColor: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
-                backgroundColor: getColor(
-                  MinimalistColors.backgroundSecondary,
-                  MinimalistColorsDark.backgroundSecondary,
-                ),
-                borderColor: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ).withValues(alpha: 0.3),
+                textColor: minimalistColors.textPrimary,
+                backgroundColor: minimalistColors.backgroundSecondary,
+                borderColor: minimalistColors.textSecondary.withValues(alpha: 0.3),
               ),
               const SizedBox(width: SpacingTokens.s),
               // Phone number input
@@ -1861,7 +1820,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     ? null
                     : () => _handleConfirmBooking(calculation),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: MinimalistColors.buttonPrimary,
+                  backgroundColor: minimalistColors.buttonPrimary,
                   padding: const EdgeInsets.symmetric(
                     vertical: SpacingTokens.m,
                   ),
@@ -1870,22 +1829,22 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   ),
                 ),
                 child: _isProcessing
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+                            minimalistColors.buttonPrimaryText,
                           ),
                         ),
                       )
                     : Text(
                         _getConfirmButtonText(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: minimalistColors.buttonPrimaryText,
                         ),
                       ),
               ),

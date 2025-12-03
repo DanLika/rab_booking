@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
-import '../common/theme_colors_helper.dart';
 import 'price_breakdown_widget.dart';
 
 /// Compact summary displayed in the pill bar showing dates, price, and reserve button.
@@ -88,8 +87,7 @@ class CompactPillSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM dd, yyyy');
-
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Column(
       children: [
@@ -103,25 +101,20 @@ class CompactPillSummary extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: getColor(
-                    MinimalistColors.backgroundSecondary,
-                    ColorTokens.pureWhite,
-                  ),
+                  color: isDarkMode
+                      ? ColorTokens.pureWhite
+                      : colors.backgroundSecondary,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: getColor(
-                      MinimalistColors.borderLight,
-                      MinimalistColorsDark.borderLight,
-                    ),
+                    color: colors.borderLight,
                   ),
                 ),
                 child: Icon(
                   Icons.close,
                   size: 16,
-                  color: getColor(
-                    MinimalistColors.textSecondary,
-                    ColorTokens.pureBlack,
-                  ),
+                  color: isDarkMode
+                      ? ColorTokens.pureBlack
+                      : colors.textSecondary,
                 ),
               ),
             ),
@@ -133,16 +126,10 @@ class CompactPillSummary extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: getColor(
-              MinimalistColors.buttonPrimary,
-              MinimalistColorsDark.buttonPrimary,
-            ).withValues(alpha: 0.1),
+            color: colors.buttonPrimary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: getColor(
-                MinimalistColors.buttonPrimary,
-                MinimalistColorsDark.buttonPrimary,
-              ).withValues(alpha: 0.3),
+              color: colors.buttonPrimary.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -151,10 +138,7 @@ class CompactPillSummary extends StatelessWidget {
               Icon(
                 Icons.calendar_month,
                 size: 18,
-                color: getColor(
-                  MinimalistColors.buttonPrimary,
-                  MinimalistColorsDark.buttonPrimary,
-                ),
+                color: colors.buttonPrimary,
               ),
               const SizedBox(width: 8),
               Text(
@@ -162,20 +146,14 @@ class CompactPillSummary extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                 ),
               ),
               const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: getColor(
-                    MinimalistColors.buttonPrimary,
-                    MinimalistColorsDark.buttonPrimary,
-                  ),
+                  color: colors.buttonPrimary,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -183,10 +161,7 @@ class CompactPillSummary extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: getColor(
-                      MinimalistColors.buttonPrimaryText,
-                      MinimalistColorsDark.buttonPrimaryText,
-                    ),
+                    color: colors.buttonPrimaryText,
                   ),
                 ),
               ),
@@ -217,10 +192,7 @@ class CompactPillSummary extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               decoration: BoxDecoration(
-                color: getColor(
-                  MinimalistColors.buttonPrimary,
-                  MinimalistColorsDark.buttonPrimary,
-                ),
+                color: colors.buttonPrimary,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -228,10 +200,7 @@ class CompactPillSummary extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: getColor(
-                    MinimalistColors.buttonPrimaryText,
-                    MinimalistColorsDark.buttonPrimaryText,
-                  ),
+                  color: colors.buttonPrimaryText,
                 ),
               ),
             ),

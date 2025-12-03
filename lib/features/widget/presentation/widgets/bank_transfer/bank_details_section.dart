@@ -20,25 +20,21 @@ class BankDetailsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: _getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        color: colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
         border: Border.all(
-          color: _getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
+          color: colors.borderDefault,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
+          _buildHeader(colors),
           const SizedBox(height: SpacingTokens.m),
           if (bankConfig.accountHolder != null)
             CopyableTextField(
@@ -113,15 +109,12 @@ class BankDetailsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(MinimalistColorSchemeAdapter colors) {
     return Row(
       children: [
         Icon(
           Icons.account_balance,
-          color: _getColor(
-            MinimalistColors.buttonPrimary,
-            MinimalistColorsDark.buttonPrimary,
-          ),
+          color: colors.buttonPrimary,
           size: IconSizeTokens.medium,
         ),
         const SizedBox(width: SpacingTokens.xs),
@@ -130,10 +123,7 @@ class BankDetailsSection extends StatelessWidget {
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeL,
             fontWeight: TypographyTokens.semiBold,
-            color: _getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
+            color: colors.textPrimary,
           ),
         ),
       ],
@@ -147,9 +137,5 @@ class BankDetailsSection extends StatelessWidget {
       message: message,
       duration: const Duration(seconds: 2),
     );
-  }
-
-  Color _getColor(Color lightColor, Color darkColor) {
-    return isDarkMode ? darkColor : lightColor;
   }
 }

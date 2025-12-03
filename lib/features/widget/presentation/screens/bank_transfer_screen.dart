@@ -12,7 +12,6 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../widgets/common/detail_row_widget.dart';
-import '../widgets/common/theme_colors_helper.dart';
 import '../widgets/bank_transfer/qr_code_payment_section.dart';
 import '../widgets/bank_transfer/bank_details_section.dart';
 import '../widgets/bank_transfer/payment_warning_section.dart';
@@ -43,35 +42,17 @@ class BankTransferScreen extends ConsumerWidget {
         .getWidgetSettings(propertyId: propertyId, unitId: unitId);
 
     final isDarkMode = ref.watch(themeProvider);
-
-    // Helper function to get theme-aware colors
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Scaffold(
-      backgroundColor: getColor(
-        MinimalistColors.backgroundPrimary,
-        MinimalistColorsDark.backgroundPrimary,
-      ),
+      backgroundColor: colors.backgroundPrimary,
       appBar: AppBar(
         title: Text(
           'Uputstva za Uplatu',
-          style: TextStyle(
-            color: getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
-          ),
+          style: TextStyle(color: colors.textPrimary),
         ),
-        backgroundColor: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
-        iconTheme: IconThemeData(
-          color: getColor(
-            MinimalistColors.textPrimary,
-            MinimalistColorsDark.textPrimary,
-          ),
-        ),
+        backgroundColor: colors.backgroundSecondary,
+        iconTheme: IconThemeData(color: colors.textPrimary),
         elevation: 0,
       ),
       body: FutureBuilder<WidgetSettings?>(
@@ -103,8 +84,7 @@ class BankTransferScreen extends ConsumerWidget {
                 return _buildWithBankConfig(
                   context,
                   ref,
-                  isDarkMode,
-                  getColor,
+                  colors,
                   effectiveBankConfig,
                 );
               },
@@ -112,12 +92,7 @@ class BankTransferScreen extends ConsumerWidget {
               error: (error, stack) => Center(
                 child: Text(
                   'Greška pri učitavanju bankovnih podataka: $error',
-                  style: TextStyle(
-                    color: getColor(
-                      MinimalistColors.error,
-                      MinimalistColorsDark.error,
-                    ),
-                  ),
+                  style: TextStyle(color: colors.error),
                 ),
               ),
             );
@@ -126,8 +101,7 @@ class BankTransferScreen extends ConsumerWidget {
           return _buildWithBankConfig(
             context,
             ref,
-            isDarkMode,
-            getColor,
+            colors,
             bankConfig,
           );
         },
@@ -173,8 +147,7 @@ class BankTransferScreen extends ConsumerWidget {
   Widget _buildWithBankConfig(
     BuildContext context,
     WidgetRef ref,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
     BankTransferConfig? bankConfig,
   ) {
     final priceCalc = ref.watch(
@@ -191,12 +164,7 @@ class BankTransferScreen extends ConsumerWidget {
           return Center(
             child: Text(
               'Greška pri učitavanju cijene',
-              style: TextStyle(
-                color: getColor(
-                  MinimalistColors.error,
-                  MinimalistColorsDark.error,
-                ),
-              ),
+              style: TextStyle(color: colors.error),
             ),
           );
         }
@@ -220,8 +188,7 @@ class BankTransferScreen extends ConsumerWidget {
               child: isDesktop
                   ? _buildDesktopLayout(
                       context,
-                      isDarkMode,
-                      getColor,
+                      colors,
                       calculation,
                       bankConfig,
                       formattedDeadline,
@@ -229,8 +196,7 @@ class BankTransferScreen extends ConsumerWidget {
                     )
                   : _buildMobileLayout(
                       context,
-                      isDarkMode,
-                      getColor,
+                      colors,
                       calculation,
                       bankConfig,
                       formattedDeadline,
@@ -244,12 +210,7 @@ class BankTransferScreen extends ConsumerWidget {
       error: (error, stack) => Center(
         child: Text(
           'Greška: $error',
-          style: TextStyle(
-            color: getColor(
-              MinimalistColors.error,
-              MinimalistColorsDark.error,
-            ),
-          ),
+          style: TextStyle(color: colors.error),
         ),
       ),
     );
@@ -258,8 +219,7 @@ class BankTransferScreen extends ConsumerWidget {
   /// Build Desktop Layout (2 columns)
   Widget _buildDesktopLayout(
     BuildContext context,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
     dynamic calculation,
     BankTransferConfig? bankConfig,
     String formattedDeadline,
@@ -273,11 +233,11 @@ class BankTransferScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSuccessHeader(context, isDarkMode, getColor),
+              _buildSuccessHeader(context, colors),
               SizedBox(height: spacing),
-              _buildReferenceCard(context, isDarkMode, getColor),
+              _buildReferenceCard(context, colors),
               SizedBox(height: spacing),
-              _buildBookingDetails(context, isDarkMode, getColor, calculation),
+              _buildBookingDetails(context, colors, calculation),
             ],
           ),
         ),
@@ -288,14 +248,14 @@ class BankTransferScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               PaymentWarningSection(
-                isDarkMode: isDarkMode,
+                isDarkMode: colors.dark,
                 depositAmount: calculation.formattedDeposit,
                 deadline: formattedDeadline,
               ),
               SizedBox(height: spacing),
               if (bankConfig != null && bankConfig.hasCompleteDetails) ...[
                 BankDetailsSection(
-                  isDarkMode: isDarkMode,
+                  isDarkMode: colors.dark,
                   bankConfig: bankConfig,
                 ),
                 SizedBox(height: spacing),
@@ -304,7 +264,7 @@ class BankTransferScreen extends ConsumerWidget {
                   bankConfig.enableQrCode &&
                   bankConfig.iban != null) ...[
                 QrCodePaymentSection(
-                  isDarkMode: isDarkMode,
+                  isDarkMode: colors.dark,
                   bankConfig: bankConfig,
                   amount: calculation.depositAmount,
                   bookingReference: bookingReference,
@@ -312,12 +272,12 @@ class BankTransferScreen extends ConsumerWidget {
                 SizedBox(height: spacing),
               ],
               ImportantNotesSection(
-                isDarkMode: isDarkMode,
+                isDarkMode: colors.dark,
                 bankConfig: bankConfig,
                 remainingAmount: calculation.formattedRemaining,
               ),
               SizedBox(height: spacing),
-              _buildDoneButton(context, isDarkMode, getColor),
+              _buildDoneButton(context, colors),
             ],
           ),
         ),
@@ -328,8 +288,7 @@ class BankTransferScreen extends ConsumerWidget {
   /// Build Mobile Layout (stacked)
   Widget _buildMobileLayout(
     BuildContext context,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
     dynamic calculation,
     BankTransferConfig? bankConfig,
     String formattedDeadline,
@@ -338,21 +297,21 @@ class BankTransferScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildSuccessHeader(context, isDarkMode, getColor),
+        _buildSuccessHeader(context, colors),
         SizedBox(height: spacing),
-        _buildReferenceCard(context, isDarkMode, getColor),
+        _buildReferenceCard(context, colors),
         SizedBox(height: spacing),
         PaymentWarningSection(
-          isDarkMode: isDarkMode,
+          isDarkMode: colors.dark,
           depositAmount: calculation.formattedDeposit,
           deadline: formattedDeadline,
         ),
         SizedBox(height: spacing),
-        _buildBookingDetails(context, isDarkMode, getColor, calculation),
+        _buildBookingDetails(context, colors, calculation),
         SizedBox(height: spacing),
         if (bankConfig != null && bankConfig.hasCompleteDetails) ...[
           BankDetailsSection(
-            isDarkMode: isDarkMode,
+            isDarkMode: colors.dark,
             bankConfig: bankConfig,
           ),
           SizedBox(height: spacing),
@@ -361,7 +320,7 @@ class BankTransferScreen extends ConsumerWidget {
             bankConfig.enableQrCode &&
             bankConfig.iban != null) ...[
           QrCodePaymentSection(
-            isDarkMode: isDarkMode,
+            isDarkMode: colors.dark,
             bankConfig: bankConfig,
             amount: calculation.depositAmount,
             bookingReference: bookingReference,
@@ -369,12 +328,12 @@ class BankTransferScreen extends ConsumerWidget {
           SizedBox(height: spacing),
         ],
         ImportantNotesSection(
-          isDarkMode: isDarkMode,
+          isDarkMode: colors.dark,
           bankConfig: bankConfig,
           remainingAmount: calculation.formattedRemaining,
         ),
         const SizedBox(height: SpacingTokens.xl),
-        _buildDoneButton(context, isDarkMode, getColor),
+        _buildDoneButton(context, colors),
         const SizedBox(height: SpacingTokens.l),
       ],
     );
@@ -382,23 +341,14 @@ class BankTransferScreen extends ConsumerWidget {
 
   Widget _buildSuccessHeader(
     BuildContext context,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
   ) {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.l),
       decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        color: colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: getColor(
-            MinimalistColors.borderLight,
-            MinimalistColorsDark.borderLight,
-          ),
-        ),
+        border: Border.all(color: colors.borderLight),
       ),
       child: Column(
         children: [
@@ -406,26 +356,17 @@ class BankTransferScreen extends ConsumerWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: getColor(
-                MinimalistColors.success,
-                MinimalistColorsDark.success,
-              ).withValues(alpha: 0.1),
+              color: colors.success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
               border: Border.all(
-                color: getColor(
-                  MinimalistColors.success,
-                  MinimalistColorsDark.success,
-                ),
+                color: colors.success,
                 width: BorderTokens.widthMedium,
               ),
             ),
             child: Icon(
               Icons.check_circle_outline,
               size: 48,
-              color: getColor(
-                MinimalistColors.success,
-                MinimalistColorsDark.success,
-              ),
+              color: colors.success,
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
@@ -434,10 +375,7 @@ class BankTransferScreen extends ConsumerWidget {
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeXXL,
               fontWeight: TypographyTokens.bold,
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
+              color: colors.textPrimary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -446,10 +384,7 @@ class BankTransferScreen extends ConsumerWidget {
             'Molimo dovršite plaćanje kako biste osigurali rezervaciju',
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeM,
-              color: getColor(
-                MinimalistColors.textSecondary,
-                MinimalistColorsDark.textSecondary,
-              ),
+              color: colors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -460,23 +395,14 @@ class BankTransferScreen extends ConsumerWidget {
 
   Widget _buildReferenceCard(
     BuildContext context,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
   ) {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        color: colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,10 +411,7 @@ class BankTransferScreen extends ConsumerWidget {
             children: [
               Icon(
                 Icons.qr_code_2,
-                color: getColor(
-                  MinimalistColors.buttonPrimary,
-                  MinimalistColorsDark.buttonPrimary,
-                ),
+                color: colors.buttonPrimary,
                 size: IconSizeTokens.medium,
               ),
               const SizedBox(width: SpacingTokens.xs),
@@ -497,10 +420,7 @@ class BankTransferScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeL,
                   fontWeight: TypographyTokens.semiBold,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                 ),
               ),
             ],
@@ -509,17 +429,9 @@ class BankTransferScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(SpacingTokens.s),
             decoration: BoxDecoration(
-              color: getColor(
-                MinimalistColors.backgroundPrimary,
-                MinimalistColorsDark.backgroundPrimary,
-              ),
+              color: colors.backgroundPrimary,
               borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
-              border: Border.all(
-                color: getColor(
-                  MinimalistColors.borderMedium,
-                  MinimalistColorsDark.borderMedium,
-                ),
-              ),
+              border: Border.all(color: colors.borderMedium),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -531,21 +443,12 @@ class BankTransferScreen extends ConsumerWidget {
                       fontSize: TypographyTokens.fontSizeXL,
                       fontWeight: TypographyTokens.bold,
                       fontFamily: 'monospace',
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
+                      color: colors.textPrimary,
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(
-                    Icons.content_copy,
-                    color: getColor(
-                      MinimalistColors.buttonPrimary,
-                      MinimalistColorsDark.buttonPrimary,
-                    ),
-                  ),
+                  icon: Icon(Icons.content_copy, color: colors.buttonPrimary),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: bookingReference));
                     SnackBarHelper.showSuccess(
@@ -564,10 +467,7 @@ class BankTransferScreen extends ConsumerWidget {
             '⚠️ Obavezno navedite ovaj broj u opisu uplate',
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeS,
-              color: getColor(
-                MinimalistColors.warning,
-                MinimalistColorsDark.warning,
-              ),
+              color: colors.warning,
               fontWeight: TypographyTokens.medium,
             ),
           ),
@@ -578,24 +478,15 @@ class BankTransferScreen extends ConsumerWidget {
 
   Widget _buildBookingDetails(
     BuildContext context,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
     dynamic calculation,
   ) {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        color: colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
-        ),
+        border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -605,60 +496,38 @@ class BankTransferScreen extends ConsumerWidget {
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeL,
               fontWeight: TypographyTokens.semiBold,
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
+              color: colors.textPrimary,
             ),
           ),
           const SizedBox(height: SpacingTokens.m),
           DetailRowWidget(
             label: 'Dolazak',
             value: _formatDate(checkIn),
-            isDarkMode: isDarkMode,
+            isDarkMode: colors.dark,
           ),
           const SizedBox(height: SpacingTokens.s),
           DetailRowWidget(
             label: 'Odlazak',
             value: _formatDate(checkOut),
-            isDarkMode: isDarkMode,
+            isDarkMode: colors.dark,
           ),
           const SizedBox(height: SpacingTokens.s),
           DetailRowWidget(
             label: 'Noći',
             value: '${calculation.nights}',
-            isDarkMode: isDarkMode,
+            isDarkMode: colors.dark,
           ),
-          Divider(
-            height: SpacingTokens.l,
-            color: getColor(
-              MinimalistColors.borderDefault,
-              MinimalistColorsDark.borderDefault,
-            ),
-          ),
-          _buildPriceRow(
-            'Ukupna Cijena',
-            calculation.formattedTotal,
-            isDarkMode,
-            getColor,
-            false,
-          ),
+          Divider(height: SpacingTokens.l, color: colors.borderDefault),
+          _buildPriceRow('Ukupna Cijena', calculation.formattedTotal, colors, false),
           const SizedBox(height: SpacingTokens.s),
           _buildPriceRow(
             'Depozit (${calculation.totalPrice > 0 ? (calculation.depositAmount / calculation.totalPrice * 100).round() : 0}%)',
             calculation.formattedDeposit,
-            isDarkMode,
-            getColor,
+            colors,
             true,
           ),
           const SizedBox(height: SpacingTokens.s),
-          _buildPriceRow(
-            'Preostalo',
-            calculation.formattedRemaining,
-            isDarkMode,
-            getColor,
-            false,
-          ),
+          _buildPriceRow('Preostalo', calculation.formattedRemaining, colors, false),
         ],
       ),
     );
@@ -667,26 +536,17 @@ class BankTransferScreen extends ConsumerWidget {
   Widget _buildPriceRow(
     String label,
     String value,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
     bool highlight,
   ) {
     return Container(
-      padding: highlight
-          ? const EdgeInsets.all(SpacingTokens.s)
-          : EdgeInsets.zero,
+      padding: highlight ? const EdgeInsets.all(SpacingTokens.s) : EdgeInsets.zero,
       decoration: highlight
           ? BoxDecoration(
-              color: getColor(
-                MinimalistColors.buttonPrimary,
-                MinimalistColorsDark.buttonPrimary,
-              ).withValues(alpha: 0.1),
+              color: colors.buttonPrimary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
               border: Border.all(
-                color: getColor(
-                  MinimalistColors.buttonPrimary,
-                  MinimalistColorsDark.buttonPrimary,
-                ),
+                color: colors.buttonPrimary,
                 width: BorderTokens.widthMedium,
               ),
             )
@@ -697,34 +557,17 @@ class BankTransferScreen extends ConsumerWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: highlight
-                  ? TypographyTokens.fontSizeL
-                  : TypographyTokens.fontSizeM,
-              fontWeight: highlight
-                  ? TypographyTokens.bold
-                  : TypographyTokens.medium,
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
+              fontSize: highlight ? TypographyTokens.fontSizeL : TypographyTokens.fontSizeM,
+              fontWeight: highlight ? TypographyTokens.bold : TypographyTokens.medium,
+              color: colors.textPrimary,
             ),
           ),
           Text(
             value,
             style: TextStyle(
-              fontSize: highlight
-                  ? TypographyTokens.fontSizeXL
-                  : TypographyTokens.fontSizeL,
+              fontSize: highlight ? TypographyTokens.fontSizeXL : TypographyTokens.fontSizeL,
               fontWeight: TypographyTokens.bold,
-              color: highlight
-                  ? getColor(
-                      MinimalistColors.buttonPrimary,
-                      MinimalistColorsDark.buttonPrimary,
-                    )
-                  : getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
+              color: highlight ? colors.buttonPrimary : colors.textPrimary,
             ),
           ),
         ],
@@ -734,22 +577,13 @@ class BankTransferScreen extends ConsumerWidget {
 
   Widget _buildDoneButton(
     BuildContext context,
-    bool isDarkMode,
-    Color Function(Color, Color) getColor,
+    MinimalistColorSchemeAdapter colors,
   ) {
     return ElevatedButton(
-      onPressed: () {
-        Navigator.of(context).pop();
-      },
+      onPressed: () => Navigator.of(context).pop(),
       style: ElevatedButton.styleFrom(
-        backgroundColor: getColor(
-          MinimalistColors.buttonPrimary,
-          MinimalistColorsDark.buttonPrimary,
-        ),
-        foregroundColor: getColor(
-          MinimalistColors.buttonPrimaryText,
-          MinimalistColorsDark.buttonPrimaryText,
-        ),
+        backgroundColor: colors.buttonPrimary,
+        foregroundColor: colors.buttonPrimaryText,
         padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BorderTokens.radiusRounded),
@@ -764,20 +598,11 @@ class BankTransferScreen extends ConsumerWidget {
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeL,
               fontWeight: TypographyTokens.bold,
-              color: getColor(
-                MinimalistColors.buttonPrimaryText,
-                MinimalistColorsDark.buttonPrimaryText,
-              ),
+              color: colors.buttonPrimaryText,
             ),
           ),
           const SizedBox(width: SpacingTokens.xs),
-          Icon(
-            Icons.check_circle_outline,
-            color: getColor(
-              MinimalistColors.buttonPrimaryText,
-              MinimalistColorsDark.buttonPrimaryText,
-            ),
-          ),
+          Icon(Icons.check_circle_outline, color: colors.buttonPrimaryText),
         ],
       ),
     );

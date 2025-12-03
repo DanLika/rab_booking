@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
-import '../common/theme_colors_helper.dart';
 import 'price_row_widget.dart';
 
 /// Price breakdown container showing room price, services, total, and deposit.
@@ -64,15 +63,12 @@ class PriceBreakdownWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        color: colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
       ),
       child: Column(
@@ -92,10 +88,7 @@ class PriceBreakdownWidget extends StatelessWidget {
               label: 'Additional Services',
               amount: formattedAdditionalServices!,
               isDarkMode: isDarkMode,
-              color: getColor(
-                MinimalistColors.statusAvailableBorder,
-                MinimalistColorsDark.statusAvailableBorder,
-              ),
+              color: colors.statusAvailableBorder,
             ),
           ],
 
@@ -103,10 +96,7 @@ class PriceBreakdownWidget extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
             child: Divider(
               height: 1,
-              color: getColor(
-                MinimalistColors.borderDefault,
-                MinimalistColorsDark.borderDefault,
-              ),
+              color: colors.borderDefault,
             ),
           ),
 
@@ -124,10 +114,7 @@ class PriceBreakdownWidget extends StatelessWidget {
             'Deposit: $formattedDeposit ($depositPercentage%)',
             style: TextStyle(
               fontSize: TypographyTokens.fontSizeS,
-              color: getColor(
-                MinimalistColors.textSecondary,
-                MinimalistColorsDark.textSecondary,
-              ),
+              color: colors.textSecondary,
               fontFamily: 'Manrope',
             ),
           ),

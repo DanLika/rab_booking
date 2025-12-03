@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../theme/minimalist_colors.dart';
-import 'theme_colors_helper.dart';
 
 /// Loading screen displayed while booking widget is initializing.
 ///
@@ -28,32 +27,23 @@ class WidgetLoadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Scaffold(
-      backgroundColor: getColor(
-        MinimalistColors.backgroundPrimary,
-        MinimalistColorsDark.backgroundPrimary,
-      ),
+      backgroundColor: colors.backgroundPrimary,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(
-              color: getColor(
-                MinimalistColors.buttonPrimary,
-                MinimalistColorsDark.buttonPrimary,
-              ),
+              color: colors.buttonPrimary,
             ),
             const SizedBox(height: 24),
             Text(
               message,
               style: TextStyle(
                 fontSize: 16,
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
+                color: colors.textSecondary,
               ),
             ),
           ],

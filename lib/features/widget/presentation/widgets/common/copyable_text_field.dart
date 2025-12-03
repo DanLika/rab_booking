@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
-import 'theme_colors_helper.dart';
 
 /// A text field with a label, value, icon, and copy button.
 ///
@@ -48,7 +47,7 @@ class CopyableTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     // Use monospace font for IBAN and reference numbers
     final useMonospace =
@@ -57,26 +56,17 @@ class CopyableTextField extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.s),
       decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundPrimary,
-          MinimalistColorsDark.backgroundPrimary,
-        ),
+        color: colors.backgroundPrimary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
         border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
+          color: colors.borderDefault,
         ),
       ),
       child: Row(
         children: [
           Icon(
             icon,
-            color: getColor(
-              MinimalistColors.buttonPrimary,
-              MinimalistColorsDark.buttonPrimary,
-            ),
+            color: colors.buttonPrimary,
             size: IconSizeTokens.small,
           ),
           const SizedBox(width: SpacingTokens.s),
@@ -88,10 +78,7 @@ class CopyableTextField extends StatelessWidget {
                   label,
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeXS,
-                    color: getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
+                    color: colors.textSecondary,
                     fontWeight: TypographyTokens.medium,
                   ),
                 ),
@@ -101,10 +88,7 @@ class CopyableTextField extends StatelessWidget {
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeM,
                     fontWeight: TypographyTokens.semiBold,
-                    color: getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
+                    color: colors.textPrimary,
                     fontFamily: useMonospace ? 'monospace' : null,
                   ),
                 ),
@@ -115,10 +99,7 @@ class CopyableTextField extends StatelessWidget {
             icon: Icon(
               Icons.content_copy,
               size: IconSizeTokens.small,
-              color: getColor(
-                MinimalistColors.buttonPrimary,
-                MinimalistColorsDark.buttonPrimary,
-              ),
+              color: colors.buttonPrimary,
             ),
             onPressed: onCopy,
             tooltip: 'Kopiraj',

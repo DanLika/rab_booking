@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
-import 'theme_colors_helper.dart';
 
 /// An informational card widget for displaying messages with an icon.
 ///
@@ -51,7 +50,7 @@ class InfoCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final hasTitle = title != null && title!.isNotEmpty;
     final effectiveIconSize = iconSize ?? (hasTitle ? 24.0 : 16.0);
 
@@ -61,16 +60,10 @@ class InfoCardWidget extends StatelessWidget {
         vertical: hasTitle ? SpacingTokens.m : SpacingTokens.xs,
       ),
       decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
+          color: colors.borderDefault,
         ),
       ),
       child: Row(
@@ -80,10 +73,7 @@ class InfoCardWidget extends StatelessWidget {
             padding: EdgeInsets.only(top: hasTitle ? 0 : 1),
             child: Icon(
               icon,
-              color: getColor(
-                MinimalistColors.textSecondary,
-                MinimalistColorsDark.textSecondary,
-              ),
+              color: colors.textSecondary,
               size: effectiveIconSize,
             ),
           ),
@@ -98,10 +88,7 @@ class InfoCardWidget extends StatelessWidget {
                         style: TextStyle(
                           fontSize: TypographyTokens.fontSizeM,
                           fontWeight: TypographyTokens.bold,
-                          color: getColor(
-                            MinimalistColors.textPrimary,
-                            MinimalistColorsDark.textPrimary,
-                          ),
+                          color: colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: SpacingTokens.xs),
@@ -109,10 +96,7 @@ class InfoCardWidget extends StatelessWidget {
                         message,
                         style: TextStyle(
                           fontSize: TypographyTokens.fontSizeS,
-                          color: getColor(
-                            MinimalistColors.textSecondary,
-                            MinimalistColorsDark.textSecondary,
-                          ),
+                          color: colors.textSecondary,
                         ),
                       ),
                     ],
@@ -121,10 +105,7 @@ class InfoCardWidget extends StatelessWidget {
                     message,
                     style: TextStyle(
                       fontSize: TypographyTokens.fontSizeS,
-                      color: getColor(
-                        MinimalistColors.textSecondary,
-                        MinimalistColorsDark.textSecondary,
-                      ),
+                      color: colors.textSecondary,
                     ),
                   ),
           ),

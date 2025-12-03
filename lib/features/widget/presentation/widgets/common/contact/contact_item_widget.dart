@@ -38,6 +38,8 @@ class ContactItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -50,9 +52,7 @@ class ContactItemWidget extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: isDarkMode
-                  ? MinimalistColorsDark.buttonPrimary
-                  : MinimalistColors.buttonPrimary,
+              color: colors.buttonPrimary,
             ),
             const SizedBox(width: 8),
             Flexible(
@@ -61,9 +61,7 @@ class ContactItemWidget extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDarkMode
-                      ? MinimalistColorsDark.textPrimary
-                      : MinimalistColors.textPrimary,
+                  color: colors.textPrimary,
                   decoration: TextDecoration.underline,
                 ),
                 overflow: TextOverflow.ellipsis,

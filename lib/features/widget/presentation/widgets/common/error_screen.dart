@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../theme/minimalist_colors.dart';
-import 'theme_colors_helper.dart';
 
 /// Error screen displayed when booking widget configuration fails.
 ///
@@ -40,13 +39,10 @@ class WidgetErrorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Scaffold(
-      backgroundColor: getColor(
-        MinimalistColors.backgroundPrimary,
-        MinimalistColorsDark.backgroundPrimary,
-      ),
+      backgroundColor: colors.backgroundPrimary,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -56,10 +52,7 @@ class WidgetErrorScreen extends StatelessWidget {
               Icon(
                 Icons.error_outline,
                 size: 64,
-                color: getColor(
-                  MinimalistColors.error,
-                  MinimalistColorsDark.error,
-                ),
+                color: colors.error,
               ),
               const SizedBox(height: 24),
               Text(
@@ -67,10 +60,7 @@ class WidgetErrorScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -79,10 +69,7 @@ class WidgetErrorScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: getColor(
-                    MinimalistColors.textSecondary,
-                    MinimalistColorsDark.textSecondary,
-                  ),
+                  color: colors.textSecondary,
                 ),
               ),
               const SizedBox(height: 24),
@@ -91,14 +78,8 @@ class WidgetErrorScreen extends StatelessWidget {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: getColor(
-                    MinimalistColors.buttonPrimary,
-                    MinimalistColorsDark.buttonPrimary,
-                  ),
-                  foregroundColor: getColor(
-                    MinimalistColors.buttonPrimaryText,
-                    MinimalistColorsDark.buttonPrimaryText,
-                  ),
+                  backgroundColor: colors.buttonPrimary,
+                  foregroundColor: colors.buttonPrimaryText,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,

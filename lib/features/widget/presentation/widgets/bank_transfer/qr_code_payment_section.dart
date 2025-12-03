@@ -22,53 +22,42 @@ class QrCodePaymentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final epcData = _generateEpcQrData();
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.l),
       decoration: BoxDecoration(
-        color: _getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        color: colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
         border: Border.all(
-          color: _getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
+          color: colors.borderDefault,
         ),
       ),
       child: Column(
         children: [
-          _buildHeader(),
+          _buildHeader(colors),
           const SizedBox(height: SpacingTokens.l),
-          _buildQrCode(epcData),
+          _buildQrCode(epcData, colors),
           const SizedBox(height: SpacingTokens.m),
-          _buildInfoBanner(),
+          _buildInfoBanner(colors),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(MinimalistColorSchemeAdapter colors) {
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(SpacingTokens.s),
           decoration: BoxDecoration(
-            color: _getColor(
-              MinimalistColors.buttonPrimary,
-              MinimalistColorsDark.buttonPrimary,
-            ).withValues(alpha: 0.1),
+            color: colors.buttonPrimary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
           ),
           child: Icon(
             Icons.qr_code_2,
-            color: _getColor(
-              MinimalistColors.buttonPrimary,
-              MinimalistColorsDark.buttonPrimary,
-            ),
+            color: colors.buttonPrimary,
             size: IconSizeTokens.medium,
           ),
         ),
@@ -82,10 +71,7 @@ class QrCodePaymentSection extends StatelessWidget {
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeL,
                   fontWeight: TypographyTokens.bold,
-                  color: _getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                 ),
               ),
               const SizedBox(height: SpacingTokens.xxs),
@@ -93,10 +79,7 @@ class QrCodePaymentSection extends StatelessWidget {
                 'Skenirajte sa mobilnom bankom',
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeS,
-                  color: _getColor(
-                    MinimalistColors.textSecondary,
-                    MinimalistColorsDark.textSecondary,
-                  ),
+                  color: colors.textSecondary,
                 ),
               ),
             ],
@@ -106,17 +89,14 @@ class QrCodePaymentSection extends StatelessWidget {
     );
   }
 
-  Widget _buildQrCode(String epcData) {
+  Widget _buildQrCode(String epcData, MinimalistColorSchemeAdapter colors) {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
         color: ColorTokens.pureWhite,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
         border: Border.all(
-          color: _getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
+          color: colors.borderDefault,
           width: BorderTokens.widthMedium,
         ),
       ),
@@ -129,20 +109,14 @@ class QrCodePaymentSection extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoBanner() {
+  Widget _buildInfoBanner(MinimalistColorSchemeAdapter colors) {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.s),
       decoration: BoxDecoration(
-        color: _getColor(
-          MinimalistColors.buttonPrimary,
-          MinimalistColorsDark.buttonPrimary,
-        ).withValues(alpha: 0.1),
+        color: colors.buttonPrimary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
         border: Border.all(
-          color: _getColor(
-            MinimalistColors.buttonPrimary,
-            MinimalistColorsDark.buttonPrimary,
-          ).withValues(alpha: 0.3),
+          color: colors.buttonPrimary.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -150,10 +124,7 @@ class QrCodePaymentSection extends StatelessWidget {
           Icon(
             Icons.info_outline,
             size: IconSizeTokens.small,
-            color: _getColor(
-              MinimalistColors.buttonPrimary,
-              MinimalistColorsDark.buttonPrimary,
-            ),
+            color: colors.buttonPrimary,
           ),
           const SizedBox(width: SpacingTokens.s),
           Expanded(
@@ -162,10 +133,7 @@ class QrCodePaymentSection extends StatelessWidget {
               'Skenirajte ga sa aplikacijom vaše banke.',
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeS,
-                color: _getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
+                color: colors.textSecondary,
                 height: 1.4,
               ),
             ),
@@ -200,9 +168,5 @@ class QrCodePaymentSection extends StatelessWidget {
     ].join('\n');
 
     return epcData;
-  }
-
-  Color _getColor(Color lightColor, Color darkColor) {
-    return isDarkMode ? darkColor : lightColor;
   }
 }

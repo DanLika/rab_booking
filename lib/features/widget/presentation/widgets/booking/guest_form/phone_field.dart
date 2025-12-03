@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
-import '../../common/theme_colors_helper.dart';
 
 /// Phone number input field with country-specific formatting and validation.
 ///
@@ -44,7 +43,7 @@ class PhoneField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return TextFormField(
       controller: controller,
@@ -54,81 +53,57 @@ class PhoneField extends StatelessWidget {
         PhoneNumberFormatter(dialCode),
       ],
       style: TextStyle(
-        color: getColor(
-          MinimalistColors.textPrimary,
-          MinimalistColorsDark.textPrimary,
-        ),
+        color: colors.textPrimary,
       ),
       decoration: InputDecoration(
         counterText: '', // Hide character counter
         labelText: 'Phone Number *',
         hintText: '99 123 4567',
         labelStyle: TextStyle(
-          color: getColor(
-            MinimalistColors.textSecondary,
-            MinimalistColorsDark.textSecondary,
-          ),
+          color: colors.textSecondary,
         ),
         hintStyle: TextStyle(
-          color: getColor(
-            MinimalistColors.textSecondary,
-            MinimalistColorsDark.textSecondary,
-          ).withValues(alpha: 0.5),
+          color: colors.textSecondary.withValues(alpha: 0.5),
         ),
         filled: true,
-        fillColor: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        fillColor: colors.backgroundSecondary,
         border: OutlineInputBorder(
           borderRadius: BorderTokens.circularMedium,
           borderSide: BorderSide(
-            color: getColor(
-              MinimalistColors.textSecondary,
-              MinimalistColorsDark.textSecondary,
-            ),
+            color: colors.textSecondary,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderTokens.circularMedium,
           borderSide: BorderSide(
-            color: getColor(
-              MinimalistColors.textSecondary,
-              MinimalistColorsDark.textSecondary,
-            ),
+            color: colors.textSecondary,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderTokens.circularMedium,
           borderSide: BorderSide(
-            color: getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
+            color: colors.textPrimary,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderTokens.circularMedium,
-          borderSide: const BorderSide(
-            color: Colors.red,
+          borderSide: BorderSide(
+            color: colors.error,
             width: 1.5,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderTokens.circularMedium,
-          borderSide: const BorderSide(color: Colors.red, width: 2),
+          borderSide: BorderSide(color: colors.error, width: 2),
         ),
-        errorStyle: const TextStyle(
-          color: Colors.red,
+        errorStyle: TextStyle(
+          color: colors.error,
           fontSize: 12,
         ),
         prefixIcon: Icon(
           Icons.phone_outlined,
-          color: getColor(
-            MinimalistColors.textSecondary,
-            MinimalistColorsDark.textSecondary,
-          ),
+          color: colors.textSecondary,
         ),
       ),
       // Real-time validation with country-specific rules

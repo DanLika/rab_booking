@@ -66,6 +66,8 @@ class BookingPillBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+
     return Positioned(
       left: position.dx,
       top: position.dy,
@@ -91,14 +93,10 @@ class BookingPillBar extends StatelessWidget {
               maxHeight: maxHeight,
             ),
             decoration: BoxDecoration(
-              color: isDarkMode
-                  ? MinimalistColorsDark.backgroundPrimary
-                  : MinimalistColors.backgroundPrimary,
+              color: colors.backgroundPrimary,
               borderRadius: BorderRadius.circular(30),
               border: Border.all(
-                color: isDarkMode
-                    ? MinimalistColorsDark.borderLight
-                    : MinimalistColors.borderLight,
+                color: colors.borderLight,
               ),
             ),
             child: ClipRRect(

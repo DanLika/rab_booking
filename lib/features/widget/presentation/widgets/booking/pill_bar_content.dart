@@ -122,6 +122,8 @@ class PillBarContent extends StatelessWidget {
 
   /// Build wide-screen 2-column layout (guest info left, payment right)
   Widget _buildWideScreenLayout(BuildContext context) {
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -135,7 +137,7 @@ class PillBarContent extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: MinimalistColors.borderLight,
+                color: colors.borderLight,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -147,14 +149,14 @@ class PillBarContent extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: MinimalistColors.backgroundSecondary,
+                  color: colors.backgroundSecondary,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: MinimalistColors.borderLight),
+                  border: Border.all(color: colors.borderLight),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.close,
                   size: 16,
-                  color: MinimalistColors.textSecondary,
+                  color: colors.textSecondary,
                 ),
               ),
             ),

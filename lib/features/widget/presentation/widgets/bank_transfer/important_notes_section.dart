@@ -19,6 +19,7 @@ class ImportantNotesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final bool useCustom = bankConfig?.useCustomNotes ?? false;
     final String? customNotes = bankConfig?.customNotes;
 
@@ -38,51 +39,39 @@ class ImportantNotesSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: _getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        color: colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
         border: Border.all(
-          color: _getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
+          color: colors.borderDefault,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
+          _buildHeader(colors),
           const SizedBox(height: SpacingTokens.m),
           if (useCustom && customNotes != null && customNotes.isNotEmpty)
             Text(
               customNotes,
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeM,
-                color: _getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
                 height: 1.5,
               ),
             )
           else
-            ...notes.map(_buildNoteItem),
+            ...notes.map((note) => _buildNoteItem(note, colors)),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(MinimalistColorSchemeAdapter colors) {
     return Row(
       children: [
         Icon(
           Icons.info_outline,
-          color: _getColor(
-            MinimalistColors.buttonPrimary,
-            MinimalistColorsDark.buttonPrimary,
-          ),
+          color: colors.buttonPrimary,
           size: IconSizeTokens.medium,
         ),
         const SizedBox(width: SpacingTokens.xs),
@@ -91,17 +80,14 @@ class ImportantNotesSection extends StatelessWidget {
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeL,
             fontWeight: TypographyTokens.semiBold,
-            color: _getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
+            color: colors.textPrimary,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildNoteItem(String note) {
+  Widget _buildNoteItem(String note, MinimalistColorSchemeAdapter colors) {
     return Padding(
       padding: const EdgeInsets.only(bottom: SpacingTokens.s),
       child: Row(
@@ -115,10 +101,7 @@ class ImportantNotesSection extends StatelessWidget {
               right: SpacingTokens.s,
             ),
             decoration: BoxDecoration(
-              color: _getColor(
-                MinimalistColors.buttonPrimary,
-                MinimalistColorsDark.buttonPrimary,
-              ),
+              color: colors.buttonPrimary,
               shape: BoxShape.circle,
             ),
           ),
@@ -127,10 +110,7 @@ class ImportantNotesSection extends StatelessWidget {
               note,
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeM,
-                color: _getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
                 height: 1.5,
               ),
             ),
@@ -138,9 +118,5 @@ class ImportantNotesSection extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Color _getColor(Color lightColor, Color darkColor) {
-    return isDarkMode ? darkColor : lightColor;
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
-import 'theme_colors_helper.dart';
 
 /// A row displaying a label and value for booking details.
 ///
@@ -67,7 +66,7 @@ class DetailRowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     final row = Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -76,10 +75,7 @@ class DetailRowWidget extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeM,
-            color: getColor(
-              MinimalistColors.textSecondary,
-              MinimalistColorsDark.textSecondary,
-            ),
+            color: colors.textSecondary,
           ),
         ),
         Text(
@@ -90,14 +86,8 @@ class DetailRowWidget extends StatelessWidget {
                 ? TypographyTokens.bold
                 : valueFontWeight,
             color: isHighlighted
-                ? getColor(
-                    MinimalistColors.buttonPrimary,
-                    MinimalistColorsDark.buttonPrimary,
-                  )
-                : getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                ? colors.buttonPrimary
+                : colors.textPrimary,
           ),
         ),
       ],

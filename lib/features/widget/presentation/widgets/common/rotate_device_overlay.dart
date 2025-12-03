@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
-import '../../theme/minimalist_colors.dart';
-import 'theme_colors_helper.dart';
 
 /// Overlay prompting user to rotate device to landscape mode.
 ///
@@ -39,14 +37,9 @@ class RotateDeviceOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
-
     return Positioned.fill(
       child: Container(
-        color: getColor(
-          MinimalistColors.backgroundPrimary,
-          MinimalistColorsDark.backgroundPrimary,
-        ).withValues(alpha: 0.95),
+        color: colors.backgroundPrimary.withValues(alpha: 0.95),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(SpacingTokens.xl),

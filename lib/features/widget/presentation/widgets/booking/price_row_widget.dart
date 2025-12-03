@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
-import '../common/theme_colors_helper.dart';
 
 /// A row displaying a label and amount for price breakdowns.
 ///
@@ -43,7 +42,7 @@ class PriceRowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -54,11 +53,7 @@ class PriceRowWidget extends StatelessWidget {
             fontSize: isBold
                 ? TypographyTokens.fontSizeM
                 : TypographyTokens.fontSizeS,
-            color: color ??
-                getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
+            color: color ?? colors.textSecondary,
             fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
             fontFamily: 'Manrope',
           ),
@@ -69,11 +64,7 @@ class PriceRowWidget extends StatelessWidget {
             fontSize: isBold
                 ? TypographyTokens.fontSizeL
                 : TypographyTokens.fontSizeS,
-            color: color ??
-                getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+            color: color ?? colors.textPrimary,
             fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
             fontFamily: 'Manrope',
           ),

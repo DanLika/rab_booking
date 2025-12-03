@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
-import '../../common/theme_colors_helper.dart';
 
 /// Multi-line text field for special requests/notes.
 ///
@@ -30,72 +29,48 @@ class NotesField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return TextFormField(
       controller: controller,
       maxLines: 3,
       maxLength: 500,
       style: TextStyle(
-        color: getColor(
-          MinimalistColors.textPrimary,
-          MinimalistColorsDark.textPrimary,
-        ),
+        color: colors.textPrimary,
       ),
       decoration: InputDecoration(
         labelText: 'Special Requests (Optional)',
         hintText: 'Any special requirements or preferences...',
         labelStyle: TextStyle(
-          color: getColor(
-            MinimalistColors.textSecondary,
-            MinimalistColorsDark.textSecondary,
-          ),
+          color: colors.textSecondary,
         ),
         hintStyle: TextStyle(
-          color: getColor(
-            MinimalistColors.textSecondary,
-            MinimalistColorsDark.textSecondary,
-          ).withValues(alpha: 0.5),
+          color: colors.textSecondary.withValues(alpha: 0.5),
         ),
         filled: true,
-        fillColor: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        fillColor: colors.backgroundSecondary,
         border: OutlineInputBorder(
           borderRadius: BorderTokens.circularMedium,
           borderSide: BorderSide(
-            color: getColor(
-              MinimalistColors.textSecondary,
-              MinimalistColorsDark.textSecondary,
-            ),
+            color: colors.textSecondary,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderTokens.circularMedium,
           borderSide: BorderSide(
-            color: getColor(
-              MinimalistColors.textSecondary,
-              MinimalistColorsDark.textSecondary,
-            ),
+            color: colors.textSecondary,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderTokens.circularMedium,
           borderSide: BorderSide(
-            color: getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
+            color: colors.textPrimary,
             width: 2,
           ),
         ),
         prefixIcon: Icon(
           Icons.notes,
-          color: getColor(
-            MinimalistColors.textSecondary,
-            MinimalistColorsDark.textSecondary,
-          ),
+          color: colors.textSecondary,
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,

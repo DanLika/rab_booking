@@ -2,7 +2,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
-import '../../common/theme_colors_helper.dart';
 
 /// A selectable payment option card with radio button styling.
 ///
@@ -57,7 +56,7 @@ class PaymentOptionWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return InkWell(
       onTap: onTap,
@@ -67,44 +66,25 @@ class PaymentOptionWidget extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border.all(
             color: isSelected
-                ? getColor(
-                    MinimalistColors.borderBlack,
-                    MinimalistColorsDark.textPrimary,
-                  )
-                : getColor(
-                    MinimalistColors.borderDefault,
-                    MinimalistColorsDark.borderDefault,
-                  ),
+                ? colors.borderFocus
+                : colors.borderDefault,
             width: isSelected
                 ? BorderTokens.widthMedium
                 : BorderTokens.widthThin,
           ),
           borderRadius: BorderTokens.circularMedium,
-          color: isSelected
-              ? getColor(
-                  MinimalistColors.backgroundSecondary,
-                  MinimalistColorsDark.backgroundSecondary,
-                )
-              : null,
+          color: isSelected ? colors.backgroundSecondary : null,
         ),
         child: Row(
           children: [
             // Radio button
-            _buildRadioIndicator(getColor),
+            _buildRadioIndicator(colors),
             const SizedBox(width: SpacingTokens.s),
 
             // Icon
             Icon(
               icon,
-              color: isSelected
-                  ? getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    )
-                  : getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
+              color: isSelected ? colors.textPrimary : colors.textSecondary,
               size: 28,
             ),
             const SizedBox(width: SpacingTokens.s),
@@ -121,10 +101,7 @@ class PaymentOptionWidget extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
+                      color: colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -136,10 +113,7 @@ class PaymentOptionWidget extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 12,
-                      color: getColor(
-                        MinimalistColors.textSecondary,
-                        MinimalistColorsDark.textSecondary,
-                      ),
+                      color: colors.textSecondary,
                     ),
                   ),
                 ],
@@ -153,10 +127,7 @@ class PaymentOptionWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12.0,
                   fontWeight: FontWeight.bold,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                 ),
               ),
           ],
@@ -165,22 +136,14 @@ class PaymentOptionWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildRadioIndicator(Color Function(Color, Color) getColor) {
+  Widget _buildRadioIndicator(MinimalistColorSchemeAdapter colors) {
     return Container(
       width: 24,
       height: 24,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: isSelected
-              ? getColor(
-                  MinimalistColors.borderBlack,
-                  MinimalistColorsDark.textPrimary,
-                )
-              : getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
+          color: isSelected ? colors.borderFocus : colors.textSecondary,
           width: 2,
         ),
       ),
@@ -191,10 +154,7 @@ class PaymentOptionWidget extends StatelessWidget {
                 height: 12,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: getColor(
-                    MinimalistColors.buttonPrimary,
-                    MinimalistColorsDark.buttonPrimary,
-                  ),
+                  color: colors.buttonPrimary,
                 ),
               ),
             )

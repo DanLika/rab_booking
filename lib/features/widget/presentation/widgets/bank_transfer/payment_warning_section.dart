@@ -18,19 +18,15 @@ class PaymentWarningSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: _getColor(
-          MinimalistColors.warning,
-          MinimalistColorsDark.warning,
-        ).withValues(alpha: 0.1),
+        color: colors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
         border: Border.all(
-          color: _getColor(
-            MinimalistColors.warning,
-            MinimalistColorsDark.warning,
-          ),
+          color: colors.warning,
           width: BorderTokens.widthMedium,
         ),
       ),
@@ -38,10 +34,7 @@ class PaymentWarningSection extends StatelessWidget {
         children: [
           Icon(
             Icons.access_time,
-            color: _getColor(
-              MinimalistColors.warning,
-              MinimalistColorsDark.warning,
-            ),
+            color: colors.warning,
             size: IconSizeTokens.large,
           ),
           const SizedBox(width: SpacingTokens.m),
@@ -54,10 +47,7 @@ class PaymentWarningSection extends StatelessWidget {
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeL,
                     fontWeight: TypographyTokens.bold,
-                    color: _getColor(
-                      MinimalistColors.textPrimary,
-                      MinimalistColorsDark.textPrimary,
-                    ),
+                    color: colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: SpacingTokens.xxs),
@@ -65,10 +55,7 @@ class PaymentWarningSection extends StatelessWidget {
                   'Rok: $deadline',
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeM,
-                    color: _getColor(
-                      MinimalistColors.textSecondary,
-                      MinimalistColorsDark.textSecondary,
-                    ),
+                    color: colors.textSecondary,
                   ),
                 ),
               ],
@@ -77,9 +64,5 @@ class PaymentWarningSection extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Color _getColor(Color lightColor, Color darkColor) {
-    return isDarkMode ? darkColor : lightColor;
   }
 }

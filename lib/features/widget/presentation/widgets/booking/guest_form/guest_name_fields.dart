@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
-import '../../common/theme_colors_helper.dart';
 
 /// Row containing first name and last name text fields.
 ///
@@ -36,7 +35,7 @@ class GuestNameFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,32 +46,20 @@ class GuestNameFields extends StatelessWidget {
             controller: firstNameController,
             maxLength: 50, // Bug #60: Maximum field length validation
             style: TextStyle(
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
+              color: colors.textPrimary,
             ),
             decoration: InputDecoration(
               counterText: '', // Hide character counter
               labelText: 'First Name *',
               hintText: 'John',
               labelStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
               ),
               hintStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
+                color: colors.textSecondary,
               ),
               filled: true,
-              fillColor: getColor(
-                MinimalistColors.backgroundSecondary,
-                MinimalistColorsDark.backgroundSecondary,
-              ),
+              fillColor: colors.backgroundSecondary,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 14,
@@ -81,54 +68,42 @@ class GuestNameFields extends StatelessWidget {
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
                 borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
                 borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textSecondary,
-                    MinimalistColorsDark.textSecondary,
-                  ),
+                  color: colors.textSecondary,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
                 borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                   width: 2,
                 ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(
-                  color: Colors.red,
+                borderSide: BorderSide(
+                  color: colors.error,
                   width: 1.5,
                 ),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(color: Colors.red, width: 2),
+                borderSide: BorderSide(color: colors.error, width: 2),
               ),
-              errorStyle: const TextStyle(
-                color: Colors.red,
+              errorStyle: TextStyle(
+                color: colors.error,
                 fontSize: 12,
                 height: 1.0,
               ),
               errorMaxLines: 1,
               prefixIcon: Icon(
                 Icons.person_outline,
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
               ),
             ),
             // Real-time validation
@@ -143,32 +118,20 @@ class GuestNameFields extends StatelessWidget {
             controller: lastNameController,
             maxLength: 50, // Bug #60: Maximum field length validation
             style: TextStyle(
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
+              color: colors.textPrimary,
             ),
             decoration: InputDecoration(
               counterText: '', // Hide character counter
               labelText: 'Last Name *',
               hintText: 'Doe',
               labelStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
               ),
               hintStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
+                color: colors.textSecondary,
               ),
               filled: true,
-              fillColor: getColor(
-                MinimalistColors.backgroundSecondary,
-                MinimalistColorsDark.backgroundSecondary,
-              ),
+              fillColor: colors.backgroundSecondary,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 14,
@@ -177,44 +140,35 @@ class GuestNameFields extends StatelessWidget {
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
                 borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
                 borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textSecondary,
-                    MinimalistColorsDark.textSecondary,
-                  ),
+                  color: colors.textSecondary,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
                 borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                   width: 2,
                 ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(
-                  color: Colors.red,
+                borderSide: BorderSide(
+                  color: colors.error,
                   width: 1.5,
                 ),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(color: Colors.red, width: 2),
+                borderSide: BorderSide(color: colors.error, width: 2),
               ),
-              errorStyle: const TextStyle(
-                color: Colors.red,
+              errorStyle: TextStyle(
+                color: colors.error,
                 fontSize: 12,
                 height: 1.0,
               ),

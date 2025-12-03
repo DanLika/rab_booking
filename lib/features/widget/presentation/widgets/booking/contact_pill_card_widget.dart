@@ -26,6 +26,8 @@ class ContactPillCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
+
     // Check if there's anything to display
     final hasEmail =
         contactOptions?.showEmail == true &&
@@ -53,14 +55,10 @@ class ContactPillCardWidget extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: isDarkMode
-                ? MinimalistColorsDark.backgroundSecondary
-                : MinimalistColors.backgroundSecondary,
+            color: colors.backgroundSecondary,
             borderRadius: BorderRadius.circular(12), // Pill style
             border: Border.all(
-              color: isDarkMode
-                  ? MinimalistColorsDark.borderDefault
-                  : MinimalistColors.borderDefault,
+              color: colors.borderDefault,
             ),
             boxShadow: [
               BoxShadow(
@@ -71,15 +69,19 @@ class ContactPillCardWidget extends StatelessWidget {
             ],
           ),
           child: useRowLayout
-              ? _buildDesktopContactRow(hasEmail, hasPhone)
-              : _buildMobileContactColumn(hasEmail, hasPhone),
+              ? _buildDesktopContactRow(hasEmail, hasPhone, colors)
+              : _buildMobileContactColumn(hasEmail, hasPhone, colors),
         ),
       ),
     );
   }
 
   /// Desktop layout: email + phone in same row with divider
-  Widget _buildDesktopContactRow(bool hasEmail, bool hasPhone) {
+  Widget _buildDesktopContactRow(
+    bool hasEmail,
+    bool hasPhone,
+    MinimalistColorSchemeAdapter colors,
+  ) {
     // Defensive check: if no items, return empty widget to avoid empty Row
     if (!hasEmail && !hasPhone) {
       return const SizedBox.shrink();
@@ -106,9 +108,7 @@ class ContactPillCardWidget extends StatelessWidget {
             height: 24,
             width: 1,
             margin: const EdgeInsets.symmetric(horizontal: 12),
-            color: isDarkMode
-                ? MinimalistColorsDark.borderDefault
-                : MinimalistColors.borderDefault,
+            color: colors.borderDefault,
           ),
 
         // Phone
@@ -126,7 +126,11 @@ class ContactPillCardWidget extends StatelessWidget {
   }
 
   /// Mobile layout: email and phone stacked vertically
-  Widget _buildMobileContactColumn(bool hasEmail, bool hasPhone) {
+  Widget _buildMobileContactColumn(
+    bool hasEmail,
+    bool hasPhone,
+    MinimalistColorSchemeAdapter colors,
+  ) {
     // Defensive check: if no items, return empty widget to avoid empty Column
     if (!hasEmail && !hasPhone) {
       return const SizedBox.shrink();
@@ -146,9 +150,7 @@ class ContactPillCardWidget extends StatelessWidget {
         // Horizontal divider between email and phone
         if (hasEmail && hasPhone)
           Divider(
-            color: isDarkMode
-                ? MinimalistColorsDark.borderDefault
-                : MinimalistColors.borderDefault,
+            color: colors.borderDefault,
             height: 12,
             thickness: 1,
           ),

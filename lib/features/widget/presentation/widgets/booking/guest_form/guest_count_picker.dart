@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
-import '../../common/theme_colors_helper.dart';
 
 /// A widget for selecting adult and children guest counts.
 ///
@@ -50,23 +49,17 @@ class GuestCountPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final totalGuests = adults + children;
     final isAtCapacity = totalGuests >= maxGuests;
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.backgroundSecondary,
-          MinimalistColorsDark.backgroundSecondary,
-        ),
+        color: colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(
-          color: getColor(
-            MinimalistColors.borderDefault,
-            MinimalistColorsDark.borderDefault,
-          ),
+          color: colors.borderDefault,
         ),
       ),
       child: Column(
@@ -81,10 +74,7 @@ class GuestCountPicker extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                 ),
               ),
               Text(
@@ -92,15 +82,7 @@ class GuestCountPicker extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: isAtCapacity
-                      ? getColor(
-                          MinimalistColors.error,
-                          MinimalistColorsDark.error,
-                        )
-                      : getColor(
-                          MinimalistColors.textSecondary,
-                          MinimalistColorsDark.textSecondary,
-                        ),
+                  color: isAtCapacity ? colors.error : colors.textSecondary,
                 ),
               ),
             ],
@@ -116,7 +98,7 @@ class GuestCountPicker extends StatelessWidget {
             canIncrement: !isAtCapacity && adults < maxGuests,
             onDecrement: () => onAdultsChanged(adults - 1),
             onIncrement: () => onAdultsChanged(adults + 1),
-            getColor: getColor,
+            colors: colors,
             isAtCapacity: isAtCapacity,
           ),
 
@@ -131,14 +113,14 @@ class GuestCountPicker extends StatelessWidget {
             canIncrement: !isAtCapacity && children < maxGuests,
             onDecrement: () => onChildrenChanged(children - 1),
             onIncrement: () => onChildrenChanged(children + 1),
-            getColor: getColor,
+            colors: colors,
             isAtCapacity: isAtCapacity,
           ),
 
           // Capacity warning
           if (isAtCapacity) ...[
             const SizedBox(height: 12),
-            _buildCapacityWarning(getColor),
+            _buildCapacityWarning(colors),
           ],
         ],
       ),
@@ -153,7 +135,7 @@ class GuestCountPicker extends StatelessWidget {
     required bool canIncrement,
     required VoidCallback onDecrement,
     required VoidCallback onIncrement,
-    required Color Function(Color light, Color dark) getColor,
+    required MinimalistColorSchemeAdapter colors,
     required bool isAtCapacity,
   }) {
     return Row(
@@ -163,10 +145,7 @@ class GuestCountPicker extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
+              color: colors.textPrimary,
               size: 20,
             ),
             const SizedBox(width: 8),
@@ -174,10 +153,7 @@ class GuestCountPicker extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 14,
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
               ),
             ),
           ],
@@ -188,10 +164,7 @@ class GuestCountPicker extends StatelessWidget {
               onPressed: canDecrement ? onDecrement : null,
               icon: Icon(
                 Icons.remove_circle_outline,
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
               ),
             ),
             Container(
@@ -202,10 +175,7 @@ class GuestCountPicker extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                 ),
               ),
             ),
@@ -214,14 +184,8 @@ class GuestCountPicker extends StatelessWidget {
               icon: Icon(
                 Icons.add_circle_outline,
                 color: isAtCapacity
-                    ? getColor(
-                        MinimalistColors.textSecondary,
-                        MinimalistColorsDark.textSecondary,
-                      ).withValues(alpha: 0.5)
-                    : getColor(
-                        MinimalistColors.textPrimary,
-                        MinimalistColorsDark.textPrimary,
-                      ),
+                    ? colors.textSecondary.withValues(alpha: 0.5)
+                    : colors.textPrimary,
               ),
             ),
           ],
@@ -230,21 +194,14 @@ class GuestCountPicker extends StatelessWidget {
     );
   }
 
-  Widget _buildCapacityWarning(
-      Color Function(Color light, Color dark) getColor) {
+  Widget _buildCapacityWarning(MinimalistColorSchemeAdapter colors) {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.error.withValues(alpha: 0.1),
-          MinimalistColorsDark.error.withValues(alpha: 0.1),
-        ),
+        color: colors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: getColor(
-            MinimalistColors.error,
-            MinimalistColorsDark.error,
-          ),
+          color: colors.error,
         ),
       ),
       child: Row(
@@ -252,10 +209,7 @@ class GuestCountPicker extends StatelessWidget {
         children: [
           Icon(
             Icons.warning,
-            color: getColor(
-              MinimalistColors.error,
-              MinimalistColorsDark.error,
-            ),
+            color: colors.error,
             size: 14,
           ),
           const SizedBox(width: 6),
@@ -264,10 +218,7 @@ class GuestCountPicker extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: getColor(
-                MinimalistColors.error,
-                MinimalistColorsDark.error,
-              ),
+              color: colors.error,
             ),
           ),
         ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
-import '../../common/theme_colors_helper.dart';
 
 /// Error info container displayed when no payment methods are configured.
 ///
@@ -34,32 +33,23 @@ class NoPaymentInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Container(
       margin: const EdgeInsets.only(top: SpacingTokens.m),
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: getColor(
-          MinimalistColors.error.withValues(alpha: 0.1),
-          MinimalistColorsDark.error.withValues(alpha: 0.2),
-        ),
+        color: colors.error.withValues(alpha: isDarkMode ? 0.2 : 0.1),
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(
-          color: getColor(
-            MinimalistColors.error,
-            MinimalistColorsDark.error,
-          ),
+          color: colors.error,
         ),
       ),
       child: Row(
         children: [
           Icon(
             Icons.error_outline,
-            color: getColor(
-              MinimalistColors.error,
-              MinimalistColorsDark.error,
-            ),
+            color: colors.error,
           ),
           const SizedBox(width: SpacingTokens.s),
           Expanded(
@@ -67,10 +57,7 @@ class NoPaymentInfo extends StatelessWidget {
               message ?? defaultMessage,
               style: TextStyle(
                 fontSize: TypographyTokens.fontSizeS,
-                color: getColor(
-                  MinimalistColors.error,
-                  MinimalistColorsDark.error,
-                ),
+                color: colors.error,
               ),
             ),
           ),

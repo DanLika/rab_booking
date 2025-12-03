@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
-import '../../common/theme_colors_helper.dart';
 
 /// Email field with optional verification button.
 ///
@@ -64,7 +63,7 @@ class EmailFieldWithVerification extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final getColor = ThemeColorsHelper.createColorGetter(isDarkMode);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     if (!requireVerification) {
       // Standard email field without verification
@@ -73,32 +72,20 @@ class EmailFieldWithVerification extends StatelessWidget {
         maxLength: 100, // Bug #60: Maximum field length validation
         keyboardType: TextInputType.emailAddress,
         style: TextStyle(
-          color: getColor(
-            MinimalistColors.textPrimary,
-            MinimalistColorsDark.textPrimary,
-          ),
+          color: colors.textPrimary,
         ),
         decoration: InputDecoration(
           counterText: '', // Hide character counter
           labelText: 'Email *',
           hintText: 'john@example.com',
           labelStyle: TextStyle(
-            color: getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
+            color: colors.textPrimary,
           ),
           hintStyle: TextStyle(
-            color: getColor(
-              MinimalistColors.textSecondary,
-              MinimalistColorsDark.textSecondary,
-            ),
+            color: colors.textSecondary,
           ),
           filled: true,
-          fillColor: getColor(
-            MinimalistColors.backgroundSecondary,
-            MinimalistColorsDark.backgroundSecondary,
-          ),
+          fillColor: colors.backgroundSecondary,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 14,
@@ -107,51 +94,39 @@ class EmailFieldWithVerification extends StatelessWidget {
           border: OutlineInputBorder(
             borderRadius: BorderTokens.circularMedium,
             borderSide: BorderSide(
-              color: getColor(
-                MinimalistColors.textSecondary,
-                MinimalistColorsDark.textSecondary,
-              ),
+              color: colors.textSecondary,
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderTokens.circularMedium,
             borderSide: BorderSide(
-              color: getColor(
-                MinimalistColors.textSecondary,
-                MinimalistColorsDark.textSecondary,
-              ),
+              color: colors.textSecondary,
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderTokens.circularMedium,
             borderSide: BorderSide(
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
+              color: colors.textPrimary,
               width: 2,
             ),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderTokens.circularMedium,
-            borderSide: const BorderSide(color: Colors.red, width: 1.5),
+            borderSide: BorderSide(color: colors.error, width: 1.5),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderTokens.circularMedium,
-            borderSide: const BorderSide(color: Colors.red, width: 2),
+            borderSide: BorderSide(color: colors.error, width: 2),
           ),
-          errorStyle: const TextStyle(
-            color: Colors.red,
+          errorStyle: TextStyle(
+            color: colors.error,
             fontSize: 12,
             height: 1.0,
           ),
           errorMaxLines: 1,
           prefixIcon: Icon(
             Icons.email_outlined,
-            color: getColor(
-              MinimalistColors.textPrimary,
-              MinimalistColorsDark.textPrimary,
-            ),
+            color: colors.textPrimary,
           ),
         ),
         autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -170,32 +145,20 @@ class EmailFieldWithVerification extends StatelessWidget {
             maxLength: 100, // Bug #60: Maximum field length validation
             keyboardType: TextInputType.emailAddress,
             style: TextStyle(
-              color: getColor(
-                MinimalistColors.textPrimary,
-                MinimalistColorsDark.textPrimary,
-              ),
+              color: colors.textPrimary,
             ),
             decoration: InputDecoration(
               counterText: '', // Hide character counter
               labelText: 'Email *',
               hintText: 'john@example.com',
               labelStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
               ),
               hintStyle: TextStyle(
-                color: getColor(
-                  MinimalistColors.textSecondary,
-                  MinimalistColorsDark.textSecondary,
-                ),
+                color: colors.textSecondary,
               ),
               filled: true,
-              fillColor: getColor(
-                MinimalistColors.backgroundSecondary,
-                MinimalistColorsDark.backgroundSecondary,
-              ),
+              fillColor: colors.backgroundSecondary,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 14,
@@ -204,51 +167,39 @@ class EmailFieldWithVerification extends StatelessWidget {
               border: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
                 borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textSecondary,
-                    MinimalistColorsDark.textSecondary,
-                  ),
+                  color: colors.textSecondary,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
                 borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textSecondary,
-                    MinimalistColorsDark.textSecondary,
-                  ),
+                  color: colors.textSecondary,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
                 borderSide: BorderSide(
-                  color: getColor(
-                    MinimalistColors.textPrimary,
-                    MinimalistColorsDark.textPrimary,
-                  ),
+                  color: colors.textPrimary,
                   width: 2,
                 ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                borderSide: BorderSide(color: colors.error, width: 1.5),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderTokens.circularMedium,
-                borderSide: const BorderSide(color: Colors.red, width: 2),
+                borderSide: BorderSide(color: colors.error, width: 2),
               ),
-              errorStyle: const TextStyle(
-                color: Colors.red,
+              errorStyle: TextStyle(
+                color: colors.error,
                 fontSize: 12,
                 height: 1.0,
               ),
               errorMaxLines: 1,
               prefixIcon: Icon(
                 Icons.email_outlined,
-                color: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
+                color: colors.textPrimary,
               ),
             ),
             autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -263,14 +214,14 @@ class EmailFieldWithVerification extends StatelessWidget {
             width: 49,
             height: 49,
             decoration: BoxDecoration(
-              color: MinimalistColors.success.withValues(alpha: 0.1),
+              color: colors.success.withValues(alpha: 0.1),
               borderRadius: BorderTokens.circularMedium,
-              border: Border.all(color: MinimalistColors.success, width: 1.5),
+              border: Border.all(color: colors.success, width: 1.5),
             ),
-            child: const Center(
+            child: Center(
               child: Icon(
                 Icons.verified,
-                color: MinimalistColors.success,
+                color: colors.success,
                 size: 24,
               ),
             ),
@@ -282,14 +233,8 @@ class EmailFieldWithVerification extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onVerifyPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: getColor(
-                  MinimalistColors.textPrimary,
-                  MinimalistColorsDark.textPrimary,
-                ),
-                foregroundColor: getColor(
-                  MinimalistColors.backgroundPrimary,
-                  MinimalistColorsDark.backgroundPrimary,
-                ),
+                backgroundColor: colors.textPrimary,
+                foregroundColor: colors.backgroundPrimary,
                 padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderTokens.circularMedium,

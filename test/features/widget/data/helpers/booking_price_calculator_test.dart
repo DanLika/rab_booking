@@ -3,7 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rab_booking/core/errors/app_exceptions.dart';
+import 'package:rab_booking/core/exceptions/app_exceptions.dart';
 import 'package:rab_booking/features/widget/data/helpers/availability_checker.dart';
 import 'package:rab_booking/features/widget/data/helpers/booking_price_calculator.dart';
 

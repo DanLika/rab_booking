@@ -61,37 +61,8 @@ export const sendEmailVerificationCode = onCall(
       const emailHash = hashEmail(emailLower);
       const verificationRef = db.collection("email_verifications").doc(emailHash);
 
-      // Check existing verification document
-      const existingDoc = await verificationRef.get();
-
-      // Rate limiting: Check daily count
-      if (existingDoc.exists) {
-        const data = existingDoc.data();
-        const now = new Date();
-        const createdAt = data?.createdAt?.toDate();
-
-        // Reset daily count if last sent was more than 24 hours ago
-        const isDifferentDay = !createdAt ||
-          (now.getTime() - createdAt.getTime()) > 24 * 60 * 60 * 1000;
-
-        if (!isDifferentDay && data?.dailyCount >= DAILY_LIMIT) {
-          throw new HttpsError(
-            "resource-exhausted",
-            "Too many verification attempts. Please try again tomorrow."
-          );
-        }
-
-        // Prevent spam: Min 60 seconds between sends
-        const lastSentAt = data?.lastSentAt?.toDate();
-        if (lastSentAt && (now.getTime() - lastSentAt.getTime()) < (RESEND_COOLDOWN_SECONDS * 1000)) {
-          throw new HttpsError(
-            "resource-exhausted",
-            `Please wait ${RESEND_COOLDOWN_SECONDS} seconds before requesting a new code`
-          );
-        }
-      }
-
-      // Generate new code
+      // Generate new code and session ID BEFORE transaction
+      // (These don't depend on document state)
       const code = generateVerificationCode();
       const expiresAt = new Date(Date.now() + VERIFICATION_TTL_MINUTES * 60 * 1000); // 30 minutes
 
@@ -104,27 +75,73 @@ export const sendEmailVerificationCode = onCall(
       const userAgent = request.rawRequest?.headers?.["user-agent"] || "unknown";
       const ipAddress = request.rawRequest?.ip || "unknown";
 
-      // Store in Firestore
-      await verificationRef.set({
-        code,
-        email: emailLower,
-        expiresAt,
-        verified: false,
-        attempts: 0,
-        lastSentAt: FieldValue.serverTimestamp(),
-        createdAt: existingDoc.exists ?
-          existingDoc.data()?.createdAt :
-          FieldValue.serverTimestamp(),
-        dailyCount: existingDoc.exists ?
-          FieldValue.increment(1) :
-          1,
-        // Session tracking fields
-        sessionId,
-        deviceFingerprint: {
-          userAgent,
-          ipAddress,
-        },
-      }, {merge: true});
+      // RACE CONDITION FIX: Use transaction to atomically check AND update daily count
+      // This ensures two simultaneous requests can't both pass the limit check
+      await db.runTransaction(async (transaction) => {
+        const existingDoc = await transaction.get(verificationRef);
+        const now = new Date();
+
+        // Rate limiting: Check daily count INSIDE transaction
+        if (existingDoc.exists) {
+          const data = existingDoc.data();
+          const createdAt = data?.createdAt?.toDate();
+
+          // Reset daily count if last sent was more than 24 hours ago
+          const isDifferentDay = !createdAt ||
+            (now.getTime() - createdAt.getTime()) > 24 * 60 * 60 * 1000;
+
+          // Get current count (0 if resetting for new day)
+          const currentCount = isDifferentDay ? 0 : (data?.dailyCount || 0);
+
+          if (currentCount >= DAILY_LIMIT) {
+            throw new HttpsError(
+              "resource-exhausted",
+              "Too many verification attempts. Please try again tomorrow."
+            );
+          }
+
+          // Prevent spam: Min 60 seconds between sends
+          const lastSentAt = data?.lastSentAt?.toDate();
+          if (lastSentAt && (now.getTime() - lastSentAt.getTime()) < (RESEND_COOLDOWN_SECONDS * 1000)) {
+            throw new HttpsError(
+              "resource-exhausted",
+              `Please wait ${RESEND_COOLDOWN_SECONDS} seconds before requesting a new code`
+            );
+          }
+
+          // Update existing document with incremented count
+          transaction.update(verificationRef, {
+            code,
+            expiresAt,
+            verified: false,
+            attempts: 0,
+            lastSentAt: FieldValue.serverTimestamp(),
+            // Reset createdAt and dailyCount if it's a new day
+            ...(isDifferentDay ? {
+              createdAt: FieldValue.serverTimestamp(),
+              dailyCount: 1,
+            } : {
+              dailyCount: FieldValue.increment(1),
+            }),
+            sessionId,
+            deviceFingerprint: {userAgent, ipAddress},
+          });
+        } else {
+          // Create new document
+          transaction.set(verificationRef, {
+            code,
+            email: emailLower,
+            expiresAt,
+            verified: false,
+            attempts: 0,
+            lastSentAt: FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
+            dailyCount: 1,
+            sessionId,
+            deviceFingerprint: {userAgent, ipAddress},
+          });
+        }
+      });
 
       // Send email via Resend
       await sendVerificationEmail(emailLower, code);

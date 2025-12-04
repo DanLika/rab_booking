@@ -329,17 +329,17 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
         // Dates (ISO strings)
         check_in: checkIn,
         check_out: checkOut,
-        // Guest info
-        guest_name: guestName,
-        guest_email: guestEmail,
-        guest_phone: guestPhone || "",
+        // Guest info - SECURITY: Use sanitized values to prevent XSS/injection
+        guest_name: sanitizedGuestName,
+        guest_email: sanitizedGuestEmail,
+        guest_phone: sanitizedGuestPhone || "",
         guest_count: String(guestCount),
         // Payment info
         total_price: String(totalPrice),
         deposit_amount: String(depositAmount),
         payment_option: paymentOption,
-        // Optional fields
-        notes: notes || "",
+        // Optional fields - SECURITY: Use sanitized notes
+        notes: sanitizedNotes || "",
         tax_legal_accepted: taxLegalAccepted ? "true" : "false",
       },
       customer_email: guestEmail,

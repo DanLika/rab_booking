@@ -5,13 +5,9 @@ import {
 } from "firebase-functions/v2/firestore";
 import {
   sendBookingApprovedEmail,
-  sendOwnerNotificationEmail,
   sendBookingCancellationEmail,
-  sendPendingBookingRequestEmail,
-  sendPendingBookingOwnerNotification,
   sendBookingRejectedEmail,
 } from "./emailService";
-import {sendEmailIfAllowed} from "./emailNotificationHelper";
 import {sendEmailWithRetry} from "./utils/emailRetry";
 import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess, logWarn} from "./logger";
@@ -184,87 +180,38 @@ export const onBookingCreated = onDocumentCreated(
     });
 
     try {
-      // Fetch unit and property details using shared utility (with error handling)
+      // Fetch property details for owner_id (we only need propertyData here)
       // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
-      const {propertyName, propertyData, unitName} = await fetchPropertyAndUnitDetails(
+      const {propertyData} = await fetchPropertyAndUnitDetails(
         booking.property_id,
         booking.unit_id,
         "onBookingCreated",
         true // fetchFullData = true (we need owner_id from propertyData)
       );
 
-      // Fetch owner details
+      // Get owner ID for in-app notification
       const ownerId = propertyData?.owner_id;
-      let ownerData: any = null;
-      if (ownerId) {
-        const ownerDoc = await db.collection("users").doc(ownerId).get();
-        ownerData = ownerDoc.data();
-      }
 
-      // Send different emails based on booking type
+      // NOTE: Guest confirmation and owner notification emails are handled by atomicBooking.ts
+      // This trigger only handles:
+      // 1. Logging for audit purposes
+      // 2. In-app notifications (see below)
+      //
+      // DO NOT send duplicate emails here - atomicBooking.ts already handles:
+      // - sendPendingBookingRequestEmail (to guest)
+      // - sendPendingBookingOwnerNotification (to owner for pending)
+      // - sendBookingConfirmationEmail (to guest for confirmed)
+      // - sendOwnerNotificationEmail (to owner for confirmed)
       if (requiresApproval || nonePayment) {
-        // Pending approval booking - no payment required yet
-        await sendPendingBookingRequestEmail(
-          booking.guest_email || "",
-          booking.guest_name || "Guest",
-          booking.booking_reference || "",
-          propertyName
-        );
-
-        logSuccess("Pending booking request email sent to guest", {email: booking.guest_email});
-
-        // Send owner notification for pending approval
-        if (ownerData?.email) {
-          // CRITICAL: Pending bookings FORCE send (owner must approve)
-          await sendEmailIfAllowed(
-            ownerId,
-            "bookings",
-            async () => {
-              await sendPendingBookingOwnerNotification(
-                ownerData.email,
-                booking.booking_reference || "",
-                booking.guest_name || "Guest",
-                propertyName
-              );
-            },
-            true // forceIfCritical: owner MUST be notified to approve booking
-          );
-
-          logSuccess("Pending booking owner notification sent", {email: ownerData.email});
-        }
-      } else {
-        // Bank transfer booking - email sent from atomicBooking.ts with access token
-        // (No email sent here to avoid duplicates - atomicBooking handles it)
-        logInfo("Bank transfer booking created - email sent from atomicBooking", {
+        logInfo("Pending booking created - emails sent from atomicBooking", {
           bookingRef: booking.booking_reference,
+          status: booking.status,
         });
-
-        // Send owner notification for bank transfer (respect preferences)
-        if (ownerData?.email) {
-          await sendEmailIfAllowed(
-            ownerId,
-            "bookings",
-            async () => {
-              await sendOwnerNotificationEmail(
-                ownerData.email,
-                booking.booking_reference || "",
-                booking.guest_name || "Guest",
-                booking.guest_email || "",
-                booking.guest_phone || undefined,
-                propertyName,
-                unitName || "Unit",
-                booking.check_in.toDate(),
-                booking.check_out.toDate(),
-                booking.guest_count || 2,
-                booking.total_price ?? 0,
-                booking.deposit_amount ?? (booking.total_price * 0.2)
-              );
-            },
-            false // Respect preferences: owner can opt-out of instant booking emails
-          );
-
-          logSuccess("Owner notification processed (sent if preferences allow)", {email: ownerData.email});
-        }
+      } else {
+        logInfo("Bank transfer booking created - emails sent from atomicBooking", {
+          bookingRef: booking.booking_reference,
+          status: booking.status,
+        });
       }
 
       // Create in-app notification for owner

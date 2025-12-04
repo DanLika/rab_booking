@@ -883,9 +883,11 @@ export const createBookingAtomic = onCall(async (request) => {
       ...result,
       message: paymentMethod === "bank_transfer" ?
         "Booking created. Awaiting bank transfer payment." :
-        requireOwnerApproval ?
-          "Booking request submitted. Awaiting owner approval." :
-          "Booking created. Please complete payment.",
+        paymentMethod === "none" ?
+          "Booking confirmed. Payment will be collected on arrival." :
+          requireOwnerApproval ?
+            "Booking request submitted. Awaiting owner approval." :
+            "Booking created. Please complete payment.",
     };
   } catch (error: any) {
     // ERROR HANDLING FIX: Properly handle different HttpsError codes

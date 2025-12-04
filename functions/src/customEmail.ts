@@ -105,13 +105,26 @@ export const sendCustomEmailToGuestFunction = onCall(async (request) => {
       .get();
     const propertyData = propertyDoc.data();
 
+    // Fetch owner email from users collection
+    // BUG FIX: owner_id is a user ID, not an email address
+    let ownerEmail: string | undefined = undefined;
+    if (bookingData.owner_id) {
+      const ownerDoc = await db
+        .collection("users")
+        .doc(bookingData.owner_id)
+        .get();
+      if (ownerDoc.exists) {
+        ownerEmail = ownerDoc.data()?.email;
+      }
+    }
+
     // Send email with property context
     await sendCustomEmailToGuest(
       guestEmail,
       guestName,
       subject,
       message,
-      bookingData.owner_id, // Pass owner email if needed
+      ownerEmail, // Pass owner email (fetched from users collection)
       propertyData?.name // Pass property name for email signature
     );
 

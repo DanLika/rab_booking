@@ -52,7 +52,7 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
       "calendar.google.com",
       "outlook.live.com",
       "outlook.office365.com",
-      "p.]calendar.yahoo.com",
+      "p.calendar.yahoo.com",
       "export.calendar.yandex.com",
       "beds24.com",
       "www.beds24.com",

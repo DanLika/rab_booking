@@ -41,6 +41,7 @@ import '../../../../core/constants/enums.dart';
 import 'booking_confirmation_screen.dart';
 import '../widgets/country_code_dropdown.dart';
 import '../widgets/email_verification_dialog.dart';
+import '../../data/services/email_verification_service.dart';
 import '../widgets/common/rotate_device_overlay.dart';
 import '../widgets/common/loading_screen.dart';
 import '../widgets/common/error_screen.dart';
@@ -1950,6 +1951,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
     }
 
+    // ✨ FINAL SAFETY CHECK: Email verification still valid?
+    // This catches expired verifications (e.g., user verified 31+ minutes ago)
+    final emailVerificationValid =
+        await _validateEmailVerificationBeforeBooking();
+    if (!emailVerificationValid) {
+      return; // Block booking - verification expired or check failed
+    }
+
     setState(() {
       _isProcessing = true;
     });
@@ -2437,10 +2446,162 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     return isPortrait;
   }
 
-  /// Open email verification dialog
+  /// Safety check: Validate that email verification is still valid before booking
+  ///
+  /// Returns true if verification is valid (or not required).
+  /// Returns false and shows error if verification expired.
+  ///
+  /// This is the FINAL check before booking submission to catch
+  /// expired verifications (e.g., user verified 31 minutes ago).
+  Future<bool> _validateEmailVerificationBeforeBooking() async {
+    // Skip check if email verification is not required
+    if (_widgetSettings?.emailConfig.requireEmailVerification != true) {
+      return true; // No verification needed
+    }
+
+    // Skip check if email is not verified in UI state
+    if (!_emailVerified) {
+      // This shouldn't happen (button should be disabled), but safety check
+      SnackBarHelper.showError(
+        context: context,
+        message: 'Please verify your email before booking',
+      );
+      return false;
+    }
+
+    try {
+      LoggingService.logOperation(
+        '[BookingWidget] Final email verification check before booking',
+      );
+
+      final email = _emailController.text.trim();
+      final status = await EmailVerificationService.checkStatus(email);
+
+      // Verification is still valid
+      if (status.isValid) {
+        LoggingService.logSuccess(
+          '[BookingWidget] Email verification valid (${status.remainingMinutes}min remaining)',
+        );
+        return true;
+      }
+
+      // Verification expired between initial verification and booking submit
+      if (status.expired) {
+        LoggingService.logWarning(
+          '[BookingWidget] Email verification expired during booking flow',
+        );
+
+        if (mounted) {
+          setState(() {
+            _emailVerified = false; // Reset UI state
+          });
+
+          SnackBarHelper.showError(
+            context: context,
+            message:
+                'Email verification expired. Please verify again before booking.',
+          );
+        }
+
+        return false;
+      }
+
+      // Email not verified (shouldn't happen, but safety check)
+      LoggingService.logWarning(
+        '[BookingWidget] Email not verified at final check',
+      );
+
+      if (mounted) {
+        setState(() {
+          _emailVerified = false;
+        });
+
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Email verification required. Please verify your email.',
+        );
+      }
+
+      return false;
+    } catch (e) {
+      // Network error or Cloud Function failed
+      await LoggingService.logError(
+        '[BookingWidget] Email verification check failed',
+        e,
+      );
+
+      // ⚠️ DECISION: Block booking on check failure (safer)
+      if (mounted) {
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Unable to verify email status. Please try again.',
+        );
+      }
+      return false;
+
+      // Alternative: Allow booking if check fails (better UX, less safe)
+      // return true; // Fallback: Allow booking if check fails
+    }
+  }
+
+  /// Open email verification dialog with pre-check logic
+  ///
+  /// PRE-CHECK FLOW:
+  /// 1. Check if email is already verified (via Cloud Function)
+  /// 2. If verified and NOT expired → Skip dialog, show success
+  /// 3. If NOT verified or expired → Show verification dialog
+  ///
+  /// FALLBACK: If pre-check fails (network error), show dialog anyway
   Future<void> _openVerificationDialog() async {
     final email = _emailController.text.trim();
     final isDarkMode = ref.read(themeProvider);
+
+    // ✨ PRE-CHECK: Da li je email već verifikovan?
+    try {
+      LoggingService.logOperation(
+        '[BookingWidget] Pre-checking email verification status',
+      );
+
+      final status = await EmailVerificationService.checkStatus(email);
+
+      // Email is already verified and NOT expired
+      if (status.isValid) {
+        LoggingService.logSuccess(
+          '[BookingWidget] Email already verified (expires in ${status.remainingMinutes}min)',
+        );
+
+        if (mounted) {
+          setState(() {
+            _emailVerified = true;
+          });
+
+          SnackBarHelper.showSuccess(
+            context: context,
+            message:
+                'Email already verified ✓ (valid for ${status.remainingMinutes} min)',
+          );
+        }
+
+        return; // ✅ Skip dialog - email already verified
+      }
+
+      // Email exists but expired
+      if (status.exists && status.expired) {
+        LoggingService.logWarning(
+          '[BookingWidget] Verification expired, sending new code',
+        );
+      }
+
+      // Email not verified or expired - show dialog normally
+    } catch (e) {
+      // Pre-check failed (network issue, etc.) - fallback to normal flow
+      LoggingService.logWarning(
+        '[BookingWidget] Pre-check failed, showing dialog anyway: $e',
+      );
+    }
+
+    // Show verification dialog (either new verification or pre-check failed)
+    if (!mounted) return;
 
     final verified = await showDialog<bool>(
       context: context,

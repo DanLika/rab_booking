@@ -4,6 +4,14 @@ import {createHash} from "crypto";
 import {logError, logSuccess, logOperation} from "./logger";
 import {sendEmailVerificationCode as sendVerificationEmail} from "./emailService";
 
+// ============================================
+// Configuration Constants
+// ============================================
+const VERIFICATION_TTL_MINUTES = 30; // Extended from 10 to 30 minutes
+const MAX_ATTEMPTS = 3;
+const DAILY_LIMIT = 5;
+const RESEND_COOLDOWN_SECONDS = 60;
+
 /**
  * Generate 6-digit verification code
  */
@@ -23,8 +31,9 @@ function hashEmail(email: string): string {
  *
  * Callable function that:
  * 1. Generates 6-digit code
- * 2. Stores in Firestore with 10-minute expiry
+ * 2. Stores in Firestore with 30-minute expiry
  * 3. Sends email via Resend
+ * 4. Tracks session ID and device fingerprint
  *
  * Rate limiting: Max 5 codes per email per day
  */
@@ -65,7 +74,7 @@ export const sendEmailVerificationCode = onCall(
         const isDifferentDay = !createdAt ||
           (now.getTime() - createdAt.getTime()) > 24 * 60 * 60 * 1000;
 
-        if (!isDifferentDay && data?.dailyCount >= 5) {
+        if (!isDifferentDay && data?.dailyCount >= DAILY_LIMIT) {
           throw new HttpsError(
             "resource-exhausted",
             "Too many verification attempts. Please try again tomorrow."
@@ -74,17 +83,26 @@ export const sendEmailVerificationCode = onCall(
 
         // Prevent spam: Min 60 seconds between sends
         const lastSentAt = data?.lastSentAt?.toDate();
-        if (lastSentAt && (now.getTime() - lastSentAt.getTime()) < 60000) {
+        if (lastSentAt && (now.getTime() - lastSentAt.getTime()) < (RESEND_COOLDOWN_SECONDS * 1000)) {
           throw new HttpsError(
             "resource-exhausted",
-            "Please wait 60 seconds before requesting a new code"
+            `Please wait ${RESEND_COOLDOWN_SECONDS} seconds before requesting a new code`
           );
         }
       }
 
       // Generate new code
       const code = generateVerificationCode();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      const expiresAt = new Date(Date.now() + VERIFICATION_TTL_MINUTES * 60 * 1000); // 30 minutes
+
+      // Generate session ID for tracking (SHA-256 of timestamp + email + random)
+      const sessionId = createHash("sha256")
+        .update(`${Date.now()}-${emailLower}-${Math.random()}`)
+        .digest("hex");
+
+      // Extract device fingerprint from request headers
+      const userAgent = request.rawRequest?.headers?.["user-agent"] || "unknown";
+      const ipAddress = request.rawRequest?.ip || "unknown";
 
       // Store in Firestore
       await verificationRef.set({
@@ -100,6 +118,12 @@ export const sendEmailVerificationCode = onCall(
         dailyCount: existingDoc.exists ?
           FieldValue.increment(1) :
           1,
+        // Session tracking fields
+        sessionId,
+        deviceFingerprint: {
+          userAgent,
+          ipAddress,
+        },
       }, {merge: true});
 
       // Send email via Resend
@@ -134,7 +158,7 @@ export const sendEmailVerificationCode = onCall(
  *
  * Callable function that:
  * 1. Validates code against Firestore
- * 2. Checks expiry (10 minutes)
+ * 2. Checks expiry (30 minutes)
  * 3. Checks attempts (max 3)
  * 4. Marks as verified if valid
  */
@@ -192,7 +216,7 @@ export const verifyEmailCode = onCall(
       }
 
       // Check max attempts (3 failed attempts = locked)
-      if (data.attempts >= 3) {
+      if (data.attempts >= MAX_ATTEMPTS) {
         throw new HttpsError(
           "permission-denied",
           "Too many failed attempts. Please request a new code."
@@ -206,7 +230,7 @@ export const verifyEmailCode = onCall(
           attempts: FieldValue.increment(1),
         });
 
-        const remainingAttempts = 3 - (data.attempts + 1);
+        const remainingAttempts = MAX_ATTEMPTS - (data.attempts + 1);
 
         throw new HttpsError(
           "invalid-argument",
@@ -247,7 +271,17 @@ export const verifyEmailCode = onCall(
 /**
  * Check if email is verified (helper for booking flow)
  *
- * Returns verification status without requiring code
+ * Returns verification status without requiring code.
+ * Useful for pre-checking if user needs to verify email again
+ * or if their verification is still valid.
+ *
+ * Response includes:
+ * - verified: boolean - Is email verified and not expired?
+ * - exists: boolean - Does verification document exist?
+ * - expired: boolean - Is verification expired?
+ * - remainingMinutes: number - Minutes until expiry
+ * - verifiedAt: string | null - ISO timestamp when verified
+ * - sessionId: string | null - Session ID for tracking
  */
 export const checkEmailVerificationStatus = onCall(
   {cors: true},
@@ -270,6 +304,10 @@ export const checkEmailVerificationStatus = onCall(
         return {
           verified: false,
           exists: false,
+          expired: false,
+          remainingMinutes: 0,
+          verifiedAt: null,
+          sessionId: null,
         };
       }
 
@@ -277,10 +315,18 @@ export const checkEmailVerificationStatus = onCall(
       const expiresAt = data.expiresAt?.toDate();
       const isExpired = !expiresAt || new Date() > expiresAt;
 
+      // Calculate remaining time in minutes
+      const remainingMinutes = expiresAt ?
+        Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 60000)) :
+        0;
+
       return {
         verified: data.verified === true && !isExpired,
         exists: true,
         expired: isExpired,
+        remainingMinutes, // How many minutes until expiry
+        verifiedAt: data.verifiedAt?.toDate().toISOString() || null,
+        sessionId: data.sessionId || null, // Include for session tracking
       };
     } catch (error: any) {
       logError("Error checking verification status", error);

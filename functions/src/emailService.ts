@@ -92,6 +92,24 @@ const WIDGET_URL = process.env.WIDGET_URL || "https://rab-booking-widget.web.app
 const BOOKING_DOMAIN = process.env.BOOKING_DOMAIN || null;
 
 /**
+ * Validate subdomain format (DNS-safe)
+ *
+ * Rules (RFC 1123):
+ * - Lowercase alphanumeric + hyphens only
+ * - Cannot start or end with hyphen
+ * - Length: 1-63 characters (DNS limit)
+ *
+ * Examples:
+ * - ✅ Valid: "villa-marija", "apartman1", "a", "my-property-123"
+ * - ❌ Invalid: "-invalid", "invalid-", "UPPERCASE", "has_underscore", ""
+ */
+function isValidSubdomain(subdomain: string): boolean {
+  // RFC 1123 subdomain pattern (case-insensitive, but we enforce lowercase)
+  const SUBDOMAIN_REGEX = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
+  return SUBDOMAIN_REGEX.test(subdomain);
+}
+
+/**
  * Generate view booking URL with subdomain support
  *
  * If BOOKING_DOMAIN is configured (production):
@@ -100,8 +118,10 @@ const BOOKING_DOMAIN = process.env.BOOKING_DOMAIN || null;
  * If BOOKING_DOMAIN is not set (testing/development):
  *   Returns: https://widget.web.app/view?subdomain=XXX&ref=XXX&email=XXX&token=XXX
  *
- * If subdomain is not set:
+ * If subdomain is not set or invalid:
  *   Returns: https://widget.web.app/view?ref=XXX&email=XXX&token=XXX (fallback)
+ *
+ * SECURITY: Subdomain is validated against RFC 1123 to prevent URL injection
  */
 async function generateViewBookingUrl(
   bookingReference: string,
@@ -120,14 +140,27 @@ async function generateViewBookingUrl(
     try {
       const propertyDoc = await db.collection("properties").doc(propertyId).get();
       if (propertyDoc.exists) {
-        subdomain = propertyDoc.data()?.subdomain || null;
+        const rawSubdomain = propertyDoc.data()?.subdomain;
+
+        // SECURITY: Validate subdomain format before using in URL
+        if (rawSubdomain && isValidSubdomain(rawSubdomain)) {
+          subdomain = rawSubdomain;
+        } else if (rawSubdomain) {
+          logError("[EmailService] Invalid subdomain format - using fallback URL", null, {
+            propertyId,
+            subdomain: rawSubdomain,
+            reason: "Failed RFC 1123 validation",
+          });
+        }
       }
     } catch (error) {
-      logError("Failed to fetch property subdomain for email", error);
+      logError("[EmailService] Failed to fetch property subdomain for email", error, {
+        propertyId,
+      });
     }
   }
 
-  // Generate URL based on configuration
+  // Generate URL based on configuration (with validated subdomain)
   if (subdomain) {
     if (BOOKING_DOMAIN) {
       // Production: subdomain.domain.com/view?ref=XXX
@@ -180,9 +213,19 @@ export async function sendBookingConfirmationEmail(
     if (propertyId) {
       try {
         const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        contactEmail = propertyDoc.data()?.contact_email;
+        if (!propertyDoc.exists) {
+          logError("[EmailService] Property not found for booking confirmation", null, {
+            propertyId,
+            operation: "fetch_contact_email",
+          });
+        } else {
+          contactEmail = propertyDoc.data()?.contact_email;
+        }
       } catch (error) {
-        // Ignore error, contactEmail will be undefined
+        logError("[EmailService] Failed to fetch property data for booking confirmation", error, {
+          propertyId,
+          operation: "fetch_contact_email",
+        });
       }
     }
 
@@ -250,9 +293,19 @@ export async function sendBookingApprovedEmail(
     if (propertyId) {
       try {
         const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        contactEmail = propertyDoc.data()?.contact_email;
+        if (!propertyDoc.exists) {
+          logError("[EmailService] Property not found for booking approval email", null, {
+            propertyId,
+            operation: "fetch_contact_email",
+          });
+        } else {
+          contactEmail = propertyDoc.data()?.contact_email;
+        }
       } catch (error) {
-        // Ignore error
+        logError("[EmailService] Failed to fetch property data for booking approval email", error, {
+          propertyId,
+          operation: "fetch_contact_email",
+        });
       }
     }
 
@@ -362,9 +415,19 @@ export async function sendGuestCancellationEmail(
     if (propertyId) {
       try {
         const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        contactEmail = propertyDoc.data()?.contact_email;
+        if (!propertyDoc.exists) {
+          logError("[EmailService] Property not found for guest cancellation email", null, {
+            propertyId,
+            operation: "fetch_contact_email",
+          });
+        } else {
+          contactEmail = propertyDoc.data()?.contact_email;
+        }
       } catch (error) {
-        // Ignore error
+        logError("[EmailService] Failed to fetch property data for guest cancellation email", error, {
+          propertyId,
+          operation: "fetch_contact_email",
+        });
       }
     }
 
@@ -463,9 +526,19 @@ export async function sendRefundNotificationEmail(
     if (propertyId) {
       try {
         const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        contactEmail = propertyDoc.data()?.contact_email;
+        if (!propertyDoc.exists) {
+          logError("[EmailService] Property not found for refund notification email", null, {
+            propertyId,
+            operation: "fetch_contact_email",
+          });
+        } else {
+          contactEmail = propertyDoc.data()?.contact_email;
+        }
       } catch (error) {
-        // Ignore error
+        logError("[EmailService] Failed to fetch property data for refund notification email", error, {
+          propertyId,
+          operation: "fetch_contact_email",
+        });
       }
     }
 
@@ -566,9 +639,19 @@ export async function sendPaymentReminderEmail(
     if (propertyId) {
       try {
         const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        contactEmail = propertyDoc.data()?.contact_email;
+        if (!propertyDoc.exists) {
+          logError("[EmailService] Property not found for payment reminder email", null, {
+            propertyId,
+            operation: "fetch_contact_email",
+          });
+        } else {
+          contactEmail = propertyDoc.data()?.contact_email;
+        }
       } catch (error) {
-        // Ignore error
+        logError("[EmailService] Failed to fetch property data for payment reminder email", error, {
+          propertyId,
+          operation: "fetch_contact_email",
+        });
       }
     }
 
@@ -631,9 +714,19 @@ export async function sendCheckInReminderEmail(
     if (propertyId) {
       try {
         const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        contactEmail = propertyDoc.data()?.contact_email;
+        if (!propertyDoc.exists) {
+          logError("[EmailService] Property not found for check-in reminder email", null, {
+            propertyId,
+            operation: "fetch_contact_email",
+          });
+        } else {
+          contactEmail = propertyDoc.data()?.contact_email;
+        }
       } catch (error) {
-        // Ignore error
+        logError("[EmailService] Failed to fetch property data for check-in reminder email", error, {
+          propertyId,
+          operation: "fetch_contact_email",
+        });
       }
     }
 
@@ -687,9 +780,19 @@ export async function sendCheckOutReminderEmail(
     if (propertyId) {
       try {
         const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        contactEmail = propertyDoc.data()?.contact_email;
+        if (!propertyDoc.exists) {
+          logError("[EmailService] Property not found for check-out reminder email", null, {
+            propertyId,
+            operation: "fetch_contact_email",
+          });
+        } else {
+          contactEmail = propertyDoc.data()?.contact_email;
+        }
       } catch (error) {
-        // Ignore error
+        logError("[EmailService] Failed to fetch property data for check-out reminder email", error, {
+          propertyId,
+          operation: "fetch_contact_email",
+        });
       }
     }
 

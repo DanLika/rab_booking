@@ -60,17 +60,45 @@ currentSettings.emailConfig.copyWith(requireEmailVerification: false)
 
 ---
 
+## ☁️ CLOUD FUNCTIONS (`functions/src/`)
+
+**Logging** - UVIJEK koristi strukturirani logger:
+```typescript
+import {logInfo, logError, logWarn} from "./logger";
+// NE: console.log() - nestrukturirano, teško za debug
+```
+
+**Timezone** - UVIJEK UTC za date comparison:
+```typescript
+const today = new Date();
+today.setUTCHours(0, 0, 0, 0);  // CORRECT
+// NE: today.setHours(0, 0, 0, 0) - koristi local timezone
+```
+
+**Rate Limiting** - dostupno u `utils/rateLimit.ts`:
+- `checkRateLimit()` - in-memory, za hot paths
+- `enforceRateLimit()` - Firestore-backed, za critical actions
+
+**Input Sanitization** - `utils/inputSanitization.ts`:
+```typescript
+sanitizeText(name), sanitizeEmail(email), sanitizePhone(phone)
+```
+
+---
+
 ## 💳 STRIPE FLOW
 
 ```
 1. User klikne "Pay with Stripe"
-2. Form data se BRIŠE
+2. PLACEHOLDER booking kreira se sa status="stripe_pending" (blokira datume)
 3. Same-tab redirect na Stripe Checkout
-4. Webhook kreira booking sa stripe_session_id
+4. Webhook UPDATE-a placeholder na status="confirmed"
 5. Return URL: ?stripe_status=success&session_id=cs_xxx
 6. Widget poll-uje fetchBookingByStripeSessionId() (max 30s)
 7. Confirmation screen
 ```
+
+**KRITIČNO**: Placeholder booking sprječava race condition gdje 2 korisnika plate za iste datume.
 
 ---
 
@@ -97,4 +125,4 @@ currentSettings.emailConfig.copyWith(requireEmailVerification: false)
 
 ---
 
-**Last Updated**: 2025-12-03 | **Version**: 4.0
+**Last Updated**: 2025-12-04 | **Version**: 4.1

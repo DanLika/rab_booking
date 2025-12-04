@@ -19,6 +19,7 @@ import {
   calculateBookingNights,
 } from "./utils/dateValidation";
 import {sanitizeText, sanitizeEmail, sanitizePhone} from "./utils/inputSanitization";
+import {logInfo, logError, logWarn} from "./logger";
 
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
@@ -51,7 +52,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
   } = request.data;
 
   // Debug logging
-  console.log("createStripeCheckoutSession called with:", {
+  logInfo("createStripeCheckoutSession called", {
     hasBookingData: !!bookingData,
     returnUrl: returnUrl ? "provided" : "not provided",
     hasAuth: !!request.auth,
@@ -90,7 +91,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
       returnUrl.startsWith(domain)
     );
     if (!isAllowedDomain) {
-      console.error(`Invalid return URL attempted: ${returnUrl}`);
+      logError(`Invalid return URL attempted: ${returnUrl}`);
       throw new HttpsError("invalid-argument", "Invalid return URL");
     }
   }
@@ -247,7 +248,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
       };
     });
 
-    console.log(
+    logInfo(
       `Placeholder booking created: ${placeholderResult.placeholderBookingId} (${placeholderResult.bookingRef})`
     );
 
@@ -344,8 +345,8 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
       customer_email: guestEmail,
     });
 
-    console.log(`Stripe checkout session created: ${session.id}`);
-    console.log(`Booking will be created by webhook after payment success`);
+    logInfo(`Stripe checkout session created: ${session.id}`);
+    logInfo(`Booking will be created by webhook after payment success`);
 
     return {
       success: true,
@@ -354,7 +355,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
       bookingReference: bookingRef, // Return for UI display
     };
   } catch (error: any) {
-    console.error("Error creating Stripe checkout session:", error);
+    logError("Error creating Stripe checkout session", error);
     throw new HttpsError(
       "internal",
       error.message || "Failed to create checkout session"
@@ -375,14 +376,14 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
   const sig = req.headers["stripe-signature"];
 
   if (!sig) {
-    console.error("Missing stripe-signature header");
+    logError("Missing stripe-signature header");
     res.status(400).send("Missing signature");
     return;
   }
 
   const webhookSecret = stripeWebhookSecret.value();
   if (!webhookSecret) {
-    console.error("STRIPE_WEBHOOK_SECRET not configured");
+    logError("STRIPE_WEBHOOK_SECRET not configured");
     res.status(500).send("Webhook secret not configured");
     return;
   }
@@ -397,7 +398,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       webhookSecret
     );
   } catch (error: any) {
-    console.error("Webhook signature verification failed:", error.message);
+    logError("Webhook signature verification failed", error);
     res.status(400).send(`Webhook Error: ${error.message}`);
     return;
   }
@@ -409,7 +410,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
     // Validate required metadata
     if (!metadata?.unit_id || !metadata?.property_id || !metadata?.owner_id) {
-      console.error("Missing required metadata in session:", {
+      logError("Missing required metadata in session", null, {
         has_unit_id: !!metadata?.unit_id,
         has_property_id: !!metadata?.property_id,
         has_owner_id: !!metadata?.owner_id,
@@ -427,19 +428,19 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       const placeholderBookingId = metadata.placeholder_booking_id;
 
       if (!placeholderBookingId) {
-        console.error("Missing placeholder_booking_id in webhook metadata");
+        logError("Missing placeholder_booking_id in webhook metadata");
         res.status(400).send("Missing placeholder booking ID - outdated checkout session");
         return;
       }
 
-      console.log(`Processing Stripe webhook for placeholder booking: ${placeholderBookingId}`);
+      logInfo(`Processing Stripe webhook for placeholder booking: ${placeholderBookingId}`);
 
       // Fetch placeholder booking
       const placeholderBookingRef = db.collection("bookings").doc(placeholderBookingId);
       const placeholderBookingSnap = await placeholderBookingRef.get();
 
       if (!placeholderBookingSnap.exists) {
-        console.error(`Placeholder booking not found: ${placeholderBookingId}`);
+        logError(`Placeholder booking not found: ${placeholderBookingId}`);
         res.status(404).send("Placeholder booking not found - may have expired");
         return;
       }
@@ -448,7 +449,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
       // IDEMPOTENCY CHECK: Check if placeholder already updated (webhook fired twice)
       if (placeholderData?.status === "confirmed" && placeholderData?.stripe_session_id === session.id) {
-        console.log(`Webhook already processed - booking ${placeholderBookingId} already confirmed`);
+        logInfo(`Webhook already processed - booking ${placeholderBookingId} already confirmed`);
         res.json({
           received: true,
           booking_id: placeholderBookingId,
@@ -461,12 +462,12 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
       // Validate placeholder is actually stripe_pending status
       if (placeholderData?.status !== "stripe_pending") {
-        console.error(`Placeholder booking has invalid status: ${placeholderData?.status}`);
+        logError(`Placeholder booking has invalid status: ${placeholderData?.status}`);
         res.status(400).send(`Invalid placeholder status: ${placeholderData?.status}`);
         return;
       }
 
-      console.log(`Updating placeholder booking ${placeholderBookingId} to confirmed status`);
+      logInfo(`Updating placeholder booking ${placeholderBookingId} to confirmed status`);
 
       // Update placeholder booking to confirmed
       await placeholderBookingRef.update({
@@ -482,13 +483,13 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
         stripe_pending_expires_at: admin.firestore.FieldValue.delete(),
       });
 
-      console.log(`Placeholder booking ${placeholderBookingId} confirmed after Stripe payment`);
+      logInfo(`Placeholder booking ${placeholderBookingId} confirmed after Stripe payment`);
 
       // Extract plaintext access token from metadata (for email "View my reservation" link)
       const accessTokenPlaintext = metadata.access_token_plaintext;
 
       if (!accessTokenPlaintext) {
-        console.warn("Missing access_token_plaintext in metadata - email link may not work");
+        logWarn("Missing access_token_plaintext in metadata - email link may not work");
       }
 
       // Prepare result for email sending (match old structure)
@@ -539,9 +540,9 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
           depositAmount,
           propertyId // For subdomain in email links
         );
-        console.log("Confirmation email sent to guest");
+        logInfo("Confirmation email sent to guest");
       } catch (error) {
-        console.error("Failed to send confirmation email to guest:", error);
+        logError("Failed to send confirmation email to guest", error);
       }
 
       // Send notification email to owner (respect preferences)
@@ -571,10 +572,10 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
             },
             false // Respect preferences: owner can opt-out of payment notifications
           );
-          console.log(`Owner payment notification processed (sent if preferences allow): ${ownerData.email}`);
+          logInfo(`Owner payment notification processed (sent if preferences allow): ${ownerData.email}`);
         }
       } catch (error) {
-        console.error("Failed to send notification email to owner:", error);
+        logError("Failed to send notification email to owner", error);
       }
 
       // Create in-app payment notification for owner
@@ -585,9 +586,9 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
           guestName,
           depositAmount
         );
-        console.log(`In-app payment notification created for owner ${ownerId}`);
+        logInfo(`In-app payment notification created for owner ${ownerId}`);
       } catch (notificationError) {
-        console.error("Failed to create in-app payment notification:", notificationError);
+        logError("Failed to create in-app payment notification", notificationError);
       }
 
       res.json({
@@ -597,12 +598,12 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
         status: "confirmed",
       });
     } catch (error: any) {
-      console.error("Error processing webhook:", error);
+      logError("Error processing webhook", error);
       res.status(500).send(`Error: ${error.message}`);
     }
   } else {
     // Unexpected event type
-    console.log(`Unhandled event type: ${event.type}`);
+    logInfo(`Unhandled event type: ${event.type}`);
     res.json({received: true});
   }
 });

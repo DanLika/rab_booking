@@ -1,4 +1,5 @@
 import {admin, db} from "./firebase";
+import {logInfo, logError} from "./logger";
 
 /**
  * Notification Service
@@ -40,9 +41,9 @@ export async function createNotification(data: NotificationData): Promise<void> 
       metadata: data.metadata || null,
     });
 
-    console.log(`✅ Notification created for owner ${data.ownerId}: ${data.type}`);
+    logInfo(`Notification created for owner ${data.ownerId}: ${data.type}`);
   } catch (error) {
-    console.error("❌ Error creating notification:", error);
+    logError("Error creating notification", error);
     throw error;
   }
 }

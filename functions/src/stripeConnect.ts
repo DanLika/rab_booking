@@ -1,6 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
 import {getStripeClient, stripeSecretKey} from "./stripe";
+import {logInfo, logError} from "./logger";
 
 /**
  * Cloud Function: Create or Get Stripe Connect Account
@@ -28,7 +29,7 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
 
     // If account doesn't exist, create new Express account
     if (!stripeAccountId) {
-      console.log(`Creating new Stripe Express account for owner ${ownerId}`);
+      logInfo(`Creating new Stripe Express account for owner ${ownerId}`);
 
       const account = await getStripeClient().accounts.create({
         type: "express",
@@ -53,7 +54,7 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
         stripe_connected_at: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      console.log(`Stripe account ${stripeAccountId} created for owner ${ownerId}`);
+      logInfo(`Stripe account ${stripeAccountId} created for owner ${ownerId}`);
     }
 
     // Create account link for onboarding or re-onboarding
@@ -70,7 +71,7 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
       onboardingUrl: accountLink.url,
     };
   } catch (error: any) {
-    console.error("Error creating Stripe Connect account:", error);
+    logError("Error creating Stripe Connect account", error);
     throw new HttpsError(
       "internal",
       error.message || "Failed to create Stripe account"
@@ -131,7 +132,7 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async
           })),
         };
       } catch (error) {
-        console.error("Error fetching balance:", error);
+        logError("Error fetching balance", error);
       }
     }
 
@@ -151,7 +152,7 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async
       },
     };
   } catch (error: any) {
-    console.error("Error getting Stripe account status:", error);
+    logError("Error getting Stripe account status", error);
     throw new HttpsError(
       "internal",
       error.message || "Failed to get account status"
@@ -197,14 +198,14 @@ export const disconnectStripeAccount = onCall({secrets: [stripeSecretKey]}, asyn
       stripe_disconnected_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    console.log(`Stripe integration removed for owner ${ownerId}. Account ${stripeAccountId} remains active.`);
+    logInfo(`Stripe integration removed for owner ${ownerId}. Account ${stripeAccountId} remains active.`);
 
     return {
       success: true,
       message: "Stripe integracija uklonjena. Vaš Stripe račun ostaje aktivan.",
     };
   } catch (error: any) {
-    console.error("Error disconnecting Stripe account:", error);
+    logError("Error disconnecting Stripe account", error);
     throw new HttpsError(
       "internal",
       error.message || "Failed to disconnect account"

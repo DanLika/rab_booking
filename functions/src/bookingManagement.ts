@@ -53,8 +53,22 @@ export const autoCancelExpiredBookings = onSchedule(
             if (booking.property_id) {
               try {
                 const propDoc = await db.collection("properties").doc(booking.property_id).get();
-                propertyName = propDoc.data()?.name || "Property";
-              } catch (e) { /* ignore */ }
+                if (!propDoc.exists) {
+                  logError("[autoCancelExpired] Property not found", null, {
+                    propertyId: booking.property_id,
+                    bookingId: doc.id,
+                  });
+                  propertyName = "Property";
+                } else {
+                  propertyName = propDoc.data()?.name || "Property";
+                }
+              } catch (e) {
+                logError("[autoCancelExpired] Failed to fetch property name", e, {
+                  propertyId: booking.property_id,
+                  bookingId: doc.id,
+                });
+                propertyName = "Property";
+              }
             }
             if (booking.property_id && booking.unit_id) {
               try {
@@ -64,8 +78,22 @@ export const autoCancelExpiredBookings = onSchedule(
                   .collection("units")
                   .doc(booking.unit_id)
                   .get();
-                unitName = unitDoc.data()?.name;
-              } catch (e) { /* ignore */ }
+                if (!unitDoc.exists) {
+                  logError("[autoCancelExpired] Unit not found", null, {
+                    propertyId: booking.property_id,
+                    unitId: booking.unit_id,
+                    bookingId: doc.id,
+                  });
+                } else {
+                  unitName = unitDoc.data()?.name;
+                }
+              } catch (e) {
+                logError("[autoCancelExpired] Failed to fetch unit name", e, {
+                  propertyId: booking.property_id,
+                  unitId: booking.unit_id,
+                  bookingId: doc.id,
+                });
+              }
             }
 
             await sendBookingCancellationEmail(
@@ -112,7 +140,9 @@ export const onBookingCreated = onDocumentCreated(
     const bankTransfer = booking.payment_method === "bank_transfer";
 
     // Send emails for: bank transfer, pending approval, or no payment bookings
-    if (!bankTransfer && !requiresApproval && !nonePayment) {
+    const shouldSendInitialEmail = bankTransfer || requiresApproval || nonePayment;
+
+    if (!shouldSendInitialEmail) {
       logInfo("Booking uses Stripe or other instant method, skipping initial email", {
         bookingId: event.params.bookingId,
         paymentMethod: booking.payment_method,
@@ -282,7 +312,8 @@ export const onBookingStatusChange = onDocumentUpdated(
             after.check_in.toDate(),
             after.check_out.toDate(),
             propertyData?.name || "Property",
-            propertyData?.contact_email
+            propertyData?.contact_email,
+            after.property_id
           );
 
           logSuccess("Booking approval email sent to guest", {email: after.guest_email});
@@ -335,8 +366,22 @@ export const onBookingStatusChange = onDocumentUpdated(
           if (booking.property_id) {
             try {
               const propDoc = await db.collection("properties").doc(booking.property_id).get();
-              propertyName = propDoc.data()?.name || "Property";
-            } catch (e) { /* ignore */ }
+              if (!propDoc.exists) {
+                logError("[onStatusChange] Property not found for cancellation email", null, {
+                  propertyId: booking.property_id,
+                  bookingId: event.params.bookingId,
+                });
+                propertyName = "Property";
+              } else {
+                propertyName = propDoc.data()?.name || "Property";
+              }
+            } catch (e) {
+              logError("[onStatusChange] Failed to fetch property name for cancellation email", e, {
+                propertyId: booking.property_id,
+                bookingId: event.params.bookingId,
+              });
+              propertyName = "Property";
+            }
           }
           if (booking.property_id && booking.unit_id) {
             try {
@@ -346,14 +391,41 @@ export const onBookingStatusChange = onDocumentUpdated(
                 .collection("units")
                 .doc(booking.unit_id)
                 .get();
-              unitName = unitDoc.data()?.name;
-            } catch (e) { /* ignore */ }
+              if (!unitDoc.exists) {
+                logError("[onStatusChange] Unit not found for cancellation email", null, {
+                  propertyId: booking.property_id,
+                  unitId: booking.unit_id,
+                  bookingId: event.params.bookingId,
+                });
+              } else {
+                unitName = unitDoc.data()?.name;
+              }
+            } catch (e) {
+              logError("[onStatusChange] Failed to fetch unit name for cancellation email", e, {
+                propertyId: booking.property_id,
+                unitId: booking.unit_id,
+                bookingId: event.params.bookingId,
+              });
+            }
+          }
+
+          // Validate booking reference exists (data integrity check)
+          if (!booking.booking_reference) {
+            logError(
+              "[onStatusChange] CRITICAL: booking_reference missing - possible data corruption",
+              null,
+              {
+                bookingId: event.params.bookingId,
+                propertyId: booking.property_id,
+                unitId: booking.unit_id,
+              }
+            );
           }
 
           await sendBookingCancellationEmail(
             booking.guest_email,
             booking.guest_name,
-            booking.booking_reference || event.params.bookingId,
+            booking.booking_reference || `ERR-${event.params.bookingId}`,
             propertyName,
             unitName,
             booking.check_in.toDate(),

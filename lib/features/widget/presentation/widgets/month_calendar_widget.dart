@@ -40,6 +40,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   DateTime _currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? _hoveredDate; // For hover tooltip (desktop)
   Offset _mousePosition = Offset.zero; // Track mouse position for tooltip
+  bool _isValidating = false; // Prevent concurrent date range validations
 
   @override
   Widget build(BuildContext context) {
@@ -593,49 +594,66 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
   /// Bug #72 Fix: Async validation using backend availability check
   /// This ensures cross-month date ranges are properly validated
+  ///
+  /// RACE CONDITION PROTECTION:
+  /// - Uses _isValidating guard to prevent concurrent validation requests
+  /// - Scenario: User rapidly clicks multiple dates → only first validation executes
+  /// - Without guard: Multiple async calls could overwrite each other's results
   Future<void> _validateAndSetRange(
     DateTime start,
     DateTime end,
     WidgetColorScheme colors,
   ) async {
-    // Check availability using backend (works across all months)
-    final isAvailable = await ref.read(
-      checkDateAvailabilityProvider(
-        unitId: widget.unitId,
-        checkIn: start,
-        checkOut: end,
-      ).future,
-    );
+    // Prevent concurrent validations (race condition protection)
+    if (_isValidating) return;
 
-    if (!mounted) return;
+    setState(() => _isValidating = true);
 
-    if (!isAvailable) {
-      // Reset selection and show error
+    try {
+      // Check availability using backend (works across all months)
+      final isAvailable = await ref.read(
+        checkDateAvailabilityProvider(
+          unitId: widget.unitId,
+          checkIn: start,
+          checkOut: end,
+        ).future,
+      );
+
+      if (!mounted) return;
+
+      if (!isAvailable) {
+        // Reset selection and show error
+        setState(() {
+          _rangeStart = null;
+          _rangeEnd = null;
+        });
+
+        SnackBarHelper.showError(
+          context: context,
+          message: 'Cannot select dates. There are already booked dates in this range.',
+          duration: const Duration(seconds: 3),
+        );
+        return;
+      }
+
+      // Availability confirmed, set the range
       setState(() {
-        _rangeStart = null;
-        _rangeEnd = null;
+        if (end.isBefore(start)) {
+          _rangeStart = end;
+          _rangeEnd = start;
+        } else {
+          _rangeStart = start;
+          _rangeEnd = end;
+        }
       });
 
-      SnackBarHelper.showError(
-        context: context,
-        message: 'Cannot select dates. There are already booked dates in this range.',
-        duration: const Duration(seconds: 3),
-      );
-      return;
-    }
-
-    // Availability confirmed, set the range
-    setState(() {
-      if (end.isBefore(start)) {
-        _rangeStart = end;
-        _rangeEnd = start;
-      } else {
-        _rangeStart = start;
-        _rangeEnd = end;
+      widget.onRangeSelected?.call(_rangeStart, _rangeEnd);
+    } finally {
+      // Always reset validation flag (even if error occurs)
+      if (mounted) {
+        setState(() => _isValidating = false);
       }
-    });
-
-    widget.onRangeSelected?.call(_rangeStart, _rangeEnd);
+    }
   }
 
   /// Get darker border color for calendar cell based on status

@@ -166,7 +166,6 @@ class IcalExportCard extends ConsumerWidget {
 
       // Success - URL will be loaded on next widget refresh
     } catch (e) {
-      debugPrint('Error generating iCal URL: $e');
       // Error handling - parent widget will handle via stream
     }
   }
@@ -244,45 +243,6 @@ class IcalExportCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildTestExportButton(BuildContext context, WidgetRef ref) {
-    return Column(
-      children: [
-        OutlinedButton.icon(
-          onPressed: () async {
-            try {
-              // Load unit data from property's units subcollection
-              final units = await ref
-                  .read(repos.unitRepositoryProvider)
-                  .fetchUnitsByProperty(propertyId);
-              final unit = units.where((u) => u.id == unitId).firstOrNull;
-
-              if (unit != null && context.mounted) {
-                await context.push(
-                  OwnerRoutes.icalExport,
-                  extra: {'unit': unit, 'propertyId': propertyId},
-                );
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ErrorDisplayUtils.showErrorSnackBar(
-                  context,
-                  e,
-                  userMessage: 'Failed to load unit data',
-                );
-              }
-            }
-          },
-          icon: const Icon(Icons.bug_report, size: 18),
-          label: const Text('Test iCal Export'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
   Widget _buildInfoMessage(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -325,5 +285,87 @@ class IcalExportCard extends ConsumerWidget {
     } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
+  }
+
+  Widget _buildTestExportButton(BuildContext context, WidgetRef ref) {
+    return _TestExportButton(
+      propertyId: propertyId,
+      unitId: unitId,
+    );
+  }
+}
+
+/// Stateful button widget with loading state to prevent concurrent requests
+class _TestExportButton extends ConsumerStatefulWidget {
+  final String propertyId;
+  final String unitId;
+
+  const _TestExportButton({
+    required this.propertyId,
+    required this.unitId,
+  });
+
+  @override
+  ConsumerState<_TestExportButton> createState() => _TestExportButtonState();
+}
+
+class _TestExportButtonState extends ConsumerState<_TestExportButton> {
+  bool _isLoading = false;
+
+  Future<void> _handleTestExport() async {
+    // Prevent concurrent requests (debouncing protection)
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Load unit data from property's units subcollection
+      final units = await ref
+          .read(repos.unitRepositoryProvider)
+          .fetchUnitsByProperty(widget.propertyId);
+      final unit = units.where((u) => u.id == widget.unitId).firstOrNull;
+
+      if (unit != null && mounted) {
+        await context.push(
+          OwnerRoutes.icalExport,
+          extra: {'unit': unit, 'propertyId': widget.propertyId},
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: 'Failed to load unit data',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        OutlinedButton.icon(
+          onPressed: _isLoading ? null : _handleTestExport,
+          icon: _isLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.bug_report, size: 18),
+          label: Text(_isLoading ? 'Loading...' : 'Test iCal Export'),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
   }
 }

@@ -8,9 +8,25 @@
  * 1. **Remove** dangerous patterns (HTML tags, control chars, script tags)
  * 2. **Preserve** legitimate Unicode content (international names, accents)
  * 3. **Normalize** whitespace without data loss
+ * 4. **Limit** input length to prevent DoS attacks
  *
  * @module inputSanitization
  */
+
+/**
+ * Maximum input lengths (DoS protection)
+ *
+ * These limits prevent attackers from sending extremely large inputs
+ * that could exhaust CPU/memory during iterative sanitization.
+ *
+ * RATIONALE:
+ * - Text: 10,000 chars (supports long notes/descriptions)
+ * - Email: 254 chars (RFC 5321 max email length)
+ * - Phone (raw input): 100 chars (allows padding before sanitization, final = 20 chars)
+ */
+const MAX_TEXT_LENGTH = 10000;        // Booking notes, property descriptions
+const MAX_EMAIL_LENGTH = 254;         // RFC 5321 standard
+const MAX_PHONE_INPUT_LENGTH = 100;   // Raw input before sanitization (final max = 20)
 
 /**
  * Sanitize text input (names, notes, descriptions)
@@ -47,6 +63,13 @@ export function sanitizeText(
   input: string | null | undefined
 ): string | null {
   if (!input || typeof input !== "string") return null;
+
+  // DoS PROTECTION: Reject inputs that are too long BEFORE processing
+  // This prevents attackers from sending mega-sized inputs with nested tags
+  // that would cause the iterative removal loop to run for a long time
+  if (input.length > MAX_TEXT_LENGTH) {
+    return null;
+  }
 
   let sanitized = input.trim();
 
@@ -111,6 +134,11 @@ export function sanitizeEmail(
 ): string | null {
   if (!input || typeof input !== "string") return null;
 
+  // DoS PROTECTION: Reject emails longer than RFC 5321 max (254 chars)
+  if (input.length > MAX_EMAIL_LENGTH) {
+    return null;
+  }
+
   let sanitized = input.trim().toLowerCase();
 
   // Remove HTML tags (iterative removal for nested/malformed tags)
@@ -146,7 +174,7 @@ export function sanitizeEmail(
  * - HTML tags (nested/malformed)
  *
  * Validation rules:
- * - Minimum 7 digits (shortest valid phone)
+ * - Minimum 6 digits (accommodates local numbers)
  * - Maximum 20 characters total
  * - Maximum 1 plus sign (must be at start)
  * - Balanced parentheses
@@ -167,8 +195,8 @@ export function sanitizeEmail(
  * sanitizePhone('+385 91 234 5678')
  * // Returns: '+385 91 234 5678' (valid)
  *
- * sanitizePhone('123')
- * // Returns: null (too few digits)
+ * sanitizePhone('12345')
+ * // Returns: null (too few digits - minimum 6)
  *
  * sanitizePhone('++1234567890')
  * // Returns: null (multiple plus signs)
@@ -180,6 +208,13 @@ export function sanitizePhone(
   input: string | null | undefined
 ): string | null {
   if (!input || typeof input !== "string") return null;
+
+  // DoS PROTECTION: Reject excessively long inputs BEFORE processing
+  // Max phone: 20 chars, but allow some buffer for attacker padding (100 chars)
+  // Real DoS attack would be 100k+ chars, so 100 char limit is safe
+  if (input.length > MAX_PHONE_INPUT_LENGTH) {
+    return null;
+  }
 
   let sanitized = input.trim();
 
@@ -203,9 +238,10 @@ export function sanitizePhone(
   sanitized = sanitized.trim();
 
   // SECURITY FIX: Strict phone validation to prevent abuse
-  // 1. Must contain at least 7 digits (shortest valid international number)
+  // 1. Must contain at least 6 digits (accommodates shorter local numbers)
+  // Examples: Croatian local numbers (6-7 digits), some international formats
   const digitCount = (sanitized.match(/\d/g) || []).length;
-  if (digitCount < 7) {
+  if (digitCount < 6) {
     return null; // Too few digits
   }
 
@@ -239,80 +275,3 @@ export function sanitizePhone(
   return sanitized.length > 0 ? sanitized : null;
 }
 
-/**
- * Check if text contains potentially dangerous patterns
- *
- * Detects:
- * - Script tags
- * - JavaScript event handlers (onclick, onerror, etc.)
- * - SQL keywords (SELECT, INSERT, UPDATE, DELETE, etc.)
- * - NoSQL operators ($where, $ne, $gt, etc.)
- *
- * ## Use Case
- * Use for additional validation AFTER sanitization:
- * ```typescript
- * const sanitized = sanitizeText(input);
- * if (containsDangerousContent(sanitized)) {
- *   throw new HttpsError('invalid-argument', 'Input contains dangerous patterns');
- * }
- * ```
- *
- * @param input - Text to check (can be null/undefined)
- * @returns true if dangerous patterns detected, false otherwise
- *
- * @example
- * containsDangerousContent('<script>alert("XSS")</script>')
- * // Returns: true (script tag detected)
- *
- * containsDangerousContent('onclick="alert(1)"')
- * // Returns: true (event handler detected)
- *
- * containsDangerousContent('SELECT * FROM users')
- * // Returns: true (SQL keyword detected)
- *
- * containsDangerousContent('Hello World')
- * // Returns: false (safe content)
- */
-export function containsDangerousContent(
-  input: string | null | undefined
-): boolean {
-  if (!input || typeof input !== "string") return false;
-
-  const lower = input.toLowerCase();
-
-  // Check for script tags
-  if (/<script[^>]*>[\s\S]*?<\/script>/i.test(lower)) return true;
-
-  // Check for JavaScript event handlers
-  if (
-    lower.includes("javascript:") ||
-    lower.includes("onerror=") ||
-    lower.includes("onload=") ||
-    lower.includes("onclick=") ||
-    lower.includes("onmouseover=")
-  ) {
-    return true;
-  }
-
-  // Check for SQL keywords (case-insensitive)
-  if (
-    /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|UNION|WHERE)\b/i.test(
-      input
-    )
-  ) {
-    return true;
-  }
-
-  // Check for NoSQL operators (MongoDB, Firestore)
-  if (
-    lower.includes("$where") ||
-    lower.includes("$ne") ||
-    lower.includes("$gt") ||
-    lower.includes("$lt") ||
-    lower.includes("$regex")
-  ) {
-    return true;
-  }
-
-  return false;
-}

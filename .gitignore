@@ -80,3 +80,4 @@ build_output.txt
 supabase/supabase/
 coverage/
 .firebase/hosting.*.cache
+*.backup

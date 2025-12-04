@@ -1,473 +1,100 @@
 # Claude Code - Project Documentation
 
-Ova dokumentacija pomaže Claude Code sesijama da razumiju kritične dijelove projekta.
-
-**Dodatni dokumenti:**
-- [CLAUDE_MCP_TOOLS.md](./CLAUDE_MCP_TOOLS.md) - MCP serveri, slash commands, agenti
-- [CLAUDE_WIDGET_SYSTEM.md](./CLAUDE_WIDGET_SYSTEM.md) - Widget modovi, payment logic, pricing
-- [CLAUDE_BUGS_ARCHIVE.md](./CLAUDE_BUGS_ARCHIVE.md) - Arhivirani bug fix-evi (pre 2025-12-01)
-
----
-
-## 📘 PROJECT OVERVIEW
-
 **RabBooking** - Booking management platforma za property owner-e na otoku Rabu.
 
-| Komponenta | Opis |
-|------------|------|
-| **Owner Dashboard** | Flutter Web admin panel |
-| **Booking Widget** | Embeddable widget za web stranice |
-| **Backend** | Firebase (Firestore, Cloud Functions, Auth) |
-
-### Tehnologije
-- Flutter 3.35.7, Riverpod 2.x, Firebase, Stripe Connect
-- Feature-first structure, Repository pattern
-
-### Status
-- ✅ Owner dashboard - production-ready
-- ✅ Booking widget - radi
-- ⚠️ Hot reload/restart ne rade - normalno za Flutter Web
+**Dodatni dokumenti:**
+- [CLAUDE_BUGS_ARCHIVE.md](./CLAUDE_BUGS_ARCHIVE.md) - Detaljni bug fix-evi sa code examples
+- [CLAUDE_WIDGET_SYSTEM.md](./CLAUDE_WIDGET_SYSTEM.md) - Widget modovi, payment logic, pricing
+- [CLAUDE_MCP_TOOLS.md](./CLAUDE_MCP_TOOLS.md) - MCP serveri, slash commands
 
 ---
 
-## 🎯 KRITIČNE SEKCIJE - NE MIJENJAJ!
+## 🎯 NIKADA NE MIJENJAJ
 
-### Unified Unit Hub
-**File**: `unified_unit_hub_screen.dart`
-**Status**: FINALIZED
-
-- **Cjenovnik tab** je FROZEN - koristi kao referentnu implementaciju
-- Responsive breakpoints: Desktop ≥1200px, Tablet 600-1199px, Mobile <600px
-- NE MIJENJAJ bez eksplicitnog user zahtjeva
-
-### Unit Wizard
-**Folder**: `unit_wizard/`
-**Status**: PRODUCTION READY
-
-Publish flow kreira 3 Firestore dokumenta (redoslijed kritičan!):
-1. Unit document
-2. Widget settings
-3. Initial pricing
-
-### Timeline Calendar
-**File**: `owner_timeline_calendar_screen.dart`
-
-- Z-Index: Cancelled (0.6 opacity) renderuje PRVI, confirmed ZADNJI
-- Gradient: DIJAGONALAN (`topLeft → bottomRight`), stops [0.0, 0.3]
-- Headers: MORAJU biti transparent
-
-### Owner Bookings Screen
-**File**: `owner_bookings_screen.dart`
-
-- Pending bookings: 2x2 button grid (Approve, Reject, Details, Cancel)
-- Provider invalidation: POSLIJE repository poziva
-- Skeleton loaders: RAZLIČITI za Card vs Table view
+| Komponenta | Razlog |
+|------------|--------|
+| Cjenovnik tab (`unified_unit_hub_screen.dart`) | FROZEN - referentna implementacija |
+| Unit Wizard publish flow | 3 Firestore docs redoslijed kritičan |
+| Timeline Calendar z-index | Cancelled PRVI, confirmed ZADNJI |
+| Calendar Repository (`firebase_booking_calendar_repository.dart`) | 989 linija, duplikacija NAMJERNA - bez unit testova NE DIRATI |
+| Owner email u `atomicBooking.ts` | UVIJEK šalje - NE vraćaj conditional check |
+| Subdomain validation regex | `/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/` |
+| `generateViewBookingUrl()` u `emailService.ts` | Email URL logika |
+| Navigator.push za confirmation | NE vraćaj state-based navigaciju |
 
 ---
 
 ## 🎨 STANDARDI
 
-### AppGradients ThemeExtension
 ```dart
+// Gradients
 final gradients = Theme.of(context).extension<AppGradients>()!;
-gradients.pageBackground    // Screen body
-gradients.sectionBackground // Cards, panels
-gradients.brandPrimary      // AppBar, buttons
-```
 
-### Input Fields
-- BorderRadius: **12px** (konzistentno!)
-- Koristi `InputDecorationHelper.buildDecoration()`
-- Theme defaults za border colors (ne hardcoded!)
+// Input fields - UVIJEK 12px borderRadius
+InputDecorationHelper.buildDecoration()
 
-### Responsive Pattern
-```dart
-LayoutBuilder(
-  builder: (context, constraints) {
-    if (constraints.maxWidth < 500) return Column(...);
-    return Row(...);
-  },
-)
-```
-
-### Provider Invalidation
-```dart
+// Provider invalidation - POSLIJE save-a
 await repository.updateData(...);
-ref.invalidate(dataProvider);  // POSLIJE save-a!
-```
+ref.invalidate(dataProvider);
 
-### Nested Config Update
-```dart
-// ✅ DOBRO
+// Nested config - UVIJEK copyWith
 currentSettings.emailConfig.copyWith(requireEmailVerification: false)
-
-// ❌ LOŠE - gubi ostala polja!
-EmailNotificationConfig(requireEmailVerification: false)
+// NE: EmailNotificationConfig(requireEmailVerification: false) - gubi polja!
 ```
 
 ---
 
-## 🔧 ALATI (Summary)
+## 📅 CALENDAR SYSTEM - KRITIČNO
 
-Vidi [CLAUDE_MCP_TOOLS.md](./CLAUDE_MCP_TOOLS.md) za detalje.
+**Repository**: `firebase_booking_calendar_repository.dart`
+- Koristi `DateTime.utc()` za SVE map keys
+- Stream errors: `onErrorReturnWith()` vraća prazan map
+- Turnover detection MORA provjeriti: `partialCheckIn`, `partialCheckOut`, `booked`, `partialBoth`
 
-**Aktivni MCP serveri**: dart-flutter, firebase, github, memory, context7, stripe, flutter-inspector, mobile-mcp
+**DateStatus enum**:
+- `pending` → žuta + dijagonalni uzorak (`#6B4C00` @ 60%)
+- `partialBoth` → turnover day (oba bookinga)
+- `isCheckOutPending` / `isCheckInPending` → prati koja polovica je pending
 
-**Key slash commands**: `/ui`, `/firebase`, `/test`, `/stripe:*`, `/flutter:code-cleanup`
-
----
-
-## 🔌 WIDGET SYSTEM (Summary)
-
-Vidi [CLAUDE_WIDGET_SYSTEM.md](./CLAUDE_WIDGET_SYSTEM.md) za detalje.
-
-**Modovi**: `calendarOnly`, `bookingPending`, `bookingInstant`
-
-**Kritično**:
-- `bookingPending` → `requireOwnerApproval` UVIJEK true
-- `bookingInstant` → MORA imati barem 1 payment method
-- Pricing: daily_price > weekend_price > base_price
+**⚠️ NE REFAKTORISATI** - duplikacija `_buildCalendarMap` vs `_buildYearCalendarMap` je NAMJERNA safety net. Prethodni refaktoring uveo 5+ bugova.
 
 ---
 
-## 🔮 FUTURE FEATURES (Low Priority)
+## 💳 STRIPE FLOW
 
-### Additional Services / Booking Add-ons
-**Status**: Prepared, not integrated
-**Files**:
-- `shared/models/additional_service_model.dart`
-- `shared/models/booking_service_model.dart` (junction table)
-- `shared/repositories/additional_services_repository.dart`
-- `features/widget/presentation/widgets/additional_services_widget.dart`
-
-**Opis**: Sistem za dodatne usluge (parking, doručak, transfer) koje se mogu dodati uz booking.
-
-**Kada implementirati**: Nakon stabilizacije core booking flowa. Nije hitno.
-
----
-
-## 📦 WIDGET REFACTORING (2025-12-03)
-
-| Fajl | Linije | Status |
-|------|--------|--------|
-| `booking_widget_screen.dart` | 2,154 → 1,100 | Refaktorisan (-49%) |
-| `year_calendar_widget.dart` | 1,152 → 905 | Refaktorisan (-21%) |
-| `month_calendar_widget.dart` | 879 → 821 | Refaktorisan (-7%) |
-
-**Ekstraktovani komponenti:**
-- `calendar/` - date_utils, view_switcher, legend, year_calendar_painters, calendar_combined_header_widget
-- `confirmation/` - 7 komponenti
-- `details/` - 8 komponenti
-- `shared/utils/` - validators, snackbar_helper
-
-**Calendar Painters** (`year_calendar_painters.dart`):
-- `DiagonalLinePainter` - check-in/check-out split days
-- `PendingPatternPainter` - diagonal stripes za pending
-- `PartialBothPainter` - turnover day sa oba bookinga
-
----
-
-## 📚 DODATNE REFERENCE
-
-### iCal Integration
-**Folder**: `screens/ical/`
-- Export Screen ZAHTIJEVA params: `context.push()` sa extra, NE `context.go()`!
-- Provider invalidation nakon CRUD operacija
-
-### Bank Account Screen
-**Route**: `/owner/integrations/payments/bank-account`
-- Odvojen od Edit Profile
-- Koristi CompanyDetails model
-
-### Router
-**File**: `router_owner.dart`
-- `isLoading` check KRITIČAN (sprječava flash nakon registracije)
-- Widget params na `/login` route prikazuju `BookingWidgetScreen` (Stripe return fix)
-
-### Same-Tab Stripe Checkout (2025-12-02, Updated)
-**File**: `booking_widget_screen.dart`
-**Svrha**: Stripe plaćanje se otvara u ISTOM tabu, booking se kreira webhook-om NAKON plaćanja.
-
-**Implementacija:**
-```dart
-// Web: Use window.location.href for same-tab redirect
-if (kIsWeb) {
-  html.window.location.href = checkoutResult.checkoutUrl;
-} else {
-  // Mobile: Use url_launcher (will open in browser)
-  await launchUrl(uri, mode: LaunchMode.externalApplication);
-}
-```
-
-**Flow (NEW - Webhook Creates Booking):**
 ```
 1. User klikne "Pay with Stripe"
-2. Form data se BRIŠE (sprječava conflict na povratku)
-3. Isti tab prelazi na Stripe Checkout
-4. User plaća
-5. Stripe webhook kreira booking u Firestore sa stripe_session_id
-6. Stripe redirect-a natrag sa ?stripe_status=success&session_id=cs_xxx
-7. Widget poll-uje za booking koristeći session_id (max 30s)
-8. Kad nađe booking, prikaže confirmation screen
+2. Form data se BRIŠE
+3. Same-tab redirect na Stripe Checkout
+4. Webhook kreira booking sa stripe_session_id
+5. Return URL: ?stripe_status=success&session_id=cs_xxx
+6. Widget poll-uje fetchBookingByStripeSessionId() (max 30s)
+7. Confirmation screen
 ```
-
-**KRITIČNO - session_id Lookup (BUG FIX 2025-12-02):**
-```dart
-// Problem: URL nema bookingId jer webhook kreira booking NAKON redirect-a
-// Rješenje: Poll Firestore po stripe_session_id
-
-Future<void> _handleStripeReturnWithSessionId(String sessionId) async {
-  // Poll max 15 attempts × 2s = 30 seconds
-  for (var i = 0; i < 15; i++) {
-    booking = await bookingRepo.fetchBookingByStripeSessionId(sessionId);
-    if (booking != null) break;
-    await Future.delayed(Duration(seconds: 2));
-  }
-  // Navigate to confirmation
-}
-```
-
-**Model Fields Added:**
-- `BookingModel.stripeSessionId` - za webhook lookup
-- `BookingModel.bookingReference` - human-readable referenca (BK-xxx)
-
-**Prednosti:**
-- Nema popup-ova ili novih tabova
-- Booking se kreira tek nakon USPJEŠNOG plaćanja
-- Cross-tab komunikacija zadržana kao fallback
-
-### Cross-Tab Communication (Optional Fallback)
-**Files**: `tab_communication_service.dart`, `tab_communication_service_web.dart`
-**Svrha**: Fallback mehanizam - šalje broadcast drugim tabovima kada plaćanje završi.
-
-- **BroadcastChannel API** sa localStorage fallback
-- Channel: `rab-booking-stripe`
-- Message types: `paymentComplete`, `bookingCancelled`, `calendarRefresh`
-- Inicijalizacija u `booking_widget_screen.dart` → `_initTabCommunication()`
-- `fromOtherTab` parametar sprječava circular broadcasting
-
-**Napomena:** Od 2025-12-02, same-tab redirect je primarni flow. Cross-tab komunikacija je zadržana samo kao fallback za slučaj da user ima više tabova otvorenih.
 
 ---
 
-## 🔗 SUBDOMAIN SYSTEM (2025-12-03)
-**Status**: ✅ COMPLETED (Bug #3 Fix - "View my reservation" button in emails)
+## 🔗 SUBDOMAIN SYSTEM
 
-### Problem
-Email dugme "View my reservation" nije radilo jer:
-- Widget se hostao na Firebase Hosting (statički URL)
-- Nije bilo načina da se poveže booking sa pravim property-em
-- Email linkovi nisu imali kontekst property-a
-
-### Rješenje - Subdomain Architecture
-Svaki property ima jedinstveni subdomain (npr. `villa-marija`) koji omogućuje:
-- Production URL: `villa-marija.rabbooking.com/view?ref=XXX&email=YYY`
-- Testing URL: `localhost:5000/view?subdomain=villa-marija&ref=XXX&email=YYY`
-
-### Komponente
-
-| Komponenta | File | Status |
-|------------|------|--------|
-| PropertyModel subdomain field | `property_model.dart` | ✅ |
-| PropertyBranding model | `property_branding_model.dart` | ✅ |
-| Cloud Function: checkSubdomainAvailability | `subdomainService.ts` | ✅ |
-| Cloud Function: generateSubdomainFromName | `subdomainService.ts` | ✅ |
-| Cloud Function: setPropertySubdomain | `subdomainService.ts` | ✅ |
-| Email URL generation | `emailService.ts` | ✅ |
-| Flutter SubdomainService | `subdomain_service.dart` | ✅ |
-| Riverpod providers | `subdomain_provider.dart` | ✅ |
-| BookingViewScreen integration | `booking_view_screen.dart` | ✅ |
-| SubdomainNotFoundScreen | `subdomain_not_found_screen.dart` | ✅ |
-| Owner Dashboard UI | `property_form_screen.dart` | ✅ |
-| Repository CRUD | `firebase_owner_properties_repository.dart` | ✅ |
-
-### Kako Radi
-
-**1. Owner kreira subdomain:**
-```dart
-// property_form_screen.dart
-// Auto-generira subdomain iz property naziva
-// Debounced availability check (500ms)
-// Prikazuje sugestije ako subdomain zauzet
-```
-
-**2. Email generira URL:**
-```typescript
-// emailService.ts - generateViewBookingUrl()
-async function generateViewBookingUrl(
-  bookingReference: string,
-  guestEmail: string,
-  accessToken: string,
-  propertyId?: string
-): Promise<string> {
-  // 1. Fetch property subdomain from Firestore
-  // 2. Build URL based on environment (prod vs dev)
-  // 3. Return full URL with query params
-}
-```
-
-**3. Widget parsira subdomain:**
-```dart
-// subdomain_service.dart
-// Priority 1: ?subdomain=xxx query param (testing)
-// Priority 2: Parse hostname xxx.rabbooking.com (production)
-```
-
-**4. Widget učitava property branding:**
-```dart
-// booking_view_screen.dart
-final context = await subdomainService.resolveCurrentContext();
-if (context != null && !context.found) {
-  // Show SubdomainNotFoundScreen
-} else {
-  // Use context.property and context.branding
-}
-```
-
-### Reserved Subdomains
-```typescript
-const RESERVED_SUBDOMAINS = [
-  'www', 'app', 'api', 'admin', 'dashboard', 'widget',
-  'booking', 'bookings', 'owner', 'owners', 'guest', 'guests',
-  'help', 'support', 'docs', 'blog', 'mail', 'smtp', 'ftp',
-  'cdn', 'static', 'assets', 'images', 'test', 'dev', 'staging',
-  'prod', 'production', 'demo', 'beta', 'alpha', 'rab', 'rabbooking'
-];
-```
-
-### KRITIČNO - NE MIJENJAJ:
-1. `generateViewBookingUrl()` - logika za kreiranje email URL-ova
-2. Subdomain validation regex: `/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/`
-3. Query param prioritet preko hostname parsinga
-4. Reserved subdomains lista
+- Production: `villa-marija.rabbooking.com/view?ref=XXX&email=YYY`
+- Testing: `localhost:5000/view?subdomain=villa-marija&ref=XXX&email=YYY`
+- Query param ima prioritet nad hostname parsingom
 
 ---
 
-## 🐛 BUG FIX-EVI (2025-12-02/03)
+## ✅ QUICK CHECKLIST
 
-**Stripe Payment Flow** - SVI bugovi riješeni:
-| # | Bug | Status |
-|---|-----|--------|
-| 1 | Stripe redirect | ✅ |
-| 2 | Owner email | ✅ |
-| 3 | Email button | ✅ (Subdomain) |
-| 4 | Pill bar | ✅ (Cross-tab) |
-| 5 | Calendar real-time | ✅ |
-| 6 | Payment shows 0 | ✅ |
+**Prije commitanja:**
+- [ ] `flutter analyze` = 0 issues
+- [ ] Pročitaj CLAUDE.md ako diraš kritične sekcije
+- [ ] `ref.invalidate()` POSLIJE repository poziva
+- [ ] `mounted` check prije async setState/navigation
 
-### Owner Email Always Sent (Bug #2 Fix)
-**File**: `functions/src/atomicBooking.ts`
-**Status**: ✅ FIXED & DEPLOYED
-
-**Problem**: Owner email za nove bookinge se nije slao ako je `shouldSendEmailNotification` vraćao `false` (tj. ako je owner isključio notifikacije u settings-u).
-
-**Zahtjev korisnika**: Owner UVIJEK mora primiti email za novu rezervaciju, bez obzira na notification settings.
-
-**Rješenje**: Uklonjen conditional check `shouldSendEmailNotification` za owner email:
-```typescript
-// PRIJE (conditional - LOŠE)
-const shouldSend = await shouldSendEmailNotification(ownerId, "bookings");
-if (shouldSend) {
-  await sendOwnerNotificationEmail(...);
-}
-
-// POSLIJE (always send - DOBRO)
-await sendOwnerNotificationEmail(...);
-```
-
-**NE VRAĆAJ conditional check** - owner MORA znati za svaku novu rezervaciju!
-
-### Calendar Pending Status - Diagonal Pattern & Colors
-**Files**: `split_day_calendar_painter.dart`, `calendar_date_status.dart`
-
-**Problem**: Dijagonalne linije na turnover days (pending bookings) bile teško vidljive, pogotovo u light theme.
-
-**Rješenje**:
-1. **Povećana debljina linije**: `strokeWidth` 1.5 → 2.0
-2. **Nova boja**: Tamno zlatna/smeđa `#6B4C00` sa 60% opacity (umjesto `backgroundPrimary @ 40%`)
-
-```dart
-// calendar_date_status.dart - getPatternLineColor()
-case DateStatus.pending:
-  return const Color(0xFF6B4C00).withValues(alpha: 0.6); // Dark gold/brown
-```
-
-**Pending Status u Kalendaru - NE MIJENJAJ:**
-- `DateStatus.pending` - žuta pozadina sa dijagonalnim uzorkom
-- `needsDiagonalPattern` - vraća `true` samo za `pending`
-- Split day (turnover) koristi `SplitDayCalendarPainter` za dijagonale
-- `isCheckOutPending` / `isCheckInPending` - prati koja polovica je pending
-
-### Booking Confirmation Navigation Fix
-**File**: `booking_widget_screen.dart`, `booking_confirmation_screen.dart`
-
-**Problem**: Back/Close dugmad na confirmation screen nisu radili za Pay on Arrival/Bank Transfer jer:
-- State-based navigacija (`WidgetViewState`) držala isti URL
-- Klik na Back/Close nije imao vizualni feedback
-
-**Rješenje**: Refaktorisano na `Navigator.push()` za SVE payment flowove:
-
-```dart
-// PRIJE (state-based - LOŠE)
-setState(() => _viewState = WidgetViewState.confirmation);
-
-// POSLIJE (Navigator.push - DOBRO)
-await Navigator.of(context).push(
-  MaterialPageRoute(builder: (context) => BookingConfirmationScreen(...)),
-);
-// Nakon pop-a, reset form state
-_resetFormState();
-_clearBookingUrlParams();
-```
-
-**Uklonjeno:**
-- `WidgetViewState` enum
-- `_viewState`, `_completedBooking`, `_completedPaymentMethod` state
-- `_resetToCalendarView()` metoda
-
-### Stripe Return - Calendar Instead of Confirmation
-**Root Cause**: Stripe webhook kreira booking NAKON redirect-a, URL nema `bookingId`.
-
-**Simptomi**:
-- URL: `?stripe_status=success&session_id=cs_xxx` (bez `bookingId`)
-- Cached form data se učita sa datumima koji su sada rezervisani
-- Widget prikaže "conflict" umjesto confirmation
-
-**Rješenje**:
-1. **Clear form data PRIJE redirect-a na Stripe** (u `_handleStripePayment`)
-2. **Nova metoda `fetchBookingByStripeSessionId()`** u repository
-3. **Nova metoda `_handleStripeReturnWithSessionId()`** - poll-uje za booking
-4. **Nova polja u `BookingModel`**: `stripeSessionId`, `bookingReference`
+**Responsive breakpoints:**
+- Desktop: ≥1200px
+- Tablet: 600-1199px
+- Mobile: <600px
 
 ---
 
-## 🎯 QUICK REFERENCE
-
-### NIKADA NE MIJENJAJ:
-1. Cjenovnik tab - frozen
-2. Z-index sorting u Timeline Calendar
-3. Wizard publish flow (3 docs redoslijed)
-4. Input field borderRadius 12px
-5. Gradient direkcija topLeft → bottomRight
-6. Provider invalidation POSLIJE save-a
-7. **Calendar Pending Status** - diagonal pattern, boje, `DateStatus.pending` logika
-8. **Navigator.push za confirmation** - NE vraćaj state-based navigaciju!
-9. **Subdomain System** - `generateViewBookingUrl()`, validation regex, reserved subdomains
-
-### UVIJEK KORISTI:
-1. `theme.colorScheme.*` (ne AppColors)
-2. `InputDecorationHelper.buildDecoration()`
-3. `.copyWith()` za nested config
-4. `ref.invalidate()` POSLIJE repository poziva
-5. `mounted` check prije async navigation
-
-### PRIJE MIJENJANJA:
-1. Pročitaj ovu dokumentaciju
-2. Provjeri commit history
-3. `flutter analyze` = 0 issues
-4. PITAJ korisnika ako nešto čudno
-
----
-
-**Last Updated**: 2025-12-03
-**Version**: 3.4 (Calendar refactoring + All Stripe bugs resolved)
+**Last Updated**: 2025-12-03 | **Version**: 4.0

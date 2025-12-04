@@ -1,6 +1,6 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
-import {createHash} from "crypto";
+import {createHash, randomInt} from "crypto";
 import {logError, logSuccess, logOperation} from "./logger";
 import {sendEmailVerificationCode as sendVerificationEmail} from "./emailService";
 
@@ -14,9 +14,10 @@ const RESEND_COOLDOWN_SECONDS = 60;
 
 /**
  * Generate 6-digit verification code
+ * Uses crypto.randomInt for cryptographically secure random numbers
  */
 function generateVerificationCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return randomInt(100000, 1000000).toString();
 }
 
 /**

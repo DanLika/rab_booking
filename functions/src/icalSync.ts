@@ -213,6 +213,9 @@ async function syncSingleFeed(
  * Fetch iCal data from URL with redirect support
  * Follows up to 5 redirects (301, 302, 303, 307, 308)
  */
+// HTTP request timeout (30 seconds)
+const HTTP_TIMEOUT_MS = 30000;
+
 function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
   return new Promise((resolve, reject) => {
     if (maxRedirects <= 0) {
@@ -222,7 +225,7 @@ function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
 
     const protocol = url.startsWith('https') ? https : http;
 
-    protocol
+    const request = protocol
       .get(url, (response) => {
         // Handle redirects (301, 302, 303, 307, 308)
         if (response.statusCode && [301, 302, 303, 307, 308].includes(response.statusCode)) {
@@ -269,6 +272,12 @@ function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
       .on('error', (error) => {
         reject(error);
       });
+
+    // Add timeout to prevent hanging requests
+    request.setTimeout(HTTP_TIMEOUT_MS, () => {
+      request.destroy();
+      reject(new Error(`Request timeout after ${HTTP_TIMEOUT_MS / 1000} seconds`));
+    });
   });
 }
 

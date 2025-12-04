@@ -52,3 +52,6 @@ export * from "./resendBookingEmail";
 
 // Export subdomain management functions
 export * from "./subdomainService";
+
+// Export cleanup scheduled functions (Stripe pending bookings)
+export * from "./cleanupExpiredPendingBookings";

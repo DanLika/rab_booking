@@ -13,6 +13,12 @@ import {
   generateBookingAccessToken,
   calculateTokenExpiration,
 } from "./bookingAccessToken";
+import {generateBookingReference} from "./utils/bookingReferenceGenerator";
+import {
+  validateAndConvertBookingDates,
+  calculateBookingNights,
+} from "./utils/dateValidation";
+import {sanitizeText, sanitizeEmail, sanitizePhone} from "./utils/inputSanitization";
 
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
@@ -115,6 +121,136 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
 
     const depositAmountInCents = Math.round(depositAmount * 100);
 
+    // ========================================================================
+    // CRITICAL SECURITY FIX: Create placeholder booking BEFORE Stripe redirect
+    // ========================================================================
+    // This prevents race condition where 2 users can both pay for same dates.
+    // Placeholder booking BLOCKS dates until payment completes or expires.
+    //
+    // FLOW:
+    // 1. Transaction checks availability (fails if dates booked)
+    // 2. Create placeholder booking with `stripe_pending` status (expires 15 min)
+    // 3. Create Stripe session with placeholder booking ID in metadata
+    // 4. Webhook updates placeholder to `confirmed` after successful payment
+    // 5. Cleanup job deletes expired placeholders (if user abandons payment)
+
+    // Sanitize inputs (security)
+    const sanitizedGuestName = sanitizeText(guestName);
+    const sanitizedGuestEmail = sanitizeEmail(guestEmail);
+    const sanitizedGuestPhone = guestPhone ? sanitizePhone(guestPhone) : null;
+    const sanitizedNotes = notes ? sanitizeText(notes) : null;
+
+    if (!sanitizedGuestName || !sanitizedGuestEmail) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Invalid guest name or email after sanitization"
+      );
+    }
+
+    // Validate and convert dates
+    const {checkInDate, checkOutDate} = validateAndConvertBookingDates(
+      checkIn,
+      checkOut
+    );
+
+    // Calculate booking nights for validation
+    const bookingNights = calculateBookingNights(checkInDate, checkOutDate);
+
+    // SECURITY: Validate booking duration
+    const MAX_BOOKING_NIGHTS = 365;
+    if (bookingNights > MAX_BOOKING_NIGHTS) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Maximum booking duration is ${MAX_BOOKING_NIGHTS} nights`
+      );
+    }
+
+    // ========================================================================
+    // ATOMIC TRANSACTION: Create placeholder booking with availability check
+    // ========================================================================
+    const placeholderResult = await db.runTransaction(async (transaction) => {
+      // Check for conflicting bookings (including stripe_pending placeholders)
+      const conflictingBookingsQuery = db
+        .collection("bookings")
+        .where("unit_id", "==", unitId)
+        .where("status", "in", ["pending", "confirmed", "stripe_pending"])
+        .where("check_in", "<", checkOutDate)
+        .where("check_out", ">", checkInDate);
+
+      const conflictingBookings =
+        await transaction.get(conflictingBookingsQuery);
+
+      if (!conflictingBookings.empty) {
+        throw new HttpsError(
+          "already-exists",
+          "Dates no longer available. Another booking is in progress or confirmed."
+        );
+      }
+
+      // Create placeholder booking
+      const placeholderBookingId = db.collection("bookings").doc().id;
+      const bookingRef = generateBookingReference(placeholderBookingId);
+
+      // Generate access token for future "View my reservation" link
+      const {token: accessToken, hashedToken} =
+        generateBookingAccessToken();
+      const tokenExpiration = calculateTokenExpiration(checkOutDate);
+
+      // Placeholder expires in 15 minutes (Stripe session expires in 24h, but we're stricter)
+      const expiresAt = admin.firestore.Timestamp.fromDate(
+        new Date(Date.now() + 15 * 60 * 1000)
+      );
+
+      const placeholderData = {
+        user_id: null, // Widget bookings are unauthenticated
+        unit_id: unitId,
+        property_id: propertyId,
+        owner_id: ownerId,
+        guest_name: sanitizedGuestName,
+        guest_email: sanitizedGuestEmail,
+        guest_phone: sanitizedGuestPhone,
+        check_in: checkInDate,
+        check_out: checkOutDate,
+        guest_count: Number(guestCount),
+        total_price: Number(totalPrice),
+        advance_amount: Number(depositAmount),
+        deposit_amount: Number(depositAmount),
+        remaining_amount: Number(totalPrice) - Number(depositAmount),
+        paid_amount: 0,
+        payment_method: "stripe",
+        payment_option: paymentOption,
+        payment_status: "pending",
+        status: "stripe_pending", // NEW STATUS: Blocks dates until payment
+        booking_reference: bookingRef,
+        source: "widget",
+        notes: sanitizedNotes,
+        require_owner_approval: false,
+        tax_legal_accepted: taxLegalAccepted || false,
+        // Booking lookup security
+        access_token: hashedToken,
+        token_expires_at: tokenExpiration,
+        // Placeholder expiration
+        stripe_pending_expires_at: expiresAt,
+        created_at: admin.firestore.FieldValue.serverTimestamp(),
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      transaction.set(
+        db.collection("bookings").doc(placeholderBookingId),
+        placeholderData
+      );
+
+      return {
+        placeholderBookingId,
+        bookingRef,
+        accessToken,
+      };
+    });
+
+    console.log(
+      `Placeholder booking created: ${placeholderResult.placeholderBookingId} (${placeholderResult.bookingRef})`
+    );
+
     // Create Stripe checkout session with destination charge
     const stripeClient = getStripeClient();
 
@@ -147,8 +283,8 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
       cancelUrl = "https://rab-booking-248fc.web.app/booking-cancelled";
     }
 
-    // Generate booking reference for display
-    const bookingRef = `BK-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    // Use booking reference from placeholder booking (guaranteed unique)
+    const bookingRef = placeholderResult.bookingRef;
 
     const session = await stripeClient.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -178,8 +314,12 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, 
       },
       success_url: successUrl,
       cancel_url: cancelUrl,
-      // CRITICAL: Store ALL booking data in metadata for webhook to create booking
+      // CRITICAL: Store placeholder booking ID for webhook to UPDATE (not create)
       metadata: {
+        // Placeholder booking (webhook will update this to confirmed)
+        placeholder_booking_id: placeholderResult.placeholderBookingId,
+        // Access token for "View my reservation" email link (plaintext)
+        access_token_plaintext: placeholderResult.accessToken,
         // Booking identifiers
         booking_reference: bookingRef,
         unit_id: unitId,
@@ -281,183 +421,96 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
     }
 
     try {
-      // Extract all booking data from metadata
-      const unitId = metadata.unit_id;
-      const propertyId = metadata.property_id;
-      const ownerId = metadata.owner_id;
-      const bookingReference = metadata.booking_reference;
-      const checkIn = new Date(metadata.check_in);
-      const checkOut = new Date(metadata.check_out);
-      const guestName = metadata.guest_name;
-      const guestEmail = metadata.guest_email;
-      const guestPhone = metadata.guest_phone || null;
-      const guestCount = parseInt(metadata.guest_count) || 1;
-      const totalPrice = parseFloat(metadata.total_price);
-      const depositAmount = parseFloat(metadata.deposit_amount);
-      const paymentOption = metadata.payment_option;
+      // ========================================================================
+      // NEW FLOW: Update placeholder booking (not create new booking)
+      // ========================================================================
+      const placeholderBookingId = metadata.placeholder_booking_id;
 
-      // Validate numeric values to prevent NaN issues
-      if (isNaN(totalPrice) || isNaN(depositAmount)) {
-        console.error("Invalid numeric metadata:", {
-          total_price: metadata.total_price,
-          deposit_amount: metadata.deposit_amount,
-          parsed_totalPrice: totalPrice,
-          parsed_depositAmount: depositAmount,
-        });
-        res.status(400).send("Invalid price metadata");
+      if (!placeholderBookingId) {
+        console.error("Missing placeholder_booking_id in webhook metadata");
+        res.status(400).send("Missing placeholder booking ID - outdated checkout session");
         return;
       }
-      const notes = metadata.notes || null;
-      const taxLegalAccepted = metadata.tax_legal_accepted === "true";
 
-      console.log(`Processing Stripe webhook for booking: ${bookingReference}`);
-      console.log(`Unit: ${unitId}, CheckIn: ${checkIn}, CheckOut: ${checkOut}`);
+      console.log(`Processing Stripe webhook for placeholder booking: ${placeholderBookingId}`);
 
-      // IDEMPOTENCY CHECK: Prevent duplicate bookings if webhook fires twice
-      const existingBookingQuery = await db.collection("bookings")
-        .where("stripe_session_id", "==", session.id)
-        .limit(1)
-        .get();
+      // Fetch placeholder booking
+      const placeholderBookingRef = db.collection("bookings").doc(placeholderBookingId);
+      const placeholderBookingSnap = await placeholderBookingRef.get();
 
-      if (!existingBookingQuery.empty) {
-        const existingBooking = existingBookingQuery.docs[0];
-        console.log(`Webhook already processed - booking ${existingBooking.id} exists for session ${session.id}`);
+      if (!placeholderBookingSnap.exists) {
+        console.error(`Placeholder booking not found: ${placeholderBookingId}`);
+        res.status(404).send("Placeholder booking not found - may have expired");
+        return;
+      }
+
+      const placeholderData = placeholderBookingSnap.data();
+
+      // IDEMPOTENCY CHECK: Check if placeholder already updated (webhook fired twice)
+      if (placeholderData?.status === "confirmed" && placeholderData?.stripe_session_id === session.id) {
+        console.log(`Webhook already processed - booking ${placeholderBookingId} already confirmed`);
         res.json({
           received: true,
-          booking_id: existingBooking.id,
-          booking_reference: existingBooking.data().booking_reference,
+          booking_id: placeholderBookingId,
+          booking_reference: placeholderData.booking_reference,
           status: "already_processed",
-          message: "Booking already created for this session",
+          message: "Booking already confirmed for this session",
         });
         return;
       }
 
-      // Convert to Firestore timestamps
-      const checkInTimestamp = admin.firestore.Timestamp.fromDate(checkIn);
-      const checkOutTimestamp = admin.firestore.Timestamp.fromDate(checkOut);
+      // Validate placeholder is actually stripe_pending status
+      if (placeholderData?.status !== "stripe_pending") {
+        console.error(`Placeholder booking has invalid status: ${placeholderData?.status}`);
+        res.status(400).send(`Invalid placeholder status: ${placeholderData?.status}`);
+        return;
+      }
 
-      // CRITICAL: Use transaction to ensure atomic booking creation
-      // This prevents race condition where dates could be double-booked
-      const result = await db.runTransaction(async (transaction) => {
-        // Re-check availability within transaction
-        const conflictingBookingsQuery = db
-          .collection("bookings")
-          .where("unit_id", "==", unitId)
-          .where("status", "in", ["pending", "confirmed"])
-          .where("check_in", "<", checkOutTimestamp)
-          .where("check_out", ">", checkInTimestamp);
+      console.log(`Updating placeholder booking ${placeholderBookingId} to confirmed status`);
 
-        const conflictingBookings = await transaction.get(conflictingBookingsQuery);
-
-        if (!conflictingBookings.empty) {
-          // Date conflict detected - someone else booked between checkout and webhook
-          console.error("Date conflict detected during webhook processing:", {
-            unitId,
-            checkIn: metadata.check_in,
-            checkOut: metadata.check_out,
-            conflictingCount: conflictingBookings.size,
-          });
-
-          // AUTO-REFUND: Payment was successful, but dates are no longer available
-          // We must refund the customer automatically
-          const paymentIntentId = session.payment_intent as string;
-
-          if (paymentIntentId) {
-            const stripeClient = getStripeClient();
-            try {
-              await stripeClient.refunds.create({
-                payment_intent: paymentIntentId,
-                reason: "requested_by_customer", // Stripe requires this for bookings
-                metadata: {
-                  reason: "DATE_CONFLICT",
-                  booking_reference: bookingReference,
-                  unit_id: unitId,
-                  check_in: metadata.check_in,
-                  check_out: metadata.check_out,
-                },
-              });
-              console.log(`Auto-refund issued for date conflict: ${paymentIntentId}`);
-            } catch (refundError) {
-              console.error("CRITICAL: Failed to issue auto-refund:", refundError);
-              // Store failed refund for manual intervention
-              try {
-                await db.collection("refund_pending").add({
-                  payment_intent_id: paymentIntentId,
-                  stripe_session_id: session.id,
-                  reason: "DATE_CONFLICT",
-                  booking_reference: bookingReference,
-                  unit_id: unitId,
-                  property_id: propertyId,
-                  owner_id: ownerId,
-                  guest_email: guestEmail,
-                  guest_name: guestName,
-                  amount: depositAmount,
-                  check_in: metadata.check_in,
-                  check_out: metadata.check_out,
-                  error_message: String(refundError),
-                  status: "requires_manual_refund",
-                  created_at: admin.firestore.FieldValue.serverTimestamp(),
-                });
-                console.log(`Created refund_pending record for manual intervention`);
-              } catch (dbError) {
-                console.error("Failed to create refund_pending record:", dbError);
-              }
-            }
-          }
-
-          throw new Error(`DATE_CONFLICT: Dates were booked by another user. Refund ${paymentIntentId ? "attempted" : "skipped (no payment intent)"}`);
-        }
-
-        // Create booking document
-        const bookingId = db.collection("bookings").doc().id;
-        const bookingDocRef = db.collection("bookings").doc(bookingId);
-
-        // Generate secure access token for "View my reservation" email link
-        const {token: accessToken, hashedToken} = generateBookingAccessToken();
-        const tokenExpiration = calculateTokenExpiration(checkOutTimestamp);
-
-        const bookingData = {
-          user_id: null, // Widget bookings are unauthenticated
-          unit_id: unitId,
-          property_id: propertyId,
-          owner_id: ownerId,
-          guest_name: guestName,
-          guest_email: guestEmail,
-          guest_phone: guestPhone,
-          check_in: checkInTimestamp,
-          check_out: checkOutTimestamp,
-          guest_count: guestCount,
-          total_price: totalPrice,
-          advance_amount: depositAmount,
-          deposit_amount: depositAmount,
-          remaining_amount: totalPrice - depositAmount,
-          paid_amount: depositAmount,
-          payment_method: "stripe",
-          payment_option: paymentOption,
-          payment_status: "paid",
-          status: "confirmed", // Stripe payments are always confirmed (paid)
-          booking_reference: bookingReference,
-          source: "widget",
-          notes: notes,
-          require_owner_approval: false, // Stripe = no approval needed
-          tax_legal_accepted: taxLegalAccepted,
-          // Stripe payment details
-          stripe_session_id: session.id,
-          payment_intent_id: session.payment_intent,
-          // Booking lookup security (for "View my reservation" link)
-          access_token: hashedToken,
-          token_expires_at: tokenExpiration,
-          paid_at: admin.firestore.FieldValue.serverTimestamp(),
-          created_at: admin.firestore.FieldValue.serverTimestamp(),
-          updated_at: admin.firestore.FieldValue.serverTimestamp(),
-        };
-
-        transaction.set(bookingDocRef, bookingData);
-
-        return { bookingId, bookingData, accessToken };
+      // Update placeholder booking to confirmed
+      await placeholderBookingRef.update({
+        status: "confirmed", // Stripe payments are always confirmed (paid)
+        payment_status: "paid",
+        paid_amount: Number(placeholderData.deposit_amount),
+        // Stripe payment details
+        stripe_session_id: session.id,
+        payment_intent_id: session.payment_intent as string,
+        paid_at: admin.firestore.FieldValue.serverTimestamp(),
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        // Remove placeholder expiration field (no longer needed)
+        stripe_pending_expires_at: admin.firestore.FieldValue.delete(),
       });
 
-      console.log(`Booking ${result.bookingId} created after Stripe payment`);
+      console.log(`Placeholder booking ${placeholderBookingId} confirmed after Stripe payment`);
+
+      // Extract plaintext access token from metadata (for email "View my reservation" link)
+      const accessTokenPlaintext = metadata.access_token_plaintext;
+
+      if (!accessTokenPlaintext) {
+        console.warn("Missing access_token_plaintext in metadata - email link may not work");
+      }
+
+      // Prepare result for email sending (match old structure)
+      const result = {
+        bookingId: placeholderBookingId,
+        bookingData: placeholderData,
+        accessToken: accessTokenPlaintext || "", // Plaintext token for email link
+      };
+
+      // Extract booking details for emails
+      const unitId = placeholderData.unit_id;
+      const propertyId = placeholderData.property_id;
+      const ownerId = placeholderData.owner_id;
+      const guestName = placeholderData.guest_name;
+      const guestEmail = placeholderData.guest_email;
+      const guestPhone = placeholderData.guest_phone;
+      const guestCount = placeholderData.guest_count;
+      const bookingReference = placeholderData.booking_reference;
+      const checkIn = placeholderData.check_in.toDate();
+      const checkOut = placeholderData.check_out.toDate();
+      const totalPrice = placeholderData.total_price;
+      const depositAmount = placeholderData.deposit_amount;
 
       // Fetch unit and property details for emails
       // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}

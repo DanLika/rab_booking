@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/repositories/firebase_booking_calendar_repository.dart';
 import '../../domain/models/calendar_date_status.dart';
+import '../../domain/repositories/i_booking_calendar_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
 
 part 'realtime_booking_calendar_provider.g.dart';
@@ -11,8 +12,9 @@ part 'realtime_booking_calendar_provider.g.dart';
 String _dateToKey(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
 
 /// Repository provider (V2 with price support)
+/// Returns interface type for better testability and flexibility
 @riverpod
-FirebaseBookingCalendarRepository bookingCalendarRepository(
+IBookingCalendarRepository bookingCalendarRepository(
   Ref ref,
 ) {
   final firestore = ref.watch(firestoreProvider);

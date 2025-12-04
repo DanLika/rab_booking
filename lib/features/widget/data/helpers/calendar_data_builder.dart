@@ -146,14 +146,12 @@ class CalendarDataBuilder {
     DateTime rangeStart,
     DateTime rangeEnd,
   ) {
-    // DEBUG: Log all bookings received
     debugPrint('[CalendarDataBuilder] Processing ${bookings.length} bookings');
     for (final booking in bookings) {
       final checkIn = DateNormalizer.normalize(booking.checkIn);
       final checkOut = DateNormalizer.normalize(booking.checkOut);
       final isPending = booking.status == BookingStatus.pending;
 
-      // DEBUG: Log each booking's status
       debugPrint('[CalendarDataBuilder] Booking ${booking.id.substring(0, 8)}: '
           'status=${booking.status}, isPending=$isPending, '
           'checkIn=$checkIn, checkOut=$checkOut');

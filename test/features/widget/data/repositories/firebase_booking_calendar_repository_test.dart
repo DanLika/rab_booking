@@ -191,8 +191,8 @@ void main() {
       test('applies weekend price for weekend nights', () async {
         final price = await repository.calculateBookingPrice(
           unitId: 'unit123',
-          checkIn: DateTime(testYear, 1, 19), // Friday
-          checkOut: DateTime(testYear, 1, 22), // Monday
+          checkIn: DateTime(testYear, 1, 16), // Friday (Jan 16, 2026)
+          checkOut: DateTime(testYear, 1, 19), // Monday (Jan 19, 2026)
           basePrice: 100.0,
           weekendBasePrice: 150.0,
         );
@@ -341,12 +341,12 @@ void main() {
         // 2026 is not a leap year = 365 days
         expect(calendarData.length, 365);
 
-        // Check June 12 is booked
-        final jun12 = calendarData[DateTime(testYear, 6, 12)];
+        // Check June 12 is booked (use UTC for year calendar keys)
+        final jun12 = calendarData[DateTime.utc(testYear, 6, 12)];
         expect(jun12?.status, DateStatus.booked);
 
-        // Check March 15 is available
-        final mar15 = calendarData[DateTime(testYear, 3, 15)];
+        // Check March 15 is available (use UTC for year calendar keys)
+        final mar15 = calendarData[DateTime.utc(testYear, 3, 15)];
         expect(mar15?.status, DateStatus.available);
       });
     });

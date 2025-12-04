@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/exceptions/app_exceptions.dart';
 import '../../core/services/rate_limit_service.dart';
 import '../../core/services/security_events_service.dart';
 import '../../core/services/ip_geolocation_service.dart';
@@ -553,7 +554,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       final UserCredential userCredential = await _auth.signInAnonymously();
 
       if (userCredential.user == null) {
-        throw Exception('Anonymous Sign-In failed: No user returned');
+        throw AuthException.noUserReturned('Anonymous');
       }
 
       // Check if this is a new user
@@ -657,7 +658,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       );
 
       if (userCredential.user == null) {
-        throw Exception('Google Sign-In failed: No user returned');
+        throw AuthException.noUserReturned('Google');
       }
 
       // Check if this is a new user

@@ -378,7 +378,6 @@ class FirebaseBookingCalendarRepository {
     final monthStart = DateTime.utc(year, month);
     final monthEnd = DateTime.utc(year, month, daysInMonth);
 
-    // DEBUG: Log bookings being processed
     debugPrint('[CalendarRepo] _buildCalendarMap: Processing ${bookings.length} bookings for $year-$month');
     for (final booking in bookings) {
       debugPrint('[CalendarRepo] Booking ${booking.id.substring(0, 8)}: status=${booking.status}, isPending=${booking.status == BookingStatus.pending}');
@@ -607,7 +606,6 @@ class FirebaseBookingCalendarRepository {
     final yearStart = DateTime.utc(year);
     final yearEnd = DateTime.utc(year, 12, 31);
 
-    // DEBUG: Log bookings being processed in YEAR view
     debugPrint('[CalendarRepo] _buildYearCalendarMap: Processing ${bookings.length} bookings for year $year');
     for (final booking in bookings) {
       debugPrint('[CalendarRepo] YEAR Booking ${booking.id.substring(0, 8)}: status=${booking.status}, isPending=${booking.status == BookingStatus.pending}');

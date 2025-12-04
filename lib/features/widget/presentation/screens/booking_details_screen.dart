@@ -79,6 +79,18 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     super.dispose();
   }
 
+  /// Safely parse check-in date and calculate hours until check-in
+  /// Returns null if parsing fails
+  int? _getHoursUntilCheckIn() {
+    try {
+      final checkInDate = DateTime.parse(widget.booking.checkIn);
+      final now = DateTime.now();
+      return checkInDate.difference(now).inHours;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Check if booking can be cancelled based on cancellation deadline
   bool _canCancelBooking() {
     // Only confirmed, approved, or pending bookings can be cancelled
@@ -101,16 +113,12 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     // Check cancellation deadline with safe date parsing
     final deadlineHours =
         widget.widgetSettings!.cancellationDeadlineHours ?? 48;
-    try {
-      final checkInDate = DateTime.parse(widget.booking.checkIn);
-      final now = DateTime.now();
-      final hoursUntilCheckIn = checkInDate.difference(now).inHours;
-      return hoursUntilCheckIn >= deadlineHours;
-    } catch (e) {
-      // If date parsing fails, allow cancellation (owner can decide)
-      debugPrint('[BookingDetails] Failed to parse checkIn date: $e');
-      return true;
-    }
+
+    final hoursUntilCheckIn = _getHoursUntilCheckIn();
+    // If date parsing fails (null), allow cancellation (owner can decide)
+    if (hoursUntilCheckIn == null) return true;
+
+    return hoursUntilCheckIn >= deadlineHours;
   }
 
   /// Get reason why booking cannot be cancelled (for tooltip)
@@ -132,18 +140,14 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
     final deadlineHours =
         widget.widgetSettings?.cancellationDeadlineHours ?? 48;
 
-    // Safe date parsing with try-catch
-    try {
-      final checkInDate = DateTime.parse(widget.booking.checkIn);
-      final now = DateTime.now();
-      final hoursUntilCheckIn = checkInDate.difference(now).inHours;
+    // Safe date parsing with helper method
+    final hoursUntilCheckIn = _getHoursUntilCheckIn();
 
-      if (hoursUntilCheckIn < deadlineHours) {
-        return 'Cancellation deadline has passed ($deadlineHours hours before check-in)';
-      }
-    } catch (e) {
-      // If date parsing fails, don't block cancellation
-      debugPrint('[BookingDetails] Failed to parse checkIn date for tooltip: $e');
+    // If date parsing fails (null), don't block cancellation
+    if (hoursUntilCheckIn == null) return null;
+
+    if (hoursUntilCheckIn < deadlineHours) {
+      return 'Cancellation deadline has passed ($deadlineHours hours before check-in)';
     }
 
     return null;

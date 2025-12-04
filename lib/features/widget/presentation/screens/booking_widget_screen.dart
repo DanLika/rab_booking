@@ -2347,6 +2347,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Poll up to 10 times with 2-second intervals (20 seconds total)
         for (var i = 0; i < 10; i++) {
           await Future.delayed(const Duration(seconds: 2));
+          // CRITICAL: Check mounted after delay - widget may be disposed during polling
+          if (!mounted) return;
 
           final updatedBooking = await bookingRepo.fetchBookingById(bookingId);
           if (updatedBooking == null) break;

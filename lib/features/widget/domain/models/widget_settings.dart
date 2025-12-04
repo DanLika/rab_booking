@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'widget_mode.dart';
 import 'settings/settings.dart';
 import '../../../../core/utils/date_time_parser.dart';
+import '../../../../core/utils/safe_cast.dart';
 
 // Re-export configs for backward compatibility
 // (Files importing widget_settings.dart can still access these classes)
@@ -96,52 +97,74 @@ class WidgetSettings {
   });
 
   /// Convert from Firestore document
+  ///
+  /// Uses safe casting to prevent runtime errors from invalid data formats.
+  /// Returns defaults if data is missing or has incorrect types.
   factory WidgetSettings.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    // Safely cast document data - could be null if document doesn't exist
+    final data = safeCastMap(doc.data());
+    if (data == null) {
+      throw ArgumentError('Document data is null or invalid format for ${doc.id}');
+    }
+
+    // Safely cast nested maps for config objects
+    final stripeConfigData = safeCastMap(data['stripe_config']);
+    final bankTransferConfigData = safeCastMap(data['bank_transfer_config']);
+    final contactOptionsData = safeCastMap(data['contact_options']) ?? {};
+    final emailConfigData = safeCastMap(data['email_config']) ?? {};
+    final externalCalendarConfigData = safeCastMap(data['external_calendar_config']);
+    final taxLegalConfigData = safeCastMap(data['tax_legal_config']) ?? {};
+    final themeOptionsData = safeCastMap(data['theme_options']);
+
+    // Safely cast weekendDays list
+    final weekendDaysList = safeCastList<int>(data['weekend_days']) ?? const [6, 7];
 
     return WidgetSettings(
       id: doc.id,
-      propertyId: data['property_id'] ?? '',
+      propertyId: safeCastString(data['property_id']) ?? '',
       widgetMode: WidgetMode.fromString(
-        data['widget_mode'] ?? 'booking_instant',
+        safeCastString(data['widget_mode']) ?? 'booking_instant',
       ),
       // Migration: If global_deposit_percentage doesn't exist, use stripe deposit or 20
       globalDepositPercentage:
-          data['global_deposit_percentage'] ??
-          (data['stripe_config'] != null
-              ? (data['stripe_config']['deposit_percentage'] ?? 20)
+          safeCastInt(data['global_deposit_percentage']) ??
+          (stripeConfigData != null
+              ? (safeCastInt(stripeConfigData['deposit_percentage']) ?? 20)
               : 20),
-      stripeConfig: data['stripe_config'] != null
-          ? StripePaymentConfig.fromMap(data['stripe_config'])
+      stripeConfig: stripeConfigData != null
+          ? StripePaymentConfig.fromMap(stripeConfigData)
           : null,
-      bankTransferConfig: data['bank_transfer_config'] != null
-          ? BankTransferConfig.fromMap(data['bank_transfer_config'])
+      bankTransferConfig: bankTransferConfigData != null
+          ? BankTransferConfig.fromMap(bankTransferConfigData)
           : null,
-      allowPayOnArrival: data['allow_pay_on_arrival'] ?? false,
-      requireOwnerApproval: data['require_owner_approval'] ?? false,
-      allowGuestCancellation: data['allow_guest_cancellation'] ?? true,
-      cancellationDeadlineHours: data['cancellation_deadline_hours'] ?? 48,
-      minNights: data['min_nights'] ?? 1,
-      weekendDays: (data['weekend_days'] as List<dynamic>?)
-              ?.map((e) => e as int)
-              .toList() ??
-          const [6, 7], // Default: Saturday (6) and Sunday (7)
-      contactOptions: ContactOptions.fromMap(data['contact_options'] ?? {}),
-      emailConfig: EmailNotificationConfig.fromMap(data['email_config'] ?? {}),
-      externalCalendarConfig: data['external_calendar_config'] != null
-          ? ExternalCalendarConfig.fromMap(data['external_calendar_config'])
+      allowPayOnArrival: safeCastBool(data['allow_pay_on_arrival']) ?? false,
+      requireOwnerApproval: safeCastBool(data['require_owner_approval']) ?? false,
+      allowGuestCancellation: safeCastBool(data['allow_guest_cancellation']) ?? true,
+      cancellationDeadlineHours: safeCastInt(data['cancellation_deadline_hours']) ?? 48,
+      minNights: safeCastInt(data['min_nights']) ?? 1,
+      weekendDays: weekendDaysList,
+      contactOptions: ContactOptions.fromMap(contactOptionsData),
+      emailConfig: EmailNotificationConfig.fromMap(emailConfigData),
+      externalCalendarConfig: externalCalendarConfigData != null
+          ? ExternalCalendarConfig.fromMap(externalCalendarConfigData)
           : null,
-      icalExportEnabled: data['ical_export_enabled'] ?? false,
-      icalExportUrl: data['ical_export_url'],
-      icalExportToken: data['ical_export_token'],
+      icalExportEnabled: safeCastBool(data['ical_export_enabled']) ?? false,
+      icalExportUrl: safeCastString(data['ical_export_url']),
+      icalExportToken: safeCastString(data['ical_export_token']),
       icalExportLastGenerated:
-          (data['ical_export_last_generated'] as Timestamp?)?.toDate(),
-      taxLegalConfig: TaxLegalConfig.fromMap(data['tax_legal_config'] ?? {}),
-      themeOptions: data['theme_options'] != null
-          ? ThemeOptions.fromMap(data['theme_options'])
+          data['ical_export_last_generated'] is Timestamp
+              ? (data['ical_export_last_generated'] as Timestamp).toDate()
+              : null,
+      taxLegalConfig: TaxLegalConfig.fromMap(taxLegalConfigData),
+      themeOptions: themeOptionsData != null
+          ? ThemeOptions.fromMap(themeOptionsData)
           : null,
-      createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      updatedAt: (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: data['created_at'] is Timestamp
+          ? (data['created_at'] as Timestamp).toDate()
+          : DateTime.now(),
+      updatedAt: data['updated_at'] is Timestamp
+          ? (data['updated_at'] as Timestamp).toDate()
+          : DateTime.now(),
     );
   }
 

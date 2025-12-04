@@ -1,6 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {sendSuspiciousActivityEmail} from "./emailService";
 import {logError} from "./logger";
+import {validateEmail} from "./utils/emailValidation";
 
 /**
  * Callable Cloud Function: Send suspicious activity alert email
@@ -26,12 +27,11 @@ export const sendSuspiciousActivityAlert = onCall(async (request) => {
     );
   }
 
-  // Basic email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(userEmail)) {
+  // RFC-compliant email validation
+  if (!validateEmail(userEmail)) {
     throw new HttpsError(
       "invalid-argument",
-      "Invalid email address"
+      "Invalid email address. Please provide a valid email with a proper domain (e.g., example@domain.com)."
     );
   }
 

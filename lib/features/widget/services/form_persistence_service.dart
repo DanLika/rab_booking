@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/services/logging_service.dart';
 import '../../../core/utils/date_time_parser.dart';
+import '../../../core/utils/safe_cast.dart';
 import '../presentation/widgets/country_code_dropdown.dart';
 
 /// Data class representing persisted form data.
@@ -68,30 +69,39 @@ class PersistedFormData {
       };
 
   /// Create from JSON map
+  ///
+  /// Uses safe casting to prevent runtime errors from invalid cached data.
+  /// Returns defaults if data is missing or has incorrect types.
   factory PersistedFormData.fromJson(Map<String, dynamic> json) {
+    // Safely extract unitId - required field
+    final unitId = safeCastString(json['unitId']);
+    if (unitId == null) {
+      throw ArgumentError('unitId is required but missing or invalid type');
+    }
+
     return PersistedFormData(
-      unitId: json['unitId'] as String,
-      propertyId: json['propertyId'] as String?,
-      checkIn: json['checkIn'] != null
-          ? DateTimeParser.tryParse(json['checkIn'] as String?)
+      unitId: unitId,
+      propertyId: safeCastString(json['propertyId']),
+      checkIn: safeCastString(json['checkIn']) != null
+          ? DateTimeParser.tryParse(safeCastString(json['checkIn']))
           : null,
-      checkOut: json['checkOut'] != null
-          ? DateTimeParser.tryParse(json['checkOut'] as String?)
+      checkOut: safeCastString(json['checkOut']) != null
+          ? DateTimeParser.tryParse(safeCastString(json['checkOut']))
           : null,
-      firstName: json['firstName'] as String? ?? '',
-      lastName: json['lastName'] as String? ?? '',
-      email: json['email'] as String? ?? '',
-      phone: json['phone'] as String? ?? '',
-      countryCode: json['countryCode'] as String? ?? '+385',
-      adults: json['adults'] as int? ?? 2,
-      children: json['children'] as int? ?? 0,
-      notes: json['notes'] as String? ?? '',
-      paymentMethod: json['paymentMethod'] as String? ?? 'stripe',
-      pillBarDismissed: json['pillBarDismissed'] as bool? ?? false,
+      firstName: safeCastString(json['firstName']) ?? '',
+      lastName: safeCastString(json['lastName']) ?? '',
+      email: safeCastString(json['email']) ?? '',
+      phone: safeCastString(json['phone']) ?? '',
+      countryCode: safeCastString(json['countryCode']) ?? '+385',
+      adults: safeCastInt(json['adults']) ?? 2,
+      children: safeCastInt(json['children']) ?? 0,
+      notes: safeCastString(json['notes']) ?? '',
+      paymentMethod: safeCastString(json['paymentMethod']) ?? 'stripe',
+      pillBarDismissed: safeCastBool(json['pillBarDismissed']) ?? false,
       hasInteractedWithBookingFlow:
-          json['hasInteractedWithBookingFlow'] as bool? ?? false,
+          safeCastBool(json['hasInteractedWithBookingFlow']) ?? false,
       timestamp: DateTimeParser.parseOrDefault(
-        json['timestamp'] as String?,
+        safeCastString(json['timestamp']),
         DateTime.now(),
       ),
     );
@@ -156,9 +166,20 @@ class FormPersistenceService {
 
       if (savedData == null) return null;
 
-      final formData = PersistedFormData.fromJson(
-        jsonDecode(savedData) as Map<String, dynamic>,
-      );
+      // Safely decode JSON and cast to Map
+      final decoded = jsonDecode(savedData);
+      final jsonMap = safeCastMap(decoded);
+
+      if (jsonMap == null) {
+        LoggingService.log(
+          'Invalid JSON format in saved form data (not a Map)',
+          tag: 'FORM_PERSISTENCE',
+        );
+        await clearFormData(unitId); // Clear invalid data
+        return null;
+      }
+
+      final formData = PersistedFormData.fromJson(jsonMap);
 
       // Check if data is not too old (max 24 hours)
       if (formData.isExpired) {

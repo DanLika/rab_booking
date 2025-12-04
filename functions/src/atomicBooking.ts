@@ -12,6 +12,12 @@ import {
   sendPendingBookingOwnerNotification,
 } from "./emailService";
 import {sendEmailIfAllowed} from "./emailNotificationHelper";
+import {validateEmail} from "./utils/emailValidation";
+import {
+  sanitizeText,
+  sanitizeEmail,
+  sanitizePhone,
+} from "./utils/inputSanitization";
 // NOTIFICATION PREFERENCES: Owner can now opt-out of emails in Notification Settings
 // Pending bookings FORCE send (critical - requires owner approval)
 // Instant bookings RESPECT preferences (owner can opt-out)
@@ -65,12 +71,36 @@ export const createBookingAtomic = onCall(async (request) => {
     );
   }
 
+  // ========================================================================
+  // SECURITY: Sanitize all user inputs before processing
+  // ========================================================================
+  const sanitizedGuestName = sanitizeText(guestName);
+  const sanitizedGuestEmail = sanitizeEmail(guestEmail);
+  const sanitizedGuestPhone = guestPhone ? sanitizePhone(guestPhone) : null;
+  const sanitizedNotes = notes ? sanitizeText(notes) : null;
+
+  // Validate sanitized email with RFC-compliance
+  if (!sanitizedGuestEmail || !validateEmail(sanitizedGuestEmail)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid email address. Please provide a valid email with a proper domain (e.g., example@domain.com)."
+    );
+  }
+
+  // Ensure sanitization didn't remove critical data
+  if (!sanitizedGuestName || sanitizedGuestName.length < 2) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Guest name is required and must be at least 2 characters after sanitization."
+    );
+  }
+
   try {
     logInfo("[AtomicBooking] Starting atomic booking creation", {
       unitId,
       checkIn,
       checkOut,
-      guestEmail,
+      guestEmail: sanitizedGuestEmail,
     });
 
     const checkInDate = admin.firestore.Timestamp.fromDate(new Date(checkIn));
@@ -394,7 +424,7 @@ export const createBookingAtomic = onCall(async (request) => {
         unitId,
         checkIn,
         checkOut,
-        guestEmail,
+        guestEmail: sanitizedGuestEmail,
         bookingNights: validationResult.bookingNights,
       });
 
@@ -409,14 +439,14 @@ export const createBookingAtomic = onCall(async (request) => {
           ownerId,
           checkIn,
           checkOut,
-          guestName,
-          guestEmail,
-          guestPhone: guestPhone || null,
+          guestName: sanitizedGuestName,
+          guestEmail: sanitizedGuestEmail,
+          guestPhone: sanitizedGuestPhone,
           guestCount: Number(guestCount), // Use validated numeric value
           totalPrice,
           depositAmount,
           paymentOption,
-          notes: notes || null,
+          notes: sanitizedNotes,
           taxLegalAccepted: taxLegalAccepted || null,
           icalExportEnabled,
         },
@@ -760,9 +790,9 @@ export const createBookingAtomic = onCall(async (request) => {
         unit_id: unitId,
         property_id: propertyId,
         owner_id: ownerId,
-        guest_name: guestName,
-        guest_email: guestEmail,
-        guest_phone: guestPhone || null,
+        guest_name: sanitizedGuestName,
+        guest_email: sanitizedGuestEmail,
+        guest_phone: sanitizedGuestPhone,
         check_in: checkInDate,
         check_out: checkOutDate,
         guest_count: Number(guestCount), // Use validated numeric value
@@ -776,7 +806,7 @@ export const createBookingAtomic = onCall(async (request) => {
         status,
         booking_reference: bookingRef,
         source: "widget",
-        notes: notes || null,
+        notes: sanitizedNotes,
         require_owner_approval: requireOwnerApproval,
         tax_legal_accepted: taxLegalAccepted || null,
         payment_deadline: paymentMethod === "bank_transfer" ?
@@ -798,7 +828,7 @@ export const createBookingAtomic = onCall(async (request) => {
         bookingId,
         bookingRef,
         unitId,
-        guestEmail,
+        guestEmail: sanitizedGuestEmail,
       });
 
       return {
@@ -830,14 +860,14 @@ export const createBookingAtomic = onCall(async (request) => {
       if (requireOwnerApproval) {
         // Manual approval flow - send "Booking Request Received" email to guest
         await sendPendingBookingRequestEmail(
-          guestEmail,
-          guestName,
+          sanitizedGuestEmail,
+          sanitizedGuestName,
           result.bookingReference,
           propertyData?.name || "Property"
         );
 
         logSuccess("[AtomicBooking] Pending booking request email sent to guest", {
-          email: guestEmail,
+          email: sanitizedGuestEmail,
         });
 
         // Send "New Booking Needs Approval" email to owner
@@ -852,7 +882,7 @@ export const createBookingAtomic = onCall(async (request) => {
               await sendPendingBookingOwnerNotification(
                 ownerData.email,
                 result.bookingReference,
-                guestName,
+                sanitizedGuestName,
                 propertyData?.name || "Property"
               );
             },
@@ -866,8 +896,8 @@ export const createBookingAtomic = onCall(async (request) => {
       } else {
         // Auto-confirmed flow - send "Booking Confirmed" email to guest
         await sendBookingConfirmationEmail(
-          guestEmail,
-          guestName,
+          sanitizedGuestEmail,
+          sanitizedGuestName,
           result.bookingReference,
           checkInDate.toDate(),
           checkOutDate.toDate(),
@@ -881,7 +911,7 @@ export const createBookingAtomic = onCall(async (request) => {
         );
 
         logSuccess("[AtomicBooking] Booking confirmation email sent to guest", {
-          email: guestEmail,
+          email: sanitizedGuestEmail,
         });
 
         // Send "New Booking Received" email to owner
@@ -914,9 +944,9 @@ export const createBookingAtomic = onCall(async (request) => {
               await sendOwnerNotificationEmail(
                 ownerData.email,
                 result.bookingReference,
-                guestName,
-                guestEmail,
-                guestPhone || undefined,
+                sanitizedGuestName,
+                sanitizedGuestEmail,
+                sanitizedGuestPhone || undefined,
                 propertyData?.name || "Property",
                 unitData?.name || "Unit",
                 checkInDate.toDate(),
@@ -964,7 +994,7 @@ export const createBookingAtomic = onCall(async (request) => {
 
     logError("[AtomicBooking] Unexpected error creating booking", error, {
       unitId,
-      guestEmail,
+      guestEmail: sanitizedGuestEmail,
     });
 
     throw new HttpsError(

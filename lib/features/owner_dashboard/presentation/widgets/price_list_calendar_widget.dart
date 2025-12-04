@@ -1230,11 +1230,6 @@ class _PriceListCalendarWidgetState
                             );
 
                             // OPTIMISTIC UPDATE: Update local cache immediately
-                            final dateKey = DateTime(
-                              date.year,
-                              date.month,
-                              date.day,
-                            );
                             _localState.updateDateOptimistically(
                               _selectedMonth,
                               date,
@@ -1932,28 +1927,6 @@ class _PriceListCalendarWidgetState
             ],
           );
         },
-      ),
-    );
-  }
-
-  /// Show notes dialog with proper text wrapping
-  void _showNotesDialog(BuildContext context, DateTime date, String notes) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Notes - ${DateFormat('d MMM yyyy').format(date)}',
-          style: const TextStyle(fontSize: 16),
-        ),
-        content: SingleChildScrollView(
-          child: Text(notes, style: const TextStyle(fontSize: 14)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }

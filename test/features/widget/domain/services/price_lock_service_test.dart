@@ -107,6 +107,16 @@ void main() {
       expect(find.textContaining('Current: €110.50'), findsOneWidget);
       expect(find.text('Cancel'), findsOneWidget);
       expect(find.text('Proceed'), findsOneWidget);
+
+      // Test cancel button
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(cancelCalled, isTrue);
+
+      // Test proceed button
+      await tester.tap(find.text('Proceed'));
+      await tester.pumpAndSettle();
+      expect(proceedCalled, isTrue);
     });
 
     testWidgets('buildDialogWidget creates correct widget for price decrease',

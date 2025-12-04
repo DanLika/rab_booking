@@ -269,7 +269,13 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
     // Validate required metadata
     if (!metadata?.unit_id || !metadata?.property_id || !metadata?.owner_id) {
-      console.error("Missing required metadata in session:", metadata);
+      console.error("Missing required metadata in session:", {
+        has_unit_id: !!metadata?.unit_id,
+        has_property_id: !!metadata?.property_id,
+        has_owner_id: !!metadata?.owner_id,
+        has_guest_email: !!metadata?.guest_email,
+        has_guest_phone: !!metadata?.guest_phone,
+      });
       res.status(400).send("Missing required booking metadata");
       return;
     }
@@ -480,7 +486,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
           depositAmount,
           propertyId // For subdomain in email links
         );
-        console.log(`Confirmation email sent to ${guestEmail}`);
+        console.log("Confirmation email sent to guest");
       } catch (error) {
         console.error("Failed to send confirmation email to guest:", error);
       }

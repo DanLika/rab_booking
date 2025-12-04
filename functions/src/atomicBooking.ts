@@ -18,6 +18,17 @@ import {
   sanitizeEmail,
   sanitizePhone,
 } from "./utils/inputSanitization";
+import {
+  validateAndConvertBookingDates,
+  calculateBookingNights,
+  calculateDaysInAdvance,
+} from "./utils/dateValidation";
+import {
+  calculateDepositAmount,
+  calculateRemainingAmount,
+} from "./utils/depositCalculation";
+import {generateBookingReference} from "./utils/bookingReferenceGenerator";
+import {sendEmailWithRetry} from "./utils/emailRetry";
 // NOTIFICATION PREFERENCES: Owner can now opt-out of emails in Notification Settings
 // Pending bookings FORCE send (critical - requires owner approval)
 // Instant bookings RESPECT preferences (owner can opt-out)
@@ -95,6 +106,13 @@ export const createBookingAtomic = onCall(async (request) => {
     );
   }
 
+  // SECURITY FIX: Validate phone number after sanitization
+  // If sanitization removed all valid digits, set to null
+  const finalGuestPhone =
+    sanitizedGuestPhone && sanitizedGuestPhone.length >= 7 ?
+      sanitizedGuestPhone :
+      null;
+
   try {
     logInfo("[AtomicBooking] Starting atomic booking creation", {
       unitId,
@@ -103,8 +121,13 @@ export const createBookingAtomic = onCall(async (request) => {
       guestEmail: sanitizedGuestEmail,
     });
 
-    const checkInDate = admin.firestore.Timestamp.fromDate(new Date(checkIn));
-    const checkOutDate = admin.firestore.Timestamp.fromDate(new Date(checkOut));
+    // ========================================================================
+    // STEP 0.5: VALIDATE AND CONVERT DATES (with comprehensive validation)
+    // ========================================================================
+    const {checkInDate, checkOutDate} = validateAndConvertBookingDates(
+      checkIn,
+      checkOut
+    );
 
     // ========================================================================
     // STEP 1: Fetch and validate widget settings
@@ -199,11 +222,18 @@ export const createBookingAtomic = onCall(async (request) => {
       allowPayOnArrival,
     });
 
-    // Generate unique booking ID and reference
+    // ========================================================================
+    // STEP 2: GENERATE UNIQUE BOOKING ID AND REFERENCE
+    // ========================================================================
+    // Generate Firestore document ID (guaranteed unique)
     const bookingId = db.collection("bookings").doc().id;
-    const bookingRef = `BK-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
-    // Calculate deposit amount using settings
+    // Generate booking reference using document ID (no collision possible)
+    const bookingRef = generateBookingReference(bookingId);
+
+    // ========================================================================
+    // STEP 3: CALCULATE DEPOSIT AMOUNT (using integer arithmetic)
+    // ========================================================================
     let depositAmount = 0.0;
     let depositPercentage = 20; // Default fallback
 
@@ -217,9 +247,8 @@ export const createBookingAtomic = onCall(async (request) => {
 
       // Calculate deposit
       if (paymentOption === "deposit") {
-        // Percentage-based deposit
-        const calculated = totalPrice * (depositPercentage / 100);
-        depositAmount = parseFloat(calculated.toFixed(2));
+        // Percentage-based deposit (uses integer arithmetic to avoid floating point errors)
+        depositAmount = calculateDepositAmount(totalPrice, depositPercentage);
       } else {
         // Full payment
         depositAmount = totalPrice;
@@ -261,20 +290,22 @@ export const createBookingAtomic = onCall(async (request) => {
           );
         }
 
-        // Validate daily_prices restrictions (same as below)
-        const bookingNights = Math.ceil(
-          (checkOutDate.toDate().getTime() - checkInDate.toDate().getTime()) /
-            (1000 * 60 * 60 * 24)
-        );
+        // Validate daily_prices restrictions (using helper functions)
+        const bookingNights = calculateBookingNights(checkInDate, checkOutDate);
+
+        // SECURITY FIX: Validate booking duration (already validated in dateValidation helper)
+        // But add max nights validation here for DoS protection
+        const MAX_BOOKING_NIGHTS = 365; // 1 year maximum
+        if (bookingNights > MAX_BOOKING_NIGHTS) {
+          throw new HttpsError(
+            "invalid-argument",
+            `Maximum booking duration is ${MAX_BOOKING_NIGHTS} nights (1 year). ` +
+              `You requested ${bookingNights} nights. For longer stays, please contact the property owner directly.`
+          );
+        }
 
         // Calculate days in advance for min/max advance booking validation
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const checkInDateObj = checkInDate.toDate();
-        checkInDateObj.setHours(0, 0, 0, 0);
-        const daysInAdvance = Math.floor(
-          (checkInDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-        );
+        const daysInAdvance = calculateDaysInAdvance(checkInDate);
 
         const dailyPricesQuery = db
           .collection("daily_prices")
@@ -441,7 +472,7 @@ export const createBookingAtomic = onCall(async (request) => {
           checkOut,
           guestName: sanitizedGuestName,
           guestEmail: sanitizedGuestEmail,
-          guestPhone: sanitizedGuestPhone,
+          guestPhone: finalGuestPhone,
           guestCount: Number(guestCount), // Use validated numeric value
           totalPrice,
           depositAmount,
@@ -475,6 +506,19 @@ export const createBookingAtomic = onCall(async (request) => {
         paymentStatus = "not_required"; // Pay on arrival or no payment
       }
     }
+
+    // ====================================================================
+    // STEP 4: GENERATE ACCESS TOKEN (BEFORE transaction to avoid waste)
+    // ====================================================================
+    // Generate token OUTSIDE transaction so we don't waste generated tokens
+    // if the transaction fails or retries due to date conflicts.
+    const {token: accessToken, hashedToken} = generateBookingAccessToken();
+    const tokenExpiration = calculateTokenExpiration(checkOutDate);
+
+    logInfo("[AtomicBooking] Access token generated", {
+      tokenLength: accessToken.length,
+      tokenExpiration: tokenExpiration.toDate().toISOString(),
+    });
 
     // ====================================================================
     // CRITICAL: Use Firestore transaction for atomic availability
@@ -522,20 +566,22 @@ export const createBookingAtomic = onCall(async (request) => {
       //  min/maxDaysAdvance - SECURITY FIX 2025-11-27)
       // ====================================================================
 
-      // Calculate booking nights for min/max validation
-      const bookingNights = Math.ceil(
-        (checkOutDate.toDate().getTime() - checkInDate.toDate().getTime()) /
-          (1000 * 60 * 60 * 24)
-      );
+      // Calculate booking nights for min/max validation (using helper functions)
+      const bookingNights = calculateBookingNights(checkInDate, checkOutDate);
+
+      // SECURITY FIX: Validate booking duration (already validated in dateValidation helper)
+      // But add max nights validation here for DoS protection
+      const MAX_BOOKING_NIGHTS = 365; // 1 year maximum
+      if (bookingNights > MAX_BOOKING_NIGHTS) {
+        throw new HttpsError(
+          "invalid-argument",
+          `Maximum booking duration is ${MAX_BOOKING_NIGHTS} nights (1 year). ` +
+            `You requested ${bookingNights} nights. For longer stays, please contact the property owner directly.`
+        );
+      }
 
       // Calculate days in advance for min/max advance booking validation
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const checkInDateObj = checkInDate.toDate();
-      checkInDateObj.setHours(0, 0, 0, 0);
-      const daysInAdvance = Math.floor(
-        (checkInDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysInAdvance = calculateDaysInAdvance(checkInDate);
 
       // Query daily_prices for all dates in the booking range
       // (check-in date to check-out date - 1, as check-out is exclusive)
@@ -781,10 +827,7 @@ export const createBookingAtomic = onCall(async (request) => {
       }
 
       // Step 3: No conflict - create booking atomically
-      // Generate secure access token for booking lookup
-      const { token: accessToken, hashedToken } = generateBookingAccessToken();
-      const tokenExpiration = calculateTokenExpiration(checkOutDate);
-
+      // (Access token already generated outside transaction to avoid waste)
       const bookingData = {
         user_id: userId,
         unit_id: unitId,
@@ -792,14 +835,14 @@ export const createBookingAtomic = onCall(async (request) => {
         owner_id: ownerId,
         guest_name: sanitizedGuestName,
         guest_email: sanitizedGuestEmail,
-        guest_phone: sanitizedGuestPhone,
+        guest_phone: finalGuestPhone,
         check_in: checkInDate,
         check_out: checkOutDate,
         guest_count: Number(guestCount), // Use validated numeric value
         total_price: totalPrice,
         advance_amount: depositAmount,
         deposit_amount: depositAmount, // For Stripe Cloud Function
-        remaining_amount: totalPrice - depositAmount,
+        remaining_amount: calculateRemainingAmount(totalPrice, depositAmount),
         paid_amount: 0,
         payment_method: paymentMethod,
         payment_status: paymentStatus,
@@ -859,16 +902,26 @@ export const createBookingAtomic = onCall(async (request) => {
 
       if (requireOwnerApproval) {
         // Manual approval flow - send "Booking Request Received" email to guest
-        await sendPendingBookingRequestEmail(
-          sanitizedGuestEmail,
-          sanitizedGuestName,
-          result.bookingReference,
-          propertyData?.name || "Property"
+        // Use retry mechanism for transient failures
+        await sendEmailWithRetry(
+          async () => {
+            await sendPendingBookingRequestEmail(
+              sanitizedGuestEmail,
+              sanitizedGuestName,
+              result.bookingReference,
+              propertyData?.name || "Property"
+            );
+          },
+          "Pending Booking Request",
+          sanitizedGuestEmail
         );
 
-        logSuccess("[AtomicBooking] Pending booking request email sent to guest", {
-          email: sanitizedGuestEmail,
-        });
+        logSuccess(
+          "[AtomicBooking] Pending booking request email sent to guest",
+          {
+            email: sanitizedGuestEmail,
+          }
+        );
 
         // Send "New Booking Needs Approval" email to owner
         const ownerDoc = await db.collection("users").doc(ownerId).get();
@@ -879,40 +932,60 @@ export const createBookingAtomic = onCall(async (request) => {
             ownerId,
             "bookings",
             async () => {
-              await sendPendingBookingOwnerNotification(
-                ownerData.email,
-                result.bookingReference,
-                sanitizedGuestName,
-                propertyData?.name || "Property"
+              // Use retry mechanism for transient failures
+              await sendEmailWithRetry(
+                async () => {
+                  await sendPendingBookingOwnerNotification(
+                    ownerData.email,
+                    result.bookingReference,
+                    sanitizedGuestName,
+                    propertyData?.name || "Property"
+                  );
+                },
+                "Pending Booking Owner Notification",
+                ownerData.email
               );
             },
             true // forceIfCritical: owner MUST be notified to approve booking
           );
 
-          logSuccess("[AtomicBooking] Pending booking owner notification sent", {
-            email: ownerData.email,
-          });
+          logSuccess(
+            "[AtomicBooking] Pending booking owner notification sent",
+            {
+              email: ownerData.email,
+            }
+          );
         }
       } else {
         // Auto-confirmed flow - send "Booking Confirmed" email to guest
-        await sendBookingConfirmationEmail(
-          sanitizedGuestEmail,
-          sanitizedGuestName,
-          result.bookingReference,
-          checkInDate.toDate(),
-          checkOutDate.toDate(),
-          totalPrice,
-          depositAmount,
-          unitData?.name || "Unit",
-          propertyData?.name || "Property",
-          result.accessToken, // Plaintext token for email link
-          propertyData?.contact_email,
-          propertyId // For subdomain in email links
+        // Use retry mechanism for transient failures
+        await sendEmailWithRetry(
+          async () => {
+            await sendBookingConfirmationEmail(
+              sanitizedGuestEmail,
+              sanitizedGuestName,
+              result.bookingReference,
+              checkInDate.toDate(),
+              checkOutDate.toDate(),
+              totalPrice,
+              depositAmount,
+              unitData?.name || "Unit",
+              propertyData?.name || "Property",
+              result.accessToken, // Plaintext token for email link
+              propertyData?.contact_email,
+              propertyId // For subdomain in email links
+            );
+          },
+          "Booking Confirmation",
+          sanitizedGuestEmail
         );
 
-        logSuccess("[AtomicBooking] Booking confirmation email sent to guest", {
-          email: sanitizedGuestEmail,
-        });
+        logSuccess(
+          "[AtomicBooking] Booking confirmation email sent to guest",
+          {
+            email: sanitizedGuestEmail,
+          }
+        );
 
         // Send "New Booking Received" email to owner
         logInfo("[AtomicBooking] Attempting to send owner notification", {
@@ -941,27 +1014,37 @@ export const createBookingAtomic = onCall(async (request) => {
             ownerId,
             "bookings",
             async () => {
-              await sendOwnerNotificationEmail(
-                ownerData.email,
-                result.bookingReference,
-                sanitizedGuestName,
-                sanitizedGuestEmail,
-                sanitizedGuestPhone || undefined,
-                propertyData?.name || "Property",
-                unitData?.name || "Unit",
-                checkInDate.toDate(),
-                checkOutDate.toDate(),
-                Number(guestCount), // Use validated numeric value
-                totalPrice,
-                depositAmount
+              // Use retry mechanism for transient failures
+              await sendEmailWithRetry(
+                async () => {
+                  await sendOwnerNotificationEmail(
+                    ownerData.email,
+                    result.bookingReference,
+                    sanitizedGuestName,
+                    sanitizedGuestEmail,
+                    finalGuestPhone || undefined,
+                    propertyData?.name || "Property",
+                    unitData?.name || "Unit",
+                    checkInDate.toDate(),
+                    checkOutDate.toDate(),
+                    Number(guestCount), // Use validated numeric value
+                    totalPrice,
+                    depositAmount
+                  );
+                },
+                "Owner Notification",
+                ownerData.email
               );
             },
             false // Respect preferences: owner can opt-out of instant booking emails
           );
 
-          logSuccess("[AtomicBooking] Owner notification email processed (sent if preferences allow)", {
-            email: ownerData.email,
-          });
+          logSuccess(
+            "[AtomicBooking] Owner notification email processed (sent if preferences allow)",
+            {
+              email: ownerData.email,
+            }
+          );
         }
       }
     } catch (emailError) {

@@ -5,6 +5,7 @@ import {
   sendBookingApprovedEmail,
   sendOwnerNotificationEmail,
 } from "./emailService";
+import {sendEmailIfAllowed} from "./emailNotificationHelper";
 import {admin, db} from "./firebase";
 import {getStripeClient, stripeSecretKey} from "./stripe";
 import {createPaymentNotification} from "./notificationService";
@@ -484,27 +485,34 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
         console.error("Failed to send confirmation email to guest:", error);
       }
 
-      // Send notification email to owner
+      // Send notification email to owner (respect preferences)
       try {
         const ownerDoc = await db.collection("users").doc(ownerId).get();
         const ownerData = ownerDoc.data();
 
         if (ownerData?.email) {
-          await sendOwnerNotificationEmail(
-            ownerData.email,
-            bookingReference,
-            guestName,
-            guestEmail,
-            guestPhone || undefined,
-            propertyData?.name || "Property",
-            unitData?.name || "Unit",
-            checkIn,
-            checkOut,
-            guestCount,
-            totalPrice,
-            depositAmount
+          await sendEmailIfAllowed(
+            ownerId,
+            "payments",
+            async () => {
+              await sendOwnerNotificationEmail(
+                ownerData.email,
+                bookingReference,
+                guestName,
+                guestEmail,
+                guestPhone || undefined,
+                propertyData?.name || "Property",
+                unitData?.name || "Unit",
+                checkIn,
+                checkOut,
+                guestCount,
+                totalPrice,
+                depositAmount
+              );
+            },
+            false // Respect preferences: owner can opt-out of payment notifications
           );
-          console.log(`Owner notification sent to ${ownerData.email}`);
+          console.log(`Owner payment notification processed (sent if preferences allow): ${ownerData.email}`);
         }
       } catch (error) {
         console.error("Failed to send notification email to owner:", error);

@@ -11,8 +11,10 @@ import {
   sendOwnerNotificationEmail,
   sendPendingBookingOwnerNotification,
 } from "./emailService";
-// BUG #2 FIX: Removed shouldSendEmailNotification import
-// Owner email is now ALWAYS sent for new bookings (user requirement B1: 1)
+import {sendEmailIfAllowed} from "./emailNotificationHelper";
+// NOTIFICATION PREFERENCES: Owner can now opt-out of emails in Notification Settings
+// Pending bookings FORCE send (critical - requires owner approval)
+// Instant bookings RESPECT preferences (owner can opt-out)
 
 /**
  * Cloud Function: Create Booking with Atomic Availability Check
@@ -722,11 +724,19 @@ export const createBookingAtomic = onCall(async (request) => {
         const ownerDoc = await db.collection("users").doc(ownerId).get();
         const ownerData = ownerDoc.data();
         if (ownerData?.email) {
-          await sendPendingBookingOwnerNotification(
-            ownerData.email,
-            result.bookingReference,
-            guestName,
-            propertyData?.name || "Property"
+          // CRITICAL: Pending bookings FORCE send (owner must approve)
+          await sendEmailIfAllowed(
+            ownerId,
+            "bookings",
+            async () => {
+              await sendPendingBookingOwnerNotification(
+                ownerData.email,
+                result.bookingReference,
+                guestName,
+                propertyData?.name || "Property"
+              );
+            },
+            true // forceIfCritical: owner MUST be notified to approve booking
           );
 
           logSuccess("[AtomicBooking] Pending booking owner notification sent", {
@@ -770,29 +780,36 @@ export const createBookingAtomic = onCall(async (request) => {
             ownerData: ownerData ? Object.keys(ownerData) : "null",
           });
         } else {
-          // BUG #2 FIX: Owner email is ALWAYS sent for new bookings
-          // Removed conditional check - owner must always know about new reservations
-          // User requirement (B1: 1): "DA - uvijek, bez obzira na settings"
-          logInfo("[AtomicBooking] Sending owner notification to", {
+          // NOTIFICATION PREFERENCES: Respect owner settings for instant bookings
+          // Owner can opt-out of instant booking emails in Notification Settings
+          logInfo("[AtomicBooking] Checking notification preferences for instant booking", {
+            ownerId,
             email: ownerData.email,
           });
 
-          await sendOwnerNotificationEmail(
-            ownerData.email,
-            result.bookingReference,
-            guestName,
-            guestEmail,
-            guestPhone || undefined,
-            propertyData?.name || "Property",
-            unitData?.name || "Unit",
-            checkInDate.toDate(),
-            checkOutDate.toDate(),
-            guestCount,
-            totalPrice,
-            depositAmount
+          await sendEmailIfAllowed(
+            ownerId,
+            "bookings",
+            async () => {
+              await sendOwnerNotificationEmail(
+                ownerData.email,
+                result.bookingReference,
+                guestName,
+                guestEmail,
+                guestPhone || undefined,
+                propertyData?.name || "Property",
+                unitData?.name || "Unit",
+                checkInDate.toDate(),
+                checkOutDate.toDate(),
+                guestCount,
+                totalPrice,
+                depositAmount
+              );
+            },
+            false // Respect preferences: owner can opt-out of instant booking emails
           );
 
-          logSuccess("[AtomicBooking] Owner notification email sent", {
+          logSuccess("[AtomicBooking] Owner notification email processed (sent if preferences allow)", {
             email: ownerData.email,
           });
         }

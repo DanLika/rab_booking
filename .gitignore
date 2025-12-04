@@ -75,6 +75,7 @@ firebase-service-account-key.json
 !CLAUDE.md
 # Whitelist entire .claude directory (Claude Code configuration)
 !.claude/
+!.claude/**/*.md
 *.sql
 *.stackdump
 build_output.txt

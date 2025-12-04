@@ -73,7 +73,7 @@ class PaymentInfoCard extends StatelessWidget {
           Text(
             'Payment Information',
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
+              fontSize: TypographyTokens.fontSizeL,
               fontWeight: TypographyTokens.bold,
               color: colors.textPrimary,
             ),

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../common/detail_row_widget.dart';
 
 /// Card displaying property and unit information.
 ///
-/// Shows property name and unit name with icons.
+/// Shows property name and unit name in a consistent detail row format.
 ///
 /// Usage:
 /// ```dart
@@ -11,6 +12,7 @@ import '../../../../../core/design_tokens/design_tokens.dart';
 ///   propertyName: 'Beach Villa',
 ///   unitName: 'Suite 1',
 ///   colors: ColorTokens.light,
+///   isDarkMode: false,
 /// )
 /// ```
 class PropertyInfoCard extends StatelessWidget {
@@ -23,11 +25,15 @@ class PropertyInfoCard extends StatelessWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
+  /// Whether dark mode is active
+  final bool isDarkMode;
+
   const PropertyInfoCard({
     super.key,
     required this.propertyName,
     required this.unitName,
     required this.colors,
+    required this.isDarkMode,
   });
 
   @override
@@ -44,50 +50,33 @@ class PropertyInfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoRow(
-            'Property',
-            propertyName,
-            Icons.apartment,
+          // Header matching BookingSummaryCard style
+          Text(
+            'Property Information',
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeL,
+              fontWeight: TypographyTokens.bold,
+              color: colors.textPrimary,
+            ),
           ),
-          const SizedBox(height: SpacingTokens.s),
-          _buildInfoRow(
-            'Unit',
-            unitName,
-            Icons.home,
+          const SizedBox(height: SpacingTokens.m),
+          // Use DetailRowWidget for consistent styling
+          DetailRowWidget(
+            label: 'Property',
+            value: propertyName,
+            isDarkMode: isDarkMode,
+            hasPadding: true,
+            valueFontWeight: FontWeight.w400,
+          ),
+          DetailRowWidget(
+            label: 'Unit',
+            value: unitName,
+            isDarkMode: isDarkMode,
+            hasPadding: true,
+            valueFontWeight: FontWeight.w400,
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: colors.textSecondary),
-        const SizedBox(width: SpacingTokens.s),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeXS,
-                  color: colors.textSecondary,
-                ),
-              ),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeM,
-                  fontWeight: TypographyTokens.medium,
-                  color: colors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

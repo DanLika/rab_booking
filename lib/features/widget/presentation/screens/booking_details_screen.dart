@@ -313,8 +313,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           propertyName: widget.booking.propertyName,
           unitName: widget.booking.unitName,
           colors: colors,
+          isDarkMode: isDarkMode,
         ),
-        const SizedBox(height: SpacingTokens.m),
+        const SizedBox(height: SpacingTokens.l),
         BookingDatesCard(
           checkIn: widget.booking.checkIn,
           checkOut: widget.booking.checkOut,
@@ -322,8 +323,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           adults: widget.booking.guestCount.adults,
           children: widget.booking.guestCount.children,
           colors: colors,
+          isDarkMode: isDarkMode,
         ),
-        const SizedBox(height: SpacingTokens.m),
+        const SizedBox(height: SpacingTokens.l),
         PaymentInfoCard(
           totalPrice: widget.booking.totalPrice,
           depositAmount: widget.booking.depositAmount,
@@ -337,7 +339,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         // Contact info
         if (widget.booking.ownerEmail != null ||
             widget.booking.ownerPhone != null) ...[
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: SpacingTokens.l),
           ContactOwnerCard(
             ownerEmail: widget.booking.ownerEmail,
             ownerPhone: widget.booking.ownerPhone,
@@ -347,7 +349,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         // Cancellation policy
         if (widget.widgetSettings != null &&
             widget.widgetSettings!.allowGuestCancellation) ...[
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: SpacingTokens.l),
           CancellationPolicyCard(
             deadlineHours:
                 widget.widgetSettings!.cancellationDeadlineHours ?? 48,
@@ -358,7 +360,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         // Notes
         if (widget.booking.notes != null &&
             widget.booking.notes!.isNotEmpty) ...[
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: SpacingTokens.l),
           BookingNotesCard(
             notes: widget.booking.notes!,
             colors: colors,

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../common/detail_row_widget.dart';
 
 /// Card displaying booking dates and guest information.
 ///
-/// Shows check-in, check-out, nights, and guest count.
+/// Shows check-in, check-out, nights, and guest count in a consistent detail row format.
 ///
 /// Usage:
 /// ```dart
@@ -15,6 +16,7 @@ import '../../../../../core/design_tokens/design_tokens.dart';
 ///   adults: 2,
 ///   children: 1,
 ///   colors: ColorTokens.light,
+///   isDarkMode: false,
 /// )
 /// ```
 class BookingDatesCard extends StatelessWidget {
@@ -36,6 +38,9 @@ class BookingDatesCard extends StatelessWidget {
   /// Color tokens for theming
   final WidgetColorScheme colors;
 
+  /// Whether dark mode is active
+  final bool isDarkMode;
+
   const BookingDatesCard({
     super.key,
     required this.checkIn,
@@ -44,13 +49,15 @@ class BookingDatesCard extends StatelessWidget {
     required this.adults,
     required this.children,
     required this.colors,
+    required this.isDarkMode,
   });
 
   @override
   Widget build(BuildContext context) {
     final checkInDate = DateTime.parse(checkIn);
     final checkOutDate = DateTime.parse(checkOut);
-    final formatter = DateFormat('MMM d, yyyy');
+    // Match BookingSummaryCard date format
+    final formatter = DateFormat('EEEE, MMM dd, yyyy');
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
@@ -64,28 +71,44 @@ class BookingDatesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoRow(
-            'Check-in',
-            formatter.format(checkInDate),
-            Icons.login,
+          // Header matching BookingSummaryCard style
+          Text(
+            'Booking Dates',
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeL,
+              fontWeight: TypographyTokens.bold,
+              color: colors.textPrimary,
+            ),
           ),
-          const SizedBox(height: SpacingTokens.s),
-          _buildInfoRow(
-            'Check-out',
-            formatter.format(checkOutDate),
-            Icons.logout,
+          const SizedBox(height: SpacingTokens.m),
+          // Use DetailRowWidget for consistent styling
+          DetailRowWidget(
+            label: 'Check-in',
+            value: formatter.format(checkInDate),
+            isDarkMode: isDarkMode,
+            hasPadding: true,
+            valueFontWeight: FontWeight.w400,
           ),
-          const SizedBox(height: SpacingTokens.s),
-          _buildInfoRow(
-            'Nights',
-            '$nights night${nights > 1 ? 's' : ''}',
-            Icons.nights_stay,
+          DetailRowWidget(
+            label: 'Check-out',
+            value: formatter.format(checkOutDate),
+            isDarkMode: isDarkMode,
+            hasPadding: true,
+            valueFontWeight: FontWeight.w400,
           ),
-          const SizedBox(height: SpacingTokens.s),
-          _buildInfoRow(
-            'Guests',
-            _formatGuestCount(),
-            Icons.people,
+          DetailRowWidget(
+            label: 'Duration',
+            value: '$nights ${nights == 1 ? 'night' : 'nights'}',
+            isDarkMode: isDarkMode,
+            hasPadding: true,
+            valueFontWeight: FontWeight.w400,
+          ),
+          DetailRowWidget(
+            label: 'Guests',
+            value: _formatGuestCount(),
+            isDarkMode: isDarkMode,
+            hasPadding: true,
+            valueFontWeight: FontWeight.w400,
           ),
         ],
       ),
@@ -98,36 +121,5 @@ class BookingDatesCard extends StatelessWidget {
       return '$adultsText, $children child${children > 1 ? 'ren' : ''}';
     }
     return adultsText;
-  }
-
-  Widget _buildInfoRow(String label, String value, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: colors.textSecondary),
-        const SizedBox(width: SpacingTokens.s),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeXS,
-                  color: colors.textSecondary,
-                ),
-              ),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeM,
-                  fontWeight: TypographyTokens.medium,
-                  color: colors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 }

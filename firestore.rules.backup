@@ -88,30 +88,10 @@ service cloud.firestore {
       allow create, update, delete: if isOwnerOrAdmin();
     }
 
-    // ========================================================================
-    // CRITICAL SECURITY FIX: BOOKINGS COLLECTION
-    // ========================================================================
-    // Bookings - secure access with minimal exceptions
+    // Bookings - guests can create, owners can manage
     match /bookings/{bookingId} {
-      // EXCEPTION #1: Stripe return flow polling (temporary, ~20s window)
-      // Allows: WHERE stripe_session_id == "cs_xxx" LIMIT 1
-      // Safe: stripe_session_id is cryptographically random (64+ chars)
-      allow read: if request.query.where.keys().hasOnly(['stripe_session_id']) &&
-                     request.query.limit <= 1;
-
-      // EXCEPTION #2: Guest email link access (booking view screen)
-      // Allows: WHERE booking_reference == "REF123" LIMIT 1
-      // Safe: booking_reference is random 8-10 chars, only in email link
-      allow read: if request.query.where.keys().hasOnly(['booking_reference']) &&
-                     request.query.limit <= 1;
-
-      // EXCEPTION #3: Owner authenticated access (dashboard)
-      // Allows: Authenticated owner to read their own bookings
-      allow read: if isAuthenticated() &&
-                     resource.data.owner_id == request.auth.uid;
-
-      // WRITES: Only Cloud Functions (Admin SDK bypasses these rules)
-      allow write: if false;
+      allow read, write: if true; // Public read/write for widget booking creation
+      // Note: Only owners should update/delete in practice, but widget needs write access
     }
 
     // Daily prices - owners manage, anyone can read
@@ -150,18 +130,10 @@ service cloud.firestore {
       allow write: if isOwnerOrAdmin();
     }
 
-    // ========================================================================
-    // MEDIUM PRIORITY FIX: BOOKING SERVICES VALIDATION
-    // ========================================================================
     // Booking Services - junction table for booking ↔ additional_services
     match /booking_services/{bookingServiceId} {
       allow read: if true; // Widget needs to read for price calculation
-
-      // Validation: Ensure required fields and non-negative price
-      allow create: if request.resource.data.keys().hasAll(['bookingId', 'serviceId', 'price']) &&
-                       request.resource.data.price is number &&
-                       request.resource.data.price >= 0;
-
+      allow create: if true; // Widget can add services to booking
       allow update, delete: if isOwnerOrAdmin();
     }
 
@@ -182,14 +154,9 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
     }
 
-    // ========================================================================
-    // CRITICAL SECURITY FIX: LOGIN ATTEMPTS
-    // ========================================================================
     // Login attempts - rate limiting for security
     match /loginAttempts/{email} {
-      // Only Cloud Functions can read/write (prevents rate limit bypass)
-      allow read: if false;
-      allow write: if false;
+      allow read, write: if true; // Anyone can read/write (for rate limiting)
     }
 
     // Email verifications - OTP codes for guest booking verification
@@ -200,14 +167,10 @@ service cloud.firestore {
       allow write: if false; // Only Cloud Functions can write
     }
 
-    // ========================================================================
-    // CRITICAL SECURITY FIX: SECURITY EVENTS
-    // ========================================================================
     // Security events - security audit log
     match /securityEvents/{eventId} {
       allow read: if isOwnerOrAdmin();
-      // Only Cloud Functions can write (prevents log poisoning)
-      allow write: if false;
+      allow write: if true; // Anyone can write security events
     }
   }
 }

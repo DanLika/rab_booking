@@ -66,62 +66,84 @@ import {
 // CONFIGURATION & HELPER FUNCTIONS
 // ==========================================
 
-// VALIDATION: Ensure RESEND_API_KEY is configured (fail fast at deployment)
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-if (!RESEND_API_KEY) {
-  throw new Error(
-    "RESEND_API_KEY environment variable not configured. " +
-    "Get your API key from: https://resend.com/api-keys"
-  );
+// Lazy initialization of Resend client (avoids issues with Firebase CLI analysis)
+let resend: Resend | null = null;
+function getResendClient(): Resend {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        "RESEND_API_KEY environment variable not configured. " +
+        "Get your API key from: https://resend.com/api-keys"
+      );
+    }
+    resend = new Resend(apiKey);
+    logSuccess("[EmailService] Resend client initialized", {
+      keyPrefix: apiKey.substring(0, 7) + "...",
+    });
+  }
+  return resend;
 }
 
-// Eagerly initialize Resend client at module level (thread-safe)
-const resend = new Resend(RESEND_API_KEY);
-logSuccess("[EmailService] Resend client initialized", {
-  keyPrefix: RESEND_API_KEY.substring(0, 7) + "...",
-});
-
-// Email sender address - validate and fail fast if not configured
-const FROM_EMAIL_RAW = process.env.FROM_EMAIL;
-const FROM_NAME_RAW = process.env.FROM_NAME;
-
-// VALIDATION: Ensure FROM_EMAIL is configured (fail fast at deployment)
-if (!FROM_EMAIL_RAW) {
-  throw new Error(
-    "FROM_EMAIL environment variable not configured. " +
-    "Set this to your verified Resend sender email (e.g., bookings@yourdomain.com). " +
-    "See: https://resend.com/docs/send-with-nodejs#2-send-email"
-  );
-}
-
-// VALIDATION: Ensure FROM_EMAIL is a valid email format
+// Email regex for validation
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-if (!EMAIL_REGEX.test(FROM_EMAIL_RAW)) {
-  throw new Error(
-    `FROM_EMAIL is not a valid email address: ${FROM_EMAIL_RAW}. ` +
-    "Must be a valid email format (e.g., bookings@yourdomain.com)"
-  );
+
+// Lazy initialization for email config (avoids issues with Firebase CLI analysis)
+let _fromEmail: string | null = null;
+let _fromName: string | null = null;
+let _configLogged = false;
+
+function getFromEmail(): string {
+  if (!_fromEmail) {
+    const fromEmailRaw = process.env.FROM_EMAIL;
+    if (!fromEmailRaw) {
+      throw new Error(
+        "FROM_EMAIL environment variable not configured. " +
+        "Set this to your verified Resend sender email (e.g., bookings@yourdomain.com). " +
+        "See: https://resend.com/docs/send-with-nodejs#2-send-email"
+      );
+    }
+    if (!EMAIL_REGEX.test(fromEmailRaw)) {
+      throw new Error(
+        `FROM_EMAIL is not a valid email address: ${fromEmailRaw}. ` +
+        "Must be a valid email format (e.g., bookings@yourdomain.com)"
+      );
+    }
+    _fromEmail = fromEmailRaw;
+    logConfigOnce();
+  }
+  return _fromEmail;
 }
 
-// After validation, we know FROM_EMAIL is a valid string
-const FROM_EMAIL: string = FROM_EMAIL_RAW;
-
-// VALIDATION: Ensure FROM_NAME is configured (fail fast at deployment)
-if (!FROM_NAME_RAW) {
-  throw new Error(
-    "FROM_NAME environment variable not configured. " +
-    "Set this to your sender display name (e.g., 'Rab Booking', 'Villa Marija Bookings'). " +
-    "This appears as the 'From' name in emails."
-  );
+function getFromName(): string {
+  if (!_fromName) {
+    const fromNameRaw = process.env.FROM_NAME;
+    if (!fromNameRaw) {
+      throw new Error(
+        "FROM_NAME environment variable not configured. " +
+        "Set this to your sender display name (e.g., 'Rab Booking', 'Villa Marija Bookings'). " +
+        "This appears as the 'From' name in emails."
+      );
+    }
+    _fromName = fromNameRaw;
+    logConfigOnce();
+  }
+  return _fromName;
 }
 
-// After validation, we know FROM_NAME is a valid string
-const FROM_NAME: string = FROM_NAME_RAW;
+function logConfigOnce(): void {
+  if (!_configLogged && _fromEmail && _fromName) {
+    logSuccess("[EmailService] Configured sender email", {
+      fromEmail: _fromEmail,
+      fromName: _fromName,
+    });
+    _configLogged = true;
+  }
+}
 
-logSuccess("[EmailService] Configured sender email", {
-  fromEmail: FROM_EMAIL,
-  fromName: FROM_NAME,
-});
+// For backwards compatibility - use these getters directly
+const FROM_EMAIL = (): string => getFromEmail();
+const FROM_NAME = (): string => getFromName();
 
 // Widget URL for booking lookup
 const WIDGET_URL = process.env.WIDGET_URL || "https://rab-booking-widget.web.app";
@@ -386,10 +408,10 @@ export async function sendBookingConfirmationEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendBookingConfirmationEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME,
+      FROM_EMAIL(),
+      FROM_NAME(),
       ownerEmail
     );
 
@@ -456,10 +478,10 @@ export async function sendBookingApprovedEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendBookingApprovedEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME,
+      FROM_EMAIL(),
+      FROM_NAME(),
       ownerEmail
     );
 
@@ -523,10 +545,10 @@ export async function sendOwnerNotificationEmail(
 
     // Send email using new template
     await sendOwnerNotificationEmailTemplate(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Owner notification email sent (NEW TEMPLATE)", {email: ownerEmail});
@@ -579,10 +601,10 @@ export async function sendGuestCancellationEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendGuestCancellationEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Guest cancellation email sent (V2 - Refined Premium)", {email: guestEmail});
@@ -637,10 +659,10 @@ export async function sendOwnerCancellationNotificationEmail(
 
     // Send email using new template
     await sendOwnerCancellationEmailTemplate(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Owner cancellation notification sent (NEW TEMPLATE)", {email: ownerEmail});
@@ -685,10 +707,10 @@ export async function sendRefundNotificationEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendRefundNotificationEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Refund notification email sent (V2 - Refined Premium)", {email: guestEmail});
@@ -731,10 +753,10 @@ export async function sendCustomGuestEmail(
 
     // Send email using new template
     await sendCustomGuestEmailTemplate(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Custom guest email sent (NEW TEMPLATE)", {email: guestEmail});
@@ -797,10 +819,10 @@ export async function sendPaymentReminderEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendPaymentReminderEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Payment reminder email sent (V2 - Refined Premium)", {email: guestEmail});
@@ -861,10 +883,10 @@ export async function sendCheckInReminderEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendCheckInReminderEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Check-in reminder email sent (V2 - Refined Premium)", {email: guestEmail});
@@ -913,10 +935,10 @@ export async function sendCheckOutReminderEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendCheckOutReminderEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Check-out reminder email sent (V2 - Refined Premium)", {email: guestEmail});
@@ -960,10 +982,10 @@ export async function sendSuspiciousActivityEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendSuspiciousActivityEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Suspicious activity email sent (V2 - Refined Premium)", {email: adminEmail});
@@ -1000,10 +1022,10 @@ export async function sendPendingBookingRequestEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendPendingBookingRequestEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Pending booking request email sent (V2 - Refined Premium)", {email: guestEmail});
@@ -1042,10 +1064,10 @@ export async function sendPendingBookingOwnerNotification(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendPendingOwnerNotificationEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Pending booking owner notification sent (V2 - Refined Premium)", {email: ownerEmail});
@@ -1086,10 +1108,10 @@ export async function sendBookingRejectedEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendBookingRejectedEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME,
+      FROM_EMAIL(),
+      FROM_NAME(),
       ownerEmail
     );
 
@@ -1121,10 +1143,10 @@ export async function sendEmailVerificationCode(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendEmailVerificationEmailV2(
-      resend,
+      getResendClient(),
       params,
-      FROM_EMAIL,
-      FROM_NAME
+      FROM_EMAIL(),
+      FROM_NAME()
     );
 
     logSuccess("Email verification code sent (V2 - Refined Premium)", {email});

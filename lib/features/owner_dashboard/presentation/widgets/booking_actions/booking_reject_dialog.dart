@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 
 /// Dialog for rejecting a booking with optional reason
@@ -23,12 +25,21 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
-      child: SizedBox(
+      child: Container(
         width: 450,
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+          ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -36,12 +47,8 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.error.withAlpha((0.85 * 255).toInt()),
-                    theme.colorScheme.error,
-                  ],
-                ),
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
@@ -79,9 +86,12 @@ class _BookingRejectDialogState extends State<BookingRejectDialog> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Jeste li sigurni da želite odbiti ovu rezervaciju?',
-                    style: TextStyle(fontSize: 15),
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/date_range_selection.dart';
 import '../providers/notifications_provider.dart';
@@ -203,9 +203,9 @@ class _OwnerTimelineCalendarScreenState
                 }
 
                 return Container(
-                  decoration: const BoxDecoration(
-                    gradient: GradientTokens.brandPrimary,
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                  decoration: BoxDecoration(
+                    gradient: context.gradients.brandPrimary,
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
                   ),
                   child: FloatingActionButton(
                     onPressed: _showCreateBookingDialog,

@@ -610,6 +610,32 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Edit property
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                onPressed: () {
+                  context.push(
+                    OwnerRoutes.propertyEdit.replaceAll(':id', property.id),
+                  );
+                },
+                tooltip: 'Uredi objekt',
+                visualDensity: VisualDensity.compact,
+              ),
+              // Delete property
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline,
+                  size: 18,
+                  color: units.isEmpty
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
+                onPressed: () => _confirmDeleteProperty(context, property, units.length),
+                tooltip: units.isEmpty
+                    ? 'Obriši objekt'
+                    : 'Obriši sve jedinice prije brisanja objekta',
+                visualDensity: VisualDensity.compact,
+              ),
               // Add unit to this property
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, size: 20),
@@ -698,6 +724,93 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ),
       ),
     );
+  }
+
+  /// Confirm and delete a property
+  Future<void> _confirmDeleteProperty(BuildContext dialogContext, PropertyModel property, int unitCount) async {
+    final theme = Theme.of(dialogContext);
+
+    // Check if property has units - cannot delete
+    if (unitCount > 0) {
+      if (!dialogContext.mounted) return;
+      await showDialog<void>(
+        context: dialogContext,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Nije moguće obrisati'),
+          content: Text(
+            'Objekt "${property.name}" ima $unitCount ${_pluralizeJedinica(unitCount)}.\n\n'
+            'Morate prvo obrisati sve jedinice prije brisanja objekta.',
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Razumijem'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: dialogContext,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Obriši objekt'),
+        content: Text(
+          'Jeste li sigurni da želite obrisati "${property.name}"?\n\n'
+          'Ova akcija se ne može poništiti.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Odustani'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Obriši'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await ref
+            .read(ownerPropertiesRepositoryProvider)
+            .deleteProperty(property.id);
+
+        // Invalidate providers to refresh UI
+        ref.invalidate(ownerPropertiesProvider);
+        ref.invalidate(ownerUnitsProvider);
+
+        // Reset selection if deleted property's unit was selected
+        if (_selectedProperty?.id == property.id) {
+          setState(() {
+            _selectedUnit = null;
+            _selectedProperty = null;
+          });
+        }
+
+        if (mounted) {
+          // ignore: use_build_context_synchronously - State.context is safe after mounted check
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            'Objekt "${property.name}" je uspješno obrisan',
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          // ignore: use_build_context_synchronously - State.context is safe after mounted check
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            'Greška pri brisanju: $e',
+          );
+        }
+      }
+    }
   }
 
   /// Confirm and delete a unit

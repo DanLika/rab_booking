@@ -719,10 +719,12 @@ class _PriceListCalendarWidgetState
     final maxNightsController = TextEditingController(
       text: existingPrice?.maxNightsOnArrival?.toString() ?? '',
     );
-    final notesController = TextEditingController(
-      text: existingPrice?.notes ?? '',
+    final minDaysAdvanceController = TextEditingController(
+      text: existingPrice?.minDaysAdvance?.toString() ?? '',
     );
-
+    final maxDaysAdvanceController = TextEditingController(
+      text: existingPrice?.maxDaysAdvance?.toString() ?? '',
+    );
     bool available = existingPrice?.available ?? true;
     bool blockCheckIn = existingPrice?.blockCheckIn ?? false;
     bool blockCheckOut = existingPrice?.blockCheckOut ?? false;
@@ -859,41 +861,6 @@ class _PriceListCalendarWidgetState
 
                       SizedBox(height: isMobile ? 16 : 24),
 
-                      // Notes section with icon header
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.sticky_note_2_outlined,
-                            size: 18,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'NAPOMENA',
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: isMobile ? 8 : 12),
-                      TextField(
-                        controller: notesController,
-                        decoration: InputDecorationHelper.buildDecoration(
-                          labelText: 'Napomena za ovaj datum (opciono)',
-                          hintText: 'Npr. Vjenčanje, poseban događaj...',
-                          prefixIcon: const Icon(Icons.sticky_note_2_outlined),
-                          isMobile: isMobile,
-                          context: context,
-                        ),
-                        maxLines: isMobile ? 2 : 3,
-                        textCapitalization: TextCapitalization.sentences,
-                      ),
-
-                      SizedBox(height: isMobile ? 16 : 24),
-
                       // Advanced options in ExpansionTile (collapsed by default)
                       Theme(
                         data: Theme.of(context).copyWith(
@@ -918,42 +885,12 @@ class _PriceListCalendarWidgetState
                             ),
                           ),
                           subtitle: Text(
-                            'Vikend cijena, min/max noći',
+                            'Vikend cijena, min/max noći, unaprijed',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           ),
                           children: [
-                            // Warning banner
-                            Container(
-                              margin: EdgeInsets.only(bottom: isMobile ? 12 : 16),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.info_outline,
-                                    size: 16,
-                                    color: Theme.of(context).colorScheme.tertiary,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'Ove opcije se čuvaju, ali booking widget ih trenutno ne koristi.',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurface,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                             // Weekend price
                             TextField(
                               controller: weekendPriceController,
@@ -995,6 +932,43 @@ class _PriceListCalendarWidgetState
                                     decoration: InputDecorationHelper.buildDecoration(
                                       labelText: 'Max. noći',
                                       hintText: 'npr. 14',
+                                      isMobile: isMobile,
+                                      context: context,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: isMobile ? 12 : 16),
+                            // Min/Max days advance booking row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: minDaysAdvanceController,
+                                    decoration: InputDecorationHelper.buildDecoration(
+                                      labelText: 'Min. dana unaprijed',
+                                      hintText: 'npr. 1',
+                                      isMobile: isMobile,
+                                      context: context,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: isMobile ? 8 : 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: maxDaysAdvanceController,
+                                    decoration: InputDecorationHelper.buildDecoration(
+                                      labelText: 'Max. dana unaprijed',
+                                      hintText: 'npr. 365',
                                       isMobile: isMobile,
                                       context: context,
                                     ),
@@ -1191,6 +1165,40 @@ class _PriceListCalendarWidgetState
                             }
                           }
 
+                          final minDaysAdvanceText =
+                              minDaysAdvanceController.text.trim();
+                          if (minDaysAdvanceText.isNotEmpty) {
+                            final minDaysAdvance =
+                                int.tryParse(minDaysAdvanceText);
+                            if (minDaysAdvance == null || minDaysAdvance < 0) {
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Min. dana unaprijed mora biti 0 ili više',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                          }
+
+                          final maxDaysAdvanceText =
+                              maxDaysAdvanceController.text.trim();
+                          if (maxDaysAdvanceText.isNotEmpty) {
+                            final maxDaysAdvance =
+                                int.tryParse(maxDaysAdvanceText);
+                            if (maxDaysAdvance == null || maxDaysAdvance <= 0) {
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Max. dana unaprijed mora biti veće od 0',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                          }
+
                           setState(() => isProcessing = true);
 
                           try {
@@ -1208,6 +1216,12 @@ class _PriceListCalendarWidgetState
                             final maxNights = maxNightsText.isEmpty
                                 ? null
                                 : int.tryParse(maxNightsText);
+                            final minDaysAdvance = minDaysAdvanceText.isEmpty
+                                ? null
+                                : int.tryParse(minDaysAdvanceText);
+                            final maxDaysAdvance = maxDaysAdvanceText.isEmpty
+                                ? null
+                                : int.tryParse(maxDaysAdvanceText);
 
                             // Create price model with all fields
                             final priceModel = DailyPriceModel(
@@ -1221,9 +1235,8 @@ class _PriceListCalendarWidgetState
                               weekendPrice: weekendPrice,
                               minNightsOnArrival: minNights,
                               maxNightsOnArrival: maxNights,
-                              notes: notesController.text.trim().isEmpty
-                                  ? null
-                                  : notesController.text.trim(),
+                              minDaysAdvance: minDaysAdvance,
+                              maxDaysAdvance: maxDaysAdvance,
                               createdAt:
                                   existingPrice?.createdAt ?? DateTime.now(),
                               updatedAt: DateTime.now(),
@@ -1329,7 +1342,8 @@ class _PriceListCalendarWidgetState
           weekendPriceController.dispose();
           minNightsController.dispose();
           maxNightsController.dispose();
-          notesController.dispose();
+          minDaysAdvanceController.dispose();
+          maxDaysAdvanceController.dispose();
         });
       }),
     );
@@ -1593,7 +1607,7 @@ class _PriceListCalendarWidgetState
                             );
 
                             // Use PARTIAL update to preserve existing data
-                            // Only update 'available' field, keep custom prices & notes
+                            // Only update 'available' field, keep custom prices
                             await repository.bulkPartialUpdate(
                               unitId: widget.unit.id,
                               dates: _selectedDays.toList(),
@@ -1704,7 +1718,7 @@ class _PriceListCalendarWidgetState
                             );
 
                             // Use PARTIAL update to preserve existing data
-                            // Only update 'available' field, keep custom prices & notes
+                            // Only update 'available' field, keep custom prices
                             await repository.bulkPartialUpdate(
                               unitId: widget.unit.id,
                               dates: _selectedDays.toList(),
@@ -1787,7 +1801,7 @@ class _PriceListCalendarWidgetState
                             );
 
                             // Use PARTIAL update to preserve existing data
-                            // Only update 'block_checkin' field, keep prices & notes
+                            // Only update 'block_checkin' field, keep prices
                             await repository.bulkPartialUpdate(
                               unitId: widget.unit.id,
                               dates: _selectedDays.toList(),
@@ -1859,7 +1873,7 @@ class _PriceListCalendarWidgetState
                             );
 
                             // Use PARTIAL update to preserve existing data
-                            // Only update 'block_checkout' field, keep prices & notes
+                            // Only update 'block_checkout' field, keep prices
                             await repository.bulkPartialUpdate(
                               unitId: widget.unit.id,
                               dates: _selectedDays.toList(),

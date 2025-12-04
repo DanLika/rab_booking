@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 
 /// Dialog for cancelling a booking with reason and email option
@@ -29,12 +30,21 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
-      child: SizedBox(
+      child: Container(
         width: 450,
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+          ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -42,12 +52,8 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.warning.withAlpha((0.85 * 255).toInt()),
-                    AppColors.warning,
-                  ],
-                ),
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
@@ -85,9 +91,12 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Jeste li sigurni da želite otkazati ovu rezervaciju?',
-                    style: TextStyle(fontSize: 15),
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -102,7 +111,10 @@ class _BookingCancelDialogState extends State<BookingCancelDialog> {
                   ),
                   const SizedBox(height: 16),
                   CheckboxListTile(
-                    title: const Text('Pošalji email gostu'),
+                    title: Text(
+                      'Pošalji email gostu',
+                      style: TextStyle(color: theme.colorScheme.onSurface),
+                    ),
                     value: _sendEmail,
                     onChanged: (value) {
                       setState(() {

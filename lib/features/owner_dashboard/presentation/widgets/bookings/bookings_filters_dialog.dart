@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/enums.dart';
-import '../../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../shared/models/property_model.dart';
 import '../../../../../shared/widgets/custom_date_range_picker.dart';
 import '../../providers/owner_bookings_provider.dart';
@@ -33,15 +34,26 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final propertiesAsync = ref.watch(ownerPropertiesCalendarProvider);
 
     return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
       child: Container(
         width: isMobile ? double.infinity : 700,
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+          ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -49,10 +61,10 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             // Header with gradient (matching CommonAppBar)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                gradient: GradientTokens.brandPrimary,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(4),
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
                 ),
               ),
               child: Row(
@@ -105,7 +117,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                    color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
                   ),
                 ),
               ),
@@ -146,7 +158,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                color: theme.colorScheme.primary.withAlpha((0.12 * 255).toInt()),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -239,7 +251,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.secondary.withValues(alpha: 0.12),
+                color: theme.colorScheme.secondary.withAlpha((0.12 * 255).toInt()),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -306,7 +318,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
               ),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -326,7 +338,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border.all(
-                color: theme.colorScheme.error.withValues(alpha: 0.3),
+                color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt()),
               ),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -358,7 +370,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.tertiary.withValues(alpha: 0.12),
+                color: theme.colorScheme.tertiary.withAlpha((0.12 * 255).toInt()),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -408,7 +420,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
               ),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -456,9 +468,9 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
 
   Widget _buildApplyButton(ThemeData theme, bool isFullWidth) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: GradientTokens.brandPrimary,
-        borderRadius: BorderRadius.all(Radius.circular(12)),
+      decoration: BoxDecoration(
+        gradient: context.gradients.brandPrimary,
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -513,7 +525,7 @@ class _BookingsFiltersDialogState extends ConsumerState<BookingsFiltersDialog> {
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
         side: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+          color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),

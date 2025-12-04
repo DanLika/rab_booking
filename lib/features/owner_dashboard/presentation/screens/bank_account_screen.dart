@@ -115,7 +115,8 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
           'Bankovni podaci uspješno spremljeni',
         );
 
-        context.pop();
+        // Use go instead of pop - this page is accessed directly via URL
+        context.go('/owner/integrations/payments');
       }
     } catch (e) {
       if (mounted) {
@@ -373,7 +374,8 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
             ),
           );
           if (shouldPop == true && context.mounted) {
-            context.pop();
+            // Use go instead of pop - this page is accessed directly via URL
+            context.go('/owner/integrations/payments');
           }
         }
       },
@@ -381,8 +383,8 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
         resizeToAvoidBottomInset: true,
         appBar: CommonAppBar(
           title: 'Bankovni Račun',
-          leadingIcon: Icons.arrow_back,
-          onLeadingIconTap: (ctx) => context.pop(),
+          leadingIcon: Icons.menu,
+          onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
         ),
         body: Container(
           decoration: BoxDecoration(

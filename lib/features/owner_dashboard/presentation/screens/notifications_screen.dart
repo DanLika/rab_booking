@@ -2,193 +2,393 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../providers/notifications_provider.dart';
 import '../../domain/models/notification_model.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Notifications screen for owner dashboard
-class NotificationsScreen extends ConsumerWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  bool _isSelectionMode = false;
+  final Set<String> _selectedIds = {};
+  bool _isDeleting = false;
+
+  void _toggleSelectionMode() {
+    setState(() {
+      _isSelectionMode = !_isSelectionMode;
+      if (!_isSelectionMode) {
+        _selectedIds.clear();
+      }
+    });
+  }
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _selectAll(List<NotificationModel> notifications) {
+    setState(() {
+      _selectedIds.addAll(notifications.map((n) => n.id));
+    });
+  }
+
+  void _deselectAll() {
+    setState(_selectedIds.clear);
+  }
+
+  Future<void> _deleteSelected() async {
+    if (_selectedIds.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => _PremiumAlertDialog(
+        title: 'Obriši odabrane?',
+        content:
+            'Jeste li sigurni da želite obrisati ${_selectedIds.length} obavještenja?',
+        confirmText: 'Obriši',
+        cancelText: 'Otkaži',
+        isDestructive: true,
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() => _isDeleting = true);
+      try {
+        final actions = ref.read(notificationActionsProvider);
+        await actions.deleteMultiple(_selectedIds.toList());
+        if (mounted) {
+          setState(() {
+            _selectedIds.clear();
+            _isSelectionMode = false;
+            _isDeleting = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Obavještenja obrisana'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isDeleting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Greška: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteAll() async {
+    final authState = ref.read(enhancedAuthProvider);
+    final ownerId = authState.firebaseUser?.uid;
+    if (ownerId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => const _PremiumAlertDialog(
+        title: 'Obriši sve?',
+        content:
+            'Jeste li sigurni da želite obrisati SVA obavještenja? Ova radnja se ne može poništiti.',
+        confirmText: 'Obriši sve',
+        cancelText: 'Otkaži',
+        isDestructive: true,
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() => _isDeleting = true);
+      try {
+        final actions = ref.read(notificationActionsProvider);
+        await actions.deleteAllNotifications(ownerId);
+        if (mounted) {
+          setState(() {
+            _selectedIds.clear();
+            _isSelectionMode = false;
+            _isDeleting = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sva obavještenja obrisana'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isDeleting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Greška: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final notificationsAsync = ref.watch(notificationsStreamProvider);
     final groupedNotifications = ref.watch(groupedNotificationsProvider);
     final actions = ref.watch(notificationActionsProvider);
 
+    // Flatten notifications for select all
+    final allNotifications = notificationsAsync.valueOrNull ?? [];
+
     return Scaffold(
-      appBar: CommonAppBar(
-        title: 'Obavještenja',
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-      ),
-      body: notificationsAsync.when(
-        data: (notifications) {
-          if (notifications.isEmpty) {
-            return _buildEmptyState(context);
-          }
+      appBar: _isSelectionMode
+          ? _buildSelectionAppBar(theme, allNotifications)
+          : CommonAppBar(
+              title: 'Obavještenja',
+              leadingIcon: Icons.menu,
+              onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: context.gradients.pageBackground,
+        ),
+        child: Stack(
+          children: [
+            notificationsAsync.when(
+            data: (notifications) {
+              if (notifications.isEmpty) {
+                return _buildEmptyState(context);
+              }
 
-          return RefreshIndicator(
-            color: theme.colorScheme.primary,
-            onRefresh: () async {
-              ref.invalidate(notificationsStreamProvider);
-            },
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: groupedNotifications.length,
-              itemBuilder: (context, index) {
-                final dateKey = groupedNotifications.keys.elementAt(index);
-                final dayNotifications = groupedNotifications[dateKey]!;
+              return RefreshIndicator(
+                color: theme.colorScheme.primary,
+                onRefresh: () async {
+                  ref.invalidate(notificationsStreamProvider);
+                },
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: groupedNotifications.length,
+                  itemBuilder: (context, index) {
+                    final dateKey = groupedNotifications.keys.elementAt(index);
+                    final dayNotifications = groupedNotifications[dateKey]!;
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Premium Date header
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16, bottom: 12),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  theme.colorScheme.primary.withAlpha(
-                                    (0.1 * 255).toInt(),
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Premium Date header
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16, bottom: 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      theme.colorScheme.primary.withAlpha(
+                                        (0.1 * 255).toInt(),
+                                      ),
+                                      theme.colorScheme.secondary.withAlpha(
+                                        (0.05 * 255).toInt(),
+                                      ),
+                                    ],
                                   ),
-                                  theme.colorScheme.secondary.withAlpha(
-                                    (0.05 * 255).toInt(),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  dateKey,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.colorScheme.primary,
                                   ),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              dateKey,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Container(
-                              height: 1,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    theme.colorScheme.primary.withAlpha(
-                                      (0.2 * 255).toInt(),
-                                    ),
-                                    Colors.transparent,
-                                  ],
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Container(
+                                  height: 1,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        theme.colorScheme.primary.withAlpha(
+                                          (0.2 * 255).toInt(),
+                                        ),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
 
-                    // Notifications for this date
-                    ...dayNotifications.map(
-                      (notification) => _buildNotificationCard(
-                        context,
-                        notification,
-                        actions,
-                      ),
-                    ),
-                  ],
-                );
-              },
+                        // Notifications for this date
+                        ...dayNotifications.map(
+                          (notification) => _buildNotificationCard(
+                            context,
+                            notification,
+                            actions,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              );
+            },
+            loading: () => Center(
+              child: CircularProgressIndicator(
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+              ),
             ),
-          );
-        },
-        loading: () => Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+            error: (error, stack) {
+              return _buildErrorState(context, error, ref);
+            },
           ),
+
+          // Loading overlay during delete
+          if (_isDeleting)
+            Container(
+              color: Colors.black.withAlpha((0.3 * 255).toInt()),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: context.gradients.sectionBackground,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: context.gradients.sectionBorder,
+                    ),
+                    boxShadow: theme.brightness == Brightness.dark
+                        ? AppShadows.elevation3Dark
+                        : AppShadows.elevation3,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Brisanje...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        error: (error, stack) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+      ),
+      drawer: const OwnerAppDrawer(currentRoute: 'notifications'),
+      // FAB for actions when not in selection mode
+      floatingActionButton: !_isSelectionMode && allNotifications.isNotEmpty
+          ? FloatingActionButton.extended(
+              onPressed: _toggleSelectionMode,
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.checklist_rounded),
+              label: const Text('Odaberi'),
+            )
+          : null,
+    );
+  }
+
+  /// Build selection mode app bar
+  PreferredSizeWidget _buildSelectionAppBar(
+    ThemeData theme,
+    List<NotificationModel> allNotifications,
+  ) {
+    final allSelected = _selectedIds.length == allNotifications.length &&
+        allNotifications.isNotEmpty;
+
+    return AppBar(
+      backgroundColor: theme.colorScheme.primary,
+      foregroundColor: Colors.white,
+      leading: IconButton(
+        icon: const Icon(Icons.close),
+        onPressed: _toggleSelectionMode,
+        tooltip: 'Otkaži',
+      ),
+      title: Text(
+        '${_selectedIds.length} odabrano',
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      actions: [
+        // Select All / Deselect All
+        IconButton(
+          icon: Icon(allSelected
+              ? Icons.deselect_rounded
+              : Icons.select_all_rounded),
+          onPressed: () {
+            if (allSelected) {
+              _deselectAll();
+            } else {
+              _selectAll(allNotifications);
+            }
+          },
+          tooltip: allSelected ? 'Poništi odabir' : 'Odaberi sve',
+        ),
+
+        // Delete Selected
+        if (_selectedIds.isNotEmpty)
+          IconButton(
+            icon: const Icon(Icons.delete_rounded),
+            onPressed: _deleteSelected,
+            tooltip: 'Obriši odabrane',
+          ),
+
+        // More options
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (value) {
+            if (value == 'delete_all') {
+              _deleteAll();
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'delete_all',
+              child: Row(
                 children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
-                          theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
-                        ],
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.error_outline_rounded,
-                      size: 50,
-                      color: theme.colorScheme.error,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                  Icon(Icons.delete_forever, color: Colors.red),
+                  SizedBox(width: 12),
                   Text(
-                    'Greška pri učitavanju obavještenja',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    error.toString(),
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      ref.invalidate(notificationsStreamProvider);
-                    },
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Pokušaj ponovno'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+                    'Obriši sve',
+                    style: TextStyle(color: Colors.red),
                   ),
                 ],
               ),
             ),
-          );
-        },
-      ),
-      drawer: const OwnerAppDrawer(currentRoute: 'notifications'),
+          ],
+        ),
+      ],
     );
   }
 
@@ -198,8 +398,20 @@ class NotificationsScreen extends ConsumerWidget {
     NotificationModel notification,
     NotificationActions actions,
   ) {
-    final theme = Theme.of(context);
+    final isSelected = _selectedIds.contains(notification.id);
 
+    if (_isSelectionMode) {
+      // Selection mode - tap to select, no swipe
+      return _SelectableNotificationCard(
+        notification: notification,
+        isSelected: isSelected,
+        onTap: () => _toggleSelection(notification.id),
+        iconData: _getNotificationIcon(notification.type),
+        iconColor: _getNotificationColor(context, notification.type),
+      );
+    }
+
+    // Normal mode - swipe to delete
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.endToStart,
@@ -209,7 +421,10 @@ class NotificationsScreen extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [theme.colorScheme.error, theme.colorScheme.error],
+            colors: [
+              Theme.of(context).colorScheme.error,
+              Theme.of(context).colorScheme.error
+            ],
           ),
           borderRadius: BorderRadius.circular(16),
         ),
@@ -257,6 +472,7 @@ class NotificationsScreen extends ConsumerWidget {
   /// Build empty state
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Center(
       child: Padding(
@@ -269,19 +485,13 @@ class NotificationsScreen extends ConsumerWidget {
               width: 140,
               height: 140,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-                    theme.colorScheme.secondary.withAlpha((0.05 * 255).toInt()),
-                  ],
-                ),
+                gradient: context.gradients.sectionBackground,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+                  color: context.gradients.sectionBorder,
                   width: 2,
                 ),
+                boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
               ),
               child: Icon(
                 Icons.notifications_none_rounded,
@@ -306,6 +516,80 @@ class NotificationsScreen extends ConsumerWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build error state
+  Widget _buildErrorState(BuildContext context, Object error, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                gradient: context.gradients.sectionBackground,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: theme.colorScheme.error.withAlpha((0.3 * 255).toInt()),
+                  width: 2,
+                ),
+                boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 50,
+                color: theme.colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Greška pri učitavanju obavještenja',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              error.toString(),
+              style: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                ref.invalidate(notificationsStreamProvider);
+              },
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Pokušaj ponovno'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           ],
         ),
@@ -352,6 +636,144 @@ class NotificationsScreen extends ConsumerWidget {
   }
 }
 
+/// Selectable notification card for selection mode
+class _SelectableNotificationCard extends StatelessWidget {
+  final NotificationModel notification;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final IconData iconData;
+  final Color iconColor;
+
+  const _SelectableNotificationCard({
+    required this.notification,
+    required this.isSelected,
+    required this.onTap,
+    required this.iconData,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final isUnread = !notification.isRead;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        gradient: isSelected ? null : context.gradients.sectionBackground,
+        color: isSelected
+            ? theme.colorScheme.primary.withAlpha((0.1 * 255).toInt())
+            : null,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected
+              ? theme.colorScheme.primary
+              : isUnread
+                  ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+                  : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+          width: isSelected ? 2 : 1,
+        ),
+        boxShadow: isSelected
+            ? (isDark ? AppShadows.elevation3Dark : AppShadows.elevation3)
+            : (isDark ? AppShadows.elevation2Dark : AppShadows.elevation2),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Checkbox
+                Checkbox(
+                  value: isSelected,
+                  onChanged: (_) => onTap(),
+                  activeColor: theme.colorScheme.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // Icon
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        iconColor.withAlpha((0.15 * 255).toInt()),
+                        iconColor.withAlpha((0.08 * 255).toInt()),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(iconData, color: iconColor, size: 22),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              notification.title,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight:
+                                    isUnread ? FontWeight.bold : FontWeight.w600,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (isUnread)
+                            Container(
+                              width: 8,
+                              height: 8,
+                              margin: const EdgeInsets.only(left: 8),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        notification.message,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Premium Notification Card with hover effect
 class _PremiumNotificationCard extends StatefulWidget {
   final NotificationModel notification;
@@ -377,6 +799,7 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isUnread = !widget.notification.isRead;
 
     return MouseRegion(
@@ -386,25 +809,19 @@ class _PremiumNotificationCardState extends State<_PremiumNotificationCard> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _isHovered
                 ? theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())
                 : isUnread
-                ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
-                : theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
+                    ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+                    : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
             width: _isHovered ? 2 : 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: _isHovered
-                  ? theme.colorScheme.primary.withAlpha((0.12 * 255).toInt())
-                  : Colors.black.withAlpha((0.04 * 255).toInt()),
-              blurRadius: _isHovered ? 16 : 8,
-              offset: Offset(0, _isHovered ? 6 : 2),
-            ),
-          ],
+          boxShadow: _isHovered
+              ? (isDark ? AppShadows.elevation3Dark : AppShadows.elevation3)
+              : (isDark ? AppShadows.elevation2Dark : AppShadows.elevation2),
         ),
         child: Material(
           color: Colors.transparent,
@@ -565,22 +982,25 @@ class _PremiumAlertDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      elevation: 8,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 400),
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isDestructive
                 ? theme.colorScheme.error.withAlpha((0.2 * 255).toInt())
-                : theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+                : context.gradients.sectionBorder,
             width: 1.5,
           ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -590,20 +1010,15 @@ class _PremiumAlertDialog extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: isDestructive
-                      ? [
-                          theme.colorScheme.error.withAlpha((0.15 * 255).toInt()),
-                          theme.colorScheme.error.withAlpha((0.08 * 255).toInt()),
-                        ]
-                      : [
-                          theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
-                          theme.colorScheme.secondary.withAlpha((0.08 * 255).toInt()),
-                        ],
-                ),
+                gradient: context.gradients.sectionBackground,
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDestructive
+                      ? theme.colorScheme.error.withAlpha((0.3 * 255).toInt())
+                      : context.gradients.sectionBorder,
+                  width: 2,
+                ),
+                boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
               ),
               child: Icon(
                 isDestructive

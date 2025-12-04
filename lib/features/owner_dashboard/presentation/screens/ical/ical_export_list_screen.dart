@@ -311,7 +311,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
               ),
               const SizedBox(height: 24),
               FilledButton.icon(
-                onPressed: () => context.go(OwnerRoutes.properties),
+                onPressed: () => context.push(OwnerRoutes.propertyNew),
                 icon: const Icon(Icons.add),
                 label: const Text('Dodaj Nekretninu'),
                 style: FilledButton.styleFrom(

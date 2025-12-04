@@ -10,6 +10,7 @@ import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/bookings_table_view.dart';
 import '../widgets/booking_details_dialog.dart';
@@ -316,13 +317,16 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     if (filters.propertyId != null) activeFilterCount++;
     if (filters.startDate != null && filters.endDate != null) activeFilterCount++;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.15),
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
         ),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Padding(
         padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -668,14 +672,16 @@ class _BookingCard extends ConsumerWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.08),
-          width: 0.5,
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
         ),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),

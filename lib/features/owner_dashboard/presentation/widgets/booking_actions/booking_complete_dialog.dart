@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 
 /// Dialog for confirming booking completion
 ///
@@ -9,19 +10,31 @@ class BookingCompleteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
-      child: SizedBox(
+      child: Container(
         width: 400,
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+          ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Gradient Header
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                gradient: GradientTokens.brandPrimary,
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
               ),
               child: Row(
                 children: [
@@ -58,9 +71,12 @@ class BookingCompleteDialog extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     'Jeste li sigurni da želite označiti ovu rezervaciju kao završenu?',
-                    style: TextStyle(fontSize: 15),
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Row(

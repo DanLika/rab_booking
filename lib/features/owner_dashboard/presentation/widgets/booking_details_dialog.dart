@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/design_tokens/gradient_tokens.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
@@ -24,226 +24,278 @@ class BookingDetailsDialog extends ConsumerWidget {
     final unit = ownerBooking.unit;
     final screenWidth = MediaQuery.of(context).size.width;
     final dialogWidth = screenWidth > 600 ? 500.0 : screenWidth * 0.9;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              gradient: GradientTokens.brandPrimary,
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-            child: const Icon(Icons.receipt_long, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 12),
-          const Text('Detalji rezervacije'),
-        ],
-      ),
-      content: SizedBox(
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
         width: dialogWidth,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Booking ID and Status
-              _DetailRow(
-                label: 'ID rezervacije',
-                value: booking.id,
-              ),
-              _DetailRow(
-                label: 'Status',
-                value: booking.status.displayName,
-                valueColor: booking.status.color,
-              ),
-
-              const Divider(height: 24),
-
-              // Guest Information
-              const _SectionHeader(
-                icon: Icons.person_outline,
-                title: 'Informacije o gostu',
-              ),
-              const SizedBox(height: 12),
-              _DetailRow(label: 'Ime', value: ownerBooking.guestName),
-              _DetailRow(label: 'Email', value: ownerBooking.guestEmail),
-              if (ownerBooking.guestPhone != null)
-                _DetailRow(label: 'Telefon', value: ownerBooking.guestPhone!),
-
-              const Divider(height: 24),
-
-              // Property Information
-              const _SectionHeader(
-                icon: Icons.home_outlined,
-                title: 'Informacije o objektu',
-              ),
-              const SizedBox(height: 12),
-              _DetailRow(label: 'Objekt', value: property.name),
-              _DetailRow(label: 'Jedinica', value: unit.name),
-              _DetailRow(label: 'Lokacija', value: property.location),
-
-              const Divider(height: 24),
-
-              // Booking Details
-              const _SectionHeader(
-                icon: Icons.calendar_today_outlined,
-                title: 'Detalji boravka',
-              ),
-              const SizedBox(height: 12),
-              _DetailRow(
-                label: 'Prijava',
-                value: '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
-              ),
-              _DetailRow(
-                label: 'Odjava',
-                value: '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
-              ),
-              _DetailRow(
-                label: 'Broj noći',
-                value: '${booking.numberOfNights}',
-              ),
-              _DetailRow(
-                label: 'Broj gostiju',
-                value: '${booking.guestCount}',
-              ),
-
-              const Divider(height: 24),
-
-              // Payment Information
-              const _SectionHeader(
-                icon: Icons.payment_outlined,
-                title: 'Informacije o plaćanju',
-              ),
-              const SizedBox(height: 12),
-              _DetailRow(
-                label: 'Ukupna cijena',
-                value: booking.formattedTotalPrice,
-                valueColor: Theme.of(context).brightness == Brightness.dark
-                    ? Theme.of(context).colorScheme.primaryContainer
-                    : Theme.of(context).primaryColor,
-              ),
-              _DetailRow(
-                label: 'Plaćeno',
-                value: booking.formattedPaidAmount,
-              ),
-              _DetailRow(
-                label: 'Preostalo',
-                value: booking.formattedRemainingBalance,
-                valueColor: booking.isFullyPaid ? AppColors.success : AppColors.warning,
-              ),
-              if (booking.paymentIntentId != null)
-                _DetailRow(
-                  label: 'Payment Intent ID',
-                  value: booking.paymentIntentId!,
-                ),
-
-              if (booking.notes != null && booking.notes!.isNotEmpty) ...[
-                const Divider(height: 24),
-                const _SectionHeader(
-                  icon: Icons.note_outlined,
-                  title: 'Napomene',
-                ),
-                const SizedBox(height: 12),
-                Text(booking.notes!),
-              ],
-
-              if (booking.status == BookingStatus.cancelled) ...[
-                const Divider(height: 24),
-                const _SectionHeader(
-                  icon: Icons.cancel_outlined,
-                  title: 'Informacije o otkazivanju',
-                ),
-                const SizedBox(height: 12),
-                if (booking.cancelledAt != null)
-                  _DetailRow(
-                    label: 'Otkazano',
-                    value:
-                        '${booking.cancelledAt!.day}.${booking.cancelledAt!.month}.${booking.cancelledAt!.year}.',
-                  ),
-                if (booking.cancellationReason != null)
-                  _DetailRow(
-                    label: 'Razlog',
-                    value: booking.cancellationReason!,
-                  ),
-              ],
-
-              const Divider(height: 24),
-
-              // Timestamps
-              _DetailRow(
-                label: 'Kreirano',
-                value:
-                    '${booking.createdAt.day}.${booking.createdAt.month}.${booking.createdAt.year}. ${booking.createdAt.hour}:${booking.createdAt.minute.toString().padLeft(2, '0')}',
-              ),
-              if (booking.updatedAt != null)
-                _DetailRow(
-                  label: 'Ažurirano',
-                  value:
-                      '${booking.updatedAt!.day}.${booking.updatedAt!.month}.${booking.updatedAt!.year}. ${booking.updatedAt!.hour}:${booking.updatedAt!.minute.toString().padLeft(2, '0')}',
-                ),
-            ],
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
           ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Gradient Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
+                    ),
+                    child: const Icon(Icons.receipt_long, color: Colors.white, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Detalji rezervacije',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Booking ID and Status
+                    _DetailRow(
+                      label: 'ID rezervacije',
+                      value: booking.id,
+                    ),
+                    _DetailRow(
+                      label: 'Status',
+                      value: booking.status.displayName,
+                      valueColor: booking.status.color,
+                    ),
+
+                    const Divider(height: 24),
+
+                    // Guest Information
+                    const _SectionHeader(
+                      icon: Icons.person_outline,
+                      title: 'Informacije o gostu',
+                    ),
+                    const SizedBox(height: 12),
+                    _DetailRow(label: 'Ime', value: ownerBooking.guestName),
+                    _DetailRow(label: 'Email', value: ownerBooking.guestEmail),
+                    if (ownerBooking.guestPhone != null)
+                      _DetailRow(label: 'Telefon', value: ownerBooking.guestPhone!),
+
+                    const Divider(height: 24),
+
+                    // Property Information
+                    const _SectionHeader(
+                      icon: Icons.home_outlined,
+                      title: 'Informacije o objektu',
+                    ),
+                    const SizedBox(height: 12),
+                    _DetailRow(label: 'Objekt', value: property.name),
+                    _DetailRow(label: 'Jedinica', value: unit.name),
+                    _DetailRow(label: 'Lokacija', value: property.location),
+
+                    const Divider(height: 24),
+
+                    // Booking Details
+                    const _SectionHeader(
+                      icon: Icons.calendar_today_outlined,
+                      title: 'Detalji boravka',
+                    ),
+                    const SizedBox(height: 12),
+                    _DetailRow(
+                      label: 'Prijava',
+                      value: '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
+                    ),
+                    _DetailRow(
+                      label: 'Odjava',
+                      value: '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
+                    ),
+                    _DetailRow(
+                      label: 'Broj noći',
+                      value: '${booking.numberOfNights}',
+                    ),
+                    _DetailRow(
+                      label: 'Broj gostiju',
+                      value: '${booking.guestCount}',
+                    ),
+
+                    const Divider(height: 24),
+
+                    // Payment Information
+                    const _SectionHeader(
+                      icon: Icons.payment_outlined,
+                      title: 'Informacije o plaćanju',
+                    ),
+                    const SizedBox(height: 12),
+                    _DetailRow(
+                      label: 'Ukupna cijena',
+                      value: booking.formattedTotalPrice,
+                      valueColor: theme.colorScheme.primary,
+                    ),
+                    _DetailRow(
+                      label: 'Plaćeno',
+                      value: booking.formattedPaidAmount,
+                    ),
+                    _DetailRow(
+                      label: 'Preostalo',
+                      value: booking.formattedRemainingBalance,
+                      valueColor: booking.isFullyPaid
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.error,
+                    ),
+                    if (booking.paymentIntentId != null)
+                      _DetailRow(
+                        label: 'Payment Intent ID',
+                        value: booking.paymentIntentId!,
+                      ),
+
+                    if (booking.notes != null && booking.notes!.isNotEmpty) ...[
+                      const Divider(height: 24),
+                      const _SectionHeader(
+                        icon: Icons.note_outlined,
+                        title: 'Napomene',
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        booking.notes!,
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                      ),
+                    ],
+
+                    if (booking.status == BookingStatus.cancelled) ...[
+                      const Divider(height: 24),
+                      const _SectionHeader(
+                        icon: Icons.cancel_outlined,
+                        title: 'Informacije o otkazivanju',
+                      ),
+                      const SizedBox(height: 12),
+                      if (booking.cancelledAt != null)
+                        _DetailRow(
+                          label: 'Otkazano',
+                          value:
+                              '${booking.cancelledAt!.day}.${booking.cancelledAt!.month}.${booking.cancelledAt!.year}.',
+                        ),
+                      if (booking.cancellationReason != null)
+                        _DetailRow(
+                          label: 'Razlog',
+                          value: booking.cancellationReason!,
+                        ),
+                    ],
+
+                    const Divider(height: 24),
+
+                    // Timestamps
+                    _DetailRow(
+                      label: 'Kreirano',
+                      value:
+                          '${booking.createdAt.day}.${booking.createdAt.month}.${booking.createdAt.year}. ${booking.createdAt.hour}:${booking.createdAt.minute.toString().padLeft(2, '0')}',
+                    ),
+                    if (booking.updatedAt != null)
+                      _DetailRow(
+                        label: 'Ažurirano',
+                        value:
+                            '${booking.updatedAt!.day}.${booking.updatedAt!.month}.${booking.updatedAt!.year}. ${booking.updatedAt!.hour}:${booking.updatedAt!.minute.toString().padLeft(2, '0')}',
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Actions
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Left side - Edit, Email, and Resend
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (booking.status != BookingStatus.cancelled)
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            showEditBookingDialog(context, ref, booking);
+                          },
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          label: const Text('Uredi'),
+                        ),
+                      TextButton.icon(
+                        onPressed: () {
+                          showSendEmailDialog(context, ref, booking);
+                        },
+                        icon: const Icon(Icons.email_outlined, size: 18),
+                        label: const Text('Email'),
+                      ),
+                      if (booking.status != BookingStatus.cancelled)
+                        TextButton.icon(
+                          onPressed: () => _resendConfirmationEmail(context, ref),
+                          icon: const Icon(Icons.replay_outlined, size: 18),
+                          label: const Text('Ponovo pošalji'),
+                        ),
+                    ],
+                  ),
+
+                  // Right side - Cancel and Close
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (booking.status == BookingStatus.pending ||
+                          booking.status == BookingStatus.confirmed)
+                        TextButton.icon(
+                          onPressed: () => _confirmCancellation(context, ref),
+                          icon: Icon(Icons.cancel_outlined, color: theme.colorScheme.error, size: 18),
+                          label: Text('Otkaži', style: TextStyle(color: theme.colorScheme.error)),
+                        ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Zatvori'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      actionsAlignment: MainAxisAlignment.spaceBetween,
-      actions: [
-        // Left side - Edit, Email, and Resend
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (booking.status != BookingStatus.cancelled)
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  showEditBookingDialog(context, ref, booking);
-                },
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: const Text('Uredi'),
-              ),
-            TextButton.icon(
-              onPressed: () {
-                showSendEmailDialog(context, ref, booking);
-              },
-              icon: const Icon(Icons.email_outlined, size: 18),
-              label: const Text('Email'),
-            ),
-            if (booking.status != BookingStatus.cancelled)
-              TextButton.icon(
-                onPressed: () => _resendConfirmationEmail(context, ref),
-                icon: const Icon(Icons.replay_outlined, size: 18),
-                label: const Text('Ponovo pošalji'),
-              ),
-          ],
-        ),
-
-        // Right side - Cancel and Close
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (booking.status == BookingStatus.pending ||
-                booking.status == BookingStatus.confirmed)
-              TextButton.icon(
-                onPressed: () => _confirmCancellation(context, ref),
-                icon: const Icon(Icons.cancel_outlined, color: AppColors.error, size: 18),
-                label: const Text('Otkaži', style: TextStyle(color: AppColors.error)),
-              ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Zatvori'),
-            ),
-          ],
-        ),
-      ],
     );
   }
 
   /// Show cancellation confirmation dialog
   Future<void> _confirmCancellation(BuildContext context, WidgetRef ref) async {
     final TextEditingController reasonController = TextEditingController();
+    final theme = Theme.of(context);
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -277,7 +329,7 @@ class BookingDetailsDialog extends ConsumerWidget {
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: theme.colorScheme.error,
             ),
             child: const Text('Otkaži rezervaciju'),
           ),
@@ -470,9 +522,9 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.all(6),
-          decoration: const BoxDecoration(
-            gradient: GradientTokens.brandPrimary,
-            borderRadius: BorderRadius.all(Radius.circular(8)),
+          decoration: BoxDecoration(
+            gradient: context.gradients.brandPrimary,
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
           ),
           child: Icon(icon, color: Colors.white, size: 18),
         ),

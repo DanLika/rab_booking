@@ -46,7 +46,6 @@ class CalendarDayCell extends StatelessWidget {
     final hasWeekendPrice = weekendPrice != null;
     final blockCheckIn = priceData?.blockCheckIn ?? false;
     final blockCheckOut = priceData?.blockCheckOut ?? false;
-    final notes = priceData?.notes;
     final hasRestrictions = blockCheckIn ||
         blockCheckOut ||
         (priceData?.minNightsOnArrival != null);
@@ -82,8 +81,8 @@ class CalendarDayCell extends StatelessWidget {
           children: [
             _buildDayNumber(context, isToday, isAvailable),
             _buildPrice(context, price, isAvailable, hasWeekendPrice, isWeekend, hasPrice),
-            if (blockCheckIn || blockCheckOut || notes != null)
-              _buildStatusIndicators(context, blockCheckIn, blockCheckOut, notes),
+            if (blockCheckIn || blockCheckOut)
+              _buildStatusIndicators(context, blockCheckIn, blockCheckOut),
           ],
         ),
       ),
@@ -197,7 +196,6 @@ class CalendarDayCell extends StatelessWidget {
     BuildContext context,
     bool blockCheckIn,
     bool blockCheckOut,
-    String? notes,
   ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -213,12 +211,6 @@ class CalendarDayCell extends StatelessWidget {
             Icons.logout,
             size: isSmallMobile ? 10 : (isMobile ? 12 : 14),
             color: context.errorColor,
-          ),
-        if (notes != null && notes.isNotEmpty)
-          Icon(
-            Icons.notes,
-            size: isSmallMobile ? 10 : (isMobile ? 12 : 14),
-            color: context.primaryColor,
           ),
       ],
     );

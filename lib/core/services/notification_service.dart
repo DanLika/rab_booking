@@ -130,6 +130,38 @@ class NotificationService {
     }
   }
 
+  /// Delete multiple notifications by IDs
+  /// Note: Handles Firestore batch limit of 500 operations
+  Future<void> deleteMultipleNotifications(List<String> notificationIds) async {
+    if (notificationIds.isEmpty) return;
+
+    try {
+      // Firestore batch limit is 500 operations
+      const batchLimit = 500;
+
+      for (var i = 0; i < notificationIds.length; i += batchLimit) {
+        final batch = _firestore.batch();
+        final end = (i + batchLimit < notificationIds.length)
+            ? i + batchLimit
+            : notificationIds.length;
+
+        for (var j = i; j < end; j++) {
+          batch.delete(
+            _firestore.collection(_collectionName).doc(notificationIds[j]),
+          );
+        }
+
+        await batch.commit();
+      }
+    } catch (e) {
+      throw NotificationException(
+        'Failed to delete multiple notifications',
+        code: 'notification/bulk-deletion-failed',
+        originalError: e,
+      );
+    }
+  }
+
   /// Delete all notifications for owner
   /// Note: Handles Firestore batch limit of 500 operations
   Future<void> deleteAllNotifications(String ownerId) async {

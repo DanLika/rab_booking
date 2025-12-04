@@ -185,7 +185,6 @@ void main() {
           blockCheckOut: false,
           minNightsOnArrival: 2,
           maxNightsOnArrival: 7,
-          notes: 'Holiday pricing',
           createdAt: DateTime.now(),
         );
 
@@ -200,7 +199,6 @@ void main() {
         expect(result.weekendPrice, 130.0);
         expect(result.blockCheckIn, true);
         expect(result.minNightsOnArrival, 2);
-        expect(result.notes, 'Holiday pricing');
       });
     });
 

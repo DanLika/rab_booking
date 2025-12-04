@@ -66,6 +66,34 @@ class AvailabilityCheckResult {
       conflictingDocId: priceDocId,
     );
   }
+
+  /// Factory for blocked check-in conflict.
+  factory AvailabilityCheckResult.blockedCheckInConflict(
+    String priceDocId,
+    DateTime checkInDate,
+  ) {
+    return AvailabilityCheckResult(
+      isAvailable: false,
+      conflictType: ConflictType.blockedCheckIn,
+      conflictMessage:
+          'Check-in is not allowed on ${checkInDate.toString().split(' ')[0]}',
+      conflictingDocId: priceDocId,
+    );
+  }
+
+  /// Factory for blocked check-out conflict.
+  factory AvailabilityCheckResult.blockedCheckOutConflict(
+    String priceDocId,
+    DateTime checkOutDate,
+  ) {
+    return AvailabilityCheckResult(
+      isAvailable: false,
+      conflictType: ConflictType.blockedCheckOut,
+      conflictMessage:
+          'Check-out is not allowed on ${checkOutDate.toString().split(' ')[0]}',
+      conflictingDocId: priceDocId,
+    );
+  }
 }
 
 /// Type of availability conflict.
@@ -78,6 +106,12 @@ enum ConflictType {
 
   /// Conflict with a manually blocked date.
   blockedDate,
+
+  /// Check-in is blocked on the requested check-in date.
+  blockedCheckIn,
+
+  /// Check-out is blocked on the requested check-out date.
+  blockedCheckOut,
 }
 
 /// Checks availability for bookings against multiple sources.
@@ -89,6 +123,7 @@ enum ConflictType {
 /// 1. Regular bookings (pending, confirmed, in_progress)
 /// 2. iCal events (Booking.com, Airbnb, etc.)
 /// 3. Blocked dates (daily_prices with available: false)
+/// 4. Blocked check-in/check-out (daily_prices with block_checkin/block_checkout: true)
 ///
 /// ## Usage
 /// ```dart
@@ -144,6 +179,14 @@ class AvailabilityChecker implements IAvailabilityChecker {
       checkOut: normalizedCheckOut,
     );
     if (!blockedResult.isAvailable) return blockedResult;
+
+    // 4. Check blocked check-in/check-out restrictions
+    final checkInOutResult = await _checkBlockedCheckInOut(
+      unitId: unitId,
+      checkIn: normalizedCheckIn,
+      checkOut: normalizedCheckOut,
+    );
+    if (!checkInOutResult.isAvailable) return checkInOutResult;
 
     LoggingService.log(
       '✅ No conflicts found for $normalizedCheckIn to $normalizedCheckOut',
@@ -325,6 +368,77 @@ class AvailabilityChecker implements IAvailabilityChecker {
         conflictType: ConflictType.blockedDate,
         conflictMessage: 'Error checking blocked date availability',
       );
+    }
+  }
+
+  /// Check for blockCheckIn on check-in date and blockCheckOut on check-out date.
+  ///
+  /// This is separate from _checkBlockedDates because:
+  /// - blockCheckIn only applies to the CHECK-IN date
+  /// - blockCheckOut only applies to the CHECK-OUT date
+  /// - available:false blocks the entire date for all purposes
+  Future<AvailabilityCheckResult> _checkBlockedCheckInOut({
+    required String unitId,
+    required DateTime checkIn,
+    required DateTime checkOut,
+  }) async {
+    try {
+      // Check if check-in date has blockCheckIn set
+      final checkInSnapshot = await _firestore
+          .collection('daily_prices')
+          .where('unit_id', isEqualTo: unitId)
+          .where('date', isEqualTo: Timestamp.fromDate(checkIn))
+          .limit(1)
+          .get();
+
+      if (checkInSnapshot.docs.isNotEmpty) {
+        final data = checkInSnapshot.docs.first.data();
+        final blockCheckIn = data['block_checkin'] as bool? ?? false;
+
+        if (blockCheckIn) {
+          LoggingService.log(
+            '❌ Check-in blocked on $checkIn',
+            tag: 'AVAILABILITY_CHECK',
+          );
+          return AvailabilityCheckResult.blockedCheckInConflict(
+            checkInSnapshot.docs.first.id,
+            checkIn,
+          );
+        }
+      }
+
+      // Check if check-out date has blockCheckOut set
+      final checkOutSnapshot = await _firestore
+          .collection('daily_prices')
+          .where('unit_id', isEqualTo: unitId)
+          .where('date', isEqualTo: Timestamp.fromDate(checkOut))
+          .limit(1)
+          .get();
+
+      if (checkOutSnapshot.docs.isNotEmpty) {
+        final data = checkOutSnapshot.docs.first.data();
+        final blockCheckOut = data['block_checkout'] as bool? ?? false;
+
+        if (blockCheckOut) {
+          LoggingService.log(
+            '❌ Check-out blocked on $checkOut',
+            tag: 'AVAILABILITY_CHECK',
+          );
+          return AvailabilityCheckResult.blockedCheckOutConflict(
+            checkOutSnapshot.docs.first.id,
+            checkOut,
+          );
+        }
+      }
+
+      return const AvailabilityCheckResult.available();
+    } catch (e) {
+      unawaited(
+        LoggingService.logError('Error checking blockCheckIn/blockCheckOut', e),
+      );
+      // Return available on error - don't block legitimate bookings
+      // The UI validation will catch these cases anyway
+      return const AvailabilityCheckResult.available();
     }
   }
 }

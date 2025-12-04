@@ -14,7 +14,6 @@ import '../../features/auth/presentation/screens/terms_conditions_screen.dart';
 import '../../features/owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import '../../features/owner_dashboard/presentation/screens/analytics_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/overview_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/properties_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_bookings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/property_form_screen.dart';
@@ -459,9 +458,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.overview,
         builder: (context, state) => const OverviewScreen(),
       ),
+      // Properties route redirects to unit-hub (property management is now in unit-hub)
       GoRoute(
         path: OwnerRoutes.properties,
-        builder: (context, state) => const PropertiesScreen(),
+        redirect: (context, state) => OwnerRoutes.unitHub,
       ),
       // Calendar route
       GoRoute(

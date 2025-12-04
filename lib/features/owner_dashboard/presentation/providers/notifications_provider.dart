@@ -103,6 +103,10 @@ class NotificationActions {
     await _service.deleteNotification(notificationId);
   }
 
+  Future<void> deleteMultiple(List<String> notificationIds) async {
+    await _service.deleteMultipleNotifications(notificationIds);
+  }
+
   Future<void> deleteAllNotifications(String ownerId) async {
     await _service.deleteAllNotifications(ownerId);
   }

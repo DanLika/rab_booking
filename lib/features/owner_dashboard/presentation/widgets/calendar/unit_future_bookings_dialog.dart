@@ -3,6 +3,8 @@ import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/constants/app_dimensions.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 
 /// Dialog showing all future bookings for a specific unit
 class UnitFutureBookingsDialog extends StatelessWidget {
@@ -20,14 +22,25 @@ class UnitFutureBookingsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < AppDimensions.mobile;
 
     return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
       child: Container(
         width: isMobile ? screenWidth * 0.95 : 600,
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+          ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -38,16 +51,9 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                 isMobile ? AppDimensions.spaceS : AppDimensions.spaceM,
               ),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withValues(alpha: 0.7),
-                  ],
-                ),
+                gradient: context.gradients.brandPrimary,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(4),
+                  top: Radius.circular(11),
                 ),
               ),
               child: Row(

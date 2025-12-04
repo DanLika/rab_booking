@@ -8,6 +8,8 @@ import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/language_selection_bottom_sheet.dart';
 import '../widgets/theme_selection_bottom_sheet.dart';
@@ -47,9 +49,13 @@ class ProfileScreen extends ConsumerWidget {
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
-      body: user == null
-          ? const Center(child: Text('Not authenticated'))
-          : userProfileAsync.when(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: context.gradients.pageBackground,
+        ),
+        child: user == null
+            ? const Center(child: Text('Not authenticated'))
+            : userProfileAsync.when(
               data: (profile) {
                 final isAnonymous = authState.isAnonymous;
                 final displayName =
@@ -70,28 +76,13 @@ class ProfileScreen extends ConsumerWidget {
                       // Premium Profile header
                       Container(
                         decoration: BoxDecoration(
-                          gradient: isDark
-                              ? const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    AppColors.elevation2Dark,
-                                    AppColors.elevation1Dark,
-                                  ],
-                                )
-                              : AppColors.primaryGradient,
+                          gradient: context.gradients.brandPrimary,
                           borderRadius: BorderRadius.circular(
                             isMobile ? 16 : 20,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isDark
-                                  ? Colors.black.withValues(alpha: 0.3)
-                                  : AppColors.primary.withValues(alpha: 0.3),
-                              blurRadius: isMobile ? 15 : 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
+                          boxShadow: isDark
+                              ? AppShadows.elevation3Dark
+                              : AppShadows.elevation3,
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(headerPadding),
@@ -234,26 +225,17 @@ class ProfileScreen extends ConsumerWidget {
                       // Account settings - Premium
                       Container(
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.elevation1Dark
-                              : Colors.white,
+                          gradient: context.gradients.sectionBackground,
                           borderRadius: BorderRadius.circular(
                             isMobile ? 12 : 16,
                           ),
                           border: Border.all(
-                            color: isDark
-                                ? AppColors.borderDark.withValues(alpha: 0.5)
-                                : AppColors.borderLight,
+                            color: context.gradients.sectionBorder
+                                .withAlpha((0.5 * 255).toInt()),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isDark
-                                  ? Colors.black.withValues(alpha: 0.2)
-                                  : Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          boxShadow: isDark
+                              ? AppShadows.elevation2Dark
+                              : AppShadows.elevation2,
                         ),
                         child: Column(
                           children: [
@@ -296,26 +278,17 @@ class ProfileScreen extends ConsumerWidget {
                       // App settings - Premium
                       Container(
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.elevation1Dark
-                              : Colors.white,
+                          gradient: context.gradients.sectionBackground,
                           borderRadius: BorderRadius.circular(
                             isMobile ? 12 : 16,
                           ),
                           border: Border.all(
-                            color: isDark
-                                ? AppColors.borderDark.withValues(alpha: 0.5)
-                                : AppColors.borderLight,
+                            color: context.gradients.sectionBorder
+                                .withAlpha((0.5 * 255).toInt()),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isDark
-                                  ? Colors.black.withValues(alpha: 0.2)
-                                  : Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          boxShadow: isDark
+                              ? AppShadows.elevation2Dark
+                              : AppShadows.elevation2,
                         ),
                         child: Column(
                           children: [
@@ -345,26 +318,17 @@ class ProfileScreen extends ConsumerWidget {
                       // Account actions - Premium
                       Container(
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.elevation1Dark
-                              : Colors.white,
+                          gradient: context.gradients.sectionBackground,
                           borderRadius: BorderRadius.circular(
                             isMobile ? 12 : 16,
                           ),
                           border: Border.all(
-                            color: isDark
-                                ? AppColors.borderDark.withValues(alpha: 0.5)
-                                : AppColors.borderLight,
+                            color: context.gradients.sectionBorder
+                                .withAlpha((0.5 * 255).toInt()),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isDark
-                                  ? Colors.black.withValues(alpha: 0.2)
-                                  : Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          boxShadow: isDark
+                              ? AppShadows.elevation2Dark
+                              : AppShadows.elevation2,
                         ),
                         child: Column(
                           children: [
@@ -405,26 +369,17 @@ class ProfileScreen extends ConsumerWidget {
                       // Legal Documents - Premium
                       Container(
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.elevation1Dark
-                              : Colors.white,
+                          gradient: context.gradients.sectionBackground,
                           borderRadius: BorderRadius.circular(
                             isMobile ? 12 : 16,
                           ),
                           border: Border.all(
-                            color: isDark
-                                ? AppColors.borderDark.withValues(alpha: 0.5)
-                                : AppColors.borderLight,
+                            color: context.gradients.sectionBorder
+                                .withAlpha((0.5 * 255).toInt()),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isDark
-                                  ? Colors.black.withValues(alpha: 0.2)
-                                  : Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          boxShadow: isDark
+                              ? AppShadows.elevation2Dark
+                              : AppShadows.elevation2,
                         ),
                         child: Column(
                           children: [
@@ -479,16 +434,33 @@ class ProfileScreen extends ConsumerWidget {
               },
               error: (error, stack) {
                 final theme = Theme.of(context);
+                final isDark = theme.brightness == Brightness.dark;
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: theme.colorScheme.error,
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            gradient: context.gradients.sectionBackground,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: theme.colorScheme.error
+                                  .withAlpha((0.3 * 255).toInt()),
+                              width: 2,
+                            ),
+                            boxShadow: isDark
+                                ? AppShadows.elevation2Dark
+                                : AppShadows.elevation2,
+                          ),
+                          child: Icon(
+                            Icons.error_outline,
+                            size: 50,
+                            color: theme.colorScheme.error,
+                          ),
                         ),
                         const SizedBox(height: 24),
                         Text(
@@ -534,6 +506,7 @@ class ProfileScreen extends ConsumerWidget {
                 );
               },
             ),
+      ),
     );
   }
 }

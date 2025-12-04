@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/breakpoints.dart';
 import '../../../../shared/providers/repository_providers.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../providers/owner_properties_provider.dart';
@@ -73,381 +73,462 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   @override
   Widget build(BuildContext context) {
     final unitsAsync = ref.watch(ownerUnitsProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = Breakpoints.isMobile(context);
 
-    return AlertDialog(
-      title: const Text(
-        'Nova rezervacija',
-        style: TextStyle(
-          color: Colors.white,
-        ),
-      ),
-      content: Container(
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
         width: isMobile ? screenWidth * 0.9 : 500,
         constraints: BoxConstraints(
-          maxHeight: screenHeight * 0.8,
+          maxHeight: screenHeight * 0.85,
         ),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Unit Selection
-                Text(
-                  'Jedinica *',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+          ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header with gradient
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
                 ),
-                const SizedBox(height: 8),
-
-                unitsAsync.when(
-                  data: (units) {
-                    if (units.isEmpty) {
-                      return const Text('Nema dostupnih jedinica');
-                    }
-
-                    return DropdownButtonFormField<String>(
-                      initialValue: _selectedUnitId,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.bed_outlined),
-                        hintText: 'Odaberite jedinicu *',
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.add_circle_outline,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Nova rezervacija',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                      items: units.map((unit) {
-                        return DropdownMenuItem(
-                          value: unit.id,
-                          child: Text(unit.name),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedUnitId = value;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Odaberite jedinicu';
-                        }
-                        return null;
-                      },
-                    );
-                  },
-                  loading: () => const CircularProgressIndicator(),
-                  error: (error, _) => Text('Greška: $error'),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Dates
-                Text(
-                  'Datumi *',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+                    tooltip: 'Zatvori',
+                  ),
+                ],
+              ),
+            ),
 
-                // Responsive date fields: Column on mobile, Row on desktop
-                if (isMobile)
-                  Column(
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildDateField(
-                        label: 'Check-in *',
-                        date: _checkInDate,
-                        onTap: _selectCheckInDate,
+                      // Unit Selection
+                      Text(
+                        'Jedinica *',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      unitsAsync.when(
+                        data: (units) {
+                          if (units.isEmpty) {
+                            return const Text('Nema dostupnih jedinica');
+                          }
+
+                          return DropdownButtonFormField<String>(
+                            value: _selectedUnitId,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.bed_outlined),
+                              hintText: 'Odaberite jedinicu *',
+                            ),
+                            items: units.map((unit) {
+                              return DropdownMenuItem(
+                                value: unit.id,
+                                child: Text(unit.name),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedUnitId = value;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Odaberite jedinicu';
+                              }
+                              return null;
+                            },
+                          );
+                        },
+                        loading: () => const CircularProgressIndicator(),
+                        error: (error, _) => Text('Greška: $error'),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Dates
+                      Text(
+                        'Datumi *',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Responsive date fields: Column on mobile, Row on desktop
+                      if (isMobile)
+                        Column(
+                          children: [
+                            _buildDateField(
+                              label: 'Check-in *',
+                              date: _checkInDate,
+                              onTap: _selectCheckInDate,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildDateField(
+                              label: 'Check-out *',
+                              date: _checkOutDate,
+                              onTap: _selectCheckOutDate,
+                            ),
+                          ],
+                        )
+                      else
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildDateField(
+                                label: 'Check-in *',
+                                date: _checkInDate,
+                                onTap: _selectCheckInDate,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildDateField(
+                                label: 'Check-out *',
+                                date: _checkOutDate,
+                                onTap: _selectCheckOutDate,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                      const SizedBox(height: 12),
+
+                      // Nights display
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.tertiary.withAlpha(
+                            (0.1 * 255).toInt(),
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: theme.colorScheme.tertiary.withAlpha(
+                              (0.3 * 255).toInt(),
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.nights_stay,
+                              size: 18,
+                              color: theme.colorScheme.tertiary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${_checkOutDate.difference(_checkInDate).inDays} noć${_checkOutDate.difference(_checkInDate).inDays > 1 ? 'i' : ''}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.tertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Guest Information
+                      Text(
+                        'Informacije o gostu',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      TextFormField(
+                        controller: _guestNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Ime gosta *',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person),
+                        ),
+                        textCapitalization: TextCapitalization.words,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Unesite ime gosta';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 12),
-                      _buildDateField(
-                        label: 'Check-out *',
-                        date: _checkOutDate,
-                        onTap: _selectCheckOutDate,
-                      ),
-                    ],
-                  )
-                else
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildDateField(
-                          label: 'Check-in *',
-                          date: _checkInDate,
-                          onTap: _selectCheckInDate,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildDateField(
-                          label: 'Check-out *',
-                          date: _checkOutDate,
-                          onTap: _selectCheckOutDate,
-                        ),
-                      ),
-                    ],
-                  ),
 
-                const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _guestEmailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email *',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.email),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Unesite email';
+                          }
+                          if (!_isValidEmail(value.trim())) {
+                            return 'Unesite validan email';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
 
-                // Nights display
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.authSecondary.withAlpha(
-                      (0.1 * 255).toInt(),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.authSecondary.withAlpha(
-                        (0.3 * 255).toInt(),
+                      TextFormField(
+                        controller: _guestPhoneController,
+                        decoration: const InputDecoration(
+                          labelText: 'Telefon *',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.phone),
+                        ),
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Unesite telefon';
+                          }
+                          return null;
+                        },
                       ),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.nights_stay,
-                        size: 18,
-                        color: AppColors.authSecondary,
-                      ),
-                      const SizedBox(width: 8),
+
+                      const SizedBox(height: 24),
+
+                      // Booking Details
                       Text(
-                        '${_checkOutDate.difference(_checkInDate).inDays} noć${_checkOutDate.difference(_checkInDate).inDays > 1 ? 'i' : ''}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.authSecondary,
+                        'Detalji rezervacije',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      TextFormField(
+                        controller: _guestCountController,
+                        decoration: const InputDecoration(
+                          labelText: 'Broj gostiju *',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.people),
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Unesite broj gostiju';
+                          }
+                          final count = int.tryParse(value.trim());
+                          if (count == null || count <= 0) {
+                            return 'Broj gostiju mora biti veći od 0';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Total Price Input (manual entry only)
+                      TextFormField(
+                        controller: _totalPriceController,
+                        decoration: const InputDecoration(
+                          labelText: 'Ukupna cijena (€) *',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.euro),
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Unesite cijenu';
+                          }
+                          final price = double.tryParse(value.trim());
+                          if (price == null) {
+                            return 'Unesite validnu cijenu';
+                          }
+                          if (price < 0) {
+                            return 'Cijena ne može biti negativna';
+                          }
+                          if (price == 0) {
+                            return 'Cijena mora biti veća od 0';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Info card - default values
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer
+                              .withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 18,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Status: Potvrđeno • Plaćanje: Gotovina',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Notes
+                      Text(
+                        'Napomene',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      TextFormField(
+                        controller: _notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Interne napomene',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.notes),
+                          hintText: 'Npr. posebni zahtjevi...',
+                        ),
+                        maxLines: 3,
+                        textCapitalization: TextCapitalization.sentences,
                       ),
                     ],
                   ),
                 ),
+              ),
+            ),
 
-                const SizedBox(height: 24),
-
-                // Guest Information
-                Text(
-                  'Informacije o gostu',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+            // Footer buttons
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
                   ),
                 ),
-                const SizedBox(height: 8),
-
-                TextFormField(
-                  controller: _guestNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Ime gosta *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+                    child: const Text('Otkaži'),
                   ),
-                  textCapitalization: TextCapitalization.words,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Unesite ime gosta';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                TextFormField(
-                  controller: _guestEmailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Unesite email';
-                    }
-                    if (!_isValidEmail(value.trim())) {
-                      return 'Unesite validan email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                TextFormField(
-                  controller: _guestPhoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Telefon *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.phone),
-                  ),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Unesite telefon';
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 24),
-
-                // Booking Details
-                Text(
-                  'Detalji rezervacije',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                TextFormField(
-                  controller: _guestCountController,
-                  decoration: const InputDecoration(
-                    labelText: 'Broj gostiju *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.people),
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Unesite broj gostiju';
-                    }
-                    final count = int.tryParse(value.trim());
-                    if (count == null || count <= 0) {
-                      return 'Broj gostiju mora biti veći od 0';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                // Total Price Input (manual entry only)
-                TextFormField(
-                  controller: _totalPriceController,
-                  decoration: const InputDecoration(
-                    labelText: 'Ukupna cijena (€) *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.euro),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Unesite cijenu';
-                    }
-                    final price = double.tryParse(value.trim());
-                    if (price == null) {
-                      return 'Unesite validnu cijenu';
-                    }
-                    if (price < 0) {
-                      return 'Cijena ne može biti negativna';
-                    }
-                    if (price == 0) {
-                      return 'Cijena mora biti veća od 0';
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                // Info card - default values
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primaryContainer
-                        .withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.3),
+                  const SizedBox(width: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: context.gradients.brandPrimary,
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _isSaving ? null : _createBooking,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          child: _isSaving
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Kreiraj',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Status: Potvrđeno • Plaćanje: Gotovina',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Notes
-                Text(
-                  'Napomene',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                TextFormField(
-                  controller: _notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Interne napomene',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.notes),
-                    hintText: 'Npr. posebni zahtjevi...',
-                  ),
-                  maxLines: 3,
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Otkaži'),
-        ),
-        Container(
-          decoration: const BoxDecoration(
-            gradient: GradientTokens.brandPrimary,
-            borderRadius: BorderRadius.all(Radius.circular(4)),
-          ),
-          child: ElevatedButton(
-            onPressed: _isSaving ? null : _createBooking,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              foregroundColor: Colors.white,
-              shadowColor: Colors.transparent,
-            ),
-            child: _isSaving
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Kreiraj'),
-          ),
-        ),
-      ],
     );
   }
 
@@ -614,7 +695,10 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   void _showError(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     }
   }

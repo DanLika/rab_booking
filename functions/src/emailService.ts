@@ -66,26 +66,50 @@ import {
 // CONFIGURATION & HELPER FUNCTIONS
 // ==========================================
 
-// Lazy initialize Resend (to avoid deployment errors)
-let resend: Resend | null = null;
-
-/**
- * Get or initialize Resend instance
- */
-function getResendClient(): Resend {
-  if (!resend) {
-    const apiKey = process.env.RESEND_API_KEY || "";
-    if (!apiKey) {
-      throw new Error("RESEND_API_KEY not configured");
-    }
-    resend = new Resend(apiKey);
-  }
-  return resend;
+// VALIDATION: Ensure RESEND_API_KEY is configured (fail fast at deployment)
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+if (!RESEND_API_KEY) {
+  throw new Error(
+    "RESEND_API_KEY environment variable not configured. " +
+    "Get your API key from: https://resend.com/api-keys"
+  );
 }
 
-// Email sender address
-const FROM_EMAIL = process.env.FROM_EMAIL || "onboarding@resend.dev";
+// Eagerly initialize Resend client at module level (thread-safe)
+const resend = new Resend(RESEND_API_KEY);
+logSuccess("[EmailService] Resend client initialized", {
+  keyPrefix: RESEND_API_KEY.substring(0, 7) + "...",
+});
+
+// Email sender address - validate and fail fast if not configured
+const FROM_EMAIL_RAW = process.env.FROM_EMAIL;
 const FROM_NAME = process.env.FROM_NAME || "Rab Booking";
+
+// VALIDATION: Ensure FROM_EMAIL is configured (fail fast at deployment)
+if (!FROM_EMAIL_RAW) {
+  throw new Error(
+    "FROM_EMAIL environment variable not configured. " +
+    "Set this to your verified Resend sender email (e.g., bookings@yourdomain.com). " +
+    "See: https://resend.com/docs/send-with-nodejs#2-send-email"
+  );
+}
+
+// VALIDATION: Ensure FROM_EMAIL is a valid email format
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!EMAIL_REGEX.test(FROM_EMAIL_RAW)) {
+  throw new Error(
+    `FROM_EMAIL is not a valid email address: ${FROM_EMAIL_RAW}. ` +
+    "Must be a valid email format (e.g., bookings@yourdomain.com)"
+  );
+}
+
+// After validation, we know FROM_EMAIL is a valid string
+const FROM_EMAIL: string = FROM_EMAIL_RAW;
+
+logSuccess("[EmailService] Configured sender email", {
+  fromEmail: FROM_EMAIL,
+  fromName: FROM_NAME,
+});
 
 // Widget URL for booking lookup
 const WIDGET_URL = process.env.WIDGET_URL || "https://rab-booking-widget.web.app";
@@ -246,7 +270,7 @@ export async function sendBookingConfirmationEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendBookingConfirmationEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME,
@@ -326,7 +350,7 @@ export async function sendBookingApprovedEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendBookingApprovedEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME,
@@ -380,7 +404,7 @@ export async function sendOwnerNotificationEmail(
 
     // Send email using new template
     await sendOwnerNotificationEmailTemplate(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME
@@ -446,7 +470,7 @@ export async function sendGuestCancellationEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendGuestCancellationEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME
@@ -494,7 +518,7 @@ export async function sendOwnerCancellationNotificationEmail(
 
     // Send email using new template
     await sendOwnerCancellationEmailTemplate(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME
@@ -554,7 +578,7 @@ export async function sendRefundNotificationEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendRefundNotificationEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME
@@ -593,7 +617,7 @@ export async function sendCustomGuestEmail(
 
     // Send email using new template
     await sendCustomGuestEmailTemplate(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME
@@ -670,7 +694,7 @@ export async function sendPaymentReminderEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendPaymentReminderEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME
@@ -746,7 +770,7 @@ export async function sendCheckInReminderEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendCheckInReminderEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME
@@ -810,7 +834,7 @@ export async function sendCheckOutReminderEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendCheckOutReminderEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME
@@ -852,7 +876,7 @@ export async function sendSuspiciousActivityEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendSuspiciousActivityEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME
@@ -886,7 +910,7 @@ export async function sendPendingBookingRequestEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendPendingBookingRequestEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME
@@ -922,7 +946,7 @@ export async function sendPendingBookingOwnerNotification(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendPendingOwnerNotificationEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME
@@ -959,7 +983,7 @@ export async function sendBookingRejectedEmail(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendBookingRejectedEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME,
@@ -990,7 +1014,7 @@ export async function sendEmailVerificationCode(
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
     await sendEmailVerificationEmailV2(
-      getResendClient(),
+      resend,
       params,
       FROM_EMAIL,
       FROM_NAME

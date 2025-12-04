@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/models/additional_service_model.dart';
 import '../../../../shared/repositories/firebase/firebase_additional_services_repository.dart';
@@ -47,7 +48,10 @@ final additionalServicesTotalProvider = Provider.family<double, (List<Additional
 
     final service = services.firstWhere(
       (s) => s.id == serviceId,
-      orElse: () => throw Exception('Service not found'),
+      orElse: () => throw BookingException(
+        'Additional service not found',
+        code: 'booking/service-not-found',
+      ),
     );
 
     total += service.calculateTotalPrice(

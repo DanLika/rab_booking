@@ -269,3 +269,94 @@ class IntegrationException extends AppException {
     );
   }
 }
+
+// ============================================================================
+// PAYMENT EXCEPTIONS
+// ============================================================================
+
+/// Thrown when payment operations fail
+class PaymentException extends AppException {
+  PaymentException(
+    super.message, {
+    super.code,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for Stripe validation failures
+  factory PaymentException.stripeValidationFailed({dynamic error}) {
+    return PaymentException(
+      'Stripe validation failed - invalid response from booking service',
+      code: 'payment/stripe-validation-failed',
+      originalError: error,
+    );
+  }
+
+  /// Factory for payment processing failures
+  factory PaymentException.processingFailed(String provider, dynamic error) {
+    return PaymentException(
+      'Payment processing failed with $provider',
+      code: 'payment/processing-failed',
+      originalError: error,
+    );
+  }
+
+  /// Factory for payment verification failures
+  factory PaymentException.verificationFailed(dynamic error) {
+    return PaymentException(
+      'Payment verification failed',
+      code: 'payment/verification-failed',
+      originalError: error,
+    );
+  }
+}
+
+// ============================================================================
+// FILE EXCEPTIONS
+// ============================================================================
+
+/// Thrown when file operations fail
+class FileException extends AppException {
+  FileException(
+    super.message, {
+    super.code,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for ICS download failures (web platform)
+  factory FileException.icsDownloadFailedWeb(dynamic error) {
+    return FileException(
+      'Failed to download ICS file in browser',
+      code: 'file/ics-download-web-failed',
+      originalError: error,
+    );
+  }
+
+  /// Factory for ICS share failures (mobile/desktop platform)
+  factory FileException.icsShareFailed(dynamic error) {
+    return FileException(
+      'Failed to share ICS file',
+      code: 'file/ics-share-failed',
+      originalError: error,
+    );
+  }
+
+  /// Factory for file read failures
+  factory FileException.readFailed(String path, dynamic error) {
+    return FileException(
+      'Failed to read file: $path',
+      code: 'file/read-failed',
+      originalError: error,
+    );
+  }
+
+  /// Factory for file write failures
+  factory FileException.writeFailed(String path, dynamic error) {
+    return FileException(
+      'Failed to write file: $path',
+      code: 'file/write-failed',
+      originalError: error,
+    );
+  }
+}

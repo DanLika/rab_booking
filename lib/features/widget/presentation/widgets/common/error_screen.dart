@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/localization/error_messages.dart';
 import '../../theme/minimalist_colors.dart';
 
 /// Error screen displayed when booking widget configuration fails.
@@ -41,24 +42,32 @@ class WidgetErrorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
+    // Responsive padding: smaller on mobile devices
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = screenWidth < 600 ? 16.0 : 32.0;
+
+    // Responsive icon and text sizes
+    final iconSize = screenWidth < 600 ? 48.0 : 64.0;
+    final titleFontSize = screenWidth < 600 ? 20.0 : 24.0;
+
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: EdgeInsets.all(horizontalPadding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.error_outline,
-                size: 64,
+                size: iconSize,
                 color: colors.error,
               ),
               const SizedBox(height: 24),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: titleFontSize,
                   fontWeight: FontWeight.bold,
                   color: colors.textPrimary,
                 ),
@@ -76,7 +85,7 @@ class WidgetErrorScreen extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: const Text(ErrorMessages.retryButton),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.buttonPrimary,
                   foregroundColor: colors.buttonPrimaryText,

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/exceptions/app_exceptions.dart';
 import '../../../../../core/services/logging_service.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
 
@@ -147,7 +148,10 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
           Navigator.of(context).pop(true);
         }
       } else {
-        throw Exception('Verification failed');
+        throw BookingException(
+          'Email verification failed',
+          code: 'booking/verification-failed',
+        );
       }
     } on FirebaseFunctionsException catch (e) {
       await LoggingService.logError(
@@ -179,12 +183,21 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Responsive padding and max width
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogPadding = screenWidth < 600 ? 16.0 : 32.0;
+    final maxWidth = screenWidth < 600 ? screenWidth * 0.95 : 450.0;
+
+    // Responsive font sizes
+    final titleFontSize = screenWidth < 600 ? 20.0 : 24.0;
+    final codeFontSize = screenWidth < 600 ? 24.0 : 32.0;
+
     return Dialog(
       backgroundColor: widget.colors.backgroundCard,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 450),
-        padding: const EdgeInsets.all(32),
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        padding: EdgeInsets.all(dialogPadding),
         child: Form(
           key: _formKey,
           child: Column(
@@ -204,7 +217,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                     child: Text(
                       'Verify Email',
                       style: GoogleFonts.inter(
-                        fontSize: 24,
+                        fontSize: titleFontSize,
                         fontWeight: FontWeight.bold,
                         color: widget.colors.textPrimary,
                       ),
@@ -266,9 +279,9 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                 autofocus: true,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.robotoMono(
-                  fontSize: 32,
+                  fontSize: codeFontSize,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 8,
+                  letterSpacing: screenWidth < 600 ? 4 : 8,
                   color: widget.colors.textPrimary,
                 ),
                 keyboardType: TextInputType.number,
@@ -279,9 +292,9 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                 decoration: InputDecoration(
                   hintText: '000000',
                   hintStyle: GoogleFonts.robotoMono(
-                    fontSize: 32,
+                    fontSize: codeFontSize,
                     fontWeight: FontWeight.bold,
-                    letterSpacing: 8,
+                    letterSpacing: screenWidth < 600 ? 4 : 8,
                     color: widget.colors.textDisabled,
                   ),
                   filled: true,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../../core/localization/error_messages.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../../../../shared/utils/validators/form_validators.dart';
 
@@ -240,7 +241,7 @@ class EmailFieldWithVerification extends StatelessWidget {
                   borderRadius: BorderTokens.circularMedium,
                 ),
               ),
-              child: const Text('Verify'),
+              child: const Text(ErrorMessages.verifyButton),
             ),
           ),
       ],

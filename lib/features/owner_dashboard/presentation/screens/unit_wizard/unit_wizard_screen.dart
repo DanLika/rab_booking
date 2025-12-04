@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../../../core/exceptions/app_exceptions.dart';
 import '../../../../../../shared/models/unit_model.dart';
 import '../../../../../../shared/providers/repository_providers.dart';
 import '../../providers/owner_properties_provider.dart';
@@ -192,7 +193,10 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       // Get current draft
       final draft = ref.read(unitWizardNotifierProvider(widget.unitId)).value;
       if (draft == null) {
-        throw Exception('Draft not found');
+        throw PropertyException(
+          'Draft not found',
+          code: 'property/draft-not-found',
+        );
       }
 
       // Validate required fields
@@ -200,7 +204,10 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
       if (draft.name == null ||
           draft.pricePerNight == null ||
           draft.maxGuests == null) {
-        throw Exception('Missing required fields');
+        throw PropertyException(
+          'Missing required fields',
+          code: 'property/missing-required-fields',
+        );
       }
 
       // Get propertyId - use draft's propertyId or fetch owner's first property
@@ -211,7 +218,10 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
         // Fetch owner's properties and use the first one
         final properties = await ref.read(ownerPropertiesProvider.future);
         if (properties.isEmpty) {
-          throw Exception('No properties found. Please create a property first.');
+          throw PropertyException(
+            'No properties found. Please create a property first.',
+            code: 'property/no-properties',
+          );
         }
         propertyId = properties.first.id;
       }

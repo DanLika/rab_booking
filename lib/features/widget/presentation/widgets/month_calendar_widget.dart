@@ -13,6 +13,7 @@ import 'calendar/calendar_combined_header_widget.dart';
 import 'calendar/calendar_date_selection_validator.dart';
 import 'calendar/calendar_tooltip_builder.dart';
 import '../theme/responsive_helper.dart';
+import '../../../../core/localization/error_messages.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
@@ -97,7 +98,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                           data: (data) => _buildMonthView(data, colors),
                           loading: () =>
                               const Center(child: CircularProgressIndicator()),
-                          error: (error, stack) => Center(child: Text('Error: $error')),
+                          error: (error, stack) => Center(
+                            child: Text(ErrorMessages.calendarError(error)),
+                          ),
                         ),
                       ),
                       // Compact legend/info banner below calendar

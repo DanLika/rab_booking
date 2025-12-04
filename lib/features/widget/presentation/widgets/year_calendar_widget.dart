@@ -9,6 +9,7 @@ import '../../../owner_dashboard/presentation/providers/owner_properties_provide
 import '../theme/responsive_helper.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/localization/error_messages.dart';
 import 'calendar/calendar_date_utils.dart';
 import 'calendar/calendar_compact_legend.dart';
 import 'calendar/calendar_combined_header_widget.dart';
@@ -74,7 +75,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                 data: (data) =>
                     _buildYearGridWithIntegratedSelector(data, colors),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(child: Text('Error: $error')),
+                error: (error, stack) => Center(
+                  child: Text(ErrorMessages.calendarError(error)),
+                ),
               ),
             ),
             // Compact legend/info banner below calendar

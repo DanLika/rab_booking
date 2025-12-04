@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../../../core/exceptions/app_exceptions.dart';
 import '../../../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../../../core/services/storage_service.dart';
 import '../../../../../../core/utils/error_display_utils.dart';
@@ -41,7 +42,10 @@ class _Step4PhotosState extends ConsumerState<Step4Photos> {
       final userId = ref.read(enhancedAuthProvider).firebaseUser?.uid;
 
       if (userId == null) {
-        throw Exception('User not authenticated');
+        throw AuthException(
+          'User not authenticated',
+          code: 'auth/not-authenticated',
+        );
       }
 
       // Use propertyId if available, otherwise use 'draft' folder

@@ -600,6 +600,20 @@ export const createBookingAtomic = onCall(async (request) => {
         const maxGuestsInTransaction = unitData?.max_guests ?? 10;
         const guestCountNum = Number(guestCount);
 
+        // FIX: Validate that guestCount is a valid positive integer (prevents NaN)
+        if (!Number.isInteger(guestCountNum) || guestCountNum <= 0) {
+          logError("[AtomicBooking] Invalid guest count - not a positive integer", null, {
+            unitId,
+            guestCount,
+            guestCountNum,
+          });
+
+          throw new HttpsError(
+            "invalid-argument",
+            `Guest count must be a positive integer. Received: ${guestCount}`
+          );
+        }
+
         if (guestCountNum > maxGuestsInTransaction) {
           logError("[AtomicBooking] Guest count exceeds unit capacity", null, {
             unitId,

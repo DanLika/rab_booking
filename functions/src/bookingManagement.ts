@@ -256,8 +256,8 @@ export const onBookingCreated = onDocumentCreated(
                 booking.check_in.toDate(),
                 booking.check_out.toDate(),
                 booking.guest_count || 2,
-                booking.total_price || 0,
-                booking.deposit_amount || (booking.total_price * 0.2)
+                booking.total_price ?? 0,
+                booking.deposit_amount ?? (booking.total_price * 0.2)
               );
             },
             false // Respect preferences: owner can opt-out of instant booking emails

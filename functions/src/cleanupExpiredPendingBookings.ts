@@ -185,18 +185,19 @@ async function deleteInBatches(
     // Create NEW batch for each chunk (fixes the batch reuse bug)
     const batch = db.batch();
 
-    // Add all deletes to batch
+    // Add all deletes to batch (no per-document logging to reduce log volume)
     for (const doc of chunk) {
-      const bookingData = doc.data();
-      logInfo(`[Cleanup] Queuing deletion: ${doc.id} (ref: ${bookingData.booking_reference})`);
       batch.delete(doc.ref);
     }
+
+    // Log batch processing (concise - one log per batch instead of per document)
+    logInfo(`[Cleanup] Processing batch: ${chunk.length} documents`);
 
     // Commit batch with error handling
     try {
       await batch.commit();
       results.successCount += chunk.length;
-      logInfo(`[Cleanup] Batch committed: ${chunk.length} deletions (total: ${results.successCount})`);
+      logInfo(`[Cleanup] Batch committed successfully (total: ${results.successCount})`);
     } catch (batchError) {
       // Batch failed - fall back to individual deletes
       logWarn(`[Cleanup] Batch commit failed, trying individual deletes`, {

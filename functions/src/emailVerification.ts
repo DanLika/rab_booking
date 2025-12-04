@@ -3,6 +3,7 @@ import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {createHash, randomInt} from "crypto";
 import {logError, logSuccess, logOperation} from "./logger";
 import {sendEmailVerificationCode as sendVerificationEmail} from "./emailService";
+import {validateEmail} from "./utils/emailValidation";
 
 // ============================================
 // Configuration Constants
@@ -51,9 +52,12 @@ export const sendEmailVerificationCode = onCall(
 
       const emailLower = email.toLowerCase().trim();
 
-      // Basic email validation
-      if (!emailLower.includes("@") || !emailLower.includes(".")) {
-        throw new HttpsError("invalid-argument", "Invalid email format");
+      // RFC-compliant email validation (better UX than basic check)
+      if (!validateEmail(emailLower)) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Invalid email format. Please enter a valid email address."
+        );
       }
 
       logOperation(`Sending verification code to ${emailLower}`);

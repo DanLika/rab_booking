@@ -90,9 +90,7 @@ class PerformanceOptimizationService {
       }
     }
 
-    for (final key in toRemove) {
-      _memoCache.remove(key);
-    }
+    toRemove.forEach(_memoCache.remove);
 
     // If still too large, remove oldest entries
     if (_memoCache.length > _maxCacheSize) {

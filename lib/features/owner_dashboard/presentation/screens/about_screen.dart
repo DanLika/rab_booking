@@ -20,7 +20,11 @@ class AboutScreen extends StatelessWidget {
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      body: SingleChildScrollView(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: context.gradients.pageBackground,
+        ),
+        child: SingleChildScrollView(
         padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,6 +237,7 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 16),
           ],
         ),
+      ),
       ),
     );
   }

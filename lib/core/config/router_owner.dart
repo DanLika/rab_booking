@@ -546,7 +546,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // Unit Wizard routes (new/edit)
       GoRoute(
         path: OwnerRoutes.unitWizard,
-        builder: (context, state) => const UnitWizardScreen(),
+        builder: (context, state) {
+          final propertyId = state.uri.queryParameters['propertyId'];
+          return UnitWizardScreen(propertyId: propertyId);
+        },
       ),
       GoRoute(
         path: OwnerRoutes.unitWizardEdit,

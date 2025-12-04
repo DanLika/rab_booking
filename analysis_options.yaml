@@ -30,7 +30,9 @@ linter:
     # DESIGN SYSTEM ENFORCEMENT (Prevents Hardcoded Values)
     # ============================================
     - use_full_hex_values_for_flutter_colors  # Warn about hardcoded colors
-    - avoid_web_libraries_in_flutter           # Prevent dart:html colors
+    # NOTE: avoid_web_libraries_in_flutter disabled - we have legitimate web code
+    # in lib/features/widget/utils/ics_download_web.dart and
+    # lib/core/services/tab_communication_service_web.dart
 
     # ============================================
     # BUG PREVENTION (Helps Claude Catch Errors Early)

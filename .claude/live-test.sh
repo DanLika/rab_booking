@@ -77,7 +77,7 @@ case $choice in
         flutter run -d chrome --web-port=8081 > /tmp/flutter-widget.log 2>&1 &
         sleep 10
 
-        open http://localhost:8081?propertyId=test&unitId=test
+        open "http://localhost:8081?propertyId=test&unitId=test"
 
         echo "✅ Ready for testing!"
         ;;

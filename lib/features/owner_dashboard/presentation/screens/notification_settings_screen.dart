@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../shared/models/notification_preferences_model.dart';
 import '../providers/user_profile_provider.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -158,7 +159,11 @@ class _NotificationSettingsScreenState
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      body: preferencesAsync.when(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: context.gradients.pageBackground,
+        ),
+        child: preferencesAsync.when(
         data: (preferences) {
           // Initialize with default preferences if none exist
           _currentPreferences ??=
@@ -178,41 +183,17 @@ class _NotificationSettingsScreenState
               Container(
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: masterEnabled
-                        ? [
-                            theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-                            theme.colorScheme.secondary.withAlpha((0.05 * 255).toInt()),
-                          ]
-                        : [
-                            theme.colorScheme.onSurface.withAlpha(
-                              (0.08 * 255).toInt(),
-                            ),
-                            theme.colorScheme.onSurface.withAlpha(
-                              (0.03 * 255).toInt(),
-                            ),
-                          ],
-                  ),
+                  gradient: masterEnabled
+                      ? context.gradients.brandPrimary
+                      : context.gradients.sectionBackground,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: masterEnabled
                         ? theme.colorScheme.primary.withAlpha((0.3 * 255).toInt())
-                        : theme.colorScheme.outline.withAlpha((0.2 * 255).toInt()),
+                        : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
                     width: 1.5,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: masterEnabled
-                          ? theme.colorScheme.primary.withAlpha((0.1 * 255).toInt())
-                          : const Color(
-                              0xFF000000,
-                            ).withAlpha((0.04 * 255).toInt()),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
                 ),
                 child: Theme(
                   data: theme.copyWith(
@@ -481,6 +462,7 @@ class _NotificationSettingsScreenState
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -499,12 +481,12 @@ class _NotificationSettingsScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        gradient: context.gradients.sectionBackground,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
         ),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),

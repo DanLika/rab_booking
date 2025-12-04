@@ -17,7 +17,6 @@ import '../mixins/calendar_common_methods_mixin.dart';
 import '../providers/multi_select_provider.dart';
 import '../../utils/calendar_grid_calculator.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
-import '../../../../core/theme/app_color_extensions.dart';
 
 /// Owner Timeline Calendar Screen
 /// Shows BedBooking-style Gantt chart with booking blocks spanning dates
@@ -99,20 +98,7 @@ class _OwnerTimelineCalendarScreenState
             drawer: const OwnerAppDrawer(currentRoute: 'calendar/timeline'),
             body: Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: Theme.of(context).brightness == Brightness.dark
-                      ? [
-                          Theme.of(context).colorScheme.veryDarkGray,
-                          Theme.of(context).colorScheme.mediumDarkGray,
-                        ]
-                      : [
-                          Theme.of(context).colorScheme.veryLightGray,
-                          Colors.white,
-                        ],
-                  stops: const [0.0, 0.3],
-                ),
+                gradient: context.gradients.sectionBackground,
               ),
               child: Column(
                 children: [

@@ -49,23 +49,23 @@ echo "========================================="
 echo ""
 
 echo "1. Missing imports:"
-grep -rn "Undefined" <<< "$ANALYZE_OUTPUT" | head -5
+echo "$ANALYZE_OUTPUT" | grep -n "Undefined" | head -5
 echo ""
 
 echo "2. Type errors:"
-grep -rn "type.*isn't.*type" <<< "$ANALYZE_OUTPUT" | head -5
+echo "$ANALYZE_OUTPUT" | grep -n "type.*isn't.*type" | head -5
 echo ""
 
 echo "3. Null safety issues:"
-grep -rn "null" <<< "$ANALYZE_OUTPUT" | head -5
+echo "$ANALYZE_OUTPUT" | grep -n "null" | head -5
 echo ""
 
 echo "4. Missing members:"
-grep -rn "isn't defined" <<< "$ANALYZE_OUTPUT" | head -5
+echo "$ANALYZE_OUTPUT" | grep -n "isn't defined" | head -5
 echo ""
 
 echo "5. Switch statement issues:"
-grep -rn "exhaustively matched" <<< "$ANALYZE_OUTPUT" | head -5
+echo "$ANALYZE_OUTPUT" | grep -n "exhaustively matched" | head -5
 echo ""
 
 echo "========================================="
@@ -81,7 +81,7 @@ echo ""
 echo "========================================="
 echo "⚠️  Deprecated API Usage"
 echo "========================================="
-grep -rn "deprecated" <<< "$ANALYZE_OUTPUT" | head -10
+echo "$ANALYZE_OUTPUT" | grep -n "deprecated" | head -10
 echo ""
 
 exit 0

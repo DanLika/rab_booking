@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../widgets/owner_app_drawer.dart';
 
@@ -362,56 +364,68 @@ class _FAQScreenState extends State<FAQScreen> {
 
   Widget _buildFAQCard(FAQItem faq) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        leading: CircleAvatar(
-          backgroundColor: AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
-          child: Icon(
-            _getCategoryIcon(faq.category),
-            color: AppColors.authPrimary,
-            size: 20,
-          ),
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
         ),
-        title: Text(
-          faq.question,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            faq.category,
-            style: TextStyle(
-              fontSize: 11,
-              color: theme.brightness == Brightness.dark
-                  ? theme.colorScheme.onSurfaceVariant
-                  : Colors.grey.shade600,
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          leading: CircleAvatar(
+            backgroundColor: AppColors.authPrimary.withAlpha((0.1 * 255).toInt()),
+            child: Icon(
+              _getCategoryIcon(faq.category),
+              color: AppColors.authPrimary,
+              size: 20,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
+          title: Text(
+            faq.question,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
             child: Text(
-              faq.answer,
+              faq.category,
               style: TextStyle(
-                fontSize: 14,
-                color: theme.brightness == Brightness.dark
-                    ? theme.colorScheme.onSurface
-                    : Colors.grey.shade800,
-                height: 1.5,
+                fontSize: 11,
+                color: isDark
+                    ? theme.colorScheme.onSurfaceVariant
+                    : Colors.grey.shade600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                faq.answer,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark
+                      ? theme.colorScheme.onSurface
+                      : Colors.grey.shade800,
+                  height: 1.5,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

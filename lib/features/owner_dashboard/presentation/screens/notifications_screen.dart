@@ -309,12 +309,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       drawer: const OwnerAppDrawer(currentRoute: 'notifications'),
       // FAB for actions when not in selection mode
       floatingActionButton: !_isSelectionMode && allNotifications.isNotEmpty
-          ? FloatingActionButton.extended(
-              onPressed: _toggleSelectionMode,
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: Colors.white,
-              icon: const Icon(Icons.checklist_rounded),
-              label: const Text('Odaberi'),
+          ? SizedBox(
+              width: 100,
+              child: FloatingActionButton.extended(
+                onPressed: _toggleSelectionMode,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.checklist_rounded, size: 18),
+                label: const Text('Odaberi'),
+              ),
             )
           : null,
     );

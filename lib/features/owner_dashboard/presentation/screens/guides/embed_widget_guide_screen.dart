@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../../core/theme/app_color_extensions.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 
@@ -46,10 +48,12 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           // Header
-          Card(
-            color: isDark
-                ? theme.colorScheme.surfaceContainerHighest
-                : theme.colorScheme.success.withAlpha((0.1 * 255).toInt()),
+          Container(
+            decoration: BoxDecoration(
+              gradient: context.gradients.brandPrimary,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+            ),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -57,26 +61,29 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        Icons.code,
-                        size: 40,
-                        color: isDark
-                            ? theme.colorScheme.success
-                            : theme.colorScheme.success,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.code,
+                          size: 32,
+                          color: Colors.white,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Embed Booking Widget',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? theme.colorScheme.success
-                                    : theme.colorScheme.onSurface,
+                                color: Colors.white,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -86,9 +93,7 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
                               'Dodajte kalendar i booking sistem na vaš web sajt',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: isDark
-                                    ? theme.colorScheme.success.withAlpha((0.8 * 255).toInt())
-                                    : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+                                color: Colors.white.withAlpha((0.9 * 255).toInt()),
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -99,10 +104,10 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     '💡 Embed widget omogućava vašim gostima da vide dostupnost i kreiraju rezervacije '
                     'direktno sa vašeg sajta, bez potrebe za redirekcijom.',
-                    style: TextStyle(fontSize: 14, height: 1.5),
+                    style: TextStyle(fontSize: 14, height: 1.5, color: Colors.white.withAlpha((0.9 * 255).toInt())),
                   ),
                 ],
               ),
@@ -333,46 +338,58 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
     required Widget content,
   }) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isExpanded = _expandedStep == stepNumber;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ExpansionTile(
-        initiallyExpanded: stepNumber == 1,
-        onExpansionChanged: (expanded) {
-          setState(() {
-            _expandedStep = expanded ? stepNumber : null;
-          });
-        },
-        leading: CircleAvatar(
-          backgroundColor: isExpanded
-              ? theme.colorScheme.primary
-              : (theme.brightness == Brightness.dark
-                  ? theme.colorScheme.surfaceContainerHighest
-                  : theme.colorScheme.surfaceContainerHigh),
-          foregroundColor: isExpanded
-              ? theme.colorScheme.onPrimary
-              : theme.colorScheme.onSurface,
-          child: Text('$stepNumber'),
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
         ),
-        title: Row(
-          children: [
-            Icon(icon, size: 20, color: theme.colorScheme.primary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: stepNumber == 1,
+          onExpansionChanged: (expanded) {
+            setState(() {
+              _expandedStep = expanded ? stepNumber : null;
+            });
+          },
+          leading: CircleAvatar(
+            backgroundColor: isExpanded
+                ? theme.colorScheme.primary
+                : (isDark
+                    ? theme.colorScheme.surfaceContainerHighest
+                    : theme.colorScheme.surfaceContainerHigh),
+            foregroundColor: isExpanded
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface,
+            child: Text('$stepNumber'),
+          ),
+          title: Row(
+            children: [
+              Icon(icon, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
+            ],
+          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: content,
             ),
           ],
         ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: content,
-          ),
-        ],
       ),
     );
   }
@@ -505,10 +522,15 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      color: isDark
-          ? theme.colorScheme.surfaceContainerHighest
-          : theme.colorScheme.primaryContainer.withAlpha((0.3 * 255).toInt()),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+        ),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -518,9 +540,13 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
               children: [
                 Icon(Icons.tune, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Napredne Opcije',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ],
             ),
@@ -586,10 +612,15 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      color: isDark
-          ? theme.colorScheme.errorContainer.withAlpha((0.3 * 255).toInt())
-          : theme.colorScheme.warning.withAlpha((0.1 * 255).toInt()),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.warning.withAlpha((0.3 * 255).toInt()),
+        ),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -602,9 +633,13 @@ class _EmbedWidgetGuideScreenState extends State<EmbedWidgetGuideScreen> {
                   color: theme.colorScheme.warning,
                 ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Rješavanje Problema',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.warning,
+                  ),
                 ),
               ],
             ),

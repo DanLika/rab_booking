@@ -62,8 +62,11 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
             subtitle: 'Always use light theme',
             isSelected: currentThemeMode == ThemeMode.light,
             onTap: () {
-              ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
               Navigator.of(context).pop();
+              // Delay theme change to after modal closes to prevent rebuild during animation
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
+              });
             },
           ),
           const Divider(height: 1, indent: 24, endIndent: 24),
@@ -74,8 +77,11 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
             subtitle: 'Always use dark theme',
             isSelected: currentThemeMode == ThemeMode.dark,
             onTap: () {
-              ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
               Navigator.of(context).pop();
+              // Delay theme change to after modal closes to prevent rebuild during animation
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
+              });
             },
           ),
           const Divider(height: 1, indent: 24, endIndent: 24),
@@ -86,8 +92,11 @@ class ThemeSelectionBottomSheet extends ConsumerWidget {
             subtitle: 'Follow system theme',
             isSelected: currentThemeMode == ThemeMode.system,
             onTap: () {
-              ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
               Navigator.of(context).pop();
+              // Delay theme change to after modal closes to prevent rebuild during animation
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
+              });
             },
           ),
         ],
@@ -126,9 +135,9 @@ class _ThemeOption extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isSelected
-              ? theme.primaryColor.withValues(alpha: 0.1)
+              ? theme.primaryColor.withValues(alpha: isDark ? 0.25 : 0.1)
               : isDark
-                  ? theme.colorScheme.surfaceContainerHighest
+                  ? Colors.white.withValues(alpha: 0.15)
                   : Colors.grey[200],
         ),
         child: Icon(
@@ -136,7 +145,7 @@ class _ThemeOption extends StatelessWidget {
           color: isSelected
               ? theme.primaryColor
               : isDark
-                  ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                  ? Colors.white
                   : Colors.grey[600],
         ),
       ),

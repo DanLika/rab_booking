@@ -9,6 +9,7 @@ import '../../../../shared/models/user_profile_model.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
 import '../providers/user_profile_provider.dart';
+import '../widgets/owner_app_drawer.dart';
 
 /// Dedicated Bank Account Screen for bank transfer payment settings
 class BankAccountScreen extends ConsumerStatefulWidget {
@@ -381,6 +382,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen> {
       },
       child: Scaffold(
         resizeToAvoidBottomInset: true,
+        drawer: const OwnerAppDrawer(currentRoute: 'integrations/payments/bank-account'),
         appBar: CommonAppBar(
           title: 'Bankovni Račun',
           leadingIcon: Icons.menu,

@@ -17,7 +17,8 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
         if (unit != null) {
           return UnitWizardDraft.fromUnit(unit);
         }
-      } catch (e) {
+      } catch (_) {
+        // Silently ignore - fall through to create new empty draft
       }
     }
 

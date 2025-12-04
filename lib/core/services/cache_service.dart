@@ -84,9 +84,7 @@ class CacheService<T> {
         .where((key) => key.startsWith(pattern))
         .toList();
 
-    for (final key in keysToRemove) {
-      _cache.remove(key);
-    }
+    keysToRemove.forEach(_cache.remove);
 
     LoggingService.logCache(
       'Invalidated ${keysToRemove.length} keys matching "$pattern"',
@@ -127,9 +125,7 @@ class CacheService<T> {
         .map((entry) => entry.key)
         .toList();
 
-    for (final key in expiredKeys) {
-      _cache.remove(key);
-    }
+    expiredKeys.forEach(_cache.remove);
 
     LoggingService.logCache('Cleaned ${expiredKeys.length} expired entries');
   }

@@ -23,12 +23,15 @@ import 'steps/step_5_review.dart';
 /// - 5-step wizard flow (Basic Info → Review & Publish)
 /// - Skip optional step (Photos)
 /// - Responsive design (mobile + desktop)
+/// - Pre-select property when creating from property context
 class UnitWizardScreen extends ConsumerStatefulWidget {
   final String? unitId; // null = new unit, non-null = edit existing
+  final String? propertyId; // Pre-select property when creating new unit
 
   const UnitWizardScreen({
     super.key,
     this.unitId,
+    this.propertyId,
   });
 
   @override
@@ -37,6 +40,20 @@ class UnitWizardScreen extends ConsumerStatefulWidget {
 
 class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen> {
   final PageController _pageController = PageController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-populate propertyId if provided (when creating from property context)
+    if (widget.propertyId != null && widget.unitId == null) {
+      // Schedule after first build to ensure provider is ready
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref
+            .read(unitWizardNotifierProvider(widget.unitId).notifier)
+            .updateField('propertyId', widget.propertyId);
+      });
+    }
+  }
 
   @override
   void dispose() {

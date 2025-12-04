@@ -234,12 +234,14 @@ class BookingDetailsDialog extends ConsumerWidget {
                   ),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Wrap(
+                spacing: 4,
+                runSpacing: 8,
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   // Left side - Edit, Email, and Resend
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Wrap(
                     children: [
                       if (booking.status != BookingStatus.cancelled)
                         TextButton.icon(
@@ -261,14 +263,13 @@ class BookingDetailsDialog extends ConsumerWidget {
                         TextButton.icon(
                           onPressed: () => _resendConfirmationEmail(context, ref),
                           icon: const Icon(Icons.replay_outlined, size: 18),
-                          label: const Text('Ponovo pošalji'),
+                          label: const Text('Ponovo'),
                         ),
                     ],
                   ),
 
                   // Right side - Cancel and Close
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Wrap(
                     children: [
                       if (booking.status == BookingStatus.pending ||
                           booking.status == BookingStatus.confirmed)

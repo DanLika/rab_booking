@@ -147,40 +147,45 @@ class TaxLegalDisclaimerCard extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // Default text option
-        RadioListTile<bool>(
-          value: true,
+        // Radio group for text source selection
+        RadioGroup<bool>(
           groupValue: useDefaultText,
-          onChanged: (val) => onUseDefaultChanged(true),
-          title: Text(
-            'Use Default Croatian Text',
-            style: theme.textTheme.bodyMedium,
-          ),
-          subtitle: Text(
-            'Standard legal text for Croatian properties',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: context.textColorSecondary,
-            ),
-          ),
-          contentPadding: EdgeInsets.zero,
-        ),
+          onChanged: (val) => onUseDefaultChanged(val ?? true),
+          child: Column(
+            children: [
+              // Default text option
+              RadioListTile<bool>(
+                value: true,
+                title: Text(
+                  'Use Default Croatian Text',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                subtitle: Text(
+                  'Standard legal text for Croatian properties',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: context.textColorSecondary,
+                  ),
+                ),
+                contentPadding: EdgeInsets.zero,
+              ),
 
-        // Custom text option
-        RadioListTile<bool>(
-          value: false,
-          groupValue: useDefaultText,
-          onChanged: (val) => onUseDefaultChanged(false),
-          title: Text(
-            'Use Custom Text',
-            style: theme.textTheme.bodyMedium,
+              // Custom text option
+              RadioListTile<bool>(
+                value: false,
+                title: Text(
+                  'Use Custom Text',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                subtitle: Text(
+                  'Provide your own legal text',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: context.textColorSecondary,
+                  ),
+                ),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
           ),
-          subtitle: Text(
-            'Provide your own legal text',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: context.textColorSecondary,
-            ),
-          ),
-          contentPadding: EdgeInsets.zero,
         ),
 
         // Custom text editor (shown when custom is selected)

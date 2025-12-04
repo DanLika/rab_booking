@@ -640,8 +640,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, size: 20),
                 onPressed: () {
-                  // TODO: Pass propertyId to wizard when supported
-                  context.push(OwnerRoutes.unitWizard);
+                  context.push(
+                    '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
+                  );
                 },
                 tooltip: 'Dodaj jedinicu',
                 visualDensity: VisualDensity.compact,
@@ -684,7 +685,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
-                              context.push(OwnerRoutes.unitWizard);
+                              context.push(
+                                '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
+                              );
                             },
                             borderRadius: BorderRadius.circular(8),
                             child: const Padding(

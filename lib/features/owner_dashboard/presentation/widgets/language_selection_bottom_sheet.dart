@@ -110,9 +110,9 @@ class _LanguageOption extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isSelected
-              ? theme.primaryColor.withValues(alpha: 0.1)
+              ? theme.primaryColor.withValues(alpha: isDark ? 0.25 : 0.1)
               : isDark
-                  ? theme.colorScheme.surfaceContainerHighest
+                  ? Colors.white.withValues(alpha: 0.15)
                   : Colors.grey[200],
         ),
         child: Center(
@@ -123,7 +123,7 @@ class _LanguageOption extends StatelessWidget {
               color: isSelected
                   ? theme.primaryColor
                   : isDark
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                      ? Colors.white
                       : Colors.grey[600],
             ),
           ),

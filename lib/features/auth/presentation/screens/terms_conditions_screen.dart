@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/theme/app_shadows.dart';
 
 /// Terms & Conditions Screen
 ///
@@ -196,6 +198,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
 
   Widget _buildHeader() {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,17 +208,9 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [theme.primaryColor, theme.colorScheme.secondary],
-                ),
+                gradient: context.gradients.brandPrimary,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.primaryColor.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
               ),
               child: const Icon(
                 Icons.description,
@@ -253,14 +248,16 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
 
   Widget _buildTableOfContents() {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
         ),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -326,17 +323,19 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
 
   Widget _buildSection(String title, String content, GlobalKey key) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Padding(
       key: key,
       padding: const EdgeInsets.only(bottom: 32),
-      child: Card(
-        elevation: 1,
-        shape: RoundedRectangleBorder(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
           ),
+          boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -347,7 +346,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
                 title,
                 style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: theme.primaryColor,
+                      color: theme.colorScheme.primary,
                     ),
               ),
               const SizedBox(height: 12),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/config/router_owner.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../widgets/owner_app_drawer.dart';
 
@@ -19,6 +20,9 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       drawer: const OwnerAppDrawer(currentRoute: 'guides/stripe'),
@@ -27,44 +31,59 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: context.gradients.pageBackground,
+        ),
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
             // Header
-            Card(
-              color: AppColors.authSecondary.withAlpha((0.1 * 255).toInt()),
-              child: const Padding(
-                padding: EdgeInsets.all(20),
+            Container(
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.payment,
-                          size: 40,
-                          color: AppColors.authSecondary,
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.payment,
+                            size: 32,
+                            color: Colors.white,
+                          ),
                         ),
-                        SizedBox(width: 16),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'Stripe Connect',
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.authSecondary,
+                                  color: Colors.white,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
                                 'Prihvatajte plaćanja karticama direktno na vaš Stripe račun',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: AppColors.authSecondary,
+                                  color: Colors.white.withAlpha((0.9 * 255).toInt()),
                                 ),
                               ),
                             ],
@@ -72,11 +91,15 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Text(
                       '💡 Stripe Connect omogućava da primajte plaćanja direktno na vaš Stripe račun. '
                       'Gosti plaćaju karticom, a sredstva odmah dolaze vama (minus Stripe naknada).',
-                      style: TextStyle(fontSize: 14, height: 1.5),
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                      ),
                     ),
                   ],
                 ),
@@ -103,28 +126,39 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
                   _buildBulletPoint('Unesite email, ime i lozinku'),
                   _buildBulletPoint('Verifikujte email adresu'),
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: AppColors.authSecondary,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Napomena: Stripe je besplatan za registraciju. Naplaćuje samo proviziju po transakciji (oko 1.4% + 0.25€).',
-                            style: TextStyle(fontSize: 12),
+                  Builder(
+                    builder: (context) {
+                      final theme = Theme.of(context);
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
                           ),
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: theme.colorScheme.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Napomena: Stripe je besplatan za registraciju. Naplaćuje samo proviziju po transakciji (oko 1.4% + 0.25€).',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   _buildPlaceholder('Slika: Stripe registracija ekran'),
@@ -207,16 +241,22 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
                   ),
                   _buildBulletPoint('Odobrite pristup'),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.go(OwnerRoutes.stripeIntegration);
+                  Builder(
+                    builder: (context) {
+                      final theme = Theme.of(context);
+                      return ElevatedButton.icon(
+                        onPressed: () {
+                          context.go(OwnerRoutes.stripeIntegration);
+                        },
+                        icon: const Icon(Icons.payment),
+                        label: const Text('Idi na Stripe Integraciju'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          padding: const EdgeInsets.all(16),
+                        ),
+                      );
                     },
-                    icon: const Icon(Icons.payment),
-                    label: const Text('Idi na Stripe Integraciju'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.authPrimary,
-                      padding: const EdgeInsets.all(16),
-                    ),
                   ),
                   const SizedBox(height: 16),
                   _buildPlaceholder('GIF: Proces povezivanja Stripe-a'),
@@ -291,6 +331,7 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
             const SizedBox(height: 24),
           ],
         ),
+        ),
       ),
     );
   }
@@ -301,37 +342,52 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
     required IconData icon,
     required Widget content,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isExpanded = _expandedStep == stepNumber;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ExpansionTile(
-        initiallyExpanded: stepNumber == 1,
-        onExpansionChanged: (expanded) {
-          setState(() {
-            _expandedStep = expanded ? stepNumber : null;
-          });
-        },
-        leading: CircleAvatar(
-          backgroundColor: isExpanded
-              ? AppColors.authPrimary
-              : Colors.grey.shade300,
-          foregroundColor: isExpanded ? Colors.white : Colors.grey.shade700,
-          child: Text('$stepNumber'),
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
         ),
-        title: Row(
-          children: [
-            Icon(icon, size: 20, color: AppColors.authPrimary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: stepNumber == 1,
+          onExpansionChanged: (expanded) {
+            setState(() {
+              _expandedStep = expanded ? stepNumber : null;
+            });
+          },
+          leading: CircleAvatar(
+            backgroundColor: isExpanded
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface.withAlpha((0.2 * 255).toInt()),
+            foregroundColor: isExpanded
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+            child: Text('$stepNumber'),
+          ),
+          title: Row(
+            children: [
+              Icon(icon, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+          children: [Padding(padding: const EdgeInsets.all(16), child: content)],
         ),
-        children: [Padding(padding: const EdgeInsets.all(16), child: content)],
       ),
     );
   }
@@ -353,22 +409,33 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
   }
 
   Widget _buildPlaceholder(String text) {
+    final theme = Theme.of(context);
+
     return Container(
       height: 200,
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: theme.colorScheme.onSurface.withAlpha((0.08 * 255).toInt()),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade400),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withAlpha((0.2 * 255).toInt()),
+        ),
       ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.image, size: 48, color: Colors.grey.shade500),
+            Icon(
+              Icons.image,
+              size: 48,
+              color: theme.colorScheme.onSurface.withAlpha((0.4 * 255).toInt()),
+            ),
             const SizedBox(height: 8),
             Text(
               text,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                fontSize: 12,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -378,18 +445,28 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
   }
 
   Widget _buildFAQSection() {
-    return Card(
-      color: Colors.grey.shade50,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+        ),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.question_answer, color: AppColors.authPrimary),
-                SizedBox(width: 8),
-                Text(
+                Icon(Icons.question_answer, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                const Text(
                   'Česta Pitanja',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -426,6 +503,8 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
   }
 
   Widget _buildFAQItem(String question, String answer) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -440,7 +519,7 @@ class _StripeGuideScreenState extends State<StripeGuideScreen> {
             answer,
             style: TextStyle(
               fontSize: 13,
-              color: Colors.grey.shade700,
+              color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
               height: 1.5,
             ),
           ),

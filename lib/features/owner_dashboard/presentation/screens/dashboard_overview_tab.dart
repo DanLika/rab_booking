@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
-import '../../../../core/theme/app_color_extensions.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../widgets/recent_activity_widget.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../widgets/booking_details_dialog.dart';
@@ -24,7 +24,6 @@ class DashboardOverviewTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -37,18 +36,7 @@ class DashboardOverviewTab extends ConsumerWidget {
       drawer: const OwnerAppDrawer(currentRoute: 'overview'),
       body: Container(
         decoration: BoxDecoration(
-          // TIP 1: Simple diagonal gradient (2 colors, 2 stops)
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    theme.colorScheme.veryDarkGray,
-                    theme.colorScheme.mediumDarkGray,
-                  ]
-                : [theme.colorScheme.veryLightGray, Colors.white],
-            stops: const [0.0, 0.3],
-          ),
+          gradient: context.gradients.pageBackground,
         ),
         child: RefreshIndicator(
           onRefresh: () async {

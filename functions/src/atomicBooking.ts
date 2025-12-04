@@ -324,11 +324,12 @@ export const createBookingAtomic = onCall(async (request) => {
       // (checkout = 15 should allow new checkin = 15, no conflict)
       //
       // NOTE: pending bookings BLOCK calendar dates (awaiting owner approval)
-      // Only pending and confirmed statuses block - cancelled does not.
+      // CRITICAL: Include "stripe_pending" to prevent race condition with Stripe checkout
+      // Without this, a bank transfer booking could overlap with an in-progress Stripe payment
       const conflictingBookingsQuery = db
         .collection("bookings")
         .where("unit_id", "==", unitId)
-        .where("status", "in", ["pending", "confirmed"])
+        .where("status", "in", ["pending", "confirmed", "stripe_pending"])
         .where("check_in", "<", checkOutDate)
         .where("check_out", ">", checkInDate);
 

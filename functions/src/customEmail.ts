@@ -1,6 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {sendCustomEmailToGuest} from "./emailService";
 import {logError} from "./logger";
+import {validateEmail} from "./utils/emailValidation";
 
 /**
  * Callable Cloud Function: Send custom email to guest
@@ -45,12 +46,11 @@ export const sendCustomEmailToGuestFunction = onCall(async (request) => {
     throw new HttpsError("invalid-argument", "Message too long (max 50KB)");
   }
 
-  // Basic email validation (improved regex)
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(guestEmail) || guestEmail.includes("..")) {
+  // RFC-compliant email validation
+  if (!validateEmail(guestEmail)) {
     throw new HttpsError(
       "invalid-argument",
-      "Invalid email address"
+      "Invalid email address. Please provide a valid email with a proper domain (e.g., example@domain.com)."
     );
   }
 

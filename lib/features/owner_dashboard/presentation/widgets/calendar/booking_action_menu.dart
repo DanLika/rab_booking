@@ -148,7 +148,7 @@ class BookingActionBottomSheet extends ConsumerWidget {
 
 /// Bottom sheet for moving booking to another unit
 /// Shown on long press of a booking block
-class BookingMoveToUnitMenu extends ConsumerWidget {
+class BookingMoveToUnitMenu extends ConsumerStatefulWidget {
   final BookingModel booking;
 
   const BookingMoveToUnitMenu({
@@ -157,7 +157,14 @@ class BookingMoveToUnitMenu extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BookingMoveToUnitMenu> createState() => _BookingMoveToUnitMenuState();
+}
+
+class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
+  bool _isProcessing = false;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final unitsAsync = ref.watch(allOwnerUnitsProvider);
 
@@ -195,7 +202,7 @@ class BookingMoveToUnitMenu extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    booking.guestName ?? 'Nepoznati gost',
+                    widget.booking.guestName ?? 'Nepoznati gost',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.textTheme.bodySmall?.color,
                     ),
@@ -210,7 +217,7 @@ class BookingMoveToUnitMenu extends ConsumerWidget {
             unitsAsync.when(
               data: (units) {
                 // Filter out current unit
-                final otherUnits = units.where((u) => u.id != booking.unitId).toList();
+                final otherUnits = units.where((u) => u.id != widget.booking.unitId).toList();
 
                 if (otherUnits.isEmpty) {
                   return const Padding(
@@ -248,10 +255,13 @@ class BookingMoveToUnitMenu extends ConsumerWidget {
                         subtitle: Text(
                           '${unit.maxGuests} gostiju • ${unit.bedrooms} spavaće sobe',
                         ),
-                        onTap: () async {
-                          Navigator.pop(context);
-                          await _moveBookingToUnit(context, ref, unit);
-                        },
+                        enabled: !_isProcessing,
+                        onTap: _isProcessing
+                            ? null
+                            : () async {
+                                Navigator.pop(context);
+                                await _moveBookingToUnit(context, unit);
+                              },
                       );
                     },
                   ),
@@ -282,21 +292,37 @@ class BookingMoveToUnitMenu extends ConsumerWidget {
 
   Future<void> _moveBookingToUnit(
     BuildContext context,
-    WidgetRef ref,
     UnitModel targetUnit,
   ) async {
+    if (_isProcessing) return; // Prevent double-tap
+
+    setState(() => _isProcessing = true);
+
     try {
       // Show loading
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Prebacivanje rezervacije...'),
-          duration: Duration(seconds: 1),
+          content: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(Colors.white),
+                ),
+              ),
+              SizedBox(width: 12),
+              Text('Prebacivanje rezervacije...'),
+            ],
+          ),
+          duration: Duration(seconds: 2),
         ),
       );
 
       // Update booking with new unit
-      final updatedBooking = booking.copyWith(unitId: targetUnit.id);
+      final updatedBooking = widget.booking.copyWith(unitId: targetUnit.id);
       final bookingRepo = ref.read(bookingRepositoryProvider);
       await bookingRepo.updateBooking(updatedBooking);
 
@@ -305,6 +331,7 @@ class BookingMoveToUnitMenu extends ConsumerWidget {
 
       // Show success
       if (!context.mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Rezervacija prebačena u ${targetUnit.name}'),
@@ -313,12 +340,17 @@ class BookingMoveToUnitMenu extends ConsumerWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Greška: $e'),
           backgroundColor: AppColors.error,
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 }

@@ -34,7 +34,6 @@ class SubdomainService {
       // Priority 1: Query parameter (for testing)
       final querySubdomain = uri.queryParameters['subdomain'];
       if (querySubdomain != null && querySubdomain.isNotEmpty) {
-        debugPrint('[SubdomainService] Found subdomain from query param: $querySubdomain');
         return querySubdomain.toLowerCase();
       }
 
@@ -45,7 +44,6 @@ class SubdomainService {
       if (host.contains('localhost') ||
           host.contains('.web.app') ||
           host.contains('.firebaseapp.com')) {
-        debugPrint('[SubdomainService] No subdomain - using default hosting: $host');
         return null;
       }
 
@@ -53,14 +51,11 @@ class SubdomainService {
       final parts = host.split('.');
       if (parts.length >= 3) {
         final subdomain = parts.first;
-        debugPrint('[SubdomainService] Found subdomain from hostname: $subdomain');
         return subdomain.toLowerCase();
       }
 
-      debugPrint('[SubdomainService] No subdomain found in host: $host');
       return null;
     } catch (e) {
-      debugPrint('[SubdomainService] Error parsing subdomain: $e');
       return null;
     }
   }
@@ -70,7 +65,6 @@ class SubdomainService {
   /// Returns null if no property is found with the given subdomain.
   Future<PropertyModel?> getPropertyBySubdomain(String subdomain) async {
     try {
-      debugPrint('[SubdomainService] Fetching property for subdomain: $subdomain');
 
       final query = await _firestore
           .collection('properties')
@@ -79,7 +73,6 @@ class SubdomainService {
           .get();
 
       if (query.docs.isEmpty) {
-        debugPrint('[SubdomainService] No property found for subdomain: $subdomain');
         return null;
       }
 
@@ -89,10 +82,8 @@ class SubdomainService {
         'id': doc.id,
       });
 
-      debugPrint('[SubdomainService] Found property: ${property.name} (${property.id})');
       return property;
     } catch (e) {
-      debugPrint('[SubdomainService] Error fetching property: $e');
       return null;
     }
   }
@@ -120,13 +111,11 @@ class SubdomainService {
   Future<SubdomainContext?> resolveCurrentContext() async {
     final subdomain = getCurrentSubdomain();
     if (subdomain == null) {
-      debugPrint('[SubdomainService] No subdomain in URL, using default context');
       return null;
     }
 
     final property = await getPropertyBySubdomain(subdomain);
     if (property == null) {
-      debugPrint('[SubdomainService] Subdomain not found: $subdomain');
       return SubdomainContext(
         subdomain: subdomain,
         found: false,

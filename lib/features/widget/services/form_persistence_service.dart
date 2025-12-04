@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/services/logging_service.dart';
+import '../../../core/utils/date_time_parser.dart';
 import '../presentation/widgets/country_code_dropdown.dart';
 
 /// Data class representing persisted form data.
@@ -72,10 +73,10 @@ class PersistedFormData {
       unitId: json['unitId'] as String,
       propertyId: json['propertyId'] as String?,
       checkIn: json['checkIn'] != null
-          ? DateTime.parse(json['checkIn'] as String)
+          ? DateTimeParser.tryParse(json['checkIn'] as String?)
           : null,
       checkOut: json['checkOut'] != null
-          ? DateTime.parse(json['checkOut'] as String)
+          ? DateTimeParser.tryParse(json['checkOut'] as String?)
           : null,
       firstName: json['firstName'] as String? ?? '',
       lastName: json['lastName'] as String? ?? '',
@@ -89,7 +90,10 @@ class PersistedFormData {
       pillBarDismissed: json['pillBarDismissed'] as bool? ?? false,
       hasInteractedWithBookingFlow:
           json['hasInteractedWithBookingFlow'] as bool? ?? false,
-      timestamp: DateTime.parse(json['timestamp'] as String),
+      timestamp: DateTimeParser.parseOrDefault(
+        json['timestamp'] as String?,
+        DateTime.now(),
+      ),
     );
   }
 

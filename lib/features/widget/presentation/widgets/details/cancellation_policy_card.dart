@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/utils/date_time_parser.dart';
 
 /// Card displaying cancellation policy information.
 ///
@@ -32,7 +33,10 @@ class CancellationPolicyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final checkInDate = DateTime.parse(checkIn);
+    final checkInDate = DateTimeParser.parseOrThrow(
+      checkIn,
+      context: 'CancellationPolicyCard.checkIn',
+    );
     final now = DateTime.now();
     final hoursUntilCheckIn = checkInDate.difference(now).inHours;
     final canCancel = hoursUntilCheckIn >= deadlineHours;

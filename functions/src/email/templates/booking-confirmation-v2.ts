@@ -12,7 +12,7 @@
  */
 
 import {Resend} from "resend";
-import {formatCurrency, formatDate, calculateNights} from "../utils/template-helpers";
+import {formatCurrency, formatDate, calculateNights, escapeHtml} from "../utils/template-helpers";
 
 export interface BookingConfirmationParams {
   guestEmail: string;
@@ -90,14 +90,14 @@ export function generateBookingConfirmationEmailV2(
       <!-- Booking Reference -->
       <div style="display: inline-block; background-color: #F9FAFB; padding: 8px 16px; border-radius: 6px; border: 1px solid #E5E7EB;">
         <span style="font-size: 14px; font-weight: 400; color: #6B7280;">Referenca:</span>
-        <strong style="font-size: 14px; font-weight: 600; color: #1F2937; margin-left: 4px;">${bookingReference}</strong>
+        <strong style="font-size: 14px; font-weight: 600; color: #1F2937; margin-left: 4px;">${escapeHtml(bookingReference)}</strong>
       </div>
     </div>
 
     <!-- Greeting -->
     <div style="background-color: #FFFFFF; border-radius: 12px; padding: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); margin-bottom: 16px;">
       <p style="margin: 0 0 16px 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #1F2937;">
-        Poštovani/a <strong>${guestName}</strong>,
+        Poštovani/a <strong>${escapeHtml(guestName)}</strong>,
       </p>
       <p style="margin: 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #1F2937;">
         Vaša rezervacija je uspješno zaprimljena i čeka potvrdu uplate.
@@ -116,7 +116,7 @@ export function generateBookingConfirmationEmailV2(
             Nekretnina
           </td>
           <td style="padding: 10px 0; font-size: 15px; font-weight: 400; color: #1F2937; text-align: right;">
-            ${propertyName}
+            ${escapeHtml(propertyName)}
           </td>
         </tr>
         <tr>
@@ -124,7 +124,7 @@ export function generateBookingConfirmationEmailV2(
             Jedinica
           </td>
           <td style="padding: 10px 0; font-size: 15px; font-weight: 400; color: #1F2937; text-align: right;">
-            ${unitName}
+            ${escapeHtml(unitName)}
           </td>
         </tr>
         <tr>
@@ -202,7 +202,7 @@ export function generateBookingConfirmationEmailV2(
       </p>
       <p style="margin: 0; font-size: 15px; font-weight: 400; line-height: 1.6; color: #78350F;">
         Molimo uplatite kaparu od <strong>${formatCurrency(depositAmount)}</strong> u roku od 3 dana.
-        <strong>VAŽNO:</strong> Obavezno navedite referencu rezervacije <strong>${bookingReference}</strong> u opisu uplate!
+        <strong>VAŽNO:</strong> Obavezno navedite referencu rezervacije <strong>${escapeHtml(bookingReference)}</strong> u opisu uplate!
       </p>
     </div>
 
@@ -235,15 +235,15 @@ export function generateBookingConfirmationEmailV2(
       </p>
       ${contactEmail ? `
       <p style="margin: 0 0 6px 0;">
-        <a href="mailto:${contactEmail}" style="color: #2563EB; text-decoration: none; font-size: 14px;">
-          ${contactEmail}
+        <a href="mailto:${escapeHtml(contactEmail)}" style="color: #2563EB; text-decoration: none; font-size: 14px;">
+          ${escapeHtml(contactEmail)}
         </a>
       </p>
       ` : ''}
       ${contactPhone ? `
       <p style="margin: 0;">
-        <a href="tel:${contactPhone}" style="color: #2563EB; text-decoration: none; font-size: 14px;">
-          ${contactPhone}
+        <a href="tel:${escapeHtml(contactPhone)}" style="color: #2563EB; text-decoration: none; font-size: 14px;">
+          ${escapeHtml(contactPhone)}
         </a>
       </p>
       ` : ''}

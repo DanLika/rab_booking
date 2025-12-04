@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/utils/date_time_parser.dart';
 
 /// Card displaying payment information for a booking.
 ///
@@ -189,7 +190,12 @@ class PaymentInfoCard extends StatelessWidget {
           ),
         ),
         Text(
-          DateFormat('MMM d, yyyy').format(DateTime.parse(paymentDeadline!)),
+          DateFormat('MMM d, yyyy').format(
+            DateTimeParser.parseOrThrow(
+              paymentDeadline,
+              context: 'PaymentInfoCard.paymentDeadline',
+            ),
+          ),
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeS,
             fontWeight: TypographyTokens.semiBold,

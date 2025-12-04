@@ -71,28 +71,17 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius),
             gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
               colors: isDark
-                  ? [Colors.grey[800]!, Colors.grey[700]!, Colors.grey[800]!]
-                  : [Colors.grey[300]!, Colors.grey[200]!, Colors.grey[300]!],
-              stops: const [0.0, 0.5, 1.0],
-              transform: _SlideGradientTransform(_animation.value),
+                  ? [Colors.grey[800]!, Colors.grey[700]!]
+                  : [Colors.grey[300]!, Colors.grey[200]!],
+              stops: const [0.0, 0.3],
             ),
           ),
         );
       },
     );
-  }
-}
-
-/// Custom gradient transform for shimmer effect
-class _SlideGradientTransform extends GradientTransform {
-  const _SlideGradientTransform(this.percent);
-
-  final double percent;
-
-  @override
-  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
-    return Matrix4.translationValues(bounds.width * percent, 0.0, 0.0);
   }
 }
 
@@ -200,9 +189,12 @@ class CircleSkeleton extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
           colors: isDark
-              ? [Colors.grey[800]!, Colors.grey[700]!, Colors.grey[800]!]
-              : [Colors.grey[300]!, Colors.grey[200]!, Colors.grey[300]!],
+              ? [Colors.grey[800]!, Colors.grey[700]!]
+              : [Colors.grey[300]!, Colors.grey[200]!],
+          stops: const [0.0, 0.3],
         ),
       ),
     );

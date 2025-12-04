@@ -38,6 +38,7 @@ import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/services/booking_service.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../shared/utils/validators/form_validators.dart';
 import 'booking_confirmation_screen.dart';
 import '../widgets/country_code_dropdown.dart';
 import '../widgets/email_verification_dialog.dart';
@@ -1750,10 +1751,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             },
             onVerifyPressed: () {
               final email = _emailController.text.trim();
-              if (email.isEmpty || !email.contains('@')) {
+              final validationError = EmailValidator.validate(email);
+              if (validationError != null) {
                 SnackBarHelper.showError(
                   context: context,
-                  message: 'Please enter a valid email first',
+                  message: validationError,
                 );
                 return;
               }
@@ -1971,6 +1973,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // For bookingPending mode - create booking without payment
       if (widgetMode == WidgetMode.bookingPending) {
+        // Sanitize user input to prevent XSS and injection attacks
+        final sanitizedGuestName = InputSanitizer.sanitizeName(
+          '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
+              .trim(),
+        );
+        final sanitizedEmail = InputSanitizer.sanitizeEmail(
+          _emailController.text.trim(),
+        );
+        final sanitizedPhone = InputSanitizer.sanitizePhone(
+          _phoneController.text.trim(),
+        );
+        final sanitizedNotes = _notesController.text.trim().isEmpty
+            ? null
+            : InputSanitizer.sanitizeText(_notesController.text.trim());
+
         // For bookingPending mode: Booking is created immediately (no Stripe)
         final bookingResult = await bookingService.createBooking(
           unitId: _unitId,
@@ -1978,21 +1995,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           ownerId: _ownerId!,
           checkIn: _checkIn!,
           checkOut: _checkOut!,
-          guestName:
-              '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
-                  .trim(),
-          guestEmail: _emailController.text.trim(),
+          guestName: sanitizedGuestName ?? '',
+          guestEmail: sanitizedEmail ?? _emailController.text.trim(),
           guestPhone:
-              '${_selectedCountry.dialCode} ${_phoneController.text.trim()}',
+              '${_selectedCountry.dialCode} ${sanitizedPhone ?? _phoneController.text.trim()}',
           guestCount: _adults + _children,
           totalPrice: calculation.totalPrice,
           paymentOption: 'none', // No payment for pending bookings
           paymentMethod: 'none',
           requireOwnerApproval:
               true, // Always requires approval in bookingPending mode
-          notes: _notesController.text.trim().isEmpty
-              ? null
-              : _notesController.text.trim(),
+          notes: sanitizedNotes,
           taxLegalAccepted:
               _widgetSettings?.taxLegalConfig != null &&
                   _widgetSettings!.taxLegalConfig.enabled
@@ -2021,26 +2034,38 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // NEW FLOW (2025-12-02):
       // - For Stripe: Only validates availability, returns bookingData for checkout
       // - For non-Stripe: Creates booking immediately
+
+      // Sanitize user input to prevent XSS and injection attacks
+      final sanitizedGuestName = InputSanitizer.sanitizeName(
+        '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
+            .trim(),
+      );
+      final sanitizedEmail = InputSanitizer.sanitizeEmail(
+        _emailController.text.trim(),
+      );
+      final sanitizedPhone = InputSanitizer.sanitizePhone(
+        _phoneController.text.trim(),
+      );
+      final sanitizedNotes = _notesController.text.trim().isEmpty
+          ? null
+          : InputSanitizer.sanitizeText(_notesController.text.trim());
+
       final bookingResult = await bookingService.createBooking(
         unitId: _unitId,
         propertyId: _propertyId!,
         ownerId: _ownerId!,
         checkIn: _checkIn!,
         checkOut: _checkOut!,
-        guestName:
-            '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
-                .trim(),
-        guestEmail: _emailController.text.trim(),
+        guestName: sanitizedGuestName ?? '',
+        guestEmail: sanitizedEmail ?? _emailController.text.trim(),
         guestPhone:
-            '${_selectedCountry.dialCode} ${_phoneController.text.trim()}',
+            '${_selectedCountry.dialCode} ${sanitizedPhone ?? _phoneController.text.trim()}',
         guestCount: _adults + _children,
         totalPrice: calculation.totalPrice,
         paymentOption: _selectedPaymentOption, // 'deposit' or 'full'
         paymentMethod: _selectedPaymentMethod, // 'stripe' or 'bank_transfer'
         requireOwnerApproval: _widgetSettings?.requireOwnerApproval ?? false,
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
+        notes: sanitizedNotes,
         taxLegalAccepted:
             _widgetSettings?.taxLegalConfig != null &&
                 _widgetSettings!.taxLegalConfig.enabled
@@ -2053,7 +2078,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Booking will be created by webhook after successful payment
         if (!bookingResult.isStripeValidation ||
             bookingResult.stripeBookingData == null) {
-          throw Exception('Invalid Stripe validation response');
+          throw const PaymentException(
+            'Invalid Stripe validation response from booking service',
+            userMessage: 'Payment validation failed. Please try again or contact support.',
+          );
         }
 
         await _handleStripePayment(

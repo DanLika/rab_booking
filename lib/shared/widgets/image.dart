@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_colors.dart';
@@ -206,6 +207,7 @@ class PremiumImageGallery extends StatefulWidget {
 class _PremiumImageGalleryState extends State<PremiumImageGallery> {
   late PageController _pageController;
   int _currentPage = 0;
+  Timer? _autoPlayTimer;
 
   @override
   void initState() {
@@ -214,14 +216,24 @@ class _PremiumImageGalleryState extends State<PremiumImageGallery> {
 
     // Auto play if enabled
     if (widget.autoPlayInterval != null) {
-      Future.delayed(widget.autoPlayInterval!, _autoPlay);
+      _startAutoPlay();
     }
   }
 
   @override
   void dispose() {
+    _autoPlayTimer?.cancel();
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _startAutoPlay() {
+    _autoPlayTimer?.cancel();
+    if (widget.autoPlayInterval != null) {
+      _autoPlayTimer = Timer.periodic(widget.autoPlayInterval!, (_) {
+        _autoPlay();
+      });
+    }
   }
 
   void _autoPlay() {
@@ -233,10 +245,6 @@ class _PremiumImageGalleryState extends State<PremiumImageGallery> {
       duration: AppAnimations.slow,
       curve: AppAnimations.smooth,
     );
-
-    if (widget.autoPlayInterval != null) {
-      Future.delayed(widget.autoPlayInterval!, _autoPlay);
-    }
   }
 
   @override

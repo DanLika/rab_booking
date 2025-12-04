@@ -37,6 +37,10 @@ class RotateDeviceOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Responsive icon size: smaller on very small screens
+    final screenWidth = MediaQuery.of(context).size.width;
+    final iconSize = screenWidth < 360 ? 56.0 : 80.0;
+
     return Positioned.fill(
       child: Container(
         color: colors.backgroundPrimary.withValues(alpha: 0.95),
@@ -48,7 +52,7 @@ class RotateDeviceOverlay extends StatelessWidget {
               children: [
                 Icon(
                   Icons.screen_rotation,
-                  size: 80,
+                  size: iconSize,
                   color: colors.textPrimary,
                 ),
                 const SizedBox(height: SpacingTokens.l),

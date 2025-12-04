@@ -166,7 +166,6 @@ class _WidgetAdvancedSettingsScreenState
         'unitId': unitId,
       });
     } catch (e) {
-      debugPrint('Error generating iCal export URL: $e');
       rethrow;
     }
   }
@@ -179,7 +178,6 @@ class _WidgetAdvancedSettingsScreenState
         'unitId': unitId,
       });
     } catch (e) {
-      debugPrint('Error revoking iCal export URL: $e');
       rethrow;
     }
   }

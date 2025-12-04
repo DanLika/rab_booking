@@ -310,6 +310,8 @@ class SplitDayCalendarCell extends StatelessWidget {
   final double size;
   final bool isSelected;
   final WidgetColorScheme colors;
+  final DateTime? date; // For semantic label
+  final bool isPending; // For semantic label
 
   const SplitDayCalendarCell({
     super.key,
@@ -318,25 +320,66 @@ class SplitDayCalendarCell extends StatelessWidget {
     this.size = IconSizeTokens.large,
     this.isSelected = false,
     required this.colors,
+    this.date,
+    this.isPending = false,
   });
+
+  /// Generate semantic label for screen readers
+  String _getSemanticLabel() {
+    final statusStr = status == DateStatus.available
+        ? 'dostupno'
+        : status == DateStatus.booked
+            ? 'rezervirano'
+            : status == DateStatus.partialCheckIn
+                ? 'prijava gosta'
+                : status == DateStatus.partialCheckOut
+                    ? 'odjava gosta'
+                    : status == DateStatus.partialBoth
+                        ? 'promjena gostiju'
+                        : status == DateStatus.blocked
+                            ? 'blokirano'
+                            : status == DateStatus.disabled
+                                ? 'nedostupno'
+                                : 'prošla rezervacija';
+
+    final pendingStr = isPending ? ', čeka odobrenje' : '';
+
+    if (date != null) {
+      // Format: "15. siječnja, dostupno"
+      final months = [
+        'siječnja', 'veljače', 'ožujka', 'travnja', 'svibnja', 'lipnja',
+        'srpnja', 'kolovoza', 'rujna', 'listopada', 'studenog', 'prosinca'
+      ];
+      final dateStr = '${date!.day}. ${months[date!.month - 1]}';
+      return '$dateStr, $statusStr$pendingStr';
+    }
+
+    return '$statusStr$pendingStr';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          border: isSelected
-              ? Border.all(color: colors.borderFocus, width: BorderTokens.widthThick)
-              : null,
-        ),
-        child: CustomPaint(
-          painter: SplitDayCalendarPainter(
-            status: status,
-            borderColor: status.getBorderColor(colors),
-            colors: colors,
+    return Semantics(
+      label: _getSemanticLabel(),
+      button: onTap != null,
+      enabled: status == DateStatus.available && onTap != null,
+      selected: isSelected,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            border: isSelected
+                ? Border.all(color: colors.borderFocus, width: BorderTokens.widthThick)
+                : null,
+          ),
+          child: CustomPaint(
+            painter: SplitDayCalendarPainter(
+              status: status,
+              borderColor: status.getBorderColor(colors),
+              colors: colors,
+            ),
           ),
         ),
       ),

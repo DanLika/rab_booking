@@ -44,7 +44,6 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
         widget.onImageSelected(bytes, image.name);
       }
     } catch (e) {
-      debugPrint('Error picking image: $e');
     }
   }
 

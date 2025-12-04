@@ -15,6 +15,8 @@ library;
 // ignore: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:html' as html;
 import 'dart:convert';
+import '../../../core/exceptions/app_exceptions.dart';
+import '../../../core/services/logging_service.dart';
 
 /// Downloads an ICS file in the browser
 ///
@@ -50,10 +52,13 @@ Future<void> downloadIcsFile(String content, String filename) async {
     // Important: Prevents memory leaks in long-running web apps
     html.Url.revokeObjectUrl(url);
   } catch (e, stackTrace) {
-    // Log the full error with stack trace for debugging
-    // ignore: avoid_print
-    print('ICS Download Error: $e\n$stackTrace');
-    // Rethrow with context - original stack trace is logged above
-    throw Exception('Failed to download ICS file in browser: $e');
+    // Log error using LoggingService instead of print
+    await LoggingService.logError(
+      '[ICS Download] Failed to download ICS file in browser',
+      e,
+      stackTrace,
+    );
+    // Throw typed exception for better error handling upstream
+    throw FileException.icsDownloadFailedWeb(e);
   }
 }

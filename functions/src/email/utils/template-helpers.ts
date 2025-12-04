@@ -8,8 +8,17 @@
 /**
  * Escape HTML to prevent XSS attacks
  * CRITICAL: Always escape user-provided content
+ *
+ * @param text - String that may contain HTML special characters (can be null/undefined)
+ * @returns Escaped string safe for HTML insertion
+ *
+ * @example
+ * escapeHtml('<script>alert("XSS")</script>')
+ * // Returns: '&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;'
  */
-export function escapeHtml(text: string): string {
+export function escapeHtml(text: string | null | undefined): string {
+  if (!text) return "";
+
   const map: Record<string, string> = {
     "&": "&amp;",
     "<": "&lt;",
@@ -17,7 +26,7 @@ export function escapeHtml(text: string): string {
     '"': "&quot;",
     "'": "&#39;",
   };
-  return text.replace(/[&<>"']/g, (char) => map[char]);
+  return String(text).replace(/[&<>"']/g, (char) => map[char]);
 }
 
 /**

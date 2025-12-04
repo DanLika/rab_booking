@@ -393,6 +393,50 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     );
   }
 
+  /// Generate semantic label for screen readers (Croatian)
+  String _getSemanticLabelForDate(
+    DateTime date,
+    DateStatus status,
+    bool isPending,
+    bool isRangeStart,
+    bool isRangeEnd,
+  ) {
+    // Status description
+    final statusStr = status == DateStatus.available
+        ? 'dostupno'
+        : status == DateStatus.booked
+            ? 'rezervirano'
+            : status == DateStatus.partialCheckIn
+                ? 'prijava gosta'
+                : status == DateStatus.partialCheckOut
+                    ? 'odjava gosta'
+                    : status == DateStatus.partialBoth
+                        ? 'promjena gostiju'
+                        : status == DateStatus.blocked
+                            ? 'blokirano'
+                            : status == DateStatus.disabled
+                                ? 'nedostupno'
+                                : 'prošla rezervacija';
+
+    final pendingStr = isPending ? ', čeka odobrenje' : '';
+
+    // Range indicators
+    final rangeStr = isRangeStart
+        ? ', datum prijave'
+        : isRangeEnd
+            ? ', datum odjave'
+            : '';
+
+    // Format date: "15. siječnja"
+    final months = [
+      'siječnja', 'veljače', 'ožujka', 'travnja', 'svibnja', 'lipnja',
+      'srpnja', 'kolovoza', 'rujna', 'listopada', 'studenog', 'prosinca'
+    ];
+    final dateStr = '${date.day}. ${months[date.month - 1]}';
+
+    return '$dateStr, $statusStr$pendingStr$rangeStr';
+  }
+
   Widget _buildDayCell(
     DateTime date,
     Map<String, CalendarDateInfo> data,
@@ -415,16 +459,30 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
     final isHovered = _hoveredDate != null && CalendarDateUtils.isSameDay(date, _hoveredDate!);
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hoveredDate = date),
-      onExit: (_) => setState(() => _hoveredDate = null),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        // Disable tap in calendar_only mode (when onRangeSelected is null)
-        onTap: widget.onRangeSelected != null
-            ? () => _onDateTapped(date, dateInfo, data, colors)
-            : null,
-        child: Container(
+    // Generate semantic label for screen readers
+    final String semanticLabel = _getSemanticLabelForDate(
+      date,
+      dateInfo.status,
+      dateInfo.isPendingBooking,
+      isRangeStart,
+      isRangeEnd,
+    );
+
+    return Semantics(
+      label: semanticLabel,
+      button: widget.onRangeSelected != null,
+      enabled: dateInfo.status == DateStatus.available && widget.onRangeSelected != null,
+      selected: isRangeStart || isRangeEnd,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hoveredDate = date),
+        onExit: (_) => setState(() => _hoveredDate = null),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          // Disable tap in calendar_only mode (when onRangeSelected is null)
+          onTap: widget.onRangeSelected != null
+              ? () => _onDateTapped(date, dateInfo, data, colors)
+              : null,
+          child: Container(
           margin: const EdgeInsets.all(BorderTokens.widthThin),
           decoration: BoxDecoration(
             border: Border.all(
@@ -512,8 +570,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             ],
           ),
         ),
-      ),
-    );
+      ), // GestureDetector
+    ), // MouseRegion
+    ); // Semantics
   }
 
   Widget _buildEmptyCell(WidgetColorScheme colors) {

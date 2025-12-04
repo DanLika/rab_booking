@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'widget_mode.dart';
 import 'settings/settings.dart';
+import '../../../../core/utils/date_time_parser.dart';
 
 // Re-export configs for backward compatibility
 // (Files importing widget_settings.dart can still access these classes)
@@ -411,7 +412,7 @@ class ExternalCalendarConfig {
       airbnbAccessToken: map['airbnb_access_token'],
       syncIntervalMinutes: map['sync_interval_minutes'] ?? 60,
       lastSyncedAt: map['last_synced_at'] != null
-          ? DateTime.parse(map['last_synced_at'])
+          ? DateTimeParser.tryParse(map['last_synced_at'] as String?)
           : null,
     );
   }

@@ -113,18 +113,14 @@ class _BookingConfirmationScreenState
   /// - Stripe returns - also pushed via Navigator
   /// The parent widget handles form reset and URL cleanup after pop
   void _navigateToCleanCalendar() {
-    debugPrint('[ConfirmationScreen] _navigateToCleanCalendar called');
-    debugPrint('[ConfirmationScreen] onClose=${widget.onClose != null}');
 
     // Priority 1: Custom close callback (if provided)
     if (widget.onClose != null) {
-      debugPrint('[ConfirmationScreen] Using custom onClose callback');
       widget.onClose!();
       return;
     }
 
     // Priority 2: Navigator.pop() - works for all Navigator.push scenarios
-    debugPrint('[ConfirmationScreen] Using Navigator.pop()');
     Navigator.of(context).pop();
   }
 

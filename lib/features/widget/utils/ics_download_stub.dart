@@ -19,6 +19,8 @@ library;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../core/exceptions/app_exceptions.dart';
+import '../../../core/services/logging_service.dart';
 
 /// Downloads/shares an ICS file on mobile/desktop platforms
 ///
@@ -60,10 +62,13 @@ Future<void> downloadIcsFile(String content, String filename) async {
     // Note: share_plus doesn't throw on user cancel
     // The share sheet will just close if user cancels
   } catch (e, stackTrace) {
-    // Log the full error with stack trace for debugging
-    // ignore: avoid_print
-    print('ICS Download Error: $e\n$stackTrace');
-    // Rethrow with context - original stack trace is logged above
-    throw Exception('Failed to share ICS file: $e');
+    // Log error using LoggingService instead of print
+    await LoggingService.logError(
+      '[ICS Download] Failed to share ICS file on mobile/desktop',
+      e,
+      stackTrace,
+    );
+    // Throw typed exception for better error handling upstream
+    throw FileException.icsShareFailed(e);
   }
 }

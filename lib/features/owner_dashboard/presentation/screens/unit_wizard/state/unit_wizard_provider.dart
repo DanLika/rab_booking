@@ -18,7 +18,6 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
           return UnitWizardDraft.fromUnit(unit);
         }
       } catch (e) {
-        debugPrint('[UnitWizard] Failed to load unit: $e');
       }
     }
 

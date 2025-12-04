@@ -2,6 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../../shared/models/booking_model.dart';
+import '../../shared/utils/html_utils.dart';
 import '../../features/widget/domain/models/widget_settings.dart';
 import 'logging_service.dart';
 import '../exceptions/app_exceptions.dart';
@@ -385,7 +386,7 @@ class EmailNotificationService {
             <p>$propertyName</p>
         </div>
 
-        <p>Poštovani ${booking.guestName},</p>
+        <p>Poštovani ${HtmlUtils.escapeHtml(booking.guestName)},</p>
 
         <p>Hvala Vam što ste odabrali naš smještaj! Vaša rezervacija je uspješno primljena.</p>
 
@@ -409,12 +410,12 @@ class EmailNotificationService {
             </div>
             <div class="detail-row">
                 <span class="detail-label">Broj gostiju:</span>
-                <span class="detail-value">${booking.guestCount}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestCount.toString())}</span>
             </div>
             ${booking.notes != null && booking.notes!.isNotEmpty ? '''
             <div class="detail-row">
                 <span class="detail-label">Napomene:</span>
-                <span class="detail-value">${booking.notes}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(booking.notes)}</span>
             </div>
             ''' : ''}
         </div>
@@ -612,7 +613,7 @@ class EmailNotificationService {
             <div class="success-badge">✓ Plaćanje uspješno primljeno</div>
         </div>
 
-        <p>Poštovani ${booking.guestName},</p>
+        <p>Poštovani ${HtmlUtils.escapeHtml(booking.guestName)},</p>
 
         <p>Potvrđujemo da smo primili Vašu uplatu. Vaša rezervacija je sada u potpunosti potvrđena!</p>
 
@@ -652,7 +653,7 @@ class EmailNotificationService {
             </div>
             <div class="detail-row">
                 <span class="detail-label">Broj gostiju:</span>
-                <span class="detail-value">${booking.guestCount}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestCount.toString())}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Ukupan iznos:</span>
@@ -802,15 +803,15 @@ class EmailNotificationService {
             <h3 style="margin-top: 0; color: #0066cc;">Informacije o gostu</h3>
             <div class="detail-row" style="border: none;">
                 <span class="detail-label">Ime:</span>
-                <span class="detail-value">${booking.guestName}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestName)}</span>
             </div>
             <div class="detail-row" style="border: none;">
                 <span class="detail-label">Email:</span>
-                <span class="detail-value">${booking.guestEmail}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestEmail)}</span>
             </div>
             <div class="detail-row" style="border: none;">
                 <span class="detail-label">Telefon:</span>
-                <span class="detail-value">${booking.guestPhone}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestPhone)}</span>
             </div>
         </div>
 
@@ -830,7 +831,7 @@ class EmailNotificationService {
             </div>
             <div class="detail-row">
                 <span class="detail-label">Broj gostiju:</span>
-                <span class="detail-value">${booking.guestCount}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestCount.toString())}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Ukupan iznos:</span>
@@ -839,7 +840,7 @@ class EmailNotificationService {
             ${booking.notes != null && booking.notes!.isNotEmpty ? '''
             <div class="detail-row">
                 <span class="detail-label">Napomene:</span>
-                <span class="detail-value">${booking.notes}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(booking.notes)}</span>
             </div>
             ''' : ''}
             <div class="detail-row">

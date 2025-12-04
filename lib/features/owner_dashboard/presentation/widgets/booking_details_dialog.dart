@@ -354,7 +354,6 @@ class BookingDetailsDialog extends ConsumerWidget {
       );
     } catch (e) {
       // Silently fail - iCal regeneration is non-critical
-      debugPrint('iCal regeneration failed: $e');
     }
   }
 

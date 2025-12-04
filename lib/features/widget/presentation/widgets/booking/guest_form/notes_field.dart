@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../theme/minimalist_colors.dart';
+import '../../../../../../shared/utils/validators/form_validators.dart';
 
 /// Multi-line text field for special requests/notes.
 ///
@@ -38,6 +39,8 @@ class NotesField extends StatelessWidget {
       style: TextStyle(
         color: colors.textPrimary,
       ),
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      validator: NotesValidator.validate,
       decoration: InputDecoration(
         labelText: 'Special Requests (Optional)',
         hintText: 'Any special requirements or preferences...',
@@ -68,6 +71,26 @@ class NotesField extends StatelessWidget {
             width: 2,
           ),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderTokens.circularMedium,
+          borderSide: BorderSide(
+            color: colors.error,
+            width: 1.5,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderTokens.circularMedium,
+          borderSide: BorderSide(
+            color: colors.error,
+            width: 2,
+          ),
+        ),
+        errorStyle: TextStyle(
+          color: colors.error,
+          fontSize: 12,
+          height: 1.0,
+        ),
+        errorMaxLines: 2,
         prefixIcon: Icon(
           Icons.notes,
           color: colors.textSecondary,

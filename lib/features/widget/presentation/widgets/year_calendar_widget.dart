@@ -304,6 +304,50 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
+  /// Generate semantic label for screen readers (Croatian) - year view
+  String _getSemanticLabelForDateYear(
+    DateTime date,
+    DateStatus status,
+    bool isPending,
+    bool isRangeStart,
+    bool isRangeEnd,
+  ) {
+    // Status description
+    final statusStr = status == DateStatus.available
+        ? 'dostupno'
+        : status == DateStatus.booked
+            ? 'rezervirano'
+            : status == DateStatus.partialCheckIn
+                ? 'prijava gosta'
+                : status == DateStatus.partialCheckOut
+                    ? 'odjava gosta'
+                    : status == DateStatus.partialBoth
+                        ? 'promjena gostiju'
+                        : status == DateStatus.blocked
+                            ? 'blokirano'
+                            : status == DateStatus.disabled
+                                ? 'nedostupno'
+                                : 'prošla rezervacija';
+
+    final pendingStr = isPending ? ', čeka odobrenje' : '';
+
+    // Range indicators
+    final rangeStr = isRangeStart
+        ? ', datum prijave'
+        : isRangeEnd
+            ? ', datum odjave'
+            : '';
+
+    // Format date: "15. siječnja"
+    final months = [
+      'siječnja', 'veljače', 'ožujka', 'travnja', 'svibnja', 'lipnja',
+      'srpnja', 'kolovoza', 'rujna', 'listopada', 'studenog', 'prosinca'
+    ];
+    final dateStr = '${date.day}. ${months[date.month - 1]}';
+
+    return '$dateStr, $statusStr$pendingStr$rangeStr';
+  }
+
   Widget _buildDayCell(
     int month,
     int day,
@@ -351,7 +395,21 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       // Show tooltip on all dates except disabled/past dates
       final showTooltip = dateInfo.status != DateStatus.disabled;
 
-      return MouseRegion(
+      // Generate semantic label for screen readers
+      final String semanticLabel = _getSemanticLabelForDateYear(
+        date,
+        dateInfo.status,
+        dateInfo.isPendingBooking,
+        isRangeStart,
+        isRangeEnd,
+      );
+
+      return Semantics(
+        label: semanticLabel,
+        button: widget.onRangeSelected != null,
+        enabled: isInteractive && widget.onRangeSelected != null,
+        selected: isRangeStart || isRangeEnd,
+        child: MouseRegion(
         cursor: isInteractive
             ? SystemMouseCursors.click
             : SystemMouseCursors.basic,
@@ -484,9 +542,10 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                   ),
               ],
             ),
-          ),
-        ),
-      );
+          ), // AnimatedContainer
+        ), // GestureDetector
+        ), // MouseRegion
+      ); // Semantics
     } catch (e) {
       // Invalid date (e.g., Feb 30)
       return _buildEmptyCell(cellSize, colors);

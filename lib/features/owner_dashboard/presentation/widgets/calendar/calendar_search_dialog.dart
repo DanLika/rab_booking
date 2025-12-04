@@ -50,7 +50,6 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
       loading: () {},
       error: (error, stackTrace) {
         // Silently fail - unit names will just show as IDs
-        debugPrint('Failed to load units for search: $error');
       },
     );
   }

@@ -108,7 +108,6 @@ class SnackBarHelper {
       final messenger = ScaffoldMessenger.maybeOf(context);
       if (messenger == null) {
         // If no ScaffoldMessenger available, print to console as fallback
-        debugPrint('SnackBar message: $message');
         return;
       }
 
@@ -152,7 +151,6 @@ class SnackBarHelper {
     } catch (e) {
       // Gracefully handle snackbar display errors (e.g., empty scaffold queue in dialogs)
       // This prevents "Bad state: No element" crashes when showing snackbars in dialog contexts
-      debugPrint('SnackBar error: $e - Message was: $message');
     }
   }
 

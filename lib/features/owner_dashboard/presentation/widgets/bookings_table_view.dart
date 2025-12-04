@@ -984,7 +984,6 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       );
     } catch (e) {
       // Silently fail - iCal regeneration is non-critical
-      debugPrint('iCal regeneration failed: $e');
     }
   }
 }

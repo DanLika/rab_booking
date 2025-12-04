@@ -615,7 +615,6 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen> {
           );
         } catch (scaffoldError) {
           // Embedded in tab without Scaffold - silently succeed
-          debugPrint('[PRICING] Price updated successfully (embedded mode)');
         }
       }
     } catch (e) {

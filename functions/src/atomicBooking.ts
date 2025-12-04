@@ -49,10 +49,19 @@ export const createBookingAtomic = onCall(async (request) => {
 
   // Validate required fields
   if (!unitId || !propertyId || !ownerId || !checkIn || !checkOut ||
-    !guestName || !guestEmail || !totalPrice || !guestCount) {
+    !guestName || !guestEmail || !totalPrice || !guestCount || !paymentMethod) {
     throw new HttpsError(
       "invalid-argument",
       "Missing required booking fields"
+    );
+  }
+
+  // Validate paymentMethod is one of the allowed values
+  const allowedPaymentMethods = ["stripe", "bank_transfer", "none"];
+  if (!allowedPaymentMethods.includes(paymentMethod)) {
+    throw new HttpsError(
+      "invalid-argument",
+      `Invalid payment method: "${paymentMethod}". Must be one of: ${allowedPaymentMethods.join(", ")}`
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/utils/date_time_parser.dart';
 import '../common/detail_row_widget.dart';
 
 /// Card displaying booking dates and guest information.
@@ -54,8 +55,14 @@ class BookingDatesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final checkInDate = DateTime.parse(checkIn);
-    final checkOutDate = DateTime.parse(checkOut);
+    final checkInDate = DateTimeParser.parseOrThrow(
+      checkIn,
+      context: 'BookingDatesCard.checkIn',
+    );
+    final checkOutDate = DateTimeParser.parseOrThrow(
+      checkOut,
+      context: 'BookingDatesCard.checkOut',
+    );
     // Match BookingSummaryCard date format
     final formatter = DateFormat('EEEE, MMM dd, yyyy');
 

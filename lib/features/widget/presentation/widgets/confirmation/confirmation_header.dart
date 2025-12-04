@@ -52,33 +52,38 @@ class ConfirmationHeader extends StatelessWidget {
     }
   }
 
-  Widget _getConfirmationIcon() {
+  Widget _getConfirmationIcon(double iconSize) {
     switch (paymentMethod) {
       case 'stripe':
-        return Icon(Icons.check_circle, size: 80, color: colors.textPrimary);
+        return Icon(Icons.check_circle, size: iconSize, color: colors.textPrimary);
       case 'bank_transfer':
-        return Icon(Icons.schedule, size: 80, color: colors.textSecondary);
+        return Icon(Icons.schedule, size: iconSize, color: colors.textSecondary);
       case 'pay_on_arrival':
-        return Icon(Icons.hotel, size: 80, color: colors.textPrimary);
+        return Icon(Icons.hotel, size: iconSize, color: colors.textPrimary);
       case 'pending':
-        return Icon(Icons.pending, size: 80, color: colors.textSecondary);
+        return Icon(Icons.pending, size: iconSize, color: colors.textSecondary);
       default:
-        return Icon(Icons.check_circle, size: 80, color: colors.textPrimary);
+        return Icon(Icons.check_circle, size: iconSize, color: colors.textPrimary);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Responsive icon and logo sizes
+    final screenWidth = MediaQuery.of(context).size.width;
+    final iconSize = screenWidth < 600 ? 56.0 : 80.0;
+    final logoHeight = screenWidth < 600 ? 60.0 : 80.0;
+
     return Column(
       children: [
         // Custom logo display (if configured)
         if (customLogoUrl != null && customLogoUrl!.isNotEmpty) ...[
           CachedNetworkImage(
             imageUrl: customLogoUrl!,
-            height: 80,
+            height: logoHeight,
             fit: BoxFit.contain,
             placeholder: (context, url) =>
-                const SizedBox(height: 80, width: 80),
+                SizedBox(height: logoHeight, width: logoHeight),
             errorWidget: (context, url, error) => const SizedBox.shrink(),
           ),
           const SizedBox(height: SpacingTokens.l),
@@ -87,7 +92,7 @@ class ConfirmationHeader extends StatelessWidget {
         // Success icon with animation
         ScaleTransition(
           scale: scaleAnimation,
-          child: _getConfirmationIcon(),
+          child: _getConfirmationIcon(iconSize),
         ),
 
         const SizedBox(height: SpacingTokens.l),

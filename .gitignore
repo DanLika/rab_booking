@@ -73,6 +73,7 @@ firebase-service-account-key.json
 *.md
 !README.md
 !claude.md
+!.claude/**/*.md
 *.sql
 *.stackdump
 build_output.txt

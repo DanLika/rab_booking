@@ -14,7 +14,7 @@ service cloud.firestore {
           // Check if user document exists and has owner/admin role
           exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['owner', 'admin']
-        ) || isAuthenticated(); // Allow all authenticated users for now
+        );
     }
 
     // Helper function to check if user owns the document

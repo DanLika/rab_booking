@@ -1,3 +1,4 @@
+
 #!/bin/bash
 # Quick error analysis for Claude Code
 # Helps Claude identify and categorize errors quickly
@@ -7,7 +8,10 @@ echo "🐛 ERROR ANALYSIS REPORT"
 echo "========================================="
 echo ""
 
-cd /Users/duskolicanin/git/rab_booking
+# Dynamically resolve project root (portable across environments)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
 
 # Run flutter analyze and capture output
 ANALYZE_OUTPUT=$(flutter analyze 2>&1)

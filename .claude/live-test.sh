@@ -2,7 +2,10 @@
 # Live testing workflow for Claude Code
 # Manages browsers, emulators, and multi-instance testing
 
-cd /Users/duskolicanin/git/rab_booking
+# Dynamically resolve project root (portable across environments)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
 
 echo "========================================="
 echo "🧪 LIVE TESTING WORKFLOW"

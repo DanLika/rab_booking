@@ -2,7 +2,10 @@
 # Firebase development tools for Claude Code
 # Helps Claude manage Firebase services quickly
 
-cd /Users/duskolicanin/git/rab_booking
+# Dynamically resolve project root (portable across environments)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
 
 echo "========================================="
 echo "🔥 FIREBASE DEVELOPMENT TOOLS"

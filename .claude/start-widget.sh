@@ -3,7 +3,11 @@
 # Usage: ./.claude/start-widget.sh
 
 echo "Starting Flutter widget on port 8081..."
-cd /Users/duskolicanin/git/rab_booking
+
+# Dynamically resolve project root (portable across environments)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
 
 # Clean build if flag provided
 if [[ "$1" == "--clean" ]]; then

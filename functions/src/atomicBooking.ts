@@ -203,7 +203,7 @@ export const createBookingAtomic = onCall(async (request) => {
     if (paymentMethod === "stripe") {
       // For Stripe, we need to validate availability within transaction
       // but NOT create the booking yet
-      await db.runTransaction(async (transaction) => {
+      const validationResult = await db.runTransaction(async (transaction) => {
         // Query conflicting bookings
         const conflictingBookingsQuery = db
           .collection("bookings")
@@ -311,6 +311,7 @@ export const createBookingAtomic = onCall(async (request) => {
         checkIn,
         checkOut,
         guestEmail,
+        bookingNights: validationResult.bookingNights,
       });
 
       // Return validation success with all data needed for Stripe checkout
@@ -327,7 +328,7 @@ export const createBookingAtomic = onCall(async (request) => {
           guestName,
           guestEmail,
           guestPhone: guestPhone || null,
-          guestCount,
+          guestCount: Number(guestCount), // Use validated numeric value
           totalPrice,
           depositAmount,
           paymentOption,
@@ -680,7 +681,7 @@ export const createBookingAtomic = onCall(async (request) => {
         guest_phone: guestPhone || null,
         check_in: checkInDate,
         check_out: checkOutDate,
-        guest_count: guestCount,
+        guest_count: Number(guestCount), // Use validated numeric value
         total_price: totalPrice,
         advance_amount: depositAmount,
         deposit_amount: depositAmount, // For Stripe Cloud Function
@@ -836,7 +837,7 @@ export const createBookingAtomic = onCall(async (request) => {
                 unitData?.name || "Unit",
                 checkInDate.toDate(),
                 checkOutDate.toDate(),
-                guestCount,
+                Number(guestCount), // Use validated numeric value
                 totalPrice,
                 depositAmount
               );

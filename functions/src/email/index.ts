@@ -103,6 +103,30 @@ export {
   type CustomGuestEmailParams,
 } from "./templates/custom-email";
 
+export {
+  sendEmailVerificationEmailV2,
+  generateEmailVerificationEmailV2,
+  type EmailVerificationParams,
+} from "./templates/email-verification-v2";
+
+export {
+  sendPendingOwnerNotificationEmailV2,
+  generatePendingOwnerNotificationEmailV2,
+  type PendingOwnerNotificationParams,
+} from "./templates/pending-owner-notification-v2";
+
+export {
+  sendBookingRejectedEmailV2,
+  generateBookingRejectedEmailV2,
+  type BookingRejectedParams,
+} from "./templates/booking-rejected-v2";
+
+export {
+  sendSuspiciousActivityEmailV2,
+  generateSuspiciousActivityEmailV2,
+  type SuspiciousActivityParams,
+} from "./templates/suspicious-activity-v2";
+
 // Base template
 export {
   generateEmailHtml,

@@ -5,23 +5,23 @@
  * All email designs are located in ./email/templates/
  *
  * MIGRATION STATUS:
- * ✅ sendBookingConfirmationEmail - Migrated to new template
- * ✅ sendBookingApprovedEmail - Migrated to new template
- * ✅ sendOwnerNotificationEmail - Migrated to new template
- * ✅ sendGuestCancellationEmail - Migrated to new template (previously sendBookingCancellationEmail)
- * ✅ sendOwnerCancellationNotificationEmail - Migrated to new template
- * ✅ sendRefundNotificationEmail - Migrated to new template
- * ✅ sendCustomGuestEmail - Migrated to new template (previously sendCustomEmailToGuest)
- * ✅ sendPaymentReminderEmail - Migrated to new template
- * ✅ sendCheckInReminderEmail - Migrated to new template
- * ✅ sendCheckOutReminderEmail - Migrated to new template
+ * ✅ sendBookingConfirmationEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendBookingApprovedEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendOwnerNotificationEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendGuestCancellationEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendOwnerCancellationNotificationEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendRefundNotificationEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendCustomGuestEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendPaymentReminderEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendCheckInReminderEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendCheckOutReminderEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendPendingBookingRequestEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendEmailVerificationCode - Migrated to V2 template (Refined Premium)
+ * ✅ sendPendingBookingOwnerNotification - Migrated to V2 template (Refined Premium)
+ * ✅ sendBookingRejectedEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendSuspiciousActivityEmail - Migrated to V2 template (Refined Premium)
  *
- * NOT YET MIGRATED (kept from old implementation):
- * - sendSuspiciousActivityEmail
- * - sendPendingBookingRequestEmail
- * - sendPendingBookingOwnerNotification
- * - sendBookingRejectedEmail
- * - sendEmailVerificationCode
+ * ALL EMAIL FUNCTIONS FULLY MIGRATED! 🎉
  */
 
 import {Resend} from "resend";
@@ -52,6 +52,14 @@ import {
   type CheckInReminderParams,
   type CheckOutReminderParams,
   type CustomGuestEmailParams,
+  sendEmailVerificationEmailV2,
+  type EmailVerificationParams,
+  sendPendingOwnerNotificationEmailV2,
+  type PendingOwnerNotificationParams,
+  sendBookingRejectedEmailV2,
+  type BookingRejectedParams,
+  sendSuspiciousActivityEmailV2,
+  type SuspiciousActivityParams,
 } from "./email";
 
 // ==========================================
@@ -713,42 +721,41 @@ export async function sendCheckOutReminderEmail(
 }
 
 // ==========================================
-// EMAIL FUNCTIONS - NOT YET MIGRATED
-// (Kept from old implementation)
+// ADDITIONAL EMAIL FUNCTIONS
 // ==========================================
 
-// TODO: These functions will be migrated in FAZA 2
-
 /**
- * Send suspicious activity email (NOT YET MIGRATED)
- * Uses old inline HTML template
+ * Send suspicious activity email
+ * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium, alert/danger theme)
  */
 export async function sendSuspiciousActivityEmail(
   adminEmail: string,
   activityType: string,
-  details: string
+  details: string,
+  timestamp?: string,
+  ipAddress?: string,
+  userAgent?: string
 ): Promise<void> {
-  const subject = `⚠️ Suspicious Activity Detected - ${activityType}`;
-  const html = `
-<!DOCTYPE html>
-<html>
-<body>
-  <h1>Suspicious Activity Detected</h1>
-  <p><strong>Type:</strong> ${activityType}</p>
-  <p><strong>Details:</strong> ${details}</p>
-  <p>Please investigate immediately.</p>
-</body>
-</html>
-  `;
-
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: adminEmail,
-      subject: subject,
-      html: html,
-    });
-    logSuccess("Suspicious activity email sent", {email: adminEmail});
+    // Build params for V2 template
+    const params: SuspiciousActivityParams = {
+      adminEmail,
+      activityType,
+      details,
+      timestamp,
+      ipAddress,
+      userAgent,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendSuspiciousActivityEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL,
+      FROM_NAME
+    );
+
+    logSuccess("Suspicious activity email sent (V2 - Refined Premium)", {email: adminEmail});
   } catch (error) {
     logError("Error sending suspicious activity email", error);
     throw error;
@@ -790,36 +797,35 @@ export async function sendPendingBookingRequestEmail(
 }
 
 /**
- * Send pending booking owner notification (NOT YET MIGRATED)
- * Uses old inline HTML template
+ * Send pending booking owner notification
+ * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium, warning theme)
  */
 export async function sendPendingBookingOwnerNotification(
   ownerEmail: string,
   bookingReference: string,
   guestName: string,
-  propertyName: string
+  propertyName: string,
+  dashboardUrl?: string
 ): Promise<void> {
-  const subject = `Novi zahtjev za rezervaciju - ${bookingReference}`;
-  const html = `
-<!DOCTYPE html>
-<html>
-<body>
-  <h1>Novi zahtjev za rezervaciju</h1>
-  <p>Gost ${guestName} je poslao zahtjev za rezervaciju ${propertyName}.</p>
-  <p>Referenca: ${bookingReference}</p>
-  <p>Molimo pregledajte i potvrdite rezervaciju.</p>
-</body>
-</html>
-  `;
-
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: ownerEmail,
-      subject: subject,
-      html: html,
-    });
-    logSuccess("Pending booking owner notification sent", {email: ownerEmail});
+    // Build params for V2 template
+    const params: PendingOwnerNotificationParams = {
+      ownerEmail,
+      bookingReference,
+      guestName,
+      propertyName,
+      dashboardUrl,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendPendingOwnerNotificationEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL,
+      FROM_NAME
+    );
+
+    logSuccess("Pending booking owner notification sent (V2 - Refined Premium)", {email: ownerEmail});
   } catch (error) {
     logError("Error sending pending booking owner notification", error);
     throw error;
@@ -827,39 +833,37 @@ export async function sendPendingBookingOwnerNotification(
 }
 
 /**
- * Send booking rejected email (NOT YET MIGRATED)
- * Uses old inline HTML template
+ * Send booking rejected email
+ * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium, error theme)
  */
 export async function sendBookingRejectedEmail(
   guestEmail: string,
   guestName: string,
   bookingReference: string,
   propertyName: string,
-  reason?: string
+  reason?: string,
+  ownerEmail?: string
 ): Promise<void> {
-  const subject = `Rezervacija odbijena - ${bookingReference}`;
-  const html = `
-<!DOCTYPE html>
-<html>
-<body>
-  <h1>Rezervacija odbijena</h1>
-  <p>Poštovani/a ${guestName},</p>
-  <p>Nažalost, vaša rezervacija ${propertyName} je odbijena.</p>
-  <p>Referenca: ${bookingReference}</p>
-  ${reason ? `<p>Razlog: ${reason}</p>` : ""}
-  <p>Žao nam je zbog neugodnosti.</p>
-</body>
-</html>
-  `;
-
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: guestEmail,
-      subject: subject,
-      html: html,
-    });
-    logSuccess("Booking rejected email sent", {email: guestEmail});
+    // Build params for V2 template
+    const params: BookingRejectedParams = {
+      guestEmail,
+      guestName,
+      bookingReference,
+      propertyName,
+      reason,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendBookingRejectedEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL,
+      FROM_NAME,
+      ownerEmail
+    );
+
+    logSuccess("Booking rejected email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending booking rejected email", error);
     throw error;
@@ -867,33 +871,29 @@ export async function sendBookingRejectedEmail(
 }
 
 /**
- * Send email verification code (NOT YET MIGRATED)
- * Uses old inline HTML template
+ * Send email verification code
+ * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium, info/security theme)
  */
 export async function sendEmailVerificationCode(
   email: string,
   code: string
 ): Promise<void> {
-  const subject = "Verifikacijski kod";
-  const html = `
-<!DOCTYPE html>
-<html>
-<body>
-  <h1>Verifikacijski kod</h1>
-  <p>Vaš verifikacijski kod je: <strong>${code}</strong></p>
-  <p>Kod vrijedi 10 minuta.</p>
-</body>
-</html>
-  `;
-
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: email,
-      subject: subject,
-      html: html,
-    });
-    logSuccess("Email verification code sent", {email});
+    // Build params for V2 template
+    const params: EmailVerificationParams = {
+      email,
+      code,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendEmailVerificationEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL,
+      FROM_NAME
+    );
+
+    logSuccess("Email verification code sent (V2 - Refined Premium)", {email});
   } catch (error) {
     logError("Error sending email verification code", error);
     throw error;

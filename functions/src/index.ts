@@ -35,17 +35,14 @@ export * from "./icalExport";
 // Export iCal export management (Generate/revoke URLs)
 export * from "./icalExportManagement";
 
-// Export cleanup functions for abandoned Stripe bookings
-export * from "./cleanupAbandonedBookings";
-
 // Export booking access verification functions (Booking lookup)
 export * from "./verifyBookingAccess";
 
 // Export email verification functions (OTP for guest bookings)
 export * from "./emailVerification";
 
-// Export widget configuration setup function
-export * from "./setupWidgetConfig";
+// Export notification preferences functions (Owner email opt-out)
+export * from "./notificationPreferences";
 
 // Export guest booking cancellation function
 export * from "./guestCancelBooking";

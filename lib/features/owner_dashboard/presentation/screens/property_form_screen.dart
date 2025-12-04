@@ -1318,12 +1318,56 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           ? null
           : _subdomainController.text.trim().toLowerCase();
 
+      // ========================================================================
+      // SECURITY: Validate subdomain availability before save
+      // ========================================================================
+      if (subdomainValue != null && subdomainValue.isNotEmpty) {
+        if (_isSubdomainAvailable != true) {
+          if (mounted) {
+            ErrorDisplayUtils.showErrorSnackBar(
+              context,
+              Exception('Subdomain nije dostupan'),
+              userMessage: _subdomainError ?? 'Molimo odaberite dostupan subdomain',
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
+
       if (_isEditing) {
+        // Check if subdomain changed and needs to be updated via Cloud Function
+        final oldSubdomain = widget.property!.subdomain;
+        final subdomainChanged = subdomainValue != oldSubdomain;
+
+        if (subdomainChanged && subdomainValue != null && subdomainValue.isNotEmpty) {
+          // Use Cloud Function for server-side validation
+          try {
+            final functions = FirebaseFunctions.instance;
+            final callable = functions.httpsCallable('setPropertySubdomain');
+            await callable.call<Map<String, dynamic>>({
+              'propertyId': widget.property!.id,
+              'subdomain': subdomainValue,
+            });
+          } catch (e) {
+            if (mounted) {
+              ErrorDisplayUtils.showErrorSnackBar(
+                context,
+                e,
+                userMessage: 'Greška pri postavljanju subdomena',
+              );
+            }
+            setState(() => _isLoading = false);
+            return;
+          }
+        }
+
+        // Update other fields (subdomain already updated by Cloud Function if changed)
         await repository.updateProperty(
           propertyId: widget.property!.id,
           name: _nameController.text,
           slug: _slugController.text,
-          subdomain: subdomainValue,
+          subdomain: subdomainChanged ? null : subdomainValue, // Skip if already set by Cloud Function
           description: _descriptionController.text,
           propertyType: _selectedType.value,
           location: _locationController.text,
@@ -1336,6 +1380,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen> {
           isActive: _isPublished,
         );
       } else {
+        // Create mode - subdomain validation already done above
         await repository.createProperty(
           ownerId: ownerId,
           name: _nameController.text,

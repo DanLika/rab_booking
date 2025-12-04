@@ -149,37 +149,6 @@ class StripeService {
     }
   }
 
-  /// Create Stripe Dashboard Link
-  ///
-  /// Calls the existing Cloud Function: createStripeDashboardLink
-  Future<String> createDashboardLink() async {
-    try {
-      LoggingService.logOperation('[StripeService] Creating dashboard link');
-
-      final result = await _functions
-          .httpsCallable('createStripeDashboardLink')
-          .call();
-
-      final data = result.data as Map<String, dynamic>;
-
-      if (data['success'] != true) {
-        throw StripeServiceException(
-          'Failed to create dashboard link',
-          data['error'] as String?,
-        );
-      }
-
-      LoggingService.logSuccess('[StripeService] Dashboard link created');
-
-      return data['dashboardUrl'] as String;
-    } on FirebaseFunctionsException catch (e) {
-      await LoggingService.logError('[StripeService] Error creating dashboard link: ${e.message}', e);
-      throw StripeServiceException(
-        'Failed to create dashboard link: ${e.message}',
-        e.code,
-      );
-    }
-  }
 }
 
 // ===================================================================

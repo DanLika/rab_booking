@@ -160,53 +160,6 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async
 });
 
 /**
- * Cloud Function: Create Stripe Dashboard Link
- *
- * Creates a login link to Stripe Express Dashboard
- */
-export const createStripeDashboardLink = onCall({secrets: [stripeSecretKey]}, async (request) => {
-  // Check authentication
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "User must be authenticated");
-  }
-
-  const ownerId = request.auth.uid;
-
-  try {
-    // Get owner data
-    const ownerDoc = await db.collection("users").doc(ownerId).get();
-    if (!ownerDoc.exists) {
-      throw new HttpsError("not-found", "Owner not found");
-    }
-
-    const stripeAccountId = ownerDoc.data()!.stripe_account_id;
-
-    if (!stripeAccountId) {
-      throw new HttpsError(
-        "failed-precondition",
-        "No Stripe account connected"
-      );
-    }
-
-    // Create login link to Stripe Express Dashboard
-    const loginLink = await getStripeClient().accounts.createLoginLink(
-      stripeAccountId
-    );
-
-    return {
-      success: true,
-      dashboardUrl: loginLink.url,
-    };
-  } catch (error: any) {
-    console.error("Error creating Stripe dashboard link:", error);
-    throw new HttpsError(
-      "internal",
-      error.message || "Failed to create dashboard link"
-    );
-  }
-});
-
-/**
  * Cloud Function: Disconnect Stripe Account
  *
  * Disconnects owner's Stripe account from the platform
@@ -235,91 +188,26 @@ export const disconnectStripeAccount = onCall({secrets: [stripeSecretKey]}, asyn
       );
     }
 
-    // Delete the account from Stripe
-    await getStripeClient().accounts.del(stripeAccountId);
-
-    // Remove from Firestore
+    // Remove integration from Firestore only
+    // NOTE: We do NOT delete the Stripe account itself - it remains active
+    // and the owner can continue using it independently or reconnect later
     await db.collection("users").doc(ownerId).update({
       stripe_account_id: admin.firestore.FieldValue.delete(),
       stripe_connected_at: admin.firestore.FieldValue.delete(),
       stripe_disconnected_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    console.log(`Stripe account ${stripeAccountId} disconnected for owner ${ownerId}`);
+    console.log(`Stripe integration removed for owner ${ownerId}. Account ${stripeAccountId} remains active.`);
 
     return {
       success: true,
-      message: "Stripe account disconnected successfully",
+      message: "Stripe integracija uklonjena. Vaš Stripe račun ostaje aktivan.",
     };
   } catch (error: any) {
     console.error("Error disconnecting Stripe account:", error);
     throw new HttpsError(
       "internal",
       error.message || "Failed to disconnect account"
-    );
-  }
-});
-
-/**
- * Cloud Function: Get Stripe Transactions
- *
- * Returns recent transactions for owner's Stripe account
- */
-export const getStripeTransactions = onCall({secrets: [stripeSecretKey]}, async (request) => {
-  // Check authentication
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "User must be authenticated");
-  }
-
-  const ownerId = request.auth.uid;
-  const {limit = 10} = request.data;
-
-  try {
-    // Get owner data
-    const ownerDoc = await db.collection("users").doc(ownerId).get();
-    if (!ownerDoc.exists) {
-      throw new HttpsError("not-found", "Owner not found");
-    }
-
-    const stripeAccountId = ownerDoc.data()!.stripe_account_id;
-
-    if (!stripeAccountId) {
-      throw new HttpsError(
-        "failed-precondition",
-        "No Stripe account connected"
-      );
-    }
-
-    // Get charges (payments) from connected account
-    const charges = await getStripeClient().charges.list(
-      {
-        limit: limit,
-      },
-      {
-        stripeAccount: stripeAccountId,
-      }
-    );
-
-    const transactions = charges.data.map((charge) => ({
-      id: charge.id,
-      amount: charge.amount / 100,
-      currency: charge.currency.toUpperCase(),
-      status: charge.status,
-      description: charge.description || "",
-      created: new Date(charge.created * 1000).toISOString(),
-      receiptUrl: charge.receipt_url,
-    }));
-
-    return {
-      success: true,
-      transactions,
-      hasMore: charges.has_more,
-    };
-  } catch (error: any) {
-    console.error("Error getting Stripe transactions:", error);
-    throw new HttpsError(
-      "internal",
-      error.message || "Failed to get transactions"
     );
   }
 });

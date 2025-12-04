@@ -115,6 +115,14 @@
         { "fieldPath": "payment_status", "order": "ASCENDING" },
         { "fieldPath": "created_at", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "stripe_pending_expires_at", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

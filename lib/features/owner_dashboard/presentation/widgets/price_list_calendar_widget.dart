@@ -747,157 +747,115 @@ class _PriceListCalendarWidgetState
         context: context,
         builder: (context) => StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              title: Text(
-                'Uredi datum - ${DateFormat('d.M.yyyy').format(date)}',
-                style: TextStyle(fontSize: isMobile ? 16 : null),
+            final theme = Theme.of(context);
+            final isDark = theme.brightness == Brightness.dark;
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              contentPadding: EdgeInsets.fromLTRB(
-                isMobile ? 16 : 24,
-                isMobile ? 12 : 20,
-                isMobile ? 16 : 24,
-                isMobile ? 12 : 20,
-              ),
-              content: SizedBox(
-                height: isMobile ? screenHeight * 0.72 : screenHeight * 0.7,
-                width: isMobile ? screenWidth * 0.9 : 600,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Price section with icon header
-                      Row(
+              clipBehavior: Clip.antiAlias,
+              child: Container(
+                width: isMobile ? screenWidth * 0.95 : 500,
+                constraints: BoxConstraints(
+                  maxHeight: isMobile ? screenHeight * 0.85 : screenHeight * 0.8,
+                ),
+                decoration: BoxDecoration(
+                  gradient: context.gradients.sectionBackground,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.gradients.sectionBorder
+                        .withAlpha((0.5 * 255).toInt()),
+                  ),
+                  boxShadow:
+                      isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Gradient Header
+                    Container(
+                      padding: EdgeInsets.all(isMobile ? 16 : 20),
+                      decoration: BoxDecoration(
+                        gradient: context.gradients.brandPrimary,
+                        borderRadius:
+                            const BorderRadius.vertical(top: Radius.circular(11)),
+                      ),
+                      child: Row(
                         children: [
-                          Icon(
-                            Icons.euro,
-                            size: 18,
-                            color: Theme.of(context).colorScheme.primary,
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.calendar_today,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'CIJENA',
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                              letterSpacing: 0.5,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Uredi datum',
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 16 : 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  DateFormat('d. MMMM yyyy.', 'hr').format(date),
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 12 : 14,
+                                    color: Colors.white.withAlpha((0.9 * 255).toInt()),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: isMobile ? 8 : 12),
-                      TextField(
-                        controller: priceController,
-                        decoration: InputDecorationHelper.buildDecoration(
-                          labelText: 'Osnovna cijena po noći (€)',
-                          prefixIcon: const Icon(Icons.euro),
-                          isMobile: isMobile,
-                          context: context,
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                      ),
+                    ),
 
-                      SizedBox(height: isMobile ? 16 : 24),
-
-                      // Availability section with icon header
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.event_available,
-                            size: 18,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'DOSTUPNOST',
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SwitchListTile(
-                        title: Text(
-                          'Dostupno',
-                          style: TextStyle(fontSize: isMobile ? 14 : null),
-                        ),
-                        value: available,
-                        onChanged: (value) => setState(() => available = value),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      SwitchListTile(
-                        title: Text(
-                          'Blokiraj prijavu (check-in)',
-                          style: TextStyle(fontSize: isMobile ? 14 : null),
-                        ),
-                        subtitle: Text(
-                          'Gosti ne mogu započeti rezervaciju',
-                          style: TextStyle(fontSize: isMobile ? 12 : null),
-                        ),
-                        value: blockCheckIn,
-                        onChanged: (value) =>
-                            setState(() => blockCheckIn = value),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      SwitchListTile(
-                        title: Text(
-                          'Blokiraj odjavu (check-out)',
-                          style: TextStyle(fontSize: isMobile ? 14 : null),
-                        ),
-                        subtitle: Text(
-                          'Gosti ne mogu završiti rezervaciju',
-                          style: TextStyle(fontSize: isMobile ? 12 : null),
-                        ),
-                        value: blockCheckOut,
-                        onChanged: (value) =>
-                            setState(() => blockCheckOut = value),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-
-                      SizedBox(height: isMobile ? 16 : 24),
-
-                      // Advanced options in ExpansionTile (collapsed by default)
-                      Theme(
-                        data: Theme.of(context).copyWith(
-                          dividerColor: Colors.transparent,
-                        ),
-                        child: ExpansionTile(
-                          tilePadding: EdgeInsets.zero,
-                          childrenPadding: EdgeInsets.only(
-                            top: isMobile ? 8 : 12,
-                            bottom: isMobile ? 8 : 12,
-                          ),
-                          leading: Icon(
-                            Icons.tune,
-                            size: 18,
-                            color: Theme.of(context).colorScheme.tertiary,
-                          ),
-                          title: Text(
-                            'Napredne opcije',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.tertiary,
-                            ),
-                          ),
-                          subtitle: Text(
-                            'Vikend cijena, min/max noći, unaprijed',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
+                    // Content
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.all(isMobile ? 16 : 24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Weekend price
+                            // Price section with icon header
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.euro,
+                                  size: 18,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'CIJENA',
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: isMobile ? 8 : 12),
                             TextField(
-                              controller: weekendPriceController,
+                              controller: priceController,
                               decoration: InputDecorationHelper.buildDecoration(
-                                labelText: 'Vikend cijena (€)',
-                                hintText: 'Npr. 120',
-                                prefixIcon: const Icon(Icons.weekend),
+                                labelText: 'Osnovna cijena po noći (€)',
+                                prefixIcon: const Icon(Icons.euro),
                                 isMobile: isMobile,
                                 context: context,
                               ),
@@ -906,53 +864,107 @@ class _PriceListCalendarWidgetState
                                 FilteringTextInputFormatter.digitsOnly,
                               ],
                             ),
-                            SizedBox(height: isMobile ? 12 : 16),
-                            // Min/Max nights row
+
+                            SizedBox(height: isMobile ? 16 : 24),
+
+                            // Availability section with icon header
                             Row(
                               children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: minNightsController,
-                                    decoration: InputDecorationHelper.buildDecoration(
-                                      labelText: 'Min. noći',
-                                      hintText: 'npr. 2',
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
-                                  ),
+                                Icon(
+                                  Icons.event_available,
+                                  size: 18,
+                                  color: theme.colorScheme.primary,
                                 ),
-                                SizedBox(width: isMobile ? 8 : 12),
-                                Expanded(
-                                  child: TextField(
-                                    controller: maxNightsController,
-                                    decoration: InputDecorationHelper.buildDecoration(
-                                      labelText: 'Max. noći',
-                                      hintText: 'npr. 14',
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
+                                const SizedBox(width: 8),
+                                Text(
+                                  'DOSTUPNOST',
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                    letterSpacing: 0.5,
                                   ),
                                 ),
                               ],
                             ),
-                            SizedBox(height: isMobile ? 12 : 16),
-                            // Min/Max days advance booking row
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: minDaysAdvanceController,
-                                    decoration: InputDecorationHelper.buildDecoration(
-                                      labelText: 'Min. dana unaprijed',
-                                      hintText: 'npr. 1',
+                            SwitchListTile(
+                              title: Text(
+                                'Dostupno',
+                                style: TextStyle(fontSize: isMobile ? 14 : null),
+                              ),
+                              value: available,
+                              onChanged: (value) =>
+                                  setState(() => available = value),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            SwitchListTile(
+                              title: Text(
+                                'Blokiraj prijavu (check-in)',
+                                style: TextStyle(fontSize: isMobile ? 14 : null),
+                              ),
+                              subtitle: Text(
+                                'Gosti ne mogu započeti rezervaciju',
+                                style: TextStyle(fontSize: isMobile ? 12 : null),
+                              ),
+                              value: blockCheckIn,
+                              onChanged: (value) =>
+                                  setState(() => blockCheckIn = value),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            SwitchListTile(
+                              title: Text(
+                                'Blokiraj odjavu (check-out)',
+                                style: TextStyle(fontSize: isMobile ? 14 : null),
+                              ),
+                              subtitle: Text(
+                                'Gosti ne mogu završiti rezervaciju',
+                                style: TextStyle(fontSize: isMobile ? 12 : null),
+                              ),
+                              value: blockCheckOut,
+                              onChanged: (value) =>
+                                  setState(() => blockCheckOut = value),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+
+                            SizedBox(height: isMobile ? 16 : 24),
+
+                            // Advanced options in ExpansionTile (collapsed by default)
+                            Theme(
+                              data: theme.copyWith(
+                                dividerColor: Colors.transparent,
+                              ),
+                              child: ExpansionTile(
+                                tilePadding: EdgeInsets.zero,
+                                childrenPadding: EdgeInsets.only(
+                                  top: isMobile ? 8 : 12,
+                                  bottom: isMobile ? 8 : 12,
+                                ),
+                                leading: Icon(
+                                  Icons.tune,
+                                  size: 18,
+                                  color: theme.colorScheme.tertiary,
+                                ),
+                                title: Text(
+                                  'Napredne opcije',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.colorScheme.tertiary,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'Vikend cijena, min/max noći, unaprijed',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                children: [
+                                  // Weekend price
+                                  TextField(
+                                    controller: weekendPriceController,
+                                    decoration:
+                                        InputDecorationHelper.buildDecoration(
+                                      labelText: 'Vikend cijena (€)',
+                                      hintText: 'Npr. 120',
+                                      prefixIcon: const Icon(Icons.weekend),
                                       isMobile: isMobile,
                                       context: context,
                                     ),
@@ -961,375 +973,507 @@ class _PriceListCalendarWidgetState
                                       FilteringTextInputFormatter.digitsOnly,
                                     ],
                                   ),
-                                ),
-                                SizedBox(width: isMobile ? 8 : 12),
-                                Expanded(
-                                  child: TextField(
-                                    controller: maxDaysAdvanceController,
-                                    decoration: InputDecorationHelper.buildDecoration(
-                                      labelText: 'Max. dana unaprijed',
-                                      hintText: 'npr. 365',
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
+                                  SizedBox(height: isMobile ? 12 : 16),
+                                  // Min/Max nights row
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          controller: minNightsController,
+                                          decoration: InputDecorationHelper
+                                              .buildDecoration(
+                                            labelText: 'Min. noći',
+                                            hintText: 'npr. 2',
+                                            isMobile: isMobile,
+                                            context: context,
+                                          ),
+                                          keyboardType: TextInputType.number,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(width: isMobile ? 8 : 12),
+                                      Expanded(
+                                        child: TextField(
+                                          controller: maxNightsController,
+                                          decoration: InputDecorationHelper
+                                              .buildDecoration(
+                                            labelText: 'Max. noći',
+                                            hintText: 'npr. 14',
+                                            isMobile: isMobile,
+                                            context: context,
+                                          ),
+                                          keyboardType: TextInputType.number,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
+                                        ),
+                                      ),
                                     ],
                                   ),
-                                ),
-                              ],
+                                  SizedBox(height: isMobile ? 12 : 16),
+                                  // Min/Max days advance booking row
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          controller: minDaysAdvanceController,
+                                          decoration: InputDecorationHelper
+                                              .buildDecoration(
+                                            labelText: 'Min. dana unaprijed',
+                                            hintText: 'npr. 1',
+                                            isMobile: isMobile,
+                                            context: context,
+                                          ),
+                                          keyboardType: TextInputType.number,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(width: isMobile ? 8 : 12),
+                                      Expanded(
+                                        child: TextField(
+                                          controller: maxDaysAdvanceController,
+                                          decoration: InputDecorationHelper
+                                              .buildDecoration(
+                                            labelText: 'Max. dana unaprijed',
+                                            hintText: 'npr. 365',
+                                            isMobile: isMobile,
+                                            context: context,
+                                          ),
+                                          keyboardType: TextInputType.number,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+
+                    // Actions footer
+                    Container(
+                      padding: EdgeInsets.all(isMobile ? 12 : 16),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                            color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (existingPrice != null)
+                            TextButton(
+                              onPressed: isProcessing
+                                  ? null
+                                  : () async {
+                                      final navigator = Navigator.of(context);
+                                      final messenger =
+                                          ScaffoldMessenger.of(context);
+
+                                      // Show confirmation dialog before deleting
+                                      final confirmed = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('Potvrda brisanja'),
+                                          content: const Text(
+                                            'Da li ste sigurni da želite obrisati custom cijenu? '
+                                            'Datum će biti vraćen na osnovnu cijenu.',
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(false),
+                                              child: const Text('Odustani'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(true),
+                                              style: TextButton.styleFrom(
+                                                foregroundColor: AppColors.error,
+                                              ),
+                                              child: const Text('Obriši'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (confirmed != true) return;
+
+                                      setState(() => isProcessing = true);
+
+                                      // Delete custom price (revert to base price)
+                                      try {
+                                        final repository = ref.read(
+                                          dailyPriceRepositoryProvider,
+                                        );
+                                        await repository.deletePriceForDate(
+                                          unitId: widget.unit.id,
+                                          date: date,
+                                        );
+
+                                        // Invalidate provider to trigger reload
+                                        ref.invalidate(
+                                          monthlyPricesProvider(
+                                            MonthlyPricesParams(
+                                              unitId: widget.unit.id,
+                                              month: DateTime(
+                                                  date.year, date.month),
+                                            ),
+                                          ),
+                                        );
+
+                                        if (mounted) {
+                                          dialogClosed = true;
+                                          navigator.pop();
+                                          messenger.showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                  'Vraćeno na osnovnu cijenu'),
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (mounted) {
+                                          messenger.showSnackBar(
+                                            SnackBar(
+                                              content: Text('Greška: $e'),
+                                              backgroundColor: AppColors.error,
+                                            ),
+                                          );
+                                        }
+                                      } finally {
+                                        // Only reset processing if dialog is still open
+                                        if (mounted && !dialogClosed) {
+                                          setState(() => isProcessing = false);
+                                        }
+                                      }
+                                    },
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppColors.error,
+                              ),
+                              child: const Text('Obriši'),
+                            ),
+                          TextButton(
+                            onPressed: isProcessing
+                                ? null
+                                : () => Navigator.of(context).pop(),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text('Odustani'),
+                          ),
+                          const SizedBox(width: 12),
+                          FilledButton(
+                            onPressed: isProcessing
+                                ? null
+                                : () async {
+                                    // Debounce: prevent duplicate clicks
+                                    final now = DateTime.now();
+                                    if (lastClickTime != null &&
+                                        now.difference(lastClickTime!)
+                                                .inSeconds <
+                                            2) {
+                                      return;
+                                    }
+                                    lastClickTime = now;
+
+                                    final messenger =
+                                        ScaffoldMessenger.of(context);
+                                    final navigator = Navigator.of(context);
+
+                                    // Save price data
+                                    final priceText =
+                                        priceController.text.trim();
+                                    if (priceText.isEmpty) {
+                                      messenger.showSnackBar(
+                                        const SnackBar(
+                                            content: Text('Unesite cijenu')),
+                                      );
+                                      return;
+                                    }
+
+                                    final price = double.tryParse(priceText);
+                                    if (price == null || price <= 0) {
+                                      messenger.showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                              'Cijena mora biti veća od 0'),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    // Validate optional fields
+                                    final weekendPriceText =
+                                        weekendPriceController.text.trim();
+                                    if (weekendPriceText.isNotEmpty) {
+                                      final weekendPrice =
+                                          double.tryParse(weekendPriceText);
+                                      if (weekendPrice == null ||
+                                          weekendPrice <= 0) {
+                                        messenger.showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Vikend cijena mora biti veća od 0',
+                                            ),
+                                          ),
+                                        );
+                                        return;
+                                      }
+                                    }
+
+                                    final minNightsText =
+                                        minNightsController.text.trim();
+                                    if (minNightsText.isNotEmpty) {
+                                      final minNights =
+                                          int.tryParse(minNightsText);
+                                      if (minNights == null || minNights <= 0) {
+                                        messenger.showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Min. noći mora biti veće od 0',
+                                            ),
+                                          ),
+                                        );
+                                        return;
+                                      }
+                                    }
+
+                                    final maxNightsText =
+                                        maxNightsController.text.trim();
+                                    if (maxNightsText.isNotEmpty) {
+                                      final maxNights =
+                                          int.tryParse(maxNightsText);
+                                      if (maxNights == null || maxNights <= 0) {
+                                        messenger.showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Max. noći mora biti veće od 0',
+                                            ),
+                                          ),
+                                        );
+                                        return;
+                                      }
+                                    }
+
+                                    final minDaysAdvanceText =
+                                        minDaysAdvanceController.text.trim();
+                                    if (minDaysAdvanceText.isNotEmpty) {
+                                      final minDaysAdvance =
+                                          int.tryParse(minDaysAdvanceText);
+                                      if (minDaysAdvance == null ||
+                                          minDaysAdvance < 0) {
+                                        messenger.showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Min. dana unaprijed mora biti 0 ili više',
+                                            ),
+                                          ),
+                                        );
+                                        return;
+                                      }
+                                    }
+
+                                    final maxDaysAdvanceText =
+                                        maxDaysAdvanceController.text.trim();
+                                    if (maxDaysAdvanceText.isNotEmpty) {
+                                      final maxDaysAdvance =
+                                          int.tryParse(maxDaysAdvanceText);
+                                      if (maxDaysAdvance == null ||
+                                          maxDaysAdvance <= 0) {
+                                        messenger.showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Max. dana unaprijed mora biti veće od 0',
+                                            ),
+                                          ),
+                                        );
+                                        return;
+                                      }
+                                    }
+
+                                    setState(() => isProcessing = true);
+
+                                    try {
+                                      final repository = ref.read(
+                                        dailyPriceRepositoryProvider,
+                                      );
+
+                                      // Parse optional fields after validation
+                                      final weekendPrice =
+                                          weekendPriceText.isEmpty
+                                              ? null
+                                              : double.tryParse(
+                                                  weekendPriceText);
+                                      final minNights = minNightsText.isEmpty
+                                          ? null
+                                          : int.tryParse(minNightsText);
+                                      final maxNights = maxNightsText.isEmpty
+                                          ? null
+                                          : int.tryParse(maxNightsText);
+                                      final minDaysAdvance =
+                                          minDaysAdvanceText.isEmpty
+                                              ? null
+                                              : int.tryParse(
+                                                  minDaysAdvanceText);
+                                      final maxDaysAdvance =
+                                          maxDaysAdvanceText.isEmpty
+                                              ? null
+                                              : int.tryParse(
+                                                  maxDaysAdvanceText);
+
+                                      // Create price model with all fields
+                                      final priceModel = DailyPriceModel(
+                                        id: existingPrice?.id ?? '',
+                                        unitId: widget.unit.id,
+                                        date: date,
+                                        price: price,
+                                        available: available,
+                                        blockCheckIn: blockCheckIn,
+                                        blockCheckOut: blockCheckOut,
+                                        weekendPrice: weekendPrice,
+                                        minNightsOnArrival: minNights,
+                                        maxNightsOnArrival: maxNights,
+                                        minDaysAdvance: minDaysAdvance,
+                                        maxDaysAdvance: maxDaysAdvance,
+                                        createdAt: existingPrice?.createdAt ??
+                                            DateTime.now(),
+                                        updatedAt: DateTime.now(),
+                                      );
+
+                                      // OPTIMISTIC UPDATE
+                                      _localState.updateDateOptimistically(
+                                        _selectedMonth,
+                                        date,
+                                        priceModel,
+                                        existingPrice,
+                                      );
+
+                                      // Close dialog immediately
+                                      if (mounted) {
+                                        dialogClosed = true;
+                                        navigator.pop();
+                                        messenger.showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Cijena spremljena'),
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
+                                      }
+
+                                      // Save to server in background
+                                      try {
+                                        await repository.setPriceForDate(
+                                          unitId: widget.unit.id,
+                                          date: date,
+                                          price: price,
+                                          priceModel: priceModel,
+                                        );
+
+                                        // Refresh from server
+                                        ref.invalidate(
+                                          monthlyPricesProvider(
+                                            MonthlyPricesParams(
+                                              unitId: widget.unit.id,
+                                              month: DateTime(
+                                                  date.year, date.month),
+                                            ),
+                                          ),
+                                        );
+                                      } catch (e) {
+                                        // ROLLBACK on error
+                                        if (existingPrice != null) {
+                                          _localState.updateDateOptimistically(
+                                            _selectedMonth,
+                                            date,
+                                            existingPrice,
+                                            priceModel,
+                                          );
+                                        }
+
+                                        if (mounted) {
+                                          messenger.showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                  'Greška pri spremanju: $e'),
+                                              backgroundColor:
+                                                  context.errorColor,
+                                              action: SnackBarAction(
+                                                label: 'Poništi',
+                                                onPressed: _localState.undo,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        messenger.showSnackBar(
+                                          SnackBar(
+                                            content:
+                                                Text('Greška validacije: $e'),
+                                            backgroundColor: context.errorColor,
+                                          ),
+                                        );
+                                      }
+                                    } finally {
+                                      if (mounted && !dialogClosed) {
+                                        setState(() => isProcessing = false);
+                                      }
+                                    }
+                                  },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: isProcessing
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text('Spremi'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              actions: [
-                if (existingPrice != null)
-                  TextButton(
-                    onPressed: isProcessing
-                        ? null
-                        : () async {
-                            final navigator = Navigator.of(context);
-                            final messenger = ScaffoldMessenger.of(context);
-
-                            // Show confirmation dialog before deleting
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Potvrda brisanja'),
-                                content: const Text(
-                                  'Da li ste sigurni da želite obrisati custom cijenu? '
-                                  'Datum će biti vraćen na osnovnu cijenu.',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(false),
-                                    child: const Text('Odustani'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(true),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: AppColors.error,
-                                    ),
-                                    child: const Text('Obriši'),
-                                  ),
-                                ],
-                              ),
-                            );
-
-                            if (confirmed != true) return;
-
-                            setState(() => isProcessing = true);
-
-                            // Delete custom price (revert to base price)
-                            try {
-                              final repository = ref.read(
-                                dailyPriceRepositoryProvider,
-                              );
-                              await repository.deletePriceForDate(
-                                unitId: widget.unit.id,
-                                date: date,
-                              );
-
-                              // This small delay ensures data is available when provider refetches
-
-                              // Invalidate provider to trigger reload with fresh data
-                              ref.invalidate(
-                                monthlyPricesProvider(
-                                  MonthlyPricesParams(
-                                    unitId: widget.unit.id,
-                                    month: DateTime(date.year, date.month),
-                                  ),
-                                ),
-                              );
-
-                              if (mounted) {
-                                dialogClosed = true;
-                                navigator.pop();
-                                messenger.showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Vraćeno na osnovnu cijenu'),
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              if (mounted) {
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text('Greška: $e'),
-                                    backgroundColor: AppColors.error,
-                                  ),
-                                );
-                              }
-                            } finally {
-                              // Only reset processing if dialog is still open
-                              if (mounted && !dialogClosed) {
-                                setState(() => isProcessing = false);
-                              }
-                            }
-                          },
-                    child: const Text('Obriši'),
-                  ),
-                TextButton(
-                  onPressed: isProcessing
-                      ? null
-                      : () => Navigator.of(context).pop(),
-                  child: const Text('Odustani'),
-                ),
-                ElevatedButton(
-                  onPressed: isProcessing
-                      ? null
-                      : () async {
-                          // Debounce: prevent duplicate clicks within 2 seconds
-                          final now = DateTime.now();
-                          if (lastClickTime != null &&
-                              now.difference(lastClickTime!).inSeconds < 2) {
-                            return;
-                          }
-                          lastClickTime = now;
-
-                          final messenger = ScaffoldMessenger.of(context);
-                          final navigator = Navigator.of(context);
-
-                          // Save price data
-                          final priceText = priceController.text.trim();
-                          if (priceText.isEmpty) {
-                            messenger.showSnackBar(
-                              const SnackBar(content: Text('Unesite cijenu')),
-                            );
-                            return;
-                          }
-
-                          final price = double.tryParse(priceText);
-                          if (price == null || price <= 0) {
-                            messenger.showSnackBar(
-                              const SnackBar(
-                                content: Text('Cijena mora biti veća od 0'),
-                              ),
-                            );
-                            return;
-                          }
-
-                          // Validate optional fields for consistency
-                          final weekendPriceText = weekendPriceController.text
-                              .trim();
-                          if (weekendPriceText.isNotEmpty) {
-                            final weekendPrice = double.tryParse(
-                              weekendPriceText,
-                            );
-                            if (weekendPrice == null || weekendPrice <= 0) {
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Vikend cijena mora biti veća od 0',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-                          }
-
-                          final minNightsText = minNightsController.text.trim();
-                          if (minNightsText.isNotEmpty) {
-                            final minNights = int.tryParse(minNightsText);
-                            if (minNights == null || minNights <= 0) {
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Min. noći mora biti veće od 0',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-                          }
-
-                          final maxNightsText = maxNightsController.text.trim();
-                          if (maxNightsText.isNotEmpty) {
-                            final maxNights = int.tryParse(maxNightsText);
-                            if (maxNights == null || maxNights <= 0) {
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Max. noći mora biti veće od 0',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-                          }
-
-                          final minDaysAdvanceText =
-                              minDaysAdvanceController.text.trim();
-                          if (minDaysAdvanceText.isNotEmpty) {
-                            final minDaysAdvance =
-                                int.tryParse(minDaysAdvanceText);
-                            if (minDaysAdvance == null || minDaysAdvance < 0) {
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Min. dana unaprijed mora biti 0 ili više',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-                          }
-
-                          final maxDaysAdvanceText =
-                              maxDaysAdvanceController.text.trim();
-                          if (maxDaysAdvanceText.isNotEmpty) {
-                            final maxDaysAdvance =
-                                int.tryParse(maxDaysAdvanceText);
-                            if (maxDaysAdvance == null || maxDaysAdvance <= 0) {
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Max. dana unaprijed mora biti veće od 0',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-                          }
-
-                          setState(() => isProcessing = true);
-
-                          try {
-                            final repository = ref.read(
-                              dailyPriceRepositoryProvider,
-                            );
-
-                            // Parse optional fields after validation
-                            final weekendPrice = weekendPriceText.isEmpty
-                                ? null
-                                : double.tryParse(weekendPriceText);
-                            final minNights = minNightsText.isEmpty
-                                ? null
-                                : int.tryParse(minNightsText);
-                            final maxNights = maxNightsText.isEmpty
-                                ? null
-                                : int.tryParse(maxNightsText);
-                            final minDaysAdvance = minDaysAdvanceText.isEmpty
-                                ? null
-                                : int.tryParse(minDaysAdvanceText);
-                            final maxDaysAdvance = maxDaysAdvanceText.isEmpty
-                                ? null
-                                : int.tryParse(maxDaysAdvanceText);
-
-                            // Create price model with all fields
-                            final priceModel = DailyPriceModel(
-                              id: existingPrice?.id ?? '',
-                              unitId: widget.unit.id,
-                              date: date,
-                              price: price,
-                              available: available,
-                              blockCheckIn: blockCheckIn,
-                              blockCheckOut: blockCheckOut,
-                              weekendPrice: weekendPrice,
-                              minNightsOnArrival: minNights,
-                              maxNightsOnArrival: maxNights,
-                              minDaysAdvance: minDaysAdvance,
-                              maxDaysAdvance: maxDaysAdvance,
-                              createdAt:
-                                  existingPrice?.createdAt ?? DateTime.now(),
-                              updatedAt: DateTime.now(),
-                            );
-
-                            // OPTIMISTIC UPDATE: Update local cache immediately
-                            _localState.updateDateOptimistically(
-                              _selectedMonth,
-                              date,
-                              priceModel,
-                              existingPrice,
-                            );
-
-                            // Close dialog and show feedback immediately
-                            if (mounted) {
-                              dialogClosed = true;
-                              navigator.pop();
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text('Cijena spremljena'),
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-                            }
-
-                            // Save to server in background
-                            try {
-                              await repository.setPriceForDate(
-                                unitId: widget.unit.id,
-                                date: date,
-                                price: price,
-                                priceModel: priceModel,
-                              );
-
-                              // Refresh from server to ensure consistency
-                              ref.invalidate(
-                                monthlyPricesProvider(
-                                  MonthlyPricesParams(
-                                    unitId: widget.unit.id,
-                                    month: DateTime(date.year, date.month),
-                                  ),
-                                ),
-                              );
-                            } catch (e) {
-                              // ROLLBACK on error
-                              if (existingPrice != null) {
-                                _localState.updateDateOptimistically(
-                                  _selectedMonth,
-                                  date,
-                                  existingPrice,
-                                  priceModel,
-                                );
-                              }
-
-                              if (mounted) {
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text('Greška pri spremanju: $e'),
-                                    backgroundColor: context.errorColor,
-                                    action: SnackBarAction(
-                                      label: 'Poništi',
-                                      onPressed: _localState.undo,
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
-                          } catch (e) {
-                            if (mounted) {
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text('Greška validacije: $e'),
-                                  backgroundColor: context.errorColor,
-                                ),
-                              );
-                            }
-                          } finally {
-                            // Only reset processing if dialog is still open
-                            // (dialogClosed is true after navigator.pop())
-                            if (mounted && !dialogClosed) {
-                              setState(() => isProcessing = false);
-                            }
-                          }
-                        },
-                  child: isProcessing
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Spremi'),
-                ),
-              ],
             );
           },
         ),

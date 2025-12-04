@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
-import '../../../../shared/widgets/widgets.dart';
 
 /// Activity type enum
 enum ActivityType { booking, review, message, payment, cancellation }
@@ -71,10 +71,18 @@ class RecentActivityWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return PremiumCard.elevated(
-      padding: EdgeInsets.zero,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+        ),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -89,8 +97,10 @@ class RecentActivityWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Recent Activity',
-                        style: AppTypography.h3,
+                        'Nedavne Aktivnosti',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (onViewAll != null) ...[
@@ -105,7 +115,7 @@ class RecentActivityWidget extends StatelessWidget {
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: const Text('View All'),
+                          child: const Text('Sve'),
                         ),
                       ],
                     ],
@@ -118,11 +128,8 @@ class RecentActivityWidget extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'Nedavne Aktivnosti',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimaryLight,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -136,7 +143,7 @@ class RecentActivityWidget extends StatelessWidget {
                             horizontal: 12,
                             vertical: 8,
                           ),
-                          foregroundColor: AppColors.primary,
+                          foregroundColor: theme.colorScheme.primary,
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
@@ -159,7 +166,7 @@ class RecentActivityWidget extends StatelessWidget {
           // Divider
           Divider(
             height: 1,
-            color: isDark ? AppColors.borderDark : AppColors.borderLight,
+            color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
           ),
 
           // Activities list
@@ -182,10 +189,10 @@ class RecentActivityWidget extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            AppColors.authPrimary.withAlpha(
+                            theme.colorScheme.primary.withAlpha(
                               (0.15 * 255).toInt(),
                             ),
-                            AppColors.authPrimary.withAlpha(
+                            theme.colorScheme.primary.withAlpha(
                               (0.05 * 255).toInt(),
                             ),
                           ],
@@ -195,7 +202,7 @@ class RecentActivityWidget extends StatelessWidget {
                       child: Icon(
                         Icons.notifications_none_rounded,
                         size: 48,
-                        color: AppColors.authPrimary.withAlpha(
+                        color: theme.colorScheme.primary.withAlpha(
                           (0.6 * 255).toInt(),
                         ),
                       ),
@@ -204,12 +211,8 @@ class RecentActivityWidget extends StatelessWidget {
                     // Title
                     Text(
                       'Nema nedavnih aktivnosti',
-                      style: AppTypography.h3.copyWith(
-                        fontSize: 18,
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.textPrimaryDark
-                            : AppColors.textPrimaryLight,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -217,11 +220,8 @@ class RecentActivityWidget extends StatelessWidget {
                     // Subtitle
                     Text(
                       'Vaše nedavne rezervacije i aktivnosti će se prikazati ovdje',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isDark
-                            ? AppColors.textSecondaryDark
-                            : AppColors.textTertiaryLight,
-                        fontSize: 14,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
@@ -237,7 +237,7 @@ class RecentActivityWidget extends StatelessWidget {
               itemCount: activities.length > 5 ? 5 : activities.length,
               separatorBuilder: (context, index) => Divider(
                 height: 1,
-                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                color: context.gradients.sectionBorder.withAlpha((0.3 * 255).toInt()),
               ),
               itemBuilder: (context, index) {
                 final activity = activities[index];
@@ -264,7 +264,7 @@ class _ActivityTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
 
     return ListTile(
       onTap: onTap,
@@ -290,12 +290,8 @@ class _ActivityTile extends StatelessWidget {
       ),
       title: Text(
         activity.title,
-        style: TextStyle(
-          fontSize: 15,
+        style: theme.textTheme.bodyLarge?.copyWith(
           fontWeight: FontWeight.w600,
-          color: isDark
-              ? AppColors.textPrimaryDark
-              : AppColors.textPrimaryLight,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -304,11 +300,8 @@ class _ActivityTile extends StatelessWidget {
         padding: const EdgeInsets.only(top: 4),
         child: Text(
           activity.subtitle,
-          style: TextStyle(
-            fontSize: 13,
-            color: isDark
-                ? AppColors.textSecondaryDark
-                : AppColors.textSecondaryLight,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -317,19 +310,14 @@ class _ActivityTile extends StatelessWidget {
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.surfaceVariantDark
-              : AppColors.surfaceVariantLight,
+          color: theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(6),
         ),
         child: Text(
           _formatTimestamp(activity.timestamp),
-          style: TextStyle(
-            fontSize: 12,
+          style: theme.textTheme.labelSmall?.copyWith(
             fontWeight: FontWeight.w500,
-            color: isDark
-                ? AppColors.textSecondaryDark
-                : AppColors.textSecondaryLight,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
           textAlign: TextAlign.center,
         ),

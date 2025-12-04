@@ -273,15 +273,17 @@ export const approvePendingBooking = onCall(async (request) => {
       if (ownerData?.email) {
         await sendOwnerNotificationEmail(
           ownerData.email,
-          ownerData.name || "Owner",
+          booking.booking_reference,
           booking.guest_name || "Guest",
           booking.guest_email || "",
-          booking.booking_reference,
+          booking.guest_phone || undefined,
+          propertyData2?.name || "Property",
+          unitData?.name || "Unit",
           booking.check_in.toDate(),
           booking.check_out.toDate(),
+          booking.guest_count || 2,
           booking.total_price,
-          booking.deposit_amount || 0,
-          unitData?.name || "Unit"
+          booking.deposit_amount || 0
         );
       }
     } catch (error) {
@@ -332,11 +334,35 @@ export const autoCancelExpiredBookings = onSchedule(
         // Send cancellation email to guest
         try {
           if (booking.guest_email) {
+            // Fetch property and unit names for email
+            let propertyName = "Property";
+            let unitName: string | undefined;
+            if (booking.property_id) {
+              try {
+                const propDoc = await db.collection("properties").doc(booking.property_id).get();
+                propertyName = propDoc.data()?.name || "Property";
+              } catch (e) { /* ignore */ }
+            }
+            if (booking.property_id && booking.unit_id) {
+              try {
+                const unitDoc = await db
+                  .collection("properties")
+                  .doc(booking.property_id)
+                  .collection("units")
+                  .doc(booking.unit_id)
+                  .get();
+                unitName = unitDoc.data()?.name;
+              } catch (e) { /* ignore */ }
+            }
+
             await sendBookingCancellationEmail(
               booking.guest_email,
               booking.guest_name || "Guest",
               booking.booking_reference,
-              "Payment not received within 3-day deadline"
+              propertyName,
+              unitName,
+              booking.check_in.toDate(),
+              booking.check_out.toDate()
             );
           }
         } catch (error) {
@@ -422,10 +448,6 @@ export const onBookingCreated = onDocumentCreated(
           booking.guest_email || "",
           booking.guest_name || "Guest",
           booking.booking_reference || "",
-          booking.check_in.toDate(),
-          booking.check_out.toDate(),
-          booking.total_price || 0,
-          unitData?.name || "Unit",
           propertyData?.name || "Property"
         );
 
@@ -435,17 +457,9 @@ export const onBookingCreated = onDocumentCreated(
         if (ownerData?.email) {
           await sendPendingBookingOwnerNotification(
             ownerData.email,
-            ownerData.name || "Owner",
-            booking.guest_name || "Guest",
-            booking.guest_email || "",
-            booking.guest_phone || "",
             booking.booking_reference || "",
-            booking.check_in.toDate(),
-            booking.check_out.toDate(),
-            booking.total_price || 0,
-            unitData?.name || "Unit",
-            booking.guest_count || 2,
-            booking.notes
+            booking.guest_name || "Guest",
+            propertyData?.name || "Property"
           );
 
           logSuccess("Pending booking owner notification sent", {email: ownerData.email});
@@ -461,15 +475,17 @@ export const onBookingCreated = onDocumentCreated(
         if (ownerData?.email) {
           await sendOwnerNotificationEmail(
             ownerData.email,
-            ownerData.name || "Owner",
+            booking.booking_reference || "",
             booking.guest_name || "Guest",
             booking.guest_email || "",
-            booking.booking_reference || "",
+            booking.guest_phone || undefined,
+            propertyData?.name || "Property",
+            unitData?.name || "Unit",
             booking.check_in.toDate(),
             booking.check_out.toDate(),
+            booking.guest_count || 2,
             booking.total_price || 0,
-            booking.deposit_amount || (booking.total_price * 0.2),
-            unitData?.name || "Unit"
+            booking.deposit_amount || (booking.total_price * 0.2)
           );
 
           logSuccess("Owner notification sent", {email: ownerData.email});
@@ -561,22 +577,11 @@ export const onBookingStatusChange = onDocumentUpdated(
             .get();
           const propertyData = propertyDoc.data();
 
-          const unitDoc = await db
-            .collection("properties")
-            .doc(after.property_id)
-            .collection("units")
-            .doc(after.unit_id)
-            .get();
-          const unitData = unitDoc.data();
-
           // Send booking rejected email to guest
           await sendBookingRejectedEmail(
             after.guest_email || "",
             after.guest_name || "Guest",
             after.booking_reference || "",
-            after.check_in.toDate(),
-            after.check_out.toDate(),
-            unitData?.name || "Unit",
             propertyData?.name || "Property",
             after.rejection_reason
           );
@@ -595,12 +600,38 @@ export const onBookingStatusChange = onDocumentUpdated(
         // Send cancellation email to guest
         try {
           const booking = after as any;
+
+          // Fetch property and unit names for email
+          let propertyName = "Property";
+          let unitName: string | undefined;
+          if (booking.property_id) {
+            try {
+              const propDoc = await db.collection("properties").doc(booking.property_id).get();
+              propertyName = propDoc.data()?.name || "Property";
+            } catch (e) { /* ignore */ }
+          }
+          if (booking.property_id && booking.unit_id) {
+            try {
+              const unitDoc = await db
+                .collection("properties")
+                .doc(booking.property_id)
+                .collection("units")
+                .doc(booking.unit_id)
+                .get();
+              unitName = unitDoc.data()?.name;
+            } catch (e) { /* ignore */ }
+          }
+
           await sendBookingCancellationEmail(
             booking.guest_email,
             booking.guest_name,
             booking.booking_reference || event.params.bookingId,
-            booking.cancellation_reason || "Cancelled by owner",
-            undefined // ownerEmail - optional
+            propertyName,
+            unitName,
+            booking.check_in.toDate(),
+            booking.check_out.toDate(),
+            undefined, // refundAmount
+            booking.property_id
           );
           logSuccess("Cancellation email sent", {email: booking.guest_email});
         } catch (emailError) {

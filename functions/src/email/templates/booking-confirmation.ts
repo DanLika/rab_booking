@@ -20,7 +20,6 @@ import {
   formatCurrency,
   formatDate,
   calculateNights,
-  escapeHtml,
 } from "../utils/template-helpers";
 
 /**

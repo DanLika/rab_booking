@@ -711,10 +711,6 @@ export const createBookingAtomic = onCall(async (request) => {
           guestEmail,
           guestName,
           result.bookingReference,
-          checkInDate.toDate(),
-          checkOutDate.toDate(),
-          totalPrice,
-          unitData?.name || "Unit",
           propertyData?.name || "Property"
         );
 
@@ -728,17 +724,9 @@ export const createBookingAtomic = onCall(async (request) => {
         if (ownerData?.email) {
           await sendPendingBookingOwnerNotification(
             ownerData.email,
-            ownerData.displayName || "Owner",
-            guestName,
-            guestEmail,
-            guestPhone || "",
             result.bookingReference,
-            checkInDate.toDate(),
-            checkOutDate.toDate(),
-            totalPrice,
-            unitData?.name || "Unit",
-            guestCount,
-            notes
+            guestName,
+            propertyData?.name || "Property"
           );
 
           logSuccess("[AtomicBooking] Pending booking owner notification sent", {
@@ -791,18 +779,17 @@ export const createBookingAtomic = onCall(async (request) => {
 
           await sendOwnerNotificationEmail(
             ownerData.email,
-            ownerData.displayName || ownerData.first_name || "Owner",
+            result.bookingReference,
             guestName,
             guestEmail,
-            result.bookingReference,
+            guestPhone || undefined,
+            propertyData?.name || "Property",
+            unitData?.name || "Unit",
             checkInDate.toDate(),
             checkOutDate.toDate(),
+            guestCount,
             totalPrice,
-            depositAmount,
-            unitData?.name || "Unit",
-            guestPhone || undefined, // Pass guest phone to owner
-            guestCount, // Pass guest count to owner
-            notes || undefined // Pass notes to owner
+            depositAmount
           );
 
           logSuccess("[AtomicBooking] Owner notification email sent", {

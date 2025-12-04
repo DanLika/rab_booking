@@ -36,13 +36,12 @@ export const sendSuspiciousActivityAlert = onCall(async (request) => {
   }
 
   try {
-    // Send email
+    // Send email - combine details into single string
+    const details = `User: ${userName} (${userEmail})\nDevice: ${deviceId}\nLocation: ${location}\nReason: ${reason}`;
     await sendSuspiciousActivityEmail(
       userEmail,
-      userName,
-      deviceId,
-      location,
-      reason
+      "Suspicious Login Activity",
+      details
     );
 
     return {

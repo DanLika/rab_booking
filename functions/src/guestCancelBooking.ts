@@ -139,11 +139,34 @@ export const guestCancelBooking = onCall(async (request) => {
 
       if (emailConfig.enabled && emailConfig.is_configured) {
         const guestName = booking.guest_details?.name || booking.guest_name || "Guest";
+
+        // Fetch property and unit names for email
+        let propertyName = "Property";
+        let unitName: string | undefined;
+        try {
+          const propDoc = await db.collection("properties").doc(propertyId).get();
+          propertyName = propDoc.data()?.name || "Property";
+        } catch (e) { /* ignore */ }
+        try {
+          const unitDoc = await db
+            .collection("properties")
+            .doc(propertyId)
+            .collection("units")
+            .doc(unitId)
+            .get();
+          unitName = unitDoc.data()?.name;
+        } catch (e) { /* ignore */ }
+
         await sendBookingCancellationEmail(
           guestEmail,
           guestName,
           bookingReference,
-          "Guest cancellation"
+          propertyName,
+          unitName,
+          booking.check_in.toDate(),
+          booking.check_out.toDate(),
+          undefined, // refundAmount
+          propertyId
         );
         logSuccess(`Cancellation email sent to guest: ${guestEmail}`);
       }

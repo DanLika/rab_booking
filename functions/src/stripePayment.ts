@@ -492,18 +492,17 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
         if (ownerData?.email) {
           await sendOwnerNotificationEmail(
             ownerData.email,
-            ownerData.name || "Owner",
+            bookingReference,
             guestName,
             guestEmail,
-            bookingReference,
+            guestPhone || undefined,
+            propertyData?.name || "Property",
+            unitData?.name || "Unit",
             checkIn,
             checkOut,
+            guestCount,
             totalPrice,
-            depositAmount,
-            unitData?.name || "Unit",
-            guestPhone || undefined, // Pass guest phone to owner
-            guestCount, // Pass guest count to owner
-            notes || undefined // Pass notes to owner
+            depositAmount
           );
           console.log(`Owner notification sent to ${ownerData.email}`);
         }

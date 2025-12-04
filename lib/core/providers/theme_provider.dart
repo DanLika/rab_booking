@@ -42,15 +42,6 @@ class ThemeNotifier extends _$ThemeNotifier {
             : 'system';
     await prefs.setString(_themeKey, modeString);
   }
-
-  /// Toggle between light and dark modes
-  Future<void> toggleTheme() async {
-    final currentMode = state.value ?? ThemeMode.system;
-    final newMode = currentMode == ThemeMode.light
-        ? ThemeMode.dark
-        : ThemeMode.light;
-    await setThemeMode(newMode);
-  }
 }
 
 /// Provider to get the current theme mode synchronously (with fallback to system)

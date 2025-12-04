@@ -1,13 +1,24 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'app_exceptions.dart';
+import '../exceptions/app_exceptions.dart';
 import '../services/logging_service.dart';
 
 /// Utility class for handling errors and converting them to user-friendly messages
 class ErrorHandler {
   /// Convert technical errors to user-friendly messages in Croatian/Serbian
+  /// Uses getUserMessage() from AppException when available
   static String getUserFriendlyMessage(dynamic error) {
+    // If it's an AppException, use its getUserMessage() method
+    if (error is AppException) {
+      final userMsg = error.getUserMessage();
+      // If userMessage is set, use it; otherwise fall back to type-specific defaults
+      if (error.userMessage != null) {
+        return userMsg;
+      }
+    }
+
+    // Type-specific fallback messages
     if (error is NetworkException) {
       return 'Provjerite internet konekciju i pokušajte ponovo.';
     } else if (error is AuthException) {
@@ -15,11 +26,11 @@ class ErrorHandler {
     } else if (error is DatabaseException) {
       return 'Greška u bazi podataka. Pokušajte ponovo.';
     } else if (error is ValidationException) {
-      return error.message;
+      return error.getUserMessage();
     } else if (error is PaymentException) {
       return 'Greška prilikom plaćanja: ${error.message}';
     } else if (error is BookingException) {
-      return error.message;
+      return error.getUserMessage();
     } else if (error is NotFoundException) {
       return 'Traženi resurs nije pronađen.';
     } else if (error is ConflictException) {
@@ -28,6 +39,8 @@ class ErrorHandler {
       return 'Operacija je istekla. Pokušajte ponovo.';
     } else if (error is AuthorizationException) {
       return 'Nemate dozvolu za ovu akciju.';
+    } else if (error is DatesNotAvailableException) {
+      return error.getUserMessage();
     } else {
       return 'Došlo je do neočekivane greške. Pokušajte ponovo.';
     }
@@ -71,7 +84,6 @@ class ErrorHandler {
         ],
         printDetails: false,
       );
-      // );
     }
   }
 

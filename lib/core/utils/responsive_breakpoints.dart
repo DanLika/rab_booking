@@ -148,10 +148,11 @@ enum DeviceType {
   ultraWide,
 }
 
-/// Responsive builder widget
+/// Breakpoints-based responsive widget builder
 /// Automatically rebuilds when screen size changes
-class ResponsiveBuilder extends StatelessWidget {
-  const ResponsiveBuilder({
+/// Note: For function-based responsive building, use ResponsiveBuilder from responsive_builder.dart
+class BreakpointsBuilder extends StatelessWidget {
+  const BreakpointsBuilder({
     required this.mobile,
     this.tablet,
     this.desktop,
@@ -181,10 +182,11 @@ class ResponsiveBuilder extends StatelessWidget {
   }
 }
 
-/// Responsive value builder
-/// Returns different values based on screen size
-class ResponsiveValue<T> extends StatelessWidget {
-  const ResponsiveValue({
+/// Breakpoints-based responsive value widget builder
+/// Returns different values based on screen size using builder pattern
+/// Note: For non-widget responsive values, use ResponsiveValue from responsive_builder.dart
+class BreakpointsValue<T> extends StatelessWidget {
+  const BreakpointsValue({
     required this.mobile,
     this.tablet,
     this.desktop,
@@ -213,9 +215,10 @@ class ResponsiveValue<T> extends StatelessWidget {
   }
 }
 
-/// Responsive grid system
-class ResponsiveGrid extends StatelessWidget {
-  const ResponsiveGrid({
+/// Breakpoints-based responsive grid system using Wrap
+/// Note: For GridView-based responsive grid, use ResponsiveGrid from responsive_builder.dart
+class BreakpointsGrid extends StatelessWidget {
+  const BreakpointsGrid({
     required this.children,
     this.mobileColumns = 1,
     this.tabletColumns = 2,

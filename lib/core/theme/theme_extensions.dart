@@ -32,7 +32,7 @@ extension ThemeColors on BuildContext {
   ///
   /// Returns:
   /// - Light mode: AppColors.backgroundLight (0xFFFAFAFA)
-  /// - Dark mode: AppColors.backgroundDark (0xFF1A202C)
+  /// - Dark mode: AppColors.backgroundDark (0xFF000000 - TRUE BLACK, OLED optimized)
   Color get backgroundColor => isDarkMode
       ? AppColors.backgroundDark
       : AppColors.backgroundLight;
@@ -41,7 +41,7 @@ extension ThemeColors on BuildContext {
   ///
   /// Returns:
   /// - Light mode: AppColors.surfaceLight (0xFFFFFFFF)
-  /// - Dark mode: AppColors.surfaceDark (0xFF2D3748)
+  /// - Dark mode: AppColors.surfaceDark (0xFF121212 - MD3 standard)
   Color get surfaceColor => isDarkMode
       ? AppColors.surfaceDark
       : AppColors.surfaceLight;
@@ -50,7 +50,7 @@ extension ThemeColors on BuildContext {
   ///
   /// Returns:
   /// - Light mode: AppColors.surfaceVariantLight (0xFFF5F5F5)
-  /// - Dark mode: AppColors.surfaceVariantDark (0xFF4A5568)
+  /// - Dark mode: AppColors.surfaceVariantDark (0xFF1E1E1E - higher elevation)
   Color get surfaceVariantColor => isDarkMode
       ? AppColors.surfaceVariantDark
       : AppColors.surfaceVariantLight;
@@ -94,7 +94,7 @@ extension ThemeColors on BuildContext {
   ///
   /// Returns:
   /// - Light mode: AppColors.borderLight (0xFFE2E8F0)
-  /// - Dark mode: AppColors.borderDark (0xFF4A5568)
+  /// - Dark mode: AppColors.borderDark (0xFF2D3748 - better contrast with black)
   Color get borderColor => isDarkMode
       ? AppColors.borderDark
       : AppColors.borderLight;
@@ -116,7 +116,7 @@ extension ThemeColors on BuildContext {
   ///
   /// Returns:
   /// - Light mode: AppColors.dividerLight (0xFFF7FAFC)
-  /// - Dark mode: AppColors.dividerDark (0xFF2D3748)
+  /// - Dark mode: AppColors.dividerDark (0xFF1E1E1E - subtle, not harsh)
   Color get dividerColor => isDarkMode
       ? AppColors.dividerDark
       : AppColors.dividerLight;

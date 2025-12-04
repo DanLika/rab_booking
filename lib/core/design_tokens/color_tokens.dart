@@ -77,7 +77,6 @@ class ColorTokens {
   // Status colors - Pink/Red (Booked)
   static const Color pink100 = Color(0xFFFFD4E5);
   static const Color pink200 = Color(0xFFFEE2E2);
-  static const Color pink300 = Color(0xFF83e6bf); // Light mint/turquoise for booked dates
   static const Color pink400 = Color(0xFFF87171);
   static const Color pink500 = Color(0xFFEC4899);
   static const Color pink600 = Color(0xFFDB2777);
@@ -334,7 +333,7 @@ class LightColorScheme implements WidgetColorScheme {
   @override
   Color get statusAvailableText => ColorTokens.teal900; // Dark text for contrast
   @override
-  Color get statusBookedBackground => ColorTokens.pink300; // Medium coral - Goldilocks approach
+  Color get statusBookedBackground => ColorTokens.pink200; // Light pink for booked dates
   @override
   Color get statusBookedBorder => ColorTokens.pink600; // Medium border
   @override
@@ -368,7 +367,7 @@ class LightColorScheme implements WidgetColorScheme {
   @override
   Color get statusPastReservationBackground => ColorTokens.pastReservationLight;
   @override
-  Color get statusPastReservationBorder => ColorTokens.pink300;
+  Color get statusPastReservationBorder => ColorTokens.pink400;
   @override
   Color get statusCancelledBackground => ColorTokens.cancelLight;
   @override
@@ -548,7 +547,7 @@ class DarkColorScheme implements WidgetColorScheme {
   @override
   Color get statusBookedBackground => ColorTokens.pink700; // TRUE RED (ne pink/magenta)
   @override
-  Color get statusBookedBorder => ColorTokens.pink300; // Lighter border for contrast
+  Color get statusBookedBorder => ColorTokens.pink400; // Coral border for contrast
   @override
   Color get statusBookedText => ColorTokens.pureWhite; // White text for good contrast
   // Pending uses GOLDEN YELLOW background to distinguish from confirmed (red) bookings

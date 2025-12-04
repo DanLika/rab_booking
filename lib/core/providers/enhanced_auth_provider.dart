@@ -891,13 +891,3 @@ final enhancedAuthProvider =
         geolocation,
       );
     });
-
-/// Current user provider (shorthand)
-final enhancedCurrentUserProvider = Provider<UserModel?>((ref) {
-  return ref.watch(enhancedAuthProvider).userModel;
-});
-
-/// Is authenticated provider
-final enhancedIsAuthenticatedProvider = Provider<bool>((ref) {
-  return ref.watch(enhancedAuthProvider).isAuthenticated;
-});

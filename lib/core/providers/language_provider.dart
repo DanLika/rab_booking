@@ -48,11 +48,6 @@ class LanguageNotifier extends _$LanguageNotifier {
   static List<Locale> get supportedLocales {
     return _supportedLanguages.map(Locale.new).toList();
   }
-
-  /// Get list of supported language codes
-  static List<String> get supportedLanguageCodes {
-    return _supportedLanguages;
-  }
 }
 
 /// Provider to get the current locale synchronously (with fallback to default)

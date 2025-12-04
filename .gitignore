@@ -72,8 +72,9 @@ firebase-service-account-key.json
 # Documentation and debug files
 *.md
 !README.md
-!claude.md
-!.claude/**/*.md
+!CLAUDE.md
+# Whitelist entire .claude directory (Claude Code configuration)
+!.claude/
 *.sql
 *.stackdump
 build_output.txt

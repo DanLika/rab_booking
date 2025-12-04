@@ -1,4 +1,3 @@
-
 #!/bin/bash
 # Quick error analysis for Claude Code
 # Helps Claude identify and categorize errors quickly

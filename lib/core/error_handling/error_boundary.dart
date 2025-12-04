@@ -28,6 +28,7 @@ class ErrorBoundary extends StatefulWidget {
 
 class _ErrorBoundaryState extends State<ErrorBoundary> {
   FlutterErrorDetails? _errorDetails;
+  FlutterExceptionHandler? _originalOnError;
 
   @override
   Widget build(BuildContext context) {
@@ -51,13 +52,13 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
   }
 
   void _setupErrorListener() {
-    // Store original error handler
-    final originalOnError = FlutterError.onError;
+    // Store original error handler as instance variable for cleanup
+    _originalOnError = FlutterError.onError;
 
     // Override error handler for this boundary's scope
     FlutterError.onError = (FlutterErrorDetails details) {
       // Call original handler first
-      originalOnError?.call(details);
+      _originalOnError?.call(details);
 
       // Capture error in this boundary
       if (mounted) {
@@ -71,7 +72,10 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
 
   @override
   void dispose() {
-    // Errors will be handled by global error handler after dispose
+    // Restore original error handler to prevent memory leak
+    if (_originalOnError != null) {
+      FlutterError.onError = _originalOnError;
+    }
     super.dispose();
   }
 }
@@ -144,9 +148,7 @@ class _DefaultErrorWidget extends StatelessWidget {
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () {
-                  // Trigger hot reload in debug mode, or navigate back
-                  if (kDebugMode) {
-                  }
+                  // Navigate back - hot reload is handled by IDE
                   Navigator.of(context).pop();
                 },
                 icon: const Icon(Icons.refresh),
@@ -184,11 +186,13 @@ class GlobalErrorHandler {
 
   static void _logError(dynamic error, StackTrace? stack) {
     if (kDebugMode) {
+      debugPrint('GlobalErrorHandler caught error: $error');
       if (stack != null) {
+        debugPrint('Stack trace:\n$stack');
       }
     }
 
-    // TODO: Send to crashlytics/sentry in production
-    // FirebaseCrashlytics.instance.recordError(error, stack);
+    // Production error tracking is handled by ErrorHandler.logError()
+    // which sends to Firebase Crashlytics
   }
 }

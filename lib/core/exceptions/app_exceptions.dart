@@ -18,15 +18,22 @@
 abstract class AppException implements Exception {
   final String message;
   final String? code;
+  final String? userMessage; // User-friendly message for UI display
   final dynamic originalError;
   final StackTrace? stackTrace;
 
   AppException(
     this.message, {
     this.code,
+    this.userMessage,
     this.originalError,
     this.stackTrace,
   });
+
+  /// Get the message to display to users
+  String getUserMessage() {
+    return userMessage ?? message;
+  }
 
   @override
   String toString() {
@@ -47,6 +54,7 @@ class AuthException extends AppException {
   AuthException(
     super.message, {
     super.code,
+    super.userMessage,
     super.originalError,
     super.stackTrace,
   });
@@ -87,6 +95,7 @@ class BookingException extends AppException {
   BookingException(
     super.message, {
     super.code,
+    super.userMessage,
     super.originalError,
     super.stackTrace,
   });
@@ -155,6 +164,7 @@ class PropertyException extends AppException {
   PropertyException(
     super.message, {
     super.code,
+    super.userMessage,
     super.originalError,
     super.stackTrace,
   });
@@ -187,6 +197,7 @@ class StorageException extends AppException {
   StorageException(
     super.message, {
     super.code,
+    super.userMessage,
     super.originalError,
     super.stackTrace,
   });
@@ -210,6 +221,7 @@ class NotificationException extends AppException {
   NotificationException(
     super.message, {
     super.code,
+    super.userMessage,
     super.originalError,
     super.stackTrace,
   });
@@ -242,6 +254,7 @@ class AnalyticsException extends AppException {
   AnalyticsException(
     super.message, {
     super.code,
+    super.userMessage,
     super.originalError,
     super.stackTrace,
   });
@@ -256,6 +269,7 @@ class IntegrationException extends AppException {
   IntegrationException(
     super.message, {
     super.code,
+    super.userMessage,
     super.originalError,
     super.stackTrace,
   });
@@ -279,6 +293,7 @@ class PaymentException extends AppException {
   PaymentException(
     super.message, {
     super.code,
+    super.userMessage,
     super.originalError,
     super.stackTrace,
   });
@@ -320,6 +335,7 @@ class FileException extends AppException {
   FileException(
     super.message, {
     super.code,
+    super.userMessage,
     super.originalError,
     super.stackTrace,
   });
@@ -356,6 +372,273 @@ class FileException extends AppException {
     return FileException(
       'Failed to write file: $path',
       code: 'file/write-failed',
+      originalError: error,
+    );
+  }
+}
+
+// ============================================================================
+// NETWORK & API EXCEPTIONS
+// ============================================================================
+
+/// Exception for network connectivity issues
+class NetworkException extends AppException {
+  NetworkException(
+    super.message, {
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for connection failures
+  factory NetworkException.connectionFailed([dynamic error]) {
+    return NetworkException(
+      'Network connection failed',
+      code: 'network/connection-failed',
+      userMessage: 'Provjerite internet konekciju i pokušajte ponovo.',
+      originalError: error,
+    );
+  }
+}
+
+/// Exception for API/Server errors
+class ServerException extends AppException {
+  final int? statusCode;
+
+  ServerException(
+    super.message, {
+    this.statusCode,
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for server errors with status code
+  factory ServerException.withStatusCode(int statusCode, [dynamic error]) {
+    return ServerException(
+      'Server error: $statusCode',
+      statusCode: statusCode,
+      code: 'server/error-$statusCode',
+      userMessage: 'Greška na serveru. Pokušajte ponovo.',
+      originalError: error,
+    );
+  }
+}
+
+/// Exception for timeout errors
+class TimeoutException extends AppException {
+  TimeoutException(
+    super.message, {
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for request timeout
+  factory TimeoutException.requestTimeout([dynamic error]) {
+    return TimeoutException(
+      'Request timed out',
+      code: 'timeout/request',
+      userMessage: 'Operacija je istekla. Pokušajte ponovo.',
+      originalError: error,
+    );
+  }
+}
+
+// ============================================================================
+// DATA & VALIDATION EXCEPTIONS
+// ============================================================================
+
+/// Exception for data validation errors
+class ValidationException extends AppException {
+  final Map<String, String>? fieldErrors;
+
+  ValidationException(
+    super.message, {
+    this.fieldErrors,
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Get error for a specific field
+  String? getFieldError(String field) => fieldErrors?[field];
+
+  /// Factory for field validation failure
+  factory ValidationException.fieldInvalid(
+      String field, String reason, [dynamic error]) {
+    return ValidationException(
+      'Validation failed for $field: $reason',
+      fieldErrors: {field: reason},
+      code: 'validation/field-invalid',
+      userMessage: reason,
+      originalError: error,
+    );
+  }
+}
+
+/// Exception for data not found errors
+class NotFoundException extends AppException {
+  NotFoundException(
+    super.message, {
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for resource not found
+  factory NotFoundException.resource(String resourceType, [dynamic error]) {
+    return NotFoundException(
+      '$resourceType not found',
+      code: 'not-found/$resourceType',
+      userMessage: 'Traženi resurs nije pronađen.',
+      originalError: error,
+    );
+  }
+}
+
+/// Exception for database errors
+class DatabaseException extends AppException {
+  DatabaseException(
+    super.message, {
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for database operation failure
+  factory DatabaseException.operationFailed(String operation, [dynamic error]) {
+    return DatabaseException(
+      'Database operation failed: $operation',
+      code: 'database/operation-failed',
+      userMessage: 'Greška u bazi podataka. Pokušajte ponovo.',
+      originalError: error,
+    );
+  }
+}
+
+// ============================================================================
+// AUTHORIZATION EXCEPTIONS
+// ============================================================================
+
+/// Exception for authorization/permission errors
+class PermissionException extends AppException {
+  PermissionException(
+    super.message, {
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for permission denied
+  factory PermissionException.denied(String action, [dynamic error]) {
+    return PermissionException(
+      'Permission denied for: $action',
+      code: 'permission/denied',
+      userMessage: 'Nemate dozvolu za ovu akciju.',
+      originalError: error,
+    );
+  }
+}
+
+/// Exception for authorization errors (different from PermissionException)
+class AuthorizationException extends AppException {
+  AuthorizationException(
+    super.message, {
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for unauthorized access
+  factory AuthorizationException.unauthorized([dynamic error]) {
+    return AuthorizationException(
+      'Unauthorized access',
+      code: 'authorization/unauthorized',
+      userMessage: 'Nemate dozvolu za pristup ovom resursu.',
+      originalError: error,
+    );
+  }
+}
+
+// ============================================================================
+// CONFLICT EXCEPTIONS
+// ============================================================================
+
+/// Exception for resource conflicts (e.g., duplicate booking)
+class ConflictException extends AppException {
+  ConflictException(
+    super.message, {
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for resource conflict
+  factory ConflictException.resourceConflict(
+      String resourceType, [dynamic error]) {
+    return ConflictException(
+      'Conflict occurred for $resourceType',
+      code: 'conflict/$resourceType',
+      userMessage: 'Konflikt podataka. Pokušajte ponovo.',
+      originalError: error,
+    );
+  }
+}
+
+/// Exception for dates that are no longer available
+/// Thrown when price calculation or booking attempt is made for dates
+/// that have been booked by another user in the meantime
+class DatesNotAvailableException extends AppException {
+  DatesNotAvailableException(
+    super.message, {
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for dates conflict
+  factory DatesNotAvailableException.conflict([dynamic error]) {
+    return DatesNotAvailableException(
+      'Selected dates are no longer available',
+      code: 'booking/dates-unavailable',
+      userMessage:
+          'Sorry, these dates were just booked by another guest. Please select different dates.',
+      originalError: error,
+    );
+  }
+}
+
+// ============================================================================
+// GENERIC EXCEPTIONS
+// ============================================================================
+
+/// Exception for unknown/unexpected errors
+class UnknownException extends AppException {
+  UnknownException(
+    super.message, {
+    super.code,
+    super.userMessage,
+    super.originalError,
+    super.stackTrace,
+  });
+
+  /// Factory for unknown errors
+  factory UnknownException.unexpected([dynamic error]) {
+    return UnknownException(
+      'An unexpected error occurred',
+      code: 'unknown/unexpected',
+      userMessage: 'Došlo je do neočekivane greške. Pokušajte ponovo.',
       originalError: error,
     );
   }

@@ -2,6 +2,47 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import {sendBookingCancellationEmail} from "./emailService";
+import {fetchPropertyAndUnitDetails} from "./utils/bookingHelpers";
+import Stripe from "stripe";
+
+/**
+ * Create Stripe client instance with secret key
+ * Lazy initialization to avoid loading Stripe SDK unless needed
+ */
+function createStripeClient(secretKey: string): Stripe {
+  return new Stripe(secretKey, {
+    apiVersion: "2025-09-30.clover",
+  });
+}
+
+/**
+ * Validates email configuration to ensure all required fields are present
+ * @param emailConfig - Email configuration from widget settings
+ * @returns Validation result with isValid flag and optional reason
+ */
+function validateEmailConfig(emailConfig: any): {
+  isValid: boolean;
+  reason?: string;
+} {
+  if (!emailConfig) {
+    return {isValid: false, reason: "Email config missing"};
+  }
+
+  if (!emailConfig.enabled) {
+    return {isValid: false, reason: "Email sending disabled"};
+  }
+
+  if (!emailConfig.is_configured) {
+    return {isValid: false, reason: "Email not configured"};
+  }
+
+  // Validate from_email has proper format
+  if (!emailConfig.from_email || !emailConfig.from_email.includes("@")) {
+    return {isValid: false, reason: "Invalid from_email address"};
+  }
+
+  return {isValid: true};
+}
 
 /**
  * Cloud Function: Guest Cancel Booking
@@ -118,44 +159,188 @@ export const guestCancelBooking = onCall(async (request) => {
       );
     }
 
-    // Update booking status to 'cancelled'
-    await bookingRef.update({
-      status: "cancelled",
-      cancelled_at: admin.firestore.FieldValue.serverTimestamp(),
-      cancelled_by: "guest",
-      cancellation_reason: "Guest cancellation via widget",
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    // ====================================================================
+    // CRITICAL: Use Firestore transaction for atomic cancellation
+    // Prevents race conditions and ensures idempotency
+    // ====================================================================
+    const cancellationResult = await db.runTransaction(async (transaction) => {
+      // Step 1: Re-read booking INSIDE transaction (fresh data)
+      const freshBookingDoc = await transaction.get(bookingRef);
+
+      if (!freshBookingDoc.exists) {
+        throw new HttpsError("not-found", "Booking not found");
+      }
+
+      const freshBooking = freshBookingDoc.data()!;
+
+      // Step 2: IDEMPOTENCY CHECK - if already cancelled, return success
+      if (freshBooking.status === "cancelled") {
+        logInfo(`Booking already cancelled: ${bookingReference}`, {
+          bookingId,
+          cancelledBy: freshBooking.cancelled_by,
+          cancelledAt: freshBooking.cancelled_at,
+        });
+
+        return {
+          alreadyCancelled: true,
+          cancelledBy: freshBooking.cancelled_by || "unknown",
+          cancelledAt: freshBooking.cancelled_at,
+          refundAmount: freshBooking.refund_amount || 0,
+          refundStatus: freshBooking.refund_status || "not_applicable",
+        };
+      }
+
+      // Step 3: Re-validate status (ensure still cancellable)
+      if (freshBooking.status !== "confirmed" &&
+          freshBooking.status !== "pending") {
+        throw new HttpsError(
+          "failed-precondition",
+          `Cannot cancel booking with status: ${freshBooking.status}`
+        );
+      }
+
+      // Step 4: Re-check cancellation deadline (time may have passed)
+      const freshCheckInDate = freshBooking.check_in.toDate();
+      const now = new Date();
+      const hoursUntilCheckIn =
+        (freshCheckInDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+      if (hoursUntilCheckIn < cancellationDeadlineHours) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Cancellation deadline has passed during processing.`
+        );
+      }
+
+      // Step 5: Calculate refund amount based on payment status
+      let refundAmount = 0;
+      let refundStatus = "not_applicable";
+      const paymentStatus = freshBooking.payment_status;
+      const paymentMethod = freshBooking.payment_method;
+      const paidAmount = freshBooking.paid_amount || 0;
+
+      if (paymentStatus === "paid" && paidAmount > 0) {
+        // User has paid - eligible for refund
+        // TODO: Add cancellation policy logic (full_refund/50_percent/no_refund)
+        refundAmount = paidAmount; // Full refund for now
+        refundStatus = paymentMethod === "stripe" ?
+          "pending_stripe" :
+          "pending_manual";
+      }
+
+      // Step 6: Update booking atomically
+      transaction.update(bookingRef, {
+        status: "cancelled",
+        cancelled_at: admin.firestore.FieldValue.serverTimestamp(),
+        cancelled_by: "guest",
+        cancellation_reason: "Guest cancellation via widget",
+        refund_amount: refundAmount,
+        refund_status: refundStatus,
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      logSuccess(`Booking cancelled atomically: ${bookingReference}`, {
+        bookingId,
+        guestEmail,
+        refundAmount,
+        refundStatus,
+      });
+
+      return {
+        alreadyCancelled: false,
+        refundAmount,
+        refundStatus,
+        paymentMethod,
+        stripePaymentIntentId: freshBooking.stripe_payment_intent_id,
+      };
     });
 
-    logSuccess(`Booking cancelled by guest: ${bookingReference}`, {
-      bookingId,
-      guestEmail,
-    });
+    // Handle idempotency - if already cancelled, return early
+    if (cancellationResult.alreadyCancelled) {
+      logInfo(`Idempotent cancellation request: ${bookingReference}`);
+      // Continue to send email confirmation (user may not have received it)
+    }
+
+    // ====================================================================
+    // Step 7: Process Stripe refund AFTER transaction completes
+    // (Outside transaction to avoid blocking on external API)
+    // ====================================================================
+    let stripeRefundId: string | undefined;
+
+    if (cancellationResult.refundStatus === "pending_stripe" &&
+        cancellationResult.refundAmount > 0) {
+      try {
+        const stripeConfig = widgetSettings.stripe_config;
+
+        if (!stripeConfig || !stripeConfig.secret_key) {
+          logError("Stripe config missing for refund", null, {bookingId});
+          await bookingRef.update({refund_status: "failed"});
+        } else {
+          // Create Stripe client with proper ES module import
+          const stripe = createStripeClient(stripeConfig.secret_key);
+          const paymentIntentId = cancellationResult.stripePaymentIntentId;
+
+          if (!paymentIntentId) {
+            logError("Stripe payment intent ID missing", null, {bookingId});
+            await bookingRef.update({refund_status: "failed"});
+          } else {
+            // Create Stripe refund
+            const refund = await stripe.refunds.create({
+              payment_intent: paymentIntentId,
+              amount: Math.round(cancellationResult.refundAmount * 100),
+              reason: "requested_by_customer",
+              metadata: {
+                booking_id: bookingId,
+                booking_reference: bookingReference,
+                cancelled_by: "guest",
+              },
+            });
+
+            stripeRefundId = refund.id;
+
+            // Update booking with refund success
+            await bookingRef.update({
+              refund_status: "processed",
+              stripe_refund_id: stripeRefundId,
+              updated_at: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            logSuccess(`Stripe refund processed: ${refund.id}`, {
+              bookingId,
+              refundAmount: cancellationResult.refundAmount,
+            });
+          }
+        }
+      } catch (stripeError) {
+        logError("Failed to process Stripe refund", stripeError, {
+          bookingId,
+          refundAmount: cancellationResult.refundAmount,
+        });
+
+        // Update booking to mark refund as failed
+        await bookingRef.update({
+          refund_status: "failed",
+          refund_error: String(stripeError),
+          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+    }
 
     // Send cancellation confirmation email to guest
     try {
       // Get email config from widget settings
       const emailConfig = widgetSettings.email_config || {};
+      const emailValidation = validateEmailConfig(emailConfig);
 
-      if (emailConfig.enabled && emailConfig.is_configured) {
+      if (emailValidation.isValid) {
         const guestName = booking.guest_details?.name || booking.guest_name || "Guest";
 
-        // Fetch property and unit names for email
-        let propertyName = "Property";
-        let unitName: string | undefined;
-        try {
-          const propDoc = await db.collection("properties").doc(propertyId).get();
-          propertyName = propDoc.data()?.name || "Property";
-        } catch (e) { /* ignore */ }
-        try {
-          const unitDoc = await db
-            .collection("properties")
-            .doc(propertyId)
-            .collection("units")
-            .doc(unitId)
-            .get();
-          unitName = unitDoc.data()?.name;
-        } catch (e) { /* ignore */ }
+        // Fetch property and unit names using shared utility
+        const {propertyName, unitName} = await fetchPropertyAndUnitDetails(
+          propertyId,
+          unitId,
+          "guestCancelBooking"
+        );
 
         await sendBookingCancellationEmail(
           guestEmail,
@@ -165,13 +350,21 @@ export const guestCancelBooking = onCall(async (request) => {
           unitName,
           booking.check_in.toDate(),
           booking.check_out.toDate(),
-          undefined, // refundAmount
+          cancellationResult.refundAmount, // Actual refund amount
           propertyId
         );
         logSuccess(`Cancellation email sent to guest: ${guestEmail}`);
+      } else {
+        logInfo(`Email not sent: ${emailValidation.reason}`, {
+          bookingId,
+          guestEmail,
+        });
       }
     } catch (emailError) {
-      logError("Failed to send cancellation email", emailError);
+      logError("Failed to send cancellation email", emailError, {
+        bookingId,
+        guestEmail,
+      });
       // Don't fail the whole cancellation if email fails
     }
 
@@ -195,17 +388,23 @@ export const guestCancelBooking = onCall(async (request) => {
       cancelledAt: new Date().toISOString(),
     };
   } catch (error) {
-    logError("Error cancelling booking", error);
+    // Log full error details for debugging (server-side only)
+    logError("Error cancelling booking", error, {
+      bookingId,
+      bookingReference,
+      guestEmail,
+    });
 
-    // Re-throw HttpsErrors
+    // Re-throw HttpsErrors (these have safe, user-facing messages)
     if (error instanceof HttpsError) {
       throw error;
     }
 
-    // Wrap other errors
+    // SECURITY: Don't expose internal error details to client
+    // Log the actual error but return generic message
     throw new HttpsError(
       "internal",
-      `Failed to cancel booking: ${error}`
+      "Failed to cancel booking. Please try again or contact support."
     );
   }
 });

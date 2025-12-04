@@ -115,6 +115,124 @@ logSuccess("[EmailService] Configured sender email", {
 const WIDGET_URL = process.env.WIDGET_URL || "https://rab-booking-widget.web.app";
 const BOOKING_DOMAIN = process.env.BOOKING_DOMAIN || null;
 
+// ==========================================
+// PROPERTY DATA HELPER (DRY - Single Fetch)
+// ==========================================
+
+/**
+ * Property data needed for emails
+ */
+interface PropertyData {
+  contactEmail?: string;
+  subdomain?: string;
+}
+
+/**
+ * Fetch property data (contact_email + subdomain) in a single query
+ *
+ * This helper eliminates duplicate Firestore fetches across email functions.
+ * Previously, each email function would fetch the property document separately,
+ * resulting in 2+ reads per email send.
+ *
+ * @param propertyId - The property document ID
+ * @param operation - Operation name for logging context
+ * @returns PropertyData with contactEmail and subdomain, or empty object on error
+ */
+async function fetchPropertyData(
+  propertyId: string | undefined,
+  operation: string
+): Promise<PropertyData> {
+  if (!propertyId) {
+    return {};
+  }
+
+  try {
+    const propertyDoc = await db.collection("properties").doc(propertyId).get();
+
+    if (!propertyDoc.exists) {
+      logError("[EmailService] Property not found", null, {
+        propertyId,
+        operation,
+      });
+      return {};
+    }
+
+    const data = propertyDoc.data();
+    return {
+      contactEmail: data?.contact_email,
+      subdomain: data?.subdomain,
+    };
+  } catch (error) {
+    logError("[EmailService] Failed to fetch property data", error, {
+      propertyId,
+      operation,
+    });
+    return {};
+  }
+}
+
+// ==========================================
+// INPUT VALIDATION HELPERS
+// ==========================================
+
+/**
+ * Validate email format
+ *
+ * @param email - Email address to validate
+ * @param fieldName - Field name for error messages
+ * @throws Error if email is invalid
+ */
+function validateEmail(email: string, fieldName: string): void {
+  if (!email || typeof email !== "string") {
+    throw new Error(`${fieldName} is required`);
+  }
+  if (!EMAIL_REGEX.test(email.trim())) {
+    throw new Error(`${fieldName} is not a valid email address: ${email}`);
+  }
+}
+
+/**
+ * Validate required string field
+ *
+ * @param value - String value to validate
+ * @param fieldName - Field name for error messages
+ * @throws Error if value is empty or not a string
+ */
+function validateRequiredString(value: string, fieldName: string): void {
+  if (!value || typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`${fieldName} is required and must be a non-empty string`);
+  }
+}
+
+/**
+ * Validate amount is non-negative
+ *
+ * @param amount - Amount to validate
+ * @param fieldName - Field name for error messages
+ * @throws Error if amount is negative
+ */
+function validateAmount(amount: number, fieldName: string): void {
+  if (typeof amount !== "number" || isNaN(amount)) {
+    throw new Error(`${fieldName} must be a valid number`);
+  }
+  if (amount < 0) {
+    throw new Error(`${fieldName} cannot be negative: ${amount}`);
+  }
+}
+
+/**
+ * Validate date is a valid Date object
+ *
+ * @param date - Date to validate
+ * @param fieldName - Field name for error messages
+ * @throws Error if date is invalid
+ */
+function validateDate(date: Date, fieldName: string): void {
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    throw new Error(`${fieldName} must be a valid Date object`);
+  }
+}
+
 /**
  * Validate subdomain format (DNS-safe)
  *
@@ -146,40 +264,35 @@ function isValidSubdomain(subdomain: string): boolean {
  *   Returns: https://widget.web.app/view?ref=XXX&email=XXX&token=XXX (fallback)
  *
  * SECURITY: Subdomain is validated against RFC 1123 to prevent URL injection
+ *
+ * @param bookingReference - The booking reference code
+ * @param guestEmail - Guest email for URL params
+ * @param accessToken - Access token for URL params
+ * @param propertyData - Pre-fetched property data (avoids duplicate Firestore reads)
  */
-async function generateViewBookingUrl(
+function generateViewBookingUrl(
   bookingReference: string,
   guestEmail: string,
   accessToken: string,
-  propertyId?: string
-): Promise<string> {
+  propertyData?: PropertyData
+): string {
   const params = new URLSearchParams();
   params.set("ref", bookingReference);
   params.set("email", guestEmail);
   params.set("token", accessToken);
 
-  // Try to get subdomain from property
+  // Use pre-fetched subdomain (validated)
   let subdomain: string | null = null;
-  if (propertyId) {
-    try {
-      const propertyDoc = await db.collection("properties").doc(propertyId).get();
-      if (propertyDoc.exists) {
-        const rawSubdomain = propertyDoc.data()?.subdomain;
+  if (propertyData?.subdomain) {
+    const rawSubdomain = propertyData.subdomain;
 
-        // SECURITY: Validate subdomain format before using in URL
-        if (rawSubdomain && isValidSubdomain(rawSubdomain)) {
-          subdomain = rawSubdomain;
-        } else if (rawSubdomain) {
-          logError("[EmailService] Invalid subdomain format - using fallback URL", null, {
-            propertyId,
-            subdomain: rawSubdomain,
-            reason: "Failed RFC 1123 validation",
-          });
-        }
-      }
-    } catch (error) {
-      logError("[EmailService] Failed to fetch property subdomain for email", error, {
-        propertyId,
+    // SECURITY: Validate subdomain format before using in URL
+    if (isValidSubdomain(rawSubdomain)) {
+      subdomain = rawSubdomain;
+    } else {
+      logError("[EmailService] Invalid subdomain format - using fallback URL", null, {
+        subdomain: rawSubdomain,
+        reason: "Failed RFC 1123 validation",
       });
     }
   }
@@ -223,35 +336,26 @@ export async function sendBookingConfirmationEmail(
   ownerEmail?: string,
   propertyId?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkIn, "checkIn");
+  validateDate(checkOut, "checkOut");
+  validateAmount(totalAmount, "totalAmount");
+  validateAmount(depositAmount, "depositAmount");
+
   try {
-    // Generate view booking URL
-    const viewBookingUrl = await generateViewBookingUrl(
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "booking_confirmation");
+
+    // Generate view booking URL with pre-fetched data (no duplicate fetch)
+    const viewBookingUrl = generateViewBookingUrl(
       bookingReference,
       guestEmail,
       accessToken,
-      propertyId
+      propertyData
     );
-
-    // Get contact email from property
-    let contactEmail: string | undefined;
-    if (propertyId) {
-      try {
-        const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        if (!propertyDoc.exists) {
-          logError("[EmailService] Property not found for booking confirmation", null, {
-            propertyId,
-            operation: "fetch_contact_email",
-          });
-        } else {
-          contactEmail = propertyDoc.data()?.contact_email;
-        }
-      } catch (error) {
-        logError("[EmailService] Failed to fetch property data for booking confirmation", error, {
-          propertyId,
-          operation: "fetch_contact_email",
-        });
-      }
-    }
 
     // Build params for new template
     const params: BookingConfirmationParams = {
@@ -265,7 +369,7 @@ export async function sendBookingConfirmationEmail(
       unitName,
       propertyName,
       viewBookingUrl,
-      contactEmail: contactEmail || ownerEmail,
+      contactEmail: propertyData.contactEmail || ownerEmail,
     };
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
@@ -302,36 +406,26 @@ export async function sendBookingApprovedEmail(
   depositAmount?: number,
   propertyId?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkIn, "checkIn");
+  validateDate(checkOut, "checkOut");
+  if (totalAmount !== undefined) validateAmount(totalAmount, "totalAmount");
+  if (depositAmount !== undefined) validateAmount(depositAmount, "depositAmount");
+
   try {
-    // Generate view booking URL if accessToken provided
-    const viewBookingUrl = accessToken ? await generateViewBookingUrl(
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "booking_approved");
+
+    // Generate view booking URL if accessToken provided (uses pre-fetched data)
+    const viewBookingUrl = accessToken ? generateViewBookingUrl(
       bookingReference,
       guestEmail,
       accessToken,
-      propertyId
+      propertyData
     ) : undefined;
-
-    // Get contact email and unit name from property
-    let contactEmail: string | undefined;
-    let unitName: string | undefined;
-    if (propertyId) {
-      try {
-        const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        if (!propertyDoc.exists) {
-          logError("[EmailService] Property not found for booking approval email", null, {
-            propertyId,
-            operation: "fetch_contact_email",
-          });
-        } else {
-          contactEmail = propertyDoc.data()?.contact_email;
-        }
-      } catch (error) {
-        logError("[EmailService] Failed to fetch property data for booking approval email", error, {
-          propertyId,
-          operation: "fetch_contact_email",
-        });
-      }
-    }
 
     // Build params for new template
     const params: BookingApprovedParams = {
@@ -341,11 +435,11 @@ export async function sendBookingApprovedEmail(
       checkIn,
       checkOut,
       propertyName,
-      unitName,
+      unitName: undefined, // unitName not available in this context
       viewBookingUrl,
       totalAmount,
       depositAmount,
-      contactEmail: contactEmail || ownerEmail,
+      contactEmail: propertyData.contactEmail || ownerEmail,
     };
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
@@ -433,27 +527,17 @@ export async function sendGuestCancellationEmail(
   refundAmount?: number,
   propertyId?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkIn, "checkIn");
+  validateDate(checkOut, "checkOut");
+  if (refundAmount !== undefined) validateAmount(refundAmount, "refundAmount");
+
   try {
-    // Get contact email from property
-    let contactEmail: string | undefined;
-    if (propertyId) {
-      try {
-        const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        if (!propertyDoc.exists) {
-          logError("[EmailService] Property not found for guest cancellation email", null, {
-            propertyId,
-            operation: "fetch_contact_email",
-          });
-        } else {
-          contactEmail = propertyDoc.data()?.contact_email;
-        }
-      } catch (error) {
-        logError("[EmailService] Failed to fetch property data for guest cancellation email", error, {
-          propertyId,
-          operation: "fetch_contact_email",
-        });
-      }
-    }
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "guest_cancellation");
 
     // Build params for new template
     const params: GuestCancellationParams = {
@@ -465,7 +549,7 @@ export async function sendGuestCancellationEmail(
       checkIn,
       checkOut,
       refundAmount,
-      contactEmail,
+      contactEmail: propertyData.contactEmail,
     };
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
@@ -544,27 +628,15 @@ export async function sendRefundNotificationEmail(
   reason?: string,
   propertyId?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateAmount(refundAmount, "refundAmount");
+
   try {
-    // Get contact email from property
-    let contactEmail: string | undefined;
-    if (propertyId) {
-      try {
-        const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        if (!propertyDoc.exists) {
-          logError("[EmailService] Property not found for refund notification email", null, {
-            propertyId,
-            operation: "fetch_contact_email",
-          });
-        } else {
-          contactEmail = propertyDoc.data()?.contact_email;
-        }
-      } catch (error) {
-        logError("[EmailService] Failed to fetch property data for refund notification email", error, {
-          propertyId,
-          operation: "fetch_contact_email",
-        });
-      }
-    }
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "refund_notification");
 
     // Build params for new template
     const params: RefundNotificationParams = {
@@ -573,7 +645,7 @@ export async function sendRefundNotificationEmail(
       bookingReference,
       refundAmount,
       reason,
-      contactEmail,
+      contactEmail: propertyData.contactEmail,
     };
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
@@ -649,35 +721,24 @@ export async function sendPaymentReminderEmail(
   accessToken?: string,
   propertyId?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkIn, "checkIn");
+  validateAmount(depositAmount, "depositAmount");
+
   try {
-    // Generate view booking URL if accessToken provided
-    const viewBookingUrl = accessToken ? await generateViewBookingUrl(
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "payment_reminder");
+
+    // Generate view booking URL if accessToken provided (uses pre-fetched data)
+    const viewBookingUrl = accessToken ? generateViewBookingUrl(
       bookingReference,
       guestEmail,
       accessToken,
-      propertyId
+      propertyData
     ) : undefined;
-
-    // Get contact email from property
-    let contactEmail: string | undefined;
-    if (propertyId) {
-      try {
-        const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        if (!propertyDoc.exists) {
-          logError("[EmailService] Property not found for payment reminder email", null, {
-            propertyId,
-            operation: "fetch_contact_email",
-          });
-        } else {
-          contactEmail = propertyDoc.data()?.contact_email;
-        }
-      } catch (error) {
-        logError("[EmailService] Failed to fetch property data for payment reminder email", error, {
-          propertyId,
-          operation: "fetch_contact_email",
-        });
-      }
-    }
 
     // Build params for new template
     const params: PaymentReminderParams = {
@@ -689,7 +750,7 @@ export async function sendPaymentReminderEmail(
       checkIn,
       depositAmount,
       viewBookingUrl,
-      contactEmail,
+      contactEmail: propertyData.contactEmail,
     };
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
@@ -724,35 +785,23 @@ export async function sendCheckInReminderEmail(
   accessToken?: string,
   propertyId?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkIn, "checkIn");
+
   try {
-    // Generate view booking URL if accessToken provided
-    const viewBookingUrl = accessToken ? await generateViewBookingUrl(
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "checkin_reminder");
+
+    // Generate view booking URL if accessToken provided (uses pre-fetched data)
+    const viewBookingUrl = accessToken ? generateViewBookingUrl(
       bookingReference,
       guestEmail,
       accessToken,
-      propertyId
+      propertyData
     ) : undefined;
-
-    // Get contact email from property
-    let contactEmail: string | undefined;
-    if (propertyId) {
-      try {
-        const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        if (!propertyDoc.exists) {
-          logError("[EmailService] Property not found for check-in reminder email", null, {
-            propertyId,
-            operation: "fetch_contact_email",
-          });
-        } else {
-          contactEmail = propertyDoc.data()?.contact_email;
-        }
-      } catch (error) {
-        logError("[EmailService] Failed to fetch property data for check-in reminder email", error, {
-          propertyId,
-          operation: "fetch_contact_email",
-        });
-      }
-    }
 
     // Build params for new template
     const params: CheckInReminderParams = {
@@ -765,7 +814,7 @@ export async function sendCheckInReminderEmail(
       checkInTime,
       address,
       viewBookingUrl,
-      contactEmail,
+      contactEmail: propertyData.contactEmail,
     };
 
     // Send email using V2 template (OPCIJA A: Refined Premium)
@@ -798,27 +847,15 @@ export async function sendCheckOutReminderEmail(
   checkOutTime?: string,
   propertyId?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkOut, "checkOut");
+
   try {
-    // Get contact email from property
-    let contactEmail: string | undefined;
-    if (propertyId) {
-      try {
-        const propertyDoc = await db.collection("properties").doc(propertyId).get();
-        if (!propertyDoc.exists) {
-          logError("[EmailService] Property not found for check-out reminder email", null, {
-            propertyId,
-            operation: "fetch_contact_email",
-          });
-        } else {
-          contactEmail = propertyDoc.data()?.contact_email;
-        }
-      } catch (error) {
-        logError("[EmailService] Failed to fetch property data for check-out reminder email", error, {
-          propertyId,
-          operation: "fetch_contact_email",
-        });
-      }
-    }
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "checkout_reminder");
 
     // Build params for new template
     const params: CheckOutReminderParams = {
@@ -829,7 +866,7 @@ export async function sendCheckOutReminderEmail(
       unitName,
       checkOut,
       checkOutTime,
-      contactEmail,
+      contactEmail: propertyData.contactEmail,
     };
 
     // Send email using V2 template (OPCIJA A: Refined Premium)

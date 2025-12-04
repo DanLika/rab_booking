@@ -33,6 +33,9 @@ import {sendEmailWithRetry} from "./utils/emailRetry";
 // Pending bookings FORCE send (critical - requires owner approval)
 // Instant bookings RESPECT preferences (owner can opt-out)
 
+// CONSTANTS
+const MAX_BOOKING_NIGHTS = 365; // 1 year maximum (DoS protection)
+
 /**
  * Cloud Function: Create Booking with Atomic Availability Check
  *
@@ -154,38 +157,6 @@ export const createBookingAtomic = onCall(async (request) => {
     const icalExportEnabled =
       widgetSettings?.ical_export_enabled ?? false;
 
-    // ========================================================================
-    // STEP 1.5: Validate guest count against unit's max_guests
-    // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
-    // ========================================================================
-    const unitDoc = await db
-      .collection("properties")
-      .doc(propertyId)
-      .collection("units")
-      .doc(unitId)
-      .get();
-    if (!unitDoc.exists) {
-      throw new HttpsError("not-found", "Unit not found");
-    }
-    const unitData = unitDoc.data();
-    const maxGuests = unitData?.max_guests ?? 10; // Default max 10 if not set
-
-    // Validate guest count is a valid positive integer
-    const guestCountNum = Number(guestCount);
-    if (!Number.isInteger(guestCountNum) || guestCountNum < 1) {
-      throw new HttpsError(
-        "invalid-argument",
-        "Guest count must be a valid integer of at least 1"
-      );
-    }
-
-    if (guestCountNum > maxGuests) {
-      throw new HttpsError(
-        "invalid-argument",
-        `Maximum ${maxGuests} guests allowed for this unit. You requested ${guestCountNum}.`
-      );
-    }
-
     // Validate payment method is enabled in settings
     const isStripeDisabled =
       paymentMethod === "stripe" && (!stripeConfig || !stripeConfig.enabled);
@@ -263,207 +234,31 @@ export const createBookingAtomic = onCall(async (request) => {
     });
 
     // ========================================================================
-    // STRIPE PAYMENT: Do NOT create booking here!
-    // For Stripe payments, we only validate availability and return success.
-    // The actual booking will be created by the webhook after payment confirms.
-    // This prevents "ghost bookings" that block calendar but were never paid.
+    // STRIPE PAYMENT: No validation here - pass data to stripePayment.ts
+    // ========================================================================
+    // CRITICAL FIX: Removed 214 lines of duplicated validation to eliminate:
+    // 1. Code duplication (daily_prices validation repeated twice)
+    // 2. Race condition (between this validation and placeholder creation)
+    // 3. Memory waste (large transaction objects)
+    //
+    // NEW FLOW:
+    // - atomicBooking.ts: Just returns booking data (no validation)
+    // - stripePayment.ts: Creates placeholder booking with atomic validation
+    // - This ensures dates are blocked BEFORE Stripe redirect (no race condition)
     // ========================================================================
     if (paymentMethod === "stripe") {
-      // For Stripe, we need to validate availability within transaction
-      // but NOT create the booking yet
-      const validationResult = await db.runTransaction(async (transaction) => {
-        // Query conflicting bookings
-        const conflictingBookingsQuery = db
-          .collection("bookings")
-          .where("unit_id", "==", unitId)
-          .where("status", "in", ["pending", "confirmed"])
-          .where("check_in", "<", checkOutDate)
-          .where("check_out", ">", checkInDate);
-
-        const conflictingBookings =
-          await transaction.get(conflictingBookingsQuery);
-
-        if (!conflictingBookings.empty) {
-          throw new HttpsError(
-            "already-exists",
-            "Dates no longer available. Select different dates."
-          );
-        }
-
-        // Validate daily_prices restrictions (using helper functions)
-        const bookingNights = calculateBookingNights(checkInDate, checkOutDate);
-
-        // SECURITY FIX: Validate booking duration (already validated in dateValidation helper)
-        // But add max nights validation here for DoS protection
-        const MAX_BOOKING_NIGHTS = 365; // 1 year maximum
-        if (bookingNights > MAX_BOOKING_NIGHTS) {
-          throw new HttpsError(
-            "invalid-argument",
-            `Maximum booking duration is ${MAX_BOOKING_NIGHTS} nights (1 year). ` +
-              `You requested ${bookingNights} nights. For longer stays, please contact the property owner directly.`
-          );
-        }
-
-        // Calculate days in advance for min/max advance booking validation
-        const daysInAdvance = calculateDaysInAdvance(checkInDate);
-
-        const dailyPricesQuery = db
-          .collection("daily_prices")
-          .where("unit_id", "==", unitId)
-          .where("date", ">=", checkInDate)
-          .where("date", "<", checkOutDate);
-
-        const dailyPricesSnapshot = await transaction.get(dailyPricesQuery);
-
-        for (const doc of dailyPricesSnapshot.docs) {
-          const priceData = doc.data();
-          const dateTimestamp = priceData.date as admin.firestore.Timestamp;
-          const dateStr = dateTimestamp.toDate().toISOString().split("T")[0];
-
-          if (priceData.available === false) {
-            throw new HttpsError(
-              "failed-precondition",
-              `Date ${dateStr} is not available for booking.`
-            );
-          }
-
-          const isCheckInDate =
-            dateTimestamp.toMillis() === checkInDate.toMillis();
-          if (isCheckInDate && priceData.block_checkin === true) {
-            throw new HttpsError(
-              "failed-precondition",
-              `Check-in is not allowed on ${dateStr}.`
-            );
-          }
-
-          if (
-            isCheckInDate &&
-            priceData.min_nights_on_arrival != null &&
-            priceData.min_nights_on_arrival > 0 &&
-            bookingNights < priceData.min_nights_on_arrival
-          ) {
-            throw new HttpsError(
-              "failed-precondition",
-              `Minimum ${priceData.min_nights_on_arrival} nights required for ` +
-                `check-in on ${dateStr}. You selected ${bookingNights} nights.`
-            );
-          }
-
-          // Check: maxNightsOnArrival on check-in date
-          if (
-            isCheckInDate &&
-            priceData.max_nights_on_arrival != null &&
-            priceData.max_nights_on_arrival > 0
-          ) {
-            if (bookingNights > priceData.max_nights_on_arrival) {
-              throw new HttpsError(
-                "failed-precondition",
-                `Maximum ${priceData.max_nights_on_arrival} nights allowed for ` +
-                  `check-in on ${dateStr}. You selected ${bookingNights} nights.`
-              );
-            }
-          }
-
-          // Check: minDaysAdvance on check-in date
-          if (
-            isCheckInDate &&
-            priceData.min_days_advance != null &&
-            priceData.min_days_advance > 0
-          ) {
-            if (daysInAdvance < priceData.min_days_advance) {
-              throw new HttpsError(
-                "failed-precondition",
-                `Must book at least ${priceData.min_days_advance} days in advance ` +
-                  `for check-in on ${dateStr}. You are booking ${daysInAdvance} days ahead.`
-              );
-            }
-          }
-
-          // Check: maxDaysAdvance on check-in date
-          if (
-            isCheckInDate &&
-            priceData.max_days_advance != null &&
-            priceData.max_days_advance > 0
-          ) {
-            if (daysInAdvance > priceData.max_days_advance) {
-              throw new HttpsError(
-                "failed-precondition",
-                `Can only book up to ${priceData.max_days_advance} days in advance ` +
-                  `for check-in on ${dateStr}. You are booking ${daysInAdvance} days ahead.`
-              );
-            }
-          }
-        }
-
-        // Check: Is check-out blocked on the check-out date?
-        // (Check-out date is not in the range query above, need separate check)
-        const checkOutPriceQuery = db
-          .collection("daily_prices")
-          .where("unit_id", "==", unitId)
-          .where("date", "==", checkOutDate);
-
-        const checkOutPriceSnapshot = await transaction.get(checkOutPriceQuery);
-
-        if (!checkOutPriceSnapshot.empty) {
-          const checkOutData = checkOutPriceSnapshot.docs[0].data();
-          if (checkOutData.block_checkout === true) {
-            const dateStr = checkOutDate.toDate().toISOString().split("T")[0];
-            throw new HttpsError(
-              "failed-precondition",
-              `Check-out is not allowed on ${dateStr}.`
-            );
-          }
-        }
-
-        // Validate unit's base minStayNights
-        // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
-        const unitDocRef = db
-          .collection("properties")
-          .doc(propertyId)
-          .collection("units")
-          .doc(unitId);
-        const unitSnapshot = await transaction.get(unitDocRef);
-
-        if (unitSnapshot.exists) {
-          const unitData = unitSnapshot.data();
-          const unitMinStayNights = unitData?.min_stay_nights ?? 1;
-
-          if (bookingNights < unitMinStayNights) {
-            throw new HttpsError(
-              "failed-precondition",
-              `Minimum ${unitMinStayNights} nights required.`
-            );
-          }
-
-          // RACE CONDITION FIX: Validate guest count INSIDE transaction
-          // This prevents owner from changing max_guests between validation and booking
-          const maxGuestsInTransaction = unitData?.max_guests ?? 10;
-          const guestCountNum = Number(guestCount);
-
-          if (guestCountNum > maxGuestsInTransaction) {
-            throw new HttpsError(
-              "invalid-argument",
-              `Maximum ${maxGuestsInTransaction} guests allowed for this unit. You requested ${guestCountNum}.`
-            );
-          }
-        }
-
-        return { valid: true, bookingNights };
-      });
-
-      logSuccess("[AtomicBooking] Stripe validation passed - no booking created yet", {
+      logInfo("[AtomicBooking] Stripe payment - skipping validation, passing to stripePayment.ts", {
         unitId,
         checkIn,
         checkOut,
         guestEmail: sanitizedGuestEmail,
-        bookingNights: validationResult.bookingNights,
       });
 
-      // Return validation success with all data needed for Stripe checkout
-      // The actual booking will be created by handleStripeWebhook after payment
+      // Return booking data without validation
+      // stripePayment.ts will do atomic validation when creating placeholder
       return {
         success: true,
-        isStripeValidation: true, // Flag to indicate this is just validation
+        isStripeValidation: true,
         bookingData: {
           unitId,
           propertyId,
@@ -473,7 +268,7 @@ export const createBookingAtomic = onCall(async (request) => {
           guestName: sanitizedGuestName,
           guestEmail: sanitizedGuestEmail,
           guestPhone: finalGuestPhone,
-          guestCount: Number(guestCount), // Use validated numeric value
+          guestCount: Number(guestCount),
           totalPrice,
           depositAmount,
           paymentOption,
@@ -481,7 +276,7 @@ export const createBookingAtomic = onCall(async (request) => {
           taxLegalAccepted: taxLegalAccepted || null,
           icalExportEnabled,
         },
-        message: "Dates available. Proceed to Stripe payment.",
+        message: "Proceed to Stripe payment.",
       };
     }
 
@@ -571,7 +366,6 @@ export const createBookingAtomic = onCall(async (request) => {
 
       // SECURITY FIX: Validate booking duration (already validated in dateValidation helper)
       // But add max nights validation here for DoS protection
-      const MAX_BOOKING_NIGHTS = 365; // 1 year maximum
       if (bookingNights > MAX_BOOKING_NIGHTS) {
         throw new HttpsError(
           "invalid-argument",
@@ -874,16 +668,18 @@ export const createBookingAtomic = onCall(async (request) => {
         guestEmail: sanitizedGuestEmail,
       });
 
+      // MEMORY OPTIMIZATION: Return only essential data (not full booking object)
+      // Client already has all booking details from request params
       return {
         bookingId,
         bookingReference: bookingRef,
         depositAmount,
         status,
         paymentStatus,
-        accessToken, // Include plaintext token for email
-        icalExportEnabled, // For widget to show "Add to Calendar" button
-        booking: bookingData, // Include full booking data for confirmation screen
-        unitDataFromTransaction, // OPTIMIZATION: Pass unit data to avoid duplicate fetch
+        accessToken, // Plaintext token for email
+        icalExportEnabled,
+        // Pass only unit name (not entire unit object)
+        unitName: unitDataFromTransaction?.name || "Unit",
       };
     });
 
@@ -895,10 +691,23 @@ export const createBookingAtomic = onCall(async (request) => {
       // Fetch property data for email (unitData already from transaction)
       const propertyDoc =
         await db.collection("properties").doc(propertyId).get();
+
+      // RELIABILITY FIX: Handle missing property data
+      if (!propertyDoc.exists) {
+        logError(
+          "[AtomicBooking] Property not found when sending emails - using fallback name",
+          null,
+          {
+            propertyId,
+            bookingId: result.bookingId,
+          }
+        );
+      }
+
       const propertyData = propertyDoc.data();
 
-      // OPTIMIZATION: Use unit data from transaction instead of duplicate fetch
-      const unitData = result.unitDataFromTransaction;
+      // MEMORY OPTIMIZATION: Use unit name from transaction (not entire unit object)
+      const unitName = result.unitName;
 
       if (requireOwnerApproval) {
         // Manual approval flow - send "Booking Request Received" email to guest
@@ -969,7 +778,7 @@ export const createBookingAtomic = onCall(async (request) => {
               checkOutDate.toDate(),
               totalPrice,
               depositAmount,
-              unitData?.name || "Unit",
+              unitName,
               propertyData?.name || "Property",
               result.accessToken, // Plaintext token for email link
               propertyData?.contact_email,
@@ -1024,7 +833,7 @@ export const createBookingAtomic = onCall(async (request) => {
                     sanitizedGuestEmail,
                     finalGuestPhone || undefined,
                     propertyData?.name || "Property",
-                    unitData?.name || "Unit",
+                    unitName,
                     checkInDate.toDate(),
                     checkOutDate.toDate(),
                     Number(guestCount), // Use validated numeric value
@@ -1065,19 +874,42 @@ export const createBookingAtomic = onCall(async (request) => {
           "Booking created. Please complete payment.",
     };
   } catch (error: any) {
-    // Check if it's our "already-exists" error
-    if (error.code === "already-exists") {
-      logInfo("[AtomicBooking] Booking rejected - dates unavailable", {
-        unitId,
-        checkIn,
-        checkOut,
-      });
-      throw error; // Re-throw to client
+    // ERROR HANDLING FIX: Properly handle different HttpsError codes
+    // Don't convert all errors to "internal" - preserve specific error codes
+
+    // Check if it's already an HttpsError with a specific code
+    if (error instanceof HttpsError || error.code) {
+      // Known error codes that should be passed through to client:
+      // - already-exists: Dates not available
+      // - invalid-argument: Guest count, booking duration, etc.
+      // - failed-precondition: Daily prices restrictions
+      // - not-found: Unit/property not found
+      // - permission-denied: Payment method disabled
+      const allowedErrorCodes = [
+        "already-exists",
+        "invalid-argument",
+        "failed-precondition",
+        "not-found",
+        "permission-denied",
+      ];
+
+      if (allowedErrorCodes.includes(error.code)) {
+        logInfo(`[AtomicBooking] Booking validation failed: ${error.code}`, {
+          unitId,
+          checkIn,
+          checkOut,
+          errorCode: error.code,
+          errorMessage: error.message,
+        });
+        throw error; // Re-throw with original code
+      }
     }
 
+    // Unknown/unexpected error - log and convert to internal error
     logError("[AtomicBooking] Unexpected error creating booking", error, {
       unitId,
       guestEmail: sanitizedGuestEmail,
+      errorType: error?.constructor?.name,
     });
 
     throw new HttpsError(

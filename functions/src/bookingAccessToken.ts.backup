@@ -1,7 +1,5 @@
 import * as crypto from "crypto";
 import {admin} from "./firebase";
-import {checkRateLimit} from "./utils/rateLimit";
-import {logWarn, logError} from "./logger";
 
 /**
  * Token Configuration
@@ -17,10 +15,9 @@ const EXPIRATION_DAYS = 30; // Standard expiration after checkout
 const EXTENDED_EXPIRATION_DAYS = 3650; // 10 years for old bookings
 
 // Token validation constants
-const EXPECTED_TOKEN_LENGTH = 43; // 32 bytes base64url = 43 chars (EXACT)
+const MIN_TOKEN_LENGTH = 16; // Minimum reasonable token length
+const MAX_TOKEN_LENGTH = 128; // Maximum reasonable token length
 const HASH_LENGTH = 64; // SHA-256 = 64 hex chars
-const BASE64URL_REGEX = /^[A-Za-z0-9_-]+$/; // base64url charset
-const HASH_REGEX = /^[0-9a-f]{64}$/i; // 64 hex chars
 
 /**
  * Generate a secure access token for booking lookup
@@ -85,7 +82,6 @@ export function calculateTokenExpiration(
  * Verify if access token matches stored hash
  *
  * SECURITY:
- * - Rate limiting prevents brute-force attacks (10 attempts/min per IP)
  * - Input validation prevents invalid data from reaching crypto operations
  * - Format validation rejects malformed tokens early
  * - Constant-time comparison prevents timing attacks
@@ -93,77 +89,69 @@ export function calculateTokenExpiration(
  *
  * @param providedToken - Token from user (plaintext from URL/email)
  * @param storedHash - SHA-256 hash from database
- * @param clientIp - Client IP address for rate limiting (optional)
  * @returns true if token matches hash, false otherwise
  */
 export function verifyAccessToken(
   providedToken: string | null | undefined,
-  storedHash: string | null | undefined,
-  clientIp?: string
+  storedHash: string | null | undefined
 ): boolean {
-  // ========================================================================
-  // STEP 0: RATE LIMITING (prevent brute-force attacks)
-  // ========================================================================
-  if (clientIp && !checkRateLimit(`token_verify:${clientIp}`, 10, 60)) {
-    logWarn("[Security] Token verification rate limit exceeded");
-    return false;
-  }
-
   // ========================================================================
   // STEP 1: VALIDATE INPUT PARAMETERS
   // ========================================================================
 
   // Check: Is providedToken valid?
   if (!providedToken || typeof providedToken !== "string") {
-    logWarn("[Security] Token verification failed");
+    console.warn("[Security] Token verification failed: invalid providedToken (empty or not string)");
     return false;
   }
 
   // Check: Is storedHash valid?
   if (!storedHash || typeof storedHash !== "string") {
-    logWarn("[Security] Token verification failed");
+    console.warn("[Security] Token verification failed: invalid storedHash (empty or not string)");
+    return false;
+  }
+
+  // Check: Token length using configured bounds
+  if (providedToken.length < MIN_TOKEN_LENGTH ||
+      providedToken.length > MAX_TOKEN_LENGTH) {
+    console.warn("[Security] Token verification failed: invalid token length", {
+      length: providedToken.length,
+      expectedRange: `${MIN_TOKEN_LENGTH}-${MAX_TOKEN_LENGTH}`,
+    });
+    return false;
+  }
+
+  // Check: Is storedHash valid hex string? (SHA-256 = exactly 64 hex chars)
+  if (storedHash.length !== HASH_LENGTH ||
+      !/^[0-9a-f]+$/i.test(storedHash)) {
+    console.warn("[Security] Token verification failed: invalid hash format", {
+      hashLength: storedHash.length,
+      expectedLength: HASH_LENGTH,
+      isValidHex: /^[0-9a-f]+$/i.test(storedHash),
+    });
     return false;
   }
 
   // ========================================================================
-  // STEP 2: VALIDATE TOKEN FORMAT (base64url characters only)
+  // STEP 2: HASH PROVIDED TOKEN
   // ========================================================================
-  if (!BASE64URL_REGEX.test(providedToken)) {
-    logWarn("[Security] Token verification failed");
+  let hashedProvidedToken: string;
+  try {
+    hashedProvidedToken = crypto
+      .createHash("sha256")
+      .update(providedToken)
+      .digest("hex");
+  } catch (error) {
+    // This should never happen with valid strings, but catch just in case
+    console.error("[Security] Token hashing failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      providedTokenLength: providedToken.length,
+    });
     return false;
   }
 
   // ========================================================================
-  // STEP 3: VALIDATE TOKEN LENGTH (exact match, prevents timing leak)
-  // ========================================================================
-  // SECURITY: Use strict equality (43 chars ONLY) to reject malformed tokens
-  // This prevents timing attacks - all invalid lengths fail at same point
-  if (providedToken.length !== EXPECTED_TOKEN_LENGTH) {
-    logWarn("[Security] Token verification failed");
-    return false;
-  }
-
-  // ========================================================================
-  // STEP 4: VALIDATE HASH FORMAT
-  // ========================================================================
-  // SHA-256 hash must be exactly 64 hexadecimal characters
-  if (storedHash.length !== HASH_LENGTH || !HASH_REGEX.test(storedHash)) {
-    logWarn("[Security] Token verification failed");
-    return false;
-  }
-
-  // ========================================================================
-  // STEP 5: HASH PROVIDED TOKEN
-  // ========================================================================
-  // After validation, this cannot fail (validated string input)
-  // No try-catch needed - unreachable error path removed
-  const hashedProvidedToken = crypto
-    .createHash(HASH_ALGORITHM)
-    .update(providedToken)
-    .digest("hex");
-
-  // ========================================================================
-  // STEP 6: CONSTANT-TIME COMPARISON (prevents timing attacks)
+  // STEP 3: CONSTANT-TIME COMPARISON (prevents timing attacks)
   // ========================================================================
   try {
     const result = crypto.timingSafeEqual(
@@ -171,16 +159,23 @@ export function verifyAccessToken(
       Buffer.from(storedHash, "hex")
     );
 
-    // Log failures only (minimal information for audit trail)
+    // Log ONLY failures for security audit (success is expected, no need to log)
     if (!result) {
-      logWarn("[Security] Token verification failed (hash mismatch)");
+      console.warn("[Security] Token verification failed: hash mismatch", {
+        providedTokenLength: providedToken.length,
+        timestamp: new Date().toISOString(),
+      });
     }
 
     return result;
   } catch (error) {
-    // This should be unreachable after validation (hash lengths are validated)
-    // Keep as final safety net
-    logError("[Security] Token comparison error", error);
+    // This catch should be unreachable now (we validated lengths above)
+    // but keep it as final safety net
+    console.error("[Security] Token comparison error", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      hashedTokenLength: hashedProvidedToken.length,
+      storedHashLength: storedHash.length,
+    });
     return false;
   }
 }

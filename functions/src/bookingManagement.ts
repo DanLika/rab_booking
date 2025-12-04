@@ -12,9 +12,62 @@ import {
   sendBookingRejectedEmail,
 } from "./emailService";
 import {sendEmailIfAllowed} from "./emailNotificationHelper";
+import {sendEmailWithRetry} from "./utils/emailRetry";
 import {admin, db} from "./firebase";
-import {logInfo, logError, logSuccess} from "./logger";
+import {logInfo, logError, logSuccess, logWarn} from "./logger";
 import {createBookingNotification} from "./notificationService";
+import {
+  fetchPropertyAndUnitDetails,
+  BookingEmailTracking,
+} from "./utils/bookingHelpers";
+
+// ==========================================
+// EMAIL ERROR TRACKING
+// ==========================================
+
+/**
+ * Track email sending failure for monitoring/alerting
+ *
+ * This creates a record that can be:
+ * - Monitored via Cloud Monitoring
+ * - Used to trigger alerts
+ * - Picked up by a retry job
+ *
+ * @param bookingId - Booking ID
+ * @param emailType - Type of email that failed
+ * @param recipient - Email recipient
+ * @param error - Error that occurred
+ */
+async function trackEmailFailure(
+  bookingId: string,
+  emailType: string,
+  recipient: string,
+  error: unknown
+): Promise<void> {
+  try {
+    await db.collection("email_failures").add({
+      booking_id: bookingId,
+      email_type: emailType,
+      recipient,
+      error_message: error instanceof Error ? error.message : String(error),
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      retry_count: 0,
+      resolved: false,
+    });
+
+    logWarn("[BookingManagement] Email failure tracked for monitoring", {
+      bookingId,
+      emailType,
+      recipient,
+    });
+  } catch (trackError) {
+    // Don't fail if tracking fails - just log
+    logError("[BookingManagement] Failed to track email failure", trackError, {
+      bookingId,
+      emailType,
+    });
+  }
+}
 
 /**
  * Cloud Function: Auto-cancel expired pending bookings
@@ -44,70 +97,41 @@ export const autoCancelExpiredBookings = onSchedule(
           updated_at: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        // Send cancellation email to guest
-        try {
-          if (booking.guest_email) {
-            // Fetch property and unit names for email
-            let propertyName = "Property";
-            let unitName: string | undefined;
-            if (booking.property_id) {
-              try {
-                const propDoc = await db.collection("properties").doc(booking.property_id).get();
-                if (!propDoc.exists) {
-                  logError("[autoCancelExpired] Property not found", null, {
-                    propertyId: booking.property_id,
-                    bookingId: doc.id,
-                  });
-                  propertyName = "Property";
-                } else {
-                  propertyName = propDoc.data()?.name || "Property";
-                }
-              } catch (e) {
-                logError("[autoCancelExpired] Failed to fetch property name", e, {
-                  propertyId: booking.property_id,
-                  bookingId: doc.id,
-                });
-                propertyName = "Property";
-              }
-            }
-            if (booking.property_id && booking.unit_id) {
-              try {
-                const unitDoc = await db
-                  .collection("properties")
-                  .doc(booking.property_id)
-                  .collection("units")
-                  .doc(booking.unit_id)
-                  .get();
-                if (!unitDoc.exists) {
-                  logError("[autoCancelExpired] Unit not found", null, {
-                    propertyId: booking.property_id,
-                    unitId: booking.unit_id,
-                    bookingId: doc.id,
-                  });
-                } else {
-                  unitName = unitDoc.data()?.name;
-                }
-              } catch (e) {
-                logError("[autoCancelExpired] Failed to fetch unit name", e, {
-                  propertyId: booking.property_id,
-                  unitId: booking.unit_id,
-                  bookingId: doc.id,
-                });
-              }
-            }
+        // Send cancellation email to guest with retry
+        if (booking.guest_email) {
+          try {
+            // Fetch property and unit names using shared utility
+            const {propertyName, unitName} = await fetchPropertyAndUnitDetails(
+              booking.property_id,
+              booking.unit_id,
+              "autoCancelExpired"
+            );
 
-            await sendBookingCancellationEmail(
+            await sendEmailWithRetry(
+              async () => {
+                await sendBookingCancellationEmail(
+                  booking.guest_email,
+                  booking.guest_name || "Guest",
+                  booking.booking_reference,
+                  propertyName,
+                  unitName,
+                  booking.check_in.toDate(),
+                  booking.check_out.toDate()
+                );
+              },
+              "Auto-Cancel Notification",
+              booking.guest_email
+            );
+          } catch (error) {
+            logError("Failed to send cancellation email after retries", error, {bookingId: doc.id});
+            // Track failure for monitoring/alerting
+            await trackEmailFailure(
+              doc.id,
+              "auto_cancel_notification",
               booking.guest_email,
-              booking.guest_name || "Guest",
-              booking.booking_reference,
-              propertyName,
-              unitName,
-              booking.check_in.toDate(),
-              booking.check_out.toDate()
+              error
             );
           }
-        } catch (error) {
-          logError("Failed to send cancellation email", error, {bookingId: doc.id});
         }
 
         logInfo("Auto-cancelled booking due to payment timeout", {bookingId: doc.id});
@@ -160,21 +184,14 @@ export const onBookingCreated = onDocumentCreated(
     });
 
     try {
-      // Fetch unit and property details
+      // Fetch unit and property details using shared utility (with error handling)
       // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
-      const propertyDoc = await db
-        .collection("properties")
-        .doc(booking.property_id)
-        .get();
-      const propertyData = propertyDoc.data();
-
-      const unitDoc = await db
-        .collection("properties")
-        .doc(booking.property_id)
-        .collection("units")
-        .doc(booking.unit_id)
-        .get();
-      const unitData = unitDoc.data();
+      const {propertyName, propertyData, unitName} = await fetchPropertyAndUnitDetails(
+        booking.property_id,
+        booking.unit_id,
+        "onBookingCreated",
+        true // fetchFullData = true (we need owner_id from propertyData)
+      );
 
       // Fetch owner details
       const ownerId = propertyData?.owner_id;
@@ -191,7 +208,7 @@ export const onBookingCreated = onDocumentCreated(
           booking.guest_email || "",
           booking.guest_name || "Guest",
           booking.booking_reference || "",
-          propertyData?.name || "Property"
+          propertyName
         );
 
         logSuccess("Pending booking request email sent to guest", {email: booking.guest_email});
@@ -207,7 +224,7 @@ export const onBookingCreated = onDocumentCreated(
                 ownerData.email,
                 booking.booking_reference || "",
                 booking.guest_name || "Guest",
-                propertyData?.name || "Property"
+                propertyName
               );
             },
             true // forceIfCritical: owner MUST be notified to approve booking
@@ -234,8 +251,8 @@ export const onBookingCreated = onDocumentCreated(
                 booking.guest_name || "Guest",
                 booking.guest_email || "",
                 booking.guest_phone || undefined,
-                propertyData?.name || "Property",
-                unitData?.name || "Unit",
+                propertyName,
+                unitName || "Unit",
                 booking.check_in.toDate(),
                 booking.check_out.toDate(),
                 booking.guest_count || 2,
@@ -296,6 +313,17 @@ export const onBookingStatusChange = onDocumentUpdated(
       if (before.status === "pending" && after.status === "confirmed" && after.approved_at) {
         logInfo("Booking approved by owner, sending confirmation email to guest");
 
+        // ✅ IDEMPOTENCY CHECK: Prevent duplicate emails on function retry
+        const emailTracking = after.emails_sent as BookingEmailTracking | undefined;
+        if (emailTracking?.approval) {
+          logInfo("Approval email already sent, skipping (idempotency check)", {
+            bookingId: event.params.bookingId,
+            sentAt: emailTracking.approval.sent_at,
+            email: emailTracking.approval.email,
+          });
+          return;
+        }
+
         try {
           // Fetch property details
           const propertyDoc = await db
@@ -317,6 +345,15 @@ export const onBookingStatusChange = onDocumentUpdated(
           );
 
           logSuccess("Booking approval email sent to guest", {email: after.guest_email});
+
+          // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
+          await event.data?.after.ref.update({
+            "emails_sent.approval": {
+              sent_at: admin.firestore.FieldValue.serverTimestamp(),
+              email: after.guest_email,
+              booking_id: event.params.bookingId,
+            },
+          });
         } catch (emailError) {
           logError("Failed to send booking approval email", emailError);
           // Don't throw - approval should succeed even if email fails
@@ -326,6 +363,17 @@ export const onBookingStatusChange = onDocumentUpdated(
       // If booking was rejected (pending -> cancelled with rejection_reason)
       if (before.status === "pending" && after.status === "cancelled" && after.rejection_reason) {
         logInfo("Booking rejected by owner, sending rejection email to guest");
+
+        // ✅ IDEMPOTENCY CHECK: Prevent duplicate emails on function retry
+        const emailTracking = after.emails_sent as BookingEmailTracking | undefined;
+        if (emailTracking?.rejection) {
+          logInfo("Rejection email already sent, skipping (idempotency check)", {
+            bookingId: event.params.bookingId,
+            sentAt: emailTracking.rejection.sent_at,
+            email: emailTracking.rejection.email,
+          });
+          return;
+        }
 
         try {
           // Fetch unit and property details
@@ -346,6 +394,15 @@ export const onBookingStatusChange = onDocumentUpdated(
           );
 
           logSuccess("Booking rejection email sent to guest", {email: after.guest_email});
+
+          // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
+          await event.data?.after.ref.update({
+            "emails_sent.rejection": {
+              sent_at: admin.firestore.FieldValue.serverTimestamp(),
+              email: after.guest_email,
+              booking_id: event.params.bookingId,
+            },
+          });
         } catch (emailError) {
           logError("Failed to send booking rejection email", emailError);
           // Don't throw - rejection should succeed even if email fails
@@ -356,87 +413,65 @@ export const onBookingStatusChange = onDocumentUpdated(
       if (after.status === "cancelled" && !after.rejection_reason) {
         logInfo("Booking cancelled, dates freed up");
 
-        // Send cancellation email to guest
-        try {
-          const booking = after as any;
+        // ✅ IDEMPOTENCY CHECK: Prevent duplicate emails on function retry
+        const emailTracking = after.emails_sent as BookingEmailTracking | undefined;
+        if (emailTracking?.cancellation) {
+          logInfo("Cancellation email already sent, skipping (idempotency check)", {
+            bookingId: event.params.bookingId,
+            sentAt: emailTracking.cancellation.sent_at,
+            email: emailTracking.cancellation.email,
+          });
+          // Don't return here - we still need to create owner notification
+        } else {
+          // Send cancellation email to guest (only if not sent before)
+          try {
+            const booking = after as any;
 
-          // Fetch property and unit names for email
-          let propertyName = "Property";
-          let unitName: string | undefined;
-          if (booking.property_id) {
-            try {
-              const propDoc = await db.collection("properties").doc(booking.property_id).get();
-              if (!propDoc.exists) {
-                logError("[onStatusChange] Property not found for cancellation email", null, {
-                  propertyId: booking.property_id,
+            // Validate booking reference exists (data integrity check)
+            if (!booking.booking_reference) {
+              logError(
+                "[onStatusChange] CRITICAL: booking_reference missing - possible data corruption",
+                null,
+                {
                   bookingId: event.params.bookingId,
-                });
-                propertyName = "Property";
-              } else {
-                propertyName = propDoc.data()?.name || "Property";
-              }
-            } catch (e) {
-              logError("[onStatusChange] Failed to fetch property name for cancellation email", e, {
-                propertyId: booking.property_id,
-                bookingId: event.params.bookingId,
-              });
-              propertyName = "Property";
-            }
-          }
-          if (booking.property_id && booking.unit_id) {
-            try {
-              const unitDoc = await db
-                .collection("properties")
-                .doc(booking.property_id)
-                .collection("units")
-                .doc(booking.unit_id)
-                .get();
-              if (!unitDoc.exists) {
-                logError("[onStatusChange] Unit not found for cancellation email", null, {
                   propertyId: booking.property_id,
                   unitId: booking.unit_id,
-                  bookingId: event.params.bookingId,
-                });
-              } else {
-                unitName = unitDoc.data()?.name;
-              }
-            } catch (e) {
-              logError("[onStatusChange] Failed to fetch unit name for cancellation email", e, {
-                propertyId: booking.property_id,
-                unitId: booking.unit_id,
-                bookingId: event.params.bookingId,
-              });
+                }
+              );
             }
-          }
 
-          // Validate booking reference exists (data integrity check)
-          if (!booking.booking_reference) {
-            logError(
-              "[onStatusChange] CRITICAL: booking_reference missing - possible data corruption",
-              null,
-              {
-                bookingId: event.params.bookingId,
-                propertyId: booking.property_id,
-                unitId: booking.unit_id,
-              }
+            // Fetch property and unit names using shared utility
+            const {propertyName, unitName} = await fetchPropertyAndUnitDetails(
+              booking.property_id,
+              booking.unit_id,
+              "onStatusChange"
             );
-          }
 
-          await sendBookingCancellationEmail(
-            booking.guest_email,
-            booking.guest_name,
-            booking.booking_reference || `ERR-${event.params.bookingId}`,
-            propertyName,
-            unitName,
-            booking.check_in.toDate(),
-            booking.check_out.toDate(),
-            undefined, // refundAmount
-            booking.property_id
-          );
-          logSuccess("Cancellation email sent", {email: booking.guest_email});
-        } catch (emailError) {
-          logError("Failed to send cancellation email", emailError);
-          // Don't throw - cancellation should succeed even if email fails
+            await sendBookingCancellationEmail(
+              booking.guest_email,
+              booking.guest_name,
+              booking.booking_reference || `ERR-${event.params.bookingId}`,
+              propertyName,
+              unitName,
+              booking.check_in.toDate(),
+              booking.check_out.toDate(),
+              undefined, // refundAmount
+              booking.property_id
+            );
+            logSuccess("Cancellation email sent", {email: booking.guest_email});
+
+            // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
+            await event.data?.after.ref.update({
+              "emails_sent.cancellation": {
+                sent_at: admin.firestore.FieldValue.serverTimestamp(),
+                email: after.guest_email,
+                booking_id: event.params.bookingId,
+              },
+            });
+          } catch (emailError) {
+            logError("Failed to send cancellation email", emailError);
+            // Don't throw - cancellation should succeed even if email fails
+          }
         }
 
         // Create in-app notification for owner about cancellation

@@ -51,8 +51,14 @@ export function sanitizeText(
   let sanitized = input.trim();
 
   // Remove HTML tags (prevent XSS)
-  // Matches: <any-tag>, <any-tag attr="value">, </any-tag>
-  sanitized = sanitized.replace(/<[^>]*>/g, "");
+  // SECURITY FIX: Iterative removal to catch nested/malformed tags
+  // Example: <div><script>alert(1)</script></div> → removes all layers
+  // Example: <script<script>alert(1)</script> → removes malformed tags
+  let previousLength = 0;
+  while (sanitized.length !== previousLength && /<[^>]*>/g.test(sanitized)) {
+    previousLength = sanitized.length;
+    sanitized = sanitized.replace(/<[^>]*>/g, "");
+  }
 
   // Remove control characters EXCEPT newlines (\n = 0x0A)
   // Control chars: 0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F, 0x7F (DEL)
@@ -107,8 +113,12 @@ export function sanitizeEmail(
 
   let sanitized = input.trim().toLowerCase();
 
-  // Remove HTML tags
-  sanitized = sanitized.replace(/<[^>]*>/g, "");
+  // Remove HTML tags (iterative removal for nested/malformed tags)
+  let previousLength = 0;
+  while (sanitized.length !== previousLength && /<[^>]*>/g.test(sanitized)) {
+    previousLength = sanitized.length;
+    sanitized = sanitized.replace(/<[^>]*>/g, "");
+  }
 
   // Remove control characters
   sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, "");
@@ -120,20 +130,27 @@ export function sanitizeEmail(
 }
 
 /**
- * Sanitize phone number
+ * Sanitize phone number (STRICT VALIDATION)
  *
  * Keeps only valid phone characters:
  * - Digits: 0-9
- * - Plus sign: + (for country code)
+ * - Plus sign: + (for country code, max 1, must be at start)
  * - Hyphens: - (separator)
- * - Parentheses: ( ) (area code)
+ * - Parentheses: ( ) (area code, must be balanced)
  * - Spaces: (separator)
  *
  * Removes:
  * - Letters
  * - Special characters (except above)
  * - Control characters
- * - HTML tags
+ * - HTML tags (nested/malformed)
+ *
+ * Validation rules:
+ * - Minimum 7 digits (shortest valid phone)
+ * - Maximum 20 characters total
+ * - Maximum 1 plus sign (must be at start)
+ * - Balanced parentheses
+ * - Maximum 6 special characters
  *
  * ## Use Cases
  * - Guest phone: `sanitizePhone(guestPhone)`
@@ -141,20 +158,23 @@ export function sanitizeEmail(
  * - Contact phone: `sanitizePhone(contactPhone)`
  *
  * @param input - Phone number to sanitize (can be null/undefined)
- * @returns Sanitized phone number or null if empty
+ * @returns Sanitized phone number or null if invalid
  *
  * @example
  * sanitizePhone('+1 (555) 123-4567')
- * // Returns: '+1 (555) 123-4567' (preserved)
+ * // Returns: '+1 (555) 123-4567' (valid)
  *
  * sanitizePhone('+385 91 234 5678')
- * // Returns: '+385 91 234 5678' (preserved)
+ * // Returns: '+385 91 234 5678' (valid)
  *
- * sanitizePhone('call me: 555-1234')
- * // Returns: ' 555-1234' (letters removed)
+ * sanitizePhone('123')
+ * // Returns: null (too few digits)
+ *
+ * sanitizePhone('++1234567890')
+ * // Returns: null (multiple plus signs)
  *
  * sanitizePhone('<script>123</script>')
- * // Returns: '123' (HTML removed)
+ * // Returns: null (too few digits after sanitization)
  */
 export function sanitizePhone(
   input: string | null | undefined
@@ -163,8 +183,12 @@ export function sanitizePhone(
 
   let sanitized = input.trim();
 
-  // Remove HTML tags
-  sanitized = sanitized.replace(/<[^>]*>/g, "");
+  // Remove HTML tags (iterative removal for nested/malformed tags)
+  let previousLength = 0;
+  while (sanitized.length !== previousLength && /<[^>]*>/g.test(sanitized)) {
+    previousLength = sanitized.length;
+    sanitized = sanitized.replace(/<[^>]*>/g, "");
+  }
 
   // Remove control characters
   sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, "");
@@ -177,6 +201,40 @@ export function sanitizePhone(
 
   // Trim again
   sanitized = sanitized.trim();
+
+  // SECURITY FIX: Strict phone validation to prevent abuse
+  // 1. Must contain at least 7 digits (shortest valid international number)
+  const digitCount = (sanitized.match(/\d/g) || []).length;
+  if (digitCount < 7) {
+    return null; // Too few digits
+  }
+
+  // 2. Max length: 20 characters (longest valid format: +XXX (XXX) XXX-XXXX)
+  if (sanitized.length > 20) {
+    return null; // Too long
+  }
+
+  // 3. Plus sign: max 1, must be at start if present
+  const plusCount = (sanitized.match(/\+/g) || []).length;
+  if (plusCount > 1) {
+    return null; // Multiple plus signs
+  }
+  if (plusCount === 1 && !sanitized.startsWith("+")) {
+    return null; // Plus sign not at start
+  }
+
+  // 4. Parentheses must be balanced
+  const openCount = (sanitized.match(/\(/g) || []).length;
+  const closeCount = (sanitized.match(/\)/g) || []).length;
+  if (openCount !== closeCount) {
+    return null; // Unbalanced parentheses
+  }
+
+  // 5. No excessive special characters (max 6: e.g., "+1 (555) 123-4567" has 5)
+  const specialCharCount = sanitized.length - digitCount;
+  if (specialCharCount > 6) {
+    return null; // Too many special chars
+  }
 
   return sanitized.length > 0 ? sanitized : null;
 }

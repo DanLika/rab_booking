@@ -332,16 +332,22 @@ export const onBookingStatusChange = onDocumentUpdated(
             .get();
           const propertyData = propertyDoc.data();
 
-          // Send booking approved email to guest
-          await sendBookingApprovedEmail(
-            after.guest_email || "",
-            after.guest_name || "Guest",
-            after.booking_reference || "",
-            after.check_in.toDate(),
-            after.check_out.toDate(),
-            propertyData?.name || "Property",
-            propertyData?.contact_email,
-            after.property_id
+          // Send booking approved email to guest with retry
+          await sendEmailWithRetry(
+            async () => {
+              await sendBookingApprovedEmail(
+                after.guest_email || "",
+                after.guest_name || "Guest",
+                after.booking_reference || "",
+                after.check_in.toDate(),
+                after.check_out.toDate(),
+                propertyData?.name || "Property",
+                propertyData?.contact_email,
+                after.property_id
+              );
+            },
+            "Booking Approved",
+            after.guest_email || ""
           );
 
           logSuccess("Booking approval email sent to guest", {email: after.guest_email});
@@ -355,7 +361,14 @@ export const onBookingStatusChange = onDocumentUpdated(
             },
           });
         } catch (emailError) {
-          logError("Failed to send booking approval email", emailError);
+          logError("Failed to send booking approval email after retries", emailError);
+          // Track failure for monitoring/alerting
+          await trackEmailFailure(
+            event.params.bookingId,
+            "booking_approved",
+            after.guest_email || "",
+            emailError
+          );
           // Don't throw - approval should succeed even if email fails
         }
       }
@@ -384,13 +397,19 @@ export const onBookingStatusChange = onDocumentUpdated(
             .get();
           const propertyData = propertyDoc.data();
 
-          // Send booking rejected email to guest
-          await sendBookingRejectedEmail(
-            after.guest_email || "",
-            after.guest_name || "Guest",
-            after.booking_reference || "",
-            propertyData?.name || "Property",
-            after.rejection_reason
+          // Send booking rejected email to guest with retry
+          await sendEmailWithRetry(
+            async () => {
+              await sendBookingRejectedEmail(
+                after.guest_email || "",
+                after.guest_name || "Guest",
+                after.booking_reference || "",
+                propertyData?.name || "Property",
+                after.rejection_reason
+              );
+            },
+            "Booking Rejected",
+            after.guest_email || ""
           );
 
           logSuccess("Booking rejection email sent to guest", {email: after.guest_email});
@@ -404,7 +423,14 @@ export const onBookingStatusChange = onDocumentUpdated(
             },
           });
         } catch (emailError) {
-          logError("Failed to send booking rejection email", emailError);
+          logError("Failed to send booking rejection email after retries", emailError);
+          // Track failure for monitoring/alerting
+          await trackEmailFailure(
+            event.params.bookingId,
+            "booking_rejected",
+            after.guest_email || "",
+            emailError
+          );
           // Don't throw - rejection should succeed even if email fails
         }
       }
@@ -447,16 +473,23 @@ export const onBookingStatusChange = onDocumentUpdated(
               "onStatusChange"
             );
 
-            await sendBookingCancellationEmail(
-              booking.guest_email,
-              booking.guest_name,
-              booking.booking_reference || `ERR-${event.params.bookingId}`,
-              propertyName,
-              unitName,
-              booking.check_in.toDate(),
-              booking.check_out.toDate(),
-              undefined, // refundAmount
-              booking.property_id
+            // Send cancellation email with retry
+            await sendEmailWithRetry(
+              async () => {
+                await sendBookingCancellationEmail(
+                  booking.guest_email,
+                  booking.guest_name,
+                  booking.booking_reference || `ERR-${event.params.bookingId}`,
+                  propertyName,
+                  unitName,
+                  booking.check_in.toDate(),
+                  booking.check_out.toDate(),
+                  undefined, // refundAmount
+                  booking.property_id
+                );
+              },
+              "Booking Cancellation",
+              booking.guest_email || ""
             );
             logSuccess("Cancellation email sent", {email: booking.guest_email});
 
@@ -469,7 +502,14 @@ export const onBookingStatusChange = onDocumentUpdated(
               },
             });
           } catch (emailError) {
-            logError("Failed to send cancellation email", emailError);
+            logError("Failed to send cancellation email after retries", emailError);
+            // Track failure for monitoring/alerting
+            await trackEmailFailure(
+              event.params.bookingId,
+              "booking_cancellation",
+              after.guest_email || "",
+              emailError
+            );
             // Don't throw - cancellation should succeed even if email fails
           }
         }

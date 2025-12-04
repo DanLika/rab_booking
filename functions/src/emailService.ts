@@ -83,7 +83,7 @@ logSuccess("[EmailService] Resend client initialized", {
 
 // Email sender address - validate and fail fast if not configured
 const FROM_EMAIL_RAW = process.env.FROM_EMAIL;
-const FROM_NAME = process.env.FROM_NAME || "Rab Booking";
+const FROM_NAME_RAW = process.env.FROM_NAME;
 
 // VALIDATION: Ensure FROM_EMAIL is configured (fail fast at deployment)
 if (!FROM_EMAIL_RAW) {
@@ -105,6 +105,18 @@ if (!EMAIL_REGEX.test(FROM_EMAIL_RAW)) {
 
 // After validation, we know FROM_EMAIL is a valid string
 const FROM_EMAIL: string = FROM_EMAIL_RAW;
+
+// VALIDATION: Ensure FROM_NAME is configured (fail fast at deployment)
+if (!FROM_NAME_RAW) {
+  throw new Error(
+    "FROM_NAME environment variable not configured. " +
+    "Set this to your sender display name (e.g., 'Rab Booking', 'Villa Marija Bookings'). " +
+    "This appears as the 'From' name in emails."
+  );
+}
+
+// After validation, we know FROM_NAME is a valid string
+const FROM_NAME: string = FROM_NAME_RAW;
 
 logSuccess("[EmailService] Configured sender email", {
   fromEmail: FROM_EMAIL,
@@ -478,6 +490,19 @@ export async function sendOwnerNotificationEmail(
   depositAmount: number,
   paymentMethod?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(ownerEmail, "ownerEmail");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateRequiredString(guestName, "guestName");
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(propertyName, "propertyName");
+  validateRequiredString(unitName, "unitName");
+  validateDate(checkIn, "checkIn");
+  validateDate(checkOut, "checkOut");
+  validateAmount(guests, "guests");
+  validateAmount(totalAmount, "totalAmount");
+  validateAmount(depositAmount, "depositAmount");
+
   try {
     // Build params for new template
     const params: OwnerNotificationParams = {
@@ -586,6 +611,16 @@ export async function sendOwnerCancellationNotificationEmail(
   checkOut: Date,
   totalAmount: number
 ): Promise<void> {
+  // Input validation
+  validateEmail(ownerEmail, "ownerEmail");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateRequiredString(guestName, "guestName");
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(propertyName, "propertyName");
+  validateDate(checkIn, "checkIn");
+  validateDate(checkOut, "checkOut");
+  validateAmount(totalAmount, "totalAmount");
+
   try {
     // Build params for new template
     const params: OwnerCancellationParams = {
@@ -676,6 +711,13 @@ export async function sendCustomGuestEmail(
   ownerEmail?: string,
   propertyName?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(subject, "subject");
+  validateRequiredString(message, "message");
+  if (ownerEmail) validateEmail(ownerEmail, "ownerEmail");
+
   try {
     // Build params for new template
     const params: CustomGuestEmailParams = {
@@ -900,6 +942,11 @@ export async function sendSuspiciousActivityEmail(
   ipAddress?: string,
   userAgent?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(adminEmail, "adminEmail");
+  validateRequiredString(activityType, "activityType");
+  validateRequiredString(details, "details");
+
   try {
     // Build params for V2 template
     const params: SuspiciousActivityParams = {
@@ -936,6 +983,12 @@ export async function sendPendingBookingRequestEmail(
   bookingReference: string,
   propertyName: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateRequiredString(propertyName, "propertyName");
+
   try {
     // Build params for V2 template
     const params: PendingBookingRequestParams = {
@@ -971,6 +1024,12 @@ export async function sendPendingBookingOwnerNotification(
   propertyName: string,
   dashboardUrl?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(ownerEmail, "ownerEmail");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(propertyName, "propertyName");
+
   try {
     // Build params for V2 template
     const params: PendingOwnerNotificationParams = {
@@ -1008,6 +1067,13 @@ export async function sendBookingRejectedEmail(
   reason?: string,
   ownerEmail?: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateRequiredString(propertyName, "propertyName");
+  if (ownerEmail) validateEmail(ownerEmail, "ownerEmail");
+
   try {
     // Build params for V2 template
     const params: BookingRejectedParams = {
@@ -1042,6 +1108,10 @@ export async function sendEmailVerificationCode(
   email: string,
   code: string
 ): Promise<void> {
+  // Input validation
+  validateEmail(email, "email");
+  validateRequiredString(code, "code");
+
   try {
     // Build params for V2 template
     const params: EmailVerificationParams = {

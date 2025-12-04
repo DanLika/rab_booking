@@ -105,8 +105,7 @@ export const guestCancelBooking = onCall(async (request) => {
       );
     }
 
-    // Get widget settings to check cancellation policy
-    // Widget settings are stored as subcollection: properties/{propertyId}/widget_settings/{unitId}
+    // Extract property and unit IDs for transaction
     const propertyId = booking.property_id;
     const unitId = booking.unit_id;
 
@@ -117,54 +116,46 @@ export const guestCancelBooking = onCall(async (request) => {
       );
     }
 
-    const widgetSettingsRef = db
-      .collection("properties")
-      .doc(propertyId)
-      .collection("widget_settings")
-      .doc(unitId);
-    const widgetSettingsDoc = await widgetSettingsRef.get();
-
-    if (!widgetSettingsDoc.exists) {
-      throw new HttpsError(
-        "not-found",
-        "Widget settings not found for this booking"
-      );
-    }
-
-    const widgetSettings = widgetSettingsDoc.data()!;
-
-    // Check if guest cancellation is allowed
-    if (!widgetSettings.allow_guest_cancellation) {
-      throw new HttpsError(
-        "permission-denied",
-        "Guest cancellation is not allowed for this property. " +
-        "Please contact the property owner."
-      );
-    }
-
-    // Check cancellation deadline
-    const cancellationDeadlineHours =
-      widgetSettings.cancellation_deadline_hours || 48;
-    const checkInDate = booking.check_in.toDate();
-    const now = new Date();
-    const hoursUntilCheckIn =
-      (checkInDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-    if (hoursUntilCheckIn < cancellationDeadlineHours) {
-      throw new HttpsError(
-        "failed-precondition",
-        `Cancellation deadline has passed. ` +
-        `You must cancel at least ${cancellationDeadlineHours} hours before check-in. ` +
-        `Please contact the property owner.`
-      );
-    }
-
     // ====================================================================
     // CRITICAL: Use Firestore transaction for atomic cancellation
     // Prevents race conditions and ensures idempotency
+    // FIX: Widget settings now fetched INSIDE transaction (prevents race condition)
     // ====================================================================
     const cancellationResult = await db.runTransaction(async (transaction) => {
-      // Step 1: Re-read booking INSIDE transaction (fresh data)
+      // Step 1: Fetch widget settings INSIDE transaction (atomic read)
+      // Widget settings are stored as subcollection: properties/{propertyId}/widget_settings/{unitId}
+      const widgetSettingsRef = db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("widget_settings")
+        .doc(unitId);
+      const widgetSettingsDoc = await transaction.get(widgetSettingsRef);
+
+      if (!widgetSettingsDoc.exists) {
+        throw new HttpsError(
+          "not-found",
+          "Widget settings not found for this booking"
+        );
+      }
+
+      const widgetSettings = widgetSettingsDoc.data()!;
+
+      // Step 2: Validate cancellation policy (atomic validation)
+      // Check if guest cancellation is allowed
+      if (!widgetSettings.allow_guest_cancellation) {
+        throw new HttpsError(
+          "permission-denied",
+          "Guest cancellation is not allowed for this property. " +
+          "Please contact the property owner."
+        );
+      }
+
+      // Check cancellation deadline
+      const cancellationDeadlineHours =
+        widgetSettings.cancellation_deadline_hours || 48;
+      const now = new Date();
+
+      // Step 3: Re-read booking INSIDE transaction (fresh data)
       const freshBookingDoc = await transaction.get(bookingRef);
 
       if (!freshBookingDoc.exists) {
@@ -173,7 +164,7 @@ export const guestCancelBooking = onCall(async (request) => {
 
       const freshBooking = freshBookingDoc.data()!;
 
-      // Step 2: IDEMPOTENCY CHECK - if already cancelled, return success
+      // Step 4: IDEMPOTENCY CHECK - if already cancelled, return success
       if (freshBooking.status === "cancelled") {
         logInfo(`Booking already cancelled: ${bookingReference}`, {
           bookingId,
@@ -187,10 +178,11 @@ export const guestCancelBooking = onCall(async (request) => {
           cancelledAt: freshBooking.cancelled_at,
           refundAmount: freshBooking.refund_amount || 0,
           refundStatus: freshBooking.refund_status || "not_applicable",
+          widgetSettings, // Return for use outside transaction
         };
       }
 
-      // Step 3: Re-validate status (ensure still cancellable)
+      // Step 5: Re-validate status (ensure still cancellable)
       if (freshBooking.status !== "confirmed" &&
           freshBooking.status !== "pending") {
         throw new HttpsError(
@@ -199,9 +191,8 @@ export const guestCancelBooking = onCall(async (request) => {
         );
       }
 
-      // Step 4: Re-check cancellation deadline (time may have passed)
+      // Step 6: Re-check cancellation deadline using fresh booking data
       const freshCheckInDate = freshBooking.check_in.toDate();
-      const now = new Date();
       const hoursUntilCheckIn =
         (freshCheckInDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
@@ -212,7 +203,7 @@ export const guestCancelBooking = onCall(async (request) => {
         );
       }
 
-      // Step 5: Calculate refund amount based on payment status
+      // Step 7: Calculate refund amount based on payment status
       let refundAmount = 0;
       let refundStatus = "not_applicable";
       const paymentStatus = freshBooking.payment_status;
@@ -228,7 +219,7 @@ export const guestCancelBooking = onCall(async (request) => {
           "pending_manual";
       }
 
-      // Step 6: Update booking atomically
+      // Step 8: Update booking atomically
       transaction.update(bookingRef, {
         status: "cancelled",
         cancelled_at: admin.firestore.FieldValue.serverTimestamp(),
@@ -252,6 +243,7 @@ export const guestCancelBooking = onCall(async (request) => {
         refundStatus,
         paymentMethod,
         stripePaymentIntentId: freshBooking.stripe_payment_intent_id,
+        widgetSettings, // Return for use outside transaction
       };
     });
 
@@ -270,7 +262,7 @@ export const guestCancelBooking = onCall(async (request) => {
     if (cancellationResult.refundStatus === "pending_stripe" &&
         cancellationResult.refundAmount > 0) {
       try {
-        const stripeConfig = widgetSettings.stripe_config;
+        const stripeConfig = cancellationResult.widgetSettings.stripe_config;
 
         if (!stripeConfig || !stripeConfig.secret_key) {
           logError("Stripe config missing for refund", null, {bookingId});
@@ -328,8 +320,8 @@ export const guestCancelBooking = onCall(async (request) => {
 
     // Send cancellation confirmation email to guest
     try {
-      // Get email config from widget settings
-      const emailConfig = widgetSettings.email_config || {};
+      // Get email config from widget settings (returned from transaction)
+      const emailConfig = cancellationResult.widgetSettings.email_config || {};
       const emailValidation = validateEmailConfig(emailConfig);
 
       if (emailValidation.isValid) {
@@ -370,7 +362,7 @@ export const guestCancelBooking = onCall(async (request) => {
 
     // Send notification email to owner (if contact email exists)
     try {
-      const ownerEmail = widgetSettings.contact_options?.email_address;
+      const ownerEmail = cancellationResult.widgetSettings.contact_options?.email_address;
       if (ownerEmail) {
         // You can implement owner notification here if needed
         logInfo(`Owner notification would be sent to: ${ownerEmail}`);

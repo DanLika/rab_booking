@@ -23,7 +23,7 @@
 
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import {db, admin} from "./firebase";
-import {logError, logSuccess, logInfo} from "./logger";
+import {logError, logSuccess, logInfo, logWarn} from "./logger";
 
 // ==========================================
 // CONFIGURATION (Environment-based)
@@ -188,7 +188,7 @@ async function deleteInBatches(
     // Add all deletes to batch
     for (const doc of chunk) {
       const bookingData = doc.data();
-      console.log(`[Cleanup] Queuing deletion: ${doc.id} (ref: ${bookingData.booking_reference})`);
+      logInfo(`[Cleanup] Queuing deletion: ${doc.id} (ref: ${bookingData.booking_reference})`);
       batch.delete(doc.ref);
     }
 
@@ -196,10 +196,12 @@ async function deleteInBatches(
     try {
       await batch.commit();
       results.successCount += chunk.length;
-      console.log(`[Cleanup] Batch committed: ${chunk.length} deletions (total: ${results.successCount})`);
+      logInfo(`[Cleanup] Batch committed: ${chunk.length} deletions (total: ${results.successCount})`);
     } catch (batchError) {
       // Batch failed - fall back to individual deletes
-      console.warn(`[Cleanup] Batch commit failed, trying individual deletes`, batchError);
+      logWarn(`[Cleanup] Batch commit failed, trying individual deletes`, {
+        error: batchError instanceof Error ? batchError.message : String(batchError),
+      });
 
       for (const doc of chunk) {
         try {
